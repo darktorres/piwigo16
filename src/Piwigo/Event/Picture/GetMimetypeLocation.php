@@ -6,12 +6,13 @@ namespace Piwigo\Event\Picture;
 
 /**
  * Typed event for the legacy `get_mimetype_location` filter. No handler
- * is registered for it anywhere today.
+ * is registered for it anywhere today. Mutable on `$location`; `$ext`
+ * stays context.
  */
-final readonly class GetMimetypeLocation
+final class GetMimetypeLocation
 {
     public function __construct(
         public string $location,
-        public string $ext,
+        public readonly string $ext,
     ) {}
 }

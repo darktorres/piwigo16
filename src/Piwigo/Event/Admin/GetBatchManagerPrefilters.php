@@ -6,9 +6,10 @@ namespace Piwigo\Event\Admin;
 
 /**
  * Typed event for the legacy `get_batch_manager_prefilters` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. No context -- every real
+ * call site passes only the prefilter list.
  */
-final readonly class GetBatchManagerPrefilters
+final class GetBatchManagerPrefilters
 {
     /**
      * @param array<mixed> $prefilters

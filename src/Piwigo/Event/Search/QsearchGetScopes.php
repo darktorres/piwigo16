@@ -15,9 +15,10 @@ namespace Piwigo\Event\Search;
  * GetBatchManagerPrefilters from the Admin/Integrity/Upload events). Also
  * avoids needing the `Piwigo\Search\Event\` namespace override every
  * other event under `Piwigo\Event\Search\` needs -- a loose `array<mixed>` carries no
- * first-party type for deptrac to see.
+ * first-party type for deptrac to see. No context -- every real call
+ * site passes only the scopes list.
  */
-final readonly class QsearchGetScopes
+final class QsearchGetScopes
 {
     /**
      * @param array<mixed> $scopes

@@ -10,15 +10,16 @@ namespace Piwigo\Event\Picture;
  * reference's plain `bool $done`: this branch's own real dispatch site
  * (`RateService::updateRatingScore()`) starts from the literal `false`
  * and lets a handler override the WHOLE return value with an array, so
- * the property must carry both.
+ * the property must carry both. Mutable on `$result`; `$elementId`
+ * stays context.
  */
-final readonly class UpdateRatingScore
+final class UpdateRatingScore
 {
     /**
      * @param bool|array<string, mixed> $result
      */
     public function __construct(
         public bool|array $result,
-        public int|false $elementId,
+        public readonly int|false $elementId,
     ) {}
 }

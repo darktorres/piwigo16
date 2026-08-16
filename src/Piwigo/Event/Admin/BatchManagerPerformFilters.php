@@ -6,9 +6,10 @@ namespace Piwigo\Event\Admin;
 
 /**
  * Typed event for the legacy `batch_manager_perform_filters` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. Mutable on `$filterSets`;
+ * `$bulkManagerFilter` stays context.
  */
-final readonly class BatchManagerPerformFilters
+final class BatchManagerPerformFilters
 {
     /**
      * @param array<mixed> $filterSets
@@ -16,6 +17,6 @@ final readonly class BatchManagerPerformFilters
      */
     public function __construct(
         public array $filterSets,
-        public array $bulkManagerFilter,
+        public readonly array $bulkManagerFilter,
     ) {}
 }

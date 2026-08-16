@@ -12,11 +12,12 @@ use Piwigo\Template\Combinable;
  * behavior change. Lives under `Piwigo\Template\Event\`, not
  * `Piwigo\Event\Template\`, since it carries a real `Piwigo\Template\
  * Combinable` instance -- deptrac's L0Data layer may depend on nothing.
+ * Mutable on `$src`; `$combinable` stays context.
  */
-final readonly class CombinedScript
+final class CombinedScript
 {
     public function __construct(
         public string $src,
-        public Combinable $combinable,
+        public readonly Combinable $combinable,
     ) {}
 }

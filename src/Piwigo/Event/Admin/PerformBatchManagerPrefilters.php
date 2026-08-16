@@ -6,15 +6,16 @@ namespace Piwigo\Event\Admin;
 
 /**
  * Typed event for the legacy `perform_batch_manager_prefilters` filter.
- * No handler is registered for it anywhere today.
+ * No handler is registered for it anywhere today. Mutable on
+ * `$filterSets`; `$prefilter` stays context.
  */
-final readonly class PerformBatchManagerPrefilters
+final class PerformBatchManagerPrefilters
 {
     /**
      * @param array<mixed> $filterSets
      */
     public function __construct(
         public array $filterSets,
-        public string $prefilter,
+        public readonly string $prefilter,
     ) {}
 }

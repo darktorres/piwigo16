@@ -12,11 +12,12 @@ use Piwigo\Template\Combinable;
  * behavior change. Lives under `Piwigo\Template\Event\`, not
  * `Piwigo\Event\Template\`, since it carries a real `Piwigo\Template\
  * Combinable` instance -- deptrac's L0Data layer may depend on nothing.
+ * Mutable on `$href`; `$combi` stays context.
  */
-final readonly class CombinedCss
+final class CombinedCss
 {
     public function __construct(
         public string $href,
-        public Combinable $combi,
+        public readonly Combinable $combi,
     ) {}
 }

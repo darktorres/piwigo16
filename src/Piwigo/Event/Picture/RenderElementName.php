@@ -9,15 +9,16 @@ namespace Piwigo\Event\Picture;
  * registered for it anywhere today -- a pure information carrier.
  * `$context` is a genuine union: `Html\HtmlService.php`'s dispatch site
  * passes the full element row (array), while every `Ws\*.php` dispatch
- * site passes `__FUNCTION__` (string) instead.
+ * site passes `__FUNCTION__` (string) instead. Mutable on
+ * `$elementName`; `$context` stays context.
  */
-final readonly class RenderElementName
+final class RenderElementName
 {
     /**
      * @param string|array<mixed> $context
      */
     public function __construct(
         public string $elementName,
-        public string|array $context,
+        public readonly string|array $context,
     ) {}
 }

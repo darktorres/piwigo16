@@ -16,11 +16,12 @@ use Piwigo\Notification\Projection\UserMailNotification;
  * `array<string, mixed>`; this branch's own real call site
  * (`NotificationByMailSender::sendMailNotifications()`) already has it
  * as the typed projection object, so that's what this carries instead.
+ * Mutable on `$customizeMailContent`; `$nbmUser` stays context.
  */
-final readonly class NbmRenderUserCustomizeMailContent
+final class NbmRenderUserCustomizeMailContent
 {
     public function __construct(
         public string $customizeMailContent,
-        public UserMailNotification $nbmUser,
+        public readonly UserMailNotification $nbmUser,
     ) {}
 }

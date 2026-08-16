@@ -19,16 +19,16 @@ use Piwigo\Search\QSingleToken;
  * zero real in-tree listeners exist today, consistent with v17.0
  * already breaking every PEM extension contract. See
  * {@see QsearchClause}'s own docblock for why this is a real fix, not
- * just a type.
+ * just a type. Mutable on `$clauses`; `$token`/`$expr` stay context.
  */
-final readonly class QsearchGetImagesSqlScopes
+final class QsearchGetImagesSqlScopes
 {
     /**
      * @param list<QsearchClause> $clauses
      */
     public function __construct(
         public array $clauses,
-        public QSingleToken $token,
-        public QExpression $expr,
+        public readonly QSingleToken $token,
+        public readonly QExpression $expr,
     ) {}
 }

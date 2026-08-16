@@ -6,15 +6,16 @@ namespace Piwigo\Event\Admin;
 
 /**
  * Typed event for the legacy `batch_manager_url_filter` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. Mutable on
+ * `$bulkManagerFilter`; `$filter` stays context.
  */
-final readonly class BatchManagerUrlFilter
+final class BatchManagerUrlFilter
 {
     /**
      * @param array<mixed> $bulkManagerFilter
      */
     public function __construct(
         public array $bulkManagerFilter,
-        public string $filter,
+        public readonly string $filter,
     ) {}
 }

@@ -6,9 +6,10 @@ namespace Piwigo\Event\Location;
 
 /**
  * Typed event for the legacy `loc_end_index_category_thumbnails`
- * filter. No handler is registered for it anywhere today.
+ * filter. No handler is registered for it anywhere today. No context --
+ * every real call site passes only the thumbnails list.
  */
-final readonly class LocEndIndexCategoryThumbnails
+final class LocEndIndexCategoryThumbnails
 {
     /**
      * @param array<mixed> $tplThumbnailsVar

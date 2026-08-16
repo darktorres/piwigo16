@@ -7,9 +7,10 @@ namespace Piwigo\Event\Admin;
 /**
  * Typed event for the legacy `get_admin_plugin_menu_links` filter. No
  * handler is registered for it anywhere in src/Piwigo/ today (only a
- * throwaway fixture plugin in PluginsInstalledPageRendererTest.php).
+ * throwaway fixture plugin in PluginsInstalledPageRendererTest.php). No
+ * context -- every real call site passes only the links list.
  */
-final readonly class GetAdminPluginMenuLinks
+final class GetAdminPluginMenuLinks
 {
     /**
      * @param array<mixed> $value

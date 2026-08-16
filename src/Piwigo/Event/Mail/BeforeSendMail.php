@@ -14,9 +14,12 @@ use Symfony\Component\Mime\Email;
  * PHPMailer`, confirming this is a real library divergence, not an
  * oversight. `Symfony\Component\Mime\Email` isn't covered by any
  * deptrac.yaml layer collector (a plain vendor dependency), so no
- * namespace override is needed here.
+ * namespace override is needed here. Mutable on `$shouldSend`; `$to`/
+ * `$args`/`$email` stay context (a handler wanting to change the mail
+ * itself mutates the already-mutable `$email` object in place, not this
+ * property).
  */
-final readonly class BeforeSendMail
+final class BeforeSendMail
 {
     /**
      * @param string|array<int|string, mixed> $to
@@ -24,8 +27,8 @@ final readonly class BeforeSendMail
      */
     public function __construct(
         public bool $shouldSend,
-        public string|array $to,
-        public array $args,
-        public Email $email,
+        public readonly string|array $to,
+        public readonly array $args,
+        public readonly Email $email,
     ) {}
 }

@@ -14,16 +14,16 @@ use Piwigo\Auth\Projection\AuthUser;
  * depend on nothing. `$state` keeps the legacy plugin-facing array shape
  * (`can_login`/`reason`/`authenticated`) real third-party handlers
  * already expect, precisely typed rather than the reference's loose
- * `array`.
+ * `array`. Mutable on `$state`; `$userFound`/`$rememberMe` stay context.
  */
-final readonly class FinalizeLogin
+final class FinalizeLogin
 {
     /**
      * @param array{can_login: bool, reason: ?string, authenticated: bool} $state
      */
     public function __construct(
         public array $state,
-        public ?AuthUser $userFound,
-        public bool $rememberMe,
+        public readonly ?AuthUser $userFound,
+        public readonly bool $rememberMe,
     ) {}
 }

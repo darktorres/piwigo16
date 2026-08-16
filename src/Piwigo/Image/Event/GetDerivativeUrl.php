@@ -12,14 +12,15 @@ use Piwigo\Image\SrcImage;
  * registered for it anywhere today. Lives under `Piwigo\Image\Event\`,
  * not `Piwigo\Event\Picture\`, since it carries real
  * `Piwigo\Image\DerivativeParams`/`SrcImage` instances -- deptrac's
- * L0Data layer may depend on nothing.
+ * L0Data layer may depend on nothing. Mutable on `$url`; `$params`/
+ * `$srcImage`/`$relUrl` stay context.
  */
-final readonly class GetDerivativeUrl
+final class GetDerivativeUrl
 {
     public function __construct(
         public string $url,
-        public DerivativeParams $params,
-        public SrcImage $srcImage,
-        public string $relUrl,
+        public readonly DerivativeParams $params,
+        public readonly SrcImage $srcImage,
+        public readonly string $relUrl,
     ) {}
 }

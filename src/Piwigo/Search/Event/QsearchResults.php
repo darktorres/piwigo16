@@ -15,16 +15,17 @@ use Piwigo\Search\QResults;
  * layer may depend on nothing. `$searchResults` stays loosely
  * `array<mixed>` -- the one real consumer already merges the hook's
  * result back key-by-key, defensively filtering non-string keys via
- * `is_string()`, same reasoning as `QsearchGetScopes`.
+ * `is_string()`, same reasoning as `QsearchGetScopes`. Mutable on
+ * `$searchResults`; `$expression`/`$qsr` stay context.
  */
-final readonly class QsearchResults
+final class QsearchResults
 {
     /**
      * @param array<mixed> $searchResults
      */
     public function __construct(
         public array $searchResults,
-        public QExpression $expression,
-        public QResults $qsr,
+        public readonly QExpression $expression,
+        public readonly QResults $qsr,
     ) {}
 }

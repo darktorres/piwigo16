@@ -6,9 +6,10 @@ namespace Piwigo\Event\Admin;
 
 /**
  * Typed event for the legacy `get_admin_advanced_features_links` filter.
- * No handler is registered for it anywhere today.
+ * No handler is registered for it anywhere today. No context -- every
+ * real call site passes only the features list.
  */
-final readonly class GetAdminAdvancedFeaturesLinks
+final class GetAdminAdvancedFeaturesLinks
 {
     /**
      * @param array<mixed> $advancedFeatures

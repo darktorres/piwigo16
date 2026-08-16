@@ -6,9 +6,10 @@ namespace Piwigo\Event\Picture;
 
 /**
  * Typed event for the legacy `pwg_log_update_last_visit` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. No context -- every real
+ * call site passes only the flag.
  */
-final readonly class LogUpdateLastVisit
+final class LogUpdateLastVisit
 {
     public function __construct(
         public bool $update,

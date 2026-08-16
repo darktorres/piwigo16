@@ -6,9 +6,10 @@ namespace Piwigo\Event\Location;
 
 /**
  * Typed event for the legacy `loc_end_index_thumbnails` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. Mutable on
+ * `$tplThumbnailsVar`; `$pictures` stays context.
  */
-final readonly class LocEndIndexThumbnails
+final class LocEndIndexThumbnails
 {
     /**
      * @param array<mixed> $tplThumbnailsVar
@@ -16,6 +17,6 @@ final readonly class LocEndIndexThumbnails
      */
     public function __construct(
         public array $tplThumbnailsVar,
-        public array $pictures,
+        public readonly array $pictures,
     ) {}
 }

@@ -13,9 +13,10 @@ namespace Piwigo\Event\Lifecycle;
  * non-string values, which ThemeCatalog::getPwgThemes() still defends
  * against per-element -- a precise shape here would make PHPStan treat
  * that defense as dead code, same reasoning as GetAdminPluginMenuLinks/
- * GetBatchManagerPrefilters.
+ * GetBatchManagerPrefilters. No context -- every real call site passes
+ * only the themes list.
  */
-final readonly class GetPwgThemes
+final class GetPwgThemes
 {
     /**
      * @param array<mixed> $themes

@@ -7,15 +7,16 @@ namespace Piwigo\Event\Template;
 /**
  * Typed event for the legacy `render_category_name` filter. No handler is
  * registered for it anywhere today -- a pure information carrier, not a
- * behavior change (nothing filters this value either way).
+ * behavior change (nothing filters this value either way). Mutable on
+ * `$categoryName`; `$context` stays context.
  */
-final readonly class RenderCategoryName
+final class RenderCategoryName
 {
     /**
      * @param string|array<string, mixed> $context Caller-identifying tag (e.g. 'admin_cat_list') OR the full category row.
      */
     public function __construct(
         public string $categoryName,
-        public string|array $context,
+        public readonly string|array $context,
     ) {}
 }

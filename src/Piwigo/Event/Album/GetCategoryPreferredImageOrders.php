@@ -12,9 +12,10 @@ namespace Piwigo\Event\Album;
  * `CategoryService::getPreferredImageOrders()` itself builds): the one
  * real consumer already defensively filters each element
  * (is_array()/isset()/is_string()), and a precise element type would
- * make PHPStan treat that filter as dead code.
+ * make PHPStan treat that filter as dead code. No context -- every real
+ * call site passes only the orders list.
  */
-final readonly class GetCategoryPreferredImageOrders
+final class GetCategoryPreferredImageOrders
 {
     /**
      * @param array<mixed> $orders

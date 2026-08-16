@@ -6,12 +6,13 @@ namespace Piwigo\Event\Admin;
 
 /**
  * Typed event for the legacy `get_popup_help_content` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. Mutable on `$content`;
+ * `$rawPage` stays context.
  */
-final readonly class GetPopupHelpContent
+final class GetPopupHelpContent
 {
     public function __construct(
         public string $content,
-        public string $rawPage,
+        public readonly string $rawPage,
     ) {}
 }

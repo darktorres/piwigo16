@@ -9,9 +9,10 @@ namespace Piwigo\Event\Location;
  * No handler is registered for it anywhere today. `$selection` stays
  * loosely `array<mixed>` -- the one real consumer already defensively
  * filters each element (is_int()/is_string()), and a precise element
- * type would make PHPStan treat that filter as dead code.
+ * type would make PHPStan treat that filter as dead code. No context --
+ * every real call site passes only the selection list.
  */
-final readonly class LocIndexThumbnailsSelection
+final class LocIndexThumbnailsSelection
 {
     /**
      * @param array<mixed> $selection

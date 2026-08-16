@@ -10,15 +10,16 @@ namespace Piwigo\Event\Album;
  * reference's `int` -- its one real dispatch site
  * (`SiteManagerSubController.php`) passes the site row's string id
  * (`(string) $row->id`), not the real int `$id_int` it also has in scope.
+ * Mutable on `$pluginLinks`; `$siteId`/`$isRemote` stay context.
  */
-final readonly class GetAdminsSiteLinks
+final class GetAdminsSiteLinks
 {
     /**
      * @param array<mixed> $pluginLinks
      */
     public function __construct(
         public array $pluginLinks,
-        public string $siteId,
-        public bool $isRemote,
+        public readonly string $siteId,
+        public readonly bool $isRemote,
     ) {}
 }

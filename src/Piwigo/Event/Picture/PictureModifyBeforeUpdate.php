@@ -6,9 +6,10 @@ namespace Piwigo\Event\Picture;
 
 /**
  * Typed event for the legacy `picture_modify_before_update` filter. No
- * handler is registered for it anywhere today.
+ * handler is registered for it anywhere today. No context -- every real
+ * call site passes only the update data.
  */
-final readonly class PictureModifyBeforeUpdate
+final class PictureModifyBeforeUpdate
 {
     /**
      * @param array<string, mixed> $data

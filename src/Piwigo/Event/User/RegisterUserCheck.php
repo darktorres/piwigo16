@@ -12,9 +12,10 @@ namespace Piwigo\Event\User;
  * element via `is_string()`, and a precise element type would make
  * PHPStan treat that filter as dead code (same reasoning as
  * GetAdminPluginMenuLinks/GetBatchManagerPrefilters from the
- * Admin/Integrity/Upload batch).
+ * Admin/Integrity/Upload batch). Mutable on `$errors`; `$user` stays
+ * context.
  */
-final readonly class RegisterUserCheck
+final class RegisterUserCheck
 {
     /**
      * @param array<mixed> $errors
@@ -22,6 +23,6 @@ final readonly class RegisterUserCheck
      */
     public function __construct(
         public array $errors,
-        public array $user,
+        public readonly array $user,
     ) {}
 }

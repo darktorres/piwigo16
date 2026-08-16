@@ -167,6 +167,7 @@ $(document).ready(() => {
       data: {
         category_id : catToEdit,
         name : $(".RenameAlbumLabelUsername input").val(),
+        pwg_token: pwg_token,
       },
       dataType: "json",
       success: function (data) {
@@ -229,7 +230,8 @@ $(document).ready(() => {
       data: {
         name : newAlbumName,
         parent : newAlbumParent,
-        position : newAlbumPosition
+        position : newAlbumPosition,
+        pwg_token: pwg_token,
       },
       dataType: "json",
       success: function (data) {

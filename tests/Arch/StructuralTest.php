@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\LoadedPluginsMiddleware;
+use Piwigo\Bootstrap\FinalizeBridgeMiddleware;
 use Piwigo\Bootstrap\RequestPipeline;
+use Piwigo\Bootstrap\UserResolutionMiddleware;
 use Piwigo\Http\BaselineSecurityHeaders;
+use Piwigo\Http\Middleware\ConfigBootstrapMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
+use Piwigo\Http\Middleware\LanguageMiddleware;
+use Piwigo\Http\Middleware\PluginBootstrapMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
 use Piwigo\Http\MiddlewarePipeline;
@@ -1372,6 +1378,14 @@ test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing class
     // static state is the sanctioned exception -- it's request-isolated via
     // Kernel::reset(), which a worker loop will call between requests once
     // that mode exists.
+    //
+    // ConfigBootstrapMiddleware/PluginBootstrapMiddleware/
+    // LoadedPluginsMiddleware/UserResolutionMiddleware/LanguageMiddleware/
+    // FinalizeBridgeMiddleware are workstream C3 Phase 1's own new
+    // bootstrap-phase middleware, formerly Bootstrap\RequestBootstrap::
+    // connect()/finalize()'s procedural body -- the same worker-isolation
+    // concern applies to them now that they run as real, container-shared
+    // middleware instances instead of one-shot static method calls.
     foreach ([
         RequestFactory::class,
         ResponseEmitter::class,
@@ -1385,6 +1399,12 @@ test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing class
         Router::class,
         RouteResult::class,
         RequestPipeline::class,
+        ConfigBootstrapMiddleware::class,
+        PluginBootstrapMiddleware::class,
+        LoadedPluginsMiddleware::class,
+        UserResolutionMiddleware::class,
+        LanguageMiddleware::class,
+        FinalizeBridgeMiddleware::class,
     ] as $fqcn) {
         $mutableProperties = array_filter(
             new ReflectionClass($fqcn)

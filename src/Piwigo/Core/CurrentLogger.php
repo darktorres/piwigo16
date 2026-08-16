@@ -11,10 +11,10 @@ use LogicException;
  * `global $logger;` bridge.
  *
  * Two writers, matching the two independent bootstrap paths that each
- * build their own Logger: `Piwigo\Bootstrap\RequestBootstrap::connect()`
- * (the normal request pipeline) and `Piwigo\Admin\Install\InstallWizard::
- * boot()` (the installer's own no-RequestBootstrap path, which needs a
- * Logger before render() runs).
+ * build their own Logger: `Piwigo\Http\Middleware\
+ * ConfigBootstrapMiddleware` (the normal request pipeline) and
+ * `Piwigo\Admin\Install\InstallWizard::boot()` (the installer's own
+ * no-RequestBootstrap path, which needs a Logger before render() runs).
  *
  * A container-shared instance: every real reader takes it via
  * constructor injection, including
@@ -32,7 +32,7 @@ final class CurrentLogger
     public function get(): Logger
     {
         if (! $this->instance instanceof Logger) {
-            throw new LogicException('CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.');
+            throw new LogicException('CurrentLogger not initialised -- call Piwigo\Http\Middleware\ConfigBootstrapMiddleware::process() or Piwigo\Controller\ImageDerivativeController::__invoke() first.');
         }
 
         return $this->instance;

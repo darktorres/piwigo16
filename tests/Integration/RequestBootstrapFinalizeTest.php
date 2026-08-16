@@ -31,15 +31,24 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Bootstrap\RequestBootstrap::finalize() runs after connect() in
- * the HTTP boot sequence. Unlike connect(), it does no session-bootstrap/
- * plugin-loading/global-error-handler-installation work, so every
- * precondition it needs (a real CurrentUser, CurrentConfigService, DB
- * connection) is set up by hand in this test.
+ * Piwigo\Bootstrap\RequestBootstrap::finalize() -- since workstream C3
+ * Phase 1, only the still-legacy, Template-dependent remainder of the
+ * original method (theme resolution, `Template` construction,
+ * `NoPhotoYetRenderer`, the gallery-locked 503 check, default
+ * event-handler registrations), called by `Bootstrap\
+ * FinalizeBridgeMiddleware` as the last step of the real bootstrap-phase
+ * middleware chain, not called directly by `bootEntryPoint()` anymore.
+ * Every precondition it needs (a real CurrentUser, CurrentConfigService,
+ * DB connection) is set up by hand in this test, the same "call the phase
+ * directly with hand-built preconditions" contract this file always used.
  *
- * Covers 6 branches the real Browser suite's fixture state never
+ * The stale-auth-key error message this file used to cover moved with
+ * the rest of language loading to `Http\Middleware\LanguageMiddleware`,
+ * earlier in the pipeline -- see `LanguageMiddlewareTest` for that
+ * coverage now.
+ *
+ * Covers 5 branches the real Browser suite's fixture state never
  * naturally exercises together:
- *  - the stale-auth-key error message.
  *  - the mobile-theme CurrentConfig::mobileTheme() override.
  *  - the "first time noPhotoYet() is null" NoPhotoYetRenderer::render()
  *    call site (the fixture's 5 images mean NoPhotoYetRenderer's own
@@ -97,22 +106,6 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         }
         $currentConfig->reset();
         parent::tearDown();
-    }
-
-    public function testFinalizeAddsAStaleAuthKeyErrorMessage(): void
-    {
-        PageStateTestFactory::get()->markAuthKeyInvalid();
-
-        RequestBootstrap::finalize();
-
-        self::assertSame(
-            [LangTestFactory::get()->t('Your authentication key is no longer valid.') . sprintf(
-                ' <a href="%s">%s</a>',
-                UrlServiceTestFactory::build()->getRootUrl() . 'identification.php',
-                LangTestFactory::get()->t('Login')
-            )],
-            PageStateTestFactory::get()->errors
-        );
     }
 
     public function testFinalizeUsesTheMobileThemeWhenTheSessionMobileThemeFlagIsSet(): void
@@ -185,7 +178,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // PageState-side list back to [] in the same method body -- the
         // template var is the only place left to observe it afterwards.
         self::assertSame(
-            [LangTestFactory::get()->t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
+            [LangTestFactory::get()->t('Bad status for user "guest", using default status. Please notify the webmaster.')],
             CurrentTemplateTestFactory::get()->get()->getTemplateVars('header_msgs')
         );
     }

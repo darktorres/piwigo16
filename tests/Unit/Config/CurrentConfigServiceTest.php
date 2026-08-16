@@ -39,7 +39,7 @@ test('get throws when no ConfigService has ever been set', function (): void {
         ->toBeFalse();
 
     $currentConfigService->get();
-})->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
+})->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Http\Middleware\ConfigBootstrapMiddleware::process()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
 
 test('set publishes a ConfigService instance that get returns and isSet reports true', function (): void {
     $currentConfigService = new CurrentConfigService();

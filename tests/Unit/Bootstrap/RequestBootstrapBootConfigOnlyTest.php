@@ -227,7 +227,7 @@ test('CurrentConfigService::get throws when nothing has ever been set', function
     expect(CurrentConfigServiceTestFactory::get()->isSet())->toBeFalse();
 
     CurrentConfigServiceTestFactory::get()->get();
-})->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
+})->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Http\Middleware\ConfigBootstrapMiddleware::process()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
 
 test('bootConfigOnly throws when the container returns an unexpected type for ConfigService', function (): void {
     // CurrentConfigServiceTestFactory::get()->isSet() is false (reset in beforeEach above), so

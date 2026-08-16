@@ -694,7 +694,7 @@ final class InstallWizard
             // install step and is assigned nowhere in the whole codebase,
             // so the isset() was always false and the guard was dropped.
 
-            // See Piwigo\Bootstrap\SessionBootstrap (kept inline here: at
+            // See Piwigo\Http\SessionBootstrap (kept inline here: at
             // this point of the install InstallationFlag was only just
             // marked active and this block ran unconditionally in the
             // original, without SessionBootstrap::register()'s

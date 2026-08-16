@@ -17,20 +17,20 @@ use LogicException;
  * Holds the current request's loaded-plugins map.
  *
  * This is a container-shared instance: the writer
- * (`Bootstrap\RequestBootstrap::connect()`, P27.4 -- populated from
+ * (`Admin\LoadedPluginsMiddleware`, P27.4 -- populated from
  * `PluginConfig\PluginRegistry::getActiveIds()`/`getManifest()` after
- * `bootActive()` runs, replacing `Admin\PluginLoader::loadPlugins()`'s
- * former direct writes) receives this instance via the same
- * container-shared resolution every other `RequestBootstrap` accessor
- * uses. All 3 real readers (`BatchManagerUnitPageRenderer`,
- * `IntroSubController`, `PluginSubController`) receive it via constructor
- * injection.
+ * `Http\Middleware\PluginBootstrapMiddleware`'s own `bootActive()` call
+ * runs earlier in the same pipeline, replacing `Admin\PluginLoader::
+ * loadPlugins()`'s former direct writes) receives this instance via the
+ * same container-shared resolution every other real consumer uses. All 3
+ * real readers (`BatchManagerUnitPageRenderer`, `IntroSubController`,
+ * `PluginSubController`) receive it via constructor injection.
  */
 final class LoadedPlugins
 {
     /**
      * Element shape matches `Projection\Plugin::toArray()`'s shape --
-     * `RequestBootstrap::connect()`'s own real writer builds each entry
+     * `Admin\LoadedPluginsMiddleware`'s own real writer builds each entry
      * that way, one per `PluginRegistry::getActiveIds()` entry.
      *
      * @var array<string, array{id: string, state: string, version: string}>|null
@@ -43,7 +43,7 @@ final class LoadedPlugins
     public function get(): array
     {
         if ($this->plugins === null) {
-            throw new LogicException('LoadedPlugins not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() first.');
+            throw new LogicException('LoadedPlugins not initialised -- call Piwigo\Admin\LoadedPluginsMiddleware::process() first.');
         }
 
         return $this->plugins;

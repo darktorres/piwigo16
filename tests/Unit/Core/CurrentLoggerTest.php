@@ -26,7 +26,7 @@ test('get throws when no Logger has been set yet', function (): void {
     expect(fn (): Logger => $currentLogger->get())
         ->toThrow(
             LogicException::class,
-            'CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.',
+            'CurrentLogger not initialised -- call Piwigo\Http\Middleware\ConfigBootstrapMiddleware::process() or Piwigo\Controller\ImageDerivativeController::__invoke() first.',
         );
 });
 

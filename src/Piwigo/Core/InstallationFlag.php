@@ -14,23 +14,21 @@ namespace Piwigo\Core;
  * A container-shared instance. `RequestBootstrap` (the normal request
  * path's writer) and `public/install.php` (the install path's writer, via
  * `RequestBootstrap::installationFlag()`) both call `mark()` through this
- * same accessor. `Piwigo\Core\Lang` and `Piwigo\Users\UserService`
- * constructor-resolve it from the container to read `isActive()`.
- * `Piwigo\Bootstrap\SessionBootstrap`, a genuinely static-only class,
- * resolves it via a private container-resolving `installationFlag()`
- * helper instead.
+ * same accessor. `Piwigo\Core\Lang`, `Piwigo\Users\UserService` and
+ * `Piwigo\Http\SessionBootstrap` all constructor-inject it directly to
+ * read `isActive()`.
  */
 final class InstallationFlag
 {
     private bool $marked = false;
 
     /**
-     * Called once from RequestBootstrap::bootEntryPoint(), between
-     * configure() and connect() -- the same point the former
-     * `defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);`
-     * guard sat in the now-deleted include/common.inc.php seam file. Also
-     * called from public/install.php, right before performInstall(), the
-     * same point that file's own former raw define() sat.
+     * Called once from RequestBootstrap::bootEntryPoint(), right after
+     * configure() -- the same point the former `defined('PHPWG_INSTALLED')
+     * or define('PHPWG_INSTALLED', true);` guard sat in the now-deleted
+     * include/common.inc.php seam file. Also called from
+     * public/install.php, right before performInstall(), the same point
+     * that file's own former raw define() sat.
      */
     public function mark(): void
     {

@@ -6,45 +6,28 @@ namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use LogicException;
-use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Auth\ApiKeyRepository;
-use Piwigo\Auth\ApiKeyService;
-use Piwigo\Auth\AuthRepository;
-use Piwigo\Auth\AuthService;
-use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Auth\PasswordRepository;
-use Piwigo\Auth\PasswordService;
-use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
-use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
-use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CoverageCollector;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentThemeConfProvider;
@@ -55,7 +38,6 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Logger;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
@@ -65,26 +47,20 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\VersionHelper;
 use Piwigo\Core\WsContext;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\Init;
-use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Filter\FilterService;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
-use Piwigo\Image\ImageStdParams;
-use Piwigo\Image\LoungeMaintenance;
 use Piwigo\Lang\Translator;
-use Piwigo\Listener\AuthListener;
 use Piwigo\Listener\CommentSpamListener;
 use Piwigo\Listener\HtmlRenderingListener;
 use Piwigo\Listener\ListenerInterface;
@@ -92,17 +68,11 @@ use Piwigo\Listener\SiteCleanupListener;
 use Piwigo\Listener\UploadFormatListener;
 use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
-use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
-use Piwigo\PluginConfig\PluginEntity;
-use Piwigo\PluginConfig\PluginManifest;
-use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionService;
@@ -119,41 +89,61 @@ use Piwigo\Validation\InputValidator;
  * The per-request bootstrap; bootEntryPoint() is the entry point every
  * root `public/*.php` file calls directly.
  *
- * Boot proceeds in three phases -- configure(), connect(), finalize() --
- * with `InstallationFlag::mark()` called between configure() and
- * connect(). bootConfigOnly() is a separate, lighter, standalone-callable
- * path (config + globals only, no install-check/session/DB-user
- * machinery) that
+ * Boot proceeds in two stages now, not three (workstream C3 Phase 1):
+ * `bootEntryPoint()` itself only runs configure() (Kernel::boot() +
+ * ServerTiming seed + the install-sentinel redirect check) and
+ * `InstallationFlag::mark()`. What used to be connect()'s and finalize()'s
+ * own bodies now run as real PSR-15 middleware
+ * (`Http\Middleware\ConfigBootstrapMiddleware`/`SessionMiddleware`/
+ * `PluginBootstrapMiddleware`/`Admin\LoadedPluginsMiddleware`/
+ * `UserResolutionMiddleware`/`Http\Middleware\LanguageMiddleware`/
+ * `FinalizeBridgeMiddleware`) inside `RequestPipeline::handle()`, called
+ * by every entry point immediately after `bootEntryPoint()` returns.
+ * `finalize()` itself still exists on this class -- its still-legacy,
+ * Template-dependent remainder (gated on Plan 2 P38/P39 for a real
+ * decomposition, workstream C3 Phase 2) is now called by
+ * `FinalizeBridgeMiddleware`, not by `bootEntryPoint()` directly.
+ * bootConfigOnly() is a separate, lighter, standalone-callable path
+ * (config + globals only, no install-check/session/DB-user machinery) that
  * `tests/Unit/Bootstrap/RequestBootstrapBootConfigOnlyTest.php` exercises
  * directly. Every reader of the app domain/URL goes through
  * Piwigo\Core\AppInfo::DOMAIN/URL or this class's own pemUrl().
  *
  * configure() calls Kernel::boot($paths) as its own first statement --
- * genuinely load-bearing, not just tidiness, since connect() below
- * performs real work (DB connection, plugin loading, user resolution)
- * that depends on the container already being built.
+ * genuinely load-bearing, not just tidiness, since the middleware chain
+ * above (and finalize(), called from within it) performs real work (DB
+ * connection, plugin loading, user resolution) that depends on the
+ * container already being built.
  */
 final class RequestBootstrap
 {
     /**
      * The real entry point every root `public/*.php` file calls directly.
-     * Captures `$t2`, runs the three phases below with
-     * `InstallationFlag::mark()` slotted between configure() and
-     * connect(), catches `ResponseReadyException` from any bootstrap-phase
-     * short-circuit (install-redirect, the 503 maintenance page) and
-     * emits it directly.
+     * Captures `$t2`, runs configure() with `InstallationFlag::mark()`
+     * right after it, and catches `ResponseReadyException` from
+     * configure()'s own short-circuit (the install-sentinel redirect --
+     * the only bootstrap-phase short-circuit that can fire this early;
+     * the 503 maintenance-mode check now runs later, inside
+     * `Bootstrap\FinalizeBridgeMiddleware`, part of the real PSR-15
+     * pipeline `RequestPipeline::handle()` runs immediately after this
+     * method returns) and emits it directly.
      *
      * `i.php` never calls this method (deliberately); `install.php`/
      * `ready.php` skip straight to their own bespoke bootstrap and never
      * depend on this class -- see each file's own docblock for why.
      *
      * `SentryBootstrap::init()`/`ServerTiming`'s own 'boot' timer (seeded
-     * from `$t2`, captured right here, and stopped at both this method's
-     * own exit points below) bracket this method's entire body, so Sentry
-     * sees any error raised anywhere in this method's own body (the bulk
-     * of real per-request boot work -- DB connect, config load, plugin
-     * load, user resolution), and the 'boot' Server-Timing entry reflects
-     * that real work.
+     * from `$t2`, captured right here) still brackets the *whole*
+     * bootstrap-phase sequence end-to-end, same as before workstream C3
+     * Phase 1 -- but the two halves of that bracket no longer live in one
+     * method: `start('boot', ...)` is still configure()'s own first
+     * statement, while `stop('boot')` moved from this method's own
+     * trailing statement to `Bootstrap\FinalizeBridgeMiddleware`, the last
+     * step of the new bootstrap-phase middleware chain (see its own
+     * docblock). This method's own `catch` block below still calls
+     * `stop('boot')` directly, since a short-circuit here means the
+     * middleware chain -- and therefore `FinalizeBridgeMiddleware` -- never
+     * runs at all for this request.
      *
      * `$mountDepth`/`$isWs`/`$isAdmin` -- the pre-`Kernel::boot()` marker
      * trio (RequestMountDepth/WsContext/AdminContext) is threaded through
@@ -182,16 +172,12 @@ final class RequestBootstrap
         try {
             self::configure($paths, $t2, $mountDepth, $isWs, $isAdmin);
             self::installationFlag()->mark();
-            self::connect();
-            self::finalize();
         } catch (ResponseReadyException $e) {
             self::serverTiming()->stop('boot');
             new ResponseEmitter()
                 ->emit($e->response());
             exit;
         }
-
-        self::serverTiming()->stop('boot');
     }
 
     /**
@@ -291,192 +277,6 @@ final class RequestBootstrap
     }
 
     /**
-     * Error collector installation, session bootstrap, DB connection,
-     * DB-backed config, logger, plugin loading, and current-user
-     * resolution (through UserBootstrap::initialize()).
-     */
-    public static function connect(): void
-    {
-        // Route errors to DevTools (X-PHP-Error-N response headers) instead
-        // of inline output, which corrupts JSON/XML/binary responses -- and
-        // is also load-bearing for HtmlService::fatalError()'s own
-        // recordFatal()+throw sequence (see
-        // ErrorCollector::installIfConfigured()'s own docblock).
-        self::errorCollector()->installIfConfigured();
-
-        if (self::currentConfig()->sessionGcProbability > 0) {
-            @ini_set('session.gc_divisor', 100);
-            $gc_probability = self::currentConfig()->sessionGcProbability;
-            @ini_set('session.gc_probability', min($gc_probability, 100));
-        }
-
-        SessionBootstrap::register();
-
-        self::pageState()->executionUuid = self::sessionService()->generateKey(10);
-
-        // Database connection. DbConnection::build() itself deliberately
-        // never touches the session-level ONLY_FULL_GROUP_BY server mode.
-        // Built eagerly (not left to DBAL's own lazy first-query connect)
-        // so an unreachable DB surfaces here as a friendly fatalError()
-        // page, not a raw exception from whatever call happens to run
-        // first. Shared for every repository/service constructed for the
-        // rest of this method -- DbConnection::build() returns a fresh
-        // Connection on every call (no internal caching), so reusing this
-        // one avoids opening a separate physical DB connection per
-        // repository.
-        $conn = DbConnection::build();
-        $db_password = self::dbCredentials()->password;
-        try {
-            $conn->getNativeConnection();
-        } catch (Exception $e) {
-            self::htmlService()
-                ->fatalError(self::lang()->t($e->getMessage()));
-        }
-
-        // ConfigService::loadConfFromDb() writes CurrentConfig's own
-        // properties directly. CurrentConfigService::set() here makes
-        // this resolved instance reachable via CurrentConfigService::get()
-        // for the rest of this request (finalize() below, and every
-        // Tier 2 static-utility caller) -- see its own docblock.
-        $configService = Kernel::container()->get(ConfigService::class);
-        if (! $configService instanceof ConfigService) {
-            throw new LogicException('Container returned an unexpected type for ' . ConfigService::class);
-        }
-        self::currentConfigService()->set($configService);
-        $configService->loadConfFromDb();
-
-        $log_data_location = self::currentConfig()->dataLocation;
-        $log_dir = self::currentConfig()->logDir;
-
-        self::currentLogger()->set(new Logger([
-            'directory' => self::paths()->root . $log_data_location . $log_dir,
-            'severity' => self::currentConfig()->logLevel,
-            // we use an hashed filename to prevent direct file access, and we salt with
-            // the db_password instead of secret_key because the log must be usable in i.php
-            // (secret_key is in the database)
-            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
-            'globPattern' => 'log_*.txt',
-            'archiveDays' => self::currentConfig()->logArchiveDays,
-        ]));
-
-        self::imageStdParams();
-
-        session_start();
-        $pluginRegistry = self::pluginRegistry($conn);
-        $pluginRegistry->bootActive();
-        self::currentPluginRegistry()->set($pluginRegistry);
-
-        // Repopulates Admin\LoadedPlugins from the registry's own already-
-        // scanned manifests -- Admin\PluginLoader::loadPlugins() used to
-        // own this directly; PluginRegistry (P27.3, PluginConfig\, L3
-        // Presentation) can't take Admin\LoadedPlugins (Admin\,
-        // L4Integration) as a constructor param itself without an L3->L4
-        // deptrac violation, so this glue stays here. Guarded on the same
-        // enablePlugins flag bootActive() itself checks -- found live via
-        // a real Integration test: getActiveIds() is a plain DB query
-        // with no such guard of its own, so without this check here too,
-        // a disabled-plugins request would still report every active
-        // plugin as "loaded" despite bootActive() never having
-        // constructed or booted a single instance.
-        self::loadedPlugins()->set([]);
-        if (self::currentConfig()->enablePlugins) {
-            foreach ($pluginRegistry->getActiveIds() as $activePluginId) {
-                $manifest = $pluginRegistry->getManifest($activePluginId);
-                if (! $manifest instanceof PluginManifest) {
-                    continue;
-                }
-                self::loadedPlugins()->add($activePluginId, [
-                    'id' => $activePluginId,
-                    'state' => 'active',
-                    'version' => $manifest->version,
-                ]);
-            }
-        }
-
-        if (self::currentConfig()->piwigoInstalledVersion === null) {
-            $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
-        } elseif (self::currentConfig()->piwigoInstalledVersion !== AppInfo::VERSION) {
-            // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-            self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
-                'from_version' => self::currentConfig()->piwigoInstalledVersion,
-                'to_version' => AppInfo::VERSION,
-            ]);
-            $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
-        }
-
-        // Check if last major update conf is set if not set it
-        if (self::currentConfig()->lastMajorUpdate === null) {
-            $dbnow = Env::now()->format('Y-m-d H:i:s');
-            $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
-        }
-
-        // users can have defined a custom order pattern, incompatible with GUI form.
-        // order_by_custom/order_by_inside_category_custom are raw "ORDER BY ..."
-        // SQL-fragment strings, same shape as order_by/order_by_inside_category
-        // themselves (not the structured {field,dir}[] shape the old SCHEMA
-        // entry implied) -- CurrentConfig::orderByCustom()/
-        // orderByInsideCategoryCustom() are real typed (nullable) accessors now.
-        $orderByCustom = self::currentConfig()->orderByCustom;
-        if ($orderByCustom !== null) {
-            self::currentConfig()->orderBy = $orderByCustom;
-        }
-        $orderByInsideCategoryCustom = self::currentConfig()->orderByInsideCategoryCustom;
-        if ($orderByInsideCategoryCustom !== null) {
-            self::currentConfig()->orderByInsideCategory = $orderByInsideCategoryCustom;
-        }
-
-        if (LoungeMaintenance::needsEmptying(self::currentConfig(), self::entityManager())) {
-            new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::activityService($conn), self::sessionService(), self::eventDispatcher(), self::currentConfig(), self::paths(), self::categoryService($conn))
-                ->emptyLounge();
-        }
-
-        // UserBootstrap::initialize() resolves the real per-request user
-        // (build_user()/AuthService::autoLogin()/auth_key_login()) and
-        // calls CurrentUser::set() itself.
-        //
-        // The TryLogUser handler is registered here, immediately before
-        // UserBootstrap::initialize(), rather than in finalize() where
-        // every other real caller's handler is registered: initialize()
-        // reaches AuthService::tryLogUser() directly on its own
-        // pwg.images.uploadAsync username/password credential path (see
-        // that method's own docblock), before finalize() ever runs.
-        // EventDispatcher::dispatchChange() with no matching handler
-        // returns the event object unchanged, so TryLogUser's own
-        // constructor-set $success (false) stays false; that credential
-        // path needs the handler registered this early; every other real
-        // caller of tryLogUser() (the normal pwg.session.login WS
-        // dispatch, which runs during RequestPipeline::handle() -- after
-        // bootEntryPoint() has fully returned) is unaffected by this
-        // ordering.
-        self::registerListener(new AuthListener(new AuthService(
-            new AuthRepository(EntityManagerFactory::build($conn)),
-            self::activityService($conn),
-            self::htmlService(),
-            self::passwordService($conn),
-            new CookieService(),
-            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
-            self::sessionService(),
-            self::eventDispatcher(),
-            self::pageState(),
-            self::currentUser(),
-            self::currentConfig(),
-            self::paths(),
-            EntityManagerFactory::build($conn),
-            new ConnectedWithSession(),
-        )));
-        new UserBootstrap(
-            self::accessLevelChecker(),
-            new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()),
-            self::urlService(),
-            self::apiKeyRequestFlag(),
-            self::currentLogger(),
-            self::wsContext(),
-            self::deploymentPolicy(),
-            new ConnectedWithSession(),
-        )->initialize();
-    }
-
-    /**
      * The PEM (piwigo extension market) base URL -- cheap and
      * side-effect-free (a Config read plus a string concat), so
      * recomputing at each read site is simpler than a per-request cache
@@ -516,96 +316,27 @@ final class RequestBootstrap
     }
 
     /**
-     * Language loading, auth-key messages, template creation,
-     * no-photo-yet, maintenance/upgrade notices, request filter, and the
-     * default event-handler registrations.
+     * Template creation, no-photo-yet, maintenance/upgrade notices, request
+     * filter, and the default event-handler registrations -- the
+     * Template-dependent remainder `Bootstrap\FinalizeBridgeMiddleware`
+     * calls (workstream C3 Phase 1). Language loading and auth-key/
+     * api-key-expiration messages, formerly this method's own first half,
+     * now run earlier in the same pipeline as `Http\Middleware\
+     * LanguageMiddleware` -- see that class's own docblock.
      */
     public static function finalize(): void
     {
         // Shared for every repository/service constructed for the rest of
         // this method -- same "one Connection per method, not per
-        // repository" reasoning as connect() above.
+        // repository" reasoning `Http\Middleware\ConfigBootstrapMiddleware`/
+        // `Http\Middleware\PluginBootstrapMiddleware`/`Http\Middleware\
+        // LanguageMiddleware` each keep independently, now that the rest of
+        // this method's former body runs as real middleware ahead of this
+        // one (workstream C3 Phase 1) -- see `Bootstrap\
+        // FinalizeBridgeMiddleware`, which calls this method as the last
+        // step of that same chain, right before routing.
         $conn = DbConnection::build();
-
-        // language files
-        self::lang()->setDefaultLanguageProvider(new UserService(
-            self::lang(),
-            new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-            self::activityService($conn),
-            self::htmlService(),
-            self::sessionService(),
-            self::eventDispatcher(),
-            self::deploymentPolicy(),
-            self::currentUser(),
-            self::currentConfig(),
-            self::installationFlag(),
-            self::processCache(),
-            self::paths(),
-            EntityManagerFactory::build($conn),
-            self::permissionService($conn),
-            self::categoryService($conn),
-            self::passwordService($conn),
-        ));
-        self::lang()->load('common.lang');
-        if (self::accessLevelChecker()->isAdmin() || self::adminContext()->isActive()) {
-            self::lang()->load('admin.lang');
-            // Add language for temporary strings for new popup, from piwigo 15
-            self::lang()->load('whats_new_' . VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
-        }
-        self::eventDispatcher()->dispatchNotify(new LoadingLang());
-        self::lang()->load('lang', self::paths()->siteLocal, [
-            'no_fallback' => true,
-            'local' => true,
-        ]);
-
-        // only now we can set the localized username of the guest user (and not in
-        // UserBootstrap::initialize())
-        if (self::accessLevelChecker()->isAGuest()) {
-            // Second CurrentUser sync point (the first is inside
-            // UserBootstrap::initialize()) -- isAGuest() itself already
-            // reads CurrentUser (synced there with the pre-localization
-            // username), so only the localized-username case needs a
-            // second sync; the non-guest path never mutates CurrentUser
-            // again after initialize()'s own sync.
-            self::currentUser()->set(self::currentUser()->get()->withUsername(Username::from(self::lang()->t('guest'))));
-        }
-
         $pageState = self::pageState();
-
-        // in case an auth key was provided and is no longer valid, we must wait to
-        // be here, with language loaded, to prepare the message
-        if ($pageState->authKeyInvalid) {
-            $pageState->addError(
-                self::lang()->t('Your authentication key is no longer valid.')
-              . sprintf(' <a href="%s">%s</a>', self::urlService()->getRootUrl() . 'identification.php', self::lang()->t('Login'))
-            );
-        }
-
-        // check if we need to notified user about api_key expiration
-        $notify_api_key_expiration = $pageState->notifyApiKeyExpiration;
-        // This account data, though read from CurrentUser, is exactly as
-        // much a "could be malformed/incomplete" boundary as raw input --
-        // a real fixture/legacy account can have an empty email or
-        // username -- so tryFrom() + a graceful skip, not a hard
-        // requirement.
-        $notify_username = $notify_api_key_expiration !== null ? Username::tryFrom(self::currentUser()->get()->username) : null;
-        $notify_email = $notify_api_key_expiration !== null ? Email::tryFrom(self::currentUser()->get()->email) : null;
-        if ($notify_api_key_expiration !== null && $notify_username instanceof Username && $notify_email instanceof Email) {
-            $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
-            $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, self::passwordService($conn), self::urlService(), self::sessionService(), self::currentConfig())
-                ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
-
-            if ($is_mail_send) {
-                $apiKeyRepo->updateLastNotifiedOn(
-                    $notify_api_key_expiration['auth_key'],
-                    self::currentUser()->get()->id->value,
-                    $notify_api_key_expiration['dbnow'],
-                );
-            }
-
-            $pageState->notifyApiKeyExpiration = null;
-        }
 
         // template instance
         if (self::adminContext()->isActive()) {// Admin template
@@ -665,7 +396,11 @@ final class RequestBootstrap
 
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
                 // Throws instead of calling header()+echo+exit() directly
-                // -- caught by bootEntryPoint()'s own try/catch.
+                // -- caught by MiddlewarePipeline::handle() itself
+                // (workstream C3 Phase 0), the same mechanism every other
+                // middleware-thrown ResponseReadyException in this
+                // pipeline goes through now, not a special case local to
+                // this one call site.
                 $body = '<a href="' . self::urlService()->getAbsoluteRootUrl(false) . 'identification.php">' . self::lang()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 throw new ResponseReadyException(ResponseFactory::raw($body, [
@@ -691,7 +426,8 @@ final class RequestBootstrap
 
         // Default event handlers -- extracted into Piwigo\Listener\*
         // classes (P27.0). Must stay after PluginRegistry::bootActive()
-        // (in connect() above, P27.4) so a plugin's own 'upload_file'
+        // (now `Http\Middleware\PluginBootstrapMiddleware`, earlier in the
+        // same pipeline -- P27.4) so a plugin's own 'upload_file'
         // handler (if any) keeps first crack in the trigger_change() chain.
         // The 2 dead 'pwg_image_resize' registrations this block used to
         // carry (UploadImageResize/UploadThumbnailResize -- no function
@@ -720,44 +456,17 @@ final class RequestBootstrap
 
         // CurrentUser's/PageState's own `??=` guards are already
         // satisfied by this point on the real HTTP path
-        // (UserBootstrap::initialize() in connect(), pageState()'s own
-        // resolution in configure()), so both calls are no-ops here in
-        // practice; kept for parity with callers that reach finalize()
-        // without having run those earlier steps. Lang::attachGlobals()
+        // (UserBootstrap::initialize(), now `Bootstrap\
+        // UserResolutionMiddleware`, earlier in the same pipeline;
+        // pageState()'s own resolution in configure()), so both calls are
+        // no-ops here in practice; kept for parity with callers that reach
+        // finalize() without having run those earlier steps. Lang::attachGlobals()
         // is the one with a real ordering requirement -- it snapshots
         // Translator's already-loaded strings, so it must run after this
         // method's own lang()->load() calls above, not before.
         self::currentUser()->attachGlobals();
         self::pageState();
         self::lang()->attachGlobals();
-    }
-
-    /**
-     * Constructed identically at 4 call sites across connect()/finalize()
-     * (each a static method with no shared instance state to inject into)
-     * -- same "inline-construct a one-off dependency behind a named method"
-     * precedent as Tag\TagService::newImageService()/Image\ImageService::
-     * categoryService(), applied here to eliminate the literal duplicated
-     * construction chain rather than to avoid a constructor-param ripple.
-     */
-    private static function activityService(Connection $conn): ActivityService
-    {
-        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
-    }
-
-    private static function passwordService(Connection $conn): PasswordService
-    {
-        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), self::deploymentPolicy());
-    }
-
-    private static function permissionService(Connection $conn): PermissionService
-    {
-        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker());
-    }
-
-    private static function categoryService(Connection $conn): CategoryService
-    {
-        return new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::permissionService($conn), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()));
     }
 
     /**
@@ -852,24 +561,6 @@ final class RequestBootstrap
     }
 
     /**
-     * PluginConfig\PluginRegistry::bootActive() (P27.4) replaces
-     * Admin\PluginLoader::loadPlugins() at the exact same position in
-     * connect() -- reuses the request's own shared Connection for every
-     * repository it needs, same discipline as every other accessor here.
-     */
-    private static function pluginRegistry(Connection $conn): PluginRegistry
-    {
-        return new PluginRegistry(
-            EntityManagerFactory::build($conn)->getRepository(PluginEntity::class),
-            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
-            self::eventDispatcher(),
-            self::extensionContextFactory($conn),
-            self::currentConfig(),
-            self::paths(),
-        );
-    }
-
-    /**
      * PluginConfig\ThemeRegistry::bootCurrent() (P27.4) -- called once
      * per request in finalize(), right after the classic (non-admin)
      * theme is resolved and before Template is constructed.
@@ -900,36 +591,6 @@ final class RequestBootstrap
     }
 
     /**
-     * Resolves the container-shared instance, same reasoning as paths()
-     * above.
-     */
-    private static function dbCredentials(): DbCredentials
-    {
-        $dbCredentials = Kernel::container()->get(DbCredentials::class);
-        if (! $dbCredentials instanceof DbCredentials) {
-            throw new LogicException('Container returned an unexpected type for ' . DbCredentials::class);
-        }
-
-        return $dbCredentials;
-    }
-
-    /**
-     * Resolves the container-shared instance (not `new ApiKeyRequestFlag()`)
-     * so that `UserBootstrap::initialize()`'s `activate()` call is visible
-     * to every other consumer holding the same shared instance -- see that
-     * class's own docblock.
-     */
-    private static function apiKeyRequestFlag(): ApiKeyRequestFlag
-    {
-        $flag = Kernel::container()->get(ApiKeyRequestFlag::class);
-        if (! $flag instanceof ApiKeyRequestFlag) {
-            throw new LogicException('Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
-        }
-
-        return $flag;
-    }
-
-    /**
      * Resolves the container-shared instance (not `new InstallationFlag()`)
      * so that this method's own `mark()` call is visible to every other
      * consumer holding the same shared instance -- see that class's own
@@ -945,40 +606,6 @@ final class RequestBootstrap
         }
 
         return $flag;
-    }
-
-    /**
-     * Resolves the container-shared instance so that connect()'s own
-     * PluginRegistry::getActiveIds()/getManifest()-driven population
-     * (P27.4, replacing Admin\PluginLoader::loadPlugins()'s former writes)
-     * is visible to every other consumer holding the same shared
-     * instance.
-     */
-    private static function loadedPlugins(): LoadedPlugins
-    {
-        $loadedPlugins = Kernel::container()->get(LoadedPlugins::class);
-        if (! $loadedPlugins instanceof LoadedPlugins) {
-            throw new LogicException('Container returned an unexpected type for ' . LoadedPlugins::class);
-        }
-
-        return $loadedPlugins;
-    }
-
-    /**
-     * Resolves the container-shared instance so that connect()'s own
-     * `set($pluginRegistry)` call, right after `bootActive()` runs, makes
-     * that one real, already-booted `PluginRegistry` reachable from
-     * `Controller\Admin\PluginSubController` -- see
-     * `PluginConfig\CurrentPluginRegistry`'s own docblock for why.
-     */
-    private static function currentPluginRegistry(): CurrentPluginRegistry
-    {
-        $currentPluginRegistry = Kernel::container()->get(CurrentPluginRegistry::class);
-        if (! $currentPluginRegistry instanceof CurrentPluginRegistry) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentPluginRegistry::class);
-        }
-
-        return $currentPluginRegistry;
     }
 
     /**
@@ -1030,9 +657,12 @@ final class RequestBootstrap
     /**
      * Resolves the container-shared instance so that this method's own
      * `set()` write is visible to every other consumer holding the same
-     * shared instance.
+     * shared instance. Public (unlike most resolver helpers here):
+     * `public/install.php`'s own `new Http\SessionBootstrap(...)` manual
+     * construction needs this, the same reason several other resolvers in
+     * this class are public.
      */
-    private static function currentLogger(): CurrentLogger
+    public static function currentLogger(): CurrentLogger
     {
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
@@ -1040,23 +670,6 @@ final class RequestBootstrap
         }
 
         return $currentLogger;
-    }
-
-    /**
-     * Resolves the container-shared instance -- its factory binding
-     * (config/container.php) already calls loadFromDb() at construction,
-     * so simply resolving it here (rather than a bare
-     * ImageStdParams::loadFromDb() static call) is enough to preserve
-     * this method's own "called every request, very early" semantics.
-     */
-    private static function imageStdParams(): ImageStdParams
-    {
-        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
-        if (! $imageStdParams instanceof ImageStdParams) {
-            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
-        }
-
-        return $imageStdParams;
     }
 
     /**
@@ -1261,19 +874,6 @@ final class RequestBootstrap
         }
 
         return $serverTiming;
-    }
-
-    /**
-     * Resolves the container-shared, immutable instance.
-     */
-    private static function wsContext(): WsContext
-    {
-        $wsContext = Kernel::container()->get(WsContext::class);
-        if (! $wsContext instanceof WsContext) {
-            throw new LogicException('Container returned an unexpected type for ' . WsContext::class);
-        }
-
-        return $wsContext;
     }
 
     /**

@@ -31,7 +31,9 @@ use LogicException;
  * table may not exist yet on the CLI path), so the two are not the same
  * thing; `Piwigo\Bootstrap\RequestBootstrap::bootConfigOnly()` is the one
  * real consumer of this exact check, reusing an already-`set()` instance
- * instead of re-resolving and reloading.
+ * instead of re-resolving and reloading. The normal request pipeline's own
+ * writer is `Piwigo\Http\Middleware\ConfigBootstrapMiddleware`, not
+ * `RequestBootstrap` directly (workstream C3 Phase 1).
  *
  * `set()`'s real value beyond "who is the current instance" is letting
  * a whole subtree of not-yet-container-booted or test-scoped callers
@@ -48,7 +50,7 @@ final class CurrentConfigService
     public function get(): ConfigService
     {
         if (! $this->configService instanceof ConfigService) {
-            throw new LogicException('CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
+            throw new LogicException('CurrentConfigService not initialised -- call Piwigo\Http\Middleware\ConfigBootstrapMiddleware::process()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
         }
 
         return $this->configService;

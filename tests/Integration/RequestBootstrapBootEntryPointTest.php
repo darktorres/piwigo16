@@ -4,163 +4,94 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use LogicException;
 use Override;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
-use Piwigo\Tests\Support\KernelContainerOverride;
-use stdClass;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 /**
  * Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint() -- the real per-
  * request entry point every root `public/*.php` file calls directly.
- * Never called directly by any Unit/Integration test before this file
- * (only reachable, until now, through a real HTTP request against the
- * live Apache instance) -- its own first statement,
- * Piwigo\Core\CoverageCollector::registerIfActive($paths), is genuinely
- * unreachable that way: CoverageCollector's own pcov instrumentation
- * (used to make the Browser suite's real Apache-process requests
- * measurable at all) only starts *after* that line already ran, so the
- * line that starts it can never appear in its own dump. A plain PHPUnit-
- * process call -- already instrumented by PHPUnit's own coverage driver
- * before this method's first statement even runs -- is the only way to
- * observe it.
  *
- * Reaching a real \LogicException deep inside connect() (the "container
- * returned an unexpected type for ConfigService" guard --
- * RequestBootstrapConnectTest.php doesn't exercise this one directly,
- * since it always calls connect() standalone with a real container)
- * conveniently proves the whole chain -- CoverageCollector,
- * SentryBootstrap::init(), configure() (a real install-sentinel pass,
- * static-setter wiring, Kernel::boot()), InstallationFlag::mark(), and
- * connect() up through its own real DB connect -- actually ran, without
- * needing finalize() (template rendering, language loading, plugin
- * event registration) to also succeed. KernelContainerOverride rebinds
- * just ConfigService::class to a plain stdClass (see its own docblock),
- * the same pattern InstallBootstrapTest/AdminAccessorTest/etc. already
- * use for this exact class of guard.
+ * Workstream C3 Phase 1 shrank this method's own body dramatically: it no
+ * longer runs connect()/finalize() (now real PSR-15 middleware inside
+ * `RequestPipeline::handle()`, called separately by every real entry
+ * point right after this method returns) -- per Plan 3's own D1 decision,
+ * "bootEntryPoint() does not disappear, it shrinks to that one
+ * [configure()] call plus the install-sentinel redirect check [and
+ * InstallationFlag::mark()]." This file replaces the pre-Phase-1
+ * `testBootEntryPointRunsCoverageCollectorAndPropagatesAContainerTypeErrorFromConnect()`,
+ * whose whole premise -- proving bootEntryPoint() reaches a real DB
+ * connect deep inside connect() -- is no longer even possible to
+ * exercise this way: bootEntryPoint() genuinely does not reach
+ * ConfigService at all anymore.
+ *
+ * `CoverageCollector::registerIfActive($paths)`'s own "unreachable via
+ * pcov instrumentation" reasoning (a plain PHPUnit-process call is the
+ * only way to observe it) still applies here, same as the file this
+ * replaces.
  */
 final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
 {
-    private static bool $fixtureReady = false;
-
-    /**
-     * @var array<string, string>
-     */
-    private array $originalDbEnv = [];
-
-    /**
-     * Resolved from the container inside the test's own override callback,
-     * before KernelContainerOverride::with()'s finally calls Kernel::reset()
-     * -- install()'s real set_error_handler() registration is a process-
-     * global side effect that outlives the container/instance that made
-     * it, so tearDown() needs a direct reference to check/undo it, not a
-     * re-resolve from what may by then be a destroyed container (unlike
-     * InstallationFlag below, whose own state has no such global side
-     * effect and is safe to simply let become unreachable garbage).
-     */
-    private ?ErrorCollector $errorCollectorUnderTest = null;
-
-    #[Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->setUpConnectionFromEnv();
-
-        if (! self::$fixtureReady) {
-            $this->resetDatabase();
-            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
-            self::$fixtureReady = true;
-        }
-
-        // This list must include PIWIGO_DB_DRIVER/PIWIGO_DB_PORT -- omitting
-        // either leaks a stale env var into every later Integration test
-        // class in the same process (see InstallWizardTest/InstallServiceTest's
-        // own docblocks for the concrete failure that causes).
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
-            $value = getenv($key);
-            $this->originalDbEnv[$key] = $value === false ? '' : $value;
-        }
-        // Defensive: force a fresh derive from the current (correct)
-        // process env, immune to any bad credential another Integration
-        // test in this shared process seeded and failed to restore.
-        DbCredentialsTestFactory::get()->reload();
-
-        unset($_SERVER['PATH_INFO']);
-    }
-
     #[Override]
     protected function tearDown(): void
     {
-        DbCredentialsTestFactory::get()->seed($this->originalDbEnv);
-
-        // configure() -> connect()'s own ErrorCollector::installIfConfigured()
-        // runs unconditionally before the \LogicException fires -- restore
-        // immediately, same discipline as InstallBootstrapTest's own
-        // docblock/RequestBootstrapConnectTest's tearDown() above. Checked
-        // via the instance captured inside the test's own callback (see
-        // that property's own docblock), not a container re-resolve --
-        // KernelContainerOverride::with()'s finally has typically already
-        // reset the container by the time tearDown() runs.
-        if ($this->errorCollectorUnderTest?->isActive() === true) {
-            restore_error_handler();
-        }
-        $this->errorCollectorUnderTest?->reset();
-        $this->errorCollectorUnderTest = null;
-
-        // Some tests above reach this point via KernelContainerOverride::
-        // with(), which already calls Kernel::reset() internally before
-        // returning -- only resolve+reset InstallationFlag when a
-        // container actually still exists.
+        unset($_SERVER['PATH_INFO']);
         if (Kernel::isBooted()) {
+            $errorCollector = Kernel::container()->get(ErrorCollector::class);
+            if ($errorCollector instanceof ErrorCollector) {
+                if ($errorCollector->isActive()) {
+                    restore_error_handler();
+                }
+                $errorCollector->reset();
+            }
             $installationFlag = Kernel::container()->get(InstallationFlag::class);
             if ($installationFlag instanceof InstallationFlag) {
                 $installationFlag->reset();
             }
         }
-        unset($_SERVER['PATH_INFO']);
+        Kernel::reset();
 
         parent::tearDown();
     }
 
-    public function testBootEntryPointRunsCoverageCollectorAndPropagatesAContainerTypeErrorFromConnect(): void
+    /**
+     * The two real, observable effects of bootEntryPoint()'s own shrunken
+     * body: configure() boots the Kernel against the exact Paths passed
+     * in, and InstallationFlag::mark() runs right after it (proven via
+     * isActive(), the only externally-observable side effect mark() has --
+     * see InstallationFlag's own docblock).
+     */
+    public function testBootEntryPointBootsTheKernelAndMarksTheInstallationFlag(): void
     {
+        Kernel::reset();
         $paths = Paths::fromRoot(dirname(__DIR__, 2));
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . ConfigService::class);
+        RequestBootstrap::bootEntryPoint($paths);
 
-        // KernelContainerOverride::with()'s own finally already guarantees
-        // Kernel::reset() regardless of the exception below, so no
-        // additional cleanup is needed here. Paths::class must be bound
-        // alongside the deliberately-wrong ConfigService::class override --
-        // with() rebuilds the container from scratch with no Paths given by
-        // default, and CurrentPaths is a pure shim with no state of its
-        // own to survive that rebuild; bootEntryPoint()'s own
-        // internal Kernel::boot($paths) call is a genuine no-op here since
-        // booted is already forced true by the override.
-        KernelContainerOverride::with(
-            [
-                ConfigService::class => new stdClass(),
-                Paths::class => $paths,
-            ],
-            function () use ($paths): void {
-                // Captured now, while the override's own container is still
-                // alive, so tearDown() can still check/undo install()'s real
-                // set_error_handler() registration after this callback's
-                // container is gone (see that property's own docblock).
-                $errorCollector = Kernel::container()->get(ErrorCollector::class);
-                if ($errorCollector instanceof ErrorCollector) {
-                    $this->errorCollectorUnderTest = $errorCollector;
-                }
-
-                RequestBootstrap::bootEntryPoint($paths);
-            }
-        );
+        self::assertTrue(Kernel::isBooted());
+        self::assertSame($paths->root, CurrentPathsTestFactory::get()->root);
+        $installationFlag = Kernel::container()->get(InstallationFlag::class);
+        self::assertInstanceOf(InstallationFlag::class, $installationFlag);
+        self::assertTrue($installationFlag->isActive());
     }
+
+    /**
+     * configure()'s own install-sentinel redirect throws
+     * ResponseReadyException, but bootEntryPoint()'s own try/catch around
+     * configure() catches it, emits the response directly, and calls
+     * exit -- terminating the whole PHP process, not returning or
+     * re-throwing. That makes this path genuinely untestable in-process
+     * through bootEntryPoint() itself (confirmed empirically: catching it
+     * here crashes the test runner with "Premature end of PHP process").
+     * RequestBootstrapConfigureTest::
+     * testConfigureRedirectResponseHasA302StatusAndInstallphpLocation()
+     * already covers the exception's own shape by calling configure()
+     * directly, one layer below bootEntryPoint()'s own catch -- the
+     * correct, already-established boundary for this, not duplicated
+     * here.
+     */
 }

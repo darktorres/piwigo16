@@ -12,13 +12,14 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Starts the PHP session (skipping if legacy common.inc.php already
- * started one -- it already registers SessionHandler as the save handler on
- * every real request via Piwigo\Bootstrap\SessionBootstrap::register()),
- * then hydrates/persists a Session VO as a request attribute.
+ * Starts the PHP session (skipping if the bootstrap phase already started
+ * one -- `Http\Middleware\ConfigBootstrapMiddleware`, earlier in this same
+ * pipeline, already registers `SessionHandler` as the save handler via
+ * `Http\SessionBootstrap::register()`), then hydrates/persists a Session VO
+ * as a request attribute.
  *
  * Deliberately does not register a save handler itself -- one may
- * already be registered (see SessionBootstrap::register() above), and
+ * already be registered (see `SessionBootstrap::register()` above), and
  * calling session_set_save_handler() again after a session is already
  * active is a hard PHP error, not just a warning.
  *

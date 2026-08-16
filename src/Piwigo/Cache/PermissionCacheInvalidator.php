@@ -35,8 +35,8 @@ final class PermissionCacheInvalidator
      * false, the plain `new CurrentConfigService()` fallback's own get()
      * throws unconditionally (its `configService` is never `set()`),
      * exactly like the container-resolved instance would if reached
-     * before RequestBootstrap::connect() has run -- no observable
-     * behavior difference either way.
+     * before Http\Middleware\ConfigBootstrapMiddleware has run -- no
+     * observable behavior difference either way.
      */
     private static function currentConfigService(): CurrentConfigService
     {

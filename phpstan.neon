@@ -133,11 +133,6 @@ parameters:
             identifier: dba.syntaxError
             path: tests/Integration/GroupServiceTest.php
         -
-            # Same `::text`-cast-misread-as-placeholder limitation as
-            # WsCategoriesMutationTest.php above.
-            identifier: dba.syntaxError
-            path: tests/Integration/RequestBootstrapConnectTest.php
-        -
             # pg_advisory_unlock()/pg_try_advisory_lock() are Postgres-only
             # functions, validated against whichever one connection
             # phpstan-dba has -- only the branch matching the configured

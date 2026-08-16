@@ -16,12 +16,12 @@ declare(strict_types=1);
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Bootstrap\SessionBootstrap;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Http\SessionBootstrap;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below is a Piwigo\ class, so the autoloader must already be active
@@ -38,7 +38,8 @@ $dbCredentials = InstallBootstrap::dbCredentials();
 
 // SessionBootstrap::register() carries the same internal PHPWG_INSTALLED
 // guard, so it stays a no-op at this point of a fresh install.
-SessionBootstrap::register();
+new SessionBootstrap(RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::currentLogger(), RequestBootstrap::installationFlag())
+    ->register();
 
 $wizard = new InstallWizard(
     RequestBootstrap::lang(),

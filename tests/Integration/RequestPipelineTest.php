@@ -7,8 +7,8 @@ namespace Piwigo\Tests\Integration;
 use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use Override;
-use PHPUnit\Framework\TestCase;
 use Piwigo\Bootstrap\RequestPipeline;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -25,6 +25,19 @@ use Psr\Http\Message\ResponseInterface;
  * the real end-to-end proof for that, driving the actual route through a
  * real browser against the real app.
  *
+ * Extends IntegrationTestCase (workstream C3 Phase 1), not plain TestCase
+ * as this class did pre-Phase-1 -- DEFAULT_MIDDLEWARE's own 7 new
+ * bootstrap-phase middleware (formerly RequestBootstrap::connect()'s/
+ * finalize()'s procedural body, which every real entry point ran
+ * *before* ever calling RequestPipeline::handle()) are now resolved
+ * eagerly, in order, by handle()'s own array_map() -- including
+ * Http\Middleware\ConfigBootstrapMiddleware, which opens a real DB
+ * connection. An unmatched path is genuinely no longer cheap to answer:
+ * it pays for the same real bootstrap work every matched route already
+ * did pre-Phase-1 (just via bootEntryPoint() instead of the pipeline),
+ * so this class needs the same real Paths/DB preconditions
+ * ConfigBootstrapMiddlewareTest itself establishes.
+ *
  * handle()'s own local `$notFound` RequestHandlerInterface (its
  * `->handle()` body returning the literal 'Not Found' 404) is
  * confirmed unreachable through this class's own public API and left
@@ -40,27 +53,56 @@ use Psr\Http\Message\ResponseInterface;
  * DEFAULT_MIDDLEWARE were empty or its terminal entry changed to
  * delegate -- neither of which handle() lets a caller control.
  */
-final class RequestPipelineTest extends TestCase
+final class RequestPipelineTest extends IntegrationTestCase
 {
+    private static bool $fixtureReady = false;
+
+    #[Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+    }
+
     #[Override]
     protected function tearDown(): void
     {
-        Kernel::reset();
+        // ConfigBootstrapMiddleware's own first statement is
+        // ErrorCollector::installIfConfigured() -- every real handle() call
+        // above reaches it, leaving a real set_error_handler() active
+        // unless undone here (same discipline as ConfigBootstrapMiddlewareTest's
+        // own tearDown). Guarded on isBooted(): the third test's own
+        // KernelContainerOverride::withWrongTypeFor() call already resets
+        // the Kernel itself in its own finally block before this runs.
+        if (Kernel::isBooted()) {
+            $errorCollector = Kernel::container()->get(ErrorCollector::class);
+            if ($errorCollector instanceof ErrorCollector) {
+                if ($errorCollector->isActive()) {
+                    restore_error_handler();
+                }
+                $errorCollector->reset();
+            }
+        }
+
+        parent::tearDown();
     }
 
     public function testHandleReturns404ForAnUnmatchedPath(): void
     {
-        Kernel::boot();
-
         $response = RequestPipeline::handle(new ServerRequest('GET', '/anything'));
 
         self::assertSame(404, $response->getStatusCode());
+        self::assertSame('Not Found', (string) $response->getBody());
     }
 
     public function testHandleResponseCarriesBaselineSecurityHeaders(): void
     {
-        Kernel::boot();
-
         $response = RequestPipeline::handle(new ServerRequest('GET', '/anything'));
 
         self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
@@ -73,10 +115,12 @@ final class RequestPipelineTest extends TestCase
             "Container returned an unexpected type for '" . ExceptionHandlerMiddleware::class . "'."
         );
 
-        // Every one of DEFAULT_MIDDLEWARE's 7 entries is resolved eagerly,
+        // Every one of DEFAULT_MIDDLEWARE's entries is resolved eagerly,
         // in order, by the array_map() inside handle() itself -- rebinding
         // the very first one (ExceptionHandlerMiddleware) means no other
-        // real middleware needs to resolve at all before the guard fires.
+        // real middleware needs to resolve at all before the guard fires,
+        // so this test alone still doesn't touch the DB despite this
+        // class's own heavier setUp() now doing so for its siblings above.
         KernelContainerOverride::withWrongTypeFor(
             ExceptionHandlerMiddleware::class,
             static fn (): ResponseInterface => RequestPipeline::handle(new ServerRequest('GET', '/anything'))

@@ -49,10 +49,10 @@ final class WsImagesSearchTest extends ContractTestCase
 
     public function testSearchWithOrderByNameSortsResultsAscending(): void
     {
-        // 'order' non-empty -> ImageSqlOrderBuilder::stdImageSqlOrder() returns a non-''
-        // clause, which flips search()'s own super_order_by branch
-        // (CurrentConfig::setOrderBy() + $super_order_by = true).
-        // ImageSqlOrderBuilder::stdImageSqlOrder()'s own regex expects "field direction"
+        // 'order' non-empty -> OrderBy::fromWsOrderParam() returns a
+        // non-empty OrderBy, which flips search()'s own super_order_by
+        // branch (CurrentConfig::setOrderBy() + $super_order_by = true).
+        // fromWsOrderParam()'s own regex expects "field direction"
         // (space-separated), not "field,direction" -- confirmed live: a
         // comma splits into two independent tokens, and a direction word
         // alone ("ASC"/"DESC") isn't a recognized sortable field, so it's

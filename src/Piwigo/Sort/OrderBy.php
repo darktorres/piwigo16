@@ -124,12 +124,23 @@ final readonly class OrderBy
      * Raw fragments still get the `RAND()` rewrite: PostgreSQL has no such
      * function, and this is the one place that rewrite now lives -- it used
      * to be repeated by every raw-SQL consumer, each of which had to
-     * remember.
+     * remember. A raw fragment missing its own `ORDER BY` keyword (a caller
+     * that stores just the bare field list, e.g. `categories.image_order`)
+     * gets one prepended -- {@see raw()}'s established caller
+     * (`CurrentConfig::$orderByCustom`) always stores it pre-included, but
+     * nothing enforces that for every caller, so this class adds it rather
+     * than silently emitting invalid SQL for the ones that don't.
      */
     public function toSql(?string $tableAlias = null): string
     {
         if ($this->raw !== null) {
-            return str_ireplace('RAND()', SqlDialect::randomFunction(), $this->raw);
+            $sql = str_ireplace('RAND()', SqlDialect::randomFunction(), $this->raw);
+
+            if ($sql === '' || preg_match('/^\s*ORDER BY\b/i', $sql) === 1) {
+                return $sql;
+            }
+
+            return 'ORDER BY ' . $sql;
         }
 
         if ($this->entries === []) {

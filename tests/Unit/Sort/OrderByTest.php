@@ -74,6 +74,31 @@ test('a raw override still gets the RAND() portability rewrite', function (): vo
         ->toBe(SqlDialect::randomFunction());
 });
 
+test('a raw override missing its own ORDER BY keyword gets one prepended', function (): void {
+    // categories.image_order stores a bare field list, unlike
+    // CurrentConfig::$orderByCustom's own always-prefixed convention --
+    // raw() must not silently drop the keyword for callers that don't
+    // already include it.
+    $order = OrderBy::raw('file DESC');
+
+    expect($order->toSql())
+        ->toBe('ORDER BY file DESC');
+});
+
+test('a raw override that already has the ORDER BY keyword is not double-prefixed', function (): void {
+    $order = OrderBy::raw('ORDER BY file DESC');
+
+    expect($order->toSql())
+        ->toBe('ORDER BY file DESC');
+});
+
+test('an empty raw override renders as no ordering, not a bare ORDER BY keyword', function (): void {
+    $order = OrderBy::raw('');
+
+    expect($order->toSql())
+        ->toBe('');
+});
+
 test('unparseable config text is kept verbatim as a raw override', function (): void {
     $order = OrderBy::fromConfigFragment('ORDER BY some_plugin_column ASC NULLS LAST');
 

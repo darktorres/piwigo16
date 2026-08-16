@@ -8,36 +8,21 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
 
 /**
- * Typed replacement for {@see \Piwigo\Ws\ImageSqlOrderBuilder::stdImageSqlOrder()}'s
- * own regex+switch-based per-token sort-field parser -- the WS `order`
- * param's 8 real sortable tokens, each optionally suffixed
- * `asc`/`desc`(`ending`), comma-chained.
- *
- * Deliberately scoped to `stdImageSqlOrder()`'s own replacement, not
- * `CurrentConfig::orderBy()`/`orderByInsideCategory()`'s own stored value
- * or any of their real readers ({@see \Piwigo\Category\CategoryRepository::
- * findImageIdsForCategories()} and similar). A prior attempt to give
- * `CurrentConfig::orderBy()`'s stored value a structured `{field,dir}[]`
- * type was reverted because it modeled nothing any real code ever wrote:
- * every real writer (`Controller\Admin\ConfigurationSubController`'s save
- * handler) always produces a raw `"ORDER BY field dir, field dir"` SQL
- * fragment string, and every real reader (15 call sites) already treats
- * it as trusted, caller-composed opaque text spliced straight into an
- * ORDER BY clause -- the same "caller composes trusted ORDER BY text"
- * architecture used elsewhere (e.g.
- * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}'s own
- * `$sortByColumn`/`$sortOrder`), not an injection risk needing binding.
- * Forcing those call sites to parse individual tokens they've never needed
- * to parse would be pure unnecessary churn with no functional or security
- * benefit. `ImageSqlOrderBuilder::stdImageSqlOrder()` is different: it's the one real
- * place that already does per-token parsing (the WS `order` param can name
- * more than one field), so it's the one place a typed parser pays for
- * itself.
+ * The typed image sort-field vocabulary underlying {@see OrderBy} --
+ * `fromToken()` backs `OrderBy::fromWsOrderParam()`'s per-token parse of
+ * the WS `order` param (8 real sortable tokens, each optionally suffixed
+ * `asc`/`desc`(`ending`), comma-chained, plus the WS-only `rand`/`random`
+ * and legacy `date_created`/`date_posted` aliases); `fromSortFieldToken()`
+ * backs `OrderBy::fromConfigFragment()`'s parse of a stored `order_by`/
+ * `order_by_inside_category` fragment against
+ * `ConfigurationSubController.php`'s own `$sort_fields` vocabulary. Both
+ * paths converge on this one enum for column names and platform-specific
+ * rendering (`Rank`'s quoting, `Random`'s dialect function) instead of
+ * repeating them per call site -- see `OrderBy`'s own class docblock for
+ * why the structured value replaced the raw-string convention project-wide.
  *
  * `parseOrderByFragment()`/`dqlOrderProperty()` are an opt-in translation
- * used only inside a repository method's own DQL conversion, with
- * `CurrentConfig::orderBy()`'s stored string and every caller's signature
- * left untouched, matching
+ * used only inside a repository method's own DQL conversion, matching
  * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
  * docblock.
  *

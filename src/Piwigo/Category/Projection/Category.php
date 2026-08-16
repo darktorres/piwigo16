@@ -85,7 +85,7 @@ final readonly class Category
             status: $entity->status->value,
             siteId: $entity->siteId,
             visible: $entity->visible,
-            representativePictureId: $entity->representativePictureId,
+            representativePictureId: $entity->representativePictureId?->value,
             uppercats: $entity->uppercats,
             commentable: $entity->commentable,
             globalRank: $entity->globalRank,

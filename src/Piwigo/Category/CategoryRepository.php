@@ -40,6 +40,7 @@ use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -1754,7 +1755,7 @@ final readonly class CategoryRepository
             ->set('c.representativePictureId', ':imageId')
             ->set('c.lastmodified', ':now')
             ->where('c.id = :categoryId')
-            ->setParameter('imageId', $imageId)
+            ->setParameter('imageId', ImageId::from($imageId))
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('categoryId', $categoryId)
             ->getQuery()
@@ -2638,7 +2639,7 @@ final readonly class CategoryRepository
             $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
                 ->where('c.representativePictureId = :imageId')
-                ->setParameter('imageId', $imageId)
+                ->setParameter('imageId', ImageId::from($imageId))
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -2667,7 +2668,7 @@ final readonly class CategoryRepository
             ->set('c.representativePictureId', ':imageId')
             ->set('c.lastmodified', ':now')
             ->where('c.id IN (:categoryIds)')
-            ->setParameter('imageId', $imageId)
+            ->setParameter('imageId', ImageId::from($imageId))
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
             ->getQuery()

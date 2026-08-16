@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Db\HasLastModified;
@@ -32,7 +33,10 @@ use Piwigo\Db\HasLastModified;
  * both during hydration, so every `CategoryRepository` method selecting
  * `c.id`/`c.permalink` that way must unwrap via `instanceof`;
  * `getSingleColumnResult()` (Gotcha #4, `HYDRATE_SCALAR_COLUMN`) never
- * does, regardless of column.
+ * does, regardless of column. `representative_picture_id` is `ImageId`-typed
+ * the same way (`fk_categories_representative_picture_id`, `ON DELETE SET
+ * NULL`) -- `Category\Projection\Category::$representativePictureId` stays
+ * plain `?int` regardless, unwrapping `->value` in `fromEntity()`.
  *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
@@ -83,8 +87,8 @@ final class CategoryEntity implements HasLastModified
         public ?int $siteId,
         #[ORM\Column(type: 'boolean')]
         public bool $visible,
-        #[ORM\Column(name: 'representative_picture_id', type: 'integer', nullable: true)]
-        public ?int $representativePictureId,
+        #[ORM\Column(name: 'representative_picture_id', type: 'image_id', nullable: true)]
+        public ?ImageId $representativePictureId,
         #[ORM\Column(type: 'string', length: 255)]
         public string $uppercats,
         #[ORM\Column(type: 'boolean')]

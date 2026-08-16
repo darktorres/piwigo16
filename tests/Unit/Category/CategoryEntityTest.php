@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?int, visible: bool, representativePictureId: ?int, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: SqlDateTime}
+ * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?int, visible: bool, representativePictureId: ?ImageId, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?Permalink, lastmodified: SqlDateTime}
  */
 function baseCategoryArgs(): array
 {
@@ -21,7 +22,7 @@ function baseCategoryArgs(): array
         'status' => CategoryStatus::Public,
         'siteId' => 1,
         'visible' => true,
-        'representativePictureId' => 458,
+        'representativePictureId' => ImageId::from(458),
         'uppercats' => '1,12,27',
         'commentable' => false,
         'globalRank' => '000012000027',
@@ -53,7 +54,7 @@ test('constructs with distinct values for every property', function (): void {
         ->and($category->visible)
         ->toBeTrue()
         ->and($category->representativePictureId)
-        ->toBe(458)
+        ->toEqual(ImageId::from(458))
         ->and($category->uppercats)
         ->toBe('1,12,27')
         ->and($category->commentable)

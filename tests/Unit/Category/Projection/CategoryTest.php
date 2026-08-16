@@ -6,6 +6,7 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
@@ -20,7 +21,7 @@ function fullCategoryEntity(): CategoryEntity
         status: CategoryStatus::Private,
         siteId: 1,
         visible: true,
-        representativePictureId: 42,
+        representativePictureId: ImageId::from(42),
         uppercats: '1,3',
         commentable: true,
         globalRank: '1.2',

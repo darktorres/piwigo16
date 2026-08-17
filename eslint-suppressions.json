@@ -221,7 +221,7 @@
   },
   "themes/admin/default/js/plugins_installated.js": {
     "eqeqeq": {
-      "count": 19
+      "count": 15
     },
     "no-const-assign": {
       "count": 1

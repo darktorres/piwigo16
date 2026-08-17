@@ -720,15 +720,12 @@ jQuery().ready(function(){
 {if $CHECK_FOR_UPDATES}
   jQuery.ajax({
     type: 'GET',
-    url: 'ws.php',
+    url: 'api/v1/extensions/updates',
     dataType: 'json',
-    data: { method: 'pwg.extensions.checkUpdates', format: 'json' },
     timeout: 5000,
     success: function (data) {
-      if (data['stat'] != 'ok')
-        return;
-      piwigo_update = data['result']['piwigo_need_update'];
-      ext_update = data['result']['ext_need_update']
+      piwigo_update = data['piwigoNeedUpdate'];
+      ext_update = data['extNeedUpdate']
       if ((piwigo_update || ext_update) && !jQuery(".warnings").is('div'))
         jQuery(".eiw").prepend('<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
       if (piwigo_update)

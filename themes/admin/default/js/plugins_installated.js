@@ -60,26 +60,22 @@ function activatePlugin(id) {
     $("#"+id+" .switch").attr("disabled", true);
 
     $.ajax({
-        type: 'GET',
+        type: 'POST',
         dataType: 'json',
-        url: 'ws.php',
-        data: { method: 'pwg.plugins.performAction', 
-                action: 'activate', 
-                plugin: id, 
-                pwg_token: pwg_token, 
-                format: 'json' },
+        contentType: 'application/json',
+        headers: {'X-CSRF-Token': pwg_token},
+        url: 'api/v1/plugins/' + id + '/actions/perform',
+        data: JSON.stringify({ action: 'activate' }),
         success: function (data) {
-            if (data.stat == 'ok') {
-                let pluginName = id;
-                $("#" + id + " .pluginNotif").stop(false, true);
-                $("#" + id + " .AddPluginSuccess label span:first").html(plugin_added_str);
-                $("#" + id + " .AddPluginSuccess").css("display", "flex");
+            let pluginName = id;
+            $("#" + id + " .pluginNotif").stop(false, true);
+            $("#" + id + " .AddPluginSuccess label span:first").html(plugin_added_str);
+            $("#" + id + " .AddPluginSuccess").css("display", "flex");
 
-                nb_plugin.active += 1;
-                nb_plugin.inactive -= 1;
-                actualizeFilter();
-            }
-        }, 
+            nb_plugin.active += 1;
+            nb_plugin.inactive -= 1;
+            actualizeFilter();
+        },
         error: function (e) {
             console.log(e.responseText);
             $("#" + id + " .pluginNotif").stop(false, true);
@@ -97,26 +93,22 @@ function disactivatePlugin(id) {
     $("#"+id+" .switch").attr("disabled", true);
 
     $.ajax({
-        type: 'GET',
+        type: 'POST',
         dataType: 'json',
-        url: 'ws.php',
-        data: { method: 'pwg.plugins.performAction', 
-                action: 'deactivate', 
-                plugin: id, 
-                pwg_token: pwg_token, 
-                format: 'json' },
+        contentType: 'application/json',
+        headers: {'X-CSRF-Token': pwg_token},
+        url: 'api/v1/plugins/' + id + '/actions/perform',
+        data: JSON.stringify({ action: 'deactivate' }),
         success: function (data) {
-            if (data.stat == 'ok') {
-                let pluginName = id;
-                $("#" + id + " .pluginNotif").stop(false, true);
-                $("#" + id + " .DeactivatePluginSuccess label span:first").html(plugin_deactivated_str);
-                $("#" + id + " .DeactivatePluginSuccess").css("display", "flex");
+            let pluginName = id;
+            $("#" + id + " .pluginNotif").stop(false, true);
+            $("#" + id + " .DeactivatePluginSuccess label span:first").html(plugin_deactivated_str);
+            $("#" + id + " .DeactivatePluginSuccess").css("display", "flex");
 
-                nb_plugin.inactive += 1;
-                nb_plugin.active -= 1;
-                actualizeFilter();
-            }
-        }, 
+            nb_plugin.inactive += 1;
+            nb_plugin.active -= 1;
+            actualizeFilter();
+        },
         error: function (e) {
             console.log(e);
             $("#" + id + " .pluginNotif").stop(false, true);
@@ -135,22 +127,18 @@ function deletePlugin(id, name) {
         title : deleted_plugin_msg.replace("%s",name),
         content: function() {
         return $.ajax({
-                    type: 'GET',
+                    type: 'POST',
                     dataType: 'json',
-                    url: 'ws.php',
-                    data: { method: 'pwg.plugins.performAction', 
-                            action: 'delete', 
-                            plugin: id, 
-                            pwg_token: pwg_token, 
-                            format: 'json' },
+                    contentType: 'application/json',
+                    headers: {'X-CSRF-Token': pwg_token},
+                    url: 'api/v1/plugins/' + id + '/actions/perform',
+                    data: JSON.stringify({ action: 'delete' }),
                     success: function (data) {
-                        if (data.stat === "ok") {
-                            $("#"+id).remove();  
-                            nb_plugin.inactive -=1;
-                            nb_plugin.all -=1;
-                            actualizeFilter();
-                        }
-                    }, 
+                        $("#"+id).remove();
+                        nb_plugin.inactive -=1;
+                        nb_plugin.all -=1;
+                        actualizeFilter();
+                    },
                     error: function (e) {
                         console.log(e);
                         $("#" + id + " .pluginNotif").stop(false, true);
@@ -166,22 +154,18 @@ function deletePlugin(id, name) {
 
 function restorePlugin(id) {
     $.ajax({
-        type: 'GET',
+        type: 'POST',
         dataType: 'json',
-        url: 'ws.php',
-        data: { method: 'pwg.plugins.performAction', 
-                action: 'restore', 
-                plugin: id, 
-                pwg_token: pwg_token, 
-                format: 'json' },
+        contentType: 'application/json',
+        headers: {'X-CSRF-Token': pwg_token},
+        url: 'api/v1/plugins/' + id + '/actions/perform',
+        data: JSON.stringify({ action: 'restore' }),
         success: function (data) {
-            if (data.stat == 'ok') {
-                let pluginName = id;
-                $("#" + id + " .pluginNotif").stop(false, true);
-                $("#" + id + " .RestorePluginSuccess label span:first").html(plugin_restored_str);
-                $("#" + id + " .RestorePluginSuccess").css("display", "flex");
-            }
-        }, 
+            let pluginName = id;
+            $("#" + id + " .pluginNotif").stop(false, true);
+            $("#" + id + " .RestorePluginSuccess label span:first").html(plugin_restored_str);
+            $("#" + id + " .RestorePluginSuccess").css("display", "flex");
+        },
         error: function (e) {
             console.log(e);
             $("#" + id + " .pluginNotif").stop(false, true);
@@ -196,14 +180,12 @@ function restorePlugin(id) {
 
 function uninstallPlugin(id) {
     $.ajax({
-        type: 'GET',
+        type: 'POST',
         dataType: 'json',
-        url: 'ws.php',
-        data: { method: 'pwg.plugins.performAction', 
-                action: 'uninstall', 
-                plugin: id, 
-                pwg_token: pwg_token, 
-                format: 'json' },
+        contentType: 'application/json',
+        headers: {'X-CSRF-Token': pwg_token},
+        url: 'api/v1/plugins/' + id + '/actions/perform',
+        data: JSON.stringify({ action: 'uninstall' }),
         success: function (data) {
             $("#"+id).remove();
             nb_plugin.other -=1;
@@ -421,13 +403,13 @@ $(document).ready(function () {
 
 function set_view_selector(view_type) {
   $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
+    url: "api/v1/session/preferences/plugin-manager-view",
+    type: "PUT",
+    contentType: "application/json",
     dataType: "JSON",
-    data: {
-      param: 'plugin-manager-view',
+    data: JSON.stringify({
       value: view_type,
-    }
+    }),
   })
 }
 
@@ -480,21 +462,18 @@ function actualizeFilter() {
 
 function performPluginDeactivate(id) {
   queuedManager.add({
-    type: "GET",
+    type: "POST",
     dataType: "json",
-    url: "ws.php",
-    data: {
-      method: "pwg.plugins.performAction",
+    contentType: "application/json",
+    headers: {'X-CSRF-Token': pwg_token},
+    url: "api/v1/plugins/" + id + "/actions/perform",
+    data: JSON.stringify({
       action: "deactivate",
-      plugin: id,
-      pwg_token: pwg_token,
-      format: "json",
-    },
+    }),
     success: function (data) {
-      if (data["stat"] == "ok")
-        jQuery("#" + id)
-          .removeClass("active")
-          .addClass("inactive");
+      jQuery("#" + id)
+        .removeClass("active")
+        .addClass("inactive");
       done++;
       if (done == nb_plugins) location.reload();
     },

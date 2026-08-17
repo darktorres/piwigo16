@@ -125,22 +125,29 @@ $(function() {
 
 function getComments(params) {
   $.ajax({
-    url: 'ws.php?format=json&method=pwg.userComments.getList',
+    url: 'api/v1/comments',
     type: 'GET',
     dataType: 'json',
-    data: params,
+    data: {
+      status: params.status,
+      page: params.page,
+      perPage: params.per_page,
+      search: params.search,
+      authorId: params.author_id,
+      minDate: params.f_min_date,
+      maxDate: params.f_max_date,
+      imageId: params.image_id,
+    },
     success: (data) => {
-      if (data.stat === 'ok') {
-        // for debug
-        // console.log(data.result);
-        commentsState = {...data.result};
-        commentsDisplaySummary(data.result.summary);
-        displayComments(data.result.comments);
-        commentsDiplayPagination(data.result.paging);
-        commentsDisplayFilters(data.result.filters);
+      // for debug
+      // console.log(data);
+      commentsState = {...data};
+      commentsDisplaySummary(data.summary);
+      displayComments(data.comments);
+      commentsDiplayPagination(data.paging);
+      commentsDisplayFilters(data.filters);
 
-        delete commentsParams.search;
-      }
+      delete commentsParams.search;
     },
     error: (e) => {
       console.log(e);
@@ -150,7 +157,7 @@ function getComments(params) {
 }
 
 function commentsDisplaySummary(summary) {
-  commentsAll.text(summary.all_comments);
+  commentsAll.text(summary.allComments);
   commentsValidated.text(summary.validated);
   commentsPending.text(summary.pending);
 }
@@ -162,9 +169,9 @@ function displayComments(comments) {
     clone.removeClass('comment-template').addClass('comment');
 
     clone.attr('id', comment.id);
-    clone.find('.comment-img').attr('src', comment.medium_url);
-    const raw_lenght = comment.raw_content.length;
-    const preview = raw_lenght > 50 ? comment.raw_content.substring(0, 50) + '...' : comment.raw_content;
+    clone.find('.comment-img').attr('src', comment.mediumUrl);
+    const raw_lenght = comment.contentRaw.length;
+    const preview = raw_lenght > 50 ? comment.contentRaw.substring(0, 50) + '...' : comment.contentRaw;
     clone.find('.comment-msg').text('"' + preview + '"');
     clone.find('.comment-author-name').text(comment.author);
     clone.find('.comment-datetime').text(comment.date);
@@ -173,10 +180,10 @@ function displayComments(comments) {
     clone.find('.comment-content').data('idx', comment.id);
     clone.find('.comment-hash').text(`#${comment.id}`);
     clone.find('.comment-select-checkbox').val(comment.id);
-    clone.find('.comment-link').attr('href', comment.admin_link);
+    clone.find('.comment-link').attr('href', comment.adminLink);
     const authorIcons = clone.find('.comment-author-icon');
 
-    switch (comment.author_status) {
+    switch (comment.authorStatus) {
       case "guest":
         authorIcons.addClass('icon-user-secret icon-yellow');
         break;
@@ -198,7 +205,7 @@ function displayComments(comments) {
         break;
     }
 
-    if (comment.is_pending) {
+    if (comment.isPending) {
       clone.find('.comment-validate').show();
     } else {
       clone.find('.comment-container').addClass('comment-validated');
@@ -247,14 +254,14 @@ function displayComments(comments) {
 function commentsDiplayPagination(paging) {
   const container = $('.pagination-item-container');
   container.empty();
-  
-  if (paging.total_pages == 0) {
-    const pageNumbers = paging.total_pages + 1;
+
+  if (paging.totalPages == 0) {
+    const pageNumbers = paging.totalPages + 1;
     const page = commentsPaginItems.replace(/%d/g, pageNumbers);
     $(page).addClass('actual').appendTo(container);
 
-  } else if (paging.total_pages <= 2) {
-    Array.from(Array(paging.total_pages + 1)).forEach((_, i) => {
+  } else if (paging.totalPages <= 2) {
+    Array.from(Array(paging.totalPages + 1)).forEach((_, i) => {
       const page = commentsPaginItems.replace(/%d/g, i + 1);
       $(page).appendTo(container);
     });
@@ -262,7 +269,7 @@ function commentsDiplayPagination(paging) {
 
   } else {
     const pageOne = commentsPaginItems.replace(/%d/g, 1);
-    const pageLast = commentsPaginItems.replace(/%d/g, paging.total_pages + 1);
+    const pageLast = commentsPaginItems.replace(/%d/g, paging.totalPages + 1);
     const pageCurrent = commentsPaginItemsCurrent.replace(/%d/g, paging.page + 1);
 
     switch (paging.page) {
@@ -274,14 +281,14 @@ function commentsDiplayPagination(paging) {
         ]);
         break;
 
-      case paging.total_pages:
+      case paging.totalPages:
         container.append([
           pageOne,
           commentsPaginElipsis,
           pageCurrent
         ]);
         break;
-    
+
       default:
         container.append([
           pageOne,
@@ -302,7 +309,7 @@ function commentsDiplayPagination(paging) {
           newPage = newPage + 1;
         }
 
-        if (newPage == -1 || newPage > commentsState.paging.total_pages) {
+        if (newPage == -1 || newPage > commentsState.paging.totalPages) {
           return;
         }
         commentsParams.page = newPage;
@@ -321,13 +328,13 @@ function commentsDiplayPagination(paging) {
 
 function commentsDisplayFilters(filters) {
   if (updateAuthorId) {
-    commentsDisplayAuthors(filters.nb_authors);
+    commentsDisplayAuthors(filters.nbAuthors);
   }
   // reset here to let decide filterAuthor onChange
   updateAuthorId = true;
 
-  const minDate = filters.started_at?.split(' ')[0] ?? '';
-  const maxDate = filters.ended_at?.split(' ')[0] ?? ''
+  const minDate = filters.startedAt?.split(' ')[0] ?? '';
+  const maxDate = filters.endedAt?.split(' ')[0] ?? ''
   filterDateStart.val(minDate).attr({ 'min': minDate, 'max': maxDate });
   filterDateEnd.val(maxDate).attr({ 'max': maxDate, 'min': minDate });
 
@@ -402,16 +409,16 @@ function showModalViewComment(id) {
   modalViewComment.find('.comment-datetime').text(comment.date);
   modalViewComment.find('.comment-author').remove();
   modalViewComment.find('.comments-modal-infos').prepend(item.find('.comment-author').clone());
-  modalViewComment.find('.comments-modal-img').attr('src', comment.medium_url);
+  modalViewComment.find('.comments-modal-img').attr('src', comment.mediumUrl);
   modalViewComment.find('.comments-modal-img-i').empty()
   .append(`
     <p class="comments-modal-filename">${comment.file}</p>
-    <p class="icon-calendar">${comment.image_date_available}</p>
+    <p class="icon-calendar">${comment.imageDateAvailable}</p>
   `);
   modalViewComment.find('.comments-modal-body').html(comment.content)
-  
+
   const validBtn = modalViewComment.find('.comments-modal-validate');
-  if (comment.is_pending) {
+  if (comment.isPending) {
     validBtn.show();
     $('#commentsModalValidate').off('click').on('click', function() {
       validateComment([id]);
@@ -439,32 +446,25 @@ function validateComment(id) {
   const idLenght = id.length ?? 1;
 
   $.ajax({
-    url: 'ws.php?format=json&method=pwg.userComments.validate',
+    url: 'api/v1/comments/actions/validate',
     type: 'POST',
-    dataType: 'json',
-    data: {
-      comment_id: id,
-      pwg_token: pwg_token
+    contentType: 'application/json',
+    headers: {
+      'X-CSRF-Token': pwg_token
     },
+    data: JSON.stringify({
+      commentIds: id
+    }),
+    dataType: 'json',
     success: function (res) {
-      if (res.stat === 'ok') {
-        $.alert({
-          ...{
-            title: idLenght > 1 ? str_comments_validated : str_comment_validated,
-            content: "",
-          },
-          ...jConfirm_alert_options
-        });
-        getComments(commentsParams);
-        return;
-      }
       $.alert({
         ...{
-          title: str_an_error_has,
+          title: idLenght > 1 ? str_comments_validated : str_comment_validated,
           content: "",
         },
-        ...jConfirm_warning_options
+        ...jConfirm_alert_options
       });
+      getComments(commentsParams);
     },
     error: function (e) {
       console.log(e)
@@ -501,17 +501,18 @@ function deleteComment(id) {
         btnClass: 'btn-red',
         action: function () {
           $.ajax({
-            url: 'ws.php?format=json&method=pwg.userComments.delete',
+            url: 'api/v1/comments/actions/delete',
             type: 'POST',
-            dataType: 'json',
-            data: {
-              comment_id: id,
-              pwg_token
+            contentType: 'application/json',
+            headers: {
+              'X-CSRF-Token': pwg_token
             },
+            data: JSON.stringify({
+              commentIds: id
+            }),
+            dataType: 'json',
             success: function(res) {
-              if (res.stat === 'ok') {
-                getComments(commentsParams);
-              }
+              getComments(commentsParams);
             },
             error: function(e) {
               console.log(e)

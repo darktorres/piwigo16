@@ -62,13 +62,13 @@ $(function () {
   // Upload logics
   $(".dont-show-again").on("click", function () {
     $.ajax({
-      url: "ws.php?format=json&method=pwg.users.preferences.set",
-      type: "POST",
+      url: "api/v1/session/preferences/promote-mobile-apps",
+      type: "PUT",
+      contentType: "application/json",
       dataType: "JSON",
-      data: {
-        param: 'promote-mobile-apps',
-        value: false,
-      },
+      data: JSON.stringify({
+        value: "false",
+      }),
       success: function (res) {
         jQuery(".promote-apps").hide();
       }
@@ -198,14 +198,14 @@ $(function () {
             const images_search = await new Promise((res, rej) => {
               //ajax qui renvois les id des images dans la gallerie.
               $.ajax({
-                url: "ws.php?format=json&method=pwg.images.formats.searchImage",
+                url: "api/v1/images/formats/actions/search",
                 type: "POST",
-                data: {
-                  filename_list: JSON.stringify(fileNames),
-                },
-                success: function (result) {
-                  let data = JSON.parse(result);
-                  res(data.result)
+                contentType: "application/json",
+                data: JSON.stringify({
+                  filenames: fileNames,
+                }),
+                success: function (data) {
+                  res(data.results)
                 }
               })
             })
@@ -216,14 +216,14 @@ $(function () {
             files.forEach((f) => {
               const search = images_search[f.id];
               if (search.status == "found"){
-                f.format_of = search.image_id;
+                f.format_of = String(search.imageId);
                 formats.push([f.id,f.format_of]);
                 $("#"+f.id+" > .plupload_file_name").append(`
                 <a target=\"_blank\" href=\"admin.php?page=photo-${f.format_of.trim()}-properties\">
                   <span class=\"icon-eye\">
                   </span>
                 </a>`);
-                if (search.format_exist)
+                if (search.formatExists)
                 {
                   $("#"+f.id+" > .plupload_file_name").after(`
                   <a target=\"_blank\" href=\"admin.php?page=photo-${f.format_of.trim()}-formats\">
@@ -434,13 +434,13 @@ $(function () {
 
         if (!formatMode) {
           $.ajax({
-            url: "ws.php?format=json&method=pwg.images.uploadCompleted",
+            url: "api/v1/uploads/actions/complete-batch",
             type: "POST",
-            data: {
-              pwg_token: pwg_token,
-              image_id: uploadedPhotos.join(","),
-              category_id: uploadCategory.id,
-            }
+            contentType: "application/json",
+            headers: {'X-CSRF-Token': pwg_token},
+            data: JSON.stringify({
+              categoryId: Number(uploadCategory.id),
+            })
           });
         }
 

@@ -163,8 +163,8 @@ function progress(success) {
 }
 
 function getDerivativeUrls() {
-	var ids = derivatives.elements.splice(0, 500);
-	var params = {max_urls: 100000, ids: ids, types: []};
+	var ids = derivatives.elements.splice(0, 500).map(Number);
+	var params = {maxUrls: 100000, ids: ids, types: []};
 	jQuery("#action_generate_derivatives input").each( function(i, t) {
 		if ($(t).is(":checked"))
 			params.types.push( t.value );
@@ -177,20 +177,19 @@ function getDerivativeUrls() {
   progress_start();
 	jQuery.ajax( {
 		type: "POST",
-		url: 'ws.php?format=json&method=pwg.getMissingDerivatives',
-		data: params,
+		url: 'api/v1/images/actions/missing-derivatives',
+		contentType: "application/json",
+		headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
+		data: JSON.stringify(params),
 		dataType: "json",
 		success: function(data) {
-			if (!data.stat || data.stat != "ok") {
-				return;
-			}
-      derivatives.total += data.result.urls.length;
+      derivatives.total += data.urls.length;
       jQuery('#regenerationStatus .badge-number').html(derivatives.done.toString() + "/" + derivatives.total.toString());
 			progress();
-			for (var i=0; i < data.result.urls.length; i++) {
+			for (var i=0; i < data.urls.length; i++) {
 				jQuery.manageAjax.add("queued", {
 					type: 'GET',
-					url: data.result.urls[i] + "&ajaxload=true",
+					url: data.urls[i] + "&ajaxload=true",
 					dataType: 'json',
 					success: ( function(data) {
             derivatives.done++;
@@ -370,18 +369,17 @@ jQuery('#applyAction').click(function(e) {
       var thisBatchSize = ids.length;
       queuedManager.add({
         type: 'POST',
-        url: 'ws.php?format=json',
-        data: {
-          method: "pwg.images.delete",
-          pwg_token: jQuery("input[name=pwg_token]").val(),
-          image_id: ids.join(',')
-        },
+        url: 'api/v1/images/actions/delete',
+        contentType: 'application/json',
+        headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
+        data: JSON.stringify({
+          imageIds: ids.map(Number)
+        }),
         dataType: 'json',
         success: function(data) {
           todo += thisBatchSize;
-          var isOk = data.stat && "ok" == data.stat;
-          if (isOk && data.result != thisBatchSize);
-            /*TODO: user feedback only data.result images out of thisBatchSize were deleted*/;
+          if (data.deletedCount != thisBatchSize);
+            /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/;
           /*TODO: user feedback if isError*/
           jQuery('#regenerationStatus .badge-number').html(todo.toString() + "/" + progressBar_max.toString());
           progress_bar(todo, progressBar_max, false);
@@ -439,22 +437,23 @@ jQuery('#sync_md5sum').click(function(e) {
 
 function add_md5sum_block(blockSize){
   jQuery.ajax({
-    url: "ws.php?format=json&method=pwg.images.setMd5sum",
+    url: "api/v1/images/actions/set-md5sum",
     type:"POST",
+    contentType: "application/json",
+    headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
     dataType: "json",
-    data: {
-      pwg_token: jQuery("input[name=pwg_token]").val(),
-      block_size: blockSize
-    },
+    data: JSON.stringify({
+      blockSize: blockSize
+    }),
     success:function(data) {
-      jQuery('#md5sum_to_add').html(data.result.nb_no_md5sum);
+      jQuery('#md5sum_to_add').html(data.remainingCount);
 
       var percent_remaining = Number(
-        (data.result.nb_no_md5sum * 100 / jQuery('#md5sum_to_add').data('origin')).toFixed()
+        (data.remainingCount * 100 / jQuery('#md5sum_to_add').data('origin')).toFixed()
       );
       var percent_done = 100 - percent_remaining;
       jQuery('#md5sum_added').html(percent_done);
-      if (data.result.nb_no_md5sum > 0) {
+      if (data.remainingCount > 0) {
         add_md5sum_block();
       }
       else {

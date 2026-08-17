@@ -35,12 +35,13 @@ $('.format-card').each((i, node) => {
 function deleteFormat(card) {
     card.find('.format-delete i').attr("class", "icon-spin6 animate-spin")
     $.ajax({
-        url: "ws.php?format=json&method=pwg.images.formats.delete",
+        url: "api/v1/images/formats/actions/delete",
         type: "POST",
-        data: {
-            pwg_token : pwg_token,
-            format_id: card.data("id"),
-        },
+        contentType: "application/json",
+        headers: {'X-CSRF-Token': pwg_token},
+        data: JSON.stringify({
+            formatIds: [Number(card.data("id"))],
+        }),
         success: function (raw_data) {
             card.fadeOut("slow", () => {
                 card.remove();

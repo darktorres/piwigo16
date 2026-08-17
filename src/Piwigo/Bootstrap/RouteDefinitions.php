@@ -46,9 +46,11 @@ use Piwigo\Controller\Api\Images\ImageFilteredSearchCreateController;
 use Piwigo\Controller\Api\Images\ImageFormatDeleteController;
 use Piwigo\Controller\Api\Images\ImageFormatSearchController;
 use Piwigo\Controller\Api\Images\ImageGetController;
+use Piwigo\Controller\Api\Images\ImageMissingDerivativesController;
 use Piwigo\Controller\Api\Images\ImageRateController;
 use Piwigo\Controller\Api\Images\ImageSearchController;
 use Piwigo\Controller\Api\Images\ImageSetCategoryController;
+use Piwigo\Controller\Api\Images\ImageSetMd5sumController;
 use Piwigo\Controller\Api\Images\ImageSetPrivacyLevelController;
 use Piwigo\Controller\Api\Images\ImageSetRankController;
 use Piwigo\Controller\Api\Images\ImageSyncMetadataController;
@@ -700,6 +702,18 @@ final class RouteDefinitions
 
         $routes->add('api_v1_images_delete_orphans', new Route('/api/v1/images/actions/delete-orphans', defaults: [
             '_controller' => ImageDeleteOrphansController::class,
+        ], methods: ['POST']));
+
+        // pwg.getMissingDerivatives/pwg.images.setMd5sum's real
+        // replacements -- missed from the original admin-consumed tier
+        // pass, found and built while converting batchManagerGlobal.js's
+        // own real callers of both.
+        $routes->add('api_v1_images_missing_derivatives', new Route('/api/v1/images/actions/missing-derivatives', defaults: [
+            '_controller' => ImageMissingDerivativesController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_set_md5sum', new Route('/api/v1/images/actions/set-md5sum', defaults: [
+            '_controller' => ImageSetMd5sumController::class,
         ], methods: ['POST']));
 
         // Uploads -- admin-only readiness/duplicate-detection helpers

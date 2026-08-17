@@ -110,29 +110,25 @@ $(document).ready(function() {
             (function(ids) {
               $.ajax({
                 type: 'POST',
-                url: 'ws.php?format=json',
-                data: {
-                  method: "pwg.images.delete",
-                  pwg_token: jQuery("input[name=pwg_token]").val(),
-                  image_id: ids.join(',')
-                },
+                url: 'api/v1/images/actions/delete',
+                contentType: 'application/json',
+                headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
+                data: JSON.stringify({
+                  imageIds: ids.map(Number)
+                }),
                 dataType: 'json',
                 success: function(data) {
-                  const isOk = data.stat && data.stat === "ok";
-                  if (isOk) {
-                    $fieldset.remove();
-                    $('.pagination-container').css({
-                      'pointer-events': 'none',
-                      'opacity': '0.5'
-                    });
-                    $('.button-reload').css('display', 'block');
-                    $('div[data-image_id="' + pictureId + '"]').css('display', 'flex');
-                  } else {
-                    showErrorLocalBadge(pictureId);
-                  }
+                  $fieldset.remove();
+                  $('.pagination-container').css({
+                    'pointer-events': 'none',
+                    'opacity': '0.5'
+                  });
+                  $('.button-reload').css('display', 'block');
+                  $('div[data-image_id="' + pictureId + '"]').css('display', 'flex');
                 },
                 error: function(data) {
                   console.error("Error occurred");
+                  showErrorLocalBadge(pictureId);
                 }
               });
             })(image_ids);
@@ -359,53 +355,40 @@ async function saveChanges(pictureId) {
     });
     let tagsStr = tags.join(',');
     let ajax_data = {
-      method: 'pwg.images.setInfo',
-      image_id: pictureId,
       name: name,
       author: author,
-      date_creation: date_creation,
+      dateCreation: date_creation,
       comment: comment,
       categories: categoriesStr,
-      // tag_ids: tagsStr,
-      tag_list: tags,
-      level: level,
-      single_value_mode: "replace",
-      multiple_value_mode: "replace",
-      pwg_token: jQuery("input[name=pwg_token]").val()
+      tagIds: tagsStr,
+      level: Number(level),
+      singleValueMode: "replace",
+      multipleValueMode: "replace",
     };
-    
+
     for (let key_index in pluginValues) {
         let pluginValues_selector = pluginValues[key_index].selector;
         let full_selector = $("#picture-" + pictureId + " " + pluginValues_selector);
         let pluginValues_value = full_selector.val();
         ajax_data[pluginValues[key_index].api_key] = pluginValues_value;
-      
+
     }
-    
+
     await $.ajax({
-      url: 'ws.php?format=json',
-      method: 'POST',
+      url: 'api/v1/images/' + pictureId,
+      method: 'PATCH',
+      contentType: 'application/json',
+      headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
       dataType: 'json',
-      data: ajax_data,
+      data: JSON.stringify(ajax_data),
       success: function(data) {
-        const isOk = data.stat && data.stat === 'ok';
-        if (isOk) {
-          enableLocalButton(pictureId);
-          enableGlobalButton();
-          hideUnsavedLocalBadge(pictureId);
-          showSuccessLocalBadge(pictureId);
-          updateSuccessGlobalBadge();
-          // Method 1 for extension's save (see Skeleton extension for more details)
-          pluginSaveLoop(activePlugins, pictureId);
-        }
-        else {
-          console.error("Error: " + data);
-          enableLocalButton(pictureId);
-          enableGlobalButton();
-          hideUnsavedLocalBadge(pictureId);
-          showErrorLocalBadge(pictureId);
-          updateSuccessGlobalBadge();
-      }
+        enableLocalButton(pictureId);
+        enableGlobalButton();
+        hideUnsavedLocalBadge(pictureId);
+        showSuccessLocalBadge(pictureId);
+        updateSuccessGlobalBadge();
+        // Method 1 for extension's save (see Skeleton extension for more details)
+        pluginSaveLoop(activePlugins, pictureId);
       },
       error: function(xhr, status, error) {
         enableLocalButton(pictureId);
@@ -453,33 +436,22 @@ function pluginSaveLoop(activePlugins, pictureId) {
 // UPDATE BLOCKS
 function updateBlock(pictureId) {
   $.ajax({
-    url: 'ws.php?format=json',
+    url: 'api/v1/images/' + pictureId,
     type: 'GET',
     dataType: 'json',
-    data: {
-      method: 'pwg.images.getInfo',
-      image_id: pictureId
-    },
     success: function(response) {
-      if (response.stat === 'ok') {
-        $("#picture-" + pictureId + " #name").val(response.result.name);
-        $("#picture-" + pictureId + " #author").val(response.result.author);
-        $("#picture-" + pictureId + " #date_creation").val(response.result.date_creation); //TODO
-        $("#picture-" + pictureId + " #description").val(response.result.comment);
-        $("#picture-" + pictureId + " #level").val(response.result.level);
-        $("#picture-" + pictureId + " #filename").text(response.result.file);
-        $("#picture-" + pictureId + " #filesize").text(response.result.filesize);
-        $("#picture-" + pictureId + " #dimensions").text(response.result.width + "x" + response.result.height);
-        // updateTags(response.result.tags, pictureId); //Yet to be implemented (TODO)
-        showMetasyncSuccesBadge(pictureId);
-        enableLocalButton(pictureId);
-        enableGlobalButton();
-      } else {
-        console.error("Error:", response.message);
-        showErrorLocalBadge(pictureId);
-        enableLocalButton(pictureId);
-        enableGlobalButton();
-      }
+      $("#picture-" + pictureId + " #name").val(response.name);
+      $("#picture-" + pictureId + " #author").val(response.author);
+      $("#picture-" + pictureId + " #date_creation").val(response.dateCreation); //TODO
+      $("#picture-" + pictureId + " #description").val(response.comment);
+      $("#picture-" + pictureId + " #level").val(response.level);
+      $("#picture-" + pictureId + " #filename").text(response.file);
+      $("#picture-" + pictureId + " #filesize").text(response.filesize);
+      $("#picture-" + pictureId + " #dimensions").text(response.width + "x" + response.height);
+      // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)
+      showMetasyncSuccesBadge(pictureId);
+      enableLocalButton(pictureId);
+      enableGlobalButton();
     },
     error: function(xhr, status, error) {
       console.error("Error:", status, error);

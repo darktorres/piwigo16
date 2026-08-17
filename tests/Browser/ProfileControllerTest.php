@@ -708,7 +708,7 @@ it('previews the guest-default values in the rendered form on reset-to-default, 
  * (a NON-special user, WITH AdminContext active) this block needs --
  * there is no "admin renames another member's account" page wired
  * through this class (Admin\UserListSubController's own username
- * handling goes through the WS API layer, a wholly different code path).
+ * handling goes through `/api/v1/users`, a wholly different code path).
  *
  * Same house style as Integration\Admin\
  * IntroSubControllerGetLatestNewsTest.php's own 3rd test docblock (a

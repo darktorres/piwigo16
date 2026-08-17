@@ -83,7 +83,7 @@ function idcGet(string $path, array $extraHeaders = []): array
 
 /**
  * Uploads a freshly-generated, custom-dimensioned/-colored test photo via
- * the WS API (same login+album+upload+emptyLounge flow as
+ * the real tus API (same login+album+upload+emptyLounge flow as
  * idcCreateTestPhoto() above, factored out for scenarios that need
  * specific pixel dimensions H::makeTestImage()'s fixed 200x150 canvas
  * can't provide -- candidate-derivative reuse math and the rotation

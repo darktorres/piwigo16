@@ -27,7 +27,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces admin/user_list.php (page slug "user_list") -- a flat page,
  * pure delegate. Confirmed via direct read: no write logic of its own
- * (user create/delete/status-change go through the WS API, not this
+ * (user create/delete/status-change go through `/api/v1/users`, not this
  * page); only defines one page-local helper, now
  * UserListPageRenderer::webmasterIdIsLocal().
  */

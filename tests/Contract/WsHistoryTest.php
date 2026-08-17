@@ -1171,8 +1171,8 @@ final class WsHistoryTest extends ContractTestCase
 
             $this->writeFixturePlugin($pluginId, <<<PHP
                 \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
-                    \\Piwigo\\Event\\Ws\\GetHistory::class,
-                    static function (\\Piwigo\\Event\\Ws\\GetHistory \$event): mixed {
+                    \\Piwigo\\Ws\\History\\Event\\GetHistory::class,
+                    static function (\\Piwigo\\Ws\\History\\Event\\GetHistory \$event): mixed {
                         \$fields = \$event->search['fields'] ?? null;
                         \$imageId = is_array(\$fields) ? (\$fields['image_id'] ?? null) : null;
                         if (\$imageId === {$imageId}) {

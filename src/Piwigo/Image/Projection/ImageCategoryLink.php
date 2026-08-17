@@ -13,9 +13,8 @@ namespace Piwigo\Image\Projection;
  * tables.
  *
  * `toArray()` exists for {@see \Piwigo\Image\ImageService::emptyLounge()}'s
- * own WS-response/event-payload boundary (`Ws\Images::emptyLounge()`/
- * `uploadCompleted()`, and the {@see \Piwigo\Event\Album\EmptyLounge} event
- * both expect the original `array{image_id: int, category_id: int}` shape).
+ * own WS-response boundary (`Ws\Images::emptyLounge()`/`uploadCompleted()`
+ * expect the original `array{image_id: int, category_id: int}` shape).
  */
 final readonly class ImageCategoryLink
 {

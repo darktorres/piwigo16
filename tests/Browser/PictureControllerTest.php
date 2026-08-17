@@ -1810,14 +1810,12 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
 
     pictureWriteFixturePlugin($pluginDir, <<<PHP
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-            \\Piwigo\\Event\\User\\UserCommentCheck::class,
-            static function (\\Piwigo\\Event\\User\\UserCommentCheck \$event): \\Piwigo\\Event\\User\\UserCommentCheck {
+            \\Piwigo\\Comment\\Event\\UserCommentCheck::class,
+            static function (\\Piwigo\\Comment\\Event\\UserCommentCheck \$event): void {
                 \$content = is_string(\$event->comm['content'] ?? null) ? \$event->comm['content'] : '';
                 if (str_contains(\$content, '{$marker}')) {
-                    return new \\Piwigo\\Event\\User\\UserCommentCheck('this-is-not-a-real-comment-action', \$event->comm);
+                    \$event->commentAction = 'this-is-not-a-real-comment-action';
                 }
-
-                return \$event;
             }
         );
         PHP);
@@ -2324,8 +2322,8 @@ it('short-circuits the default element-content renderer when an earlier render_e
 
     pictureWriteFixturePlugin($pluginDir, <<<PHP
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
-            \\Piwigo\\Event\\Picture\\RenderElementContent::class,
-            static function (\\Piwigo\\Event\\Picture\\RenderElementContent \$event): \\Piwigo\\Event\\Picture\\RenderElementContent {
+            \\Piwigo\\Controller\\Event\\RenderElementContent::class,
+            static function (\\Piwigo\\Controller\\Event\\RenderElementContent \$event): \\Piwigo\\Controller\\Event\\RenderElementContent {
                 \$id = \$event->currentPicture['id'] ?? null;
                 if (is_numeric(\$id) && (int) \$id === {$imageId}) {
                     \$event->content = '{$marker}';

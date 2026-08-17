@@ -576,8 +576,8 @@ it('proceeds with the original submission when a picture_modify_before_update pl
 
     pictureModifyWriteFixturePlugin($pluginDir, <<<PHP
         \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
-            \\Piwigo\\Event\\Picture\\PictureModifyBeforeUpdate::class,
-            static function (\\Piwigo\\Event\\Picture\\PictureModifyBeforeUpdate \$event): mixed {
+            \\Piwigo\\Admin\\Event\\PictureModifyBeforeUpdate::class,
+            static function (\\Piwigo\\Admin\\Event\\PictureModifyBeforeUpdate \$event): mixed {
                 if (is_string(\$event->data['comment'] ?? null) && str_contains(\$event->data['comment'], '{$marker}')) {
                     return null;
                 }

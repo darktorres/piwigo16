@@ -687,7 +687,9 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
     commentsWriteFixturePlugin($pluginId, <<<'PHP'
     \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
         \Piwigo\Comment\Event\UserCommentCheck::class,
-        static fn (\Piwigo\Comment\Event\UserCommentCheck $event): \Piwigo\Comment\Event\UserCommentCheck => new \Piwigo\Comment\Event\UserCommentCheck('ct_unknown_action', $event->comm)
+        static function (\Piwigo\Comment\Event\UserCommentCheck $event): void {
+            $event->commentAction = 'ct_unknown_action';
+        }
     );
     PHP);
 

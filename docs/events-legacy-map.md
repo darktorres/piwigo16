@@ -6,8 +6,8 @@ class — the reference for anyone porting a plugin's `add_event_handler()`
 call or trying to find where a familiar hook name landed after P32 Stage
 A5's catalogue/rename/co-location pass. See `docs/REFERENCE.md`'s
 "Plugin/theme contract" section for how `subscribedEvents()` and
-`ExtensionContext::dispatchNotify()`/`dispatchChange()` actually work; this
-file is the name lookup, not the mechanism doc.
+`ExtensionContext::dispatch()` actually work; this file is the name
+lookup, not the mechanism doc.
 
 **Kind** is `filter` (the legacy hook's `trigger_change()` — a handler can
 mutate the event's own field(s) and later handlers/the caller see the
@@ -16,6 +16,19 @@ is ever read). No back-compat obligation exists with upstream Piwigo or
 pre-17.x extensions (`AppInfo::VERSION` is the real compatibility gate) —
 this map exists for readability and porting convenience, not a wire
 contract.
+
+**A `filter` handler must mutate the event's own field in place and
+return `void` — it must not `return` a replacement value.** `dispatch()`
+(P32 Stage A2) is the single verb for both kinds and never reads a
+handler's return value, unlike the legacy `trigger_change()`/pre-A2
+`dispatchChange()`, both of which chained each handler's *returned* value
+into the next. A handler written the old way (`return $newValue;` instead
+of `$event->field = $newValue;`) fails **silently** — it runs, throws
+nothing, and simply has no effect — not loudly. This bit several of this
+fork's own tests during A2 (see `we-made-lots-and-recursive-valiant.md`'s
+own A2 entry for the full list); a plugin ported from a pre-17.x hook
+using the old idiom will hit the exact same silent no-op, so check every
+migrated handler mutates its event in place.
 
 ## Current classes
 

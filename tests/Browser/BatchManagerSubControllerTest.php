@@ -1151,8 +1151,8 @@ it('proceeds with an empty filter set when a perform_batch_manager_prefilters ha
 
     bmWriteFixturePlugin($pluginDir, <<<PHP
         \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
-            \\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters::class,
-            static function (\\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters \$event): mixed {
+            \\Piwigo\\Controller\\Admin\\Event\\PerformBatchManagerPrefilters::class,
+            static function (\\Piwigo\\Controller\\Admin\\Event\\PerformBatchManagerPrefilters \$event): mixed {
                 if (\$event->prefilter === '{$marker}') {
                     return 'not-a-perform-batch-manager-prefilters-instance';
                 }
@@ -1199,8 +1199,8 @@ it('proceeds with an empty filter set when a batch_manager_perform_filters handl
 
     bmWriteFixturePlugin($pluginDir, <<<PHP
         \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
-            \\Piwigo\\Event\\Admin\\BatchManagerPerformFilters::class,
-            static function (\\Piwigo\\Event\\Admin\\BatchManagerPerformFilters \$event): mixed {
+            \\Piwigo\\Controller\\Admin\\Event\\BatchManagerPerformFilters::class,
+            static function (\\Piwigo\\Controller\\Admin\\Event\\BatchManagerPerformFilters \$event): mixed {
                 if ((\$event->bulkManagerFilter['prefilter'] ?? null) === '{$marker}') {
                     return 'not-a-batch-manager-perform-filters-instance';
                 }

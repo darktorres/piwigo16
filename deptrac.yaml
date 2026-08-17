@@ -39,12 +39,8 @@ deptrac:
     # Storage/Audit above, so L1Infrastructure is both the lowest layer
     # that covers every real caller and the architecturally correct fit.
     # Its namespace-mate PluginRepository stays in L2bExtendedDomain (see
-    # its own comment there). EventHandler (EventDispatcher's own
-    # handler-registration DTO, constructed only by EventDispatcher
-    # itself) rides along in the same collector -- without it, this
-    # class would have no layer at all and every dependency touching it
-    # would go unchecked. Any future class added to this namespace needs
-    # the same deliberate placement, not a silent gap.
+    # its own comment there). Any future class added to this namespace
+    # needs the same deliberate placement, not a silent gap.
     # Piwigo\Sort\{OrderBy,OrderByClause,PhotoSortField} is the photo
     # sort-order vocabulary and its SQL/DQL rendering. It lives here, not in
     # L2aCoreDomain, because it meets this layer's own criterion exactly:
@@ -61,7 +57,7 @@ deptrac:
         - type: classLike
           value: ^Piwigo\\(Config|Core|Db|Cache|Session|Backup|Lang|Sort|Storage|Audit|Validation)\\.*
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(EventDispatcher|EventHandler)$
+          value: ^Piwigo\\PluginConfig\\EventDispatcher$
     # L2a Core Domain — Piwigo\Group\GroupRepository/GroupService sits at
     # this layer rather than the more natural-looking L2bExtendedDomain:
     # Permission\PermissionRepository/PermissionService (Permission
@@ -120,10 +116,9 @@ deptrac:
     # fetches via the EntityManager), Projection\Plugin
     # (PluginRepository's own read-shape DTO), and PluginState
     # (PluginEntity's own `state` column enum type) ride along in the
-    # same collector, same reasoning as EventHandler riding with
-    # EventDispatcher above -- without it, these classes would have no
-    # layer at all and every dependency touching them would go
-    # unchecked. PluginMigrationEntity/PluginMigrationRepository
+    # same collector as PluginRepository -- without it, these classes
+    # would have no layer at all and every dependency touching them
+    # would go unchecked. PluginMigrationEntity/PluginMigrationRepository
     # relocated here from Admin\Extensions\ in P27.3 -- PluginRegistry
     # (L3Presentation) needs this ledger directly, and L3 may depend
     # downward on L2b, so this is the coherent placement beside
@@ -174,8 +169,8 @@ deptrac:
     # allowed) depends on it, so this carve-out is safe.
     # Piwigo\PluginConfig\{ExtensionInterface,ExtensionContext,
     # ExtensionSession,PluginManifest,ThemeManifest} (P27.1/P27.2) sit here
-    # rather than PluginConfig's other two layers (EventDispatcher/
-    # EventHandler at L1Infrastructure; PluginRepository/PluginEntity at
+    # rather than PluginConfig's other two layers (EventDispatcher at
+    # L1Infrastructure; PluginRepository/PluginEntity at
     # L2bExtendedDomain, both above): ExtensionContext needs read access
     # to Config/Lang/Session (L1), CurrentUser/UserService (L2a), and
     # CurrentTemplate (L3) -- L3Presentation is the lowest layer that

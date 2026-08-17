@@ -482,8 +482,8 @@ final class WsTagsMutationTest extends ContractTestCase
 
         $this->writeFixturePlugin($pluginId, <<<PHP
             \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
-                \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
-                static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
+                \\Piwigo\\Tag\\Event\\RenderTagUrl::class,
+                static function (\\Piwigo\\Tag\\Event\\RenderTagUrl \$event): mixed {
                     if (\$event->tagName === '{$renameMarker}') {
                         return 12345;
                     }
@@ -535,8 +535,8 @@ final class WsTagsMutationTest extends ContractTestCase
 
         $this->writeFixturePlugin($pluginId, <<<PHP
             \\Piwigo\\Tests\\Support\\EventDispatcherTestFactory::get()->addTypedHandler(
-                \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
-                static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
+                \\Piwigo\\Tag\\Event\\RenderTagUrl::class,
+                static function (\\Piwigo\\Tag\\Event\\RenderTagUrl \$event): mixed {
                     if (\$event->tagName === '{$duplicateMarker}') {
                         return 12345;
                     }

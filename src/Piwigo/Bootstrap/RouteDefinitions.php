@@ -7,6 +7,8 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
+use Piwigo\Controller\Api\InfoController;
+use Piwigo\Controller\Api\SessionController;
 use Piwigo\Controller\Api\VersionController;
 use Piwigo\Controller\CommentsController;
 use Piwigo\Controller\CustomLogoController;
@@ -175,6 +177,14 @@ final class RouteDefinitions
         // ApiErrorMiddleware, not by a route.
         $routes->add('api_v1_version', new Route('/api/v1/version', defaults: [
             '_controller' => VersionController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_session', new Route('/api/v1/session', defaults: [
+            '_controller' => SessionController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_info', new Route('/api/v1/info', defaults: [
+            '_controller' => InfoController::class,
         ], methods: ['GET']));
 
         return $routes;

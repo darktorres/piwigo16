@@ -43,9 +43,11 @@ use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\SessionController;
 use Piwigo\Controller\Api\SessionLoginController;
 use Piwigo\Controller\Api\SessionLogoutController;
+use Piwigo\Controller\Api\Tags\TagAvailableListController;
 use Piwigo\Controller\Api\Tags\TagCreateController;
 use Piwigo\Controller\Api\Tags\TagDeleteController;
 use Piwigo\Controller\Api\Tags\TagDuplicateController;
+use Piwigo\Controller\Api\Tags\TagImagesController;
 use Piwigo\Controller\Api\Tags\TagListController;
 use Piwigo\Controller\Api\Tags\TagMergeController;
 use Piwigo\Controller\Api\Tags\TagRenameController;
@@ -242,11 +244,23 @@ final class RouteDefinitions
         ], methods: ['GET']));
 
         // Tags resource family -- admin-consumed (pwg.tags.getAdminList's
-        // own audience, permissions not taken into account). The public,
-        // permission-filtered browsing shape (pwg.tags.getList/getImages)
-        // is a separate external-only REST concern, not this family.
+        // own audience, permissions not taken into account).
         $routes->add('api_v1_tags_list', new Route('/api/v1/tags', defaults: [
             '_controller' => TagListController::class,
+        ], methods: ['GET']));
+
+        // Public, permission-filtered browsing shape (pwg.tags.getList/
+        // getImages) -- a genuinely different query (TagService::
+        // getAvailableTags(), not getAllTags()), kept as its own resource
+        // rather than folded into GET /api/v1/tags behind a permission
+        // check.
+
+        $routes->add('api_v1_tags_available', new Route('/api/v1/tags/available', defaults: [
+            '_controller' => TagAvailableListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_tags_images', new Route('/api/v1/tags/images', defaults: [
+            '_controller' => TagImagesController::class,
         ], methods: ['GET']));
 
         $routes->add('api_v1_tags_create', new Route('/api/v1/tags', defaults: [

@@ -73,4 +73,30 @@ final class ResponseFactory
     {
         return new Response($status, $headers, $body);
     }
+
+    /**
+     * RFC 9457 `application/problem+json` -- the `/api/v1` surface's error
+     * shape (P27 Locked Decision D3), replacing WS's `{stat, err, message}`
+     * envelope. `type` defaults to the spec's own "no more specific URI"
+     * placeholder; pass a real one once a problem type is documented.
+     */
+    public static function problem(string $title, int $status, ?string $detail = null, string $type = 'about:blank'): ResponseInterface
+    {
+        $body = [
+            'type' => $type,
+            'title' => $title,
+            'status' => $status,
+        ];
+        if ($detail !== null) {
+            $body['detail'] = $detail;
+        }
+
+        return new Response(
+            $status,
+            [
+                'Content-Type' => 'application/problem+json',
+            ],
+            json_encode($body, JSON_THROW_ON_ERROR)
+        );
+    }
 }

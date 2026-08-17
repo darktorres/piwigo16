@@ -98,8 +98,14 @@ final readonly class Router
      * (see class docblock) -- 0 by default (every existing root-level
      * file), explicitly set higher by an entry point that genuinely lives
      * in a subdirectory.
+     *
+     * Public (not just this class's own dispatch() caller): Http\
+     * Middleware\ApiErrorMiddleware needs the exact same mount-stripped
+     * path dispatch() itself matched routes against, not the raw
+     * `$request->getUri()->getPath()` -- a `/piwigo17`-mounted deployment
+     * would otherwise never match its own `/api/v1` prefix check.
      */
-    private static function pathInfo(ServerRequestInterface $request, string $path): string
+    public static function pathInfo(ServerRequestInterface $request, string $path): string
     {
         $scriptName = $request->getServerParams()['SCRIPT_NAME'] ?? null;
         if (! is_string($scriptName) || $scriptName === '') {

@@ -8,6 +8,7 @@ use LogicException;
 use Override;
 use Piwigo\Admin\LoadedPluginsMiddleware;
 use Piwigo\Core\Kernel;
+use Piwigo\Http\Middleware\ApiErrorMiddleware;
 use Piwigo\Http\Middleware\ConfigBootstrapMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
@@ -27,7 +28,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Runs the real middleware pipeline -- 13 middleware now (workstream C3
+ * Runs the real middleware pipeline -- 14 middleware now (workstream C3
  * Phase 1), every root file's own call shape:
  * `RequestPipeline::handle($request)`.
  *
@@ -50,6 +51,11 @@ use Psr\Http\Server\RequestHandlerInterface;
  * remaining relative order exactly. All 7 run before `RoutingMiddleware`,
  * matching the pre-Phase-1 shape where connect()/finalize() always
  * completed before routing/controller invocation ever started.
+ * `Http\Middleware\ApiErrorMiddleware` (P27) runs between
+ * `RoutingMiddleware` and `ControllerInvokerMiddleware` -- it needs the
+ * real `RouteResult`, and it must win before `ControllerInvokerMiddleware`'s
+ * own generic 404 fallback for any `/api/v1/...` path whose route didn't
+ * resolve to `Found`.
  *
  * Lives in Bootstrap/ (L4Integration), not Kernel (L1Infrastructure) --
  * orchestrating Http/Routing/Container together is genuinely an
@@ -104,6 +110,7 @@ final class RequestPipeline
         SentryMiddleware::class,
         ...self::BOOTSTRAP_MIDDLEWARE,
         RoutingMiddleware::class,
+        ApiErrorMiddleware::class,
         ControllerInvokerMiddleware::class,
     ];
 

@@ -70,3 +70,41 @@ test('raw accepts a custom status code', function (): void {
     expect($response->getStatusCode())
         ->toBe(403);
 });
+
+test('problem builds an RFC 9457 body with the application/problem+json content type', function (): void {
+    $response = ResponseFactory::problem('Not Found', 404, 'No resource exists at this path.');
+
+    expect($response->getStatusCode())
+        ->toBe(404);
+    expect($response->getHeaderLine('Content-Type'))
+        ->toBe('application/problem+json');
+    expect(json_decode((string) $response->getBody(), true))
+        ->toBe([
+            'type' => 'about:blank',
+            'title' => 'Not Found',
+            'status' => 404,
+            'detail' => 'No resource exists at this path.',
+        ]);
+});
+
+test('problem omits detail entirely when not given, rather than a null value', function (): void {
+    $response = ResponseFactory::problem('Internal Server Error', 500);
+
+    expect(json_decode((string) $response->getBody(), true))
+        ->toBe([
+            'type' => 'about:blank',
+            'title' => 'Internal Server Error',
+            'status' => 500,
+        ]);
+});
+
+test('problem accepts a custom type URI', function (): void {
+    $response = ResponseFactory::problem('Rate limited', 429, type: 'https://piwigo.example/problems/rate-limit');
+
+    expect(json_decode((string) $response->getBody(), true))
+        ->toBe([
+            'type' => 'https://piwigo.example/problems/rate-limit',
+            'title' => 'Rate limited',
+            'status' => 429,
+        ]);
+});

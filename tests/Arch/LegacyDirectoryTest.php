@@ -115,6 +115,7 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
         'admin',
         'admin.php',
         'analytics_vitals.php',
+        'api.php',
         'comments.php',
         'dist',
         'feed.php',

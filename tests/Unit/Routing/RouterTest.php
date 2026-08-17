@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Bootstrap\RouteDefinitions;
+use Piwigo\Controller\Api\VersionController;
 use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\Router;
 use Piwigo\Routing\RouteResult;
@@ -65,6 +66,39 @@ test('dispatch works against the real RouteDefinitions::all() route collection',
 
     expect($result->status)
         ->toBe(RouteMatchStatus::NotFound);
+});
+
+test('dispatch resolves /api/v1/version to VersionController', function (): void {
+    $router = new Router(RouteDefinitions::all());
+
+    $result = $router->dispatch(new ServerRequest('GET', '/api/v1/version'));
+
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe(VersionController::class);
+});
+
+test('dispatch returns NotFound for an unmatched /api/v1 resource path (no catch-all route)', function (): void {
+    // Deliberately no dedicated route for this -- see RouteDefinitions's
+    // own comment on why a catch-all would shadow a real route's 405.
+    // Http\Middleware\ApiErrorMiddleware turns this NotFound into RFC
+    // 9457 problem+json further down the pipeline.
+    $router = new Router(RouteDefinitions::all());
+
+    $result = $router->dispatch(new ServerRequest('GET', '/api/v1/does/not/exist'));
+
+    expect($result->status)
+        ->toBe(RouteMatchStatus::NotFound);
+});
+
+test('dispatch returns MethodNotAllowed for a non-GET request to /api/v1/version', function (): void {
+    $router = new Router(RouteDefinitions::all());
+
+    $result = $router->dispatch(new ServerRequest('POST', '/api/v1/version'));
+
+    expect($result->status)
+        ->toBe(RouteMatchStatus::MethodNotAllowed);
 });
 
 test('dispatch resolves the request context host from a non-empty URI host, not overriding it with the localhost fallback', function (): void {

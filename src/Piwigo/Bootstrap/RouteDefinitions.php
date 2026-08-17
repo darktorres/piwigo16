@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
+use Piwigo\Controller\Api\VersionController;
 use Piwigo\Controller\CommentsController;
 use Piwigo\Controller\CustomLogoController;
 use Piwigo\Controller\FeedController;
@@ -162,6 +163,19 @@ final class RouteDefinitions
         $routes->add('test_errors', new Route('/__test/errors', [
             '_controller' => TestErrorsController::class,
         ]));
+
+        // Public API v1 (P27) -- one route per resource/method, mirroring
+        // WS's own pwg.* methods but as proper REST paths/verbs. No
+        // catch-all here on purpose: a route that unconditionally matches
+        // every method would shadow a real route's own 405 on a method
+        // mismatch (symfony/routing only throws MethodNotAllowedException
+        // when literally no route fully matches) -- an unmatched
+        // /api/v1/... path is a genuine RouteMatchStatus::NotFound instead,
+        // turned into RFC 9457 problem+json by Http\Middleware\
+        // ApiErrorMiddleware, not by a route.
+        $routes->add('api_v1_version', new Route('/api/v1/version', defaults: [
+            '_controller' => VersionController::class,
+        ], methods: ['GET']));
 
         return $routes;
     }

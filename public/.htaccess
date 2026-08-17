@@ -59,6 +59,13 @@
     # Piwigo\Controller\TestErrorsController itself 404s outside test mode,
     # so no extra guard is needed here.
     RewriteRule ^__test/errors$ __test_errors.php [L]
+
+    # Public API v1 (P27) -- clean /api/v1/... URLs (arbitrary path depth,
+    # e.g. /api/v1/tags/5) all resolve to the one real entry point,
+    # api.php; RouteDefinitions's own routes match the clean path (see
+    # Piwigo\Routing\Router's own "falls back to raw REQUEST_URI" doc),
+    # not this rewrite target.
+    RewriteRule ^api/v1/ api.php [L]
 </IfModule>
 
 # SEC-05: Brotli compression (15-20% better than gzip for text assets).

@@ -52,8 +52,8 @@ final readonly class RateService
      * one via the same $entityManager.
      *
      * @param int|string|null $rate raw $_POST value (string) from
-     *   picture.php, an (int)-cast value from the WS layer, or null when
-     *   absent
+     *   picture.php, an int from `Controller\Api\Images\
+     *   ImageRateController`'s JSON body, or null when absent
      * @return array{score: float|null, average: float|null, count: int}|false
      */
     public function rate(int $imageId, int|string|null $rate, EntityManagerInterface $entityManager): array|false

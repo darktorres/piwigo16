@@ -40,9 +40,7 @@ use Piwigo\Users\UserEntity;
  * The one real entity-level write path,
  * {@see \Piwigo\Image\ImageRepository::updateDescriptiveFields()}, has
  * always used the strict `SqlDateTime::from()` (not `tryFrom()`) before
- * assignment. Unlike `Users\UserListCriteria::$minRegister`/`$maxRegister`
- * (blocked on adding upstream WS validation first, no DB-level backstop
- * at all), `date_creation`/`date_available` are real `datetime`/
+ * assignment -- `date_creation`/`date_available` are real `datetime`/
  * `timestamp` columns (not VARCHAR) even under the pre-VO `string`
  * Doctrine mapping -- the DB driver itself already rejects or silently
  * zero-dates a malformed value on write today, so moving that same

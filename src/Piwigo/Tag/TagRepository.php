@@ -194,7 +194,7 @@ final class TagRepository extends EntityRepository
      * shape (`SearchFilterRenderer::render()`'s own "force missing tags
      * into the list" fallback) -- two independently-built, mutated,
      * merged row streams feeding one combined list across 6 real call
-     * sites (WS responses and template assignments both). A safe
+     * sites (REST responses and template assignments both). A safe
      * conversion to a typed DTO needs `getAvailableTags()`'s own
      * row-building/caching converted too -- a Tag-domain-wide, not
      * single-method, change.
@@ -815,7 +815,7 @@ final class TagRepository extends EntityRepository
      * permissions -- Admin\TagsPageRenderer's own "permissions are not
      * taken into account" listing, unlike {@see countImagesPerTag()}
      * above (that one restricts to visible/permitted images via an
-     * image_category JOIN, for the public-facing WS listing).
+     * image_category JOIN, for the public-facing tag listing).
      *
      * Single-table (`image_tag`, mapped via ImageTagEntity), no WHERE/join
      * DQL can't express. it.tagId hydrates as a TagId VO (ImageTagEntity's

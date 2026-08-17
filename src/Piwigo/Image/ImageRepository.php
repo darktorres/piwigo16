@@ -274,7 +274,7 @@ final class ImageRepository extends EntityRepository
         // DQL select of a custom-typed field still hydrates through that
         // Type (same gotcha as scalar enum selects), so it comes back as
         // ImageId here, not int. Unwrapped below to keep this method's
-        // own documented int contract for its WS-layer consumer.
+        // own documented int contract for its ImageFormatDeleteController caller.
         $rows = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('f.imageId AS image_id', 'f.ext AS ext')
@@ -2670,9 +2670,8 @@ final class ImageRepository extends EntityRepository
     /**
      * Ids of every image with $md5sum -- Admin\Upload\UploadService's own
      * upload-time duplicate detection. $md5sum is a fully free-form,
-     * caller-controlled string despite its name (registered with zero
-     * WS-level type constraints in WsDefaultMethods.php) and must be
-     * bound as a parameter, never spliced into the query.
+     * caller-controlled string despite its name and must be bound as a
+     * parameter, never spliced into the query.
      *
      * @return list<int>
      */

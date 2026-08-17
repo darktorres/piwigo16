@@ -781,7 +781,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * this class's own docblock for why that indirection is gone now).
      * `id` is `$userId->value` directly, not re-selected -- the caller
      * already has it, and every real downstream consumer of this array
-     * (templates, WS responses) expects a raw scalar there, not a UserId
+     * (templates, REST responses) expects a raw scalar there, not a UserId
      * VO (Gotcha #4 territory, sidestepped entirely by not selecting the
      * custom-Typed column at all).
      *

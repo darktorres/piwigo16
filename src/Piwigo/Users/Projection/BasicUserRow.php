@@ -14,8 +14,8 @@ use Piwigo\Common\ValueObject\UserId;
  * `toArray()` preserves the exact original snake_case shape:
  * `getUserData()` `array_merge()`s this with
  * {@see UserInfoWithThemeName}'s own `toArray()` into one flat,
- * dynamically-keyed `$userdata` bag every downstream template/WS response
- * reads by key -- the merge boundary itself genuinely needs a flat array,
+ * dynamically-keyed `$userdata` bag every downstream template/REST
+ * response reads by key -- the merge boundary itself genuinely needs a flat array,
  * same reason every other DTO in this codebase keeps a `toArray()` unwrap
  * at its actual serialization boundary.
  */

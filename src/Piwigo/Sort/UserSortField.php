@@ -52,12 +52,13 @@ enum UserSortField
     }
 
     /**
-     * Parses a WS `order` param (`"field dir, field dir"`, direction
-     * optional per entry, defaulting to `ASC`) into a real `ORDER BY` body
-     * string built from {@see column()}'s own trusted column names --
-     * never the caller's raw text. Returns null on anything that doesn't
-     * cleanly match the fixed 4-field vocabulary, the caller's signal to
-     * return a hard 1003 error rather than fall back to any default.
+     * Parses `GET /api/v1/users`'s `order` query param (`"field dir, field
+     * dir"`, direction optional per entry, defaulting to `ASC`) into a
+     * real `ORDER BY` body string built from {@see column()}'s own trusted
+     * column names -- never the caller's raw text. Returns null on
+     * anything that doesn't cleanly match the fixed 4-field vocabulary,
+     * `UserListController`'s own signal to return a 422 `problem+json`
+     * error rather than fall back to any default.
      */
     public static function parseOrderClause(string $order): ?string
     {

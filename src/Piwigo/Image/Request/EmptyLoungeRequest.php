@@ -6,8 +6,9 @@ namespace Piwigo\Image\Request;
 
 /**
  * Validated `$_REQUEST['method']` shape for ImageService::emptyLounge().
- * Read-only debug-log context there (the WS method name, if any, appended
- * to that method's own log lines) with no business-logic branching, so
+ * Read-only debug-log context there (the requested method name, if any,
+ * appended to that method's own log lines) with no business-logic
+ * branching, so
  * it's constructed inside emptyLounge() itself rather than threaded
  * through its own several call sites.
  *

@@ -66,7 +66,7 @@ final class GroupRepository extends EntityRepository
     /**
      * Ids of every group whose name matches $namePattern (an already-built
      * SQL LIKE pattern, e.g. `%foo%`) -- the group-name half of the
-     * WS-era `pwg.users.getList` free-text `filter` search (see
+     * `pwg.users.getList`-era free-text `filter` search (see
      * `Users\UserListCriteria`'s own docblock: no current `/api/v1/users`
      * caller resolves this yet, a deliberately deferred filter).
      *

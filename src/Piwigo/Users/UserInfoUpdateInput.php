@@ -17,10 +17,9 @@ namespace Piwigo\Users;
  * UserUpdateInput`/`Controller\Api\Session\MyInfoUpdateInput`), not
  * parsed from a raw transport array directly.
  *
- * Every field but $userIds is null when not supplied by the caller, same
- * "absent means null" convention every field already used when it lived
- * on the raw WS $params array -- checkAndSaveUserInfos()'s own
- * self::emptyValue() checks treat a supplied-but-empty value
+ * Every field but $userIds is null when not supplied by the caller --
+ * checkAndSaveUserInfos()'s own self::emptyValue() checks treat a
+ * supplied-but-empty value
  * (''/0/'0'/false/[]) identically to an absent one already, so this
  * carries the value through unchanged rather than pre-collapsing it.
  */

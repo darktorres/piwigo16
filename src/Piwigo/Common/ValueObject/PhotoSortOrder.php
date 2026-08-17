@@ -214,8 +214,10 @@ final readonly class PhotoSortOrder
     /**
      * {@see toSortFieldTokens()} joined the way a stored `image_order` value
      * is written -- for the callers that persist or expose the order as
-     * text rather than execute it (the WS album rows' `image_order`, which
-     * otherwise reports an album's own stored string).
+     * text rather than execute it (`Controller\Api\Categories\
+     * {CategoryListController,CategoryAvailableListController}`'s own
+     * album-row `imageOrder` field, which otherwise reports an album's own
+     * stored string).
      *
      * Not SQL for execution: that is {@see \Piwigo\Db\SortRenderer::toSql()}.
      */

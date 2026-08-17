@@ -915,8 +915,8 @@ $(".delete-size-check").click( function () {
       <div class="cache-infos">
         <span class="cache-size-text">{='Cache size'|translate}</span>
         <span class="cache-size-value">
-          {if isset($cache_sizes)}
-            {='%s MB'|translate:round($cache_sizes[0]['value'] / 1024 / 1024, 2)}
+          {if isset($cache_sizes) and $cache_sizes->cacheSize !== null}
+            {='%s MB'|translate:round($cache_sizes->cacheSize / 1024 / 1024, 2)}
           {else}
             {='N/A'|translate}
           {/if}
@@ -936,8 +936,8 @@ $(".delete-size-check").click( function () {
         class="{$maint_actions['compiled-templates']['icon']} maintenance-action"
       >{$maint_actions['compiled-templates']['label']}
         <span class="multiple-compiledTemplate-sizes">
-          {if isset($cache_sizes)}
-            {='%s MB'|translate:round($cache_sizes[2]['value'] / 1024 / 1024, 2)}
+          {if isset($cache_sizes) and $cache_sizes->tsizes !== null}
+            {='%s MB'|translate:round($cache_sizes->tsizes / 1024 / 1024, 2)}
           {else}
             {='N/A'|translate}
           {/if}
@@ -950,8 +950,8 @@ $(".delete-size-check").click( function () {
         id="label-delete-size-checkbox"
       >{$maint_actions['derivatives']['label']}
         <span class="multiple-pictures-sizes">
-          {if isset($cache_sizes)}
-            {='%s MB'|translate:round($cache_sizes[1]['value']['all'] / 1024 / 1024, 2)}
+          {if isset($cache_sizes) and isset($cache_sizes->msizes['all'])}
+            {='%s MB'|translate:round($cache_sizes->msizes['all'] / 1024 / 1024, 2)}
           {else}
             {='N/A'|translate}
           {/if}
@@ -961,7 +961,7 @@ $(".delete-size-check").click( function () {
         <div
           n:foreach="$purge_derivatives as $name => $url"
           class="delete-size-check"
-          title="{if isset($cache_sizes) and isset($cache_sizes[1]['value'][$url])}{='%s MB'|translate:round($cache_sizes[1]['value'][$url] / 1024 / 1024, 2)}{else}{='N/A'|translate}{/if}"
+          title="{if isset($cache_sizes) and isset($cache_sizes->msizes[$url])}{='%s MB'|translate:round($cache_sizes->msizes[$url] / 1024 / 1024, 2)}{else}{='N/A'|translate}{/if}"
           data-selected="0"
           name="{$url}"
         >

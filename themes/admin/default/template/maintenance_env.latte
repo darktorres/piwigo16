@@ -726,8 +726,8 @@ const unit_MB = "{='%s MB'|translate}"
     <li>
       <span class="cache-size-text">{='Cache size'|translate}</span>
       <span class="cache-size-value">
-        {if isset($cache_sizes)}
-          {=round($cache_sizes[0]['value'] / 1024 / 1024, 2)} Mo
+        {if isset($cache_sizes) and $cache_sizes->cacheSize !== null}
+          {=round($cache_sizes->cacheSize / 1024 / 1024, 2)} Mo
         {else}
           {='N/A'|translate}
         {/if}

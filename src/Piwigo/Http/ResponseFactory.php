@@ -75,6 +75,16 @@ final class ResponseFactory
     }
 
     /**
+     * A genuinely empty body -- the `/api/v1` surface's shape for a
+     * mutation whose WS predecessor returned `null` (no data worth
+     * confirming beyond the 2xx status itself).
+     */
+    public static function noContent(): ResponseInterface
+    {
+        return new Response(204);
+    }
+
+    /**
      * RFC 9457 `application/problem+json` -- the `/api/v1` surface's error
      * shape (P27 Locked Decision D3), replacing WS's `{stat, err, message}`
      * envelope. `type` defaults to the spec's own "no more specific URI"

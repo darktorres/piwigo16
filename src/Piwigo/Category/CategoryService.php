@@ -2442,7 +2442,7 @@ final readonly class CategoryService
 
     /**
      * @param  list<int>  $parentIds
-     * @return array<string, int>
+     * @return array<int, int> keyed by id_uppercat
      */
     public function getSubcategoryCountsByParent(array $parentIds): array
     {

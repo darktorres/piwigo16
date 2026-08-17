@@ -7,6 +7,15 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
+use Piwigo\Controller\Api\Categories\CategoryCreateController;
+use Piwigo\Controller\Api\Categories\CategoryDeleteController;
+use Piwigo\Controller\Api\Categories\CategoryDeleteRepresentativeController;
+use Piwigo\Controller\Api\Categories\CategoryListController;
+use Piwigo\Controller\Api\Categories\CategoryMoveController;
+use Piwigo\Controller\Api\Categories\CategoryRefreshRepresentativeController;
+use Piwigo\Controller\Api\Categories\CategoryReorderController;
+use Piwigo\Controller\Api\Categories\CategorySetRepresentativeController;
+use Piwigo\Controller\Api\Categories\CategoryUpdateController;
 use Piwigo\Controller\Api\Groups\GroupAddUserController;
 use Piwigo\Controller\Api\Groups\GroupCreateController;
 use Piwigo\Controller\Api\Groups\GroupDeleteController;
@@ -277,6 +286,57 @@ final class RouteDefinitions
 
         $routes->add('api_v1_groups_merge', new Route('/api/v1/groups/actions/merge', defaults: [
             '_controller' => GroupMergeController::class,
+        ], methods: ['POST']));
+
+        // Categories (albums) resource family -- admin-consumed.
+        // pwg.categories.setRepresentative wasn't in the plan's own
+        // admin-consumed table (an oversight there) but is clearly the
+        // same audience as deleteRepresentative/refreshRepresentative,
+        // so it's folded into this family too.
+        $routes->add('api_v1_categories_list', new Route('/api/v1/categories', defaults: [
+            '_controller' => CategoryListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_categories_create', new Route('/api/v1/categories', defaults: [
+            '_controller' => CategoryCreateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_categories_update', new Route('/api/v1/categories/{id}', defaults: [
+            '_controller' => CategoryUpdateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_categories_delete', new Route('/api/v1/categories/{id}', defaults: [
+            '_controller' => CategoryDeleteController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['DELETE']));
+
+        $routes->add('api_v1_categories_move', new Route('/api/v1/categories/actions/move', defaults: [
+            '_controller' => CategoryMoveController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_categories_reorder', new Route('/api/v1/categories/actions/reorder', defaults: [
+            '_controller' => CategoryReorderController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_categories_set_representative', new Route('/api/v1/categories/{id}/representative', defaults: [
+            '_controller' => CategorySetRepresentativeController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PUT']));
+
+        $routes->add('api_v1_categories_delete_representative', new Route('/api/v1/categories/{id}/representative', defaults: [
+            '_controller' => CategoryDeleteRepresentativeController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['DELETE']));
+
+        $routes->add('api_v1_categories_refresh_representative', new Route('/api/v1/categories/{id}/actions/refresh-representative', defaults: [
+            '_controller' => CategoryRefreshRepresentativeController::class,
+        ], requirements: [
+            'id' => '\d+',
         ], methods: ['POST']));
 
         return $routes;

@@ -116,7 +116,7 @@ final readonly class GetAdminListHandler implements WsAction
 
             foreach ($cats as $idx => $cat) {
                 $cat_id = $cat['id'];
-                $cats[$idx]['nb_categories'] = is_numeric($cat_id) ? ($nb_subcats_of[(string) $cat_id] ?? 0) : 0;
+                $cats[$idx]['nb_categories'] = is_numeric($cat_id) ? ($nb_subcats_of[(int) $cat_id] ?? 0) : 0;
             }
         }
 

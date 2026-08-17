@@ -3615,7 +3615,10 @@ final readonly class CategoryRepository
      * getAdminList()'s own non-recursive "nb_categories" column.
      *
      * @param  list<int>  $parentIds
-     * @return array<string, int> keyed by id_uppercat
+     * @return array<int, int> keyed by id_uppercat -- the `(string)` cast
+     *   below never actually produces a string key for a real
+     *   id_uppercat value: PHP normalizes any canonical decimal-integer
+     *   string key back to int at the point of array assignment.
      *
      * Single-table, standard COUNT + GROUP BY aggregate.
      */
@@ -3641,8 +3644,8 @@ final readonly class CategoryRepository
 
             $idUppercat = $row['id_uppercat'] ?? null;
             $nbSubcats = $row['nb_subcats'] ?? null;
-            if (is_scalar($idUppercat) && is_numeric($nbSubcats)) {
-                $bySubcat[(string) $idUppercat] = (int) $nbSubcats;
+            if (is_numeric($idUppercat) && is_numeric($nbSubcats)) {
+                $bySubcat[(int) $idUppercat] = (int) $nbSubcats;
             }
         }
 

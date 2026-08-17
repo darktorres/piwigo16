@@ -13,8 +13,14 @@ use Piwigo\Core\TemplatePageContext;
  */
 final readonly class MaintenanceSysPageContext implements TemplatePageContext
 {
+    /**
+     * @param list<array<string, mixed>> $activityLogEntries each shaped by
+     *   {@see \Piwigo\Admin\Maintenance\ActivityLogEntryFormatter::format()};
+     *   empty when not webmaster.
+     */
     public function __construct(
         public bool $isWebmaster,
+        public array $activityLogEntries,
     ) {}
 
     /**
@@ -25,6 +31,7 @@ final readonly class MaintenanceSysPageContext implements TemplatePageContext
     {
         return [
             'isWebmaster' => $this->isWebmaster ? 1 : 0,
+            'ACTIVITY_LOG_ENTRIES' => $this->activityLogEntries,
         ];
     }
 }

@@ -290,25 +290,19 @@ it('maintenance env tab renders real server, database and version info', functio
     $page->assertSee('PHP:');
 });
 
-it('maintenance sys tab renders the webmaster-only activity log table', function (): void {
+it('maintenance sys tab server-renders the webmaster-only activity log table, no ajax round-trip', function (): void {
+    // P26.2: the fixture DB's install-time system log (Core install + 2
+    // default-theme activations, see tests/Fixtures/piwigo-17.0.sql) is
+    // now server-rendered directly -- this used to only be reachable via
+    // the deleted `?method=pwg.activity_sys.getList` ajax endpoint.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=sys');
 
     $page->assertSee('System Activities');
     $page->assertPresent('#activities-system');
-});
-
-it('maintenance sys ajax endpoint returns real activity log JSON instead of the HTML page', function (): void {
-    $page = H::loginAsAdmin($this);
-    $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=sys&method=pwg.activity_sys.getList');
-
-    $content = $page->content();
-    expect($content)
-        ->toContain('"object":"Core"')
-        ->and($content)
-        ->toContain('"action":"Install"')
-        ->and($content)
-        ->toContain('"data":[');
+    $page->assertSee('Core');
+    $page->assertSee('Install');
+    $page->assertNoJavaScriptErrors();
 });
 
 it('batch manager unit mode shows the caddie prefilter active by default with an empty caddie', function (): void {

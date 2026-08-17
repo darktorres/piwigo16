@@ -9,6 +9,7 @@
 {varType int $ACTIVITY_CHART_NUMBER_SIZES}
 {varType array{min: string, max: string} $ACTIVITY_DATES}
 {varType array<array-key, mixed> $ACTIVITY_LAST_WEEKS}
+{varType list<array<string, mixed>> $ACTIVITY_LOG_ENTRIES}
 {varType list<string> $ACTIVITY_WEEK_NUMBER}
 {varType list<array<array-key, mixed>>|null $ADDED_BY}
 {varType string|false $ADDITIONAL_FILT}
@@ -694,7 +695,6 @@
 {* END varType *}
 {if $isWebmaster == 1}
   {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-  {do combineScript(id: 'sys', load: 'footer', path: 'themes/admin/default/js/maintenance_sys.js')}
   <fieldset id="activities-system">
     <div class="tab-header">
       <div class="tab-object">
@@ -714,62 +714,51 @@
       </div>
     </div>
 
-    <div class="loading">
-      <span class="icon-spin6 animate-spin"></span>
-    </div>
-
-    <div class="tab-body line" id="body_example">
+    <div n:foreach="$ACTIVITY_LOG_ENTRIES as $entry" id="{$entry['id']}" class="tab-body line{if $entry['major_infos']} major-infos{/if}">
       <div class="tab-body-object">
         <p>
-          <span class="icon_object"></span>
-          <span class="text_object">Object</span>
+          <span class="icon_object {$entry['object_icon']}"></span>
+          <span class="text_object" title="{$entry['object']}">{$entry['object']}</span>
         </p>
       </div>
       <div class="tab-body-action">
-        <p class="color_action">
-          <span class="icon_action"></span>
-          <span class="text_action">Action</span>
+        <p class="color_action {$entry['action_color']}">
+          <span class="icon_action {$entry['action_icon']}"></span>
+          <span class="text_action" title="{$entry['action']}">{$entry['action']}</span>
         </p>
       </div>
       <div class="tab-body-users">
         <p>
-          <span class="icon_user"></span>
-          <span class="text_username">Username</span>
+          {if $entry['username'] === 'System'}
+            <span class="icon_user icon-robot-head"></span>
+          {else}
+            <span class="icon_user {=['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'][$entry['user_id'] % 5]}">{$entry['initial']}</span>
+          {/if}
+          <span class="text_username" title="{$entry['username']}">{$entry['username']}</span>
         </p>
       </div>
       <div class="tab-body-date">
         <p>
           <span class="icon icon-clock"></span>
-          <span class="text_date">Date</span>
-          <span class="text_hour">Hour</span>
+          <span class="text_date" title="{$entry['date']} {$entry['hour']}">{$entry['date']}</span>
+          <span class="text_hour">{$entry['hour']}</span>
         </p>
       </div>
       <div class="tab-body-details">
-        <p class="detail-item" id="line_details_example">
-          <span class="icon_details"></span>
-          <span class="text_details">Details</span>
-        </p>
+        {foreach $entry['detailItems'] as $i => $item}
+          {if $i > 0 && $entry['detailArrow']}<span class="icon-right">&nbsp;</span>{/if}
+          <p class="detail-item">
+            <span class="icon_details {$item['icon']}"></span>
+            <span class="text_details" title="{$item['text']}">{$item['text']}</span>
+          </p>
+        {/foreach}
       </div>
     </div>
-
-    <div id="tab-body-content"></div>
   </fieldset>
   <style>
-        #body_example {
-            display: none;
-        }
-
-        #line_details_example {
-            display: none;
-        }
-
         .icon-th-list {
             padding: 0;
             font-size: unset;
-        }
-
-        .loading {
-            font-size: 40px;
         }
 
         .major-infos {

@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Admin\Projection\MaintenanceSysPageContext;
-use Piwigo\Admin\Request\MaintenanceSysMethodRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -18,8 +17,7 @@ use Piwigo\Template\CurrentTemplate;
 /**
  * Renders the "sys" tab of the "maintenance" admin page (dispatched by
  * MaintenanceSubController) -- webmaster-only system activity log viewer,
- * backed by a GET-only JSON ajax endpoint
- * (`?method=pwg.activity_sys.getList`). Read-only, so no CSRF concern.
+ * server-rendered directly (P26.2 -- no ajax round-trip).
  *
  * The is_webmaster() check is a real, stricter guard layered on top of
  * admin.php's AccessLevel::Administrator gate, not a redundant one.
@@ -36,33 +34,23 @@ final class MaintenanceSysPageRenderer
     {
         $template = $currentTemplate->get();
 
+        $activity_log_entries = [];
         if ($accessControl->isWebmaster()) {
-            // Get system activities data
-            if (MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
-                $data = [];
+            $activity_log = $entityManager->getRepository(ActivityEntity::class)
+                ->findSystemObjectLogWithUsernames();
 
-                $activity_log = $entityManager->getRepository(ActivityEntity::class)
-                    ->findSystemObjectLogWithUsernames();
-
-                $formatter = new ActivityLogEntryFormatter();
-
-                // Format our data for frontend
-                foreach ($activity_log as $rows) {
-                    $data[] = $formatter->format($lang, $rows, $maintActions);
-                }
-
-                // Now we good to send our response data
-                $response = [
-                    'data' => $data,
-                ];
-                echo json_encode($response);
-                exit;
+            $formatter = new ActivityLogEntryFormatter();
+            foreach ($activity_log as $row) {
+                $activity_log_entries[] = $formatter->format($lang, $row, $maintActions);
             }
         } else {
             $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
-        $template->assignContext(new MaintenanceSysPageContext(isWebmaster: $accessControl->isWebmaster()));
+        $template->assignContext(new MaintenanceSysPageContext(
+            isWebmaster: $accessControl->isWebmaster(),
+            activityLogEntries: $activity_log_entries,
+        ));
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_sys.latte');
     }

@@ -112,10 +112,11 @@ test('core maintenance action looks up its icon/label from maint_actions', funct
             $maintActions
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail['type'])->toBe('maintenance_action')
-        ->and($detail['icon'])->toBe('icon-user-1')
-        ->and($detail['text'])->toBe('Purge user cache');
+    expect($entry['detailItems'])->toBe([[
+        'icon' => 'icon-user-1',
+        'text' => 'Purge user cache',
+    ]])
+        ->and($entry['detailArrow'])->toBeFalse();
 });
 
 test('core maintenance action falls back to the raw action name when unknown to maint_actions', function (): void {
@@ -133,9 +134,10 @@ test('core maintenance action falls back to the raw action name when unknown to 
             // maintenance action not in the built-in list).
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail['icon'])->toBe('icon-cone')
-        ->and($detail['text'])->toBe('some_future_action');
+    expect($entry['detailItems'])->toBe([[
+        'icon' => 'icon-cone',
+        'text' => 'some_future_action',
+    ]]);
 });
 
 test('core maintenance action with a non-string/non-int maintenance_action falls back to an empty lookup key', function (): void {
@@ -162,9 +164,10 @@ test('core maintenance action with a non-string/non-int maintenance_action falls
             $maintActions
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail['icon'])->toBe('icon-fallback-key')
-        ->and($detail['text'])->toBe('Fallback key label');
+    expect($entry['detailItems'])->toBe([[
+        'icon' => 'icon-fallback-key',
+        'text' => 'Fallback key label',
+    ]]);
 });
 
 test('core config action with a known section', function (): void {
@@ -180,12 +183,10 @@ test('core config action with a known section', function (): void {
             []
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail['type'])->toBe('config_section')
-        ->and($detail[0])->toBe([
-            'icon' => 'icon-file-image',
-            'text' => 'Watermark',
-        ]);
+    expect($entry['detailItems'])->toBe([[
+        'icon' => 'icon-file-image',
+        'text' => 'Watermark',
+    ]]);
 });
 
 test('plugin delete action reports db and filesystem version details', function (): void {
@@ -204,22 +205,21 @@ test('plugin delete action reports db and filesystem version details', function 
             []
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
     expect($entry['object'])->toBe('My Plugin')
         ->and($entry['action_icon'])->toBe('icon-trash-1')
         ->and($entry['action_color'])->toBe('icon-red')
-        ->and($detail['type'])->toBe('db_fs_version')
-        // both db_version and fs_version push onto the same $detail array in
-        // order -- last one set (filesystem) wins for indices 0, both remain
-        // reachable via the array's own numeric keys.
-        ->and($detail[0])->toBe([
-            'icon' => 'icon-flow-branch',
-            'text' => 'database : 1.2.3',
+        // db_version and fs_version each push their own item, in order.
+        ->and($entry['detailItems'])->toBe([
+            [
+                'icon' => 'icon-flow-branch',
+                'text' => 'database : 1.2.3',
+            ],
+            [
+                'icon' => 'icon-flow-branch',
+                'text' => 'filesystem : 1.2.4',
+            ],
         ])
-        ->and($detail[1])->toBe([
-            'icon' => 'icon-flow-branch',
-            'text' => 'filesystem : 1.2.4',
-        ]);
+        ->and($entry['detailArrow'])->toBeFalse();
 });
 
 test('plugin_id present but non-string is left unused, not passed to str_replace', function (): void {
@@ -256,9 +256,7 @@ test('db_version present but non-string is left out of the delete detail', funct
             []
         );
 
-    expect($entry['detail'])->toBe([
-        'type' => 'empty',
-    ]);
+    expect($entry['detailItems'])->toBe([]);
 });
 
 test('fs_version present but non-string is left out of the delete detail', function (): void {
@@ -276,9 +274,7 @@ test('fs_version present but non-string is left out of the delete detail', funct
             []
         );
 
-    expect($entry['detail'])->toBe([
-        'type' => 'empty',
-    ]);
+    expect($entry['detailItems'])->toBe([]);
 });
 
 test('theme_id present but non-string is left unused, not passed to str_replace', function (): void {
@@ -346,9 +342,7 @@ test('unknown object_id falls through to empty icon/object/color and the default
         ->and($entry['object'])->toBe('')
         ->and($entry['action_icon'])->toBe('')
         ->and($entry['action_color'])->toBe('')
-        ->and($entry['detail'])->toBe([
-            'type' => 'empty',
-        ]);
+        ->and($entry['detailItems'])->toBe([]);
 });
 
 test('from_version detail overrides the object/action-specific detail', function (): void {
@@ -367,15 +361,16 @@ test('from_version detail overrides the object/action-specific detail', function
             []
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail['type'])->toBe('from_to')
-        ->and($detail[0])->toBe([
-            'icon' => 'icon-flow-branch',
-            'text' => '1.0',
-        ])
-        ->and($detail[1])->toBe([
-            'icon' => 'icon-flow-branch',
-            'text' => '2.0',
+    expect($entry['detailArrow'])->toBeTrue()
+        ->and($entry['detailItems'])->toBe([
+            [
+                'icon' => 'icon-flow-branch',
+                'text' => '1.0',
+            ],
+            [
+                'icon' => 'icon-flow-branch',
+                'text' => '2.0',
+            ],
         ]);
 });
 
@@ -392,8 +387,8 @@ test('from_version detail with no to_version falls back to the result value', fu
             []
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail[1])->toBe([
+    $detailItems = is_array($entry['detailItems']) ? $entry['detailItems'] : [];
+    expect($detailItems[1])->toBe([
         'icon' => 'icon-block',
         'text' => 'failed',
     ]);
@@ -411,8 +406,8 @@ test('from_version detail with neither to_version nor result falls back to an em
             []
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail[1])->toBe([
+    $detailItems = is_array($entry['detailItems']) ? $entry['detailItems'] : [];
+    expect($detailItems[1])->toBe([
         'icon' => 'icon-block',
         'text' => '',
     ]);
@@ -430,11 +425,11 @@ test('version-only detail is formatted as a version badge', function (): void {
             []
         );
 
-    expect($entry['detail'])->toBe([
-        'type' => 'version',
+    expect($entry['detailItems'])->toBe([[
         'icon' => 'icon-flow-branch',
         'text' => '3.1.4',
-    ]);
+    ]])
+        ->and($entry['detailArrow'])->toBeFalse();
 });
 
 test('result-only detail is formatted as an error badge', function (): void {
@@ -449,11 +444,11 @@ test('result-only detail is formatted as an error badge', function (): void {
             []
         );
 
-    expect($entry['detail'])->toBe([
-        'type' => 'error',
+    expect($entry['detailItems'])->toBe([[
         'icon' => 'icon-block',
         'text' => 'failed',
-    ]);
+    ]])
+        ->and($entry['detailArrow'])->toBeFalse();
 });
 
 test('core config action with an unknown section falls back to the raw section name', function (): void {
@@ -469,12 +464,10 @@ test('core config action with an unknown section falls back to the raw section n
             []
         );
 
-    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
-    expect($detail['type'])->toBe('config_section')
-        ->and($detail[0])->toBe([
-            'icon' => 'icon-cog-alt',
-            'text' => 'totally-unknown-section',
-        ]);
+    expect($entry['detailItems'])->toBe([[
+        'icon' => 'icon-cog-alt',
+        'text' => 'totally-unknown-section',
+    ]]);
 });
 
 test('core autoupdate action is flagged as major_infos with the blue update icon', function (): void {
@@ -760,6 +753,30 @@ test('date and hour are split from occured_on and id/user/username pass through'
     expect($entry['id'])->toBe(7)
         ->and($entry['user_id'])->toBe(3)
         ->and($entry['username'])->toBe('someone')
+        ->and($entry['initial'])->toBe('S')
         ->and($entry['date'])->toBe(DateHelper::formatDate('2026-08-01'))
         ->and($entry['hour'])->toBe('09:15:30');
+});
+
+test('a null username (a deleted user) gets an empty initial, not a crash', function (): void {
+    // makeActivityRow()'s own `??` merge can't pass an explicit null through
+    // (null ?? default resolves to the default), so this constructs the row
+    // directly.
+    $entry = new ActivityLogEntryFormatter()
+        ->format(
+            activityLogEntryFormatterLang(),
+            new SystemActivityLogEntry(
+                activityId: 42,
+                performedBy: 1,
+                objectId: ActivitySystem::Core,
+                action: 'install',
+                occuredOn: '2026-08-01 12:34:56',
+                details: null,
+                username: null,
+            ),
+            []
+        );
+
+    expect($entry['username'])->toBeNull()
+        ->and($entry['initial'])->toBe('');
 });

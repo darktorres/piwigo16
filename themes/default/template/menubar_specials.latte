@@ -4,10 +4,12 @@
 {varType bool $ACTIVATE_COMMENTS}
 {varType int $ACTIVE_MENU}
 {varType list<string> $ACTIVE_PLUGINS}
+{varType list<string> $ACTIVE_PLUGIN_NAMES}
 {varType array<array-key, mixed> $ACTIVITY_CHART_DATA}
 {varType int $ACTIVITY_CHART_NUMBER_SIZES}
 {varType array{min: string, max: string} $ACTIVITY_DATES}
 {varType array<array-key, mixed> $ACTIVITY_LAST_WEEKS}
+{varType list<array<string, mixed>> $ACTIVITY_LOG_ENTRIES}
 {varType list<string> $ACTIVITY_WEEK_NUMBER}
 {varType list<array<array-key, mixed>>|null $ADDED_BY}
 {varType string|false $ADDITIONAL_FILT}
@@ -41,7 +43,7 @@
 {varType string $CATEGORIES_PARENT_NAV}
 {varType bool $CAT_ADMIN_ACCESS}
 {varType string $CAT_COMMENT}
-{varType ?string $CAT_COMMENTABLE}
+{varType ?bool $CAT_COMMENTABLE}
 {varType ?string $CAT_DIR_NAME}
 {varType ?string $CAT_FULL_DIR}
 {varType int $CAT_ID}
@@ -157,7 +159,7 @@
 {varType bool $IN_CADDIE}
 {varType string $IP}
 {varType bool $IS_HOME}
-{varType string $IS_VISIBLE}
+{varType bool $IS_VISIBLE}
 {varType string $LEVEL_SEPARATOR}
 {varType ?int $LOUNGE_COUNTER}
 {varType string $L_CAT_OPTIONS_FALSE}

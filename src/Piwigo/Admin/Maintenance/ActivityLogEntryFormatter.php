@@ -12,19 +12,25 @@ use Piwigo\Core\Lang;
 /**
  * Formats one Piwigo\Activity\ActivityRepository::
  * findSystemObjectLogWithUsernames() row into the icon/color/label/detail
- * shape the "sys" tab's `pwg.activity_sys.getList` ajax response needs.
- * Pure data transformation given a row, with zero DB/IO side effects, so
- * it's Unit-testable directly.
+ * shape the "sys" tab's server-rendered activity log
+ * ({@see \Piwigo\Admin\MaintenanceSysPageRenderer}) needs. Pure data
+ * transformation given a row, with zero DB/IO side effects, so it's
+ * Unit-testable directly.
  */
 final class ActivityLogEntryFormatter
 {
     /**
-     * $details/the returned 'detail' key are genuinely polymorphic by
+     * $details/the returned 'detailItems' are genuinely polymorphic by
      * design: $row->details is an entity-agnostic activity-log payload
-     * (same rationale as Audit\AuditService's own $before/$after), and
-     * 'detail' itself takes one of several different shapes below
-     * depending on $row->objectId/$row->action (config_section/
-     * maintenance_action/from_to/version/error/empty).
+     * (same rationale as Audit\AuditService's own $before/$after) that can
+     * resolve to zero, one, or two detail items depending on
+     * $row->objectId/$row->action (config_section/maintenance_action/
+     * from_to/version/error/empty) -- normalized here into a flat
+     * `list<array{icon: string, text: string}>` (0-2 items) plus a
+     * `detailArrow` flag (only the from_to case renders an arrow between
+     * its exactly-2 items), since the template rendering this needs a
+     * uniform shape, not the type-discriminated one a JS switch statement
+     * used to branch on.
      *
      * @param array<string, array{icon: string, label: string}> $maintActions
      *   matches MaintenanceSysPageRenderer::render()'s own already-precise
@@ -41,9 +47,8 @@ final class ActivityLogEntryFormatter
         $action_color = '';
         $action = $row->action;
         $details = $row->details ?? [];
-        $detail = [
-            'type' => 'empty',
-        ];
+        $detailItems = [];
+        $detailArrow = false;
 
         // For each categories (Core, Plugin and Theme) we need to format theirs actions
         switch ($row->objectId) {
@@ -87,7 +92,7 @@ final class ActivityLogEntryFormatter
                                     $c_text = $lang->t('Photo sizes');
                                     // sizes have 2 params always Photo sizes and sometimes config_action
                                     if (isset($details['config_action']) && $details['config_action'] === 'restore_settings') {
-                                        $detail[] = [
+                                        $detailItems[] = [
                                             'icon' => 'icon-back-in-time',
                                             'text' => $lang->t('Set as default'),
                                         ];
@@ -110,8 +115,7 @@ final class ActivityLogEntryFormatter
                                     break;
                             }
 
-                            $detail['type'] = 'config_section';
-                            $detail[] = [
+                            $detailItems[] = [
                                 'icon' => $c_icon,
                                 'text' => $c_text,
                             ];
@@ -130,11 +134,10 @@ final class ActivityLogEntryFormatter
                             // to an empty-string key, which simply misses the lookup.
                             $action_detail_key = is_string($action_detail) || is_int($action_detail) ? $action_detail : '';
                             $maint_action_entry = $maintActions[$action_detail_key] ?? null;
-                            $detail = [
-                                'type' => 'maintenance_action',
+                            $detailItems = [[
                                 'icon' => $maint_action_entry['icon'] ?? 'icon-cone',
                                 'text' => $maint_action_entry['label'] ?? $action_detail,
-                            ];
+                            ]];
                         }
                         break;
 
@@ -208,15 +211,13 @@ final class ActivityLogEntryFormatter
                         $action = $lang->t('Delete');
                         // for delete we need to specific format details
                         if (isset($details['db_version']) && is_string($details['db_version'])) {
-                            $detail['type'] = 'db_fs_version';
-                            $detail[] = [
+                            $detailItems[] = [
                                 'icon' => 'icon-flow-branch',
                                 'text' => 'database : ' . $details['db_version'],
                             ];
                         }
                         if (isset($details['fs_version']) && is_string($details['fs_version'])) {
-                            $detail['type'] = 'db_fs_version';
-                            $detail[] = [
+                            $detailItems[] = [
                                 'icon' => 'icon-flow-branch',
                                 'text' => 'filesystem : ' . $details['fs_version'],
                             ];
@@ -293,8 +294,7 @@ final class ActivityLogEntryFormatter
 
         // For each lines we need to format theirs details (general details)
         if (isset($details['from_version'])) {
-            $detail = [
-                'type' => 'from_to',
+            $detailItems = [
                 [
                     'icon' => 'icon-flow-branch',
                     'text' => $details['from_version'],
@@ -304,22 +304,19 @@ final class ActivityLogEntryFormatter
                     'text' => $details['to_version'] ?? ($details['result'] ?? ''),
                 ],
             ];
+            $detailArrow = true;
         } elseif (isset($details['version'])) {
-            $detail = [
-                'type' => 'version',
+            $detailItems = [[
                 'icon' => 'icon-flow-branch',
                 'text' => $details['version'],
-            ];
+            ]];
         } elseif (isset($details['result'])) {
-            $detail = [
-                'type' => 'error',
+            $detailItems = [[
                 'icon' => 'icon-block',
                 'text' => $details['result'],
-            ];
+            ]];
         }
 
-        // Format our data before send
-        // This data will be manipulate by maintenance_sys.js
         [$date, $hour] = explode(' ', $row->occuredOn);
 
         return [
@@ -332,9 +329,11 @@ final class ActivityLogEntryFormatter
             'action' => $action,
             'user_id' => $row->performedBy,
             'username' => $row->username,
+            'initial' => mb_strtoupper(mb_substr($row->username ?? '', 0, 1)),
             'date' => DateHelper::formatDate($date),
             'hour' => $hour,
-            'detail' => $detail,
+            'detailItems' => $detailItems,
+            'detailArrow' => $detailArrow,
         ];
     }
 }

@@ -29,13 +29,10 @@ use Piwigo\Users\UserStatus;
  * Browser spec -- reached only via the "sys" tab of the "maintenance"
  * page slug.
  *
- * The webmaster + `?method=pwg.activity_sys.getList` branch ends in a
- * real `exit` -- an HTTP-only branch by this whole campaign's own
- * documented convention (same class as Ws\Server's documented
- * exit()/die() branches), never exercised in-process here.
- * Both branches actually covered (non-webmaster; webmaster without the
- * ajax method) fall through to the same template-assignment tail without
- * ever reaching it.
+ * P26.2: the activity log is server-rendered directly now, no ajax
+ * round-trip -- a webmaster always gets a real
+ * findSystemObjectLogWithUsernames() query result (the fixture DB's own
+ * install-time system log, 3 rows), a non-webmaster gets none.
  */
 function maintenanceSysTestRoot(): string
 {
@@ -114,7 +111,10 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
             ->toHaveCount(1)
             ->and($pageState->warnings[0])->toContain('status is required to edit parameters.')
             ->and($template->getTemplateVars('isWebmaster'))
-            ->toBe(0);
+            ->toBe(0)
+            // a non-webmaster never even queries the activity log.
+            ->and($template->getTemplateVars('ACTIVITY_LOG_ENTRIES'))
+            ->toBe([]);
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
@@ -123,9 +123,8 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
     }
 });
 
-test('render() adds no warning for a webmaster and reaches the template tail without the ajax method', function (): void {
+test('render() adds no warning for a webmaster and passes the real system activity log to the template', function (): void {
     $root = maintenanceSysTestRoot();
-    unset($_GET['method']);
 
     try {
         $template = TemplateTestFactory::build();
@@ -139,10 +138,27 @@ test('render() adds no warning for a webmaster and reaches the template tail wit
         new MaintenanceSysPageRenderer()
             ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager());
 
+        $rawEntries = $template->getTemplateVars('ACTIVITY_LOG_ENTRIES');
+        $entries = is_array($rawEntries) ? $rawEntries : [];
+
         expect($pageState->warnings)
             ->toBe([])
             ->and($template->getTemplateVars('isWebmaster'))
-            ->toBe(1);
+            ->toBe(1)
+            ->and($rawEntries)
+            ->toBeArray()
+            // At least the fixture DB's own install-time system log (Core
+            // install + 2 default-theme activations, see
+            // tests/Fixtures/piwigo-17.0.sql) -- not an exact count, since
+            // other tests sharing this DB can add their own real system
+            // activity rows (plugin/theme actions, etc.) within the same
+            // session.
+            ->and(count($entries))
+            ->toBeGreaterThanOrEqual(3);
+
+        $first = is_array($entries[0] ?? null) ? $entries[0] : [];
+        expect($first)
+            ->toHaveKeys(['id', 'object', 'action', 'username', 'date', 'hour', 'detailItems', 'detailArrow']);
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();

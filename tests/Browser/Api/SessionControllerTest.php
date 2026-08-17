@@ -48,3 +48,27 @@ it('reports admin status and the extra upload fields for a logged-in admin', fun
         ->and($body)
         ->toHaveKey('uploadFormChunkSize');
 });
+
+it('POST /api/v1/session (login) reports the new status in its own response, not the pre-login one', function (): void {
+    // Regression coverage: SessionLoginController used to return this
+    // endpoint's own response before CurrentUser was refreshed, so a
+    // successful login's own response body still reported the guest
+    // status it had at the start of the request -- only a *separate*
+    // follow-up GET /api/v1/session picked up the real, now-authenticated
+    // state. Asserting on this same POST's own response is the point;
+    // loginAsAdmin()'s own UI-driven flow doesn't exercise this endpoint
+    // at all (identification.php's own real login, not this REST route).
+    $page = H::visitPwg($this, '/identification.php');
+
+    $result = H::rawPostJson($page, '/api/v1/session', [
+        'username' => H::ADMIN_USER,
+        'password' => H::ADMIN_PASS,
+    ]);
+
+    expect($result['status'])
+        ->toBe(200);
+    $decoded = json_decode($result['body'], true);
+    $body = is_array($decoded) ? $decoded : [];
+    expect($body['username'])->toBe(H::ADMIN_USER)
+        ->and($body['status'])->toBe('webmaster');
+});

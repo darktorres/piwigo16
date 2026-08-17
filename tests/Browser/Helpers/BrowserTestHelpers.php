@@ -1296,6 +1296,53 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same in-browser fetch() technique as adminPost(), but JSON-bodied --
+     * every real `/api/v1/*` endpoint (unlike the legacy admin.php form
+     * POSTs adminPost() targets) decodes its body via Http\JsonBody, not
+     * $_POST.
+     *
+     * @param array<string, mixed> $body
+     * @return array{status: int, body: string}
+     */
+    public static function rawPostJson(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path, array $body): array
+    {
+        $url = self::baseUrl() . '/' . ltrim($path, '/');
+        // $jsonBody is embedded as a JS object-literal *expression* (valid
+        // JSON is valid JS object-literal syntax) and re-serialized by
+        // JSON.stringify() at the JS level, not embedded as a pre-quoted
+        // string -- a field value containing a literal `'` would otherwise
+        // break out of a single-quoted JS string embedding.
+        $jsonBody = json_encode($body, \JSON_THROW_ON_ERROR);
+        $js = <<<JS
+        fetch('{$url}', {
+            method: 'POST',
+            redirect: 'manual',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({$jsonBody})
+        }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
+        JS;
+
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new ExpectationFailedException(
+                "rawPostJson to {$path} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded) || ! is_int($decoded['status'] ?? null) || ! is_string($decoded['body'] ?? null)) {
+            throw new ExpectationFailedException(
+                "rawPostJson to {$path} did not return the expected {status, body} shape: " . var_export($result, true)
+            );
+        }
+
+        return [
+            'status' => $decoded['status'],
+            'body' => $decoded['body'],
+        ];
+    }
+
+    /**
      * Same in-browser fetch() technique as adminPost(), but for a plain
      * authenticated GET whose real HTTP status code needs asserting (e.g. a
      * CSRF-gated GET action) -- navigateOk()/gotoOk() only assert success,

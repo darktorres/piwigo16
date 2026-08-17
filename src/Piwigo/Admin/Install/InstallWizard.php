@@ -70,6 +70,8 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -304,10 +306,23 @@ final class InstallWizard
 
         $this->isNewsletterSubscribe = $this->request->isNewsletterSubscribe;
 
-        // Is Piwigo already installed ?
+        // Is Piwigo already installed ? This is the normal steady state of
+        // any live deployment, not a fatal error -- fatalError() always
+        // throws a 500 (see its own docblock, no status override
+        // available), so this builds the ResponseReadyException directly
+        // instead, mirroring RequestBootstrap::configure()'s own
+        // inverse-case redirect. Plain, untranslated string, matching the
+        // "PHP extension ... not loaded" check just above: $this->lang
+        // hasn't loaded any catalog yet at this point in boot().
         if (file_exists($this->paths->siteLocal . Env::testModeInstalledStamp())) {
-            PresentationAccessor::htmlService()
-                ->fatalError('Piwigo is already installed');
+            $indexUrl = PresentationAccessor::urlService()
+                ->makeIndexUrl();
+            throw new ResponseReadyException(ResponseFactory::html(
+                '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
+                . '<h1>Piwigo is already installed</h1>'
+                . '<p><a href="' . htmlspecialchars($indexUrl) . '">Home</a></p>',
+                200,
+            ));
         }
 
         $this->fsLanguages = new ExtensionScanner()

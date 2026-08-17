@@ -42,7 +42,8 @@ final readonly class PreferenceSetController implements ControllerInterface
         $this->preferencesService->updateParam($param, $decodedValue);
 
         return ResponseFactory::json([
-            'preferences' => $this->currentUser->get()->preferences,
+            'preferences' => $this->currentUser->get()
+                ->preferences,
         ]);
     }
 }

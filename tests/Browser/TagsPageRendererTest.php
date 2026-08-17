@@ -10,9 +10,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * Piwigo\Admin\TagsPageRenderer (admin.php?page=tags) -- lists every tag
  * with its image counter, warns about orphan tags (tags with zero images),
- * and deletes them via a CSRF-gated action. pwg.images.setInfo's own
- * `tag_ids` param only accepts existing numeric tag ids (not names) --
- * pwg.tags.add is the real way to create a brand-new tag over the WS API.
+ * and deletes them via a CSRF-gated action. `PATCH /api/v1/images/{id}`'s
+ * own `tagIds` field only accepts existing numeric tag ids (not names) --
+ * `POST /api/v1/tags` is the real way to create a brand-new tag.
  *
  * The 'alt_names' assign (only set when a GetTagAltNames event handler
  * returns a non-empty list) has no plugin registered to answer it

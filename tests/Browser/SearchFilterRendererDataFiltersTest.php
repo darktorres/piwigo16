@@ -53,7 +53,7 @@ function searchFilterDataAdminUserId(): int
 
 /**
  * `added_by` is nullable (`ON DELETE SET NULL` on its FK to users) but no
- * WS setter exists for it -- every real upload always records the
+ * API setter exists for it -- every real upload always records the
  * uploading user's own id.
  */
 function searchFilterDataSetAddedByNull(int $imageId): void
@@ -64,7 +64,7 @@ function searchFilterDataSetAddedByNull(int $imageId): void
 }
 
 /**
- * `width`/`height` are both nullable -- no WS setter for either, same
+ * `width`/`height` are both nullable -- no API setter for either, same
  * established fact this file's own docblock already documents for
  * filesize/rating_score/date_creation.
  */
@@ -76,7 +76,7 @@ function searchFilterDataSetImageDimsNull(int $imageId): void
 }
 
 /**
- * `filesize` is nullable -- no WS setter for it either.
+ * `filesize` is nullable -- no API setter for it either.
  */
 function searchFilterDataSetImageFilesizeNull(int $imageId): void
 {
@@ -455,7 +455,7 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
  * above, for the `added_by_rows_<user>` cache pool entry (lines ~394-399).
  * Also closes the `! is_string($addedById)` continue guard (line ~442)
  * that skips enriching a NULL `added_by` group with a username: a second,
- * unrelated photo has `added_by` forced to NULL via raw SQL (no WS setter
+ * unrelated photo has `added_by` forced to NULL via raw SQL (no API setter
  * for it -- every real upload always records the uploading user's own
  * id), landing in the same unscoped `added_by AS added_by_id` GROUP BY
  * result set this search's own permissions-only clause scans.
@@ -877,7 +877,7 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
  * multi-filter test above's own Portrait/square/Panorama fixture set never
  * exercises) together with the ratio-bucket loop's own defensive skips:
  * a non-numeric width/height row (`continue`, line ~751 -- width/height
- * forced NULL via raw SQL, no WS setter for either) and a
+ * forced NULL via raw SQL, no API setter for either) and a
  * both-dimensions-zero row (`$rowWidth <= 0 and $rowHeight <= 0`, line
  * ~757-758). Deliberately scoped via 'cat' (unlike the ratios-only cache
  * test above) so the bucket counts below are exact and not diluted by

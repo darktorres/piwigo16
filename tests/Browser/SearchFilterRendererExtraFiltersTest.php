@@ -10,7 +10,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * A freshly-uploaded photo carries no rating_score/date_creation at all
- * (both genuinely NULL -- there's no WS setter for
+ * (both genuinely NULL -- there's no API setter for
  * either column, same established fact SearchFilterRendererDataFiltersTest.php's
  * own docblock already documents). A search filtering on either of those
  * columns must set a real value directly first, or it matches zero
@@ -528,7 +528,7 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Date Cache Photo');
         @unlink($image);
-        // date_creation is NULL on a freshly-uploaded photo (no WS setter
+        // date_creation is NULL on a freshly-uploaded photo (no API setter
         // for it, no EXIF metadata on a GD-generated test image -- same
         // established fact SearchFilterRendererDataFiltersTest.php's own
         // docblock documents) -- a 'date_created_preset=30d' filter can

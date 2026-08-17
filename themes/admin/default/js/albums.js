@@ -162,13 +162,13 @@ $(document).ready(() => {
   $(".RenameAlbumSubmit").on("click", function () {
     catToEdit = $(this).data("cat_id");
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setInfo",
-      type: "POST",
-      data: {
-        category_id : catToEdit,
-        name : $(".RenameAlbumLabelUsername input").val(),
-        pwg_token: pwg_token,
-      },
+      url: "api/v1/categories/" + catToEdit,
+      type: "PATCH",
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
+        name: $(".RenameAlbumLabelUsername input").val(),
+      }),
       dataType: "json",
       success: function (data) {
         const node_id = $("#cat-"+catToEdit).find('.move-cat-toogler').attr('data-id');
@@ -225,14 +225,15 @@ $(document).ready(() => {
     newAlbumPosition = $("input[name=position]:checked").val();
 
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.add",
+      url: "api/v1/categories",
       type: "POST",
-      data: {
-        name : newAlbumName,
-        parent : newAlbumParent,
-        position : newAlbumPosition,
-        pwg_token: pwg_token,
-      },
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
+        name: newAlbumName,
+        parentId: Number(newAlbumParent),
+        position: newAlbumPosition,
+      }),
       dataType: "json",
       success: function (data) {
         var parent_node = $('.tree').tree('getNodeById', newAlbumParent);
@@ -240,84 +241,81 @@ $(document).ready(() => {
           loadOnDemand(parent_node);
         }
         if (parent_node) openNodeOnDemand(parent_node);
-        
-        if (data.stat == "ok") {
-          if (newAlbumPosition == "last") {
-            $('.tree').tree(
-              'appendNode',
-              {
-                id: data.result.id,
-                isEmptyFolder: true,
-                name: newAlbumName
-              },
-              parent_node
-            );
-          } else {
-            $('.tree').tree(
-              'prependNode',
-              {
-                id: data.result.id,
-                isEmptyFolder: true,
-                name: newAlbumName
-              },
-              parent_node
-            );
-          }
-  
-          if (parent_node) {
-            setSubcatsBadge(parent_node);
-  
-            $("#cat-"+parent_node.id).on( 'click', '.move-cat-toogler', function(e) {
-              var node_id = parent_node.id;
-              var node = $('.tree').tree('getNodeById', node_id);
-              if (node) {
-                open_nodes = $('.tree').tree('getState').open_nodes;
-                if (!open_nodes.includes(node_id)) {
-                  $(this).html(toggler_open);
-                  $('.tree').tree('openNode', node);
-                } else {
-                  $(this).html(toggler_close);
-                  $('.tree').tree('closeNode', node);
-                }
-              }
-            });
-          } 
-          
-          $(".move-cat-add").off("click").on("click", function (e) {
-            e.preventDefault();
-            openAddAlbumPopIn($(this).data("aid"));
-            $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-          });
-          $(".move-cat-delete").on("click", function () {
-            triggerDeleteAlbum($(this).data("id"));
-          });
-          $(".move-cat-title-container").unbind("click").on("click", function () {
-            openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-            $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
-          });
-          $('.tiptip').tipTip({
-            delay: 0,
-            fadeIn: 200,
-            fadeOut: 200,
-            edgeOffset: 3
-          });
 
-          updateTitleBadge(nb_albums+1)
-
-          goToNode($(".tree").tree('getNodeById', data.result.id), $(".tree").tree('getNodeById', data.result.id));
-          $('html,body').animate({
-            scrollTop: $("#cat-" + data.result.id).offset().top - screen.height / 2},
-            'slow');
-
-          closeAddAlbumPopIn();
-          $(".AddAlbumSubmit").removeClass("notClickable");
+        if (newAlbumPosition == "last") {
+          $('.tree').tree(
+            'appendNode',
+            {
+              id: data.id,
+              isEmptyFolder: true,
+              name: newAlbumName
+            },
+            parent_node
+          );
         } else {
-          $(".AddAlbumErrors").text(str_album_name_empty).show();
-          $(".AddAlbumSubmit").removeClass("notClickable");
+          $('.tree').tree(
+            'prependNode',
+            {
+              id: data.id,
+              isEmptyFolder: true,
+              name: newAlbumName
+            },
+            parent_node
+          );
         }
+
+        if (parent_node) {
+          setSubcatsBadge(parent_node);
+
+          $("#cat-"+parent_node.id).on( 'click', '.move-cat-toogler', function(e) {
+            var node_id = parent_node.id;
+            var node = $('.tree').tree('getNodeById', node_id);
+            if (node) {
+              open_nodes = $('.tree').tree('getState').open_nodes;
+              if (!open_nodes.includes(node_id)) {
+                $(this).html(toggler_open);
+                $('.tree').tree('openNode', node);
+              } else {
+                $(this).html(toggler_close);
+                $('.tree').tree('closeNode', node);
+              }
+            }
+          });
+        }
+
+        $(".move-cat-add").off("click").on("click", function (e) {
+          e.preventDefault();
+          openAddAlbumPopIn($(this).data("aid"));
+          $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
+        });
+        $(".move-cat-delete").on("click", function () {
+          triggerDeleteAlbum($(this).data("id"));
+        });
+        $(".move-cat-title-container").unbind("click").on("click", function () {
+          openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
+          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+        });
+        $('.tiptip').tipTip({
+          delay: 0,
+          fadeIn: 200,
+          fadeOut: 200,
+          edgeOffset: 3
+        });
+
+        updateTitleBadge(nb_albums+1)
+
+        goToNode($(".tree").tree('getNodeById', data.id), $(".tree").tree('getNodeById', data.id));
+        $('html,body').animate({
+          scrollTop: $("#cat-" + data.id).offset().top - screen.height / 2},
+          'slow');
+
+        closeAddAlbumPopIn();
+        $(".AddAlbumSubmit").removeClass("notClickable");
       },
       error: function(message) {
         console.log(message);
+        $(".AddAlbumErrors").text(str_album_name_empty).show();
+        $(".AddAlbumSubmit").removeClass("notClickable");
       }
     });
   })
@@ -567,13 +565,13 @@ function openDeleteAlbumPopIn(cat_to_delete) {
   // Actually delete
   $(".DeleteAlbumSubmit").unbind("click").on("click", function () {
     $.ajax({
-      url: "ws.php?format=json&method=pwg.categories.delete",
-      type: "POST",
-      data: {
-        category_id: cat_to_delete,
-        photo_deletion_mode: $("input[name=photo_deletion_mode]:checked").val(),
-        pwg_token: pwg_token,
-      },
+      url: "api/v1/categories/" + cat_to_delete,
+      type: "DELETE",
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
+        photoDeletionMode: $("input[name=photo_deletion_mode]:checked").val(),
+      }),
       success: function (raw_data) {
         parentOfDeletedNode = node.parent
         $('.tree').tree('removeNode', node);
@@ -798,34 +796,30 @@ function changeParent(node, parent, rank) {
   oldParent = node.parent
   return new Promise((res, rej) => {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.move",
+      url: "api/v1/categories/actions/move",
       type: "POST",
-      data: {
-        category_id : node,
-        parent : parent,
-        pwg_token : pwg_token
-      },
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
+        categoryIds: [Number(node)],
+        parentId: Number(parent),
+      }),
       before: function () {
         oldParent = node.parent
       },
       dataType: "json",
-      success: function (raw_data) {
-        data = raw_data;
-        if (data.stat === "ok") {
-          changeRank(node, rank)
-          const updated_cats = data.result.updated_cats;
-          if (updated_cats) 
-          {
-            updated_cats.forEach((cat) => {
-              const node = $('.tree').tree('getNodeById', cat.cat_id);
-              node.nb_sub_photos = cat.nb_sub_photos;
-              $('.tree').tree('updateNode', node, node.name);
-            });
-          }
-          res();
-        } else {
-          rej(raw_data);
+      success: function (data) {
+        changeRank(node, rank)
+        const updatedCategories = data.updatedCategories;
+        if (updatedCategories)
+        {
+          updatedCategories.forEach((cat) => {
+            const node = $('.tree').tree('getNodeById', cat.categoryId);
+            node.nb_sub_photos = cat.nbSubPhotos;
+            $('.tree').tree('updateNode', node, node.name);
+          });
         }
+        res();
       },
       error: function(message) {
         rej(message);
@@ -837,20 +831,17 @@ function changeParent(node, parent, rank) {
 function changeRank(node, rank) {
   return new Promise((res, rej) => {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setRank",
+      url: "api/v1/categories/actions/reorder",
       type: "POST",
-      data: {
-        category_id : node,
-        rank : rank
-      },
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
+        categoryIds: [Number(node)],
+        rank: Number(rank),
+      }),
       dataType: "json",
-      success: function (raw_data) {
-        data = raw_data;
-        if (data.stat === "ok") {
-          res();
-        } else {
-          rej(raw_data);
-        }
+      success: function (data) {
+        res();
       },
       error: function(message) {
         rej(message);

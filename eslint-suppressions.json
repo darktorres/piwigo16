@@ -28,10 +28,10 @@
   },
   "themes/admin/default/js/albums.js": {
     "eqeqeq": {
-      "count": 43
+      "count": 42
     },
     "no-undef": {
-      "count": 174
+      "count": 170
     }
   },
   "themes/admin/default/js/batchManagerFilter.js": {

@@ -14,8 +14,8 @@ namespace Piwigo\Category\Projection;
  * `toArray()` preserves the exact original snake_case shape: every real
  * consumer of these 3 repository methods reaches this DTO only through
  * {@see \Piwigo\Category\CategoryService}'s own pass-through methods,
- * which keep their existing plain-array return contracts (WS responses
- * and a `CategoryService::getCategoryInfo()` splice site among them) --
+ * which keep their existing plain-array return contracts (a
+ * `CategoryService::getCategoryInfo()` splice site among them) --
  * `toArray()` is what lets the service layer stay unchanged.
  */
 final readonly class CategoryIdNamePermalink

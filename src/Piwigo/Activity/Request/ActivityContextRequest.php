@@ -12,9 +12,7 @@ namespace Piwigo\Activity\Request;
  * the class's own docblock), so changing its signature to thread these
  * fields in as parameters would ripple across every caller for a
  * read-only, audit-log-enrichment concern -- constructed as the first
- * statement of `record()` instead, same as every WS method this
- * migration has already converted under `Server::invoke()`'s own
- * fixed dispatch signature.
+ * statement of `record()` instead.
  *
  * `pageParam` covers the original's own 2 separate `$_GET['page']` reads
  * (the "script" fallback and the "sync" detection) -- same key, reused.

@@ -10,7 +10,8 @@ namespace Piwigo\Auth\Event;
  * only change-shape event under `Piwigo\Event\User\`, mutable on `$success`. `$password`
  * is nullable -- diverges from the reference's non-nullable `string` --
  * since both real callers (identification.php's raw POST body,
- * `pwg.session.login`'s optional WS param) can genuinely omit it.
+ * {@see \Piwigo\Controller\Api\SessionLoginController}'s optional request
+ * field) can genuinely omit it.
  */
 final class TryLogUser
 {

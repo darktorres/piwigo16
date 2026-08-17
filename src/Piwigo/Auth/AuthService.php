@@ -276,8 +276,9 @@ final readonly class AuthService
      * escaped).
      *
      * @param string|null $password both real callers (identification.php's
-     *   $_POST, ws_session_login()'s optional WS param) can genuinely pass
-     *   null when the field is omitted
+     *   $_POST, {@see \Piwigo\Controller\Api\SessionLoginController}'s
+     *   optional request field) can genuinely pass null when the field is
+     *   omitted
      */
     public function tryLogUser(
         string $username,

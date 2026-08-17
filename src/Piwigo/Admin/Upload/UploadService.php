@@ -649,9 +649,9 @@ final readonly class UploadService
             $imageService = $this->imageService;
 
             if ($this->currentConfig->loungeActive) {
-                // fillLounge() requires int keys for $categories; a WS param
-                // forced into an array by makeArrayParam() could theoretically
-                // carry non-sequential/string keys, so reindex to guarantee it.
+                // fillLounge() requires int keys for $categories; a caller-supplied
+                // array could theoretically carry non-sequential/string keys,
+                // so reindex to guarantee it.
                 $imageService->fillLounge([$image_id], array_values($categories));
             } else {
                 $imageService->associateImagesToCategories([$image_id], $categories);

@@ -16,13 +16,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * CLI wrapper for `pwg.images.syncMetadata` -- re-reads EXIF/IPTC
- * metadata from disk for the given photos. Its WS predecessor's own
- * `image_id` string-validation loop is wire-format-specific (guarding
- * against a malformed request param); Symfony Console's own `int[]`
- * argument type makes that unnecessary here, so this calls
- * `ImageService::getExistingIds()`/`MetadataService::syncMetadata()`
- * directly, same domain calls the WS handler itself makes.
+ * CLI counterpart to `POST /api/v1/images/actions/sync-metadata`
+ * ({@see \Piwigo\Controller\Api\Images\ImageSyncMetadataController}) --
+ * re-reads EXIF/IPTC metadata from disk for the given photos. Symfony
+ * Console's own `int[]` argument type needs no request-param
+ * string-validation loop, so this calls `ImageService::getExistingIds()`/
+ * `MetadataService::syncMetadata()` directly, same domain calls that
+ * controller makes.
  */
 #[AsCommand(name: 'maintenance:sync-metadata', description: 'Re-read EXIF/IPTC metadata from disk for the given photos')]
 final class MaintenanceSyncMetadataCommand extends Command

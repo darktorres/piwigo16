@@ -21,8 +21,10 @@ use Piwigo\Session\SessionService;
 
 /**
  * Personal API key (pkid-...) lifecycle: create/revoke/edit/list, plus the
- * "connected via identification.php" guard WS methods use to gate API key
- * self-management, and the expiration-notice email.
+ * "connected via identification.php" guard `Controller\Api\Session\
+ * {ApiKeyCreateController,ApiKeyRevokeController,ApiKeyListController,
+ * ApiKeyUpdateController}` use to gate API key self-management, and the
+ * expiration-notice email.
  *
  * Constructor-injects `MailerInterface` rather than
  * `Piwigo\Mail\MailService` directly: `MailService` is `L3Presentation`

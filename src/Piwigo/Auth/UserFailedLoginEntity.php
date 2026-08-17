@@ -12,8 +12,9 @@ use Piwigo\Common\ValueObject\UserId;
  * Maps the `user_failed_logins` table. Genuinely append-only (surrogate
  * auto-increment PK, unlike every other table this migration touches) -- one
  * row per failed login attempt through AuthService::pwgLogin(), the single
- * real choke point for both the HTML login form and the WS pwg.session.login
- * method. Backs a dual-scope (per-user AND per-IP) lockout -- see the table's
+ * real choke point for both the HTML login form and
+ * {@see \Piwigo\Controller\Api\SessionLoginController}. Backs a dual-scope
+ * (per-user AND per-IP) lockout -- see the table's
  * own two indexes (idx_user_failed_logins_user_time,
  * idx_user_failed_logins_ip_time).
  *

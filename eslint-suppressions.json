@@ -77,10 +77,10 @@
   },
   "themes/admin/default/js/cat_modify.js": {
     "eqeqeq": {
-      "count": 11
+      "count": 5
     },
     "no-undef": {
-      "count": 45
+      "count": 50
     }
   },
   "themes/admin/default/js/cat_search.js": {

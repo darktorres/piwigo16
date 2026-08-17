@@ -13,37 +13,27 @@ jQuery(document).ready(function() {
 
   $(".unlock-album").on('click', function () {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setInfo",
-      type:"POST",
+      url: "api/v1/categories/" + album_id,
+      type:"PATCH",
       dataType: "json",
-      data: {
-        category_id: album_id,
-        visible: 'true',
-      },
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
+        visible: true,
+      }),
       success:function(data) {
-        if (data.stat == "ok") {
-
-          is_visible = 'true';
-          if ($("#cat-locked").is(":checked")) {
-            $("input[id='cat-locked']").trigger('click');
-          }
-          checkAlbumLock();
-
-          setTimeout(
-            function() {
-              $('.info-message').hide()
-            }, 
-            5000
-          )
-        } else {
-          $('.info-error').show()
-          setTimeout(
-            function() {
-              $('.info-error').hide()
-            }, 
-            5000
-          )
+        is_visible = 'true';
+        if ($("#cat-locked").is(":checked")) {
+          $("input[id='cat-locked']").trigger('click');
         }
+        checkAlbumLock();
+
+        setTimeout(
+          function() {
+            $('.info-message').hide()
+          },
+          5000
+        )
       },
       error:function(XMLHttpRequest, textStatus, errorThrows) {
         save_button_set_loading(false)
@@ -72,43 +62,33 @@ jQuery(document).ready(function() {
     $('.info-error,.info-message').hide()
 
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setInfo",
-      type:"POST",
+      url: "api/v1/categories/" + album_id,
+      type:"PATCH",
       dataType: "json",
-      data: {
-        category_id: album_id,
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
         name: $("#cat-name").val(),
         comment: $("#cat-comment").val(),
-        visible: $("#cat-locked").is(":checked") ? 'false' : 'true',
-        commentable: $("#cat-commentable").is(":checked") ? "true":"false",
-        pwg_token: pwg_token,
-      },
+        visible: !$("#cat-locked").is(":checked"),
+        commentable: $("#cat-commentable").is(":checked"),
+      }),
       success:function(data) {
-        if (data.stat == "ok") {
-          save_button_set_loading(false)
+        save_button_set_loading(false)
 
-          $('.info-message').show()
-          $('.cat-modification .cat-modify-info-subcontent').html(str_just_now)
-          $('.cat-modification .cat-modify-info-content').html(str_just_now)
+        $('.info-message').show()
+        $('.cat-modification .cat-modify-info-subcontent').html(str_just_now)
+        $('.cat-modification .cat-modify-info-content').html(str_just_now)
 
-          is_visible = $("#cat-locked").is(":checked") ? 'false' : 'true';
-          checkAlbumLock();
+        is_visible = $("#cat-locked").is(":checked") ? 'false' : 'true';
+        checkAlbumLock();
 
-          setTimeout(
-            function() {
-              $('.info-message').hide()
-            }, 
-            5000
-          )
-        } else {
-          $('.info-error').show()
-          setTimeout(
-            function() {
-              $('.info-error').hide()
-            }, 
-            5000
-          )
-        }
+        setTimeout(
+          function() {
+            $('.info-message').hide()
+          },
+          5000
+        )
       },
       error:function(XMLHttpRequest, textStatus, errorThrows) {
         save_button_set_loading(false)
@@ -117,7 +97,7 @@ jQuery(document).ready(function() {
         setTimeout(
           function() {
             $('.info-error').hide()
-          }, 
+          },
           5000
         )
         console.log(errorThrows);
@@ -126,31 +106,29 @@ jQuery(document).ready(function() {
 
     if (parent_album != default_parent_album) {
       jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.categories.move",
+        url: "api/v1/categories/actions/move",
         type:"POST",
         dataType: "json",
-        data: {
-          category_id: album_id,
-          parent: parent_album,
-          pwg_token: pwg_token,
-        },
+        contentType: "application/json",
+        headers: {'X-CSRF-Token': pwg_token},
+        data: JSON.stringify({
+          categoryIds: [album_id],
+          parentId: parent_album,
+        }),
         success: function (data) {
-          if (data.stat === "ok") {
-            $(".cat-modify-ariane").html(
-              data.result.new_ariane_string
-            )
-            default_parent_album = parent_album;
-          } else {
-            $('.info-error').show()
-            setTimeout(
-              function() {
-                $('.info-error').hide()
-              }, 
-              5000
-            )
-          }
+          $(".cat-modify-ariane").html(
+            data.newArianeString
+          )
+          default_parent_album = parent_album;
         },
         error: function(e) {
+          $('.info-error').show()
+          setTimeout(
+            function() {
+              $('.info-error').hide()
+            },
+            5000
+          )
           console.log(e.message);
         }
       });
@@ -244,13 +222,13 @@ jQuery(document).ready(function() {
   function delete_album(photo_deletion_mode) {
     return new Promise((res, rej) => {
       $.ajax({
-        url: "ws.php?format=json&method=pwg.categories.delete",
-        type: "POST",
-        data: {
-          category_id: album_id,
-          photo_deletion_mode: photo_deletion_mode,
-          pwg_token : pwg_token,
-        },
+        url: "api/v1/categories/" + album_id,
+        type: "DELETE",
+        contentType: "application/json",
+        headers: {'X-CSRF-Token': pwg_token},
+        data: JSON.stringify({
+          photoDeletionMode: photo_deletion_mode,
+        }),
         success: function (raw_data) {
           res()
         },
@@ -262,30 +240,22 @@ jQuery(document).ready(function() {
   }
 
   $('#refreshRepresentative').on('click', function(e) {
-    var method = 'pwg.categories.refreshRepresentative';
-
     $('#refreshRepresentative i').removeClass("icon-ccw").addClass("icon-spin6").addClass("animate-spin")
 
     jQuery.ajax({
-      url: "ws.php?format=json&method="+method,
+      url: "api/v1/categories/" + album_id + "/actions/refresh-representative",
       type:"POST",
-      data: {
-        category_id: album_id
-      },
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
       dataType: "json",
       success:function(data) {
-        if (data.stat == 'ok') {
-          jQuery("#deleteRepresentative").show();
+        jQuery("#deleteRepresentative").show();
 
-          jQuery(".cat-modify-representative")
-            .attr('style', `background-image:url('${data.result.src}')`)
-            .removeClass('icon-dice-solid')
-          
-          }
-          else {
-            console.error(data);
-          }
-          $('#refreshRepresentative i').addClass("icon-ccw").removeClass("icon-spin6").removeClass("animate-spin")
+        jQuery(".cat-modify-representative")
+          .attr('style', `background-image:url('${data.src}')`)
+          .removeClass('icon-dice-solid')
+
+        $('#refreshRepresentative i').addClass("icon-ccw").removeClass("icon-spin6").removeClass("animate-spin")
       },
       error:function(XMLHttpRequest, textStatus, errorThrows) {
         console.error(errorThrows);
@@ -297,27 +267,20 @@ jQuery(document).ready(function() {
   });
 
   $('#deleteRepresentative').on('click',  function(e) {
-    var method = 'pwg.categories.deleteRepresentative';
-
     $('#deleteRepresentative i').removeClass("icon-cancel").addClass("icon-spin6").addClass("animate-spin")
 
     jQuery.ajax({
-      url: "ws.php?format=json&method="+method,
-      type:"POST",
-      data: {
-        category_id: album_id
-      },
+      url: "api/v1/categories/" + album_id + "/representative",
+      type:"DELETE",
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
       dataType: "json",
       success:function(data) {
-        if (data.stat == 'ok') {
-          jQuery("#deleteRepresentative").hide();
-          jQuery(".cat-modify-representative")
-            .attr('style', ``)
-            .addClass('icon-dice-solid')
-        }
-        else {
-          console.error(data);
-        }
+        jQuery("#deleteRepresentative").hide();
+        jQuery(".cat-modify-representative")
+          .attr('style', ``)
+          .addClass('icon-dice-solid')
+
         $('#deleteRepresentative i').addClass("icon-cancel").removeClass("icon-spin6").removeClass("animate-spin")
       },
       error:function(XMLHttpRequest, textStatus, errorThrows) {
@@ -339,97 +302,91 @@ jQuery(document).ready(function() {
 
   $(".allow-comments").on("click", function () {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setInfo",
-      type:"POST",
+      url: "api/v1/categories/" + album_id,
+      type:"PATCH",
       dataType: "json",
-      data: {
-        category_id: album_id,
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
         commentable: true,
-        apply_commentable_to_subalbums: true,
-      },
+        applyCommentableToSubalbums: true,
+      }),
       beforeSend: function () {
         save_button_set_loading(true);
       },
       success:function(data) {
-        if (data.stat == "ok") {
-
-          save_button_set_loading(false);
-          if (!$("#cat-commentable").is(":checked")) {
-            $("#cat-commentable").trigger("click");
-          }
-
-          temp_txt = $(".info-message").text();
-          $(".info-message").text(str_album_comment_allow);
-          $(".info-message").show();
-
-          setTimeout(
-            function() {
-              $('.info-message').hide()
-              $(".info-message").text(temp_txt);
-            }, 
-            5000
-          )
-        } else {
-          $('.info-error').show()
-          setTimeout(
-            function() {
-              $('.info-error').hide()
-            }, 
-            5000
-          )
+        save_button_set_loading(false);
+        if (!$("#cat-commentable").is(":checked")) {
+          $("#cat-commentable").trigger("click");
         }
+
+        temp_txt = $(".info-message").text();
+        $(".info-message").text(str_album_comment_allow);
+        $(".info-message").show();
+
+        setTimeout(
+          function() {
+            $('.info-message').hide()
+            $(".info-message").text(temp_txt);
+          },
+          5000
+        )
       },
       error:function(e) {
         console.log(e);
         save_button_set_loading(false);
+        $('.info-error').show()
+        setTimeout(
+          function() {
+            $('.info-error').hide()
+          },
+          5000
+        )
       }
     });
   });
   $(".disallow-comments").on("click", function () {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setInfo",
-      type:"POST",
+      url: "api/v1/categories/" + album_id,
+      type:"PATCH",
       dataType: "json",
-      data: {
-        category_id: album_id,
+      contentType: "application/json",
+      headers: {'X-CSRF-Token': pwg_token},
+      data: JSON.stringify({
         commentable: false,
-        apply_commentable_to_subalbums: true,
-      },
+        applyCommentableToSubalbums: true,
+      }),
       beforeSend: function () {
         save_button_set_loading(true);
       },
       success:function(data) {
-        if (data.stat == "ok") {
-
-          save_button_set_loading(false);
-          if ($("#cat-commentable").is(":checked")) {
-            $("#cat-commentable").trigger("click");
-          }
-
-          temp_txt = $(".info-message").text();
-          $(".info-message").text(str_album_comment_disallow);
-          $(".info-message").show();
-
-          setTimeout(
-            function() {
-              $('.info-message').hide()
-              $(".info-message").text(temp_txt);
-            }, 
-            5000
-          )
-        } else {
-          $('.info-error').show()
-          setTimeout(
-            function() {
-              $('.info-error').hide()
-            }, 
-            5000
-          )
+        save_button_set_loading(false);
+        if ($("#cat-commentable").is(":checked")) {
+          $("#cat-commentable").trigger("click");
         }
+
+        temp_txt = $(".info-message").text();
+        $(".info-message").text(str_album_comment_disallow);
+        $(".info-message").show();
+
+        setTimeout(
+          function() {
+            $('.info-message').hide()
+            $(".info-message").text(temp_txt);
+          },
+          5000
+        )
       },
       error:function(e) {
         console.log(e);
         save_button_set_loading(false);
+        $('.info-error').show()
+        setTimeout(
+          function() {
+            $('.info-error').hide()
+          },
+          5000
+        )
       }
     });
   });

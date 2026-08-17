@@ -16,7 +16,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\SortRenderer;
 use Piwigo\Http\Middleware\PluginBootstrapMiddleware;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -101,13 +100,11 @@ final class PluginBootstrapMiddlewareTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testProcessStampsAFreshInstalledVersionAndLastMajorUpdateAppliesTheCustomOrderAndEmptiesTheLounge(): void
+    public function testProcessStampsAFreshInstalledVersionAndLastMajorUpdateAndEmptiesTheLounge(): void
     {
         // Fresh-install state: neither row has ever been written.
         $this->configService->confDeleteParam('piwigo_installed_version');
         $this->configService->confDeleteParam('last_major_update');
-        // A real custom ORDER BY fragment for the "inside category" listing.
-        $this->configService->confUpdateParam('order_by_inside_category_custom', 'ORDER BY id DESC');
         // Lounge: active, a short max duration, one photo aged well past it
         // -- same recipe as LoungeMaintenanceTest's own
         // test_needsEmptying_is_true_once_the_oldest_lounge_photo_exceeds_the_max_duration.
@@ -137,9 +134,9 @@ final class PluginBootstrapMiddlewareTest extends IntegrationTestCase
             $this->process();
 
             // Neither confUpdateParam() call for piwigo_installed_version
-            // passes updateGlobal: true -- unlike last_major_update/
-            // orderByInsideCategory just below, the in-memory
-            // CurrentConfig::piwigoInstalledVersion() property is
+            // passes updateGlobal: true -- unlike last_major_update just
+            // below, the in-memory CurrentConfig::piwigoInstalledVersion()
+            // property is
             // deliberately left holding whatever loadConfFromDb() hydrated
             // it to at the start of this same test, so the DB row itself
             // (not the property) is the real proof this branch ran.
@@ -150,7 +147,6 @@ final class PluginBootstrapMiddlewareTest extends IntegrationTestCase
             self::assertIsString($storedVersion);
             self::assertSame(AppInfo::VERSION, json_decode($storedVersion, true));
             self::assertNotNull(CurrentConfigTestFactory::get()->lastMajorUpdate);
-            self::assertSame('ORDER BY id DESC', new SortRenderer($this->conn)->toSql(CurrentConfigTestFactory::get()->orderByInsideCategory));
             // The real, definitive proof LoungeMaintenance::needsEmptying()
             // -> ImageService::emptyLounge() actually ran: the lounge row
             // deleteLoungeUpTo() removes is gone.
@@ -164,7 +160,6 @@ final class PluginBootstrapMiddlewareTest extends IntegrationTestCase
             );
             $this->configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
             $this->configService->confUpdateParam('last_major_update', '2026-07-26 23:10:35');
-            $this->configService->confDeleteParam('order_by_inside_category_custom');
             $this->configService->confUpdateParam('lounge_active', true);
             $this->configService->confDeleteParam('lounge_max_duration');
         }

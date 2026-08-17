@@ -1,0 +1,31 @@
+parameters:
+    level: 8
+    # shipmonk/dead-code-detector traces usage only within the analysed
+    # set. Every plugin/theme's own ExtensionInterface lifecycle methods
+    # (boot/install/activate/deactivate/uninstall/update/subscribedEvents)
+    # are called exclusively from PluginRegistry/ThemeRegistry/
+    # EventDispatcher, which live in this repo's own src/ -- outside the
+    # scope of this config on purpose (see the file-level comment below).
+    # Without that caller visible, every implementation of the interface
+    # looks unreachable; that's a structural blind spot of this config's
+    # narrower scope, not a real finding, so dead-code detection is off
+    # here even though the main phpstan.neon leaves it on for src/ itself.
+    shipmonkDeadCode:
+        detect:
+            deadMethods: false
+            deadConstants: false
+            deadEnumCases: false
+            deadProperties:
+                neverRead: false
+                neverWritten: false
+    # Separate from tmpDir: /tmp/phpstan%currentWorkingDirectory% in
+    # phpstan.neon (a different prefix) so a run of this config can't
+    # collide with a concurrent run of the main one.
+    tmpDir: /tmp/phpstan-extensions%currentWorkingDirectory%
+    excludePaths:
+        analyseAndScan:
+            # A handful of legacy plugins bundle their own vendor/ inside
+            # src/ (e.g. flickr2piwigo's phpFlickr) -- not a concern for
+            # any of the 26/50 currently-ported plugins/themes, but a
+            # future port could add one.
+            - '*/vendor/*'

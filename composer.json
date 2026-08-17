@@ -168,6 +168,7 @@
       "@php bin/piwigo phpstan-latte:compile",
       "@php vendor/bin/phpstan analyse"
     ],
+    "analyse:phpstan:extensions": "bash tools/analyse-ported-extensions.sh",
     "bench": "@php vendor/bin/phpbench run",
     "check:doc-drift": "@php tools/doc-drift-check.php",
     "generate:latte-shims": "@php bin/piwigo phpstan-latte:generate-shims",

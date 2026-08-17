@@ -15,7 +15,6 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\SortRenderer;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;

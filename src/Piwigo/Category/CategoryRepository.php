@@ -3353,7 +3353,8 @@ final readonly class CategoryRepository
 
         return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $qb->getQuery()->getSingleColumnResult()
+            $qb->getQuery()
+                ->getSingleColumnResult()
         ));
     }
 

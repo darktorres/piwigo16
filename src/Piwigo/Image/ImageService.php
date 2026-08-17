@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -19,6 +20,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Image\Event\BeginDeleteElements;
 use Piwigo\Image\Event\DeleteElements;
 use Piwigo\Image\Projection\AddMethodBreakdown;
@@ -40,8 +42,6 @@ use Piwigo\Image\Request\EmptyLoungeRequest;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
-use Piwigo\Db\SortRenderer;
 
 /**
  * Slideshow param encode/decode/correct and PDF page counting -- pure

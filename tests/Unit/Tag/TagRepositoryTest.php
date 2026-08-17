@@ -347,7 +347,8 @@ test('findImageIdsForTagIds() matches the fixture', function (): void {
 test('findAllTaggedImageIds() returns every distinct image id with at least one tag', function (): void {
     // Fixture: image_tag links images 1/2/3 (image 1 to all 3 tags, 2/3 to
     // tag 1 only); images 4/5 have none.
-    $ids = tagTestRepo()->findAllTaggedImageIds();
+    $ids = tagTestRepo()
+        ->findAllTaggedImageIds();
     sort($ids);
 
     expect($ids)

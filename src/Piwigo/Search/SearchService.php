@@ -12,6 +12,7 @@ use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
@@ -33,7 +34,6 @@ use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -1216,7 +1216,7 @@ final readonly class SearchService
             $token = $expr->stokens[$i];
 
             if ($tagIds !== []) {
-                $qsr->tag_iids[$i] = $this->tagService->getImageIdsForTags(array_map(TagId::from(...), $tagIds), 'OR', null, '', false);
+                $qsr->tag_iids[$i] = $this->tagService->getImageIdsForTags(array_map(TagId::from(...), $tagIds), 'OR', null, null, false);
                 if ((bool) ($expr->stoken_modifiers[$i] & QSingleToken::QST_NOT)) {
                     $notIds = array_merge($notIds, $tagIds);
                 } elseif (strlen($token->term) > 2 || count($expr->stokens) === 1 || isset($token->scope) || (bool) ($token->modifier & (QSingleToken::QST_WILDCARD | QSingleToken::QST_QUOTED))) {

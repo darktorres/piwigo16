@@ -206,16 +206,6 @@ parameters:
             identifier: cast.useless
             path: tests/Contract/ImageFilterCriteriaBuilderTest.php
         -
-            # images.rating_score is declared FLOAT on MySQL (DBAL returns
-            # a native float) but numeric(5,4) on Postgres (DBAL returns a
-            # string, to preserve exact decimal precision) -- the (float)
-            # cast is required for Postgres portability even though
-            # phpstan-dba's currently-configured mysqli connection already
-            # reports the column as float, making the cast look redundant
-            # from that one connection's view alone.
-            identifier: cast.useless
-            path: tests/Contract/WsHelperTest.php
-        -
             # ImageRepository::findIdsGroupedByDuplicateFields() is inferred
             # as returning `array{}` -- but only when called with an inline
             # literal naming Md5sum. Narrowed by experiment: the identical

@@ -16,6 +16,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Http\Middleware\PluginBootstrapMiddleware;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -149,7 +150,7 @@ final class PluginBootstrapMiddlewareTest extends IntegrationTestCase
             self::assertIsString($storedVersion);
             self::assertSame(AppInfo::VERSION, json_decode($storedVersion, true));
             self::assertNotNull(CurrentConfigTestFactory::get()->lastMajorUpdate);
-            self::assertSame('ORDER BY id DESC', CurrentConfigTestFactory::get()->orderByInsideCategory->toSql());
+            self::assertSame('ORDER BY id DESC', new SortRenderer($this->conn)->toSql(CurrentConfigTestFactory::get()->orderByInsideCategory));
             // The real, definitive proof LoungeMaintenance::needsEmptying()
             // -> ImageService::emptyLounge() actually ran: the lounge row
             // deleteLoungeUpTo() removes is gone.

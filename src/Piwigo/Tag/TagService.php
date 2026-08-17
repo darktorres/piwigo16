@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Cache\TagCloudCachePool;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -20,7 +21,6 @@ use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Tag\Event\DeleteTags;
 use Piwigo\Tag\Event\GetTagAltNames;
 use Piwigo\Tag\Event\GetTagNameLikeWhere;
@@ -340,7 +340,8 @@ final readonly class TagService
             $usePermissions,
             $this->permissionService->getPermissionCriteria(),
             $filterCriteria,
-            $this->sortRenderer()->toSqlBody($order, 'i')
+            $this->sortRenderer()
+                ->toSqlBody($order, 'i')
         );
     }
 

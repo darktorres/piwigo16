@@ -2520,6 +2520,59 @@ final readonly class CategoryService
     }
 
     /**
+     * How many photos would become orphan (linked to no other category) if
+     * this category (and its sub-categories) were deleted -- the
+     * `pwg.categories.calculateOrphans` computation, shared by
+     * `Ws\Categories\CalculateOrphansHandler` and
+     * `Command\MaintenanceCalculateOrphansCommand` so this 2-branch
+     * performance optimization (below ~1000 recursive images, let MySQL do
+     * the set difference; above that, avoid a huge SQL IN-list and diff in
+     * PHP instead) lives in exactly one place.
+     *
+     * @return array{nbImagesAssociatedOutside: int, nbImagesBecomingOrphan: int, nbImagesRecursive: int}
+     */
+    public function calculateOrphanImpact(int $categoryId): array
+    {
+        $subcatIds = $this->getSubcatIds([$categoryId]);
+        $imageIdsRecursive = $this->getDistinctLinkedImageIds($subcatIds);
+        $nbImagesRecursive = count($imageIdsRecursive);
+
+        $nbImagesAssociatedOutside = 0;
+        $nbImagesBecomingOrphan = 0;
+
+        if ($nbImagesRecursive > 0) {
+            if ($nbImagesRecursive < 1000) {
+                $imageIdsAssociatedOutside = $this->getNonOrphanImageIds($imageIdsRecursive, $subcatIds);
+                $nbImagesAssociatedOutside = count($imageIdsAssociatedOutside);
+
+                $imageIdsBecomingOrphan = array_diff($imageIdsRecursive, $imageIdsAssociatedOutside);
+                $nbImagesBecomingOrphan = count($imageIdsBecomingOrphan);
+            } else {
+                $imageIdsRecursiveKeys = array_flip($imageIdsRecursive);
+
+                $imageIdsAssociatedOutside = $this->getImageIdsOutsideCategories($subcatIds);
+                $imageIdsNotOrphan = [];
+
+                foreach ($imageIdsAssociatedOutside as $imageId) {
+                    if (isset($imageIdsRecursiveKeys[$imageId])) {
+                        $imageIdsNotOrphan[] = $imageId;
+                    }
+                }
+
+                $nbImagesAssociatedOutside = count(array_unique($imageIdsNotOrphan));
+                $imageIdsBecomingOrphan = array_diff($imageIdsRecursive, $imageIdsNotOrphan);
+                $nbImagesBecomingOrphan = count($imageIdsBecomingOrphan);
+            }
+        }
+
+        return [
+            'nbImagesAssociatedOutside' => $nbImagesAssociatedOutside,
+            'nbImagesBecomingOrphan' => $nbImagesBecomingOrphan,
+            'nbImagesRecursive' => $nbImagesRecursive,
+        ];
+    }
+
+    /**
      * @param  list<int>  $ids
      * @return list<string>
      */

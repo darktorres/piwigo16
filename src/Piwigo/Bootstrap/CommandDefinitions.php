@@ -9,11 +9,15 @@ use Piwigo\Command\BackupCreateCommand;
 use Piwigo\Command\BackupRestoreCommand;
 use Piwigo\Command\CacheClearCommand;
 use Piwigo\Command\LintLatteCommand;
+use Piwigo\Command\MaintenanceCacheSizeCommand;
+use Piwigo\Command\MaintenanceCalculateOrphansCommand;
+use Piwigo\Command\MaintenanceDeleteOrphansCommand;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
+use Piwigo\Command\MaintenanceSyncMetadataCommand;
 use Piwigo\Command\PhpStanLatteCompileCommand;
 use Piwigo\Command\PhpStanLatteShimsCommand;
 use Piwigo\Command\PhpStanLatteSyncVarTypeCommand;
@@ -29,8 +33,11 @@ use Symfony\Component\Messenger\Command\ConsumeMessagesCommand;
  * gain real backing services -- same discipline as config/container.php
  * and Piwigo\Bootstrap\RouteDefinitions.
  *
- * The 4 Maintenance*Command classes autowire DbMaintenanceRepository with
- * zero new container entries.
+ * The 4 original Maintenance*Command classes autowire DbMaintenanceRepository
+ * with zero new container entries; the 4 newer ones (CalculateOrphans/
+ * DeleteOrphans/SyncMetadata/CacheSize) autowire CategoryService/
+ * ImageService/MetadataService/CacheSizeCalculator instead, same
+ * zero-new-entries autowiring.
  *
  * [Finding 6] ConsumeMessagesCommand needs its own explicit
  * config/container.php factory entry (RoutableMessageBus/receiver
@@ -55,6 +62,10 @@ final class CommandDefinitions
             MaintenanceOrphanTagsCommand::class,
             MaintenanceRepairDbCommand::class,
             MaintenancePurgeFailedLoginsCommand::class,
+            MaintenanceCalculateOrphansCommand::class,
+            MaintenanceDeleteOrphansCommand::class,
+            MaintenanceSyncMetadataCommand::class,
+            MaintenanceCacheSizeCommand::class,
             MigrateCommand::class,
             SchemaDumpCommand::class,
             LintLatteCommand::class,

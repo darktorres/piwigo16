@@ -131,6 +131,6 @@ final readonly class ImageFilterCriteria
             $types['imgFilterMaxLevel'] = ParameterType::INTEGER;
         }
 
-        return new SqlCondition($clauses === [] ? '' : '(' . implode(' AND ', $clauses) . ')', $parameters, $types);
+        return SqlCondition::fromRawSql($clauses === [] ? '' : '(' . implode(' AND ', $clauses) . ')', $parameters, $types);
     }
 }

@@ -1068,7 +1068,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * `QueryBuilder` below otherwise -- `applyTo()` needs a real
      * `QueryBuilder` to apply the permission condition onto, which is why
      * this fallback builds one via `Connection::createQueryBuilder()`
-     * rather than splicing `$condition->sql` into a heredoc directly.
+     * rather than splicing `(string) $condition->expr` into a heredoc
+     * directly.
      * Never offers an `image_category` alias for `Rank`: unlike
      * {@see \Piwigo\Category\
      * CategoryRepository::findImageIdsForCategories()}, a favorites
@@ -1167,7 +1168,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * Stays on DBAL: $orderBySql is a caller-composed raw fragment, and it
      * selects `i.*` (a whole-row shape, not a fixed DQL property list).
      * Builds its own `Connection::createQueryBuilder()` (rather than
-     * splicing `$condition->sql` into a heredoc directly) because
+     * splicing `(string) $condition->expr` into a heredoc directly) because
      * `SqlCondition::applyTo()` needs a real `QueryBuilder` to apply the
      * permission condition onto, same reasoning as
      * {@see findVisibleFavoriteImageIds()} above; $orderBySql always
@@ -1525,7 +1526,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $conditions = [];
 
         if ($criteria->userId !== null) {
-            $conditions[] = new SqlCondition('u.id IN (:userId)', [
+            $conditions[] = SqlCondition::fromRawSql('u.id IN (:userId)', [
                 'userId' => array_map(static fn (UserId $userId): int => $userId->value, $criteria->userId),
             ], [
                 'userId' => ArrayParameterType::INTEGER,
@@ -1533,7 +1534,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->username !== null) {
-            $conditions[] = new SqlCondition('u.username LIKE :username', [
+            $conditions[] = SqlCondition::fromRawSql('u.username LIKE :username', [
                 'username' => $criteria->username,
             ]);
         }
@@ -1551,23 +1552,23 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
                 $filterTypes['filteredGroups'] = ArrayParameterType::INTEGER;
             }
 
-            $conditions[] = new SqlCondition($filterClause . ')', $filterParams, $filterTypes);
+            $conditions[] = SqlCondition::fromRawSql($filterClause . ')', $filterParams, $filterTypes);
         }
 
         if ($criteria->minRegister instanceof SqlDateTime) {
-            $conditions[] = new SqlCondition('ui.registration_date >= :minRegister', [
+            $conditions[] = SqlCondition::fromRawSql('ui.registration_date >= :minRegister', [
                 'minRegister' => $criteria->minRegister->value,
             ]);
         }
 
         if ($criteria->maxRegister instanceof SqlDateTime) {
-            $conditions[] = new SqlCondition('ui.registration_date <= :maxRegister', [
+            $conditions[] = SqlCondition::fromRawSql('ui.registration_date <= :maxRegister', [
                 'maxRegister' => $criteria->maxRegister->value,
             ]);
         }
 
         if ($criteria->status !== null) {
-            $conditions[] = new SqlCondition('ui.status IN (:status)', [
+            $conditions[] = SqlCondition::fromRawSql('ui.status IN (:status)', [
                 'status' => $criteria->status,
             ], [
                 'status' => ArrayParameterType::STRING,
@@ -1575,7 +1576,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->minLevel !== null) {
-            $conditions[] = new SqlCondition('ui.level >= :minLevel', [
+            $conditions[] = SqlCondition::fromRawSql('ui.level >= :minLevel', [
                 'minLevel' => $criteria->minLevel,
             ], [
                 'minLevel' => ParameterType::INTEGER,
@@ -1583,7 +1584,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->maxLevel !== null) {
-            $conditions[] = new SqlCondition('ui.level <= :maxLevel', [
+            $conditions[] = SqlCondition::fromRawSql('ui.level <= :maxLevel', [
                 'maxLevel' => $criteria->maxLevel,
             ], [
                 'maxLevel' => ParameterType::INTEGER,
@@ -1591,7 +1592,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->groupId !== null) {
-            $conditions[] = new SqlCondition('ug.group_id IN (:groupId)', [
+            $conditions[] = SqlCondition::fromRawSql('ug.group_id IN (:groupId)', [
                 'groupId' => $criteria->groupId,
             ], [
                 'groupId' => ArrayParameterType::INTEGER,
@@ -1599,7 +1600,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->exclude !== null) {
-            $conditions[] = new SqlCondition('u.id NOT IN (:exclude)', [
+            $conditions[] = SqlCondition::fromRawSql('u.id NOT IN (:exclude)', [
                 'exclude' => $criteria->exclude,
             ], [
                 'exclude' => ArrayParameterType::INTEGER,

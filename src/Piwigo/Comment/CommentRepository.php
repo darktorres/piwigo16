@@ -292,7 +292,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     {
         if ($criteria->search !== null && $criteria->search !== '') {
             return [
-                new SqlCondition('content LIKE :search', [
+                SqlCondition::fromRawSql('content LIKE :search', [
                     'search' => '%' . $criteria->search . '%',
                 ], [
                     'search' => ParameterType::STRING,
@@ -303,7 +303,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $conditions = [];
 
         if ($includeAuthorId && $criteria->authorId instanceof UserId) {
-            $conditions[] = new SqlCondition('author_id = :authorId', [
+            $conditions[] = SqlCondition::fromRawSql('author_id = :authorId', [
                 'authorId' => $criteria->authorId->value,
             ], [
                 'authorId' => ParameterType::INTEGER,
@@ -311,7 +311,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         }
 
         if ($criteria->imageId instanceof ImageId) {
-            $conditions[] = new SqlCondition('image_id = :imageId', [
+            $conditions[] = SqlCondition::fromRawSql('image_id = :imageId', [
                 'imageId' => $criteria->imageId->value,
             ], [
                 'imageId' => ParameterType::INTEGER,
@@ -319,7 +319,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         }
 
         if ($criteria->minDate instanceof SqlDateTime) {
-            $conditions[] = new SqlCondition('date >= :minDate', [
+            $conditions[] = SqlCondition::fromRawSql('date >= :minDate', [
                 'minDate' => $criteria->minDate->value,
             ], [
                 'minDate' => ParameterType::STRING,
@@ -327,7 +327,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         }
 
         if ($criteria->maxDate instanceof SqlDateTime) {
-            $conditions[] = new SqlCondition('date <= :maxDate', [
+            $conditions[] = SqlCondition::fromRawSql('date <= :maxDate', [
                 'maxDate' => $criteria->maxDate->value,
             ], [
                 'maxDate' => ParameterType::STRING,
@@ -356,12 +356,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         // platforms, so binding rather than splicing fixes this portably
         // with no per-platform branch needed.
         $statusCondition = match ($criteria->status) {
-            'pending' => new SqlCondition('validated = :validated', [
+            'pending' => SqlCondition::fromRawSql('validated = :validated', [
                 'validated' => 0,
             ], [
                 'validated' => ParameterType::INTEGER,
             ]),
-            'validated' => new SqlCondition('validated = :validated', [
+            'validated' => SqlCondition::fromRawSql('validated = :validated', [
                 'validated' => 1,
             ], [
                 'validated' => ParameterType::INTEGER,

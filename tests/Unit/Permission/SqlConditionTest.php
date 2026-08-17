@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\Query\Expr;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 
 test('isEmpty is true only for an empty sql string', function (): void {
-    expect(new SqlCondition('')->isEmpty())
+    expect(SqlCondition::fromRawSql('')->isEmpty())
         ->toBeTrue()
-        ->and(new SqlCondition('1 = 1')->isEmpty())
+        ->and(SqlCondition::fromRawSql('1 = 1')->isEmpty())
         ->toBeFalse()
-        ->and(new SqlCondition('x IN (:x)', [
+        ->and(SqlCondition::fromRawSql('x IN (:x)', [
             'x' => [1],
         ], [
             'x' => ArrayParameterType::INTEGER,
@@ -22,7 +23,7 @@ test('isEmpty is true only for an empty sql string', function (): void {
 });
 
 test('combine with zero non-empty conditions returns an empty condition', function (): void {
-    $combined = SqlCondition::combine('AND', new SqlCondition(''), new SqlCondition(''));
+    $combined = SqlCondition::combine('AND', SqlCondition::fromRawSql(''), SqlCondition::fromRawSql(''));
 
     expect($combined->isEmpty())
         ->toBeTrue()
@@ -33,25 +34,25 @@ test('combine with zero non-empty conditions returns an empty condition', functi
 });
 
 test('combine with exactly one non-empty condition returns it unchanged, not re-wrapped', function (): void {
-    $only = new SqlCondition('(x IN (:x))', [
+    $only = SqlCondition::fromRawSql('(x IN (:x))', [
         'x' => [1, 2],
     ], [
         'x' => ArrayParameterType::INTEGER,
     ]);
 
-    $combined = SqlCondition::combine('AND', new SqlCondition(''), $only);
+    $combined = SqlCondition::combine('AND', SqlCondition::fromRawSql(''), $only);
 
     expect($combined)
         ->toBe($only);
 });
 
 test('combine glues several non-empty conditions and merges their parameters/types', function (): void {
-    $a = new SqlCondition('(x IN (:x))', [
+    $a = SqlCondition::fromRawSql('(x IN (:x))', [
         'x' => [1, 2],
     ], [
         'x' => ArrayParameterType::INTEGER,
     ]);
-    $b = new SqlCondition('(y IN (:y))', [
+    $b = SqlCondition::fromRawSql('(y IN (:y))', [
         'y' => [3],
     ], [
         'y' => ArrayParameterType::INTEGER,
@@ -59,7 +60,7 @@ test('combine glues several non-empty conditions and merges their parameters/typ
 
     $combined = SqlCondition::combine('AND', $a, $b);
 
-    expect($combined->sql)
+    expect((string) $combined->expr)
         ->toBe('(x IN (:x)) AND (y IN (:y))')
         ->and($combined->parameters)
         ->toBe([
@@ -74,29 +75,54 @@ test('combine glues several non-empty conditions and merges their parameters/typ
 });
 
 test('combine drops empty fragments instead of gluing them in', function (): void {
-    $a = new SqlCondition('(x IN (:x))', [
+    $a = SqlCondition::fromRawSql('(x IN (:x))', [
         'x' => [1],
     ], [
         'x' => ArrayParameterType::INTEGER,
     ]);
 
-    $combined = SqlCondition::combine('AND', new SqlCondition(''), $a, new SqlCondition(''));
+    $combined = SqlCondition::combine('AND', SqlCondition::fromRawSql(''), $a, SqlCondition::fromRawSql(''));
 
-    expect($combined->sql)
+    expect((string) $combined->expr)
         ->toBe('(x IN (:x))');
 });
 
 test('combine respects a different glue', function (): void {
-    $a = new SqlCondition('a = 1');
-    $b = new SqlCondition('b = 2');
+    $a = SqlCondition::fromRawSql('a = 1');
+    $b = SqlCondition::fromRawSql('b = 2');
 
-    expect(SqlCondition::combine('OR', $a, $b)->sql)->toBe('a = 1 OR b = 2');
+    expect((string) SqlCondition::combine('OR', $a, $b)->expr)->toBe('a = 1 OR b = 2');
+});
+
+test('combine parenthesizes a compound fragment nested into another combine(), construction-enforced', function (): void {
+    // The real value this class's Expr\Base conversion adds over naive
+    // string concatenation: a fragment that already carries its own
+    // top-level AND/OR gets wrapped automatically when glued into a
+    // wider condition, instead of relying on a call site's own
+    // "already parenthesized, don't wrap again" comment convention
+    // (see e.g. the former TagRepository:311).
+    $compound = SqlCondition::fromRawSql('a = 1 AND b = 2');
+    $single = SqlCondition::fromRawSql('c = 3');
+
+    expect((string) SqlCondition::combine('AND', $compound, $single)->expr)
+        ->toBe('(a = 1 AND b = 2) AND c = 3');
+});
+
+test('fromRawSql wraps sql in a single-part Expr\Andx that stringifies back to the bare text', function (): void {
+    $condition = SqlCondition::fromRawSql('a = 1');
+
+    expect($condition->expr)
+        ->toBeInstanceOf(Expr\Andx::class)
+        ->and($condition->expr->count())
+        ->toBe(1)
+        ->and((string) $condition->expr)
+        ->toBe('a = 1');
 });
 
 test('toWhereClause renders a complete clause, or nothing when empty', function (): void {
-    expect(new SqlCondition('')->toWhereClause())
+    expect(SqlCondition::fromRawSql('')->toWhereClause())
         ->toBe('')
-        ->and(new SqlCondition('a = 1')->toWhereClause())
+        ->and(SqlCondition::fromRawSql('a = 1')->toWhereClause())
         ->toBe('WHERE a = 1');
 });
 
@@ -106,7 +132,7 @@ test('applyTo binds sql, parameters and types onto a DBAL query builder', functi
         ->select('id')
         ->from('images');
 
-    new SqlCondition('id IN (:ids) AND file = :file', [
+    SqlCondition::fromRawSql('id IN (:ids) AND file = :file', [
         'ids' => [1, 2],
         'file' => 'fixture-photo-1.jpg',
     ], [
@@ -133,7 +159,7 @@ test('applyTo binds onto an ORM query builder too', function (): void {
         ->select('i.id')
         ->from(ImageEntity::class, 'i');
 
-    new SqlCondition('i.id = :onlyId', [
+    SqlCondition::fromRawSql('i.id = :onlyId', [
         'onlyId' => 3,
     ])->applyTo($qb);
 
@@ -150,7 +176,7 @@ test('applyTo is a no-op for an empty condition', function (): void {
         ->from('images');
     $before = $qb->getSQL();
 
-    new SqlCondition('')
+    SqlCondition::fromRawSql('')
         ->applyTo($qb);
 
     // No stray WHERE, and nothing bound -- this is what removes the need

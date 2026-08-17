@@ -178,7 +178,7 @@ test('getPermissionCriteria computes forbiddenCategoryIds from the user forbidde
 
     $condition = $criteria->forbiddenCategoriesCondition('category_id');
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('category_id NOT IN (:permForbiddenCategoryIds)')
         ->and($condition->parameters)
         ->toBe([
@@ -205,7 +205,7 @@ test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from Fil
     $catCondition = $criteria->visibleCategoriesCondition('category_id');
     $imgCondition = $criteria->visibleImagesCondition('id');
 
-    expect($catCondition->sql)
+    expect((string) $catCondition->expr)
         ->toBe('category_id IN (:permVisibleCategoryIds)')
         ->and($catCondition->parameters)
         ->toBe([
@@ -215,7 +215,7 @@ test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from Fil
         ->toBe([
             'permVisibleCategoryIds' => ArrayParameterType::INTEGER,
         ])
-        ->and($imgCondition->sql)
+        ->and((string) $imgCondition->expr)
         ->toBe('id IN (:permVisibleImageIds)')
         ->and($imgCondition->parameters)
         ->toBe([
@@ -244,7 +244,7 @@ test('getPermissionCriteria always computes maxLevel alongside visibleImageIds, 
 
     $levelCondition = $criteria->maxLevelCondition('level');
 
-    expect($levelCondition->sql)
+    expect((string) $levelCondition->expr)
         ->toBe('level <= :permMaxLevel')
         ->and($levelCondition->parameters)
         ->toBe([
@@ -267,7 +267,7 @@ test('getPermissionCriteria computes maxLevel from the user level, bound via max
 
     $condition = $criteria->maxLevelCondition('i.level');
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('i.level <= :permMaxLevel')
         ->and($condition->parameters)
         ->toBe([
@@ -292,7 +292,7 @@ test('getPermissionCriteria computes imageAccessIds/imageAccessIsAllowlist from 
 
     $condition = $criteria->imageAccessCondition('category_id');
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('category_id NOT IN (:permImageAccessIds)')
         ->and($condition->parameters)
         ->toBe([
@@ -315,7 +315,7 @@ test('imageAccessCondition builds an IN clause, not NOT IN, when imageAccessIsAl
 
     $condition = $criteria->imageAccessCondition('category_id');
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('category_id IN (:permImageAccessIds)');
 });
 

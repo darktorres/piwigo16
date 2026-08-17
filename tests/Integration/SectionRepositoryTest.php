@@ -48,26 +48,26 @@ final class SectionRepositoryTest extends IntegrationTestCase
 
     public function testFindVisibleSubcategoryIdsReturnsDirectSubcategories(): void
     {
-        $ids = $this->repo->findVisibleSubcategoryIds('1', new SqlCondition(''));
+        $ids = $this->repo->findVisibleSubcategoryIds('1', SqlCondition::fromRawSql(''));
 
         self::assertSame(['2'], $ids);
     }
 
     public function testFindVisibleSubcategoryIdsReturnsEmptyForALeafCategory(): void
     {
-        self::assertSame([], $this->repo->findVisibleSubcategoryIds('1,2', new SqlCondition('')));
+        self::assertSame([], $this->repo->findVisibleSubcategoryIds('1,2', SqlCondition::fromRawSql('')));
     }
 
     public function testFindTopRatedImageIdsReturnsIdsOrderedByRatingDesc(): void
     {
-        $ids = $this->repo->findTopRatedImageIds(new SqlCondition(''), 3);
+        $ids = $this->repo->findTopRatedImageIds(SqlCondition::fromRawSql(''), 3);
 
         self::assertSame(['3', '1', '2'], $ids);
     }
 
     public function testFindTopRatedImageIdsRespectsTheLimit(): void
     {
-        self::assertSame(['3'], $this->repo->findTopRatedImageIds(new SqlCondition(''), 1));
+        self::assertSame(['3'], $this->repo->findTopRatedImageIds(SqlCondition::fromRawSql(''), 1));
     }
 
     public function testFindTopByHitsImageIdsReturnsIdsOrderedByHitDesc(): void
@@ -76,7 +76,7 @@ final class SectionRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE images SET hit = 10 WHERE id = 4');
 
         try {
-            $ids = $this->repo->findTopByHitsImageIds(new SqlCondition(''), 5);
+            $ids = $this->repo->findTopByHitsImageIds(SqlCondition::fromRawSql(''), 5);
 
             self::assertSame(['4', '2'], $ids);
         } finally {
@@ -86,6 +86,6 @@ final class SectionRepositoryTest extends IntegrationTestCase
 
     public function testFindTopByHitsImageIdsReturnsEmptyWhenNoImageHasAHit(): void
     {
-        self::assertSame([], $this->repo->findTopByHitsImageIds(new SqlCondition(''), 5));
+        self::assertSame([], $this->repo->findTopByHitsImageIds(SqlCondition::fromRawSql(''), 5));
     }
 }

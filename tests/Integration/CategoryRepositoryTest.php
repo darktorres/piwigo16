@@ -1190,7 +1190,7 @@ namespace Piwigo\Tests\Integration {
         /**
          * A {@see PermissionCriteria} with every dimension null -- "no
          * restriction on anything," the direct replacement for the old
-         * `new SqlCondition('')` sentinel.
+         * `SqlCondition::fromRawSql('')` sentinel.
          */
         private static function noPermissionRestriction(): PermissionCriteria
         {

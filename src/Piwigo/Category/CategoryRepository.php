@@ -3417,12 +3417,12 @@ final readonly class CategoryRepository
     {
         if (! $recursive) {
             if ($catId instanceof CategoryId) {
-                return new SqlCondition('(id_uppercat = :catId OR id = :catId)', [
+                return SqlCondition::fromRawSql('(id_uppercat = :catId OR id = :catId)', [
                     'catId' => $catId->value,
                 ]);
             }
 
-            return new SqlCondition('id_uppercat IS NULL');
+            return SqlCondition::fromRawSql('id_uppercat IS NULL');
         }
 
         if ($catId instanceof CategoryId) {
@@ -3442,12 +3442,12 @@ final readonly class CategoryRepository
                 ->getDatabasePlatform();
             $regexOperator = $platform instanceof PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
 
-            return new SqlCondition('uppercats ' . $regexOperator . ' :catUppercatsLike', [
+            return SqlCondition::fromRawSql('uppercats ' . $regexOperator . ' :catUppercatsLike', [
                 'catUppercatsLike' => '(^|,)' . $catId->value . '(,|$)',
             ]);
         }
 
-        return new SqlCondition('');
+        return SqlCondition::fromRawSql('');
     }
 
     /**
@@ -3483,7 +3483,7 @@ final readonly class CategoryRepository
         $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
 
         if ($criteria->forbiddenCategoryIds !== []) {
-            $conditions[] = new SqlCondition('id NOT IN (:forbiddenCategoryIds)', [
+            $conditions[] = SqlCondition::fromRawSql('id NOT IN (:forbiddenCategoryIds)', [
                 'forbiddenCategoryIds' => $criteria->forbiddenCategoryIds,
             ], [
                 'forbiddenCategoryIds' => ArrayParameterType::INTEGER,
@@ -3500,7 +3500,7 @@ final readonly class CategoryRepository
             // is valid MySQL tinyint(1) input but Postgres rejects it
             // outright against a real boolean column, so it's bound as a
             // real BOOLEAN parameter instead of a per-platform literal.
-            $conditions[] = new SqlCondition("status = 'public' AND visible = :visible", [
+            $conditions[] = SqlCondition::fromRawSql("status = 'public' AND visible = :visible", [
                 'visible' => true,
             ], [
                 'visible' => ParameterType::BOOLEAN,
@@ -3511,7 +3511,7 @@ final readonly class CategoryRepository
         // after the fact -- that keeps every filter in one fragment, so the
         // WHERE can be rendered (or omitted entirely) in one place.
         if ($searchTerm !== null) {
-            $conditions[] = new SqlCondition('name LIKE :searchTerm', [
+            $conditions[] = SqlCondition::fromRawSql('name LIKE :searchTerm', [
                 'searchTerm' => LikePattern::containing($searchTerm),
             ]);
         }
@@ -3583,7 +3583,7 @@ final readonly class CategoryRepository
 
         $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
         if ($searchTerm !== null) {
-            $conditions[] = new SqlCondition('name LIKE :searchTerm', [
+            $conditions[] = SqlCondition::fromRawSql('name LIKE :searchTerm', [
                 'searchTerm' => LikePattern::containing($searchTerm),
             ]);
         }

@@ -215,7 +215,7 @@ final readonly class CommentsController implements ControllerInterface
                 $category_ids = [NoMatchSentinel::ID];
             }
 
-            $whereClauses[] = new SqlCondition(
+            $whereClauses[] = SqlCondition::fromRawSql(
                 'category_id IN (:categoryIds)',
                 [
                     'categoryIds' => $category_ids,
@@ -230,7 +230,7 @@ final readonly class CommentsController implements ControllerInterface
         $author_filter = $commentsRequest->authorFilter;
         if ($author_filter !== null) {
             $author_search = $author_filter;
-            $whereClauses[] = new SqlCondition(
+            $whereClauses[] = SqlCondition::fromRawSql(
                 '(u.username = :authorSearchUsername OR author = :authorSearchAuthor)',
                 [
                     'authorSearchUsername' => $author_search,
@@ -259,7 +259,7 @@ final readonly class CommentsController implements ControllerInterface
                 $this->redirectService->redirect($login_url);
             }
 
-            $whereClauses[] = new SqlCondition(
+            $whereClauses[] = SqlCondition::fromRawSql(
                 'com.id = :commentId',
                 [
                     'commentId' => $get_comment_id,
@@ -294,10 +294,10 @@ final readonly class CommentsController implements ControllerInterface
                 $keywordTypes[$placeholder] = ParameterType::STRING;
             }
 
-            $whereClauses[] = new SqlCondition('(' . implode(' AND ', $keywordParts) . ')', $keywordParams, $keywordTypes);
+            $whereClauses[] = SqlCondition::fromRawSql('(' . implode(' AND ', $keywordParts) . ')', $keywordParams, $keywordTypes);
         }
 
-        $whereClauses[] = new SqlCondition($since_options[$since]['clause']);
+        $whereClauses[] = SqlCondition::fromRawSql($since_options[$since]['clause']);
 
         // which status to filter on ?
         if (! $this->accessControl->isAdmin()) {
@@ -310,7 +310,7 @@ final readonly class CommentsController implements ControllerInterface
             // real BOOLEAN parameter, matching every other real validated
             // comparison in CommentRepository.php (all `->setParameter(...,
             // true)`), rather than another raw literal.
-            $whereClauses[] = new SqlCondition('validated = :validated', [
+            $whereClauses[] = SqlCondition::fromRawSql('validated = :validated', [
                 'validated' => true,
             ], [
                 'validated' => ParameterType::BOOLEAN,

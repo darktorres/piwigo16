@@ -104,14 +104,14 @@ namespace Piwigo\Tests\Integration {
             $scope = $this->service->buildInnerSql('categories', true, 1, '', []);
 
             self::assertNotNull($scope);
-            self::assertStringContainsString('category_id IN (:innerSubIds)', $scope->rawSqlFromWhere->sql);
-            self::assertSame([1, 2], $scope->rawSqlFromWhere->parameters['innerSubIds']);
-            self::assertStringContainsString('INNER JOIN', $scope->rawSqlFromWhere->sql);
+            self::assertStringContainsString('category_id IN (:innerSubIds)', (string) $scope->rawSqlWhere->expr);
+            self::assertSame([1, 2], $scope->rawSqlWhere->parameters['innerSubIds']);
+            self::assertStringContainsString('INNER JOIN', $scope->rawSqlFrom);
 
             // DQL representation: same subcategory ids, DQL association path
             // (ic.category) instead of the raw column name, join flag set.
             self::assertTrue($scope->joinImageCategory);
-            self::assertStringContainsString('ic.category IN (:innerSubIds)', $scope->dqlWhere->sql);
+            self::assertStringContainsString('ic.category IN (:innerSubIds)', (string) $scope->dqlWhere->expr);
             self::assertSame([1, 2], $scope->dqlWhere->parameters['innerSubIds']);
         }
 
@@ -144,7 +144,7 @@ namespace Piwigo\Tests\Integration {
             $scope = $this->service->buildInnerSql('categories', true, 1, '2', []);
 
             self::assertNotNull($scope);
-            self::assertSame([1], $scope->rawSqlFromWhere->parameters['innerSubIds']);
+            self::assertSame([1], $scope->rawSqlWhere->parameters['innerSubIds']);
             self::assertSame([1], $scope->dqlWhere->parameters['innerSubIds']);
         }
 
@@ -153,13 +153,13 @@ namespace Piwigo\Tests\Integration {
             $scope = $this->service->buildInnerSql('categories', false, null, '', []);
 
             self::assertNotNull($scope);
-            self::assertStringContainsString('WHERE', $scope->rawSqlFromWhere->sql);
-            self::assertStringContainsString('INNER JOIN', $scope->rawSqlFromWhere->sql);
+            self::assertFalse($scope->rawSqlWhere->isEmpty());
+            self::assertStringContainsString('INNER JOIN', $scope->rawSqlFrom);
             self::assertTrue($scope->joinImageCategory);
             // Every real condition below references ic.category/i.id/i.level
             // (a DQL association path plus property paths), never the raw
             // ic.category_id/id/level column names the raw-SQL side uses.
-            self::assertStringContainsString('ic.category', $scope->dqlWhere->sql);
+            self::assertStringContainsString('ic.category', (string) $scope->dqlWhere->expr);
         }
 
         public function testBuildInnerSqlForAnExplicitItemList(): void
@@ -167,11 +167,11 @@ namespace Piwigo\Tests\Integration {
             $scope = $this->service->buildInnerSql('items', false, null, '', [1, 2, 3]);
 
             self::assertNotNull($scope);
-            self::assertStringContainsString('WHERE id IN (:innerItems)', $scope->rawSqlFromWhere->sql);
-            self::assertSame([1, 2, 3], $scope->rawSqlFromWhere->parameters['innerItems']);
+            self::assertStringContainsString('id IN (:innerItems)', (string) $scope->rawSqlWhere->expr);
+            self::assertSame([1, 2, 3], $scope->rawSqlWhere->parameters['innerItems']);
 
             self::assertFalse($scope->joinImageCategory);
-            self::assertSame('i.id IN (:innerItems)', $scope->dqlWhere->sql);
+            self::assertSame('i.id IN (:innerItems)', (string) $scope->dqlWhere->expr);
             self::assertSame([1, 2, 3], $scope->dqlWhere->parameters['innerItems']);
         }
 

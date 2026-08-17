@@ -128,9 +128,10 @@ namespace Piwigo\Tests\Integration {
             $calendar = new CalendarWeekly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
             $calendar->chronology_field = 'posted';
             $calendar->initialize(new CalendarQueryScope(
-                new SqlCondition(' FROM images WHERE id IN (1,2,3,4,5)'),
+                ' FROM images',
                 false,
-                new SqlCondition('i.id IN (1,2,3,4,5)'),
+                SqlCondition::fromRawSql('id IN (1,2,3,4,5)'),
+                SqlCondition::fromRawSql('i.id IN (1,2,3,4,5)'),
             ));
 
             return $calendar;
@@ -195,7 +196,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [];
 
             $where = $calendar->getDateWhere();
-            self::assertSame(' AND date_available IS NOT NULL', $where->sql);
+            self::assertSame(' AND date_available IS NOT NULL', (string) $where->expr);
             self::assertSame([], $where->parameters);
         }
 
@@ -209,7 +210,7 @@ namespace Piwigo\Tests\Integration {
                 ' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd'
                 . ' AND WEEK(date_available, 5)+1= :dateWhereWeek'
                 . ' AND WEEKDAY(date_available)= :dateWhereDay',
-                $where->sql
+                (string) $where->expr
             );
             self::assertSame([
                 'dateWhereYearStart' => '2024-01-01',
@@ -225,7 +226,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 'any'];
 
             $where = $calendar->getDateWhere();
-            self::assertSame(' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd', $where->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd', (string) $where->expr);
             self::assertSame([
                 'dateWhereYearStart' => '2024-01-01',
                 'dateWhereYearEnd' => '2024-12-31 23:59:59',
@@ -354,7 +355,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 ' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd'
                 . ' AND WEEK(date_available, 5)+1= :dateWhereWeek',
-                $where->sql
+                (string) $where->expr
             );
             self::assertSame([
                 'dateWhereYearStart' => '2024-01-01',

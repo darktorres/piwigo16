@@ -30,6 +30,7 @@ use Piwigo\Db\SortRenderer;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -306,9 +307,22 @@ final readonly class CalendarRenderer
                 /** @var list<int> $cached_items */
                 $items = $cached_items;
             } else {
+                // findImageIds()'s raw-DBAL path still wants one combined
+                // FROM+WHERE fragment (see its own docblock) -- CalendarQueryScope
+                // itself carries the FROM/JOIN text and the WHERE condition
+                // as two separate fields (see that class's own docblock for
+                // why), so this recombines them the same way
+                // CalendarService::buildInnerSql() used to before returning.
+                $rawSqlWhereClause = $calendar->scope->rawSqlWhere->toWhereClause();
+                $fromWhere = SqlCondition::fromRawSql(
+                    $calendar->scope->rawSqlFrom . ($rawSqlWhereClause === '' ? '' : "\n    " . $rawSqlWhereClause),
+                    $calendar->scope->rawSqlWhere->parameters,
+                    $calendar->scope->rawSqlWhere->types,
+                );
+
                 $items = new CalendarRepository($this->entityManager)
                     ->findImageIds(
-                        $calendar->scope->rawSqlFromWhere,
+                        $fromWhere,
                         $calendar->getDateWhere(),
                         $order_by,
                         $calendar->scope,

@@ -141,9 +141,10 @@ namespace Piwigo\Tests\Integration {
         private function makeScope(?string $idFilterSql = null): CalendarQueryScope
         {
             return new CalendarQueryScope(
-                new SqlCondition(' FROM images' . ($idFilterSql === null ? '' : ' WHERE ' . $idFilterSql)),
+                ' FROM images',
                 false,
-                new SqlCondition($idFilterSql === null ? '' : 'i.' . $idFilterSql),
+                SqlCondition::fromRawSql($idFilterSql ?? ''),
+                SqlCondition::fromRawSql($idFilterSql === null ? '' : 'i.' . $idFilterSql),
             );
         }
 
@@ -202,7 +203,7 @@ namespace Piwigo\Tests\Integration {
 
             $where = $calendar->getDateWhere();
 
-            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', (string) $where->expr);
             self::assertSame([
                 'dateWhereStart' => '2024-03-10',
                 'dateWhereEnd' => '2024-03-10 23:59:59',
@@ -221,7 +222,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->chronology_date = [2024, 2]; // 2024 is a leap year
             $where2024 = $calendar->getDateWhere();
-            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where2024->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', (string) $where2024->expr);
             self::assertSame([
                 'dateWhereStart' => '2024-02-01',
                 'dateWhereEnd' => '2024-02-29 23:59:59',
@@ -229,7 +230,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->chronology_date = [2023, 2]; // 2023 is not a leap year
             $where2023 = $calendar->getDateWhere();
-            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where2023->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', (string) $where2023->expr);
             self::assertSame([
                 'dateWhereStart' => '2023-02-01',
                 'dateWhereEnd' => '2023-02-28 23:59:59',
@@ -244,7 +245,7 @@ namespace Piwigo\Tests\Integration {
             // filters only by month.
             $calendar->chronology_date = ['any', 3];
             $whereMonthOnly = $calendar->getDateWhere();
-            self::assertSame(' AND date_available IS NOT NULL AND MONTH(date_available)= :dateWhereMonth', $whereMonthOnly->sql);
+            self::assertSame(' AND date_available IS NOT NULL AND MONTH(date_available)= :dateWhereMonth', (string) $whereMonthOnly->expr);
             self::assertSame([
                 'dateWhereMonth' => 3,
             ], $whereMonthOnly->parameters);
@@ -252,7 +253,7 @@ namespace Piwigo\Tests\Integration {
             // year given, month 'any': the whole year, no month/day narrowing.
             $calendar->chronology_date = [2024, 'any'];
             $whereYearOnly = $calendar->getDateWhere();
-            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $whereYearOnly->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', (string) $whereYearOnly->expr);
             self::assertSame([
                 'dateWhereStart' => '2024-01-01',
                 'dateWhereEnd' => '2024-12-31 23:59:59',
@@ -265,7 +266,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [];
 
             $where = $calendar->getDateWhere();
-            self::assertSame(' AND date_available IS NOT NULL', $where->sql);
+            self::assertSame(' AND date_available IS NOT NULL', (string) $where->expr);
             self::assertSame([], $where->parameters);
         }
 
@@ -424,7 +425,7 @@ namespace Piwigo\Tests\Integration {
             ], $this->dig($calendarVars, ['month_view', 'weeks', 0, 4]));
 
             $where = $calendar->getDateWhere();
-            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', (string) $where->expr);
             self::assertSame([
                 'dateWhereStart' => '2024-03-01',
                 'dateWhereEnd' => '2024-03-31 23:59:59',
@@ -651,7 +652,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 'any', 15];
 
             $where = $calendar->getDateWhere();
-            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd AND DAYOFMONTH(date_available)= :dateWhereDay', $where->sql);
+            self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd AND DAYOFMONTH(date_available)= :dateWhereDay', (string) $where->expr);
             self::assertSame([
                 'dateWhereDay' => 15,
                 'dateWhereStart' => '2024-01-01',
@@ -669,7 +670,7 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = ['any', 'any', 15];
 
             $where = $calendar->getDateWhere();
-            self::assertSame(' AND date_available IS NOT NULL AND DAYOFMONTH(date_available)= :dateWhereDay', $where->sql);
+            self::assertSame(' AND date_available IS NOT NULL AND DAYOFMONTH(date_available)= :dateWhereDay', (string) $where->expr);
             self::assertSame([
                 'dateWhereDay' => 15,
             ], $where->parameters);

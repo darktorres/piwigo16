@@ -82,14 +82,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function testCountByTypeCountsNewCommentsInRange(): void
     {
-        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', new SqlCondition(''));
+        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', SqlCondition::fromRawSql(''));
 
         self::assertSame(4, $count);
     }
 
     public function testFindIdsByTypeReturnsNewCommentIds(): void
     {
-        $ids = $this->repo->findIdsByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', new SqlCondition(''));
+        $ids = $this->repo->findIdsByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', SqlCondition::fromRawSql(''));
 
         sort($ids);
         self::assertSame([1, 2, 3, 4], $ids);
@@ -97,7 +97,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function testCountByTypeExcludesCommentsOutsideTheRange(): void
     {
-        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:39', '2026-07-07 05:02:40', new SqlCondition(''));
+        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:39', '2026-07-07 05:02:40', SqlCondition::fromRawSql(''));
 
         self::assertSame(0, $count);
     }
@@ -112,7 +112,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             ['test author', '127.0.0.9', 'pending test comment', 0]
         );
 
-        $count = $this->repo->countByType('unvalidated_comments', null, null, new SqlCondition(''));
+        $count = $this->repo->countByType('unvalidated_comments', null, null, SqlCondition::fromRawSql(''));
 
         self::assertSame(2, $count);
 
@@ -121,14 +121,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function testCountByTypeCountsNewElementsInRange(): void
     {
-        $count = $this->repo->countByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
+        $count = $this->repo->countByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', SqlCondition::fromRawSql(''));
 
         self::assertSame(3, $count);
     }
 
     public function testFindIdsByTypeReturnsNewElementIds(): void
     {
-        $ids = $this->repo->findIdsByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
+        $ids = $this->repo->findIdsByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', SqlCondition::fromRawSql(''));
 
         sort($ids);
         self::assertSame([3, 4, 5], $ids);
@@ -138,21 +138,21 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     {
         // updated_categories shares new_elements' image_category-driven
         // query shape, just aliased to category_id instead of image_id.
-        $count = $this->repo->countByType('updated_categories', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
+        $count = $this->repo->countByType('updated_categories', '2026-07-07 05:02:36', '2026-07-07 05:02:38', SqlCondition::fromRawSql(''));
 
         self::assertSame(2, $count);
     }
 
     public function testCountByTypeCountsNewUsersInRange(): void
     {
-        $count = $this->repo->countByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', new SqlCondition(''));
+        $count = $this->repo->countByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', SqlCondition::fromRawSql(''));
 
         self::assertSame(2, $count);
     }
 
     public function testFindIdsByTypeReturnsNewUserIds(): void
     {
-        $ids = $this->repo->findIdsByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', new SqlCondition(''));
+        $ids = $this->repo->findIdsByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', SqlCondition::fromRawSql(''));
 
         sort($ids);
         self::assertSame([3, 4], $ids);
@@ -164,7 +164,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         // proves it's actually appended to the query, not ignored. DQL
         // association path (ic.category), not the raw SQL column name --
         // see NotificationRepository's own docblock.
-        $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.category = -1'));
+        $count = $this->repo->countByType('new_elements', null, null, SqlCondition::fromRawSql('ic.category = -1'));
 
         self::assertSame(0, $count);
     }
@@ -173,12 +173,12 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $this->repo->countByType('bogus_type', null, null, new SqlCondition(''));
+        $this->repo->countByType('bogus_type', null, null, SqlCondition::fromRawSql(''));
     }
 
     public function testFindRecentPostDatesGroupsByDate(): void
     {
-        $dates = $this->repo->findRecentPostDates(new SqlCondition('1 = 1'), 10);
+        $dates = $this->repo->findRecentPostDates(SqlCondition::fromRawSql('1 = 1'), 10);
 
         self::assertCount(3, $dates);
         $byDate = [];
@@ -195,7 +195,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function testFindRecentElementsForDateReturnsMatchingRows(): void
     {
-        $rows = $this->repo->findRecentElementsForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
+        $rows = $this->repo->findRecentElementsForDate(SqlCondition::fromRawSql('1 = 1'), '2026-07-07 05:02:36', 10);
 
         $ids = array_column($rows, 'id');
         sort($ids);
@@ -236,7 +236,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function testFindRecentCategoriesForDateReturnsMatchingRows(): void
     {
-        $rows = $this->repo->findRecentCategoriesForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
+        $rows = $this->repo->findRecentCategoriesForDate(SqlCondition::fromRawSql('1 = 1'), '2026-07-07 05:02:36', 10);
 
         self::assertNotSame([], $rows);
     }

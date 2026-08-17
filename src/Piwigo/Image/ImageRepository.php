@@ -2873,7 +2873,7 @@ final class ImageRepository extends EntityRepository
         $combined = SqlCondition::combine(
             'AND',
             $criteria->filterCriteria->toSqlCondition('i.'),
-            new SqlCondition('category_id IN (:categoryIds)', [
+            SqlCondition::fromRawSql('category_id IN (:categoryIds)', [
                 'categoryIds' => $criteria->categoryIds,
             ], [
                 'categoryIds' => ArrayParameterType::INTEGER,

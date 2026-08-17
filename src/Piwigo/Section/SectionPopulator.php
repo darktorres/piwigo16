@@ -394,7 +394,7 @@ final readonly class SectionPopulator
                     // here, same fix as CalendarRepository::findImageIds()/
                     // SearchService::getQuickSearchResultsNoCache() -- `id`
                     // and `image_id` are equal per the JOIN condition.
-                    $page['items'] = $this->repo->findSectionImageIds(new SqlCondition($where_sql, $where_params, $where_types), $forbiddenCondition, $order_by);
+                    $page['items'] = $this->repo->findSectionImageIds(SqlCondition::fromRawSql($where_sql, $where_params, $where_types), $forbiddenCondition, $order_by);
 
                     if ($cache_item instanceof CacheItemInterface) {
                         $cache_item->set($page['items']);

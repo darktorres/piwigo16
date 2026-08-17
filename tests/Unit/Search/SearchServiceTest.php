@@ -785,7 +785,7 @@ test('getRegularSearchResults() combines two filters via intersection', function
 
 test('getRegularSearchResults() custom search clause', function (): void {
     $results = searchServiceTestService()
-        ->getRegularSearchResults([], new SqlCondition('i.id = 1'));
+        ->getRegularSearchResults([], SqlCondition::fromRawSql('i.id = 1'));
 
     expect($results['items'])->toBe([1]);
 });
@@ -2283,7 +2283,7 @@ test('getQuickSearchResultsNoCache() applies a custom images_where clause', func
     // coincidentally the same result).
     $results = searchServiceTestService()
         ->getQuickSearchResultsNoCache('nature', [
-            'images_where' => new SqlCondition('id = :onlyId', [
+            'images_where' => SqlCondition::fromRawSql('id = :onlyId', [
                 'onlyId' => 2,
             ]),
         ]);
@@ -2299,7 +2299,7 @@ test('getQuickSearchResultsNoCache() keeps images_where values bound rather than
     // early, producing a syntax error instead of an empty result.
     $results = searchServiceTestService()
         ->getQuickSearchResultsNoCache('nature', [
-            'images_where' => new SqlCondition('file = :quoted', [
+            'images_where' => SqlCondition::fromRawSql('file = :quoted', [
                 'quoted' => "o'brien' OR '1'='1",
             ]),
         ]);

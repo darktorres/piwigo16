@@ -69,10 +69,10 @@ final readonly class PermissionCriteria
     public function forbiddenCategoriesCondition(string $column): SqlCondition
     {
         if ($this->forbiddenCategoryIds === null) {
-            return new SqlCondition('');
+            return SqlCondition::fromRawSql('');
         }
 
-        return new SqlCondition(
+        return SqlCondition::fromRawSql(
             $column . ' NOT IN (:permForbiddenCategoryIds)',
             [
                 'permForbiddenCategoryIds' => $this->forbiddenCategoryIds,
@@ -86,10 +86,10 @@ final readonly class PermissionCriteria
     public function visibleCategoriesCondition(string $column): SqlCondition
     {
         if ($this->visibleCategoryIds === null) {
-            return new SqlCondition('');
+            return SqlCondition::fromRawSql('');
         }
 
-        return new SqlCondition(
+        return SqlCondition::fromRawSql(
             $column . ' IN (:permVisibleCategoryIds)',
             [
                 'permVisibleCategoryIds' => $this->visibleCategoryIds,
@@ -103,10 +103,10 @@ final readonly class PermissionCriteria
     public function visibleImagesCondition(string $column): SqlCondition
     {
         if ($this->visibleImageIds === null) {
-            return new SqlCondition('');
+            return SqlCondition::fromRawSql('');
         }
 
-        return new SqlCondition(
+        return SqlCondition::fromRawSql(
             $column . ' IN (:permVisibleImageIds)',
             [
                 'permVisibleImageIds' => $this->visibleImageIds,
@@ -120,10 +120,10 @@ final readonly class PermissionCriteria
     public function maxLevelCondition(string $column): SqlCondition
     {
         if ($this->maxLevel === null) {
-            return new SqlCondition('');
+            return SqlCondition::fromRawSql('');
         }
 
-        return new SqlCondition(
+        return SqlCondition::fromRawSql(
             $column . ' <= :permMaxLevel',
             [
                 'permMaxLevel' => $this->maxLevel,
@@ -137,10 +137,10 @@ final readonly class PermissionCriteria
     public function imageAccessCondition(string $column): SqlCondition
     {
         if ($this->imageAccessIds === null) {
-            return new SqlCondition('');
+            return SqlCondition::fromRawSql('');
         }
 
-        return new SqlCondition(
+        return SqlCondition::fromRawSql(
             $column . ($this->imageAccessIsAllowlist === true ? ' IN (:permImageAccessIds)' : ' NOT IN (:permImageAccessIds)'),
             [
                 'permImageAccessIds' => $this->imageAccessIds,

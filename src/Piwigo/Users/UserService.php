@@ -1069,7 +1069,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $user = $this->currentUser->get();
         if (! isset($user->rawAttributes['last_photo_date'])) {
-            return new SqlCondition('0=1');
+            return SqlCondition::fromRawSql('0=1');
         }
 
         // A raw user_infos DB value -- numeric string or int in practice,
@@ -1084,7 +1084,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $last_photo_date = $user->rawAttributes['last_photo_date'];
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
 
-        return new SqlCondition(
+        return SqlCondition::fromRawSql(
             $dbField . '>=LEAST('
               . SqlDialect::getRecentPeriodExpression($recent_period)
               . ',' . SqlDialect::getRecentPeriodExpression(1, ':recentLastPhotoDate') . ')',

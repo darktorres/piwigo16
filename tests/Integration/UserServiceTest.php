@@ -763,7 +763,7 @@ namespace Piwigo\Tests\Integration {
             // setUp) has no 'last_photo_date' key in rawAttributes at all
             // -- only buildUser()'s own effective-permission enrichment
             // adds it (see the next test).
-            self::assertEquals(new SqlCondition('0=1'), $this->service->getRecentPhotosCondition('i.date_available'));
+            self::assertEquals(SqlCondition::fromRawSql('0=1'), $this->service->getRecentPhotosCondition('i.date_available'));
         }
 
         public function testGetRecentPhotosConditionBuildsALeastExpressionWhenLastPhotoDateIsSet(): void
@@ -781,8 +781,8 @@ namespace Piwigo\Tests\Integration {
             // territory (already covered there) -- this only confirms
             // UserService's own wiring reaches the real "set" branch, and
             // that $last_photo_date is bound rather than spliced.
-            self::assertStringStartsWith('i.date_available>=LEAST(', $condition->sql);
-            self::assertStringEndsWith(')', $condition->sql);
+            self::assertStringStartsWith('i.date_available>=LEAST(', (string) $condition->expr);
+            self::assertStringEndsWith(')', (string) $condition->expr);
             self::assertArrayHasKey('recentLastPhotoDate', $condition->parameters);
         }
 
@@ -813,14 +813,14 @@ namespace Piwigo\Tests\Integration {
                 CurrentUserTestFactory::get()->reset();
             }
 
-            self::assertStringNotContainsString('not-a-number', $condition->sql);
+            self::assertStringNotContainsString('not-a-number', (string) $condition->expr);
             // SqlDialect::getRecentPeriodExpression()'s own real Postgres
             // form is make_interval(days => 0), not SUBDATE's INTERVAL
             // literal -- already driver-aware in production code, this
             // assertion just wasn't updated to match.
             self::assertStringContainsString(
                 $this->dbDriver === 'pgsql' ? 'make_interval(days => 0)' : 'INTERVAL 0 DAY',
-                $condition->sql
+                (string) $condition->expr
             );
             self::assertSame('2024-01-01', $condition->parameters['recentLastPhotoDate']);
         }

@@ -48,7 +48,7 @@ test('toSqlCondition returns an empty fragment when every field is null', functi
 
     expect($condition->isEmpty())
         ->toBeTrue()
-        ->and($condition->sql)
+        ->and((string) $condition->expr)
         ->toBe('')
         ->and($condition->parameters)
         ->toBe([])
@@ -60,7 +60,7 @@ test('toSqlCondition builds the min/max rate clauses with float parameters', fun
     $condition = new ImageFilterCriteria(minRate: 1.5, maxRate: 4.5)
         ->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(rating_score >= :imgFilterMinRate AND rating_score <= :imgFilterMaxRate)')
         ->and($condition->parameters)
         ->toBe([
@@ -75,7 +75,7 @@ test('toSqlCondition builds the min/max hit clauses with explicit INTEGER types'
     $condition = new ImageFilterCriteria(minHit: 5, maxHit: 500)
         ->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(hit >= :imgFilterMinHit AND hit <= :imgFilterMaxHit)')
         ->and($condition->parameters)
         ->toBe([
@@ -93,7 +93,7 @@ test('toSqlCondition builds the date_available clauses with a strict upper bound
     $condition = new ImageFilterCriteria(minDateAvailable: '2026-01-01', maxDateAvailable: '2026-12-31')
         ->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(date_available >= :imgFilterMinDateAvailable AND date_available < :imgFilterMaxDateAvailable)');
 });
 
@@ -101,7 +101,7 @@ test('toSqlCondition builds the date_creation clauses with a strict upper bound'
     $condition = new ImageFilterCriteria(minDateCreated: '2026-01-01', maxDateCreated: '2026-12-31')
         ->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(date_creation >= :imgFilterMinDateCreated AND date_creation < :imgFilterMaxDateCreated)');
 });
 
@@ -109,7 +109,7 @@ test('toSqlCondition builds the ratio clauses with the NULLIF-guarded decimal-co
     $condition = new ImageFilterCriteria(minRatio: 1.0, maxRatio: 2.0)
         ->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(width*1.0/NULLIF(height, 0) >= :imgFilterMinRatio AND width*1.0/NULLIF(height, 0) <= :imgFilterMaxRatio)')
         ->and($condition->parameters)
         ->toBe([
@@ -122,7 +122,7 @@ test('toSqlCondition builds the maxLevel clause with an explicit INTEGER type', 
     $condition = new ImageFilterCriteria(maxLevel: 4)
         ->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(level <= :imgFilterMaxLevel)')
         ->and($condition->parameters)
         ->toBe([
@@ -138,7 +138,7 @@ test('toSqlCondition prefixes every column reference with the given table prefix
     $condition = new ImageFilterCriteria(minRate: 1.0, minRatio: 1.0)
         ->toSqlCondition('i.');
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(i.rating_score >= :imgFilterMinRate AND i.width*1.0/NULLIF(i.height, 0) >= :imgFilterMinRatio)');
 });
 
@@ -149,6 +149,6 @@ test('toSqlCondition joins every set clause with AND, in field declaration order
         maxLevel: 4,
     )->toSqlCondition();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe('(rating_score >= :imgFilterMinRate AND hit <= :imgFilterMaxHit AND level <= :imgFilterMaxLevel)');
 });

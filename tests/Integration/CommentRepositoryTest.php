@@ -494,14 +494,14 @@ final class CommentRepositoryTest extends IntegrationTestCase
         ]);
 
         $matchingCount = $this->repo->countAvailableWithConditions([
-            new SqlCondition('com.id = :id', [
+            SqlCondition::fromRawSql('com.id = :id', [
                 'id' => $id->value,
             ], [
                 'id' => ParameterType::INTEGER,
             ]),
         ]);
         $nonMatchingCount = $this->repo->countAvailableWithConditions([
-            new SqlCondition('com.id = :id', [
+            SqlCondition::fromRawSql('com.id = :id', [
                 'id' => 999999,
             ], [
                 'id' => ParameterType::INTEGER,
@@ -519,12 +519,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
         ]);
 
         $count = $this->repo->countAvailableWithConditions([
-            new SqlCondition('com.id = :id', [
+            SqlCondition::fromRawSql('com.id = :id', [
                 'id' => $id->value,
             ], [
                 'id' => ParameterType::INTEGER,
             ]),
-            new SqlCondition('com.validated = false'),
+            SqlCondition::fromRawSql('com.validated = false'),
         ]);
 
         self::assertSame(0, $count);
@@ -553,7 +553,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'email' => null,
         ]);
 
-        $condition = new SqlCondition('com.id IN (:ids)', [
+        $condition = SqlCondition::fromRawSql('com.id IN (:ids)', [
             'ids' => [$first->value, $second->value],
         ], [
             'ids' => ArrayParameterType::INTEGER,
@@ -594,7 +594,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         ]);
 
         $payload = "nonexistent' OR '1'='1";
-        $maliciousCondition = new SqlCondition(
+        $maliciousCondition = SqlCondition::fromRawSql(
             '(u.username = :authorA OR author = :authorB)',
             [
                 'authorA' => $payload,

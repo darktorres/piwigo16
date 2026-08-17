@@ -45,8 +45,9 @@ final readonly class CalendarRepository
     }
 
     /**
-     * $fromWhereSql ({@see CalendarService::buildInnerSql()}'s own
-     * `CalendarQueryScope::$rawSqlFromWhere}) and $dateWhereSql (the
+     * $fromWhere ({@see CalendarService::buildInnerSql()}'s own
+     * `CalendarQueryScope::$rawSqlFrom`/`$rawSqlWhere`, recombined by the
+     * caller) and $dateWhereSql (the
      * pre-existing `CalendarBase::getDateWhere()` -- despite the name,
      * a WHERE-clause *continuation* fragment, e.g. `AND
      * (date_available BETWEEN ...)`, not an ORDER BY) are already-built
@@ -127,7 +128,7 @@ final readonly class CalendarRepository
         $ids = $this->em->getConnection()
             ->executeQuery(
                 <<<SQL
-                SELECT id {$fromWhere->sql} {$dateWhere->sql}
+                SELECT id {$fromWhere->expr} {$dateWhere->expr}
                 GROUP BY id
                 {$orderBySql}
                 SQL

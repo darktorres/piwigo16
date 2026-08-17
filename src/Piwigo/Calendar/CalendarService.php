@@ -26,19 +26,6 @@ final readonly class CalendarService
     ) {}
 
     /**
-     * $condition as an indented WHERE line for the query being assembled
-     * below, or nothing at all when it carries no restriction -- that query
-     * is built as text, so an empty condition has to contribute no line
-     * rather than a bare `WHERE`.
-     */
-    private static function whereFragment(SqlCondition $condition): string
-    {
-        $clause = $condition->toWhereClause();
-
-        return $clause === '' ? '' : "\n    " . $clause;
-    }
-
-    /**
      * Null return means "nothing to do", for an empty sub-category set or
      * an empty non-category item list.
      *
@@ -84,9 +71,9 @@ final readonly class CalendarService
                 // visible_images's own old fallthrough into forbidden_images
                 // (fieldName 'id' -> the images-table's own level check) --
                 // see PermissionCriteria's own docblock.
-                $where = SqlCondition::combine(
+                $rawSqlWhere = SqlCondition::combine(
                     'AND',
-                    new SqlCondition('category_id IN (:innerSubIds)', [
+                    SqlCondition::fromRawSql('category_id IN (:innerSubIds)', [
                         'innerSubIds' => $subIdsInt,
                     ], [
                         'innerSubIds' => ArrayParameterType::INTEGER,
@@ -94,9 +81,6 @@ final readonly class CalendarService
                     $criteria->visibleImagesCondition('id'),
                     $criteria->maxLevelCondition('level'),
                 );
-                $sql .= self::whereFragment($where);
-                $params = $where->parameters;
-                $types = $where->types;
 
                 $dqlPermissionCondition = SqlCondition::combine(
                     'AND',
@@ -105,7 +89,7 @@ final readonly class CalendarService
                 );
                 $dqlWhere = SqlCondition::combine(
                     'AND',
-                    new SqlCondition('ic.category IN (:innerSubIds)', [
+                    SqlCondition::fromRawSql('ic.category IN (:innerSubIds)', [
                         'innerSubIds' => $subIdsInt,
                     ], [
                         'innerSubIds' => ArrayParameterType::INTEGER,
@@ -114,18 +98,15 @@ final readonly class CalendarService
                 );
             } else {
                 $criteria = $this->permissionService->getPermissionCriteria();
-                $permissionCondition = SqlCondition::combine(
+                // An empty criteria (no real restriction for this user)
+                // renders as no WHERE at all rather than a `1 = 1` stand-in.
+                $rawSqlWhere = SqlCondition::combine(
                     'AND',
                     $criteria->forbiddenCategoriesCondition('category_id'),
                     $criteria->visibleCategoriesCondition('category_id'),
                     $criteria->visibleImagesCondition('id'),
                     $criteria->maxLevelCondition('level'),
                 );
-                // An empty criteria (no real restriction for this user)
-                // renders as no WHERE at all rather than a `1 = 1` stand-in.
-                $sql .= self::whereFragment($permissionCondition);
-                $params = $permissionCondition->parameters;
-                $types = $permissionCondition->types;
 
                 $dqlWhere = SqlCondition::combine(
                     'AND',
@@ -136,17 +117,12 @@ final readonly class CalendarService
                 );
             }
 
-            return new CalendarQueryScope(new SqlCondition($sql, $params, $types), true, $dqlWhere);
+            return new CalendarQueryScope($sql, true, $rawSqlWhere, $dqlWhere);
         }
 
         if ($items === []) {
             return null;
         }
-
-        $sql .= <<<SQL
-
-            WHERE id IN (:innerItems)
-            SQL;
 
         // $items is caller-supplied and only ever filtered through
         // is_scalar() upstream, so it can genuinely carry a bool/float
@@ -161,13 +137,14 @@ final readonly class CalendarService
         $innerItemIds = array_map(static fn (bool|float|int|string $v): int => is_numeric($v) ? (int) $v : 0, $items);
 
         return new CalendarQueryScope(
-            new SqlCondition($sql, [
+            $sql,
+            false,
+            SqlCondition::fromRawSql('id IN (:innerItems)', [
                 'innerItems' => $innerItemIds,
             ], [
                 'innerItems' => ArrayParameterType::INTEGER,
             ]),
-            false,
-            new SqlCondition('i.id IN (:innerItems)', [
+            SqlCondition::fromRawSql('i.id IN (:innerItems)', [
                 'innerItems' => $innerItemIds,
             ], [
                 'innerItems' => ArrayParameterType::INTEGER,

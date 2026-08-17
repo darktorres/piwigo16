@@ -1156,7 +1156,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindWithConditionsPaginatedReturnsMatchingRowsAndTotal(): void
     {
-        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition(''));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], SqlCondition::fromRawSql(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
         self::assertCount(3, $result->rows);
@@ -1165,7 +1165,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindWithConditionsPaginatedRespectsTheLimit(): void
     {
-        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition(''));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], SqlCondition::fromRawSql(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 1, 0);
 
         self::assertCount(1, $result->rows);
@@ -1176,7 +1176,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         // fixture: category 1's images are 1 (rating_score 4.50), 2
         // (3.00), 3 (5.00) -- minRate: 4.0 keeps only 1 and 3.
-        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(minRate: 4.0), [1], new SqlCondition(''));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(minRate: 4.0), [1], SqlCondition::fromRawSql(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
         self::assertCount(2, $result->rows);
@@ -1185,7 +1185,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindWithConditionsPaginatedAppliesTheVisibleImagesCondition(): void
     {
-        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition('i.id = -1'));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], SqlCondition::fromRawSql('i.id = -1'));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
         self::assertSame([], $result->rows);

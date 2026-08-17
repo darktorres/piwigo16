@@ -194,8 +194,10 @@ final readonly class SearchService
      * @param  array<string, mixed>  $search
      * @return array{items: list<int>, search_details: array{matching_cat_ids: ?list<int>, matching_tag_ids: ?list<int>, has_filters_filled: bool, image_ids_for_filter: array<string, list<int>>}}
      */
-    public function getRegularSearchResults(array $search, SqlCondition $imagesWhere = new SqlCondition('')): array
+    public function getRegularSearchResults(array $search, ?SqlCondition $imagesWhere = null): array
     {
+        $imagesWhere ??= SqlCondition::fromRawSql('');
+
         $hasFiltersFilled = false;
         $matchingCatIds = null;
         $matchingTagIds = null;
@@ -257,7 +259,7 @@ final readonly class SearchService
         if (isset($searchFields['author']) && $authorWords !== [] && ($displayFilters['author']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['author'] = $this->queryImageIdsFor(
-                new SqlCondition('i.author IN (:authorWords)', [
+                SqlCondition::fromRawSql('i.author IN (:authorWords)', [
                     'authorWords' => $authorWords,
                 ], [
                     'authorWords' => ArrayParameterType::STRING,
@@ -278,7 +280,7 @@ final readonly class SearchService
                 $params["filetype{$i}"] = '%.' . $ext;
             }
 
-            $imageIdsForFilter['filetypes'] = $this->queryImageIdsFor(new SqlCondition('(' . implode(' OR ', $clauses) . ')', $params), $forbidden);
+            $imageIdsForFilter['filetypes'] = $this->queryImageIdsFor(SqlCondition::fromRawSql('(' . implode(' OR ', $clauses) . ')', $params), $forbidden);
         }
 
         // added_by
@@ -287,7 +289,7 @@ final readonly class SearchService
         if ($addedByIds !== [] && ($displayFilters['added_by']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['added_by'] = $this->queryImageIdsFor(
-                new SqlCondition('i.addedByUser IN (:addedByIds)', [
+                SqlCondition::fromRawSql('i.addedByUser IN (:addedByIds)', [
                     'addedByIds' => $addedByIds,
                 ], [
                     'addedByIds' => ArrayParameterType::INTEGER,
@@ -314,7 +316,7 @@ final readonly class SearchService
 
             if ($catIds !== []) {
                 $imageIdsForFilter['cat'] = $this->queryImageIdsFor(
-                    new SqlCondition('ic.category IN (:catIds)', [
+                    SqlCondition::fromRawSql('ic.category IN (:catIds)', [
                         'catIds' => $catIds,
                     ], [
                         'catIds' => ArrayParameterType::INTEGER,
@@ -408,7 +410,7 @@ final readonly class SearchService
             }
 
             if ($clauses !== []) {
-                $imageIdsForFilter['ratios'] = $this->queryImageIdsFor(new SqlCondition('(' . implode(' OR ', $clauses) . ')'), $forbidden);
+                $imageIdsForFilter['ratios'] = $this->queryImageIdsFor(SqlCondition::fromRawSql('(' . implode(' OR ', $clauses) . ')'), $forbidden);
             }
         }
 
@@ -429,7 +431,7 @@ final readonly class SearchService
                 }
             }
 
-            $imageIdsForFilter['ratings'] = $this->queryImageIdsFor(new SqlCondition('(' . implode(' OR ', $clauses) . ')', $ratingParams), $forbidden);
+            $imageIdsForFilter['ratings'] = $this->queryImageIdsFor(SqlCondition::fromRawSql('(' . implode(' OR ', $clauses) . ')', $ratingParams), $forbidden);
         }
 
         // filesize
@@ -438,7 +440,7 @@ final readonly class SearchService
         if ($filesizeMinRaw !== null && $filesizeMinRaw !== 0 && $filesizeMaxRaw !== null && $filesizeMaxRaw !== 0 && is_numeric($filesizeMinRaw) && is_numeric($filesizeMaxRaw) && ($displayFilters['file_size']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['filesize'] = $this->queryImageIdsFor(
-                new SqlCondition('i.filesize BETWEEN :filesizeMin AND :filesizeMax', [
+                SqlCondition::fromRawSql('i.filesize BETWEEN :filesizeMin AND :filesizeMax', [
                     'filesizeMin' => (float) $filesizeMinRaw - 100.0,
                     'filesizeMax' => (float) $filesizeMaxRaw + 100.0,
                 ]),
@@ -452,7 +454,7 @@ final readonly class SearchService
         if ($heightMinRaw !== null && $heightMinRaw !== 0 && $heightMaxRaw !== null && $heightMaxRaw !== 0 && is_scalar($heightMinRaw) && is_scalar($heightMaxRaw) && ($displayFilters['height']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['height'] = $this->queryImageIdsFor(
-                new SqlCondition('i.height BETWEEN :heightMin AND :heightMax', [
+                SqlCondition::fromRawSql('i.height BETWEEN :heightMin AND :heightMax', [
                     'heightMin' => $heightMinRaw,
                     'heightMax' => $heightMaxRaw,
                 ]),
@@ -466,7 +468,7 @@ final readonly class SearchService
         if ($widthMinRaw !== null && $widthMinRaw !== 0 && $widthMaxRaw !== null && $widthMaxRaw !== 0 && is_scalar($widthMinRaw) && is_scalar($widthMaxRaw) && ($displayFilters['width']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['width'] = $this->queryImageIdsFor(
-                new SqlCondition('i.width BETWEEN :widthMin AND :widthMax', [
+                SqlCondition::fromRawSql('i.width BETWEEN :widthMin AND :widthMax', [
                     'widthMin' => $widthMinRaw,
                     'widthMax' => $widthMaxRaw,
                 ]),
@@ -552,7 +554,7 @@ final readonly class SearchService
             $values[] = $value;
 
             return '?';
-        }, $condition->sql);
+        }, (string) $condition->expr);
         if ($sql === null) {
             throw new RuntimeException('positionalCondition(): preg_replace_callback() failed');
         }
@@ -632,7 +634,7 @@ final readonly class SearchService
         if (isset($presetOptions[$preset])) {
             [$amount, $unit] = $presetOptions[$preset];
 
-            return new SqlCondition(
+            return SqlCondition::fromRawSql(
                 $dqlColumn . " > DATE_SUB(CURRENT_TIMESTAMP(), :dateAmount, '{$unit}')",
                 [
                     'dateAmount' => $amount,
@@ -685,7 +687,7 @@ final readonly class SearchService
                 }
 
                 if ($begin !== null) {
-                    $subconditions[] = new SqlCondition(
+                    $subconditions[] = SqlCondition::fromRawSql(
                         "({$dqlColumn} BETWEEN :dateBegin{$i} AND :dateEnd{$i})",
                         [
                             "dateBegin{$i}" => $begin,
@@ -697,7 +699,7 @@ final readonly class SearchService
 
             $combined = SqlCondition::combine('OR', ...$subconditions);
 
-            return $combined->isEmpty() ? $combined : new SqlCondition('(' . $combined->sql . ')', $combined->parameters, $combined->types);
+            return $combined->isEmpty() ? $combined : SqlCondition::fromRawSql('(' . (string) $combined->expr . ')', $combined->parameters, $combined->types);
         }
 
         // No preset and no custom range: nothing to filter on. An empty
@@ -705,7 +707,7 @@ final readonly class SearchService
         // use, so it disappears rather than contributing a tautology --
         // matching the empty condition the custom-range branch above already
         // returns when it finds no bounds.
-        return new SqlCondition('');
+        return SqlCondition::fromRawSql('');
     }
 
     /**
@@ -797,7 +799,7 @@ final readonly class SearchService
             }
 
             if ($fieldClauses !== []) {
-                $wordConditions[] = new SqlCondition('(' . implode(' OR ', $fieldClauses) . ')', $params, $types);
+                $wordConditions[] = SqlCondition::fromRawSql('(' . implode(' OR ', $fieldClauses) . ')', $params, $types);
             }
         }
 
@@ -806,7 +808,7 @@ final readonly class SearchService
             : 'AND';
 
         $combined = SqlCondition::combine($allwordsMode, ...$wordConditions);
-        $filterCondition = $combined->isEmpty() ? $combined : new SqlCondition('(' . $combined->sql . ')', $combined->parameters, $combined->types);
+        $filterCondition = $combined->isEmpty() ? $combined : SqlCondition::fromRawSql('(' . (string) $combined->expr . ')', $combined->parameters, $combined->types);
 
         $imageIds = $this->repo->findImageIdsMatching(SqlCondition::combine('AND', $filterCondition, $forbidden));
 
@@ -1732,7 +1734,7 @@ final readonly class SearchService
         }
 
         if (! isset($search['q']) || ! is_string($search['q'])) {
-            return $this->getRegularSearchResults($search, new SqlCondition($imagesWhere));
+            return $this->getRegularSearchResults($search, SqlCondition::fromRawSql($imagesWhere));
         }
 
         return $this->getQuickSearchResults($search['q'], [

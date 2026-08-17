@@ -204,7 +204,7 @@ final readonly class SectionRepository
     {
         $where = SqlCondition::combine(
             'AND',
-            new SqlCondition('image_id IN (:imageIds)', [
+            SqlCondition::fromRawSql('image_id IN (:imageIds)', [
                 'imageIds' => $imageIds,
             ], [
                 'imageIds' => ArrayParameterType::STRING,

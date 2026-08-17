@@ -127,8 +127,8 @@ namespace Piwigo\Tests\Integration {
         public function testGetCommentsRestrictConditionWithTheSentinelForbiddenCategoriesValue(): void
         {
             // getCommentsRestrictCondition() returns a SqlCondition whose own
-            // ->sql has no 'WHERE ' prefix -- callers compose it via
-            // QueryBuilder::andWhere() instead.
+            // stringified ->expr has no 'WHERE ' prefix -- callers compose it
+            // via QueryBuilder::andWhere() instead.
             //
             // setUp() seeds forbiddenCategories: '0' -- PermissionService's
             // own sentinel for "no real forbidden categories" (see
@@ -140,7 +140,7 @@ namespace Piwigo\Tests\Integration {
             $condition = $this->service->getCommentsRestrictCondition();
 
             self::assertFalse($condition->isEmpty());
-            self::assertStringContainsString('NOT IN', $condition->sql);
+            self::assertStringContainsString('NOT IN', (string) $condition->expr);
             $key = array_key_first($condition->parameters);
             self::assertIsString($key);
             self::assertSame([0], $condition->parameters[$key]);

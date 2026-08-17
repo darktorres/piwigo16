@@ -385,7 +385,7 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
 
     try {
         $rows = searchTestRepo()
-            ->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
+            ->countImagesGroupedBy('i.author', 'author', SqlCondition::fromRawSql('i.author IS NOT NULL'), true);
 
         expect($rows)
             ->toBe([
@@ -404,7 +404,7 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
 });
 
 test('countImagesGroupedBy() returns empty for no match', function (): void {
-    expect(searchTestRepo()->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL')))
+    expect(searchTestRepo()->countImagesGroupedBy('i.author', 'author', SqlCondition::fromRawSql('i.author IS NOT NULL')))
         ->toBe([]);
 });
 
@@ -412,7 +412,7 @@ test('findDistinctImageRows() returns the requested extra columns', function ():
     $rows = searchTestRepo()
         ->findDistinctImageRows(
             ['i.ratingScore AS rating_score'],
-            new SqlCondition('i.id = :id', [
+            SqlCondition::fromRawSql('i.id = :id', [
                 'id' => 1,
             ]),
         );
@@ -425,7 +425,7 @@ test('findDistinctImageRows() returns the requested extra columns', function ():
 });
 
 test('findDistinctImageRows() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', [
+    expect(searchTestRepo()->findDistinctImageRows(['i.ratingScore AS rating_score'], SqlCondition::fromRawSql('i.id = :id', [
         'id' => 99999,
     ])))->toBe([]);
 });
@@ -434,7 +434,7 @@ test('findDistinctImageColumnValues() returns grouped, ordered values', function
     // Every fixture image shares height 150 -- collapses to one row via
     // this method's own GROUP BY.
     $values = searchTestRepo()
-        ->findDistinctImageColumnValues('i.height', new SqlCondition(''));
+        ->findDistinctImageColumnValues('i.height', SqlCondition::fromRawSql(''));
 
     expect($values)
         ->toBe(['150']);
@@ -443,7 +443,7 @@ test('findDistinctImageColumnValues() returns grouped, ordered values', function
 test('findCategoryIdsAndUppercats() returns matching rows', function (): void {
     $rows = searchTestRepo()
         ->findCategoryIdsAndUppercats(
-            new SqlCondition('c.id IN (:ids)', [
+            SqlCondition::fromRawSql('c.id IN (:ids)', [
                 'ids' => [1, 2],
             ], [
                 'ids' => ArrayParameterType::INTEGER,
@@ -460,7 +460,7 @@ test('findCategoryIdsAndUppercats() returns matching rows', function (): void {
 });
 
 test('findCategoryIdsAndUppercats() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', [
+    expect(searchTestRepo()->findCategoryIdsAndUppercats(SqlCondition::fromRawSql('c.id = :id', [
         'id' => 99999,
     ])))->toBe([]);
 });

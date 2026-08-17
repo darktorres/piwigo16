@@ -29,7 +29,7 @@ function calendarMonthlyTestSubject(): CalendarMonthly
 
 function calendarMonthlyTestScope(): CalendarQueryScope
 {
-    return new CalendarQueryScope(new SqlCondition(''), false, new SqlCondition(''));
+    return new CalendarQueryScope('', false, SqlCondition::fromRawSql(''), SqlCondition::fromRawSql(''));
 }
 
 beforeEach(function (): void {
@@ -84,7 +84,7 @@ test('getDateWhere returns the real IS NOT NULL fallback for an empty chronology
 
     $condition = $calendar->getDateWhere();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation IS NOT NULL')
         ->and($condition->parameters)
         ->toBe([]);
@@ -98,7 +98,7 @@ test('getDateWhere builds a real full-year range for a single-level chronology_d
 
     $condition = $calendar->getDateWhere();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
         ->and($condition->parameters)
         ->toBe([
@@ -116,7 +116,7 @@ test('getDateWhere builds a real full-month range when only year+month are set',
     $condition = $calendar->getDateWhere();
 
     // 2026 is not a leap year (2026 / 4 is not an integer) -- February has 28 days.
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
         ->and($condition->parameters)
         ->toBe([
@@ -134,14 +134,14 @@ test('getDateWhere builds a real single-day range for a full year+month+day chro
     $sqlCondition = $calendar->getDateWhere(3, false);
     $dqlCondition = $calendar->getDateWhere(3, true);
 
-    expect($sqlCondition->sql)
+    expect((string) $sqlCondition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
         ->and($sqlCondition->parameters)
         ->toBe([
             'dateWhereStart' => '2026-02-14',
             'dateWhereEnd' => '2026-02-14 23:59:59',
         ])
-        ->and($dqlCondition->sql)
+        ->and((string) $dqlCondition->expr)
         ->toBe('i.dateCreation BETWEEN :dateWhereStart AND :dateWhereEnd');
 });
 
@@ -153,7 +153,7 @@ test('getDateWhere filters by month/day alone (via calendar_levels) when the yea
 
     $condition = $calendar->getDateWhere();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation IS NOT NULL AND MONTH(date_creation)= :dateWhereMonth AND DAYOFMONTH(date_creation)= :dateWhereDay')
         ->and($condition->parameters)
         ->toBe([
@@ -170,7 +170,7 @@ test('getDateWhere respects max_levels, dropping the day component from a full c
 
     $condition = $calendar->getDateWhere(2);
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereStart AND :dateWhereEnd')
         ->and($condition->parameters)
         ->toBe([

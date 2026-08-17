@@ -34,7 +34,7 @@ function calendarWeeklyTestSubject(): CalendarWeekly
 
 function calendarWeeklyTestScope(): CalendarQueryScope
 {
-    return new CalendarQueryScope(new SqlCondition(''), false, new SqlCondition(''));
+    return new CalendarQueryScope('', false, SqlCondition::fromRawSql(''), SqlCondition::fromRawSql(''));
 }
 
 beforeEach(function (): void {
@@ -115,7 +115,7 @@ test('getDateWhere returns the real IS NOT NULL fallback for an empty chronology
 
     $condition = $calendar->getDateWhere();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation IS NOT NULL')
         ->and($condition->parameters)
         ->toBe([]);
@@ -129,7 +129,7 @@ test('getDateWhere builds a real year-range condition for a single-level chronol
 
     $condition = $calendar->getDateWhere();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
         ->and($condition->parameters)
         ->toBe([
@@ -147,7 +147,7 @@ test('getDateWhere builds a year+week+day condition, stripping the leading AND f
     $sqlCondition = $calendar->getDateWhere(3, false);
     $dqlCondition = $calendar->getDateWhere(3, true);
 
-    expect($sqlCondition->sql)
+    expect((string) $sqlCondition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(date_creation, 5)+1= :dateWhereWeek AND WEEKDAY(date_creation)= :dateWhereDay')
         ->and($sqlCondition->parameters)
         ->toBe([
@@ -156,7 +156,7 @@ test('getDateWhere builds a year+week+day condition, stripping the leading AND f
             'dateWhereWeek' => 15,
             'dateWhereDay' => 3,
         ])
-        ->and($dqlCondition->sql)
+        ->and((string) $dqlCondition->expr)
         ->toBe('i.dateCreation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd AND WEEK(i.dateCreation, 5)+1= :dateWhereWeek AND WEEKDAY(i.dateCreation)= :dateWhereDay');
 });
 
@@ -168,7 +168,7 @@ test('getDateWhere respects max_levels, dropping deeper chronology_date componen
 
     $condition = $calendar->getDateWhere(1);
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation BETWEEN :dateWhereYearStart AND :dateWhereYearEnd')
         ->and($condition->parameters)
         ->not->toHaveKey('dateWhereWeek');
@@ -182,6 +182,6 @@ test('getDateWhere treats an "any" chronology_date component as unset', function
 
     $condition = $calendar->getDateWhere();
 
-    expect($condition->sql)
+    expect((string) $condition->expr)
         ->toBe(' AND date_creation IS NOT NULL');
 });

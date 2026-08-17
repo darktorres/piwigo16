@@ -99,7 +99,7 @@ final readonly class NotificationService
         $restrictCondition = match ($type) {
             'new_comments' => $this->getCommentsRestrictCondition(),
             'new_elements', 'updated_categories' => $this->getElementsRestrictCondition(),
-            default => new SqlCondition(''),
+            default => SqlCondition::fromRawSql(''),
         };
 
         return match ($action) {
@@ -124,7 +124,7 @@ final readonly class NotificationService
 
     public function nbUnvalidatedComments(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('unvalidated_comments', $start, $end, new SqlCondition(''));
+        return $this->repo->countByType('unvalidated_comments', $start, $end, SqlCondition::fromRawSql(''));
     }
 
     public function nbNewElements(?string $start = null, ?string $end = null): int
@@ -155,7 +155,7 @@ final readonly class NotificationService
 
     public function nbNewUsers(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('new_users', $start, $end, new SqlCondition(''));
+        return $this->repo->countByType('new_users', $start, $end, SqlCondition::fromRawSql(''));
     }
 
     /**
@@ -163,7 +163,7 @@ final readonly class NotificationService
      */
     public function newUsers(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('new_users', $start, $end, new SqlCondition(''));
+        return $this->repo->findIdsByType('new_users', $start, $end, SqlCondition::fromRawSql(''));
     }
 
     /**

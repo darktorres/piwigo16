@@ -308,7 +308,7 @@ final class TagRepository extends EntityRepository
             // against the conditions already applied above with no
             // further wrapping needed.
             $filterCondition = $filterCriteria->toSqlCondition('i.');
-            $qb->andWhere($filterCondition->sql);
+            $qb->andWhere((string) $filterCondition->expr);
             foreach ($filterCondition->parameters as $name => $value) {
                 $qb->setParameter($name, $value, $filterCondition->types[$name] ?? ParameterType::STRING);
             }

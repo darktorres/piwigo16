@@ -281,7 +281,7 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
             $filterClause = $this->getClauseForFilter('author', $page);
             $filterCondition = $filterClause->condition;
-            $groupCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.author IS NOT NULL'));
+            $groupCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.author IS NOT NULL'));
 
             if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
@@ -468,7 +468,7 @@ final readonly class SearchFilterRenderer
                 $permissionCondition = $this->permissionService->getPermissionCriteria()
                     ->visibleCategoriesCondition('c.id');
                 $catWordsInts = array_map(static fn (int|string $v): int => (int) $v, $catWords);
-                $idsCondition = new SqlCondition(
+                $idsCondition = SqlCondition::fromRawSql(
                     'c.id IN (:catWords)',
                     [
                         'catWords' => $catWordsInts,
@@ -522,7 +522,7 @@ final readonly class SearchFilterRenderer
             // parameter itself is typed as.
             $searchDetailsRaw = $page['search_details'];
             $searchDetailsForbiddenRaw = is_array($searchDetailsRaw) ? ($searchDetailsRaw['forbidden'] ?? null) : null;
-            $searchDetailsForbidden = $searchDetailsForbiddenRaw instanceof SqlCondition ? $searchDetailsForbiddenRaw : new SqlCondition('');
+            $searchDetailsForbidden = $searchDetailsForbiddenRaw instanceof SqlCondition ? $searchDetailsForbiddenRaw : SqlCondition::fromRawSql('');
             $allExtsCondition = $searchDetailsForbidden;
 
             // SUBSTRING_INDEX has no DQL/portable-SQL built-in equivalent
@@ -680,7 +680,7 @@ final readonly class SearchFilterRenderer
             $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
             if (! is_array($ratios)) {
-                $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.width IS NOT NULL AND i.height IS NOT NULL'));
+                $notNullCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.width IS NOT NULL AND i.height IS NOT NULL'));
                 $filterRows = $this->repo->findDistinctImageRows(['i.width AS width', 'i.height AS height'], $notNullCondition);
 
                 $ratios = [
@@ -730,7 +730,7 @@ final readonly class SearchFilterRenderer
             $filterClause = $this->getClauseForFilter('height', $page);
             $filterCondition = $filterClause->condition;
 
-            $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.height IS NOT NULL'));
+            $notNullCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.height IS NOT NULL'));
 
             if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
@@ -778,7 +778,7 @@ final readonly class SearchFilterRenderer
             $filterClause = $this->getClauseForFilter('width', $page);
             $filterCondition = $filterClause->condition;
 
-            $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.width IS NOT NULL'));
+            $notNullCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.width IS NOT NULL'));
 
             if ($filterClause->cacheApplicable) {
                 // we use the cache pool only for fetching lines filtered
@@ -1176,7 +1176,7 @@ final readonly class SearchFilterRenderer
             // render().
             $searchDetails = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
             $forbidden = $searchDetails['forbidden'] ?? null;
-            $forbiddenCondition = $forbidden instanceof SqlCondition ? $forbidden : new SqlCondition('');
+            $forbiddenCondition = $forbidden instanceof SqlCondition ? $forbidden : SqlCondition::fromRawSql('');
 
             return new SearchFilterClause($forbiddenCondition, true);
         }
@@ -1191,7 +1191,7 @@ final readonly class SearchFilterRenderer
         );
 
         return new SearchFilterClause(
-            new SqlCondition(
+            SqlCondition::fromRawSql(
                 'ic.image IN (:otherFiltersItems)',
                 [
                     'otherFiltersItems' => $otherFiltersItemInts,

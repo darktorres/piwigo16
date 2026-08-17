@@ -46,7 +46,7 @@ final readonly class AvailableCommentsCounter
             // modeling item.
             $where = [];
             if (! $this->accessLevelChecker->isAdmin()) {
-                $where[] = new SqlCondition('com.validated = true');
+                $where[] = SqlCondition::fromRawSql('com.validated = true');
             }
             $permissionCriteria = $permissionService->getPermissionCriteria();
             $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.category');

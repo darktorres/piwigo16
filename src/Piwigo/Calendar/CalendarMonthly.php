@@ -193,7 +193,7 @@ final class CalendarMonthly extends CalendarBase
             $res = substr($res, strlen(' AND '));
         }
 
-        return new SqlCondition($res, $params);
+        return SqlCondition::fromRawSql($res, $params);
     }
 
     /**

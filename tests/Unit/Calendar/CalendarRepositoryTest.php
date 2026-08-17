@@ -55,8 +55,8 @@ function calendarTestRepo(): CalendarRepository
 test('findImageIds() returns matching ids in order', function (): void {
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (3, 1, 2)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (3, 1, 2)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id ASC'
         );
 
@@ -67,8 +67,8 @@ test('findImageIds() returns matching ids in order', function (): void {
 test('findImageIds() returns empty for no match', function (): void {
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id = 999999'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id = 999999'),
+            SqlCondition::fromRawSql(''),
             ''
         );
 
@@ -84,8 +84,8 @@ test('findImageIds() orders by a column outside the select list', function (): v
     // ORDER BY columns not in the SELECT list).
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY date_available DESC, file ASC, id ASC'
         );
 
@@ -100,8 +100,8 @@ test('findImageIds() deduplicates rows from a join', function (): void {
     // collapse that back down to one id per image.
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images INNER JOIN image_category ON id = image_id WHERE category_id IN (1, 2)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images INNER JOIN image_category ON id = image_id WHERE category_id IN (1, 2)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id ASC'
         );
 
@@ -123,8 +123,8 @@ test('findImageIds() collapses a real multi-category duplicate down to one row',
     try {
         $ids = calendarTestRepo()
             ->findImageIds(
-                new SqlCondition(' FROM images INNER JOIN image_category ON id = image_id WHERE category_id IN (1, 2)'),
-                new SqlCondition(''),
+                SqlCondition::fromRawSql(' FROM images INNER JOIN image_category ON id = image_id WHERE category_id IN (1, 2)'),
+                SqlCondition::fromRawSql(''),
                 'ORDER BY id ASC'
             );
 
@@ -144,8 +144,8 @@ test('findImageIds() honours a real DESC order, not just the GROUP BY key\'s own
     // silently dropped.
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id DESC'
         );
 
@@ -160,12 +160,12 @@ test('findImageIds() binds real parameters and types from both $fromWhere and $d
     // merged into one executeQuery() call.
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id = :onlyId', [
+            SqlCondition::fromRawSql(' FROM images WHERE id = :onlyId', [
                 'onlyId' => 2,
             ], [
                 'onlyId' => ParameterType::INTEGER,
             ]),
-            new SqlCondition('AND (rating_score = :rating)', [
+            SqlCondition::fromRawSql('AND (rating_score = :rating)', [
                 'rating' => '3.00',
             ], [
                 'rating' => ParameterType::STRING,
@@ -187,8 +187,8 @@ test('findImageIds() applies the date_where continuation', function (): void {
     try {
         $ids = calendarTestRepo()
             ->findImageIds(
-                new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-                new SqlCondition("AND (date_available = '2026-08-01 00:00:00')"),
+                SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+                SqlCondition::fromRawSql("AND (date_available = '2026-08-01 00:00:00')"),
                 'ORDER BY id ASC'
             );
 
@@ -209,19 +209,20 @@ test('findImageIds() runs DQL, applies a real $dqlDateWhere filter, and never fa
     // instead of the correct DQL-filtered one.
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3, 4, 5)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3, 4, 5)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id DESC',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('i.id != :excluded', [
+            SqlCondition::fromRawSql('i.id != :excluded', [
                 'excluded' => 3,
             ], [
                 'excluded' => ParameterType::INTEGER,
@@ -238,13 +239,14 @@ test('findImageIds() falls back to raw DBAL when $dqlScope is given but $dqlDate
     // attempt DQL at all, only the raw-DBAL args below (all 5 images).
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3, 4, 5)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3, 4, 5)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id ASC',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
@@ -260,11 +262,11 @@ test('findImageIds() falls back to raw DBAL when $dqlScope is given but $dqlDate
 test('findImageIds() falls back to raw DBAL when $dqlDateWhere is given but $dqlScope is not', function (): void {
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3, 4, 5)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3, 4, 5)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id ASC',
             null,
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
 
     expect($ids)
@@ -293,19 +295,20 @@ test('findImageIds() DQL path only joins image_category when the scope asks for 
     try {
         $ids = calendarTestRepo()
             ->findImageIds(
-                new SqlCondition(''),
-                new SqlCondition(''),
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql(''),
                 'ORDER BY id ASC',
                 new CalendarQueryScope(
-                    new SqlCondition(''),
+                    '',
                     true,
-                    new SqlCondition('i.id IN (:ids)', [
+                    SqlCondition::fromRawSql(''),
+                    SqlCondition::fromRawSql('i.id IN (:ids)', [
                         'ids' => [1, $orphanId],
                     ], [
                         'ids' => ArrayParameterType::INTEGER,
                     ])
                 ),
-                new SqlCondition('')
+                SqlCondition::fromRawSql('')
             );
 
         expect($ids)
@@ -322,19 +325,20 @@ test('findImageIds() falls back to raw DBAL when a DQL scope is given but order 
     // fallback, not throw, even though a $dqlScope is given.
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY comment ASC',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
     sort($ids);
 
@@ -349,19 +353,20 @@ test('findImageIds() runs a random order as DQL when a scope is given', function
     // can be asserted.
     $ids = calendarTestRepo()
         ->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY RAND()',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
     sort($ids);
 

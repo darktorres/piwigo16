@@ -752,7 +752,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetRegularSearchResultsCustomSearchClause(): void
         {
-            $results = $this->service->getRegularSearchResults([], new SqlCondition('i.id = 1'));
+            $results = $this->service->getRegularSearchResults([], SqlCondition::fromRawSql('i.id = 1'));
 
             self::assertSame([1], $results['items']);
         }
@@ -1649,7 +1649,7 @@ namespace Piwigo\Tests\Integration {
             // narrows that down further, proving the clause is genuinely
             // applied (not coincidentally the same result).
             $results = $this->service->getQuickSearchResultsNoCache('nature', [
-                'images_where' => new SqlCondition('id = :onlyId', [
+                'images_where' => SqlCondition::fromRawSql('id = :onlyId', [
                     'onlyId' => 2,
                 ]),
             ]);

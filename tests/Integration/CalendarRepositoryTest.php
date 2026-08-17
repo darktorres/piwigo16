@@ -52,8 +52,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function testFindImageIdsReturnsMatchingIdsInOrder(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (3, 1, 2)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (3, 1, 2)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id ASC'
         );
 
@@ -63,8 +63,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function testFindImageIdsReturnsEmptyForNoMatch(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id = 999999'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id = 999999'),
+            SqlCondition::fromRawSql(''),
             ''
         );
 
@@ -80,8 +80,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // for ORDER BY columns not in the SELECT list). A regression here
         // breaks every live calendar page.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY date_available DESC, file ASC, id ASC'
         );
 
@@ -95,8 +95,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // (one row per category an image belongs to) -- GROUP BY id must
         // still collapse that back down to one id per image.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images INNER JOIN image_category ON id = image_id WHERE category_id IN (1, 2)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images INNER JOIN image_category ON id = image_id WHERE category_id IN (1, 2)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id ASC'
         );
 
@@ -119,8 +119,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         );
 
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition("AND (date_available = '2026-08-01 00:00:00')"),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql("AND (date_available = '2026-08-01 00:00:00')"),
             'ORDER BY id ASC'
         );
 
@@ -134,19 +134,20 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function testFindImageIdsRunsDqlWhenDqlScopeAndOrderByAreGiven(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id DESC',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
 
         self::assertSame([3, 2, 1], $ids);
@@ -162,19 +163,20 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function testFindImageIdsRunsDqlForADateFieldPrependedOrder(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY id DESC, file ASC',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
 
         self::assertSame([3, 2, 1], $ids);
@@ -187,19 +189,20 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // returning null -- so this takes the DQL path, against a real
         // server. The order is random, so only membership can be asserted.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY RAND()',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
         sort($ids);
 
@@ -213,19 +216,20 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // returns null and this must still return the right members via the
         // raw-DBAL fallback, not throw, even though a $dqlScope is given.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM images WHERE id IN (1, 2, 3)'),
-            new SqlCondition(''),
+            SqlCondition::fromRawSql(' FROM images WHERE id IN (1, 2, 3)'),
+            SqlCondition::fromRawSql(''),
             'ORDER BY comment ASC',
             new CalendarQueryScope(
-                new SqlCondition(''),
+                '',
                 false,
-                new SqlCondition('i.id IN (:ids)', [
+                SqlCondition::fromRawSql(''),
+                SqlCondition::fromRawSql('i.id IN (:ids)', [
                     'ids' => [1, 2, 3],
                 ], [
                     'ids' => ArrayParameterType::INTEGER,
                 ])
             ),
-            new SqlCondition('')
+            SqlCondition::fromRawSql('')
         );
         sort($ids);
 

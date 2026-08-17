@@ -257,7 +257,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE images SET author = 'Dorothea Lange' WHERE id = 3");
 
         try {
-            $rows = $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
+            $rows = $this->repo->countImagesGroupedBy('i.author', 'author', SqlCondition::fromRawSql('i.author IS NOT NULL'), true);
 
             self::assertSame([
                 [
@@ -276,14 +276,14 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function testCountImagesGroupedByReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL')));
+        self::assertSame([], $this->repo->countImagesGroupedBy('i.author', 'author', SqlCondition::fromRawSql('i.author IS NOT NULL')));
     }
 
     public function testFindDistinctImageRowsReturnsTheRequestedExtraColumns(): void
     {
         $rows = $this->repo->findDistinctImageRows(
             ['i.ratingScore AS rating_score'],
-            new SqlCondition('i.id = :id', [
+            SqlCondition::fromRawSql('i.id = :id', [
                 'id' => 1,
             ]),
         );
@@ -296,7 +296,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function testFindDistinctImageRowsReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', [
+        self::assertSame([], $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], SqlCondition::fromRawSql('i.id = :id', [
             'id' => 99999,
         ])));
     }
@@ -305,7 +305,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
     {
         // every fixture image shares height 150 -- collapses to one row via
         // this method's own GROUP BY.
-        $values = $this->repo->findDistinctImageColumnValues('i.height', new SqlCondition(''));
+        $values = $this->repo->findDistinctImageColumnValues('i.height', SqlCondition::fromRawSql(''));
 
         self::assertSame(['150'], $values);
     }
@@ -313,7 +313,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
     public function testFindCategoryIdsAndUppercatsReturnsMatchingRows(): void
     {
         $rows = $this->repo->findCategoryIdsAndUppercats(
-            new SqlCondition('c.id IN (:ids)', [
+            SqlCondition::fromRawSql('c.id IN (:ids)', [
                 'ids' => [1, 2],
             ], [
                 'ids' => ArrayParameterType::INTEGER,
@@ -330,7 +330,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function testFindCategoryIdsAndUppercatsReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', [
+        self::assertSame([], $this->repo->findCategoryIdsAndUppercats(SqlCondition::fromRawSql('c.id = :id', [
             'id' => 99999,
         ])));
     }

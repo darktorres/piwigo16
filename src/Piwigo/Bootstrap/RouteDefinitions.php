@@ -42,6 +42,15 @@ use Piwigo\Controller\Api\Images\ImageFormatSearchController;
 use Piwigo\Controller\Api\Images\ImageGetController;
 use Piwigo\Controller\Api\Images\ImageUpdateController;
 use Piwigo\Controller\Api\InfoController;
+use Piwigo\Controller\Api\Session\ApiKeyCreateController;
+use Piwigo\Controller\Api\Session\ApiKeyListController;
+use Piwigo\Controller\Api\Session\ApiKeyRevokeController;
+use Piwigo\Controller\Api\Session\ApiKeyUpdateController;
+use Piwigo\Controller\Api\Session\FavoriteAddController;
+use Piwigo\Controller\Api\Session\FavoriteListController;
+use Piwigo\Controller\Api\Session\FavoriteRemoveController;
+use Piwigo\Controller\Api\Session\MyInfoUpdateController;
+use Piwigo\Controller\Api\Session\PreferenceSetController;
 use Piwigo\Controller\Api\SessionController;
 use Piwigo\Controller\Api\SessionLoginController;
 use Piwigo\Controller\Api\SessionLogoutController;
@@ -56,6 +65,7 @@ use Piwigo\Controller\Api\Tags\TagRenameController;
 use Piwigo\Controller\Api\Users\UserCreateController;
 use Piwigo\Controller\Api\Users\UserDeleteController;
 use Piwigo\Controller\Api\Users\UserGeneratePasswordLinkController;
+use Piwigo\Controller\Api\Users\UserGetAuthKeyController;
 use Piwigo\Controller\Api\Users\UserListController;
 use Piwigo\Controller\Api\Users\UserSetMainUserController;
 use Piwigo\Controller\Api\Users\UserUpdateController;
@@ -239,6 +249,55 @@ final class RouteDefinitions
 
         $routes->add('api_v1_session_logout', new Route('/api/v1/session', defaults: [
             '_controller' => SessionLogoutController::class,
+        ], methods: ['DELETE']));
+
+        // Self-service "my account" sub-resources -- pwg.users.setMyInfo/
+        // preferences.set/api_key.*/favorites.*, all scoped to the calling
+        // session's own account.
+        $routes->add('api_v1_session_update', new Route('/api/v1/session', defaults: [
+            '_controller' => MyInfoUpdateController::class,
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_session_preferences_set', new Route('/api/v1/session/preferences/{param}', defaults: [
+            '_controller' => PreferenceSetController::class,
+        ], requirements: [
+            'param' => '[a-zA-Z0-9_-]+',
+        ], methods: ['PUT']));
+
+        $routes->add('api_v1_session_api_keys_list', new Route('/api/v1/session/api-keys', defaults: [
+            '_controller' => ApiKeyListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_session_api_keys_create', new Route('/api/v1/session/api-keys', defaults: [
+            '_controller' => ApiKeyCreateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_session_api_keys_update', new Route('/api/v1/session/api-keys/{pkid}', defaults: [
+            '_controller' => ApiKeyUpdateController::class,
+        ], requirements: [
+            'pkid' => 'pkid-\d{8}-[a-zA-Z0-9]{20}',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_session_api_keys_revoke', new Route('/api/v1/session/api-keys/{pkid}', defaults: [
+            '_controller' => ApiKeyRevokeController::class,
+        ], requirements: [
+            'pkid' => 'pkid-\d{8}-[a-zA-Z0-9]{20}',
+        ], methods: ['DELETE']));
+
+        $routes->add('api_v1_session_favorites_list', new Route('/api/v1/session/favorites', defaults: [
+            '_controller' => FavoriteListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_session_favorites_add', new Route('/api/v1/session/favorites/{imageId}', defaults: [
+            '_controller' => FavoriteAddController::class,
+        ], requirements: [
+            'imageId' => '\d+',
+        ], methods: ['PUT']));
+
+        $routes->add('api_v1_session_favorites_remove', new Route('/api/v1/session/favorites/{imageId}', defaults: [
+            '_controller' => FavoriteRemoveController::class,
+        ], requirements: [
+            'imageId' => '\d+',
         ], methods: ['DELETE']));
 
         $routes->add('api_v1_info', new Route('/api/v1/info', defaults: [
@@ -431,6 +490,14 @@ final class RouteDefinitions
 
         $routes->add('api_v1_users_set_main_user', new Route('/api/v1/users/{id}/actions/set-main-user', defaults: [
             '_controller' => UserSetMainUserController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        // Not admin-gated: any signed-in (non-guest) caller, matching
+        // pwg.users.getAuthKey's own requiresAuth-only WS registration.
+        $routes->add('api_v1_users_get_auth_key', new Route('/api/v1/users/{id}/actions/get-auth-key', defaults: [
+            '_controller' => UserGetAuthKeyController::class,
         ], requirements: [
             'id' => '\d+',
         ], methods: ['POST']));

@@ -76,6 +76,7 @@ use Piwigo\Controller\Api\Uploads\TusUploadDeleteController;
 use Piwigo\Controller\Api\Uploads\TusUploadHeadController;
 use Piwigo\Controller\Api\Uploads\TusUploadOptionsController;
 use Piwigo\Controller\Api\Uploads\TusUploadPatchController;
+use Piwigo\Controller\Api\Uploads\UploadCompleteBatchController;
 use Piwigo\Controller\Api\Uploads\UploadDuplicatesController;
 use Piwigo\Controller\Api\Uploads\UploadReadinessController;
 use Piwigo\Controller\Api\Users\UserCreateController;
@@ -718,6 +719,10 @@ final class RouteDefinitions
         ], requirements: [
             'id' => '[a-f0-9]{32}',
         ], methods: ['DELETE']));
+
+        $routes->add('api_v1_uploads_complete_batch', new Route('/api/v1/uploads/actions/complete-batch', defaults: [
+            '_controller' => UploadCompleteBatchController::class,
+        ], methods: ['POST']));
 
         return $routes;
     }

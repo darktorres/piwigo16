@@ -61,11 +61,14 @@ final class PictureCommentRenderer
      * comment list's own pagination offset, not a separate value.
      */
     /**
-     * @param list<array<string, mixed>> $related_categories row shape is
-     *   mixed, not uniformly string|null: `commentable` is this table's
-     *   real tinyint column (int|bool depending on the driver), `id` a
-     *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
-     *   genuinely string|null.
+     * @param list<array<string, mixed>> $related_categories
+     *   {@see \Piwigo\Image\Projection\VisibleCategoryRow::toArray()}'s own
+     *   shape in production ({@see \Piwigo\Controller\PictureController}
+     *   flattens it before calling this, see that call site's own
+     *   docblock) -- `commentable` is a real `bool` there, but this
+     *   method's own type stays loose: its own mutation-kill tests below
+     *   deliberately construct a row missing the key entirely, to observe
+     *   the resulting "Undefined array key" warning.
      */
     public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
     {

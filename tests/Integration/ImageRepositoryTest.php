@@ -1096,8 +1096,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findRelatedCategoriesForImage(ImageId::from(1), self::noPermissionRestriction());
 
         self::assertCount(1, $rows);
-        self::assertSame(1, $rows[0]['id']);
-        self::assertTrue($rows[0]['commentable']);
+        self::assertSame(1, $rows[0]->id);
+        self::assertTrue($rows[0]->commentable);
     }
 
     public function testFindRelatedCategoriesForImageAppliesTheGivenCondition(): void
@@ -1120,7 +1120,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findVisibleCategoriesForImage(ImageId::from(1), self::noPermissionRestriction());
 
         self::assertCount(1, $rows);
-        self::assertSame(1, $rows[0]['id']);
+        self::assertSame(1, $rows[0]->id);
     }
 
     public function testFindVisibleCategoriesForImageAppliesTheGivenCondition(): void

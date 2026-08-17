@@ -35,7 +35,9 @@ use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Image\Projection\PathRepresentativeExtLevel;
+use Piwigo\Image\Projection\RelatedCategoryRow;
 use Piwigo\Image\Projection\SlideshowParams;
+use Piwigo\Image\Projection\VisibleCategoryRow;
 use Piwigo\Image\Request\EmptyLoungeRequest;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -976,7 +978,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<RelatedCategoryRow>
      */
     public function getRelatedCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
@@ -989,7 +991,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<VisibleCategoryRow>
      */
     public function getVisibleCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {

@@ -56,6 +56,7 @@ use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\ImageFormat;
+use Piwigo\Image\Projection\VisibleCategoryRow;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
@@ -578,13 +579,17 @@ final readonly class PictureController implements ControllerInterface
                 ->incrementVisitCounter(ImageId::from($image_id));
         }
 
-        // Row shape is mixed, not uniformly string|null -- see
-        // PictureCommentRenderer::render()'s own param docblock for the
-        // real per-column breakdown.
-        $related_categories = $this->imageService->getVisibleCategoriesForImage(
+        $relatedCategoryRows = $this->imageService->getVisibleCategoriesForImage(
             ImageId::from($image_id),
             $this->permissionService->getPermissionCriteria()
         );
+        // Flattened to plain arrays here, once: CategoryService::
+        // compareByGlobalRank() is a generic, cross-domain array-typed
+        // comparator shared by 8+ unrelated call sites (see
+        // VisibleCategoryRow's own docblock), and every real read below
+        // (including PictureCommentRenderer::render()'s own param) already
+        // expects a plain row.
+        $related_categories = array_map(static fn (VisibleCategoryRow $row): array => $row->toArray(), $relatedCategoryRows);
         usort($related_categories, CategoryService::compareByGlobalRank(...));
         $picture = [];
 
@@ -1101,22 +1106,19 @@ final readonly class PictureController implements ControllerInterface
 
         // related categories
         //
-        // findVisibleCategoriesForImage()'s own 'id' column comes back as a
-        // native PHP int (DbConnection::params()'s own
-        // MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true), never a
-        // string. The old code left $related_cat0_id at that native int
-        // type but force-cast $page_category['id'] to string before
-        // comparing them with strict `===` -- `5 === "5"` is always false,
-        // so this "single category, no need to go to db" fast path could
-        // never actually be taken through any real request; every view
-        // silently fell through to the else branch's extra SQL query
-        // below, even for the common case of a photo viewed via its own
-        // single album. Normalizing both sides to int|null (matching this
-        // file's own is_numeric()-then-cast idiom used everywhere else,
-        // e.g. $category_id above) makes the comparison type-consistent
-        // and the fast path reachable again.
+        // VisibleCategoryRow::$id is a real int, never a string. The old
+        // code left $related_cat0_id at that native int type but
+        // force-cast $page_category['id'] to string before comparing them
+        // with strict `===` -- `5 === "5"` is always false, so this
+        // "single category, no need to go to db" fast path could never
+        // actually be taken through any real request; every view silently
+        // fell through to the else branch's extra SQL query below, even
+        // for the common case of a photo viewed via its own single album.
+        // Normalizing $page_category_id_for_compare to int|null too
+        // (matching this file's own is_numeric()-then-cast idiom used
+        // everywhere else, e.g. $category_id above) makes the comparison
+        // type-consistent and the fast path reachable again.
         $related_cat0_id = $related_categories[0]['id'] ?? null;
-        $related_cat0_id = is_numeric($related_cat0_id) ? (int) $related_cat0_id : null;
         $page_category_id_for_compare = $page_category !== null && is_numeric($page_category['id'] ?? null) ? (int) $page_category['id'] : null;
         $related_categories_display = [];
         if (count($related_categories) === 1 and
@@ -1133,15 +1135,13 @@ final readonly class PictureController implements ControllerInterface
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids
-                $categoryUppercats = $category['uppercats'];
-                $ids = array_merge($ids, explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : ''));
+                $ids = array_merge($ids, explode(',', $category['uppercats']));
             }
             $ids = array_unique($ids);
             $cat_map = $this->categoryService->getNamesByIds(array_values(array_map(intval(...), $ids)));
             foreach ($related_categories as $category) {
                 $cats = [];
-                $categoryUppercats = $category['uppercats'];
-                foreach (explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : '') as $id) {
+                foreach (explode(',', $category['uppercats']) as $id) {
                     $cats[] = $cat_map[$id];
                 }
                 $related_categories_display[] = $this->htmlService->getCatDisplayName($cats);

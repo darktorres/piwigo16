@@ -14,6 +14,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use LogicException;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\CategoryStatus;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\FormatId;
@@ -40,7 +41,9 @@ use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Image\Projection\PathRepresentativeExtLevel;
+use Piwigo\Image\Projection\RelatedCategoryRow;
 use Piwigo\Image\Projection\UploadResultInfo;
+use Piwigo\Image\Projection\VisibleCategoryRow;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Stringable;
@@ -2516,12 +2519,13 @@ final class ImageRepository extends EntityRepository
      *
      * `commentable` hydrates as a real `bool` -- safe because the one
      * real caller ({@see \Piwigo\Controller\Api\Images\ImageGetController})
-     * already `(bool)`-casts it and `unset()`s the key immediately after, before
-     * the row ever reaches its own JSON response. `c.id`/`c.permalink`
-     * are custom-Typed (`category_id`/`permalink`), so `getArrayResult()`
+     * already reads it as one and `unset()`s the key immediately after,
+     * before the row ever reaches its own JSON response. `c.id`/
+     * `c.permalink` are custom-Typed (`category_id`/`permalink`), so
+     * `getArrayResult()`
      * (Gotcha #1) returns real VO instances for them, unwrapped below.
      *
-     * @return list<array<string, mixed>>
+     * @return list<RelatedCategoryRow>
      */
     public function findRelatedCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
@@ -2544,14 +2548,14 @@ final class ImageRepository extends EntityRepository
 
             $id = $row['id'] ?? null;
             $permalink = $row['permalink'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'name' => $row['name'] ?? null,
-                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
-                'uppercats' => $row['uppercats'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-                'commentable' => $row['commentable'] ?? null,
-            ];
+            $result[] = new RelatedCategoryRow(
+                id: $id instanceof CategoryId ? $id->value : 0,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                permalink: $permalink instanceof Permalink ? $permalink->value : null,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                commentable: (bool) ($row['commentable'] ?? false),
+            );
         }
 
         return $result;
@@ -2595,16 +2599,12 @@ final class ImageRepository extends EntityRepository
      * PictureController's own "related categories" block, ordered by
      * CategoryService::compareByGlobalRank() afterwards (not here).
      *
-     * `commentable`/`visible` hydrate as real `bool` -- safe because
-     * {@see \Piwigo\Picture\PictureCommentRenderer::render()}'s own
-     * `commentable` read already `(bool)`-casts it, and `visible` has no
-     * strict-typed reader in either real consumer
-     * ({@see \Piwigo\Controller\PictureController}/
-     * `PictureCommentRenderer`). `c.id` is custom-Typed (`category_id`) --
-     * {@see \Piwigo\Controller\PictureController}'s own `is_numeric()`
-     * read of `$related_categories[0]['id']` needs the unwrapped int.
+     * `commentable`/`visible` hydrate as real `bool`. `c.id` is
+     * custom-Typed (`category_id`), `c.status` is the `CategoryStatus`
+     * enum -- both unwrapped below, matching every other real `c.status`
+     * DQL-select site in this codebase.
      *
-     * @return list<array<string, mixed>>
+     * @return list<VisibleCategoryRow>
      */
     public function findVisibleCategoriesForImage(ImageId $imageId, PermissionCriteria $criteria): array
     {
@@ -2629,14 +2629,15 @@ final class ImageRepository extends EntityRepository
             }
 
             $id = $row['id'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'uppercats' => $row['uppercats'] ?? null,
-                'commentable' => $row['commentable'] ?? null,
-                'visible' => $row['visible'] ?? null,
-                'status' => $row['status'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-            ];
+            $status = $row['status'] ?? null;
+            $result[] = new VisibleCategoryRow(
+                id: $id instanceof CategoryId ? $id->value : 0,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                commentable: (bool) ($row['commentable'] ?? false),
+                visible: (bool) ($row['visible'] ?? false),
+                status: $status instanceof CategoryStatus ? $status->value : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;

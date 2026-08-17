@@ -1411,9 +1411,10 @@ test('getImageIdsForCategories() returns empty for no category ids', function ()
 });
 
 test('updateCategory() with a scalar id clears a stale representative_picture_id', function (): void {
-    // updateCategory()'s own docblock: real WS callers pass a raw,
-    // never-int-cast scalar category id, not an array -- calling with a
-    // bare int here exercises that '%s=' . $ids scalar branch directly.
+    // updateCategory()'s own docblock: legacy ws_functions/pwg.images.php
+    // callers passed a raw, never-int-cast scalar category id, not an
+    // array -- calling with a bare int here exercises that '%s=' . $ids
+    // scalar branch directly.
     //
     // representative_picture_id has a real FK to images.id (ON DELETE
     // SET NULL) -- a genuinely dangling value can only exist in practice

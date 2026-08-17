@@ -221,10 +221,10 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
             'tag_ids' => (string) $tagId,
         ]);
 
-        // Every one of these WS params is WsParamFlag::FORCE_ARRAY-declared
-        // (Server::makeArrayParam() coerces a bare scalar into a
-        // 1-element array server-side) -- a single value per field is
-        // enough to make `isset($searchFields[x])` true; the sidebar's own
+        // A single tag id is already a real, complete comma-joined tagIds
+        // value on its own (ImageUpdateController explodes it into a
+        // 1-element list server-side) -- enough to make
+        // `isset($searchFields[x])` true; the sidebar's own
         // bucket/row computations below read from the *underlying photo
         // data* (via getClauseForFilter()'s "other active filters"
         // intersection, which excludes each section's own criterion), not
@@ -966,7 +966,7 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
 
 /**
  * Closes the filesize-bucket loop's own `! is_numeric($row['filesize'])`
- * continue guard (line ~673, filesize forced NULL via raw SQL, no WS
+ * continue guard (line ~673, filesize forced NULL via raw SQL, no API
  * setter for it) together with the "no bucket values at all" arbitrary
  * fallback array (line ~679-686) it feeds into when every row in scope
  * gets skipped that way -- distinguishable from a genuinely-empty gallery

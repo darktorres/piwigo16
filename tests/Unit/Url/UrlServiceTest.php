@@ -223,9 +223,8 @@ function urlServiceTestCategoryId(mixed $category): int
 //    and a real DB lookup instead of breaking, producing an uncaught
 //    ResponseReadyException) and passes on the real source.
 test('getActionUrl builds action.php with id/part, adding a bare download flag when requested', function (): void {
-    // addUrlParams()'s own default separator is the HTML-safe '&amp;'
-    // (outside a WS request context) -- see that method's own docblock
-    // example.
+    // addUrlParams()'s own default separator is the HTML-safe '&amp;' --
+    // see that method's own docblock example.
     $service = UrlServiceTestFactory::build();
 
     expect($service->getActionUrl(42, 'e', false))

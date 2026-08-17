@@ -1276,9 +1276,9 @@ namespace Piwigo\Tests\Integration {
 
         public function testUpdateCategoryWithAScalarIdClearsAStaleRepresentativePictureId(): void
         {
-            // updateCategory()'s own docblock: real WS callers
-            // (ws_functions/pwg.images.php) pass a raw, never-int-cast scalar
-            // category id, not an array -- calling with a bare int here
+            // updateCategory()'s own docblock: legacy
+            // ws_functions/pwg.images.php callers passed a raw, never-int-cast
+            // scalar category id, not an array -- calling with a bare int here
             // exercises that '%s=' . $ids scalar branch directly (as opposed
             // to the 'all' and array branches already covered elsewhere).
             //

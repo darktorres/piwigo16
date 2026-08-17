@@ -1203,9 +1203,8 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
 
     // Zero-tolerance: a file may not repeat the same multi-dependency
     // service construction chain verbatim -- DRY-extract it into a
-    // private helper method (`$this->helperMethod()`, or
-    // `self::helperMethod()` for static `Ws/*.php` WS-method handlers)
-    // or a single reused local variable instead.
+    // private helper method (`$this->helperMethod()`, or a static one for
+    // a static caller) or a single reused local variable instead.
     $allowlist = [];
 
     $prefixLength = strlen($repoRoot . '/src/Piwigo/');

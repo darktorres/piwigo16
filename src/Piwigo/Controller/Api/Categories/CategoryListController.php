@@ -103,10 +103,22 @@ final readonly class CategoryListController implements ControllerInterface
 
         usort($categories, static fn (array $a, array $b): int => strnatcasecmp((string) $a['globalRank'], (string) $b['globalRank']));
 
+        $limitedTo = $this->currentConfig->linkedAlbumSearchLimit;
+
         return ResponseFactory::json([
             'categories' => $categories,
-            'limit' => $this->currentConfig->linkedAlbumSearchLimit,
-            'limitReached' => $counter > $this->currentConfig->linkedAlbumSearchLimit,
+            // Same rich shape as CategoryAvailableListController's own
+            // conditional $limitInfo (unconditional here -- this endpoint
+            // always applies linkedAlbumSearchLimit, there's no
+            // client-supplied opt-in) -- album_selector.js's tree-prefill
+            // path reads limitedTo/totalCats/remainingCats directly, its
+            // free-text-search path derives a reached/not-reached flag as
+            // remainingCats > 0.
+            'limit' => [
+                'limitedTo' => $limitedTo,
+                'totalCats' => $counter,
+                'remainingCats' => $counter > $limitedTo ? $counter - $limitedTo : 0,
+            ],
         ]);
     }
 }

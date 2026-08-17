@@ -79,7 +79,7 @@ class AlbumSelector {
   }) {
     this.instanceId = `AlbumSelector-${Math.random().toString(36).substring(2, 9)}`;
     this.#in_admin_mode = adminMode;
-    this.#methodPwg = adminMode ? 'pwg.categories.getAdminList' : 'pwg.categories.getList';
+    this.#methodPwg = adminMode ? 'api/v1/categories' : 'api/v1/categories/available';
     this.#limitParam = limitParam;
     this.#selected_categories = adminMode ? [...selectedCategoriesIds] : selectedCategoriesIds.map(String);
     this.#isAlbumCreationChecked = false;
@@ -531,8 +531,8 @@ class AlbumSelector {
     this.#loadSubCatEvent();
     // for debug
     // console.log(limit);
-    if (limit.remaining_cats > 0) {
-      const text = sprintf(str_plus_albums_found, limit.limited_to, limit.total_cats);
+    if (limit.remainingCats > 0) {
+      const text = sprintf(str_plus_albums_found, limit.limitedTo, limit.totalCats);
       display_div.append(
         `<p class="and-more">${text}</p>`
       );
@@ -579,28 +579,34 @@ class AlbumSelector {
   /*-----------
   Ajax method
   -----------*/
+  // GET /api/v1/categories (admin mode) filters by parentId; GET
+  // /api/v1/categories/available (non-admin mode) filters by catId --
+  // the two endpoints were built at different times with different
+  // query param names for the same "look at this category" concept.
+  #catIdParam(cat_id) {
+    return this.#in_admin_mode ? { parentId: cat_id } : { catId: cat_id };
+  }
+
   #prefill_search() {
     $(".linkedAlbumPopInContainer .searching").show();
     let api_params = {
-      cat_id: 0,
+      ...this.#catIdParam(0),
       recursive: false,
       fullname: true,
       limit: this.#limitParam,
     };
 
-    this.#in_admin_mode && (api_params.additional_output = 'full_name_with_admin_links');
-
     $.ajax({
-      url: "ws.php?format=json&method=" + this.#methodPwg,
-      type: "POST",
+      url: this.#methodPwg,
+      type: "GET",
       dataType: "json",
       data: api_params,
       success: (data) => {
         // for debug
         // console.log(data);
         $(".linkedAlbumPopInContainer .searching").hide();
-        const cats = data.result.categories;
-        const limit = data.result.limit;
+        const cats = data.categories;
+        const limit = data.limit;
         this.#prefill_results("root", cats, limit);
       },
       error: function (e) {
@@ -612,21 +618,19 @@ class AlbumSelector {
 
   async #prefill_search_subcats(cat_id) {
     let api_params = {
-      cat_id: cat_id,
+      ...this.#catIdParam(cat_id),
       recursive: false,
       limit: this.#limitParam,
     };
 
-    this.#in_admin_mode && (api_params.additional_output = 'full_name_with_admin_links');
-
     $.ajax({
-      url: "ws.php?format=json&method=" + this.#methodPwg,
-      type: "POST",
+      url: this.#methodPwg,
+      type: "GET",
       dataType: "json",
       data: api_params,
       success: (data) => {
-        const cats = data.result.categories.filter((c) => c.id != cat_id);
-        const limit = data.result.limit;
+        const cats = data.categories.filter((c) => c.id != cat_id);
+        const limit = data.limit;
         this.#prefill_results(cat_id, cats, limit);
       },
       error: (e) => {
@@ -641,27 +645,24 @@ class AlbumSelector {
       return;
     }
     let api_params = {
-      cat_id: 0,
+      ...this.#catIdParam(0),
       recursive: true,
       fullname: true,
       search: searchText,
     }
 
-    this.#in_admin_mode && (api_params.additional_output = 'full_name_with_admin_links');
-
     AlbumSelector.selectors.iconSearchingSpin.show();
     $.ajax({
-      url: "ws.php?format=json&method=" + this.#methodPwg,
-      type: "POST",
+      url: this.#methodPwg,
+      type: "GET",
       dataType: "json",
       data: api_params,
-      success: (raw_data) => {
-        if ('ok' !== raw_data.stat) { return }
+      success: (data) => {
         AlbumSelector.selectors.iconSearchingSpin.hide();
-        let categories = raw_data.result.categories;
+        let categories = data.categories;
         this.#fill_results(categories);
 
-        if (raw_data.result.limit_reached) {
+        if (data.limit && data.limit.remainingCats > 0) {
           AlbumSelector.selectors.limitReached.html(str_result_limit.replace("%d", categories.length));
         } else {
           if (categories.length == 1) {
@@ -685,26 +686,26 @@ class AlbumSelector {
     const cat_position = $("input[name=position]:checked").val();
     const api_params = {
       name: cat_name,
-      parent: cat_id === 'root' ? 0 : +cat_id,
+      parentId: cat_id === 'root' ? 0 : +cat_id,
       position: cat_position,
     }
-  
+
     if(!cat_name || '' === cat_name) {
       this.#show_new_album_error(str_complete_name_field);
       return
     }
-  
+
     $.ajax({
-      url: 'ws.php?format=json&method=pwg.categories.add',
+      url: 'api/v1/categories',
       type: 'POST',
+      contentType: 'application/json',
+      headers: {
+        'X-CSRF-Token': pwg_token
+      },
+      data: JSON.stringify(api_params),
       dataType: 'json',
-      data: api_params,
       success: (data) => {
-        if (data.stat === 'ok') {
-          this.#get_album_by_id(data.result.id);
-        } else {
-          this.#show_new_album_error(str_an_error_has_occured);
-        }
+        this.#get_album_by_id(data.id);
       },
       error: () => {
         this.#show_new_album_error(str_an_error_has_occured);
@@ -714,18 +715,14 @@ class AlbumSelector {
 
   #get_album_by_id(cat_id) {
     $.ajax({
-      url: 'ws.php?format=json&method=pwg.categories.getAdminList',
+      url: 'api/v1/categories',
+      type: 'GET',
       dataType: 'json',
       data: {
-        cat_id,
-        additional_output: 'full_name_with_admin_links',
+        parentId: cat_id,
       },
       success: (data) => {
-        if(data.stat === 'ok') {
-          this.#select_new_album_and_close(data.result.categories[0]);
-        } else {
-          this.#show_new_album_error(str_an_error_has_occured);
-        }
+        this.#select_new_album_and_close(data.categories[0]);
       },
       error: () => {
         this.#show_new_album_error(str_an_error_has_occured);

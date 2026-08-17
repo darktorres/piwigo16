@@ -31,6 +31,8 @@ ALTER TABLE IF EXISTS ONLY public.search DROP CONSTRAINT IF EXISTS fk_search_for
 ALTER TABLE IF EXISTS ONLY public.search DROP CONSTRAINT IF EXISTS fk_search_created_by;
 ALTER TABLE IF EXISTS ONLY public.rate DROP CONSTRAINT IF EXISTS fk_rate_user_id;
 ALTER TABLE IF EXISTS ONLY public.rate DROP CONSTRAINT IF EXISTS fk_rate_element_id;
+ALTER TABLE IF EXISTS ONLY public.plugin_migrations DROP CONSTRAINT IF EXISTS fk_plugin_migrations_plugin_id;
+ALTER TABLE IF EXISTS ONLY public.old_permalinks DROP CONSTRAINT IF EXISTS fk_old_permalinks_cat_id;
 ALTER TABLE IF EXISTS ONLY public.lounge DROP CONSTRAINT IF EXISTS fk_lounge_image_id;
 ALTER TABLE IF EXISTS ONLY public.lounge DROP CONSTRAINT IF EXISTS fk_lounge_category_id;
 ALTER TABLE IF EXISTS ONLY public.images DROP CONSTRAINT IF EXISTS fk_images_storage_category_id;
@@ -52,16 +54,32 @@ ALTER TABLE IF EXISTS ONLY public.favorites DROP CONSTRAINT IF EXISTS fk_favorit
 ALTER TABLE IF EXISTS ONLY public.favorites DROP CONSTRAINT IF EXISTS fk_favorites_image_id;
 ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS fk_comments_image_id;
 ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS fk_comments_author_id;
+ALTER TABLE IF EXISTS ONLY public.categories DROP CONSTRAINT IF EXISTS fk_categories_site_id;
 ALTER TABLE IF EXISTS ONLY public.categories DROP CONSTRAINT IF EXISTS fk_categories_representative_picture_id;
 ALTER TABLE IF EXISTS ONLY public.categories DROP CONSTRAINT IF EXISTS fk_categories_id_uppercat;
 ALTER TABLE IF EXISTS ONLY public.caddie DROP CONSTRAINT IF EXISTS fk_caddie_user_id;
 ALTER TABLE IF EXISTS ONLY public.caddie DROP CONSTRAINT IF EXISTS fk_caddie_element_id;
+ALTER TABLE IF EXISTS ONLY public.audit_log DROP CONSTRAINT IF EXISTS fk_audit_log_group_id;
 ALTER TABLE IF EXISTS ONLY public.audit_log DROP CONSTRAINT IF EXISTS fk_audit_log_actor_id;
+ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_user_id;
+ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_tag_id;
 ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_performed_by;
+ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_image_id;
+ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_group_id;
+ALTER TABLE IF EXISTS ONLY public.activity DROP CONSTRAINT IF EXISTS fk_activity_category_id;
 DROP INDEX IF EXISTS public.user_infos_lastmodified_idx;
+DROP INDEX IF EXISTS public.user_group_user_id_idx;
+DROP INDEX IF EXISTS public.user_feed_user_id_idx;
+DROP INDEX IF EXISTS public.user_auth_keys_user_id_idx;
+DROP INDEX IF EXISTS public.user_access_cat_id_idx;
 DROP INDEX IF EXISTS public.tags_lastmodified_idx;
 DROP INDEX IF EXISTS public.tags_i1;
 DROP INDEX IF EXISTS public.tags_ft_name;
+DROP INDEX IF EXISTS public.search_forked_from_idx;
+DROP INDEX IF EXISTS public.search_created_by_idx;
+DROP INDEX IF EXISTS public.rate_user_id_idx;
+DROP INDEX IF EXISTS public.old_permalinks_cat_id_idx;
+DROP INDEX IF EXISTS public.lounge_category_id_idx;
 DROP INDEX IF EXISTS public.images_lastmodified_idx;
 DROP INDEX IF EXISTS public.images_i9;
 DROP INDEX IF EXISTS public.images_i8;
@@ -74,7 +92,9 @@ DROP INDEX IF EXISTS public.images_i2;
 DROP INDEX IF EXISTS public.images_i1;
 DROP INDEX IF EXISTS public.images_ft_name_comment;
 DROP INDEX IF EXISTS public.images_ft_author;
+DROP INDEX IF EXISTS public.images_added_by_idx;
 DROP INDEX IF EXISTS public.image_tag_i1;
+DROP INDEX IF EXISTS public.image_format_image_id_idx;
 DROP INDEX IF EXISTS public.image_category_i1;
 DROP INDEX IF EXISTS public.idx_user_failed_logins_user_time;
 DROP INDEX IF EXISTS public.idx_user_failed_logins_ip_time;
@@ -83,12 +103,31 @@ DROP INDEX IF EXISTS public.idx_history_date_desc;
 DROP INDEX IF EXISTS public.idx_audit_log_entity;
 DROP INDEX IF EXISTS public.idx_audit_log_created_at;
 DROP INDEX IF EXISTS public.idx_audit_log_actor;
+DROP INDEX IF EXISTS public.history_user_id_idx;
+DROP INDEX IF EXISTS public.history_search_id_idx;
+DROP INDEX IF EXISTS public.history_image_id_idx;
+DROP INDEX IF EXISTS public.history_format_id_idx;
+DROP INDEX IF EXISTS public.history_category_id_idx;
+DROP INDEX IF EXISTS public.history_auth_key_id_idx;
 DROP INDEX IF EXISTS public.groups_lastmodified_idx;
+DROP INDEX IF EXISTS public.group_access_cat_id_idx;
+DROP INDEX IF EXISTS public.favorites_image_id_idx;
 DROP INDEX IF EXISTS public.comments_i2;
 DROP INDEX IF EXISTS public.comments_i1;
+DROP INDEX IF EXISTS public.comments_author_id_idx;
+DROP INDEX IF EXISTS public.categories_site_id_idx;
+DROP INDEX IF EXISTS public.categories_representative_picture_id_idx;
 DROP INDEX IF EXISTS public.categories_lastmodified_idx;
 DROP INDEX IF EXISTS public.categories_i2;
 DROP INDEX IF EXISTS public.categories_ft_name_comment;
+DROP INDEX IF EXISTS public.caddie_element_id_idx;
+DROP INDEX IF EXISTS public.audit_log_group_id_idx;
+DROP INDEX IF EXISTS public.activity_user_id_idx;
+DROP INDEX IF EXISTS public.activity_tag_id_idx;
+DROP INDEX IF EXISTS public.activity_performed_by_idx;
+DROP INDEX IF EXISTS public.activity_image_id_idx;
+DROP INDEX IF EXISTS public.activity_group_id_idx;
+DROP INDEX IF EXISTS public.activity_category_id_idx;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_ui1_unique;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
 ALTER TABLE IF EXISTS ONLY public.user_mail_notification DROP CONSTRAINT IF EXISTS user_mail_notification_ui1_unique;
@@ -105,7 +144,6 @@ ALTER TABLE IF EXISTS ONLY public.sites DROP CONSTRAINT IF EXISTS sites_ui1_uniq
 ALTER TABLE IF EXISTS ONLY public.sites DROP CONSTRAINT IF EXISTS sites_pkey;
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
 ALTER TABLE IF EXISTS ONLY public.search DROP CONSTRAINT IF EXISTS search_pkey;
-ALTER TABLE IF EXISTS ONLY public.search_filter_view DROP CONSTRAINT IF EXISTS search_filter_view_pkey;
 ALTER TABLE IF EXISTS ONLY public.rate DROP CONSTRAINT IF EXISTS rate_pkey;
 ALTER TABLE IF EXISTS ONLY public.plugins DROP CONSTRAINT IF EXISTS plugins_pkey;
 ALTER TABLE IF EXISTS ONLY public.plugin_migrations DROP CONSTRAINT IF EXISTS plugin_migrations_pkey;
@@ -146,7 +184,6 @@ DROP TABLE IF EXISTS public.themes;
 DROP TABLE IF EXISTS public.tags;
 DROP TABLE IF EXISTS public.sites;
 DROP TABLE IF EXISTS public.sessions;
-DROP TABLE IF EXISTS public.search_filter_view;
 DROP TABLE IF EXISTS public.search;
 DROP TABLE IF EXISTS public.rate;
 DROP TABLE IF EXISTS public.plugins;
@@ -281,6 +318,48 @@ COMMENT ON COLUMN public.activity.user_agent IS 'browser user agent string, only
 
 
 --
+-- Name: COLUMN activity.user_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.activity.user_id IS 'typed reference for object = user, ON DELETE SET NULL';
+
+
+--
+-- Name: COLUMN activity.category_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.activity.category_id IS 'typed reference for object = album, ON DELETE SET NULL';
+
+
+--
+-- Name: COLUMN activity.image_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.activity.image_id IS 'typed reference for object = photo, ON DELETE SET NULL';
+
+
+--
+-- Name: COLUMN activity.tag_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.activity.tag_id IS 'typed reference for object = tag, ON DELETE SET NULL';
+
+
+--
+-- Name: COLUMN activity.group_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.activity.group_id IS 'typed reference for object = group, ON DELETE SET NULL';
+
+
+--
+-- Name: COLUMN activity.system_scope; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.activity.system_scope IS 'ActivitySystem constant for object = system rows, which store no row id in object_id';
+
+
+--
 -- Name: activity_activity_id_seq; Type: SEQUENCE; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -398,6 +477,13 @@ COMMENT ON COLUMN public.audit_log.prev_hash IS 'row_hash of the previous row, n
 --
 
 COMMENT ON COLUMN public.audit_log.row_hash IS 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash';
+
+
+--
+-- Name: COLUMN audit_log.group_id; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+COMMENT ON COLUMN public.audit_log.group_id IS 'typed reference for entity_type = group, ON DELETE SET NULL';
 
 
 --
@@ -1146,7 +1232,7 @@ COMMENT ON COLUMN public.history.ip IS 'REMOTE_ADDR of the request, truncated to
 -- Name: COLUMN history.section; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
 --
 
-COMMENT ON COLUMN public.history.section IS 'gallery navigation view the visit occurred in, plugin-defined sections are appended to this enum automatically';
+COMMENT ON COLUMN public.history.section IS 'gallery navigation view the visit occurred in, plugin-defined sections stored as-is';
 
 
 --
@@ -2047,47 +2133,6 @@ COMMENT ON COLUMN public.search.rules IS 'encoded search criteria (query terms, 
 
 
 --
--- Name: search_filter_view; Type: TABLE; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE TABLE public.search_filter_view (
-    name character varying(64) NOT NULL,
-    config_json jsonb NOT NULL,
-    created_at timestamp without time zone NOT NULL
-);
-
-
-ALTER TABLE public.search_filter_view OWNER TO piwigo_fixture_regen;
-
---
--- Name: TABLE search_filter_view; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
---
-
-COMMENT ON TABLE public.search_filter_view IS 'named, reusable saved search-filter presets, unused: not read or written by any repository or service in this codebase';
-
-
---
--- Name: COLUMN search_filter_view.name; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
---
-
-COMMENT ON COLUMN public.search_filter_view.name IS 'saved filter view name';
-
-
---
--- Name: COLUMN search_filter_view.config_json; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
---
-
-COMMENT ON COLUMN public.search_filter_view.config_json IS 'encoded search filter configuration';
-
-
---
--- Name: COLUMN search_filter_view.created_at; Type: COMMENT; Schema: public; Owner: piwigo_fixture_regen
---
-
-COMMENT ON COLUMN public.search_filter_view.created_at IS 'when the filter view was saved';
-
-
---
 -- Name: search_id_seq; Type: SEQUENCE; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -2871,24 +2916,24 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
 
 COPY public.activity (activity_id, object, object_id, action, performed_by, session_idx, ip_address, occured_on, details, user_agent, user_id, category_id, image_id, tag_id, group_id, system_scope) FROM stdin;
 1	system	3	activate	\N	none	::1	2026-08-01 00:00:00	{"script": "install", "theme_id": "default"}	\N	\N	\N	\N	\N	\N	3
-2	system	1	install	\N	none	::1	2026-08-01 00:00:00	{"script": "install", "version": "16.3.0"}	\N	\N	\N	\N	\N	\N	1
-3	user	1	login	1	1bc781ddd982d9b5d45f376dfc58d7f7	::1	2026-08-01 00:00:00	{"script": "install"}	PiwigoFixtureRegen/1.0	1	\N	\N	\N	\N	\N
-4	user	1	login	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.session.login"}	PiwigoFixtureRegen/1.0	1	\N	\N	\N	\N	\N
-5	album	1	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N	\N	1	\N	\N	\N	\N
-6	album	2	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N	\N	2	\N	\N	\N	\N
-7	photo	1	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	1	\N	\N	\N
-8	photo	2	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	2	\N	\N	\N
-9	photo	3	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	3	\N	\N	\N
-10	photo	4	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	4	\N	\N	\N
-11	photo	5	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	5	\N	\N	\N
-12	tag	1	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N	\N	\N	\N	1	\N	\N
-13	tag	2	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N	\N	\N	\N	2	\N	\N
-14	tag	3	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N	\N	\N	\N	3	\N	\N
-15	user	3	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N	3	\N	\N	\N	\N	\N
-16	user	4	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N	4	\N	\N	\N	\N	\N
-17	group	1	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N	\N	\N	\N	\N	1	\N
-18	group	2	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N	\N	\N	\N	\N	2	\N
-19	group	3	add	1	181a4e2d08983eef4ef71dc7e8fa24c1	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N	\N	\N	\N	\N	3	\N
+2	system	1	install	\N	none	::1	2026-08-01 00:00:00	{"script": "install", "version": "17.0.0"}	\N	\N	\N	\N	\N	\N	1
+3	user	1	login	1	2cce8b5adfc87f1b056dc013444caa58	::1	2026-08-01 00:00:00	{"script": "install"}	PiwigoFixtureRegen/1.0	1	\N	\N	\N	\N	\N
+4	user	1	login	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.session.login"}	PiwigoFixtureRegen/1.0	1	\N	\N	\N	\N	\N
+5	album	1	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N	\N	1	\N	\N	\N	\N
+6	album	2	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N	\N	2	\N	\N	\N	\N
+7	photo	1	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	1	\N	\N	\N
+8	photo	2	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	2	\N	\N	\N
+9	photo	3	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	3	\N	\N	\N
+10	photo	4	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	4	\N	\N	\N
+11	photo	5	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N	\N	\N	5	\N	\N	\N
+12	tag	1	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N	\N	\N	\N	1	\N	\N
+13	tag	2	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N	\N	\N	\N	2	\N	\N
+14	tag	3	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N	\N	\N	\N	3	\N	\N
+15	user	3	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N	3	\N	\N	\N	\N	\N
+16	user	4	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N	4	\N	\N	\N	\N	\N
+17	group	1	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N	\N	\N	\N	\N	1	\N
+18	group	2	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N	\N	\N	\N	\N	2	\N
+19	group	3	add	1	01420a5c479f1c2e7803a91624a5f1e4	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N	\N	\N	\N	\N	3	\N
 \.
 
 
@@ -2916,8 +2961,8 @@ COPY public.caddie (user_id, element_id) FROM stdin;
 --
 
 COPY public.categories (id, name, id_uppercat, comment, dir, rank, status, site_id, visible, representative_picture_id, uppercats, commentable, global_rank, image_order, permalink, lastmodified) FROM stdin;
-1	Sample Album	\N	\N	\N	1	public	\N	t	1	1	t	1	\N	\N	2026-08-10 14:13:12
-2	Nested Sub Album	1	\N	\N	1	public	\N	t	4	1,2	t	1.1	\N	\N	2026-08-10 14:13:15
+1	Sample Album	\N	\N	\N	1	public	\N	t	1	1	t	1	\N	\N	2026-08-01 00:00:00
+2	Nested Sub Album	1	\N	\N	1	public	\N	t	4	1,2	t	1.1	\N	\N	2026-08-01 00:00:00
 \.
 
 
@@ -3005,7 +3050,7 @@ index_search_in_set_action	"true"	\N
 upload_detect_duplicate	true	\N
 webmaster_id	1	\N
 use_standard_pages	true	\N
-secret_key	"75c9c6fe09cb4cfdae81547823137019bb38fd8e"	a secret key specific to the gallery for internal use
+secret_key	"dcad772361c4da434fdefecea42f5248abc59824"	a secret key specific to the gallery for internal use
 activate_comments	true	Global parameter for usage of comments system
 page_banner	"<h1>%gallery_title%</h1>\\n\\n<p>Welcome to my photo gallery</p>"	html displayed on the top each page of your gallery
 piwigo_installed_version	"17.0.0"	\N
@@ -3036,17 +3081,17 @@ COPY public.derivative_settings (id, default_quality, watermark_json, custom_jso
 --
 
 COPY public.derivative_size (name, enabled, max_width, max_height, max_crop, min_width, min_height, sharpen, last_mod_time) FROM stdin;
-square	1	120	120	1.0000	120	120	0.0000	1786381991
-thumb	1	144	144	0.0000	\N	\N	0.0000	1786381991
-2small	1	240	240	0.0000	\N	\N	0.0000	1786381991
-xsmall	1	432	324	0.0000	\N	\N	0.0000	1786381991
-small	1	576	432	0.0000	\N	\N	0.0000	1786381991
-medium	1	792	594	0.0000	\N	\N	0.0000	1786381991
-large	1	1008	756	0.0000	\N	\N	0.0000	1786381991
-xlarge	1	1224	918	0.0000	\N	\N	0.0000	1786381991
-xxlarge	1	1656	1242	0.0000	\N	\N	0.0000	1786381991
-3xlarge	0	2232	1674	0.0000	\N	\N	0.0000	1786381991
-4xlarge	0	3000	2250	0.0000	\N	\N	0.0000	1786381991
+square	1	120	120	1.0000	120	120	0.0000	1786961956
+thumb	1	144	144	0.0000	\N	\N	0.0000	1786961956
+2small	1	240	240	0.0000	\N	\N	0.0000	1786961956
+xsmall	1	432	324	0.0000	\N	\N	0.0000	1786961956
+small	1	576	432	0.0000	\N	\N	0.0000	1786961956
+medium	1	792	594	0.0000	\N	\N	0.0000	1786961956
+large	1	1008	756	0.0000	\N	\N	0.0000	1786961956
+xlarge	1	1224	918	0.0000	\N	\N	0.0000	1786961956
+xxlarge	1	1656	1242	0.0000	\N	\N	0.0000	1786961956
+3xlarge	0	2232	1674	0.0000	\N	\N	0.0000	1786961957
+4xlarge	0	3000	2250	0.0000	\N	\N	0.0000	1786961957
 \.
 
 
@@ -3147,11 +3192,11 @@ COPY public.image_tag (image_id, tag_id) FROM stdin;
 --
 
 COPY public.images (id, file, date_available, date_creation, name, comment, author, hit, filesize, width, height, coi, representative_ext, date_metadata_update, rating_score, path, storage_category_id, level, md5sum, added_by, rotation, latitude, longitude, lastmodified) FROM stdin;
-4	fixture-photo-4.jpg	2026-08-01 00:00:00	\N	Photo 4	\N	\N	0	1	200	150	\N	\N	2026-08-10	2	upload/2026/08/01/20260801000000-3df6d315.jpg	\N	0	3df6bd0ebb6f22ea988f2ffb1c3a9566	1	0	\N	\N	2026-08-10 14:13:17
-5	fixture-photo-5.jpg	2026-08-01 00:00:00	\N	Photo 5	\N	\N	0	1	200	150	\N	\N	2026-08-10	\N	upload/2026/08/01/20260801000000-4b010581.jpg	\N	0	4b01d21f3d56009c3b1f913fafda86c5	1	0	\N	\N	2026-08-10 14:13:15
-1	fixture-photo-1.jpg	2026-08-01 00:00:00	\N	Photo 1	\N	\N	0	1	200	150	\N	\N	2026-08-10	4.5	upload/2026/08/01/20260801000000-2e7e2ce3.jpg	\N	0	2e7ee450c4a4cffe42945205029782b9	1	0	\N	\N	2026-08-10 14:13:17
-2	fixture-photo-2.jpg	2026-08-01 00:00:00	\N	Photo 2	\N	\N	0	1	200	150	\N	\N	2026-08-10	3	upload/2026/08/01/20260801000000-4a0136e2.jpg	\N	0	4a010138f010067cfc713afb6dcf45e1	1	0	\N	\N	2026-08-10 14:13:17
-3	fixture-photo-3.jpg	2026-08-01 00:00:00	\N	Photo 3	\N	\N	0	1	200	150	\N	\N	2026-08-10	5	upload/2026/08/01/20260801000000-a6a01c06.jpg	\N	0	a6a04acded208db63890b74c4252a012	1	0	\N	\N	2026-08-10 14:13:17
+5	fixture-photo-5.jpg	2026-08-01 00:00:00	\N	Photo 5	\N	\N	0	1	200	150	\N	\N	2026-08-17	\N	upload/2026/08/01/20260801000000-4b017258.jpg	\N	0	4b01d21f3d56009c3b1f913fafda86c5	1	0	\N	\N	2026-08-01 00:00:00
+1	fixture-photo-1.jpg	2026-08-01 00:00:00	\N	Photo 1	\N	\N	0	1	200	150	\N	\N	2026-08-17	4.5	upload/2026/08/01/20260801000000-2e7e2251.jpg	\N	0	2e7ee450c4a4cffe42945205029782b9	1	0	\N	\N	2026-08-01 00:00:00
+2	fixture-photo-2.jpg	2026-08-01 00:00:00	\N	Photo 2	\N	\N	0	1	200	150	\N	\N	2026-08-17	3	upload/2026/08/01/20260801000000-4a012aff.jpg	\N	0	4a010138f010067cfc713afb6dcf45e1	1	0	\N	\N	2026-08-01 00:00:00
+3	fixture-photo-3.jpg	2026-08-01 00:00:00	\N	Photo 3	\N	\N	0	1	200	150	\N	\N	2026-08-17	5	upload/2026/08/01/20260801000000-a6a0d152.jpg	\N	0	a6a04acded208db63890b74c4252a012	1	0	\N	\N	2026-08-01 00:00:00
+4	fixture-photo-4.jpg	2026-08-01 00:00:00	\N	Photo 4	\N	\N	0	1	200	150	\N	\N	2026-08-17	2	upload/2026/08/01/20260801000000-3df685b2.jpg	\N	0	3df6bd0ebb6f22ea988f2ffb1c3a9566	1	0	\N	\N	2026-08-01 00:00:00
 \.
 
 
@@ -3168,7 +3213,7 @@ COPY public.integrity_ignored_anomalies (anomaly_id, piwigo_version, ignored_at)
 --
 
 COPY public.languages (id, version, name) FROM stdin;
-en_UK	16.3.0	English (Great Britain)
+en_UK	17.0.0	English (Great Britain)
 \.
 
 
@@ -3227,24 +3272,16 @@ COPY public.search (id, search_uuid, created_on, created_by, forked_from, rules)
 
 
 --
--- Data for Name: search_filter_view; Type: TABLE DATA; Schema: public; Owner: piwigo_fixture_regen
---
-
-COPY public.search_filter_view (name, config_json, created_at) FROM stdin;
-\.
-
-
---
 -- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: piwigo_fixture_regen
 --
 
 COPY public.sessions (id, data, expiration) FROM stdin;
-11c7b76e0d4b9ea7413be9088473f1f0		2026-08-01 00:00:00
-849b99c5216593bf118155c326116b77		2026-08-01 00:00:00
-9d5f43dc0d2f8e73178b2315998c20a3		2026-08-01 00:00:00
-f7e0f8df945af550476b59c8c188bbbb		2026-08-01 00:00:00
-9a9b30216df4d6ba19b0d1ee99c361ea		2026-08-01 00:00:00
-181a4e2d08983eef4ef71dc7e8fa24c1	pwg_uid|i:1;connected_with|s:16:"ws_session_login";	2026-08-01 00:00:00
+1242995247a509d13adb3e50c6c8898b		2026-08-01 00:00:00
+36852a9ae1bb6bf6686f88281647fc84		2026-08-01 00:00:00
+46791ccd92738ba8f61fd4703a456fb3		2026-08-01 00:00:00
+0fabbf66c106c94c59f2bf682348005c		2026-08-01 00:00:00
+d5d73d881dd4d786b3341c177e21ea23		2026-08-01 00:00:00
+01420a5c479f1c2e7803a91624a5f1e4	pwg_uid|i:1;connected_with|s:16:"ws_session_login";	2026-08-01 00:00:00
 \.
 
 
@@ -3253,7 +3290,7 @@ f7e0f8df945af550476b59c8c188bbbb		2026-08-01 00:00:00
 --
 
 COPY public.sites (id, galleries_url) FROM stdin;
-1	/home/torres/piwigo17-rewrite-sql/galleries/
+1	/home/torres/piwigo17-rewrite-2/galleries/
 \.
 
 
@@ -3326,7 +3363,7 @@ COPY public.user_group (user_id, group_id) FROM stdin;
 
 COPY public.user_infos (user_id, nb_image_page, status, language, expand, show_nb_comments, show_nb_hits, recent_period, theme, registration_date, enabled_high, level, activation_key, activation_key_expire, last_visit, last_visit_from_history, lastmodified, preferences) FROM stdin;
 2	15	guest	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
-1	15	webmaster	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	8	\N	\N	\N	f	2026-08-01 00:00:00	{"show_whats_new_16": false}
+1	15	webmaster	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	8	\N	\N	\N	f	2026-08-01 00:00:00	{"show_whats_new_17": false}
 3	15	normal	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
 4	15	normal	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
 \.
@@ -3347,10 +3384,10 @@ COPY public.user_mail_notification (user_id, check_key, enabled, last_send) FROM
 --
 
 COPY public.users (id, username, password, mail_address) FROM stdin;
-1	fixture_admin	$2y$04$mneAv48AR7mwW0GoBNh4vefxc3598N7uoLGPa83dfKBCp8FVNkQQO	fixture_admin@example.test
+1	fixture_admin	$2y$04$P0Ma0k/s5Ed3VUs/zQzMzOQPGjtVMp2NrtLGUlRPsVyJOj2xqPPG.	fixture_admin@example.test
 2	guest	\N	\N
-3	regular_user	$2y$04$To87nw9.k48SazVd75zrbeZMs3dtZZgk3gYQSuBGi8B8esr.YdKBu	\N
-4	power_user	$2y$04$FA1vvlBXxvikFw7ngnbKEuyz8hsWefDyafHW65XUcesLXUWy4Fy2a	\N
+3	regular_user	$2y$04$k0VJpR5Di6AxTumXLyIPKehgLsat4Echp7wfR5fY/vSZmzx7DRVZm	\N
+4	power_user	$2y$04$C4ZIzlIs8rlKHdDxZAbT2uCOZfKUxFVxO5Y3Cz0EWBBjHJ9jZxbfy	\N
 \.
 
 
@@ -3684,14 +3721,6 @@ ALTER TABLE ONLY public.rate
 
 
 --
--- Name: search_filter_view search_filter_view_pkey; Type: CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.search_filter_view
-    ADD CONSTRAINT search_filter_view_pkey PRIMARY KEY (name);
-
-
---
 -- Name: search search_pkey; Type: CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -3820,6 +3849,62 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: activity_category_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX activity_category_id_idx ON public.activity USING btree (category_id);
+
+
+--
+-- Name: activity_group_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX activity_group_id_idx ON public.activity USING btree (group_id);
+
+
+--
+-- Name: activity_image_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX activity_image_id_idx ON public.activity USING btree (image_id);
+
+
+--
+-- Name: activity_performed_by_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX activity_performed_by_idx ON public.activity USING btree (performed_by);
+
+
+--
+-- Name: activity_tag_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX activity_tag_id_idx ON public.activity USING btree (tag_id);
+
+
+--
+-- Name: activity_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX activity_user_id_idx ON public.activity USING btree (user_id);
+
+
+--
+-- Name: audit_log_group_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX audit_log_group_id_idx ON public.audit_log USING btree (group_id);
+
+
+--
+-- Name: caddie_element_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX caddie_element_id_idx ON public.caddie USING btree (element_id);
+
+
+--
 -- Name: categories_ft_name_comment; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -3841,6 +3926,13 @@ CREATE INDEX categories_lastmodified_idx ON public.categories USING btree (lastm
 
 
 --
+-- Name: categories_representative_picture_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX categories_representative_picture_id_idx ON public.categories USING btree (representative_picture_id);
+
+
+--
 -- Name: categories_site_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -3848,52 +3940,10 @@ CREATE INDEX categories_site_id_idx ON public.categories USING btree (site_id);
 
 
 --
--- Name: old_permalinks_cat_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+-- Name: comments_author_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
-CREATE INDEX old_permalinks_cat_id_idx ON public.old_permalinks USING btree (cat_id);
-
-
---
--- Name: activity_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE INDEX activity_user_id_idx ON public.activity USING btree (user_id);
-
-
---
--- Name: activity_category_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE INDEX activity_category_id_idx ON public.activity USING btree (category_id);
-
-
---
--- Name: activity_image_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE INDEX activity_image_id_idx ON public.activity USING btree (image_id);
-
-
---
--- Name: activity_tag_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE INDEX activity_tag_id_idx ON public.activity USING btree (tag_id);
-
-
---
--- Name: activity_group_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE INDEX activity_group_id_idx ON public.activity USING btree (group_id);
-
-
---
--- Name: audit_log_group_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
---
-
-CREATE INDEX audit_log_group_id_idx ON public.audit_log USING btree (group_id);
+CREATE INDEX comments_author_id_idx ON public.comments USING btree (author_id);
 
 
 --
@@ -3911,10 +3961,66 @@ CREATE INDEX comments_i2 ON public.comments USING btree (validation_date);
 
 
 --
+-- Name: favorites_image_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX favorites_image_id_idx ON public.favorites USING btree (image_id);
+
+
+--
+-- Name: group_access_cat_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX group_access_cat_id_idx ON public.group_access USING btree (cat_id);
+
+
+--
 -- Name: groups_lastmodified_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
 CREATE INDEX groups_lastmodified_idx ON public.groups USING btree (lastmodified);
+
+
+--
+-- Name: history_auth_key_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX history_auth_key_id_idx ON public.history USING btree (auth_key_id);
+
+
+--
+-- Name: history_category_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX history_category_id_idx ON public.history USING btree (category_id);
+
+
+--
+-- Name: history_format_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX history_format_id_idx ON public.history USING btree (format_id);
+
+
+--
+-- Name: history_image_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX history_image_id_idx ON public.history USING btree (image_id);
+
+
+--
+-- Name: history_search_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX history_search_id_idx ON public.history USING btree (search_id);
+
+
+--
+-- Name: history_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX history_user_id_idx ON public.history USING btree (user_id);
 
 
 --
@@ -3974,10 +4080,24 @@ CREATE INDEX image_category_i1 ON public.image_category USING btree (category_id
 
 
 --
+-- Name: image_format_image_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX image_format_image_id_idx ON public.image_format USING btree (image_id);
+
+
+--
 -- Name: image_tag_i1; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
 CREATE INDEX image_tag_i1 ON public.image_tag USING btree (tag_id);
+
+
+--
+-- Name: images_added_by_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX images_added_by_idx ON public.images USING btree (added_by);
 
 
 --
@@ -4065,6 +4185,41 @@ CREATE INDEX images_lastmodified_idx ON public.images USING btree (lastmodified)
 
 
 --
+-- Name: lounge_category_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX lounge_category_id_idx ON public.lounge USING btree (category_id);
+
+
+--
+-- Name: old_permalinks_cat_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX old_permalinks_cat_id_idx ON public.old_permalinks USING btree (cat_id);
+
+
+--
+-- Name: rate_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX rate_user_id_idx ON public.rate USING btree (user_id);
+
+
+--
+-- Name: search_created_by_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX search_created_by_idx ON public.search USING btree (created_by);
+
+
+--
+-- Name: search_forked_from_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX search_forked_from_idx ON public.search USING btree (forked_from);
+
+
+--
 -- Name: tags_ft_name; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
@@ -4086,20 +4241,62 @@ CREATE INDEX tags_lastmodified_idx ON public.tags USING btree (lastmodified);
 
 
 --
+-- Name: user_access_cat_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX user_access_cat_id_idx ON public.user_access USING btree (cat_id);
+
+
+--
+-- Name: user_auth_keys_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX user_auth_keys_user_id_idx ON public.user_auth_keys USING btree (user_id);
+
+
+--
+-- Name: user_feed_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX user_feed_user_id_idx ON public.user_feed USING btree (user_id);
+
+
+--
+-- Name: user_group_user_id_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
+--
+
+CREATE INDEX user_group_user_id_idx ON public.user_group USING btree (user_id);
+
+
+--
 -- Name: user_infos_lastmodified_idx; Type: INDEX; Schema: public; Owner: piwigo_fixture_regen
 --
 
 CREATE INDEX user_infos_lastmodified_idx ON public.user_infos USING btree (lastmodified);
 
 
+--
+-- Name: activity fk_activity_category_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_category_id FOREIGN KEY (category_id) REFERENCES public.categories(id) ON DELETE SET NULL;
 
 
+--
+-- Name: activity fk_activity_group_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_group_id FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
 
 
+--
+-- Name: activity fk_activity_image_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
 
-
-
-
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_image_id FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE SET NULL;
 
 
 --
@@ -4111,11 +4308,35 @@ ALTER TABLE ONLY public.activity
 
 
 --
+-- Name: activity fk_activity_tag_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_tag_id FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE SET NULL;
+
+
+--
+-- Name: activity fk_activity_user_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.activity
+    ADD CONSTRAINT fk_activity_user_id FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: audit_log fk_audit_log_actor_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
 --
 
 ALTER TABLE ONLY public.audit_log
     ADD CONSTRAINT fk_audit_log_actor_id FOREIGN KEY (actor_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: audit_log fk_audit_log_group_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.audit_log
+    ADD CONSTRAINT fk_audit_log_group_id FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
 
 
 --
@@ -4156,70 +4377,6 @@ ALTER TABLE ONLY public.categories
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT fk_categories_site_id FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
-
-
---
--- Name: old_permalinks fk_old_permalinks_cat_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.old_permalinks
-    ADD CONSTRAINT fk_old_permalinks_cat_id FOREIGN KEY (cat_id) REFERENCES public.categories(id) ON DELETE CASCADE;
-
-
---
--- Name: plugin_migrations fk_plugin_migrations_plugin_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.plugin_migrations
-    ADD CONSTRAINT fk_plugin_migrations_plugin_id FOREIGN KEY (plugin_id) REFERENCES public.plugins(id) ON DELETE RESTRICT;
-
-
---
--- Name: activity fk_activity_user_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.activity
-    ADD CONSTRAINT fk_activity_user_id FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
-
-
---
--- Name: activity fk_activity_category_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.activity
-    ADD CONSTRAINT fk_activity_category_id FOREIGN KEY (category_id) REFERENCES public.categories(id) ON DELETE SET NULL;
-
-
---
--- Name: activity fk_activity_image_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.activity
-    ADD CONSTRAINT fk_activity_image_id FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE SET NULL;
-
-
---
--- Name: activity fk_activity_tag_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.activity
-    ADD CONSTRAINT fk_activity_tag_id FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE SET NULL;
-
-
---
--- Name: activity fk_activity_group_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.activity
-    ADD CONSTRAINT fk_activity_group_id FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
-
-
---
--- Name: audit_log fk_audit_log_group_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
---
-
-ALTER TABLE ONLY public.audit_log
-    ADD CONSTRAINT fk_audit_log_group_id FOREIGN KEY (group_id) REFERENCES public.groups(id) ON DELETE SET NULL;
 
 
 --
@@ -4388,6 +4545,22 @@ ALTER TABLE ONLY public.lounge
 
 ALTER TABLE ONLY public.lounge
     ADD CONSTRAINT fk_lounge_image_id FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE;
+
+
+--
+-- Name: old_permalinks fk_old_permalinks_cat_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.old_permalinks
+    ADD CONSTRAINT fk_old_permalinks_cat_id FOREIGN KEY (cat_id) REFERENCES public.categories(id) ON DELETE CASCADE;
+
+
+--
+-- Name: plugin_migrations fk_plugin_migrations_plugin_id; Type: FK CONSTRAINT; Schema: public; Owner: piwigo_fixture_regen
+--
+
+ALTER TABLE ONLY public.plugin_migrations
+    ADD CONSTRAINT fk_plugin_migrations_plugin_id FOREIGN KEY (plugin_id) REFERENCES public.plugins(id) ON DELETE RESTRICT;
 
 
 --

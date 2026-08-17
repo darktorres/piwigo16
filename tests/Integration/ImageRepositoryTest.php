@@ -741,7 +741,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
                 'label' => 'Photo 1',
                 'filesize' => 1,
                 'file' => 'fixture-photo-1.jpg',
-                'path' => 'upload/2026/08/01/20260801000000-2e7e6c90.jpg',
+                'path' => 'upload/2026/08/01/20260801000000-2e7e3a53.jpg',
                 'representative_ext' => null,
             ],
         ], $rows);

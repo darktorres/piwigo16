@@ -89,7 +89,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         $row = $this->repo->find(ExtensionType::Language, 'en_UK');
 
         self::assertIsArray($row);
-        self::assertSame('16.3.0', $row['version']);
+        self::assertSame('17.0.0', $row['version']);
     }
 
     public function testFindReturnsNullForAMissingRow(): void

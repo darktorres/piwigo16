@@ -1,7 +1,7 @@
 SET SESSION innodb_ft_enable_stopword = 0;
 -- MySQL dump 10.13  Distrib 8.4.10, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: piwigo17_sql_test
+-- Host: 127.0.0.1    Database: piwigo17_2_test
 -- ------------------------------------------------------
 -- Server version	8.4.10-0ubuntu0.26.04.1
 
@@ -34,12 +34,12 @@ CREATE TABLE `activity` (
   `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when the action was recorded',
   `details` json DEFAULT NULL COMMENT 'per-action heterogeneous payload, e.g. config diffs, batch-edit fields, install metadata',
   `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'browser user agent string, only captured on login actions',
-  `user_id` int DEFAULT NULL,
-  `category_id` int DEFAULT NULL,
-  `image_id` int DEFAULT NULL,
-  `tag_id` int DEFAULT NULL,
-  `group_id` int DEFAULT NULL,
-  `system_scope` smallint DEFAULT NULL,
+  `user_id` int DEFAULT NULL COMMENT 'typed reference for object = user, ON DELETE SET NULL',
+  `category_id` int DEFAULT NULL COMMENT 'typed reference for object = album, ON DELETE SET NULL',
+  `image_id` int DEFAULT NULL COMMENT 'typed reference for object = photo, ON DELETE SET NULL',
+  `tag_id` int DEFAULT NULL COMMENT 'typed reference for object = tag, ON DELETE SET NULL',
+  `group_id` int DEFAULT NULL COMMENT 'typed reference for object = group, ON DELETE SET NULL',
+  `system_scope` smallint DEFAULT NULL COMMENT 'ActivitySystem constant for object = system rows, which store no row id in object_id',
   PRIMARY KEY (`activity_id`),
   KEY `fk_activity_performed_by` (`performed_by`),
   KEY `fk_activity_user_id` (`user_id`),
@@ -62,7 +62,7 @@ CREATE TABLE `activity` (
 
 LOCK TABLES `activity` WRITE;
 /*!40000 ALTER TABLE `activity` DISABLE KEYS */;
-INSERT INTO `activity` VALUES (1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL,NULL,NULL,NULL,NULL,NULL,3),(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL,NULL,NULL,NULL,NULL,NULL,1),(3,'user',1,'login',1,'aa35407a03d85ddb0c5cb929d012a4ee','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0',1,NULL,NULL,NULL,NULL,NULL),(4,'user',1,'login',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0',1,NULL,NULL,NULL,NULL,NULL),(5,'album',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL,NULL,1,NULL,NULL,NULL,NULL),(6,'album',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL,NULL,2,NULL,NULL,NULL,NULL),(7,'photo',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,1,NULL,NULL,NULL),(8,'photo',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,2,NULL,NULL,NULL),(9,'photo',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,3,NULL,NULL,NULL),(10,'photo',4,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,4,NULL,NULL,NULL),(11,'photo',5,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,5,NULL,NULL,NULL),(12,'tag',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,1,NULL,NULL),(13,'tag',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,2,NULL,NULL),(14,'tag',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,3,NULL,NULL),(15,'user',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL,3,NULL,NULL,NULL,NULL,NULL),(16,'user',4,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL,4,NULL,NULL,NULL,NULL,NULL),(17,'group',1,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,1,NULL),(18,'group',2,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,2,NULL),(19,'group',3,'add',1,'8b26bb61a41ac7950c20dc9236118216','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,3,NULL);
+INSERT INTO `activity` VALUES (1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL,NULL,NULL,NULL,NULL,NULL,3),(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"17.0.0\"}',NULL,NULL,NULL,NULL,NULL,NULL,1),(3,'user',1,'login',1,'7e81dde79128cdc9b1d7adc163539463','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0',1,NULL,NULL,NULL,NULL,NULL),(4,'user',1,'login',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0',1,NULL,NULL,NULL,NULL,NULL),(5,'album',1,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL,NULL,1,NULL,NULL,NULL,NULL),(6,'album',2,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL,NULL,2,NULL,NULL,NULL,NULL),(7,'photo',1,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,1,NULL,NULL,NULL),(8,'photo',2,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,2,NULL,NULL,NULL),(9,'photo',3,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,3,NULL,NULL,NULL),(10,'photo',4,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,4,NULL,NULL,NULL),(11,'photo',5,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL,NULL,NULL,5,NULL,NULL,NULL),(12,'tag',1,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,1,NULL,NULL),(13,'tag',2,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,2,NULL,NULL),(14,'tag',3,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL,NULL,NULL,NULL,3,NULL,NULL),(15,'user',3,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL,3,NULL,NULL,NULL,NULL,NULL),(16,'user',4,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL,4,NULL,NULL,NULL,NULL,NULL),(17,'group',1,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,1,NULL),(18,'group',2,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,2,NULL),(19,'group',3,'add',1,'68c5dbb5cf10e06e966ad85a144e4156','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL,NULL,NULL,NULL,NULL,3,NULL);
 /*!40000 ALTER TABLE `activity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -85,7 +85,7 @@ CREATE TABLE `audit_log` (
   `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
   `prev_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
   `row_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
-  `group_id` int DEFAULT NULL,
+  `group_id` int DEFAULT NULL COMMENT 'typed reference for entity_type = group, ON DELETE SET NULL',
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
@@ -175,7 +175,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,'Sample Album',NULL,NULL,NULL,1,'public',NULL,1,1,'1',1,'1',NULL,NULL,'2026-08-10 17:20:40'),(2,'Nested Sub Album',1,NULL,NULL,1,'public',NULL,1,4,'1,2',1,'1.1',NULL,NULL,'2026-08-10 17:20:40');
+INSERT INTO `categories` VALUES (1,'Sample Album',NULL,NULL,NULL,1,'public',NULL,1,1,'1',1,'1',NULL,NULL,'2026-08-01 03:00:00'),(2,'Nested Sub Album',1,NULL,NULL,1,'public',NULL,1,4,'1,2',1,'1.1',NULL,NULL,'2026-08-01 03:00:00');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -238,7 +238,7 @@ CREATE TABLE `config` (
 
 LOCK TABLES `config` WRITE;
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
-INSERT INTO `config` VALUES ('activate_comments','true','Global parameter for usage of comments system'),('allow_user_customization','true','allow users to customize their gallery?'),('allow_user_registration','true','allow visitors to register?'),('comments_author_mandatory','false','Comment author is mandatory'),('comments_email_mandatory','false','Comment email is mandatory'),('comments_enable_website','true','Enable \"website\" field on add comment form'),('comments_forall','false','even guest not registered can post comments'),('comments_order','\"ASC\"','comments order on picture page and cie'),('comments_validation','true','administrators validate users comments before becoming visible'),('dashboard_check_for_updates','false',NULL),('data_dir_checked','\"1\"',NULL),('display_fromto','false',NULL),('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered'),('email_admin_on_comment_deletion','false','Send an email to the administrators when a comment is deleted'),('email_admin_on_comment_edition','false','Send an email to the administrators when a comment is modified'),('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation'),('email_admin_on_new_user','\"none\"','Send an email to theadministrators when a user registers'),('extents_for_templates','[]','Actived template-extension(s)'),('gallery_locked','false','Lock your gallery temporary for non admin users'),('gallery_title','\"Fixture Gallery\"','Title at top of each page and for RSS feed'),('history_admin','false','keep a history of administrator visits on your website'),('history_guest','true','keep a history of guest visits on your website'),('index_caddie_icon','true',NULL),('index_created_date_icon','true','Display calendar by creation date icon'),('index_edit_icon','true',NULL),('index_flat_icon','false','Display flat icon'),('index_new_icon','true','Display new icons next albums and pictures'),('index_posted_date_icon','true','Display calendar by posted date'),('index_search_in_set_action','\"true\"',NULL),('index_search_in_set_button','false',NULL),('index_sizes_icon','true',NULL),('index_slideshow_icon','true','Display slideshow icon'),('index_sort_order_input','true','Display image order selection list'),('last_major_update','\"2026-08-01 00:00:00\"',NULL),('log','true','keep an history of visits on your website'),('lounge_active','true',NULL),('mail_theme','\"clear\"',NULL),('menubar_filter_icon','false','Display filter icon'),('mobile_theme',NULL,NULL),('nb_categories_page','12','Param for categories pagination'),('nb_comment_page','10','number of comments to display on each page'),('nbm_complementary_mail_content','\"\"','Complementary mail content for notification by mail'),('nbm_send_detailed_content','true','Send detailed content for notification by mail'),('nbm_send_html_mail','true','Send mail on HTML format for notification by mail'),('nbm_send_mail_as','\"\"','Send mail as param value for notification by mail'),('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail'),('no_photo_yet','\"false\"',NULL),('obligatory_user_mail_address','false','Mail address is obligatory for users'),('order_by','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order'),('order_by_inside_category','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order inside category'),('original_resize','false',NULL),('original_resize_maxheight','2016',NULL),('original_resize_maxwidth','2016',NULL),('original_resize_quality','95',NULL),('page_banner','\"<h1>%gallery_title%</h1>\\n\\n<p>Welcome to my photo gallery</p>\"','html displayed on the top each page of your gallery'),('picture_caddie_icon','true',NULL),('picture_download_icon','true','Display download icon on picture page'),('picture_edit_icon','true',NULL),('picture_favorite_icon','true','Display favorite icon on picture page'),('picture_informations','{\"file\": false, \"tags\": true, \"author\": true, \"visits\": true, \"filesize\": false, \"posted_on\": true, \"categories\": true, \"created_on\": true, \"dimensions\": false, \"rating_score\": true, \"privacy_level\": true}','Information displayed on picture page'),('picture_menu','false','Show menubar on picture page'),('picture_metadata_icon','true','Display metadata icon on picture page'),('picture_navigation_icons','true','Display navigation icons on picture page'),('picture_navigation_thumb','true','Display navigation thumbnails on picture page'),('picture_representative_icon','true',NULL),('picture_sizes_icon','true',NULL),('picture_slideshow_icon','true','Display slideshow icon on picture page'),('piwigo_installed_version','\"17.0.0\"',NULL),('rate','true','Rating pictures feature is enabled'),('rate_anonymous','true','Rating pictures feature is also enabled for visitors'),('secret_key','\"d18ea6c8c92232821e4a3916a6806d7c8782c505\"','a secret key specific to the gallery for internal use'),('show_mobile_app_banner_in_admin','true',NULL),('show_mobile_app_banner_in_gallery','false',NULL),('show_piwigo_latest_news','false',NULL),('upload_detect_duplicate','true',NULL),('use_standard_pages','true',NULL),('user_can_delete_comment','false','administrators can allow user delete their own comments'),('user_can_edit_comment','false','administrators can allow user edit their own comments'),('webmaster_id','1',NULL),('week_starts_on','\"monday\"','Monday may not be the first day of the week');
+INSERT INTO `config` VALUES ('activate_comments','true','Global parameter for usage of comments system'),('allow_user_customization','true','allow users to customize their gallery?'),('allow_user_registration','true','allow visitors to register?'),('comments_author_mandatory','false','Comment author is mandatory'),('comments_email_mandatory','false','Comment email is mandatory'),('comments_enable_website','true','Enable \"website\" field on add comment form'),('comments_forall','false','even guest not registered can post comments'),('comments_order','\"ASC\"','comments order on picture page and cie'),('comments_validation','true','administrators validate users comments before becoming visible'),('dashboard_check_for_updates','false',NULL),('data_dir_checked','\"1\"',NULL),('display_fromto','false',NULL),('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered'),('email_admin_on_comment_deletion','false','Send an email to the administrators when a comment is deleted'),('email_admin_on_comment_edition','false','Send an email to the administrators when a comment is modified'),('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation'),('email_admin_on_new_user','\"none\"','Send an email to theadministrators when a user registers'),('extents_for_templates','[]','Actived template-extension(s)'),('gallery_locked','false','Lock your gallery temporary for non admin users'),('gallery_title','\"Fixture Gallery\"','Title at top of each page and for RSS feed'),('history_admin','false','keep a history of administrator visits on your website'),('history_guest','true','keep a history of guest visits on your website'),('index_caddie_icon','true',NULL),('index_created_date_icon','true','Display calendar by creation date icon'),('index_edit_icon','true',NULL),('index_flat_icon','false','Display flat icon'),('index_new_icon','true','Display new icons next albums and pictures'),('index_posted_date_icon','true','Display calendar by posted date'),('index_search_in_set_action','\"true\"',NULL),('index_search_in_set_button','false',NULL),('index_sizes_icon','true',NULL),('index_slideshow_icon','true','Display slideshow icon'),('index_sort_order_input','true','Display image order selection list'),('last_major_update','\"2026-08-01 00:00:00\"',NULL),('log','true','keep an history of visits on your website'),('lounge_active','true',NULL),('mail_theme','\"clear\"',NULL),('menubar_filter_icon','false','Display filter icon'),('mobile_theme',NULL,NULL),('nb_categories_page','12','Param for categories pagination'),('nb_comment_page','10','number of comments to display on each page'),('nbm_complementary_mail_content','\"\"','Complementary mail content for notification by mail'),('nbm_send_detailed_content','true','Send detailed content for notification by mail'),('nbm_send_html_mail','true','Send mail on HTML format for notification by mail'),('nbm_send_mail_as','\"\"','Send mail as param value for notification by mail'),('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail'),('no_photo_yet','\"false\"',NULL),('obligatory_user_mail_address','false','Mail address is obligatory for users'),('order_by','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order'),('order_by_inside_category','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order inside category'),('original_resize','false',NULL),('original_resize_maxheight','2016',NULL),('original_resize_maxwidth','2016',NULL),('original_resize_quality','95',NULL),('page_banner','\"<h1>%gallery_title%</h1>\\n\\n<p>Welcome to my photo gallery</p>\"','html displayed on the top each page of your gallery'),('picture_caddie_icon','true',NULL),('picture_download_icon','true','Display download icon on picture page'),('picture_edit_icon','true',NULL),('picture_favorite_icon','true','Display favorite icon on picture page'),('picture_informations','{\"file\": false, \"tags\": true, \"author\": true, \"visits\": true, \"filesize\": false, \"posted_on\": true, \"categories\": true, \"created_on\": true, \"dimensions\": false, \"rating_score\": true, \"privacy_level\": true}','Information displayed on picture page'),('picture_menu','false','Show menubar on picture page'),('picture_metadata_icon','true','Display metadata icon on picture page'),('picture_navigation_icons','true','Display navigation icons on picture page'),('picture_navigation_thumb','true','Display navigation thumbnails on picture page'),('picture_representative_icon','true',NULL),('picture_sizes_icon','true',NULL),('picture_slideshow_icon','true','Display slideshow icon on picture page'),('piwigo_installed_version','\"17.0.0\"',NULL),('rate','true','Rating pictures feature is enabled'),('rate_anonymous','true','Rating pictures feature is also enabled for visitors'),('secret_key','\"f8f501a4fc8b26e25277563f096f1dd600d409bf\"','a secret key specific to the gallery for internal use'),('show_mobile_app_banner_in_admin','true',NULL),('show_mobile_app_banner_in_gallery','false',NULL),('show_piwigo_latest_news','false',NULL),('upload_detect_duplicate','true',NULL),('use_standard_pages','true',NULL),('user_can_delete_comment','false','administrators can allow user delete their own comments'),('user_can_edit_comment','false','administrators can allow user edit their own comments'),('webmaster_id','1',NULL),('week_starts_on','\"monday\"','Monday may not be the first day of the week');
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -295,7 +295,7 @@ CREATE TABLE `derivative_size` (
 
 LOCK TABLES `derivative_size` WRITE;
 /*!40000 ALTER TABLE `derivative_size` DISABLE KEYS */;
-INSERT INTO `derivative_size` VALUES ('2small',1,240,240,0.0000,NULL,NULL,0.0000,1786382439),('3xlarge',0,2232,1674,0.0000,NULL,NULL,0.0000,1786382439),('4xlarge',0,3000,2250,0.0000,NULL,NULL,0.0000,1786382439),('large',1,1008,756,0.0000,NULL,NULL,0.0000,1786382439),('medium',1,792,594,0.0000,NULL,NULL,0.0000,1786382439),('small',1,576,432,0.0000,NULL,NULL,0.0000,1786382439),('square',1,120,120,1.0000,120,120,0.0000,1786382439),('thumb',1,144,144,0.0000,NULL,NULL,0.0000,1786382439),('xlarge',1,1224,918,0.0000,NULL,NULL,0.0000,1786382439),('xsmall',1,432,324,0.0000,NULL,NULL,0.0000,1786382439),('xxlarge',1,1656,1242,0.0000,NULL,NULL,0.0000,1786382439);
+INSERT INTO `derivative_size` VALUES ('2small',1,240,240,0.0000,NULL,NULL,0.0000,1786961867),('3xlarge',0,2232,1674,0.0000,NULL,NULL,0.0000,1786961867),('4xlarge',0,3000,2250,0.0000,NULL,NULL,0.0000,1786961867),('large',1,1008,756,0.0000,NULL,NULL,0.0000,1786961867),('medium',1,792,594,0.0000,NULL,NULL,0.0000,1786961867),('small',1,576,432,0.0000,NULL,NULL,0.0000,1786961867),('square',1,120,120,1.0000,120,120,0.0000,1786961867),('thumb',1,144,144,0.0000,NULL,NULL,0.0000,1786961867),('xlarge',1,1224,918,0.0000,NULL,NULL,0.0000,1786961867),('xsmall',1,432,324,0.0000,NULL,NULL,0.0000,1786961867),('xxlarge',1,1656,1242,0.0000,NULL,NULL,0.0000,1786961867);
 /*!40000 ALTER TABLE `derivative_size` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -622,7 +622,7 @@ CREATE TABLE `images` (
 
 LOCK TABLES `images` WRITE;
 /*!40000 ALTER TABLE `images` DISABLE KEYS */;
-INSERT INTO `images` VALUES (1,'fixture-photo-1.jpg','2026-08-01 00:00:00',NULL,'Photo 1',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-10',4.50,'upload/2026/08/01/20260801000000-2e7e6c90.jpg',NULL,0,'2e7ee450c4a4cffe42945205029782b9',1,0,NULL,NULL,'2026-08-10 17:20:41'),(2,'fixture-photo-2.jpg','2026-08-01 00:00:00',NULL,'Photo 2',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-10',3.00,'upload/2026/08/01/20260801000000-4a014fb5.jpg',NULL,0,'4a010138f010067cfc713afb6dcf45e1',1,0,NULL,NULL,'2026-08-10 17:20:41'),(3,'fixture-photo-3.jpg','2026-08-01 00:00:00',NULL,'Photo 3',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-10',5.00,'upload/2026/08/01/20260801000000-a6a09035.jpg',NULL,0,'a6a04acded208db63890b74c4252a012',1,0,NULL,NULL,'2026-08-10 17:20:41'),(4,'fixture-photo-4.jpg','2026-08-01 00:00:00',NULL,'Photo 4',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-10',2.00,'upload/2026/08/01/20260801000000-3df6d267.jpg',NULL,0,'3df6bd0ebb6f22ea988f2ffb1c3a9566',1,0,NULL,NULL,'2026-08-10 17:20:41'),(5,'fixture-photo-5.jpg','2026-08-01 00:00:00',NULL,'Photo 5',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-10',NULL,'upload/2026/08/01/20260801000000-4b01ecda.jpg',NULL,0,'4b01d21f3d56009c3b1f913fafda86c5',1,0,NULL,NULL,'2026-08-10 17:20:41');
+INSERT INTO `images` VALUES (1,'fixture-photo-1.jpg','2026-08-01 00:00:00',NULL,'Photo 1',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-17',4.50,'upload/2026/08/01/20260801000000-2e7e3a53.jpg',NULL,0,'2e7ee450c4a4cffe42945205029782b9',1,0,NULL,NULL,'2026-08-01 03:00:00'),(2,'fixture-photo-2.jpg','2026-08-01 00:00:00',NULL,'Photo 2',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-17',3.00,'upload/2026/08/01/20260801000000-4a01f076.jpg',NULL,0,'4a010138f010067cfc713afb6dcf45e1',1,0,NULL,NULL,'2026-08-01 03:00:00'),(3,'fixture-photo-3.jpg','2026-08-01 00:00:00',NULL,'Photo 3',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-17',5.00,'upload/2026/08/01/20260801000000-a6a09864.jpg',NULL,0,'a6a04acded208db63890b74c4252a012',1,0,NULL,NULL,'2026-08-01 03:00:00'),(4,'fixture-photo-4.jpg','2026-08-01 00:00:00',NULL,'Photo 4',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-17',2.00,'upload/2026/08/01/20260801000000-3df64911.jpg',NULL,0,'3df6bd0ebb6f22ea988f2ffb1c3a9566',1,0,NULL,NULL,'2026-08-01 03:00:00'),(5,'fixture-photo-5.jpg','2026-08-01 00:00:00',NULL,'Photo 5',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-17',NULL,'upload/2026/08/01/20260801000000-4b01365c.jpg',NULL,0,'4b01d21f3d56009c3b1f913fafda86c5',1,0,NULL,NULL,'2026-08-01 03:00:00');
 /*!40000 ALTER TABLE `images` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -671,7 +671,7 @@ CREATE TABLE `languages` (
 
 LOCK TABLES `languages` WRITE;
 /*!40000 ALTER TABLE `languages` DISABLE KEYS */;
-INSERT INTO `languages` VALUES ('en_UK','16.3.0','English (Great Britain)');
+INSERT INTO `languages` VALUES ('en_UK','17.0.0','English (Great Britain)');
 /*!40000 ALTER TABLE `languages` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -841,30 +841,6 @@ LOCK TABLES `search` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `search_filter_view`
---
-
-DROP TABLE IF EXISTS `search_filter_view`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `search_filter_view` (
-  `name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'saved filter view name',
-  `config_json` json NOT NULL COMMENT 'encoded search filter configuration',
-  `created_at` datetime NOT NULL COMMENT 'when the filter view was saved',
-  PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='named, reusable saved search-filter presets, unused: not read or written by any repository or service in this codebase';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `search_filter_view`
---
-
-LOCK TABLES `search_filter_view` WRITE;
-/*!40000 ALTER TABLE `search_filter_view` DISABLE KEYS */;
-/*!40000 ALTER TABLE `search_filter_view` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `sessions`
 --
 
@@ -885,7 +861,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('34bb05492022dffd5d7444b693113ca8','','2026-08-01 00:00:00'),('8b26bb61a41ac7950c20dc9236118216','pwg_uid|i:1;connected_with|s:16:\"ws_session_login\";','2026-08-01 00:00:00'),('bb77aa7f255304e7c638d749d2a4f82b','','2026-08-01 00:00:00'),('c8bfc2dcb05251d7c919f4b982e6e9ce','','2026-08-01 00:00:00'),('cdf494f6f432ed52db4751d178131ec2','','2026-08-01 00:00:00'),('f21a97b3987cc3e8ff7913769214095b','','2026-08-01 00:00:00');
+INSERT INTO `sessions` VALUES ('316bc25f02eafe58047136ae1041c004','','2026-08-01 00:00:00'),('322a8a649267a63b05c8ba7200bdd21a','','2026-08-01 00:00:00'),('467701f7157c7f310817f8d14d960338','','2026-08-01 00:00:00'),('68c5dbb5cf10e06e966ad85a144e4156','pwg_uid|i:1;connected_with|s:16:\"ws_session_login\";','2026-08-01 00:00:00'),('ce6644660a3c3db72516728395863e86','','2026-08-01 00:00:00'),('f6ad0a4120e84e230ab472f3243a19e7','','2026-08-01 00:00:00');
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -910,7 +886,7 @@ CREATE TABLE `sites` (
 
 LOCK TABLES `sites` WRITE;
 /*!40000 ALTER TABLE `sites` DISABLE KEYS */;
-INSERT INTO `sites` VALUES (1,'/home/torres/piwigo17-rewrite-sql/galleries/');
+INSERT INTO `sites` VALUES (1,'/home/torres/piwigo17-rewrite-2/galleries/');
 /*!40000 ALTER TABLE `sites` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1124,7 +1100,7 @@ CREATE TABLE `user_infos` (
   `expand` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether the album tree auto-expands in the menu',
   `show_nb_comments` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether comment counts are shown alongside thumbnails',
   `show_nb_hits` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether view counts are shown alongside thumbnails',
-  `recent_period` smallint NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
+  `recent_period` int NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
   `theme` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'modus' COMMENT 'interface theme, references themes.id',
   `registration_date` datetime DEFAULT NULL COMMENT 'account creation date',
   `enabled_high` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether the user may view/download the original, high-definition photo',
@@ -1147,7 +1123,7 @@ CREATE TABLE `user_infos` (
 
 LOCK TABLES `user_infos` WRITE;
 /*!40000 ALTER TABLE `user_infos` DISABLE KEYS */;
-INSERT INTO `user_infos` VALUES (1,15,'webmaster','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,8,NULL,NULL,NULL,0,'2026-08-01 03:00:00','{\"show_whats_new_16\": false}'),(2,15,'guest','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(3,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(4,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL);
+INSERT INTO `user_infos` VALUES (1,15,'webmaster','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,8,NULL,NULL,NULL,0,'2026-08-01 03:00:00','{\"show_whats_new_17\": false}'),(2,15,'guest','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(3,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(4,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL);
 /*!40000 ALTER TABLE `user_infos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1202,7 +1178,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'fixture_admin','$2y$04$7uUmJSEmEZgleEd3n6GFzuB/uKIzJmjqNBHE5OSx65uVaz7pIyPK2','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$2y$04$5iHho2h8WHWpsthi7sIHbOx0Sl9Tv.a7i2UQpqOH.KmYXISugJ8WC',NULL),(4,'power_user','$2y$04$qo4pdN6PHJzR/qcol0qRl.zXOTP0tu34A1v6YC0tr1gQsvSIYS2Rm',NULL);
+INSERT INTO `users` VALUES (1,'fixture_admin','$2y$04$9no5N.5i1uEgMxBHuC3Kq.LjHpCLF3bEgVtfBye4LYb.mVgM/H83W','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$2y$04$/h.s7H/A1/n.z1CRnswKaOkZ/gGVnbv5hzLqslMn3hybdcxjWu5aO',NULL),(4,'power_user','$2y$04$ZYMFJn2RVAyekXK6TNUsOupfrMIVbilfWs4wQIYXbaoxqJXaeIkdK',NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1215,4 +1191,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-10 14:20:42
+-- Dump completed on 2026-08-17  7:17:50

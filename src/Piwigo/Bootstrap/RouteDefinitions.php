@@ -33,6 +33,12 @@ use Piwigo\Controller\Api\Groups\GroupListController;
 use Piwigo\Controller\Api\Groups\GroupMergeController;
 use Piwigo\Controller\Api\Groups\GroupRemoveUserController;
 use Piwigo\Controller\Api\Groups\GroupUpdateController;
+use Piwigo\Controller\Api\Images\ImageDeleteController;
+use Piwigo\Controller\Api\Images\ImageFilteredSearchCreateController;
+use Piwigo\Controller\Api\Images\ImageFormatDeleteController;
+use Piwigo\Controller\Api\Images\ImageFormatSearchController;
+use Piwigo\Controller\Api\Images\ImageGetController;
+use Piwigo\Controller\Api\Images\ImageUpdateController;
 use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\SessionController;
 use Piwigo\Controller\Api\Tags\TagCreateController;
@@ -444,6 +450,42 @@ final class RouteDefinitions
         ], requirements: [
             'type' => 'plugins|themes|languages',
             'id' => '[a-zA-Z0-9_-]+',
+        ], methods: ['POST']));
+
+        // Images resource family -- admin-consumed. getInfo is public/
+        // permission-filtered (no AdminGuard), same as its WS predecessor;
+        // filteredSearch.create is public too (the front-end's own
+        // advanced-search page calls it, not just admin). The upload-flow
+        // methods (add/addChunk/addFile/addSimple/checkFiles/checkUpload/
+        // exist/upload/uploadAsync/uploadCompleted) fold into tus later;
+        // rate/search/setCategory/setPrivacyLevel/setRank/addComment are
+        // external-only, a separate later pass.
+        $routes->add('api_v1_images_get', new Route('/api/v1/images/{id}', defaults: [
+            '_controller' => ImageGetController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_images_update', new Route('/api/v1/images/{id}', defaults: [
+            '_controller' => ImageUpdateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_images_delete', new Route('/api/v1/images/actions/delete', defaults: [
+            '_controller' => ImageDeleteController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_formats_delete', new Route('/api/v1/images/formats/actions/delete', defaults: [
+            '_controller' => ImageFormatDeleteController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_formats_search', new Route('/api/v1/images/formats/actions/search', defaults: [
+            '_controller' => ImageFormatSearchController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_filtered_search_create', new Route('/api/v1/images/searches', defaults: [
+            '_controller' => ImageFilteredSearchCreateController::class,
         ], methods: ['POST']));
 
         return $routes;

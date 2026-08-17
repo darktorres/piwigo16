@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Api\Uploads;
 
 use Override;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
@@ -90,6 +91,27 @@ final readonly class TusUploadCreateController implements ControllerInterface
             }
         }
 
+        // `updateMode` mirrors Ws\Images\UploadHandler's own behavior: if
+        // set (and no explicit imageId/formatOf was already given),
+        // resolve a same-filename photo already in the first target
+        // category and upload as a replacement of it instead of a new
+        // photo. Resolved here, before any byte is transferred, same
+        // "cheap up front" reasoning as the imageId/formatOf checks above.
+        if (
+            ($metadata['updateMode'] ?? '') !== ''
+            && ! isset($metadata['imageId'])
+            && ! isset($metadata['formatOf'])
+        ) {
+            $firstCategoryId = explode(',', $metadata['category'] ?? '')[0];
+            $categoryId = CategoryId::tryFrom($firstCategoryId);
+            if ($categoryId instanceof CategoryId) {
+                $existingIds = $this->imageService->getIdsByFilenameInCategory($metadata['filename'], $categoryId);
+                if ($existingIds !== []) {
+                    $metadata['imageId'] = (string) $existingIds[0];
+                }
+            }
+        }
+
         $session = $this->tusUploadStore->create($uploadLength, $this->currentUser->get()->id->value, $metadata);
         if (! $session instanceof TusUploadSession) {
             return $this->problem('Internal Server Error', 500, 'Could not create the upload buffer.');
@@ -97,7 +119,20 @@ final readonly class TusUploadCreateController implements ControllerInterface
 
         return ResponseFactory::raw('', [
             'Tus-Resumable' => self::TUS_VERSION,
-            'Location' => '/api/v1/uploads/' . $session->id,
+            // Built off this exact request's own URI (which the client
+            // just used to reach this endpoint), not any derived "app
+            // root" helper -- UrlService::getAbsoluteRootUrl() computes
+            // its mount prefix from cookiePath()'s own
+            // REDIRECT_URL/PATH_INFO heuristics, tuned for page-rendering
+            // entry points (admin.php, index.php); inside this
+            // .htaccess-rewritten /api/v1/... request it instead derived
+            // "/piwigo17/api/v1/" (treating the route's own "api/v1"
+            // segment as part of the directory to keep), doubling the
+            // prefix on every follow-up PATCH. Caught live: the very
+            // first real tus-js-client caller, not any curl/fetch-based
+            // test, actually follows this header the way a real client
+            // does.
+            'Location' => (string) $request->getUri() . '/' . $session->id,
             'Upload-Offset' => '0',
         ], 201);
     }

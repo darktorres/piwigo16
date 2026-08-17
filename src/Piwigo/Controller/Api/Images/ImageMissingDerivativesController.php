@@ -69,7 +69,9 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
         $imageCount = $nextIdAndCount->count;
 
         if ($imageCount === 0) {
-            return ResponseFactory::json(['urls' => []]);
+            return ResponseFactory::json([
+                'urls' => [],
+            ]);
         }
 
         $startId = $prevPage ?? 0;
@@ -128,7 +130,9 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
             }
         } while (count($urls) < $maxUrls && $startId !== 0);
 
-        $response = ['urls' => $urls];
+        $response = [
+            'urls' => $urls,
+        ];
         if ($startId !== 0) {
             $response['nextPage'] = $startId;
         }

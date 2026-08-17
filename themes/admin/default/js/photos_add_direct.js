@@ -102,8 +102,13 @@ $(function () {
     // runtimes : 'html5,flash,silverlight,html4',
     runtimes: 'html5',
 
-    // url : '../upload.php',
-    url: 'ws.php?method=pwg.images.upload&format=json',
+    // Plupload owns file selection/drag-drop/queue UI only -- this `url`
+    // is never actually requested. The real transport is a tus.Upload
+    // per file (see startTusUploads()/uploadNextTusFile() below), driven
+    // through this same up.trigger() event pipeline so every handler in
+    // `init` below keeps working exactly as if plupload's own uploader
+    // had run.
+    url: 'api/v1/uploads',
 
     chunk_size,
 
@@ -128,12 +133,12 @@ $(function () {
 
         $('#startUpload').on('click', function (e) {
           e.preventDefault();
-          up.start();
+          startTusUploads(up);
         });
 
         $('#cancelUpload').on('click', function (e) {
           e.preventDefault();
-          up.stop();
+          cancelTusUploads();
           up.trigger('UploadComplete', up.files);
         });
       }
@@ -387,18 +392,20 @@ $(function () {
       },
 
       FileUploaded: function (up, file, info) {
-        // Called when file has finished uploading
-        //console.log('[FileUploaded] File:', file, "Info:", info);
+        // Called when file has finished uploading. Unlike a plain plupload
+        // setup, `info` here is a plain object built in uploadNextTusFile()
+        // below (imageId/addStatus from the tus completion response,
+        // squareSrc/name from a follow-up GET /api/v1/images/{id}) rather
+        // than a JSON-encoded legacy WS response envelope -- there's no
+        // wire format to preserve once this app is both ends of the call.
 
         // hide item line
         $('#' + file.id).hide();
 
-        let data = JSON.parse(info.response);
-
         $("#uploadedPhotos").parent("fieldset").show();
 
-        html = '<a href="admin.php?page=photo-' + data.result.image_id + '" style="position : relative" target="_blank">';
-        html += '<img src="' + data.result.square_src + '" class="thumbnail" title="' + data.result.name + '">';
+        html = '<a href="admin.php?page=photo-' + info.imageId + '" style="position : relative" target="_blank">';
+        html += '<img src="' + info.squareSrc + '" class="thumbnail" title="' + info.name + '">';
         if (formatMode) html += '<div class="format-ext-name" title="' + file.name + '"><span>' + file.name.slice(file.name.indexOf('.')) + '</span></div>';
         html += '</a> ';
 
@@ -406,23 +413,21 @@ $(function () {
 
         // do not remove file, or it will reset the progress bar :-/
         // up.removeFile(file);
-        uploadedPhotos.push(parseInt(data.result.image_id));
-        if(data.result.add_status=="add"){
-          addedPhotos.push(parseInt(data.result.image_id));
+        uploadedPhotos.push(info.imageId);
+        if(info.addStatus=="add"){
+          addedPhotos.push(info.imageId);
         }
         else{
-          updatedPhotos.push(parseInt(data.result.image_id));
+          updatedPhotos.push(info.imageId);
         }
-        if (!formatMode)
-          uploadCategory = data.result.category;
       },
 
       Error: function (up, error) {
-        // Called when file has finished uploading
-        //console.log('[Error] error: ', error);
-        var piwigoApiResponse = JSON.parse(error.response);
-
-        $(".errors ul").append('<li>' + piwigoApiResponse.message + '</li>');
+        // Called when file has finished uploading. `error` is a plain
+        // {message, file} object built in uploadNextTusFile() below (a
+        // real HTTP status from the tus endpoint, not a WS-style 200
+        // wrapping a failure).
+        $(".errors ul").append('<li>' + error.message + '</li>');
         $(".errors").show();
       },
 
@@ -432,7 +437,7 @@ $(function () {
 
         Piecon.reset();
 
-        if (!formatMode) {
+        if (!formatMode && uploadCategory) {
           $.ajax({
             url: "api/v1/uploads/actions/complete-batch",
             type: "POST",
@@ -440,7 +445,20 @@ $(function () {
             headers: {'X-CSRF-Token': pwg_token},
             data: JSON.stringify({
               categoryId: Number(uploadCategory.id),
-            })
+            }),
+            dataType: "json",
+            success: function (data) {
+              // A real, fresh nb_photos/label straight from the server --
+              // read here instead of a value captured mid-upload, since
+              // that captured value would otherwise be stale by the time
+              // this batch-complete summary line renders.
+              const summaryHtml = sprintf(
+                albumSummary_label,
+                '<a href="admin.php?page=album-' + data.category.id + '">' + data.category.label + '</a>',
+                data.category.nbPhotos
+              );
+              $(".infos ul").append('<li>' + summaryHtml + '</li>');
+            }
           });
         }
 
@@ -464,16 +482,6 @@ $(function () {
           $(".infos").append('<ul><li>' + infoText + '</li></ul>');
         }
 
-        if (!formatMode) {
-          html = sprintf(
-            albumSummary_label,
-            '<a href="admin.php?page=album-' + uploadCategory.id + '">' + uploadCategory.label + '</a>',
-            parseInt(uploadCategory.nb_photos)
-          );
-
-          $(".infos ul").append('<li>' + html + '</li>');
-        }
-
         $(".infos").show();
 
         // TODO: use a new method pwg.caddie.empty +
@@ -493,6 +501,160 @@ $(function () {
     }
   });
 });
+
+/*--------------
+tus upload transport
+
+Plupload's own queue widget provides file selection/drag-drop/rename/
+progress-bar UI only -- pwg.images.upload (and the whole base64/
+multipart chunk-upload protocol behind it) was replaced by a real tus
+1.0.0 server earlier in this campaign (/api/v1/uploads). Plupload itself
+has never supported tus at any version, so the real byte transfer here
+goes through tus-js-client (vendored, themes/default/js/plugins/
+tus-js-client/) instead of plupload's own uploader, one file at a time
+(matching plupload's own default non-parallel behavior). Every step is
+still announced through plupload's own up.trigger() so every handler in
+the `init` block above keeps working exactly as if plupload's native
+uploader had run -- BeforeUpload still builds `multipart_params` via the
+album selector, UploadProgress still reads up.total.percent, FileUploaded/
+Error/UploadComplete still update the same DOM.
+--------------*/
+
+let activeTusUpload = null;
+
+function computeAggregatePercent(files) {
+  let totalLoaded = 0;
+  let totalSize = 0;
+  files.forEach(function (f) {
+    totalSize += f.size || 0;
+    totalLoaded += (f.status === plupload.DONE) ? (f.size || 0) : (f.loaded || 0);
+  });
+  return totalSize ? Math.round(totalLoaded / totalSize * 100) : 0;
+}
+
+function extractTusErrorDetail(err) {
+  if (err && err.originalResponse) {
+    try {
+      const body = JSON.parse(err.originalResponse.getBody());
+      if (body && body.detail) {
+        return body.detail;
+      }
+    } catch (e) {
+      // Not a problem+json body (e.g. a network-level failure) -- fall
+      // through to the generic message below.
+    }
+  }
+  return (err && err.message) ? err.message : 'Upload failed';
+}
+
+function startTusUploads(up) {
+  const pendingFiles = up.files.filter(function (f) {
+    return f.status !== plupload.DONE;
+  });
+
+  if (pendingFiles.length === 0) {
+    up.trigger('UploadComplete', up.files);
+    return;
+  }
+
+  uploadNextTusFile(up, pendingFiles, 0);
+}
+
+function cancelTusUploads() {
+  if (activeTusUpload) {
+    activeTusUpload.abort();
+    activeTusUpload = null;
+  }
+}
+
+function uploadNextTusFile(up, files, index) {
+  if (index >= files.length) {
+    activeTusUpload = null;
+    up.trigger('UploadComplete', up.files);
+    return;
+  }
+
+  const file = files[index];
+  file.status = plupload.UPLOADING;
+
+  // Reuses BeforeUpload's own multipart_params-building logic verbatim
+  // (album selector read, format_of/update_mode) -- only the destination
+  // (tus metadata instead of plupload's native multipart form fields)
+  // differs from here on.
+  up.trigger('BeforeUpload', file);
+  const options = up.getOption('multipart_params') || {};
+
+  const metadata = { filename: file.name };
+  if (formatMode) {
+    metadata.formatOf = String(options.format_of);
+  } else {
+    metadata.category = String(options.category);
+    metadata.name = options.name;
+    if (!uploadCategory) {
+      uploadCategory = { id: options.category };
+    }
+  }
+  if (options.update_mode) {
+    metadata.updateMode = '1';
+  }
+
+  activeTusUpload = new tus.Upload(file.getNative(), {
+    endpoint: 'api/v1/uploads',
+    chunkSize: parseInt(chunk_size) * 1024,
+    retryDelays: [0, 1000, 3000, 5000],
+    headers: {'X-CSRF-Token': pwg_token},
+    metadata: metadata,
+    onProgress: function (bytesUploaded, bytesTotal) {
+      file.loaded = bytesUploaded;
+      file.size = bytesTotal;
+      file.percent = bytesTotal ? Math.round(bytesUploaded / bytesTotal * 100) : 0;
+      up.total.percent = computeAggregatePercent(up.files);
+      up.trigger('UploadProgress', file);
+    },
+    onError: function (error) {
+      file.status = plupload.FAILED;
+      up.trigger('Error', { message: extractTusErrorDetail(error), file: file });
+      uploadNextTusFile(up, files, index + 1);
+    },
+    onSuccess: async function (payload) {
+      file.status = plupload.DONE;
+      file.percent = 100;
+
+      let result = {};
+      try {
+        result = JSON.parse(payload.lastResponse.getBody());
+      } catch (e) {
+        // Falls through with result = {}; the !result.imageId check
+        // below reports it.
+      }
+
+      if (!result.imageId) {
+        up.trigger('Error', { message: 'Upload finished but the server response was unreadable.', file: file });
+        uploadNextTusFile(up, files, index + 1);
+        return;
+      }
+
+      let imageInfo = {};
+      try {
+        imageInfo = await $.ajax({ url: 'api/v1/images/' + result.imageId, type: 'GET', dataType: 'json' });
+      } catch (e) {
+        // Enrichment fetch failed -- the photo itself was uploaded
+        // successfully, so still report it as such, just with a
+        // fallback thumbnail/name.
+      }
+
+      up.trigger('FileUploaded', file, {
+        imageId: result.imageId,
+        addStatus: result.addStatus,
+        squareSrc: (imageInfo.derivatives && imageInfo.derivatives.square) ? imageInfo.derivatives.square.url : '',
+        name: imageInfo.name || file.name
+      });
+      uploadNextTusFile(up, files, index + 1);
+    }
+  });
+
+  activeTusUpload.start();
+}
 
 /*--------------
 General functions

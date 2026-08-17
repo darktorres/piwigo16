@@ -49,14 +49,15 @@ jQuery.fn.pwgAddAlbum = function(options) {
       jQuery('#categoryNameError').css('visibility', 'hidden');
 
       jQuery.ajax({
-        url: 'ws.php?format=json',
+        url: 'api/v1/categories',
         type: 'POST',
+        contentType: 'application/json',
+        headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
         dataType: 'json',
-        data: {
-          method: 'pwg.categories.add',
-          parent: parent_id,
+        data: JSON.stringify({
+          parentId: Number(parent_id),
           name: name
-        },
+        }),
         beforeSend: function() {
           jQuery('#albumCreationLoading').css('display', 'inline-block');
           jQuery('.albumCreationButton').hide();
@@ -67,7 +68,7 @@ jQuery.fn.pwgAddAlbum = function(options) {
           $button.colorbox.close();
 
           var newAlbum = {
-            id: data.result.id,
+            id: data.id,
             name: name,
             fullname: name,
             global_rank: '0',

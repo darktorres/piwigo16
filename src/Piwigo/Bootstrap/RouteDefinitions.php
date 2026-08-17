@@ -16,6 +16,9 @@ use Piwigo\Controller\Api\Categories\CategoryRefreshRepresentativeController;
 use Piwigo\Controller\Api\Categories\CategoryReorderController;
 use Piwigo\Controller\Api\Categories\CategorySetRepresentativeController;
 use Piwigo\Controller\Api\Categories\CategoryUpdateController;
+use Piwigo\Controller\Api\Comments\CommentDeleteController;
+use Piwigo\Controller\Api\Comments\CommentListController;
+use Piwigo\Controller\Api\Comments\CommentValidateController;
 use Piwigo\Controller\Api\Groups\GroupAddUserController;
 use Piwigo\Controller\Api\Groups\GroupCreateController;
 use Piwigo\Controller\Api\Groups\GroupDeleteController;
@@ -381,6 +384,22 @@ final class RouteDefinitions
             '_controller' => UserSetMainUserController::class,
         ], requirements: [
             'id' => '\d+',
+        ], methods: ['POST']));
+
+        // Comments (userComments) resource family -- admin moderation view.
+        // Bulk actions, matching the WS predecessors' own shape and the
+        // admin moderation UI's batch-select workflow -- no per-comment
+        // resource verbs.
+        $routes->add('api_v1_comments_list', new Route('/api/v1/comments', defaults: [
+            '_controller' => CommentListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_comments_delete', new Route('/api/v1/comments/actions/delete', defaults: [
+            '_controller' => CommentDeleteController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_comments_validate', new Route('/api/v1/comments/actions/validate', defaults: [
+            '_controller' => CommentValidateController::class,
         ], methods: ['POST']));
 
         return $routes;

@@ -15,16 +15,14 @@ get_user_activity(activity_page, uid_filter, action_filter, object_filter, [date
 
 /*
  * GET /api/v1/activity returns flat, unmerged rows by design (see
- * ActivityListController's own docblock) -- Ws\Activity\GetListHandler's
- * own consecutive-same-session/object/action line-merging-with-counter
- * scheme is replicated here client-side instead, from those flat rows.
- * Fetches successive pages of raw rows (using the endpoint's own
- * offset/hasMore) and merges them adjacently, exactly like
- * GetListHandler's own while loop, until either
- * ACTIVITY_DISPLAY_PAGE_SIZE merged lines are accumulated or the server
- * reports no more rows -- a merge can span a fetch boundary the same way
- * it could span a raw-row-batch boundary server-side, so `currentKey`
- * intentionally isn't reset between iterations of the while loop below.
+ * ActivityListController's own docblock). This performs
+ * consecutive-same-session/object/action line-merging-with-counter
+ * client-side, from those flat rows. Fetches successive pages of raw
+ * rows (using the endpoint's own offset/hasMore) and merges them
+ * adjacently until either ACTIVITY_DISPLAY_PAGE_SIZE merged lines are
+ * accumulated or the server reports no more rows -- a merge can span a
+ * fetch boundary, so `currentKey` intentionally isn't reset between
+ * iterations of the while loop below.
  */
 async function fetchAndMergeActivityLines(startOffset, uid, action, object, date, id) {
     let offset = startOffset;

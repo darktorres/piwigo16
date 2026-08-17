@@ -394,10 +394,8 @@ $(function () {
       FileUploaded: function (up, file, info) {
         // Called when file has finished uploading. Unlike a plain plupload
         // setup, `info` here is a plain object built in uploadNextTusFile()
-        // below (imageId/addStatus from the tus completion response,
-        // squareSrc/name from a follow-up GET /api/v1/images/{id}) rather
-        // than a JSON-encoded legacy WS response envelope -- there's no
-        // wire format to preserve once this app is both ends of the call.
+        // below: imageId/addStatus from the tus completion response,
+        // squareSrc/name from a follow-up GET /api/v1/images/{id}.
 
         // hide item line
         $('#' + file.id).hide();
@@ -424,9 +422,8 @@ $(function () {
 
       Error: function (up, error) {
         // Called when file has finished uploading. `error` is a plain
-        // {message, file} object built in uploadNextTusFile() below (a
-        // real HTTP status from the tus endpoint, not a WS-style 200
-        // wrapping a failure).
+        // {message, file} object built in uploadNextTusFile() below, from
+        // a real HTTP status returned by the tus endpoint.
         $(".errors ul").append('<li>' + error.message + '</li>');
         $(".errors").show();
       },

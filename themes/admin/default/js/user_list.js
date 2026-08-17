@@ -1404,9 +1404,9 @@ function get_status_index(status) {
 
 function get_level_index(level) {
     // level_arr holds string literals; /api/v1/users returns a real
-    // JSON number for `level` (unlike WS's raw string rows), so this
-    // needs a loose match rather than the strict one status_arr's own
-    // still-string `status` comparison above can keep using.
+    // JSON number for `level`, so this needs a loose match rather than
+    // the strict one status_arr's own still-string `status` comparison
+    // above can keep using.
     for (let i = 0; i < level_arr.length; i++) {
         if (level_arr[i] == level) {
             return i;

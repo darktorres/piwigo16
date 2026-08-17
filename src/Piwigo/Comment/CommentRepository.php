@@ -381,7 +381,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * DQL counterpart of {@see buildApiConditions()} -- shared by the 3
      * DQL-based CommentApiCriteria-consuming methods below
      * ({@see findAuthorCounts()}/{@see findSummaryCounts()}/
-     * {@see findDateRange()}). {@see findListForAdminWs()} deliberately
+     * {@see findDateRange()}). {@see findList()} deliberately
      * keeps using the original SqlCondition/DBAL version above -- it has
      * its own separate, permanent blocker (a dynamic multi-auth
      * column-name join, same as {@see findForImage()}'s own), so tying it
@@ -521,7 +521,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * and two comments on one image share a timestamp readily (a bulk
      * import, or two posts in the same second). Paging an order that isn't
      * total lets a row appear on two pages or none as $offset advances --
-     * the same reason findAllWithConditions()/findListForAdminWs() below
+     * the same reason findAllWithConditions()/findList() below
      * already append their own primary-key tiebreaker.
      *
      * @return list<CommentSummary>
@@ -898,7 +898,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      *   status: ?string, content: ?string, path: string, representative_ext: ?string,
      *   file: string, date_available: ?string, validated: bool|int, anonymous_id: string}>
      */
-    public function findListForAdminWs(
+    public function findList(
         CommentApiCriteria $criteria,
         int $offset,
         int $limit

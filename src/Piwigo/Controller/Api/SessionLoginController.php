@@ -48,12 +48,12 @@ final readonly class SessionLoginController implements ControllerInterface
             // considered valid at all, so it never needs escaping.
             $authenticated = $this->authService->authKeyLogin($input->username . ':' . $input->password);
             if ($authenticated) {
-                $this->connectedWithSession->set(ConnectedWith::WsSessionLoginApiKey);
+                $this->connectedWithSession->set(ConnectedWith::ApiSessionLoginApiKey);
 
                 return ResponseFactory::json($this->sessionStatusPresenter->present());
             }
         } elseif ($this->authService->tryLogUser($input->username, $input->password, false)) {
-            $this->connectedWithSession->set(ConnectedWith::WsSessionLogin);
+            $this->connectedWithSession->set(ConnectedWith::ApiSessionLogin);
 
             return ResponseFactory::json($this->sessionStatusPresenter->present());
         }

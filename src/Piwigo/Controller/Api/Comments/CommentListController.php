@@ -119,7 +119,7 @@ final readonly class CommentListController implements ControllerInterface
         };
 
         $comments = [];
-        foreach ($this->commentService->getListForAdminWs($criteria, $perPage * $page, $perPage) as $row) {
+        foreach ($this->commentService->getList($criteria, $perPage * $page, $perPage) as $row) {
             $rowImageId = $row['image_id'];
 
             $mediumDerivative = DerivativeImage::getOne(ImageStdParams::MEDIUM, [

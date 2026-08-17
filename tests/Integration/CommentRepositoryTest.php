@@ -687,7 +687,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $summary->pending);
     }
 
-    public function testFindListForAdminWsReturnsJoinedRowsWithUsernameAndStatus(): void
+    public function testFindListReturnsJoinedRowsWithUsernameAndStatus(): void
     {
         $marker = 'flfaw-marker-' . uniqid();
         $id = $this->repo->insert([
@@ -701,7 +701,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'email' => null,
         ]);
 
-        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker), 0, 10);
+        $rows = $this->repo->findList(new CommentApiCriteria(search: $marker), 0, 10);
 
         self::assertCount(1, $rows);
         self::assertSame($id->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
@@ -709,7 +709,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertArrayHasKey('status', $rows[0]);
     }
 
-    public function testFindListForAdminWsAppliesTheStatusFilter(): void
+    public function testFindListAppliesTheStatusFilter(): void
     {
         $marker = 'flfaws-marker-' . uniqid();
         $this->repo->insert([
@@ -733,7 +733,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'email' => null,
         ]);
 
-        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker, status: 'pending'), 0, 10);
+        $rows = $this->repo->findList(new CommentApiCriteria(search: $marker, status: 'pending'), 0, 10);
 
         self::assertCount(1, $rows);
         self::assertSame($pendingId->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);

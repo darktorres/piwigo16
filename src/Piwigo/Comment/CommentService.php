@@ -85,12 +85,12 @@ final readonly class CommentService
      *   status: ?string, content: ?string, path: string, representative_ext: ?string,
      *   file: string, date_available: ?string, validated: bool|int, anonymous_id: string}>
      */
-    public function getListForAdminWs(
+    public function getList(
         CommentApiCriteria $criteria,
         int $offset,
         int $limit
     ): array {
-        return $this->repo->findListForAdminWs($criteria, $offset, $limit);
+        return $this->repo->findList($criteria, $offset, $limit);
     }
 
     public function getDateRange(CommentApiCriteria $criteria): ?CommentDateRange

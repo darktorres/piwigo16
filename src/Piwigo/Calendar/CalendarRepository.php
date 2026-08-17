@@ -7,6 +7,7 @@ namespace Piwigo\Calendar;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
+use Piwigo\Calendar\Projection\CalendarPeriodCount;
 use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\SortRenderer;
@@ -42,6 +43,24 @@ final readonly class CalendarRepository
     private function sortRenderer(): SortRenderer
     {
         return new SortRenderer($this->em->getConnection());
+    }
+
+    /**
+     * Narrows a `getArrayResult()` row value to `int|string` for
+     * {@see CalendarPeriodCount}'s own 2 fields -- both are always one of
+     * a DQL date function (YEAR()/DAYOFMONTH()/DATE_FORMAT_YEAR_MONTH()/
+     * DATE_FORMAT_MONTH_DAY()) or a COUNT(...) aggregate on a matched
+     * row, never anything else in practice; Doctrine's own
+     * `getArrayResult(): array` return type is `mixed`-valued regardless,
+     * so this exists to satisfy that, not because real data varies. The
+     * `0` fallback is unreachable in practice, same as the per-consumer
+     * `is_numeric()`/`is_scalar()` guards this replaces used to be
+     * (themselves already inconsistent with each other on the fallback
+     * value for this same unreachable branch).
+     */
+    private static function narrowPeriodOrCount(mixed $value): int|string
+    {
+        return is_int($value) || is_string($value) ? $value : 0;
     }
 
     /**
@@ -185,7 +204,7 @@ final readonly class CalendarRepository
      * unchanged rather than "fixed" to avoid a behavior-preservation
      * risk).
      *
-     * @return list<array<string, mixed>>
+     * @return list<CalendarPeriodCount>
      */
     public function countGroupedByLevel(string $levelDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
@@ -209,10 +228,10 @@ final readonly class CalendarRepository
                 continue;
             }
 
-            $result[] = [
-                'period' => $row['period'] ?? null,
-                'nb_images' => $row['nb_images'] ?? null,
-            ];
+            $result[] = new CalendarPeriodCount(
+                period: self::narrowPeriodOrCount($row['period'] ?? null),
+                count: self::narrowPeriodOrCount($row['nb_images'] ?? null),
+            );
         }
 
         return $result;
@@ -301,7 +320,7 @@ final readonly class CalendarRepository
      * ASC` are both legal alias references -- the 2 extra columns this
      * adds to each hydrated row are dropped below, never returned.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CalendarPeriodCount>
      */
     public function countByYearMonth(string $dateFieldDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
@@ -325,10 +344,10 @@ final readonly class CalendarRepository
                 continue;
             }
 
-            $result[] = [
-                'period' => $row['period'] ?? null,
-                'count' => $row['count'] ?? null,
-            ];
+            $result[] = new CalendarPeriodCount(
+                period: self::narrowPeriodOrCount($row['period'] ?? null),
+                count: self::narrowPeriodOrCount($row['count'] ?? null),
+            );
         }
 
         return $result;
@@ -342,7 +361,7 @@ final readonly class CalendarRepository
      * countByYearMonth() above), so no extra GROUP-BY-satisfying aliases
      * are needed.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CalendarPeriodCount>
      */
     public function countByMonthDay(string $dateFieldDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
@@ -358,10 +377,10 @@ final readonly class CalendarRepository
                 continue;
             }
 
-            $result[] = [
-                'period' => $row['period'] ?? null,
-                'count' => $row['count'] ?? null,
-            ];
+            $result[] = new CalendarPeriodCount(
+                period: self::narrowPeriodOrCount($row['period'] ?? null),
+                count: self::narrowPeriodOrCount($row['count'] ?? null),
+            );
         }
 
         return $result;
@@ -375,7 +394,7 @@ final readonly class CalendarRepository
      * Same "period alone is group+sort key" shape as countByMonthDay()
      * above.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CalendarPeriodCount>
      */
     public function countByDayOfMonth(string $dateFieldDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
@@ -391,10 +410,10 @@ final readonly class CalendarRepository
                 continue;
             }
 
-            $result[] = [
-                'period' => $row['period'] ?? null,
-                'count' => $row['count'] ?? null,
-            ];
+            $result[] = new CalendarPeriodCount(
+                period: self::narrowPeriodOrCount($row['period'] ?? null),
+                count: self::narrowPeriodOrCount($row['count'] ?? null),
+            );
         }
 
         return $result;

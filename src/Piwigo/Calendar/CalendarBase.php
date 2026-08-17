@@ -345,12 +345,10 @@ abstract class CalendarBase
         $rows = $this->calendarRepository->countGroupedByLevel($levelDql, $scope, $dateWhere);
         $level_items = [];
         foreach ($rows as $row) {
-            $keyRaw = $row['period'] ?? null;
-            $key = is_int($keyRaw) || is_string($keyRaw) ? $keyRaw : '';
-            // nb_images is a COUNT(...) aggregate; DBAL row values are mixed
-            // (native int or numeric string depending on driver), guard
-            // either way, same idiom as CalendarMonthly's own build_*_calendar().
-            $level_items[$key] = is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0;
+            // CalendarPeriodCount::$count is a COUNT(...) aggregate; DBAL
+            // row values are int|string depending on driver, cast either
+            // way, same idiom as CalendarMonthly's own build_*_calendar().
+            $level_items[$row->period] = (int) $row->count;
         }
 
         $page_chronology_date = $this->chronology_date;

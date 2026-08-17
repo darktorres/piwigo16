@@ -253,17 +253,10 @@ final class CalendarMonthly extends CalendarBase
         $rows = $this->calendarRepository->countByYearMonth($this->date_field_dql, $scope, $dateWhere);
         $items = [];
         foreach ($rows as $row) {
-            // period is a DATE_FORMAT_YEAR_MONTH(...) expression, always a
-            // scalar; DQL array-hydrated row values are typed mixed
-            // regardless, so narrow before casting.
-            $periodRaw = $row['period'] ?? null;
-            $period = is_scalar($periodRaw) ? (string) $periodRaw : '';
+            $period = (string) $row->period;
             $y = substr($period, 0, 4);
             $m = (int) substr($period, 4, 2);
-            // count is a COUNT(...) aggregate; DBAL row values are mixed
-            // (native int or numeric string depending on driver), guard
-            // either way.
-            $count = is_numeric($row['count']) ? (int) $row['count'] : 0;
+            $count = (int) $row->count;
             if (! isset($items[$y])) {
                 $items[$y] = [
                     'nb_images' => 0,
@@ -328,17 +321,10 @@ final class CalendarMonthly extends CalendarBase
         $rows = $this->calendarRepository->countByMonthDay($this->date_field_dql, $scope, $dateWhere);
         $items = [];
         foreach ($rows as $row) {
-            // period is a DATE_FORMAT_MONTH_DAY(...) expression, always a
-            // scalar; DQL array-hydrated row values are typed mixed
-            // regardless, so narrow before casting.
-            $periodRaw = $row['period'] ?? null;
-            $period = is_scalar($periodRaw) ? (string) $periodRaw : '';
+            $period = (string) $row->period;
             $m = (int) substr($period, 0, 2);
             $d = substr($period, 2, 2);
-            // count is a COUNT(...) aggregate; DBAL row values are mixed
-            // (native int or numeric string depending on driver), guard
-            // either way.
-            $count = is_numeric($row['count']) ? (int) $row['count'] : 0;
+            $count = (int) $row->count;
             if (! isset($items[$m])) {
                 $items[$m] = [
                     'nb_images' => 0,
@@ -411,10 +397,8 @@ final class CalendarMonthly extends CalendarBase
         $items = [];
         $rows = $this->calendarRepository->countByDayOfMonth($this->date_field_dql, $scope, $dateWhere);
         foreach ($rows as $row) {
-            $periodRaw = $row['period'] ?? null;
-            $d = is_numeric($periodRaw) ? (int) $periodRaw : 0;
-            $items[$d] = [
-                'nb_images' => $row['count'],
+            $items[(int) $row->period] = [
+                'nb_images' => $row->count,
             ];
         }
 

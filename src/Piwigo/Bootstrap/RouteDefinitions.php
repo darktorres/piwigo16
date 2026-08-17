@@ -32,6 +32,12 @@ use Piwigo\Controller\Api\Tags\TagDuplicateController;
 use Piwigo\Controller\Api\Tags\TagListController;
 use Piwigo\Controller\Api\Tags\TagMergeController;
 use Piwigo\Controller\Api\Tags\TagRenameController;
+use Piwigo\Controller\Api\Users\UserCreateController;
+use Piwigo\Controller\Api\Users\UserDeleteController;
+use Piwigo\Controller\Api\Users\UserGeneratePasswordLinkController;
+use Piwigo\Controller\Api\Users\UserListController;
+use Piwigo\Controller\Api\Users\UserSetMainUserController;
+use Piwigo\Controller\Api\Users\UserUpdateController;
 use Piwigo\Controller\Api\VersionController;
 use Piwigo\Controller\CommentsController;
 use Piwigo\Controller\CustomLogoController;
@@ -335,6 +341,44 @@ final class RouteDefinitions
 
         $routes->add('api_v1_categories_refresh_representative', new Route('/api/v1/categories/{id}/actions/refresh-representative', defaults: [
             '_controller' => CategoryRefreshRepresentativeController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        // Users resource family -- admin-consumed. pwg.users.preferences.set
+        // isn't included: it's a self-service action on the calling user's
+        // own account (no requiresAuth flag at all in its WS registration),
+        // not an admin-management action -- deferred to the same later pass
+        // as setMyInfo/favorites/getAuthKey/api_key.* (all external-only per
+        // the plan's own method classification).
+        $routes->add('api_v1_users_list', new Route('/api/v1/users', defaults: [
+            '_controller' => UserListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_users_create', new Route('/api/v1/users', defaults: [
+            '_controller' => UserCreateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_users_update', new Route('/api/v1/users/{id}', defaults: [
+            '_controller' => UserUpdateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_users_delete', new Route('/api/v1/users/{id}', defaults: [
+            '_controller' => UserDeleteController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['DELETE']));
+
+        $routes->add('api_v1_users_generate_password_link', new Route('/api/v1/users/{id}/actions/generate-password-link', defaults: [
+            '_controller' => UserGeneratePasswordLinkController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_users_set_main_user', new Route('/api/v1/users/{id}/actions/set-main-user', defaults: [
+            '_controller' => UserSetMainUserController::class,
         ], requirements: [
             'id' => '\d+',
         ], methods: ['POST']));

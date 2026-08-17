@@ -52,6 +52,7 @@ use Piwigo\Controller\Api\Session\ApiKeyCreateController;
 use Piwigo\Controller\Api\Session\ApiKeyListController;
 use Piwigo\Controller\Api\Session\ApiKeyRevokeController;
 use Piwigo\Controller\Api\Session\ApiKeyUpdateController;
+use Piwigo\Controller\Api\Session\CaddieAddController;
 use Piwigo\Controller\Api\Session\FavoriteAddController;
 use Piwigo\Controller\Api\Session\FavoriteListController;
 use Piwigo\Controller\Api\Session\FavoriteRemoveController;
@@ -70,6 +71,7 @@ use Piwigo\Controller\Api\Tags\TagMergeController;
 use Piwigo\Controller\Api\Tags\TagRenameController;
 use Piwigo\Controller\Api\Users\UserCreateController;
 use Piwigo\Controller\Api\Users\UserDeleteController;
+use Piwigo\Controller\Api\Users\UserDeleteRatingsController;
 use Piwigo\Controller\Api\Users\UserGeneratePasswordLinkController;
 use Piwigo\Controller\Api\Users\UserGetAuthKeyController;
 use Piwigo\Controller\Api\Users\UserListController;
@@ -306,6 +308,14 @@ final class RouteDefinitions
             'imageId' => '\d+',
         ], methods: ['DELETE']));
 
+        // pwg.caddie.add is requiresAuth: true, which really means
+        // admin_only (Ws\Server::invoke()'s own enforcement) -- the
+        // caddie/lightbox is a Batch Manager feature, not a general
+        // visitor one.
+        $routes->add('api_v1_session_caddie_add', new Route('/api/v1/session/caddie', defaults: [
+            '_controller' => CaddieAddController::class,
+        ], methods: ['POST']));
+
         $routes->add('api_v1_info', new Route('/api/v1/info', defaults: [
             '_controller' => InfoController::class,
         ], methods: ['GET']));
@@ -506,6 +516,14 @@ final class RouteDefinitions
         // docblock.
         $routes->add('api_v1_users_get_auth_key', new Route('/api/v1/users/{id}/actions/get-auth-key', defaults: [
             '_controller' => UserGetAuthKeyController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        // pwg.rates.delete is requiresAuth: true, which really means
+        // admin_only (Ws\Server::invoke()'s own enforcement).
+        $routes->add('api_v1_users_delete_ratings', new Route('/api/v1/users/{id}/actions/delete-ratings', defaults: [
+            '_controller' => UserDeleteRatingsController::class,
         ], requirements: [
             'id' => '\d+',
         ], methods: ['POST']));

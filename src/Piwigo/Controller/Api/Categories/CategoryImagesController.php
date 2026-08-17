@@ -76,7 +76,7 @@ final readonly class CategoryImagesController implements ControllerInterface
         }
         $catConditions = [];
         if ($catClauses !== []) {
-            $catConditions[] = new SqlCondition('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
+            $catConditions[] = SqlCondition::fromRawSql('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
         }
         $catConditions[] = $this->permissionService->getPermissionCriteria()->forbiddenCategoriesCondition('c.id');
 

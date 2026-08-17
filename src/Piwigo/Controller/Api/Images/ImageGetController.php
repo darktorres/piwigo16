@@ -85,24 +85,24 @@ final readonly class ImageGetController implements ControllerInterface
         $isCommentable = false;
         $relatedCategories = [];
         foreach ($relatedCategoryRows as $row) {
-            if ((bool) ($row['commentable'] ?? false)) {
+            if ($row->commentable) {
                 $isCommentable = true;
             }
 
-            $categoryNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'getInfo'));
-            $categoryId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $categoryNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($row->name, 'getInfo'));
+            $categoryRow = $row->toArray();
 
             $relatedCategories[] = [
-                'id' => $categoryId,
+                'id' => $row->id,
                 'name' => strip_tags($categoryNameEvent->categoryName),
-                'globalRank' => is_scalar($row['global_rank'] ?? null) ? (string) $row['global_rank'] : null,
+                'globalRank' => $row->globalRank,
                 'url' => $this->urlService->makeIndexUrl([
-                    'category' => $row,
+                    'category' => $categoryRow,
                 ]),
                 'pageUrl' => $this->urlService->makePictureUrl([
                     'image_id' => $image->id->value,
                     'image_file' => $image->file,
-                    'category' => $row,
+                    'category' => $categoryRow,
                 ]),
             ];
         }

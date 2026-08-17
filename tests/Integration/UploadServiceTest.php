@@ -1274,10 +1274,9 @@ final class UploadServiceTest extends IntegrationTestCase
 
     /**
      * Spawns a real, separate OS process that acquires $lockName, sleeps
-     * briefly, then releases it -- same genuine, separate-session
-     * technique as tests/Contract/WsImagesUploadConcurrencyTest.php's own
-     * spawnBackgroundLockHolderThatInsertsThenReleases(), pared down to a
-     * bare acquire-sleep-release.
+     * briefly, then releases it -- a genuine, separate-session technique
+     * (a same-process GET_LOCK() call would just re-acquire its own
+     * already-held lock), pared down to a bare acquire-sleep-release.
      *
      * @return array{0: resource, 1: array<int, resource>}
      */

@@ -10,7 +10,7 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 /**
  * Batched parameterized INSERT/UPDATE helpers, shared rather than
  * duplicated per-repository -- these 4 methods back ~20 call sites across
- * Category/Image/Ws/Admin/Controller/Mail, not a single domain's concern.
+ * Category/Image/Admin/Controller/Mail, not a single domain's concern.
  *
  * massUpdate()/singleUpdate() issue one parameterized `UPDATE` per row, for
  * every batch size, wrapped in a single transaction (all-or-nothing): a

@@ -224,9 +224,8 @@ it('reports a setup error (and suppresses warnings) when the configured upload_d
     $snapshot = H::snapshotConfig(['upload_dir']);
     // A nested path under a directory that doesn't exist either -- no
     // mkdir()/chmod() needed (unlike the analogous "exists but not
-    // writable" case, see WsImagesTest::
-    // test_checkUpload_reports_not_ready_when_the_upload_directory_is_not_writable()):
-    // is_writable() on a nonexistent path is simply false, no warning, so
+    // writable" case): is_writable() on a nonexistent path is simply
+    // false, no warning, so
     // this reaches UploadService::readyForUploadMessage()'s very first
     // branch (`! is_dir($upload_dir)` then `! is_writable(dirname($upload_dir))`)
     // through a real, non-mutating filesystem state.
@@ -246,9 +245,8 @@ it('reports a setup error (and suppresses warnings) when the configured upload_d
 
 it('warns when upload_form_chunk_size is configured larger than PHP\'s real upload_max_filesize', function (): void {
     $snapshot = H::snapshotConfig(['upload_form_chunk_size']);
-    // php.ini's upload_max_filesize is 2M (2048kB) in this environment
-    // (see WsUploadTest's own comment) -- any chunk size
-    // configured above that in kB trips prepareUploadForm()'s own sanity
+    // php.ini's upload_max_filesize is 2M (2048kB) in this environment --
+    // any chunk size configured above that in kB trips prepareUploadForm()'s own sanity
     // warning. Unlike upload_max_filesize/post_max_size themselves (real
     // PHP_INI_PERDIR directives baked into the live Apache php.ini, not
     // safely overridable per-request without mutating shared global state

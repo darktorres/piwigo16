@@ -618,9 +618,8 @@ namespace Piwigo\Tests\Integration {
                 self::assertIsString($matching[0]->details);
                 // MySQL's JSON column type reorders object members (by key
                 // length, then lexicographically) independent of the original
-                // insertion order -- ksort() both sides, matching this
-                // codebase's own established convention for this gotcha (see
-                // tests/Contract/WsImagesFilteredSearchTest.php's docblock).
+                // insertion order -- ksort() both sides to compare regardless
+                // of that reordering.
                 $expectedDetails = [
                     'from_version' => '16.0.0',
                     'to_version' => '17.0.0',

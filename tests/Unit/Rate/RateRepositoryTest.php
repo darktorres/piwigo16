@@ -620,7 +620,7 @@ test('findImageThumbInfoByIds() returns the requested images', function (): void
     // baked into each fixture file at regen time and genuinely differs
     // between piwigo-17.0.sql and piwigo-17.0-pgsql.sql (both generated
     // via separate, independent install+upload runs), same driver split
-    // documented in NotificationRepositoryTest.php/WsTopLevelTest.php.
+    // documented in NotificationRepositoryTest.php.
     $expectedPath = getenv('PIWIGO_DB_DRIVER') === 'pgsql'
         ? 'upload/2026/08/01/20260801000000-2e7e2ce3.jpg'
         : 'upload/2026/08/01/20260801000000-2e7e6c90.jpg';

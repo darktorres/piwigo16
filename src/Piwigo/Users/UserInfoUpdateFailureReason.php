@@ -15,8 +15,9 @@ namespace Piwigo\Users;
  * Why UserService::checkAndSaveUserInfos() rejected a
  * UserInfoUpdateInput -- a domain-shaped classification, not a transport
  * status code. Callers translate this to whatever their own transport
- * needs (e.g. the WS layer maps InvalidInput/Forbidden onto its own
- * WsError::InvalidParam/403).
+ * needs (e.g. {@see \Piwigo\Controller\Api\Users\UserUpdateController}/
+ * {@see \Piwigo\Controller\Api\Session\MyInfoUpdateController} map
+ * InvalidInput/Forbidden onto a 422/403 `problem+json` response).
  */
 enum UserInfoUpdateFailureReason
 {

@@ -16,9 +16,8 @@ namespace Piwigo\Users;
  * a failure (a UserInfoUpdateFailureReason plus a human-readable
  * message) or a success (the ids actually updated, the user_infos
  * fields that were changed, and any account-table field changes).
- * Carries no transport-shaped value (no WsError:: reference, no HTTP
- * status) -- a caller's own transport layer maps failureReason onto
- * whatever it needs.
+ * Carries no transport-shaped value (no HTTP status of its own) -- a
+ * caller's own transport layer maps failureReason onto whatever it needs.
  */
 final readonly class UserInfoUpdateResult
 {

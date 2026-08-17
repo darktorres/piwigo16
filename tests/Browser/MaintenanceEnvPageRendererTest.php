@@ -21,9 +21,8 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
         $page->assertSee('MySQL');
         // The plugin list is server-rendered, no AJAX round-trip
         // -- this environment's plugins/ directory has no real plugin
-        // subdirectories (confirmed live, same as WsPluginsTest's own
-        // comment), so the empty-state branch is what a plain page load
-        // exercises here.
+        // subdirectories, so the empty-state branch is what a plain
+        // page load exercises here.
         $page->assertSee('No plugin activated');
         $page->assertNoJavaScriptErrors();
     } finally {
@@ -32,12 +31,9 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
 });
 
 it('server-renders a real active plugin\'s name and badge count in the env tab plugin list', function (): void {
-    // Same throwaway-plugin-directory technique as Contract's
-    // WsPluginsTest::testGetListIncludesARealPluginDirectoryFromDisk(),
-    // plus a `state = 'active'` DB row -- PluginsGetListHandler's fixture
-    // there never installs the plugin, only ever exercising the
-    // 'uninstalled' fallback; this test needs the 'active' branch since
-    // that's the only state maintenance_env.latte's fragment ever renders.
+    // Throwaway-plugin-directory technique, plus a `state = 'active'` DB
+    // row -- this test needs the 'active' branch since that's the only
+    // state maintenance_env.latte's fragment ever renders.
     $pluginId = 'ct_fake_plugin_' . uniqid();
     $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
     mkdir($dir, 0775, true);

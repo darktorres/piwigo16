@@ -104,3 +104,66 @@ test('every reference-shaped column is either foreign-keyed or on the exception 
     expect($unconstrained)
         ->toBe([]);
 });
+
+/**
+ * Closes the other half of the same gap: a foreign key can exist and
+ * still leave its referencing column unindexed. InnoDB indexes every
+ * foreign key automatically; PostgreSQL does not, so this only ever
+ * catches something real on that provider -- `db-multi-provider` runs
+ * this file on all three, which is what makes it worth asserting
+ * unconditionally rather than gating it on the connected platform.
+ *
+ * An FK is covered when some index's own column list, truncated to the
+ * FK's column count, equals the FK's columns in order -- this handles a
+ * composite primary key covering a single-column FK by construction
+ * (`image_category`'s PK `(image_id, category_id)` covers `image_id` as
+ * a leading-column match, no separate index needed; `favorites`' PK
+ * `(user_id, image_id)` does not cover `image_id`, which correctly still
+ * needs -- and has -- its own index, `fk_favorites_image_id`). No
+ * composite FKs exist anywhere in this schema (every `FOREIGN KEY (...)`
+ * names exactly one column), so every real case here reduces to a
+ * single-column comparison, but the general form costs nothing extra.
+ */
+test('every foreign key\'s referencing column is indexed', function (): void {
+    $schema = DbConnection::build()
+        ->createSchemaManager()
+        ->introspectSchema();
+
+    $uncovered = [];
+    foreach ($schema->getTables() as $table) {
+        $tableName = $table->getObjectName()
+            ->toString();
+
+        $indexColumnLists = [];
+        foreach ($table->getIndexes() as $index) {
+            $indexColumnLists[] = array_map(
+                static fn ($indexedColumn): string => $indexedColumn->getColumnName()
+                    ->toString(),
+                $index->getIndexedColumns(),
+            );
+        }
+
+        foreach ($table->getForeignKeys() as $foreignKey) {
+            $fkColumns = array_map(
+                static fn ($columnName): string => $columnName->toString(),
+                $foreignKey->getReferencingColumnNames(),
+            );
+
+            $covered = false;
+            foreach ($indexColumnLists as $indexColumns) {
+                if (array_slice($indexColumns, 0, count($fkColumns)) === $fkColumns) {
+                    $covered = true;
+
+                    break;
+                }
+            }
+
+            if (! $covered) {
+                $uncovered[] = $tableName . '.' . implode(',', $fkColumns);
+            }
+        }
+    }
+
+    expect($uncovered)
+        ->toBe([]);
+});

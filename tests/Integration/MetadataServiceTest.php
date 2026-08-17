@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Error;
     use Imagick;
     use LogicException;
     use Override;

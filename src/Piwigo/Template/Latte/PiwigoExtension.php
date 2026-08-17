@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Template\Latte;
 
-use Latte\Compiler\Nodes\Php;
+use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
+use Latte\Compiler\Nodes\Php\FilterNode;
+use Latte\Compiler\Nodes\Php\IdentifierNode;
 use Latte\Compiler\Nodes\PrintNode;
 use Latte\Compiler\Tag;
+use Latte\Compiler\TemplateParser;
+use Latte\Compiler\Token;
 use Latte\Extension;
 use Latte\Runtime\Html;
 use Override;
@@ -128,7 +132,7 @@ final class PiwigoExtension extends Extension
     }
 
     /**
-     * @return array<string, callable(Tag, \Latte\Compiler\TemplateParser): PrintNode>
+     * @return array<string, callable(Tag, TemplateParser):PrintNode>
      */
     #[Override]
     public function getTags(): array
@@ -158,15 +162,15 @@ final class PiwigoExtension extends Extension
         $tag->expectArguments();
         $node = new PrintNode();
         $node->expression = $tag->parser->parseUnquotedStringOrExpression();
-        $args = new Php\Expression\ArrayNode();
-        if ($tag->parser->stream->tryConsume(',') !== null) {
+        $args = new ArrayNode();
+        if ($tag->parser->stream->tryConsume(',') instanceof Token) {
             $args = $tag->parser->parseArguments();
         }
 
         $node->modifier = $tag->parser->parseModifier();
-        $node->modifier->escape = $node->modifier->removeFilter('noescape') === null;
+        $node->modifier->escape = ! $node->modifier->removeFilter('noescape') instanceof FilterNode;
 
-        array_unshift($node->modifier->filters, new Php\FilterNode(new Php\IdentifierNode('translate'), $args->toArguments()));
+        array_unshift($node->modifier->filters, new FilterNode(new IdentifierNode('translate'), $args->toArguments()));
 
         return $node;
     }

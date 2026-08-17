@@ -169,7 +169,7 @@ final class LoadedPluginsMiddlewareTest extends IntegrationTestCase
         $loadedPluginsMiddleware = Kernel::container()->get(LoadedPluginsMiddleware::class);
         self::assertInstanceOf(LoadedPluginsMiddleware::class, $loadedPluginsMiddleware);
 
-        $pluginBootstrap->process(new ServerRequest('GET', '/'), new class($loadedPluginsMiddleware) implements RequestHandlerInterface {
+        $pluginBootstrap->process(new ServerRequest('GET', '/'), new readonly class($loadedPluginsMiddleware) implements RequestHandlerInterface {
             public function __construct(
                 private LoadedPluginsMiddleware $loadedPluginsMiddleware,
             ) {}

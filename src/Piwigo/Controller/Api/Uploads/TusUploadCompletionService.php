@@ -13,6 +13,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\Projection\Image;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 
@@ -80,7 +81,7 @@ final readonly class TusUploadCompletionService
 
         $formatOfId = ImageId::tryFrom($session->formatOf ?? 0);
         $imageRow = $formatOfId instanceof ImageId ? $this->imageRepository->findById($formatOfId) : null;
-        if ($imageRow === null) {
+        if (! $imageRow instanceof Image) {
             return ResponseFactory::problem('Not Found', 404, 'formatOf image not found.');
         }
 

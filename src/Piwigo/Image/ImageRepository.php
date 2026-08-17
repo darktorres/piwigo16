@@ -8,10 +8,10 @@ use DateTimeInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use LogicException;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -224,7 +224,7 @@ final class ImageRepository extends EntityRepository
         $em->persist($entity);
         $em->flush();
 
-        assert($entity->formatId !== null);
+        assert($entity->formatId instanceof FormatId);
 
         return $entity->formatId->value;
     }
@@ -1326,7 +1326,7 @@ final class ImageRepository extends EntityRepository
      * docblock). Each entry is independently optional (null = no
      * restriction on that dimension).
      */
-    private static function applyImageFilterCriteria(\Doctrine\ORM\QueryBuilder $qb, ImageFilterCriteria $criteria, string $alias): void
+    private static function applyImageFilterCriteria(QueryBuilder $qb, ImageFilterCriteria $criteria, string $alias): void
     {
         if ($criteria->minRate !== null) {
             $qb->andWhere($alias . '.ratingScore >= :filterMinRate')

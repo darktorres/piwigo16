@@ -271,13 +271,13 @@ final readonly class PictureModifyPageRenderer
         }
 
         $post_name = $pictureModifyRequest->nameField;
-        $name_value = $post_name !== null ? $post_name : (is_string($row['name'] ?? null) ? $row['name'] : '');
+        $name_value = $post_name ?? (is_string($row['name'] ?? null) ? $row['name'] : '');
 
         $post_author = $pictureModifyRequest->authorField;
-        $author_value = $post_author !== null ? $post_author : (is_string($row['author'] ?? null) && $row['author'] !== '' ? $row['author'] : '');
+        $author_value = $post_author ?? (is_string($row['author'] ?? null) && $row['author'] !== '' ? $row['author'] : '');
 
         $post_comment = $pictureModifyRequest->commentField;
-        $comment_value = $post_comment !== null ? $post_comment : (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
+        $comment_value = $post_comment ?? (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
 
         $u_download = 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken();
         $u_sync = $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . $this->csrfService->getToken();

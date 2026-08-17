@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
-use Error;
 use Exception;
 use LogicException;
 use Piwigo\Config\CurrentConfig;

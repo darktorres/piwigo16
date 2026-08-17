@@ -6,7 +6,6 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 
 // Guards the property contract on Piwigo\Config\CurrentConfig: every
 // config-value property is publicly readable, write access matches an

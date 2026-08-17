@@ -169,7 +169,7 @@ final class RequestPipeline
         $container = Kernel::container();
 
         $sentinel = ResponseFactory::text('', 204);
-        $completedNormally = new class($sentinel) implements RequestHandlerInterface {
+        $completedNormally = new readonly class($sentinel) implements RequestHandlerInterface {
             public function __construct(
                 private ResponseInterface $sentinel,
             ) {}

@@ -7,7 +7,6 @@ namespace Piwigo\Activity;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Activity\Projection\ActionCount;
 use Piwigo\Activity\Projection\CoreUpdateHistoryRow;

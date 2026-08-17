@@ -120,7 +120,7 @@ final readonly class AuditService
     ): string {
         $payload = implode('|', [
             $prevHash ?? '',
-            $actorId !== null ? (string) $actorId : '',
+            $actorId instanceof UserId ? (string) $actorId : '',
             $action,
             $entityType,
             $entityId !== null ? (string) $entityId : '',

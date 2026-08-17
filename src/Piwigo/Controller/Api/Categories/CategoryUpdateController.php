@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Http\AdminGuard;
@@ -53,7 +54,7 @@ final readonly class CategoryUpdateController implements ControllerInterface
         $categoryId = is_string($rawId) ? (int) $rawId : 0;
 
         $category = $this->categoryRepository->findById($categoryId);
-        if ($category === null) {
+        if (! $category instanceof Category) {
             return ResponseFactory::problem('Not Found', 404, 'This album does not exist.');
         }
 
@@ -102,7 +103,7 @@ final readonly class CategoryUpdateController implements ControllerInterface
         ]);
 
         $updated = $this->categoryRepository->findById($categoryId);
-        assert($updated !== null);
+        assert($updated instanceof Category);
 
         return ResponseFactory::json(CategoryPresenter::toArray($updated));
     }

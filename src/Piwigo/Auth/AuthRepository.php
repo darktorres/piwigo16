@@ -11,6 +11,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Auth\Projection\UsernamePassword;
+use Piwigo\Common\ValueObject\AuthKeyId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -237,7 +238,7 @@ final readonly class AuthRepository
         $this->em->persist($entity);
         $this->em->flush();
 
-        assert($entity->authKeyId !== null);
+        assert($entity->authKeyId instanceof AuthKeyId);
 
         return (string) $entity->authKeyId;
     }

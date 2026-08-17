@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
-use Error;
 use FilesystemIterator;
 use LogicException;
 use Piwigo\Category\Event\RenderCategoryLiteralDescription;
-use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -21,7 +20,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\Event\RenderCommentContent;
 use Piwigo\Html\Event\RenderElementDescription;
-use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
@@ -612,7 +610,7 @@ test('setStatusHeader sends the well-known reason phrase for a known code', func
 
     // real assertion is the absence of a fatal/warning; header() is a
     // no-op under CLI SAPI
-    expect(static fn () => $service->setStatusHeader(404))
+    expect(static fn (): HttpStatusLine => $service->setStatusHeader(404))
         ->not->toThrow(Throwable::class);
 });
 

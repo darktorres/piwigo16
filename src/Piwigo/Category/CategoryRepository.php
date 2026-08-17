@@ -7,9 +7,9 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\Projection\ActivePermalinkRow;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Category\Projection\CategoryAdminListForWsRow;
@@ -1016,7 +1016,7 @@ final readonly class CategoryRepository
      *
      * @param 'all'|int|string|array<int|string> $ids
      */
-    private static function restrictToCategoryIds(\Doctrine\ORM\QueryBuilder $qb, array|int|string $ids): bool
+    private static function restrictToCategoryIds(QueryBuilder $qb, array|int|string $ids): bool
     {
         if ($ids === 'all') {
             return true;

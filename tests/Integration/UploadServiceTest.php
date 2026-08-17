@@ -31,7 +31,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageService;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;

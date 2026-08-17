@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
-    use Error;
     use Exception;
     use LogicException;
     use Override;

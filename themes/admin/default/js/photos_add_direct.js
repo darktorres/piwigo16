@@ -550,21 +550,18 @@ function hide_first_album(cat_name) {
 function add_first_album(add_cat) {
   const params = {
     name: inputFirstAlbum.val().toString(),
-    pwg_token
   }
 
   $.ajax({
-    url: 'ws.php?format=json&method=pwg.categories.add',
+    url: 'api/v1/categories',
     method: 'POST',
+    contentType: 'application/json',
+    headers: {'X-CSRF-Token': pwg_token},
     dataType: 'json',
-    data: params,
+    data: JSON.stringify(params),
     success: function (res) {
-      if (res.stat === 'ok') {
-        add_cat(res.result.id);
-        hide_first_album(params.name);
-      } else {
-        console.error('An error has occurred');  
-      }
+      add_cat(res.id);
+      hide_first_album(params.name);
     },
     error: function() {
       console.error('An error has occurred');

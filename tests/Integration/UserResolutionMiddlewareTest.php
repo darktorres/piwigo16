@@ -29,7 +29,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * the last block of `Bootstrap\RequestBootstrap::connect()` (workstream
  * C3 Phase 1) -- the `AuthListener` handler registration + `UserBootstrap::
  * initialize()` call. `UserBootstrap::initialize()`'s own branches
- * (Apache-authentication, authKeyLogin(), the WS uploadAsync paths) are
+ * (Apache-authentication, authKeyLogin()) are
  * already exhaustively covered by `UserBootstrapTest.php`, which
  * registers an equivalent `AuthListener` handler by hand since it never
  * boots a real middleware -- this file's own job is narrower and does

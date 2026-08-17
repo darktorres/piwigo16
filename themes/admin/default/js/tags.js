@@ -178,33 +178,37 @@ $('#add-tag .icon-validate').on('click', function () {
 function addTag(name) {
   return new Promise((resolve, reject) => {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.tags.add",
+      url: "api/v1/tags",
       type: "POST",
-      data: {
-        name: name
+      contentType: "application/json",
+      headers: {
+        'X-CSRF-Token': pwg_token
       },
+      data: JSON.stringify({
+        name: name
+      }),
       dataType: "json",
       success: function (data) {
-        if (data.stat === "ok") {
-          newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
-          $('.tag-container').prepend(newTag);
-          setupTagbox(newTag);
-          updateSearchInfo();
+        newTag = createTagBox(data.id, data.name, data.urlName, 0);
+        $('.tag-container').prepend(newTag);
+        setupTagbox(newTag);
+        updateSearchInfo();
 
-          //Update the data
-          dataTags.unshift({
-            name:data.result.name,
-            raw_name:data.result.name,
-            id:data.result.id,
-            url_name:data.result.url_name
-          });
-          updateBadge();
-          resolve();
-        } else {
-          reject(str_already_exist.replace('%s', name));
-        }
+        //Update the data
+        dataTags.unshift({
+          name:data.name,
+          raw_name:data.name,
+          id:data.id,
+          url_name:data.urlName
+        });
+        updateBadge();
+        resolve();
       },
       error : function (err) {
+        if (err.status === 422) {
+          reject(str_already_exist.replace('%s', name));
+          return;
+        }
         reject(err);
       }
     })
@@ -281,7 +285,7 @@ function setupTagbox(tagBox) {
   //Duplicate Tag
   tagBox.find('.dropdown-option.duplicate').on('click', function () {
     duplicateTag(tagBox.data('id'), tagBox.find('.tag-name').data('rawname')).then((data) => {
-      showMessage(str_tag_created.replace('%s',data.result.name))
+      showMessage(str_tag_created.replace('%s',data.name))
     })
   })
 
@@ -313,25 +317,23 @@ function removeTag(id, name) {
       title : str_tag_deleted.replace("%s",name),
       content: function() {
       return jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.tags.delete",
-        type: "POST",
-        data: {
-          tag_id: id,
-          pwg_token: pwg_token
+        url: "api/v1/tags/" + id,
+        type: "DELETE",
+        headers: {
+          'X-CSRF-Token': pwg_token
         },
         dataType: "json",
         success: function (data) {
-          if (data.stat === "ok") {
-            $('.tag-box[data-id='+id+']').remove();
-            //Update data
-            dataTags = dataTags.filter((tag) => tag.id != id);
-            showMessage(str_tag_deleted.replace('%s', name));
-            updateBadge();
-            updateSearchInfo();
-            updatePaginationMenu();
-          } else {
-            showError('A problem has occured')
-          }
+          $('.tag-box[data-id='+id+']').remove();
+          //Update data
+          dataTags = dataTags.filter((tag) => tag.id != id);
+          showMessage(str_tag_deleted.replace('%s', name));
+          updateBadge();
+          updateSearchInfo();
+          updatePaginationMenu();
+        },
+        error: function () {
+          showError('A problem has occured')
         }
       })
     },
@@ -342,34 +344,36 @@ function removeTag(id, name) {
 function renameTag(id, new_name) {
   return new Promise((resolve, reject) => {
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.tags.rename",
-      type: "POST",
-      data: {
-        tag_id: id,
-        new_name: new_name,
-        pwg_token: pwg_token
+      url: "api/v1/tags/" + id,
+      type: "PATCH",
+      contentType: "application/json",
+      headers: {
+        'X-CSRF-Token': pwg_token
       },
+      data: JSON.stringify({
+        name: new_name
+      }),
       dataType: "json",
       success: function (data) {
-        if (data.stat === "ok") {
-          $('.tag-box[data-id='+id+'] p, .tag-box[data-id='+id+'] .tag-dropdown-header b').html(data.result.name);
-          $('.tag-box[data-id='+id+'] .tag-name-editable').attr('value', data.result.name);
-          $('.tag-box[data-id='+id+'] .tag-name').attr('data-rawname', data.result.raw_name);
-          let u_view = 'index.php?/tags/'+id+'-'+data.result.url_name;
-          $('.dropdown-option.view').attr('href', u_view);
+        $('.tag-box[data-id='+id+'] p, .tag-box[data-id='+id+'] .tag-dropdown-header b').html(data.name);
+        $('.tag-box[data-id='+id+'] .tag-name-editable').attr('value', data.name);
+        $('.tag-box[data-id='+id+'] .tag-name').attr('data-rawname', data.nameRaw);
+        let u_view = 'index.php?/tags/'+id+'-'+data.urlName;
+        $('.dropdown-option.view').attr('href', u_view);
 
-          //Update the data
-          index = dataTags.findIndex((tag) => tag.id == id);
-          dataTags[index].name = data.result.name;
-          dataTags[index].raw_name = data.result.raw_name;
-          dataTags[index].url_name = data.result.url_name;
+        //Update the data
+        index = dataTags.findIndex((tag) => tag.id == id);
+        dataTags[index].name = data.name;
+        dataTags[index].raw_name = data.nameRaw;
+        dataTags[index].url_name = data.urlName;
 
-          resolve(data);
-        } else {
-          reject(str_already_exist.replace('%s', new_name))
-        }
+        resolve(data);
       },
-      error:function(XMLHttpRequest) {
+      error: function (XMLHttpRequest) {
+        if (XMLHttpRequest.status === 422) {
+          reject(str_already_exist.replace('%s', new_name));
+          return;
+        }
         reject(XMLHttpRequest.statusText);
       }
     })
@@ -396,32 +400,32 @@ function duplicateTag(id, name) {
     }
 
     jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.tags.duplicate",
+      url: "api/v1/tags/" + id + "/actions/duplicate",
       type: "POST",
-      data: {
-        tag_id : id,
-        copy_name: copy_name,
-        pwg_token: pwg_token
+      contentType: "application/json",
+      headers: {
+        'X-CSRF-Token': pwg_token
       },
+      data: JSON.stringify({
+        name: copy_name
+      }),
       dataType: "json",
       success: function (data) {
-        if (data.stat === "ok") {
-          newTag = createTagBox(data.result.id, data.result.name, data.result.url_name, data.result.count);
-          newTag.insertAfter($('.tag-box[data-id='+id+']'));
-          setupTagbox(newTag);
+        newTag = createTagBox(data.id, data.name, data.urlName, data.count);
+        newTag.insertAfter($('.tag-box[data-id='+id+']'));
+        setupTagbox(newTag);
 
-          //Update Data
-          index = dataTags.findIndex((tag) => tag.id == id);
-          dataTags.splice(index+1, 0, {
-            name: data.result.name,
-            id: data.result.id,
-            url_name: data.result.url_name,
-            counter : data.result.count
-          });
-          updateBadge();
-          updateSearchInfo();
-          resolve(data);
-        }
+        //Update Data
+        index = dataTags.findIndex((tag) => tag.id == id);
+        dataTags.splice(index+1, 0, {
+          name: data.name,
+          id: data.id,
+          url_name: data.urlName,
+          counter : data.count
+        });
+        updateBadge();
+        updateSearchInfo();
+        resolve(data);
       },
       error:function(XMLHttpRequest) {
         reject(XMLHttpRequest.statusText);
@@ -691,35 +695,30 @@ function removeSelectedTags() {
   $.alert({
     title : str_tags_deleted.replace("%s",tagListToString(names)),
     content: function() {
-      return jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.tags.delete",
-        type: "POST",
-        data: {
-          'pwg_token': pwg_token,
-          'tag_id': selected
-        },
-        dataType: "json",
-        success: function (data) {
-          if (data.stat === 'ok') {
-            selected.forEach(function(id) {
-              $('.tag-box[data-id='+id+']').remove();
-            })
+      // No bulk-delete endpoint (a REST single-resource DELETE per tag,
+      // per P27's own design) -- fire one DELETE per selected tag.
+      return Promise.all(selected.map(function(id) {
+        return jQuery.ajax({
+          url: "api/v1/tags/" + id,
+          type: "DELETE",
+          headers: {
+            'X-CSRF-Token': pwg_token
+          },
+          dataType: "json"
+        });
+      })).then(function () {
+        selected.forEach(function(id) {
+          $('.tag-box[data-id='+id+']').remove();
+        })
 
-            // Update Data
-            dataTags = dataTags.filter((tag) => !selected.includes(tag.id))
+        // Update Data
+        dataTags = dataTags.filter((tag) => !selected.includes(tag.id))
 
-            clearSelection();
-            updatePaginationMenu();
-            updateBadge();
-            updateSearchInfo();
-          } else {
-            return data;
-          }
-        },
-        error: function(message) {
-          return message;
-        }
-      })
+        clearSelection();
+        updatePaginationMenu();
+        updateBadge();
+        updateSearchInfo();
+      });
     },
     ...jConfirm_alert_options
   });
@@ -748,42 +747,41 @@ function mergeGroups(destination_id, merge_ids) {
     title : str_message,
     content: function() {
       return jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.tags.merge",
+        url: "api/v1/tags/actions/merge",
         type: "POST",
-        data: {
-          'pwg_token': pwg_token,
-          'destination_tag_id': destination_id,
-          'merge_tag_id': merge_ids
+        contentType: "application/json",
+        headers: {
+          'X-CSRF-Token': pwg_token
         },
+        data: JSON.stringify({
+          'destinationTagId': Number(destination_id),
+          'mergeTagIds': merge_ids
+        }),
         dataType: "json",
         success: function (data) {
-          if (data.stat === "ok") {
-            data.result.deleted_tag.forEach((id) => {
-              if (data.result.destination_tag != id) {
-                $('.tag-box[data-id='+id+']').remove();
-                // Update data
-                dataTags = dataTags.filter((tag) => id != tag.id);
-              }
-            })
-            if (data.result.images_in_merged_tag.length > 0) {
-              tagBox = $('.tag-box[data-id='+data.result.destination_tag+']')
-              tagBox.find('.dropdown-option.view,'+ 
-              '.dropdown-option.manage,'+
-              '.tag-dropdown-header i').show();
-              $('.tag-dropdown-header i').html(str_number_photos.replace('%d', data.result.images_in_merged_tag.length));
-
+          data.deletedTagIds.forEach((id) => {
+            if (data.destinationTagId != id) {
+              $('.tag-box[data-id='+id+']').remove();
               // Update data
-              index = dataTags.findIndex((tag) => tag.id == data.result.destination_tag);
-              dataTags[index].counter = data.result.images_in_merged_tag.length;
+              dataTags = dataTags.filter((tag) => id != tag.id);
             }
-            $(".tag-box").attr("data-selected", '0');
-            clearSelection();
-            updatePaginationMenu();
-            updateBadge()
-            updateSearchInfo()
-          } else {
-            return raw_data;
+          })
+          if (data.imagesInMergedTag.length > 0) {
+            tagBox = $('.tag-box[data-id='+data.destinationTagId+']')
+            tagBox.find('.dropdown-option.view,'+
+            '.dropdown-option.manage,'+
+            '.tag-dropdown-header i').show();
+            $('.tag-dropdown-header i').html(str_number_photos.replace('%d', data.imagesInMergedTag.length));
+
+            // Update data
+            index = dataTags.findIndex((tag) => tag.id == data.destinationTagId);
+            dataTags[index].counter = data.imagesInMergedTag.length;
           }
+          $(".tag-box").attr("data-selected", '0');
+          clearSelection();
+          updatePaginationMenu();
+          updateBadge()
+          updateSearchInfo()
         }
       })
     },

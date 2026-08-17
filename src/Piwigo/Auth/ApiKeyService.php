@@ -66,10 +66,8 @@ final readonly class ApiKeyService
             authKey: $key_id,
             apikeySecret: $key_secret,
             apikeyName: $keyName,
-            userId: $userId,
             createdOn: $createdOn,
             duration: $duration,
-            keyType: 'api_key',
             expiredOn: $expiration,
         );
     }
@@ -115,18 +113,9 @@ final readonly class ApiKeyService
             // created_on/expired_on are real NOT NULL columns -- Projection\
             // ApiKey::fromRow() already guarantees a string, no assert() needed.
             $created_on = $api_key_row->createdOn;
-            $created_on_format = DateHelper::formatDate($created_on, ['day', 'month', 'year']);
-
             $expired_on_raw = $api_key_row->expiredOn;
-            $expired_on_format = DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
-
             $revoked_on = $api_key_row->revokedOn;
-
             $last_used_on = $api_key_row->lastUsedOn;
-            $last_used_on_since =
-              $last_used_on !== null
-              ? DateHelper::timeSince($last_used_on, 'day')
-              : $this->lang->t('Never');
 
             $expired_on = DateHelper::str2DateTime($expired_on_raw);
             $now = DateHelper::str2DateTime($now);
@@ -148,18 +137,6 @@ final readonly class ApiKeyService
                 }
             }
 
-            $expired_on_since = DateHelper::timeSince($expired_on_raw, 'day');
-
-            $revoked_on_since =
-              (bool) $revoked_on
-              ? DateHelper::timeSince($revoked_on, 'day')
-              : null;
-
-            $revoked_on_message =
-              (bool) $revoked_on
-              ? $this->lang->t('This API key was manually revoked on %s', DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
-              : null;
-
             $results[] = new ApiKeySummary(
                 authKey: $api_key_row->authKey,
                 apikeySecret: str_repeat('*', 40),
@@ -169,15 +146,8 @@ final readonly class ApiKeyService
                 expiredOn: $expired_on_raw,
                 revokedOn: $revoked_on,
                 lastUsedOn: $last_used_on,
-                lastNotifiedOn: $api_key_row->lastNotifiedOn,
-                createdOnFormat: $created_on_format,
-                expiredOnFormat: $expired_on_format,
-                lastUsedOnSince: $last_used_on_since,
                 isExpired: $is_expired,
                 expiration: $expiration,
-                expiredOnSince: $expired_on_since,
-                revokedOnSince: $revoked_on_since,
-                revokedOnMessage: $revoked_on_message,
             );
         }
 

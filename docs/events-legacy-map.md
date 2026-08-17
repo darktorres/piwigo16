@@ -62,7 +62,6 @@ migrated handler mutates its event in place.
 | `get_derivative_url` | filter | `Piwigo\Image\Event\GetDerivativeUrl` |
 | `get_element_metadata_available` | filter | `Piwigo\Controller\Event\GetElementMetadataAvailable` |
 | `get_element_url` | filter | `Piwigo\Picture\Event\GetElementUrl` |
-| `get_history` | filter | `Piwigo\Ws\History\Event\GetHistory` |
 | `get_index_derivative_params` | filter | `Piwigo\Image\Event\GetIndexDerivativeParams` |
 | `get_mimetype_location` | filter | `Piwigo\Image\Event\GetMimetypeLocation` |
 | `get_popup_help_content` | filter | `Piwigo\Controller\Event\GetPopupHelpContent` |
@@ -122,7 +121,7 @@ migrated handler mutates its event in place.
 | `loc_index_thumbnails_selection` | filter | `Piwigo\Category\Event\IndexThumbnailsSelected` |
 | `login_failure` | notify | `Piwigo\Auth\Event\LoginFailure` |
 | `login_success` | notify | `Piwigo\Auth\Event\LoginSuccess` |
-| `merge_tags` | notify | `Piwigo\Ws\Tags\Event\MergeTags` |
+| `merge_tags` | notify | `Piwigo\Tag\Event\MergeTags` |
 | `nbm_render_global_customize_mail_content` | notify | `Piwigo\Mail\Event\NbmRenderGlobalCustomizeMailContent` |
 | `nbm_render_user_customize_mail_content` | notify | `Piwigo\Notification\Event\NbmRenderUserCustomizeMailContent` |
 | `perform_batch_manager_prefilters` | filter | `Piwigo\Controller\Admin\Event\PerformBatchManagerPrefilters` |
@@ -151,7 +150,6 @@ migrated handler mutates its event in place.
 | `render_tag_name` | filter | `Piwigo\Tag\Event\RenderTagName` |
 | `render_tag_url` | filter | `Piwigo\Tag\Event\RenderTagUrl` |
 | `save_profile_from_post` | notify | `Piwigo\Controller\Event\SaveProfileFromPost` |
-| `sendResponse` | notify | `Piwigo\Ws\Event\SendResponse` |
 | `tabsheet_before_select` | filter | `Piwigo\Admin\Event\TabsheetBeforeSelect` |
 | `try_log_user` | filter | `Piwigo\Auth\Event\TryLogUser` |
 | `upload_file` | filter | `Piwigo\Admin\Upload\Event\UploadFile` |
@@ -160,9 +158,6 @@ migrated handler mutates its event in place.
 | `user_comment_validation` | notify | `Piwigo\Comment\Event\UserCommentValidation` |
 | `user_init` | notify | `Piwigo\Bootstrap\Event\UserInit` |
 | `user_logout` | notify | `Piwigo\Auth\Event\UserLogout` |
-| `ws_add_methods` | notify | `Piwigo\Ws\Event\WsAddMethods` |
-| `ws_invoke_allowed` | filter | `Piwigo\Ws\Event\WsInvokeAllowed` |
-| `ws_users_getList` | filter | `Piwigo\Ws\Users\Event\WsUsersGetList` |
 
 Two payload notes, both from P32 Stage A5's "6 missing core hooks" pass
 (neither is a straight port — see `we-made-lots-and-recursive-valiant.md`
@@ -197,7 +192,7 @@ from:
 
 | Legacy hook | Why not ported |
 | --- | --- |
-| `user_list_columns` | Filtered a server-rendered admin DataTables column list. The admin user list is WS + client-JS now — `ws_users_getList` (`Piwigo\Ws\Users\Event\WsUsersGetList`) is the real modern equivalent capability. |
+| `user_list_columns` | Filtered a server-rendered admin DataTables column list. The admin user list is `/api/v1/users` + client-JS now (P27) — no server-side row-filtering hook exists in that flow; `ws_users_getList` was the last real equivalent capability and was itself removed along with the WS layer (see "Removed" below). |
 | `after_render_user_list` | Same DataTables mechanism as `user_list_columns`, same reason. |
 | `get_high_url` | A binary "high definition available" toggle with no analogue in this rewrite's derivative/multi-size image system. |
 | `add_elements` | A legacy batch-insert notify (`$inserts`, an array of raw file rows from an old directory-scan flow) with no current counterpart. |
@@ -225,3 +220,12 @@ is in `we-made-lots-and-recursive-valiant.md`; commits
 `qsearch_before_eval` · `set_status_header` · `update_rating_score` ·
 `upload_image_resize` · `upload_thumbnail_resize` ·
 `user_comment_deletion` · `user_login` · `ws_images_uploadCompleted`
+
+5 more were removed separately, when the WS layer itself was deleted
+outright (P27, not the P32 catalogue pass above): their dispatch sites
+were WS-protocol-internal code (response serialization, method
+registration, invoke-authorization, and 2 admin-page listing filters)
+with no REST equivalent concept, not events that migrated elsewhere.
+
+`get_history` · `sendResponse` · `ws_add_methods` · `ws_invoke_allowed` ·
+`ws_users_getList`

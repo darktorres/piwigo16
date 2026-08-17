@@ -198,18 +198,11 @@ it('deletes a virtual child album and redirects back to its own parent_id listin
             'login' => 'Login',
         ]);
 
-        $statusResponse = $curl(H::baseUrl() . '/ws.php?format=json', [
-            'method' => 'pwg.session.getStatus',
-        ]);
-        // CURLOPT_HEADER=true prefixes the body with response headers;
-        // isolate the JSON payload after the blank-line separator.
-        $statusParts = explode("\r\n\r\n", $statusResponse);
-        $jsonPart = end($statusParts);
-        $decoded = json_decode($jsonPart, true);
-        $resultData = is_array($decoded) ? ($decoded['result'] ?? null) : null;
-        $token = is_array($resultData) && is_string($resultData['pwg_token'] ?? null) ? $resultData['pwg_token'] : null;
+        $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+        $decoded = json_decode($statusBody, true);
+        $token = is_array($decoded) && is_string($decoded['pwgToken'] ?? null) ? $decoded['pwgToken'] : null;
         if ($token === null) {
-            throw new RuntimeException('Could not obtain a real pwg_token via curl session: ' . $statusResponse);
+            throw new RuntimeException('Could not obtain a real pwgToken via curl session: ' . $statusBody);
         }
 
         $deleteResponse = $curl(H::baseUrl() . '/admin.php?page=cat_list&delete=' . $childId . '&parent_id=' . $parentId . '&pwg_token=' . $token);

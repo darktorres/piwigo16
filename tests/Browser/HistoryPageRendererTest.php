@@ -6,10 +6,16 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Piwigo\Admin\HistoryPageRenderer (admin.php?page=history) -- renders the
- * filter FORM only; the actual history line listing is fetched
- * client-side via ws.php?method=pwg.history.search (out of this class's
- * scope, see its own docblock). This suite covers the form's own
- * filter-echo/default-date/valid-vs-invalid-user_id branches.
+ * filter FORM only; the actual history line listing was fetched
+ * client-side via `pwg.history.search` (out of this class's scope, see its
+ * own docblock) -- P27 deliberately never ported that WS method (its own
+ * handler builds admin-page HTML strings/ALL_CAPS Latte-template keys and
+ * writes a display cookie, needing a dedicated redesign rather than a
+ * mechanical port), so `history.js`'s own AJAX call to it now 404s since
+ * the WS layer itself was deleted; the redesign is still open, tracked in
+ * the plan file, not silently fixed here. This suite covers only the
+ * form's own filter-echo/default-date/valid-vs-invalid-user_id branches,
+ * unaffected either way.
  */
 it('renders with today\'s date pre-filled and no filter applied', function (): void {
     $page = H::loginAsAdmin($this);

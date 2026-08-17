@@ -25,7 +25,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Ws\ImageUrlBuilder;
+use Piwigo\Image\ImageUrlBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

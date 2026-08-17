@@ -62,16 +62,3 @@ test('fromRow defaults name/lastmodified to empty string and nb_users to 0 when 
         ->and($group->nbUsers)
         ->toBe(0);
 });
-
-test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
-    $roundTripped = GroupListing::fromRow(fullGroupListingRow())->toArray();
-
-    expect($roundTripped)
-        ->toBe([
-            'id' => 2,
-            'name' => 'Editors',
-            'is_default' => true,
-            'lastmodified' => '2026-08-01 12:00:00',
-            'nb_users' => 5,
-        ]);
-});

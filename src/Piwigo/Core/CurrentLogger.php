@@ -17,9 +17,9 @@ use LogicException;
  * no-RequestBootstrap path, which needs a Logger before render() runs).
  *
  * A container-shared instance: every real reader takes it via
- * constructor injection, including
- * `Piwigo\Ws\Users`/`Piwigo\Ws\Images` (`$this->currentLogger->get()`)
- * and `Piwigo\Core\UniqueExecLock` (a real `Logger` parameter). The
+ * constructor injection, including `Controller\Api\Session\
+ * ApiKeyCreateController` (`$this->currentLogger->get()`) and
+ * `Piwigo\Core\UniqueExecLock` (a real `Logger` parameter). The
  * exception is `Piwigo\Admin\Upload\UploadService`, whose static event
  * handlers can't take constructor injection and instead resolve a
  * `Logger` through their own private static resolver

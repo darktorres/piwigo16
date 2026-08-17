@@ -133,7 +133,7 @@ function feedUserFeedRow(string $feedId): ?array
 }
 
 /**
- * Logs into a real curl cookie jar (ws.php pwg.session.login), mirroring
+ * Logs into a real curl cookie jar (POST /api/v1/session), mirroring
  * BrowserTestHelpers::uploadPhotoViaApi()'s own cookie-jar-login shape --
  * needed here for a real, non-guest *session* (rather than an
  * un-authenticated plain curl GET, which is already indistinguishable
@@ -149,22 +149,10 @@ function feedAdminCookieJar(): string
         throw new RuntimeException('tempnam failed');
     }
 
-    $ch = curl_init(H::baseUrl() . '/ws.php?format=json');
-    if ($ch === false) {
-        throw new RuntimeException('curl_init failed');
-    }
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, [
-        'method' => 'pwg.session.login',
+    H::curlApi($cookieJar, 'POST', '/api/v1/session', [
         'username' => H::ADMIN_USER,
         'password' => H::ADMIN_PASS,
     ]);
-    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
-    curl_exec($ch);
-    unset($ch);
 
     return $cookieJar;
 }
@@ -346,9 +334,9 @@ it('switches the current user to a personal feed\'s real owner when fetched anon
  * "well-formed RSS2 feed" test above already exercises the `$feed_id ===
  * ''` path, but via a genuinely anonymous curl GET (no cookie jar) --
  * already-guest, so `! isAGuest()` is false there and this identity-reset
- * never actually runs. A real logged-in cookie jar (ws.php
- * pwg.session.login) hitting bare feed.php (no `feed` param) is the only
- * way to make `! isAGuest()` true going into this branch.
+ * never actually runs. A real logged-in cookie jar (`POST /api/v1/session`)
+ * hitting bare feed.php (no `feed` param) is the only way to make
+ * `! isAGuest()` true going into this branch.
  */
 it('resets an authenticated session back to guest identity for the generic (tokenless) feed', function (): void {
     $cookieJar = feedAdminCookieJar();

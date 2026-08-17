@@ -31,9 +31,10 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Piwigo\Admin\HistoryPageRenderer -- zero-constructor, method-param-
- * injected (B3 Tier 1 shape). No dedicated Integration/Browser spec --
- * reached only via the "history" page slug (the real filtered line
- * listing is a client-side ws.php async call this class never touches).
+ * injected (B3 Tier 1 shape). Reached only via the "history" page slug
+ * (the real filtered line listing is a client-side `pwg.history.search`
+ * AJAX call this class never touches -- currently broken, see
+ * tests/Browser/HistoryPageRendererTest.php's own docblock).
  *
  * Only the default (no ?filter_user_id) happy path is covered -- a real
  * $_GET['filter_user_id'] additionally needs a matching real

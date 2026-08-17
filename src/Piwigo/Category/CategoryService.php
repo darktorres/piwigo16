@@ -2379,14 +2379,6 @@ final readonly class CategoryService
     }
 
     /**
-     * @return ?array{id: int, name: string, permalink: ?string}
-     */
-    public function getIdNamePermalinkById(int $id): ?array
-    {
-        return $this->repo->findIdNamePermalinkById($id)?->toArray();
-    }
-
-    /**
      * @param  list<SqlCondition>  $conditions
      * @return list<CategoryIdImageOrder>
      */

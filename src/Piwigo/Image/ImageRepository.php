@@ -40,7 +40,6 @@ use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Image\Projection\PathRepresentativeExtLevel;
-use Piwigo\Image\Projection\UploadInfo;
 use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
@@ -1051,39 +1050,6 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * path/file/md5sum/width/height/filesize for $imageId -- Ws\Images::
-     * addFile()'s own "what's the current state of this image, before we
-     * merge in a bigger chunked upload" lookup.
-     *
-     * setMaxResults(1) is paired with getOneOrNullResult() even though the
-     * WHERE is on the primary key -- getOneOrNullResult() throws if more
-     * than one row matches.
-     */
-    public function findUploadInfoById(ImageId $imageId): ?UploadInfo
-    {
-        $row = $this->createQueryBuilder('i')
-            ->select('i.path', 'i.file', 'i.md5sum', 'i.width', 'i.height', 'i.filesize')
-            ->where('i.id = :imageId')
-            ->setParameter('imageId', $imageId)
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
-
-        if (! is_array($row)) {
-            return null;
-        }
-
-        return new UploadInfo(
-            path: is_string($row['path']) ? $row['path'] : '',
-            file: is_string($row['file']) ? $row['file'] : '',
-            md5sum: ($row['md5sum'] ?? null) instanceof Md5Sum ? $row['md5sum']->value : (is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null),
-            width: is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
-            height: is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
-            filesize: is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
-        );
-    }
-
-    /**
      * Whether at least one image has $value in $column -- Ws\Images::
      * add()'s own upload-time uniqueness check ($column is one of
      * `md5sum`/`file`, selected from CurrentConfig::uniquenessMode(),
@@ -1355,8 +1321,8 @@ final class ImageRepository extends EntityRepository
     /**
      * Applies an {@see ImageFilterCriteria}'s own up-to-11 range
      * predicates as `andWhere()`s against $alias's own columns -- shared by
-     * every DQL-based consumer of the shared f_* WS filter set (see
-     * {@see \Piwigo\Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()}'s own
+     * every DQL-based consumer of the shared f_* filter set (see
+     * {@see ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()}'s own
      * docblock). Each entry is independently optional (null = no
      * restriction on that dimension).
      */
@@ -2494,13 +2460,13 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Every column of $imageId's own row, if it satisfies $criteria --
-     * Ws\Images\GetInfoHandler's own image lookup. Both
-     * $criteria->visibleImageIds and $criteria->maxLevel apply here (not
-     * visibleImageIds alone).
+     * {@see \Piwigo\Controller\Api\Images\ImageGetController}'s own image
+     * lookup. Both $criteria->visibleImageIds and $criteria->maxLevel apply
+     * here (not visibleImageIds alone).
      *
      * Stays on DBAL -- the blocker is `SELECT *` itself: this row is
-     * {@see \Piwigo\Ws\Images\GetInfoHandler}'s own public WS response
-     * shape, read/re-emitted with its raw snake_case column names
+     * that controller's own public JSON response shape, read/re-emitted
+     * with its raw snake_case column names
      * (`$image_row['rating_score']`, etc.) as real external API contract.
      * DQL always hydrates through the entity's own (camelCase) property
      * names, never the raw column name -- reproducing the exact original
@@ -2536,12 +2502,13 @@ final class ImageRepository extends EntityRepository
     /**
      * Categories $imageId belongs to that satisfy $criteria, with each
      * category's own display-relevant columns (including `commentable`,
-     * unlike findVisibleCategoriesForImage() below) -- Ws\Images\
-     * GetInfoHandler's own "related categories" block.
+     * unlike findVisibleCategoriesForImage() below) --
+     * {@see \Piwigo\Controller\Api\Images\ImageGetController}'s own
+     * "related categories" block.
      *
      * `commentable` hydrates as a real `bool` -- safe because the one
-     * real caller ({@see \Piwigo\Ws\Images\GetInfoHandler}) already
-     * `(bool)`-casts it and `unset()`s the key immediately after, before
+     * real caller ({@see \Piwigo\Controller\Api\Images\ImageGetController})
+     * already `(bool)`-casts it and `unset()`s the key immediately after, before
      * the row ever reaches its own JSON response. `c.id`/`c.permalink`
      * are custom-Typed (`category_id`/`permalink`), so `getArrayResult()`
      * (Gotcha #1) returns real VO instances for them, unwrapped below.

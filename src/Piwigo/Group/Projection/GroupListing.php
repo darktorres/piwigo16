@@ -11,13 +11,6 @@ use Piwigo\Common\ValueObject\GroupId;
  * own `g.*` + `COUNT(...) AS nb_users` raw-DBAL row -- distinct from the
  * sibling {@see Group} Projection, which only covers `findAllBasic()`'s
  * narrower `id`/`name`/`is_default` selection.
- *
- * `toArray()` preserves the exact snake_case shape
- * {@see \Piwigo\Ws\Groups\GetListHandler}'s own JSON/XML response already
- * commits to (`tests/Contract/schemas/pwg.groups.getList.json` requires
- * `is_default`/`nb_users` literally) -- the WS call site converts back to
- * an array via `toArray()` before handing rows to `NamedArray`, same
- * boundary-unwrap convention every other Projection in this codebase uses.
  */
 final readonly class GroupListing
 {
@@ -41,19 +34,5 @@ final readonly class GroupListing
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
             nbUsers: is_numeric($row['nb_users'] ?? null) ? (int) $row['nb_users'] : 0,
         );
-    }
-
-    /**
-     * @return array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}
-     */
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id->value,
-            'name' => $this->name,
-            'is_default' => $this->isDefault,
-            'lastmodified' => $this->lastmodified,
-            'nb_users' => $this->nbUsers,
-        ];
     }
 }

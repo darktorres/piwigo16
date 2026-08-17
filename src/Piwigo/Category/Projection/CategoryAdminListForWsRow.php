@@ -6,15 +6,16 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findAdminListForWs()}'s own
- * row shape -- {@see \Piwigo\Ws\Categories\GetAdminListHandler}'s real (and
- * only) consumer, its paginated admin category rollup. Same raw
+ * row shape -- {@see \Piwigo\Controller\Api\Categories\CategoryListController}'s
+ * real (and only) consumer, its paginated admin category rollup (via
+ * {@see \Piwigo\Category\CategoryService::getAdminListForWs()}). Same raw
  * `Connection::fetchAllAssociative()` DBAL row reasoning as
  * {@see CategoryListForWsRow} -- narrowed to each real `categories`-table
- * column type once here, not scattered through the WS consumer.
+ * column type once here, not scattered through the response builder.
  *
  * `toArray()` exists for that consumer: it splices several derived keys
  * (`nb_images`, `fullname`, `name_raw`, `comment_raw`, ...) onto each row
- * before building the final WS response, so it `toArray()`s the whole
+ * before building the final JSON response, so it `toArray()`s the whole
  * paginated result once, up front.
  */
 final readonly class CategoryAdminListForWsRow

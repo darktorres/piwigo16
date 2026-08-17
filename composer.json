@@ -189,10 +189,6 @@
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
     ],
-    "test:contract": [
-      "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Contract"
-    ],
     "test:coverage": [
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Unit,Arch --coverage-php _data/coverage-raw/unit-arch.cov"
@@ -209,7 +205,6 @@
     ],
     "test:coverage:web": [
       "rm -rf _data/coverage-raw/web",
-      "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Contract",
       "bash tools/reimport-fixture.sh",
       "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
     ],

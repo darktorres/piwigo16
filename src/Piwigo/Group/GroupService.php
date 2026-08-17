@@ -79,14 +79,6 @@ final readonly class GroupService
     }
 
     /**
-     * @return list<int>
-     */
-    public function getIdsByNameLike(string $namePattern): array
-    {
-        return $this->repo->findIdsByNameLike($namePattern);
-    }
-
-    /**
      * @param  list<int>  $userIds
      * @return list<array{user_id: int, group_id: int}>
      */

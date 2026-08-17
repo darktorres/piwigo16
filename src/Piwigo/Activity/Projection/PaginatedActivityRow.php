@@ -10,9 +10,8 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 /**
  * {@see \Piwigo\Activity\ActivityRepository::findPaginated()}'s own row
  * shape -- every {@see \Piwigo\Activity\ActivityEntity} column except its
- * auto-increment `activityId` -- {@see \Piwigo\Ws\Activity\GetListHandler}'s
- * real (and only) consumer, its `history.log`/`activity.search`-style WS
- * listing.
+ * auto-increment `activityId` -- {@see \Piwigo\Controller\Api\ActivityListController}'s
+ * real (and only) consumer, its `GET /api/v1/activity` listing.
  *
  * `performedBy` stays plain `?int` even though
  * `ActivityEntity::$performedByUser` is a real association (`?UserEntity`)

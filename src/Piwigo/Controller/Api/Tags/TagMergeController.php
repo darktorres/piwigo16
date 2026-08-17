@@ -14,8 +14,8 @@ use Piwigo\Http\CsrfGuard;
 use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tag\Event\MergeTags;
 use Piwigo\Tag\TagService;
-use Piwigo\Ws\Tags\Event\MergeTags;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

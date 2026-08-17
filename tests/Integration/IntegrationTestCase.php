@@ -651,18 +651,6 @@ abstract class IntegrationTestCase extends TestCase
         $conn->executeStatement($this->dbDriver === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
     }
 
-    protected function markTestInstalled(): void
-    {
-        $stamp = dirname(__DIR__, 2) . '/local/' . Env::testModeInstalledStamp();
-        // The stamp is often already present, created by install.php running
-        // as the webserver user (e.g. www-data) — only the file's existence
-        // matters (common.inc.php gates on file_exists(), not mtime), so
-        // don't touch() an existing file the CLI user may not own.
-        if (! file_exists($stamp)) {
-            touch($stamp);
-        }
-    }
-
     protected function removeTestStamp(): void
     {
         $stamp = dirname(__DIR__, 2) . '/local/' . Env::testModeInstalledStamp();

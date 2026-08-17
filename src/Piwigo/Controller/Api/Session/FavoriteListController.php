@@ -10,10 +10,10 @@ use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageUrlBuilder;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\ImageUrlBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

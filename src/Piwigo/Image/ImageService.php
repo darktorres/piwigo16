@@ -36,8 +36,6 @@ use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Image\Projection\PathRepresentativeExtLevel;
 use Piwigo\Image\Projection\SlideshowParams;
-use Piwigo\Image\Projection\UploadInfo;
-use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Image\Request\EmptyLoungeRequest;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -1134,15 +1132,6 @@ final readonly class ImageService
         return $this->repo->findForMissingDerivatives($criteria, $startId, $limit);
     }
 
-    /**
-     * @param  list<int|string>  $imageIds
-     * @return array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}>
-     */
-    public function getHistoryDisplayInfoByIds(array $imageIds): array
-    {
-        return $this->repo->findHistoryDisplayInfoByIds($imageIds);
-    }
-
     public function hasAccessibleImageWithAuthor(PermissionCriteria $criteria): bool
     {
         return $this->repo->hasAccessibleImageWithAuthor($criteria);
@@ -1162,19 +1151,9 @@ final readonly class ImageService
         return $this->repo->findExistingIds($ids);
     }
 
-    public function getUploadInfoById(ImageId $imageId): ?UploadInfo
-    {
-        return $this->repo->findUploadInfoById($imageId);
-    }
-
     public function getPathById(ImageId $imageId): ?string
     {
         return $this->repo->findPathById($imageId);
-    }
-
-    public function existsWithColumnValue(ImageUniquenessColumn $column, string $value): bool
-    {
-        return $this->repo->existsWithColumnValue($column, $value);
     }
 
     /**
@@ -1185,19 +1164,9 @@ final readonly class ImageService
         return $this->repo->findIdsByFilenameInCategory($filename, $categoryId);
     }
 
-    public function getUploadResultInfoById(ImageId $imageId): ?UploadResultInfo
-    {
-        return $this->repo->findUploadResultInfoById($imageId);
-    }
-
     public function countImagesInCategory(CategoryId $categoryId): int
     {
         return $this->repo->countImagesInCategory($categoryId);
-    }
-
-    public function countLoungeImagesPendingForCategory(CategoryId $categoryId): int
-    {
-        return $this->repo->countLoungeImagesPendingForCategory($categoryId);
     }
 
     /**

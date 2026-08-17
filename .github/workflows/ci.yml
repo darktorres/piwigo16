@@ -425,7 +425,7 @@ jobs:
       # signal that a testsuite isn't silently running 0 tests.
       - run: |
           set -euo pipefail
-          for dir in Unit Arch Integration Contract Browser; do
+          for dir in Unit Arch Integration Browser; do
             count=$(find "tests/$dir" -maxdepth 1 -name '*Test.php' | wc -l)
             echo "tests/$dir: $count Test.php file(s)"
             if [ "$count" -eq 0 ]; then
@@ -451,10 +451,10 @@ jobs:
   # docs/REFERENCE.md's "hard-required bleeding-edge stack" decision's
   # provider matrix. mysql/mariadb legs stay lean (Unit/Db, Unit/Config, Arch smoke +
   # migrate + schema-drift check) since MySQL is already comprehensively
-  # covered by the integration/contract/browser jobs below; MariaDB has no
+  # covered by the integration/browser jobs below; MariaDB has no
   # other CI coverage at all, but this job's own smoke+migration proof is
   # its intended scope, not a full-suite duplication. The pgsql leg
-  # additionally runs the full Integration/Contract/Browser suites --
+  # additionally runs the full Integration/Browser suites --
   # IntegrationTestCase/BrowserTestHelpers support Postgres, so this is
   # the one leg with no other job anywhere proving Postgres for real.
   #
@@ -462,7 +462,7 @@ jobs:
   # below -- Piwigo\Core\Env::testModeEnvFile() only loads .env.test (vs.
   # production .env) when that var is set; a bin/piwigo command run
   # without it silently targets whatever .env would resolve to instead.
-  # Every real Pest suite (Integration/Contract/Browser/Unit/Arch) sets
+  # Every real Pest suite (Integration/Browser/Unit/Arch) sets
   # this for its own process automatically via tests/bootstrap.php, so
   # only the raw bin/piwigo steps below need the explicit prefix.
   db-multi-provider:
@@ -582,8 +582,6 @@ jobs:
       - if: matrix.provider == 'pgsql'
         run: composer test:integration
       - if: matrix.provider == 'pgsql'
-        run: composer test:contract
-      - if: matrix.provider == 'pgsql'
         run: composer test:browser
 
   integration:
@@ -625,50 +623,6 @@ jobs:
           ENVEOF
       - run: mkdir -p local && touch local/.installed.test
       - run: composer test:integration
-
-  contract:
-    name: Pest (WS contract)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    services:
-      mysql:
-        image: mysql:9.7
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: piwigo_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
-          --health-timeout=5s --health-retries=5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-        with:
-          php-version: "8.5"
-          coverage: none
-          extensions: ${{ env.PHP_EXTENSIONS }}
-      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      - name: Provision piwigo_test from the committed fixture
-        run: |
-          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
-          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM images;' > /dev/null 2>&1; do sleep 0.5; done
-      - name: Write .env.test
-        run: |
-          cat > .env.test <<'ENVEOF'
-          PIWIGO_DB_HOST=127.0.0.1
-          PIWIGO_DB_PORT=3306
-          PIWIGO_DB_USER=root
-          PIWIGO_DB_PASSWORD=root
-          PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_BASE_URL=http://localhost:8080
-          ENVEOF
-      - run: mkdir -p local && touch local/.installed.test
-      - name: Start PHP built-in server
-        run: |
-          php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
-          until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
-      - run: composer test:contract
 
   browser:
     name: Pest (browser E2E)

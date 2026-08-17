@@ -15,11 +15,13 @@ use Piwigo\Common\ValueObject\UserId;
  * $filter/$filteredGroupIds are two separate pieces of the original's one
  * `filter` concept: $filter is the raw (unwrapped) search term matched
  * against username/email; $filteredGroupIds is the *already-resolved*
- * list of group ids whose name matches that same term
- * (`GroupService::getIdsByNameLike()`'s own output) -- resolving a name
+ * list of group ids whose name matches that same term -- resolving a name
  * pattern to ids is Group-domain business logic, not something this
  * repository's own persistence layer should do, so the caller resolves it
- * first and hands over just the ids.
+ * first and hands over just the ids. No current `/api/v1/users` caller
+ * populates $filteredGroupIds yet -- the free-text (non-`id:NNN`) search
+ * box this fed is a deliberately deferred filter (see
+ * `Controller\Api\Users\UserListController`'s own docblock).
  *
  * $minRegister/$maxRegister are `SqlDateTime`-typed --
  * `Ws\Users::getList()` validates the raw `min_register`/

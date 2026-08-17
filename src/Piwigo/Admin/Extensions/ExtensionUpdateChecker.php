@@ -137,8 +137,8 @@ final readonly class ExtensionUpdateChecker
     /**
      * Computes pending updates for every ExtensionType, stores the result
      * in ExtensionUpdateCachePool under the 'extensions_need_update' key
-     * (consumed by Piwigo\Ws\Extensions\CheckUpdatesHandler), and syncs
-     * the ignore-list in extension_ignored_updates via $ignoredUpdateRepo
+     * (consumed by Controller\Api\Extensions\CheckUpdatesController), and
+     * syncs the ignore-list in extension_ignored_updates via $ignoredUpdateRepo
      * -- mirrors updates.class.php::check_extensions()'s own behavior,
      * including its "an ignored id no longer pending silently
      * un-ignores" side effect (see the loop's own comment below).

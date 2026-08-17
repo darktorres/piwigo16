@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser\Helpers;
 
-use CURLFile;
 use InvalidArgumentException;
 use mysqli;
 use mysqli_result;
@@ -750,7 +749,7 @@ final class BrowserTestHelpers
 
     /**
      * Logs in as fixture_admin exactly once per test process, via the same
-     * curlWs()+cookie-jar mechanism uploadPhotoViaApi() already uses for
+     * curlApi()+cookie-jar mechanism uploadPhotoViaApi() already uses for
      * its own separate curl-based login -- no browser/UI interaction, no
      * repeated page load. Caches the resulting cookie(s) so every later
      * asAdmin() call reuses the SAME server-side session instead of
@@ -771,8 +770,7 @@ final class BrowserTestHelpers
             throw new ExpectationFailedException('tempnam failed');
         }
 
-        self::curlWs($cookieJar, [
-            'method' => 'pwg.session.login',
+        self::curlApi($cookieJar, 'POST', '/api/v1/session', [
             'username' => self::ADMIN_USER,
             'password' => self::ADMIN_PASS,
         ]);
@@ -840,75 +838,414 @@ final class BrowserTestHelpers
     }
 
     /**
-     * WS methods whose pwg_token is unconditionally required (P25 Stage 0's
-     * "Ship first" finding 5, commit 1e12629bf1: checkSecurityToken()
-     * defaults to required: true) — every real call site below wants a
-     * genuinely working call, not a deliberate CSRF-rejection test (those
-     * exercise a *different* endpoint's own missing/wrong-token branch
-     * directly, never one of these 4 methods), so wsCall() itself supplies
-     * the token automatically here rather than requiring 100+ call sites
-     * across the Browser suite to each remember to.
+     * Translates a legacy WS method call onto its real `/api/v1` replacement
+     * and reshapes the JSON response back into the `{stat, result}`/
+     * `{stat, err, message}` WS envelope this suite's ~50 call sites were
+     * already written against -- P27 deleted the WS layer, not those call
+     * sites' own response-shape assumptions, and rewriting every one of
+     * them (most only need an `id`/`username`/... field back out) would be
+     * pure churn against a mechanically equivalent read. Only the WS
+     * methods this suite's own fixture-setup code actually calls are
+     * covered -- add a new match() arm if a future test needs one that
+     * isn't listed here.
      *
-     * @var list<string>
-     */
-    private const array WS_METHODS_REQUIRING_TOKEN = [
-        'pwg.categories.add',
-        'pwg.categories.setInfo',
-        'pwg.images.setInfo',
-        'pwg.groups.add',
-    ];
-
-    /**
-     * Calls a WS API method through the SAME authenticated browser session,
-     * via a same-origin fetch() POST executed in the page (script() awaits
-     * the returned promise). POST, not ->navigate() with a GET query string,
-     * because several WS methods (e.g. pwg.images.setInfo) explicitly
-     * reject GET with a 405 — matching how a real API client behaves.
-     *
-     * @param  array<string, int|string>  $params
+     * @param  array<string, mixed>  $params
      * @return array<string, mixed>
      */
     public static function wsCall(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $method, array $params = []): array
     {
-        // WS_METHODS_REQUIRING_TOKEN's own methods never appear here --
-        // pwg.session.getStatus is a read-only, no-token method, so this
-        // recurses at most one level deep.
-        if (in_array($method, self::WS_METHODS_REQUIRING_TOKEN, true) && ! array_key_exists('pwg_token', $params)) {
-            $params['pwg_token'] = self::pwgToken($page);
+        return match ($method) {
+            'pwg.session.getStatus' => self::wsGetStatus($page),
+            'pwg.categories.add' => self::wsCategoriesAdd($page, $params),
+            'pwg.categories.delete' => self::wsCategoriesDelete($page, $params),
+            'pwg.categories.getAdminList' => self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/categories')),
+            'pwg.categories.getImages' => self::wsCategoriesGetImages($page, $params),
+            'pwg.groups.add' => self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/groups', [
+                'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
+            ], self::apiCsrfToken($page))),
+            'pwg.groups.addUser' => self::wsGroupsAddUser($page, $params),
+            'pwg.images.delete' => self::wsImagesDelete($page, $params),
+            'pwg.images.filteredSearch.create' => self::wsImagesFilteredSearchCreate($page, $params),
+            'pwg.images.getInfo' => self::wsImagesGetInfo($page, $params),
+            'pwg.images.search' => self::wsImagesSearch($page, $params),
+            'pwg.images.setInfo' => self::wsImagesSetInfo($page, $params),
+            'pwg.tags.add' => self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/tags', [
+                'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
+            ], self::apiCsrfToken($page))),
+            'pwg.tags.delete' => self::wsTagsDelete($page, $params),
+            'pwg.tags.getImages' => self::wsTagsGetImages($page, $params),
+            'pwg.tags.getList' => self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/tags')),
+            'pwg.users.add' => self::wsUsersAdd($page, $params),
+            'pwg.users.delete' => self::wsUsersDelete($page, $params),
+            'pwg.users.getList' => self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/users')),
+            'pwg.users.preferences.set' => self::wsPreferencesSet($page, $params),
+            default => throw new ExpectationFailedException(
+                "wsCall(): no /api/v1 translation registered for WS method '{$method}' -- add one in BrowserTestHelpers::wsCall()'s own match() arms."
+            ),
+        };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function wsGetStatus(Webpage|PendingAwaitablePage|AwaitableWebpage $page): array
+    {
+        $wrapped = self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/session'));
+        if ($wrapped['stat'] === 'ok' && is_array($wrapped['result']) && array_key_exists('pwgToken', $wrapped['result'])) {
+            $wrapped['result']['pwg_token'] = $wrapped['result']['pwgToken'];
         }
 
-        $body = http_build_query(array_merge([
-            'method' => $method,
-        ], $params));
-        $url = self::baseUrl() . '/ws.php?format=json';
+        return $wrapped;
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsCategoriesAdd(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $body = [
+            'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
+        ];
+        if (isset($params['parent']) && is_numeric($params['parent'])) {
+            $body['parentId'] = (int) $params['parent'];
+        }
+        if (isset($params['status']) && is_string($params['status'])) {
+            $body['status'] = $params['status'];
+        }
+
+        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/categories', $body, self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsCategoriesDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $categoryId = is_numeric($params['category_id'] ?? null) ? (int) $params['category_id'] : 0;
+        $mode = is_string($params['photo_deletion_mode'] ?? null) ? $params['photo_deletion_mode'] : 'no_delete';
+
+        return self::wrapApiResponse(self::apiFetch($page, 'DELETE', '/api/v1/categories/' . $categoryId, [
+            'photoDeletionMode' => $mode,
+        ], self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsCategoriesGetImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $catId = is_numeric($params['cat_id'] ?? null) ? (int) $params['cat_id'] : 0;
+        $query = http_build_query([
+            'catIds' => [$catId],
+        ]);
+
+        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/categories/images?' . $query));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsGroupsAddUser(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $groupId = is_numeric($params['group_id'] ?? null) ? (int) $params['group_id'] : 0;
+        $userId = is_numeric($params['user_id'] ?? null) ? (int) $params['user_id'] : 0;
+
+        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/groups/' . $groupId . '/actions/add-user', [
+            'userIds' => [$userId],
+        ], self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsImagesDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $imageId = is_numeric($params['image_id'] ?? null) ? (int) $params['image_id'] : 0;
+
+        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/images/actions/delete', [
+            'imageIds' => [$imageId],
+        ], self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsImagesGetInfo(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $imageId = is_numeric($params['image_id'] ?? null) ? (int) $params['image_id'] : 0;
+
+        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/images/' . $imageId));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsImagesSearch(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $query = http_build_query([
+            'query' => is_string($params['query'] ?? null) ? $params['query'] : '',
+        ]);
+
+        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/images/search?' . $query));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsImagesSetInfo(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $imageId = is_numeric($params['image_id'] ?? null) ? (int) $params['image_id'] : 0;
+
+        $rename = [
+            'author' => 'author',
+            'comment' => 'comment',
+            'date_creation' => 'dateCreation',
+            'name' => 'name',
+            'tag_ids' => 'tagIds',
+            'single_value_mode' => 'singleValueMode',
+            'multiple_value_mode' => 'multipleValueMode',
+        ];
+        $body = [];
+        foreach ($rename as $wsKey => $restKey) {
+            if (array_key_exists($wsKey, $params)) {
+                $body[$restKey] = $params[$wsKey];
+            }
+        }
+
+        return self::wrapApiResponse(self::apiFetch($page, 'PATCH', '/api/v1/images/' . $imageId, $body, self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsImagesFilteredSearchCreate(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $body = [];
+
+        foreach ([
+            'allwords' => 'allwords',
+            'date_created_preset' => 'dateCreatedPreset',
+            'ratings' => 'ratings',
+        ] as $wsKey => $restKey) {
+            if (array_key_exists($wsKey, $params)) {
+                $body[$restKey] = $params[$wsKey];
+            }
+        }
+
+        // REST requires a real JSON array here; a Browser test's own
+        // WS-style scalar param (WS's FORCE_ARRAY coerces a lone value
+        // automatically) needs the same one-element wrap. 'expert' has no
+        // /api/v1 equivalent -- ImageFilteredSearchCreateController's own
+        // docblock documents dropping it (a raw, undocumented search-string
+        // escape hatch, not a registered WS param even in the original).
+        foreach ([
+            'tags' => 'tags',
+            'categories' => 'categories',
+            'authors' => 'authors',
+            'filetypes' => 'filetypes',
+            'ratios' => 'ratios',
+            'added_by' => 'addedBy',
+        ] as $wsKey => $restKey) {
+            if (! array_key_exists($wsKey, $params)) {
+                continue;
+            }
+            $value = $params[$wsKey];
+            $body[$restKey] = is_array($value) ? array_values($value) : [$value];
+        }
+
+        foreach ([
+            'filesize_min' => 'filesizeMin',
+            'filesize_max' => 'filesizeMax',
+            'height_min' => 'heightMin',
+            'height_max' => 'heightMax',
+            'width_min' => 'widthMin',
+            'width_max' => 'widthMax',
+        ] as $wsKey => $restKey) {
+            if (array_key_exists($wsKey, $params) && is_numeric($params[$wsKey])) {
+                $body[$restKey] = (int) $params[$wsKey];
+            }
+        }
+
+        $wrapped = self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/images/searches', $body));
+        if ($wrapped['stat'] === 'ok' && is_array($wrapped['result']) && array_key_exists('searchUrl', $wrapped['result'])) {
+            $wrapped['result']['search_url'] = $wrapped['result']['searchUrl'];
+        }
+
+        return $wrapped;
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsTagsDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $tagId = is_numeric($params['tag_id'] ?? null) ? (int) $params['tag_id'] : 0;
+
+        return self::wrapApiResponse(self::apiFetch($page, 'DELETE', '/api/v1/tags/' . $tagId, [], self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsTagsGetImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $tagId = is_numeric($params['tag_id'] ?? null) ? (int) $params['tag_id'] : 0;
+        $query = http_build_query([
+            'tagIds' => [$tagId],
+        ]);
+
+        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/tags/images?' . $query));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsUsersAdd(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $body = [
+            'username' => is_string($params['username'] ?? null) ? $params['username'] : '',
+        ];
+        foreach ([
+            'password' => 'password',
+            'password_confirm' => 'passwordConfirm',
+            'email' => 'email',
+        ] as $wsKey => $restKey) {
+            if (is_string($params[$wsKey] ?? null)) {
+                $body[$restKey] = $params[$wsKey];
+            }
+        }
+
+        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/users', $body, self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsUsersDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $userId = is_numeric($params['user_id'] ?? null) ? (int) $params['user_id'] : 0;
+
+        return self::wrapApiResponse(self::apiFetch($page, 'DELETE', '/api/v1/users/' . $userId, [], self::apiCsrfToken($page)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private static function wsPreferencesSet(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        $param = is_string($params['param'] ?? null) ? $params['param'] : '';
+        $value = is_string($params['value'] ?? null) ? $params['value'] : '';
+
+        return self::wrapApiResponse(self::apiFetch($page, 'PUT', '/api/v1/session/preferences/' . rawurlencode($param), [
+            'value' => $value,
+        ]));
+    }
+
+    /**
+     * Reshapes a raw `/api/v1` `{status, body}` pair into the
+     * `{stat, result}`/`{stat, err, message}` WS envelope wsCall()'s own
+     * callers still expect.
+     *
+     * @param  array{status: int, body: string}  $response
+     * @return array<string, mixed>
+     */
+    private static function wrapApiResponse(array $response): array
+    {
+        $decoded = json_decode($response['body'], true);
+        $status = $response['status'];
+
+        if ($status >= 200 && $status < 300) {
+            return [
+                'stat' => 'ok',
+                'result' => is_array($decoded) ? $decoded : [],
+            ];
+        }
+
+        $detail = is_array($decoded) && is_string($decoded['detail'] ?? null) ? $decoded['detail'] : $response['body'];
+
+        return [
+            'stat' => 'fail',
+            'err' => $status,
+            'message' => $detail,
+        ];
+    }
+
+    /**
+     * `GET /api/v1/session`'s own `pwgToken` field -- the `X-CSRF-Token`
+     * every mutating `/api/v1` call needs, replacing WS's `pwg_token`
+     * body/query param convention.
+     */
+    private static function apiCsrfToken(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string
+    {
+        $response = self::apiFetch($page, 'GET', '/api/v1/session');
+        $decoded = json_decode($response['body'], true);
+        $token = is_array($decoded) ? ($decoded['pwgToken'] ?? null) : null;
+
+        return is_string($token) ? $token : '';
+    }
+
+    /**
+     * Raw `/api/v1` call through the SAME authenticated browser session, via
+     * a same-origin fetch() executed in the page (script() awaits the
+     * returned promise) -- wsCall()'s own former ws.php mechanism, now that
+     * the WS layer itself is deleted (P27). $body is base64-embedded into
+     * the script and decoded via atob() in-page: a JSON body can contain
+     * quotes/backslashes a naive string interpolation would corrupt, unlike
+     * adminPost()'s own http_build_query() (URL-encoded, always
+     * JS-string-safe).
+     *
+     * @param  array<string, mixed>  $body
+     * @return array{status: int, body: string}
+     */
+    private static function apiFetch(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $httpMethod, string $path, array $body = [], ?string $csrfToken = null): array
+    {
+        $url = self::baseUrl() . $path;
+        $hasBody = $body !== [];
+        $bodyExpr = $hasBody ? "atob('" . base64_encode(self::jsonEncode($body)) . "')" : 'undefined';
+        $csrfHeaderLine = $csrfToken !== null ? "'X-CSRF-Token': " . self::jsonEncode($csrfToken) . ",\n                " : '';
         $js = <<<JS
         fetch('{$url}', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: '{$body}'
-        }).then(r => r.text())
+            method: '{$httpMethod}',
+            headers: {
+                'Content-Type': 'application/json',
+                {$csrfHeaderLine}
+            },
+            body: {$bodyExpr}
+        }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
         JS;
 
         $result = $page->script($js);
         if (! is_string($result)) {
             throw new ExpectationFailedException(
-                "WS call to {$method} did not return a string result: " . var_export($result, true)
+                "apiFetch {$httpMethod} {$path} did not return a string result: " . var_export($result, true)
             );
         }
 
         $decoded = json_decode($result, true);
-        if (! is_array($decoded)) {
+        if (! is_array($decoded) || ! is_int($decoded['status'] ?? null) || ! is_string($decoded['body'] ?? null)) {
             throw new ExpectationFailedException(
-                "WS call to {$method} did not return valid JSON: " . var_export($result, true)
+                "apiFetch {$httpMethod} {$path} did not return the expected {status, body} shape: " . var_export($result, true)
             );
         }
 
-        $normalized = [];
-        foreach ($decoded as $key => $value) {
-            $normalized[(string) $key] = $value;
-        }
-
-        return $normalized;
+        return [
+            'status' => $decoded['status'],
+            'body' => $decoded['body'],
+        ];
     }
 
     /**
@@ -1723,12 +2060,16 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Uploads a photo via the WS API using a fresh admin login over curl.
-     * pest-plugin-browser has no cookie-jar access to reuse the browser
-     * session for a multipart POST, and Piwigo's admin upload UI is a JS
-     * (plupload) widget with no plain <input type="file"> fallback to
-     * automate reliably — this mirrors what 16.x-v2's own E2E suite did
-     * for the same reason (direct API upload, not simulated drag-drop).
+     * Uploads a photo via the real tus 1.0.0 API using a fresh admin login
+     * over curl (single-chunk: Upload-Length == the whole file, so the one
+     * PATCH both transfers every byte and completes the upload). Replaces
+     * this helper's former WS-based (`pwg.images.addSimple`) mechanism, now
+     * that the WS layer itself is deleted (P27) -- same underlying reason
+     * this stays on raw curl rather than the browser session: pest-plugin-
+     * browser has no cookie-jar access to reuse the browser session for a
+     * binary-body PATCH, and Piwigo's admin upload UI is a JS (plupload)
+     * widget with no plain <input type="file"> fallback to automate
+     * reliably.
      */
     public static function uploadPhotoViaApi(string $imagePath, int $albumId, string $name): int
     {
@@ -1739,41 +2080,104 @@ final class BrowserTestHelpers
             throw new ExpectationFailedException('tempnam failed');
         }
 
-        self::curlWs($cookieJar, [
-            'method' => 'pwg.session.login',
+        self::curlApi($cookieJar, 'POST', '/api/v1/session', [
             'username' => self::ADMIN_USER,
             'password' => self::ADMIN_PASS,
         ]);
 
-        $body = self::curlWs($cookieJar, [
-            'method' => 'pwg.images.addSimple',
-            'category' => (string) $albumId,
-            'name' => $name,
-            'image' => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
-        ]);
-
-        $decoded = json_decode($body, true);
-        if (! is_array($decoded) || ($decoded['stat'] ?? null) !== 'ok') {
+        $statusBody = self::curlApi($cookieJar, 'GET', '/api/v1/session');
+        $statusDecoded = json_decode($statusBody, true);
+        $csrfToken = is_array($statusDecoded) && is_string($statusDecoded['pwgToken'] ?? null) ? $statusDecoded['pwgToken'] : '';
+        if ($csrfToken === '') {
             @unlink($cookieJar);
-            throw new ExpectationFailedException('Photo upload failed: ' . var_export($body, true));
+            throw new ExpectationFailedException('Could not obtain a CSRF token for the upload session: ' . var_export($statusBody, true));
         }
 
-        // Empties the upload "lounge" so the just-uploaded photo is visible
-        // immediately, reusing the same authenticated cookie jar.
-        self::curlWs($cookieJar, [
-            'method' => 'pwg.images.emptyLounge',
+        $contents = file_get_contents($imagePath);
+        if ($contents === false || $contents === '') {
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('Could not read ' . $imagePath);
+        }
+
+        $metadata = implode(',', [
+            'filename ' . base64_encode(basename($imagePath)),
+            'category ' . base64_encode((string) $albumId),
+            'name ' . base64_encode($name),
         ]);
-        @unlink($cookieJar);
 
-        $result = $decoded['result'] ?? null;
-        if (! is_array($result)) {
-            throw new ExpectationFailedException('Photo upload response missing result: ' . var_export($body, true));
+        $ch = curl_init(self::baseUrl() . '/api/v1/uploads');
+        if ($ch === false) {
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('curl_init failed');
+        }
+        $createHeaders = self::testHeaders();
+        $createHeaders[] = 'Tus-Resumable: 1.0.0';
+        $createHeaders[] = 'Upload-Length: ' . strlen($contents);
+        $createHeaders[] = 'Upload-Metadata: ' . $metadata;
+        $createHeaders[] = 'X-CSRF-Token: ' . $csrfToken;
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, '');
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $createHeaders);
+        $createResponse = curl_exec($ch);
+        $createStatus = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        unset($ch);
+
+        if (! is_string($createResponse) || $createStatus !== 201) {
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('tus upload create failed (HTTP ' . $createStatus . '): ' . var_export($createResponse, true));
         }
 
-        $imageId = $result['image_id'] ?? null;
+        if (preg_match('/^Location:\s*(\S+)/mi', substr($createResponse, 0, $headerSize), $matches) !== 1) {
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('tus upload create response missing a Location header: ' . substr($createResponse, 0, $headerSize));
+        }
+        $location = trim($matches[1]);
+
+        $ch = curl_init($location);
+        if ($ch === false) {
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('curl_init failed');
+        }
+        $patchHeaders = self::testHeaders();
+        $patchHeaders[] = 'Tus-Resumable: 1.0.0';
+        $patchHeaders[] = 'Upload-Offset: 0';
+        $patchHeaders[] = 'Content-Type: application/offset+octet-stream';
+        $patchHeaders[] = 'X-CSRF-Token: ' . $csrfToken;
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $contents);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $patchHeaders);
+        $patchBody = curl_exec($ch);
+        $patchStatus = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        if (! is_string($patchBody) || $patchStatus !== 200) {
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('tus upload PATCH failed (HTTP ' . $patchStatus . '): ' . var_export($patchBody, true));
+        }
+
+        $completeDecoded = json_decode($patchBody, true);
+        $imageId = is_array($completeDecoded) ? ($completeDecoded['imageId'] ?? null) : null;
         if (! is_numeric($imageId)) {
-            throw new ExpectationFailedException('Photo upload response missing image_id: ' . var_export($body, true));
+            @unlink($cookieJar);
+            throw new ExpectationFailedException('tus upload PATCH response missing imageId: ' . var_export($patchBody, true));
         }
+
+        // Same defensive lounge-flush the original WS-based upload always
+        // did after a successful upload -- a harmless no-op when
+        // lounge_active is off (the common case in this fixture), real when
+        // a test run has crossed CurrentConfig::loungeActivateThreshold.
+        self::curlApi($cookieJar, 'POST', '/api/v1/uploads/actions/complete-batch', [
+            'categoryId' => $albumId,
+        ], $csrfToken);
+        @unlink($cookieJar);
 
         return (int) $imageId;
     }
@@ -1847,25 +2251,47 @@ final class BrowserTestHelpers
     }
 
     /**
-     * @param array<string, mixed> $fields
+     * Raw curl `/api/v1` call against a caller-supplied cookie jar --
+     * `wsCall()`'s own in-page `apiFetch()`, for callers that need a
+     * session independent of any Playwright page: this class's own
+     * `adminSessionCookies()`/`uploadPhotoViaApi()` (a fresh curl-only
+     * login, or a cookie jar built before any page exists), and several
+     * Browser test files' own local curl-cookie-jar sessions (raw
+     * `CURLINFO_REDIRECT_URL`-observing helpers `H::rawGet()`'s in-page
+     * fetch(manual) can't replace -- see e.g. PictureControllerTest's own
+     * pictureCurlLoginSession() docblock) that previously called `ws.php`
+     * directly through their own local closure and now call this instead
+     * for the same fixture-creation need. Every caller always passes
+     * `tempnam()`'s result, so `$cookieJar` is always a real path.
+     *
+     * @param array<string, mixed> $body
      */
-    private static function curlWs(string $cookieJar, array $fields): string
+    public static function curlApi(string $cookieJar, string $httpMethod, string $path, array $body = [], ?string $csrfToken = null): string
     {
-        // the only caller passes tempnam()'s result, always a real path
         assert($cookieJar !== '');
-        $ch = curl_init(self::baseUrl() . '/ws.php?format=json');
+        if ($httpMethod === '') {
+            throw new ExpectationFailedException('curlApi(): $httpMethod must not be empty');
+        }
+        $ch = curl_init(self::baseUrl() . $path);
         if ($ch === false) {
             throw new ExpectationFailedException('curl_init failed');
         }
+        $headers = self::testHeaders();
+        $headers[] = 'Content-Type: application/json';
+        if ($csrfToken !== null) {
+            $headers[] = 'X-CSRF-Token: ' . $csrfToken;
+        }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $httpMethod);
+        if ($body !== []) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, self::jsonEncode($body));
+        }
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, self::testHeaders());
-        $body = curl_exec($ch);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        $responseBody = curl_exec($ch);
         unset($ch);
 
-        return is_string($body) ? $body : '';
+        return is_string($responseBody) ? $responseBody : '';
     }
 }

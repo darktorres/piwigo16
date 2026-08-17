@@ -41,7 +41,8 @@ final class MaintenanceDeleteOrphansCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $blockSize = max(1, (int) $input->getOption('block-size'));
+        $rawBlockSize = $input->getOption('block-size');
+        $blockSize = max(1, is_numeric($rawBlockSize) ? (int) $rawBlockSize : 1);
 
         $orphanIdsToDelete = array_slice($this->imageService->getOrphans(), 0, $blockSize);
         $deletedCount = $this->imageService->deleteElements($orphanIdsToDelete, $this->urlService, true);

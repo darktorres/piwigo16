@@ -677,39 +677,31 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function ():
 });
 
 test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO or a documented exception', function (): void {
-    // Every page controller/WS method/domain service reads
-    // $_GET/$_POST/$_REQUEST/$_FILES only through a validating
-    // `{Module}/Request/{Name}` DTO's own `fromGlobals()` (the sole
-    // legitimate raw read a DTO class makes for itself -- this scan only
-    // covers files OUTSIDE any `Request/`
+    // Every page controller/domain service reads $_GET/$_POST/$_REQUEST/
+    // $_FILES only through a validating `{Module}/Request/{Name}` DTO's own
+    // `fromGlobals()` (the sole legitimate raw read a DTO class makes for
+    // itself -- this scan only covers files OUTSIDE any `Request/`
     // directory, matching `RequestFactory::fromGlobals()`'s own
     // established "the wrapper's internals are exempt from the rule it
     // enforces on everyone else" shape). A hit anywhere else means a new
     // raw read was introduced and must be migrated onto a Request DTO,
-    // not allowlisted -- the 6 files below are the only real exceptions
+    // not allowlisted -- the 3 files below are the only real exceptions
     // that survived a full repo audit, each already documented at its own
-    // call site:
+    // call site (the WS layer's own 2 former exceptions, Ws/Server.php's
+    // isPost() and Ws/Images/UploadHandler.php's $_FILES !== [] check,
+    // were deleted along with it, P27 -- as was Bootstrap/UserBootstrap.php's
+    // former api_key pwg_token synthesis, its only own raw superglobal
+    // write, once its dead WS-gated branches were removed):
     //   - Admin/AdminShell.php: runDispatch()'s own page-slug alias
     //     rewriting ($_GET['page']/['section']/['tab']) -- load-bearing,
     //     must survive into RequestFactory::fromGlobals()'s own later
     //     read in the same method.
-    //   - Bootstrap/UserBootstrap.php: the api_key pwg_token synthesis
-    //     ($_POST['pwg_token'] = $_GET['pwg_token'] = ...) -- load-
-    //     bearing, must survive into Ws\Request\WsRawRequest's own later
-    //     read in the same request.
     //   - Bootstrap/RequestBootstrap.php: the once-per-request magic-
     //     quotes-style superglobal sanitization pass (array_walk_recursive
     //     over the whole $_GET/$_POST), which necessarily runs before any
     //     Request DTO in the app could read either array -- the same
     //     "earliest possible bootstrap stage" category as
     //     RequestFactory::fromGlobals() itself.
-    //   - Ws/Server.php: isPost()'s own `$_POST !== []` -- a minimal
-    //     single-fact reader (matches this same file's own docblock),
-    //     not a bag of request data a DTO wrapper would help.
-    //   - Ws/Images/UploadHandler.php: __invoke()'s own `$_FILES !== []`
-    //     top-level existence check -- governs a broader condition ("was
-    //     ANY file posted") than the 'file' key specifically, which
-    //     Ws\Request\UploadedFileRequest already covers.
     //   - Admin/BatchManagerGlobalPageRenderer.php: the pre-DTO CSRF gate
     //     (`count($_POST) > 0`), which must run before
     //     Admin\Request\BatchManagerGlobalRequest::fromGlobals() to match
@@ -725,10 +717,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
 
     $allowlistedSuffixes = [
         'Admin/AdminShell.php',
-        'Bootstrap/UserBootstrap.php',
         'Bootstrap/RequestBootstrap.php',
-        'Ws/Server.php',
-        'Ws/Images/UploadHandler.php',
         'Admin/BatchManagerGlobalPageRenderer.php',
     ];
     $unexpected = array_values(array_filter(

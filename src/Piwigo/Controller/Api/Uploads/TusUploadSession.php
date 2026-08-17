@@ -56,7 +56,7 @@ final readonly class TusUploadSession
     }
 
     /**
-     * @param array<string, mixed> $raw
+     * @param array<int|string, mixed> $raw
      */
     public static function fromArray(array $raw): self
     {

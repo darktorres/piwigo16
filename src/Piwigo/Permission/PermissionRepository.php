@@ -7,7 +7,6 @@ namespace Piwigo\Permission;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -16,11 +15,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Group\GroupAccessEntity;
-use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
-use Piwigo\Permission\Projection\GroupAccessRow;
-use Piwigo\Permission\Projection\UserAccessRow;
 use UnexpectedValueException;
 
 /**
@@ -37,8 +33,7 @@ use UnexpectedValueException;
  * Every method here uses real DQL except `massInsertUserAccess()`
  * (`INSERT IGNORE` via `BatchWriter`, which `persist()`+`flush()` has no
  * equivalent for).
- * `findGrantedGroupIdsByCategory()`/`findGroupAccessRows()`/
- * `findIndirectUserAccessRows()` use `getArrayResult()` rather than
+ * `findGrantedGroupIdsByCategory()` uses `getArrayResult()` rather than
  * `getSingleColumnResult()` specifically because `getArrayResult()`
  * applies each column's real custom Doctrine Type (unlike
  * `getSingleColumnResult()`'s own `HYDRATE_SCALAR_COLUMN`, which skips
@@ -350,106 +345,6 @@ final readonly class PermissionRepository
             ->getSingleScalarResult();
 
         return is_numeric($nb) && (int) $nb !== 0;
-    }
-
-    /**
-     * Every direct user_access row, optionally filtered to $catIds ([]
-     * means unfiltered) -- Ws\Permissions::getList()'s own "direct
-     * users" block.
-     *
-     * @param  list<int>  $catIds
-     * @return list<UserAccessRow>
-     */
-    public function findDirectUserAccessRows(array $catIds): array
-    {
-        $qb = $this->em->createQueryBuilder()
-            ->select('ua.userId', 'ua.catId')
-            ->from(UserAccessEntity::class, 'ua');
-
-        if ($catIds !== []) {
-            $qb->where('ua.catId IN (:catIds)')
-                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
-        }
-
-        $rows = $qb->getQuery()
-            ->getArrayResult();
-
-        $result = [];
-        foreach ($rows as $row) {
-            if (! is_array($row) || ! $row['userId'] instanceof UserId || ! $row['catId'] instanceof CategoryId) {
-                continue;
-            }
-            $result[] = new UserAccessRow($row['userId']->value, $row['catId']->value);
-        }
-
-        return $result;
-    }
-
-    /**
-     * Every indirect (via group membership) user access row, optionally
-     * filtered to $catIds ([] means unfiltered) -- Ws\Permissions::
-     * getList()'s own "indirect users" block.
-     *
-     * @param  list<int>  $catIds
-     * @return list<UserAccessRow>
-     */
-    public function findIndirectUserAccessRows(array $catIds): array
-    {
-        $qb = $this->em->createQueryBuilder()
-            ->select('ug.userId', 'ga.catId')
-            ->from(UserGroupEntity::class, 'ug')
-            ->innerJoin(GroupAccessEntity::class, 'ga', Join::WITH, 'ug.groupId = ga.groupId');
-
-        if ($catIds !== []) {
-            $qb->andWhere('ga.catId IN (:catIds)')
-                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
-        }
-
-        $rows = $qb->getQuery()
-            ->getArrayResult();
-
-        $result = [];
-        foreach ($rows as $row) {
-            if (! is_array($row) || ! $row['userId'] instanceof UserId || ! $row['catId'] instanceof CategoryId) {
-                continue;
-            }
-            $result[] = new UserAccessRow($row['userId']->value, $row['catId']->value);
-        }
-
-        return $result;
-    }
-
-    /**
-     * Every direct group_access row, optionally filtered to $catIds ([]
-     * means unfiltered) -- Ws\Permissions::getList()'s own "groups"
-     * block.
-     *
-     * @param  list<int>  $catIds
-     * @return list<GroupAccessRow>
-     */
-    public function findGroupAccessRows(array $catIds): array
-    {
-        $qb = $this->em->createQueryBuilder()
-            ->select('ga.groupId', 'ga.catId')
-            ->from(GroupAccessEntity::class, 'ga');
-
-        if ($catIds !== []) {
-            $qb->where('ga.catId IN (:catIds)')
-                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
-        }
-
-        $rows = $qb->getQuery()
-            ->getArrayResult();
-
-        $result = [];
-        foreach ($rows as $row) {
-            if (! is_array($row) || ! $row['groupId'] instanceof GroupId || ! $row['catId'] instanceof CategoryId) {
-                continue;
-            }
-            $result[] = new GroupAccessRow($row['groupId']->value, $row['catId']->value);
-        }
-
-        return $result;
     }
 
     /**

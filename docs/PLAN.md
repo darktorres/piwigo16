@@ -1082,14 +1082,17 @@ record, since these were the foundation Stage 1/2 built on):
 - `Ws/Images.php`, the last god-class, was deleted in `6573f728c2`. The
   namespace is now 204 files across per-domain subdirectories.
 
-<!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='grep -rl "implements WsAction" src/Piwigo/Ws --include="*.php" | wc -l' expect="94" -->
+**Superseded**: the entire `Piwigo\Ws\*` namespace and `tests/Contract/`
+described throughout this P25 history section were deleted outright by
+P27 (the WS layer deletion, its own section below) — nothing here is
+verifiable against the current tree anymore; kept as historical record
+only, no doc-drift-check marker.
 
-One registration deliberately stays on the legacy `addMethod()` path:
-`pwg.activity.downloadLog` points at an undefined function and fatals if
-invoked. It is permanently dead and covered by its own regression test in
-`tests/Contract/WsHistoryTest.php`; converting it would give a dead
-method a working implementation it never had.
+One registration deliberately stayed on the legacy `addMethod()` path:
+`pwg.activity.downloadLog` pointed at an undefined function and fataled
+if invoked. It was permanently dead and covered by its own regression
+test in `tests/Contract/WsHistoryTest.php`; both are gone now along with
+the rest of `Ws/*` and `tests/Contract/`.
 
 Follow-up fixes in the same window: `#[\Override]` added to all 94
 handlers, `Server` no longer resolving handlers via `Kernel::container()`,

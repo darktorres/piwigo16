@@ -12,8 +12,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\Projection\GroupAccessRow;
-use Piwigo\Permission\Projection\UserAccessRow;
 use Piwigo\Users\CurrentUser;
 use UnexpectedValueException;
 
@@ -276,32 +274,5 @@ final readonly class PermissionService
         }
 
         $this->repo->massInsertUserAccess($inserts);
-    }
-
-    /**
-     * @param  list<int>  $catIds
-     * @return list<UserAccessRow>
-     */
-    public function getDirectUserAccessRows(array $catIds): array
-    {
-        return $this->repo->findDirectUserAccessRows($catIds);
-    }
-
-    /**
-     * @param  list<int>  $catIds
-     * @return list<UserAccessRow>
-     */
-    public function getIndirectUserAccessRows(array $catIds): array
-    {
-        return $this->repo->findIndirectUserAccessRows($catIds);
-    }
-
-    /**
-     * @param  list<int>  $catIds
-     * @return list<GroupAccessRow>
-     */
-    public function getGroupAccessRows(array $catIds): array
-    {
-        return $this->repo->findGroupAccessRows($catIds);
     }
 }

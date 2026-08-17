@@ -230,7 +230,7 @@ deptrac:
     - name: L4Integration
       collectors:
         - type: classLike
-          value: ^Piwigo\\(Admin|Bootstrap|Command|Controller|Job|Ws)\\.*
+          value: ^Piwigo\\(Admin|Bootstrap|Command|Controller|Job)\\.*
         - type: classLike
           value: ^Piwigo\\Listener\\UploadFormatListener$
   ruleset:

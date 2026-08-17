@@ -419,24 +419,18 @@ it('delete_comment succeeds for an anonymous (NULL author_id) comment', function
         'login' => 'Login',
     ]);
 
-    $statusResult = $post($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $album = $post($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($cookieJar, 'POST', '/api/v1/categories', [
         'name' => 'Picture Bug Test Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $decodedAlbum = json_decode($album['body'], true);
-    $albumResultData = is_array($decodedAlbum) ? ($decodedAlbum['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResultData) ? ($albumResultData['id'] ?? null) : null;
+    ], $pwgToken);
+    $decodedAlbum = json_decode($albumBody, true);
+    $albumIdRaw = is_array($decodedAlbum) ? ($decodedAlbum['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);
@@ -516,24 +510,18 @@ it("edits a comment's own content via the edit_comment action, validating it as 
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $album = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($cookieJar, 'POST', '/api/v1/categories', [
         'name' => 'Picture Edit Comment Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $decodedAlbum = json_decode($album['body'], true);
-    $albumResultData = is_array($decodedAlbum) ? ($decodedAlbum['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResultData) ? ($albumResultData['id'] ?? null) : null;
+    ], $pwgToken);
+    $decodedAlbum = json_decode($albumBody, true);
+    $albumIdRaw = is_array($decodedAlbum) ? ($decodedAlbum['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);
@@ -780,24 +768,18 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $album = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($cookieJar, 'POST', '/api/v1/categories', [
         'name' => 'Picture Reject Comment Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $decodedAlbum = json_decode($album['body'], true);
-    $albumResultData = is_array($decodedAlbum) ? ($decodedAlbum['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResultData) ? ($albumResultData['id'] ?? null) : null;
+    ], $pwgToken);
+    $decodedAlbum = json_decode($albumBody, true);
+    $albumIdRaw = is_array($decodedAlbum) ? ($decodedAlbum['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);
@@ -1074,36 +1056,27 @@ it("shows the access-denied page for a photo whose privacy level exceeds the vie
     $curl = $adminSession['curl'];
     $baseUrl = $adminSession['baseUrl'];
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($adminSession['cookieJar'], 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $ownAlbum = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $ownAlbumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Level Test Own Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $ownAlbumData = json_decode($ownAlbum['body'], true);
-    $ownAlbumResult = is_array($ownAlbumData) ? ($ownAlbumData['result'] ?? null) : null;
-    $ownAlbumIdRaw = is_array($ownAlbumResult) ? ($ownAlbumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $ownAlbumData = json_decode($ownAlbumBody, true);
+    $ownAlbumIdRaw = is_array($ownAlbumData) ? ($ownAlbumData['id'] ?? null) : null;
     $ownAlbumId = is_numeric($ownAlbumIdRaw) ? (int) $ownAlbumIdRaw : 0;
     expect($ownAlbumId)
         ->toBeGreaterThan(0);
 
-    $otherAlbum = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $otherAlbumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Level Test Other Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $otherAlbumData = json_decode($otherAlbum['body'], true);
-    $otherAlbumResult = is_array($otherAlbumData) ? ($otherAlbumData['result'] ?? null) : null;
-    $otherAlbumIdRaw = is_array($otherAlbumResult) ? ($otherAlbumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $otherAlbumData = json_decode($otherAlbumBody, true);
+    $otherAlbumIdRaw = is_array($otherAlbumData) ? ($otherAlbumData['id'] ?? null) : null;
     $otherAlbumId = is_numeric($otherAlbumIdRaw) ? (int) $otherAlbumIdRaw : 0;
     expect($otherAlbumId)
         ->toBeGreaterThan(0);
@@ -1113,11 +1086,10 @@ it("shows the access-denied page for a photo whose privacy level exceeds the vie
     @unlink($image);
 
     // level=8 is above any non-admin user's default level.
-    $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.images.setPrivacyLevel',
-        'image_id' => (string) $imageId,
-        'level' => '8',
-    ]);
+    H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/images/actions/set-privacy-level', [
+        'imageIds' => [$imageId],
+        'level' => 8,
+    ], $pwgToken);
 
     $regularSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
     $result = $regularSession['curl']($baseUrl . '/picture.php?/' . $imageId . '/category/' . $otherAlbumId);
@@ -1134,36 +1106,27 @@ it('shows "requested image is filtered" for a backdated photo excluded by an act
     $curl = $adminSession['curl'];
     $baseUrl = $adminSession['baseUrl'];
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($adminSession['cookieJar'], 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $ownAlbum = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $ownAlbumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Filtered Test Own Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $ownAlbumData = json_decode($ownAlbum['body'], true);
-    $ownAlbumResult = is_array($ownAlbumData) ? ($ownAlbumData['result'] ?? null) : null;
-    $ownAlbumIdRaw = is_array($ownAlbumResult) ? ($ownAlbumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $ownAlbumData = json_decode($ownAlbumBody, true);
+    $ownAlbumIdRaw = is_array($ownAlbumData) ? ($ownAlbumData['id'] ?? null) : null;
     $ownAlbumId = is_numeric($ownAlbumIdRaw) ? (int) $ownAlbumIdRaw : 0;
     expect($ownAlbumId)
         ->toBeGreaterThan(0);
 
-    $otherAlbum = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $otherAlbumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Filtered Test Other Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $otherAlbumData = json_decode($otherAlbum['body'], true);
-    $otherAlbumResult = is_array($otherAlbumData) ? ($otherAlbumData['result'] ?? null) : null;
-    $otherAlbumIdRaw = is_array($otherAlbumResult) ? ($otherAlbumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $otherAlbumData = json_decode($otherAlbumBody, true);
+    $otherAlbumIdRaw = is_array($otherAlbumData) ? ($otherAlbumData['id'] ?? null) : null;
     $otherAlbumId = is_numeric($otherAlbumIdRaw) ? (int) $otherAlbumIdRaw : 0;
     expect($otherAlbumId)
         ->toBeGreaterThan(0);
@@ -1496,24 +1459,18 @@ it('shows access-denied via the flat "all items" view when the photo\'s only alb
     $curl = $adminSession['curl'];
     $baseUrl = $adminSession['baseUrl'];
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($adminSession['cookieJar'], 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $album = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Flat View Denied Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $albumData = json_decode($album['body'], true);
-    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $albumData = json_decode($albumBody, true);
+    $albumIdRaw = is_array($albumData) ? ($albumData['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);
@@ -1608,24 +1565,18 @@ it('redirects to the canonical flat picture URL when the image is not part of th
     $curl = $adminSession['curl'];
     $baseUrl = $adminSession['baseUrl'];
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($adminSession['cookieJar'], 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $album = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Redirect Section Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $albumData = json_decode($album['body'], true);
-    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $albumData = json_decode($albumBody, true);
+    $albumIdRaw = is_array($albumData) ? ($albumData['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);
@@ -1689,24 +1640,18 @@ it('flashes an admin-authorization message via the session when a non-admin\'s c
     try {
         $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
         $baseUrl = $adminSession['baseUrl'];
-        $adminStatusResult = $adminSession['curl']($baseUrl . '/ws.php?format=json', [
-            'method' => 'pwg.session.getStatus',
-        ]);
-        $adminDecodedStatus = json_decode($adminStatusResult['body'], true);
-        $adminStatusResultData = is_array($adminDecodedStatus) ? ($adminDecodedStatus['result'] ?? null) : null;
-        $adminPwgTokenRaw = is_array($adminStatusResultData) ? ($adminStatusResultData['pwg_token'] ?? null) : null;
+        $adminStatusBody = H::curlApi($adminSession['cookieJar'], 'GET', '/api/v1/session');
+        $adminDecodedStatus = json_decode($adminStatusBody, true);
+        $adminPwgTokenRaw = is_array($adminDecodedStatus) ? ($adminDecodedStatus['pwgToken'] ?? null) : null;
         $adminPwgToken = is_string($adminPwgTokenRaw) || is_int($adminPwgTokenRaw) ? (string) $adminPwgTokenRaw : '';
         expect($adminPwgToken)
             ->not->toBe('');
 
-        $album = $adminSession['curl']($baseUrl . '/ws.php?format=json', [
-            'method' => 'pwg.categories.add',
+        $albumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
             'name' => 'Moderate Flash Album ' . uniqid(),
-            'pwg_token' => $adminPwgToken,
-        ]);
-        $albumData = json_decode($album['body'], true);
-        $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
-        $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+        ], $adminPwgToken);
+        $albumData = json_decode($albumBody, true);
+        $albumIdRaw = is_array($albumData) ? ($albumData['id'] ?? null) : null;
         $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
         expect($albumId)
             ->toBeGreaterThan(0);
@@ -1725,12 +1670,9 @@ it('flashes an admin-authorization message via the session when a non-admin\'s c
         $userSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
         $curl = $userSession['curl'];
 
-        $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-            'method' => 'pwg.session.getStatus',
-        ]);
-        $decodedStatus = json_decode($statusResult['body'], true);
-        $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-        $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+        $statusBody = H::curlApi($userSession['cookieJar'], 'GET', '/api/v1/session');
+        $decodedStatus = json_decode($statusBody, true);
+        $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
         $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
         expect($pwgToken)
             ->not->toBe('');
@@ -1840,24 +1782,18 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
     try {
         $adminSession = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
         $baseUrl = $adminSession['baseUrl'];
-        $adminStatusResult = $adminSession['curl']($baseUrl . '/ws.php?format=json', [
-            'method' => 'pwg.session.getStatus',
-        ]);
-        $adminDecodedStatus = json_decode($adminStatusResult['body'], true);
-        $adminStatusResultData = is_array($adminDecodedStatus) ? ($adminDecodedStatus['result'] ?? null) : null;
-        $adminPwgTokenRaw = is_array($adminStatusResultData) ? ($adminStatusResultData['pwg_token'] ?? null) : null;
+        $adminStatusBody = H::curlApi($adminSession['cookieJar'], 'GET', '/api/v1/session');
+        $adminDecodedStatus = json_decode($adminStatusBody, true);
+        $adminPwgTokenRaw = is_array($adminDecodedStatus) ? ($adminDecodedStatus['pwgToken'] ?? null) : null;
         $adminPwgToken = is_string($adminPwgTokenRaw) || is_int($adminPwgTokenRaw) ? (string) $adminPwgTokenRaw : '';
         expect($adminPwgToken)
             ->not->toBe('');
 
-        $album = $adminSession['curl']($baseUrl . '/ws.php?format=json', [
-            'method' => 'pwg.categories.add',
+        $albumBody = H::curlApi($adminSession['cookieJar'], 'POST', '/api/v1/categories', [
             'name' => 'Bogus Action Album ' . uniqid(),
-            'pwg_token' => $adminPwgToken,
-        ]);
-        $albumData = json_decode($album['body'], true);
-        $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
-        $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+        ], $adminPwgToken);
+        $albumData = json_decode($albumBody, true);
+        $albumIdRaw = is_array($albumData) ? ($albumData['id'] ?? null) : null;
         $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
         expect($albumId)
             ->toBeGreaterThan(0);
@@ -1872,12 +1808,9 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         $userSession = pictureCurlLoginSession('regular_user', 'regular_user_pass');
         $curl = $userSession['curl'];
 
-        $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-            'method' => 'pwg.session.getStatus',
-        ]);
-        $decodedStatus = json_decode($statusResult['body'], true);
-        $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-        $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+        $statusBody = H::curlApi($userSession['cookieJar'], 'GET', '/api/v1/session');
+        $decodedStatus = json_decode($statusBody, true);
+        $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
         $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
         expect($pwgToken)
             ->not->toBe('');
@@ -2224,24 +2157,18 @@ it('falls back to the medium derivative size, without warnings, when the picture
     $curl = $session['curl'];
     $baseUrl = $session['baseUrl'];
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($session['cookieJar'], 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $album = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($session['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'Deriv Corrupt Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $albumData = json_decode($album['body'], true);
-    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $albumData = json_decode($albumBody, true);
+    $albumIdRaw = is_array($albumData) ? ($albumData['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);

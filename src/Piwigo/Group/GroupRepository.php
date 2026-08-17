@@ -65,8 +65,10 @@ final class GroupRepository extends EntityRepository
 
     /**
      * Ids of every group whose name matches $namePattern (an already-built
-     * SQL LIKE pattern, e.g. `%foo%`) -- Ws\Users::getList()'s own
-     * "filter" param, which also searches group membership.
+     * SQL LIKE pattern, e.g. `%foo%`) -- the group-name half of the
+     * WS-era `pwg.users.getList` free-text `filter` search (see
+     * `Users\UserListCriteria`'s own docblock: no current `/api/v1/users`
+     * caller resolves this yet, a deliberately deferred filter).
      *
      * @return list<int>
      */
@@ -124,10 +126,10 @@ final class GroupRepository extends EntityRepository
 
     /**
      * Groups matching the given filters, each augmented with its member
-     * count (`nb_users`). $order is a pre-validated `ORDER BY` body string,
-     * built from {@see \Piwigo\Sort\GroupSortField::parseOrderClause()}'s
-     * own fixed 4-field vocabulary at the `ws_groups_getList` call site --
-     * not user-controlled free text.
+     * count (`nb_users`). $order is a pre-validated `ORDER BY` body string
+     * -- not user-controlled free text; every current caller passes its
+     * own default (no `/api/v1/groups` caller exposes a client-controlled
+     * `order` param yet, see `GroupListController`'s own docblock).
      * Plain DBAL never sees the `group_id` custom Type, so `$groupIds`
      * unwraps to raw ints before binding regardless of the IN-clause rule
      * above being about DQL specifically -- this was already true before

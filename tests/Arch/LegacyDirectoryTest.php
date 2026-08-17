@@ -139,7 +139,6 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
         'search.php',
         'tags.php',
         'themes',
-        'ws.php',
     ]);
 
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public/admin'))->toBe([

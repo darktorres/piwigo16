@@ -6,9 +6,8 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findIdsAndImageOrderWithConditions()}'s
- * own row shape -- {@see \Piwigo\Ws\Categories\GetImagesHandler}'s own
- * "which categories are we fetching images for" step, its real (and only)
- * consumer.
+ * own row shape -- the "which categories are we fetching images for" step
+ * of a category-images listing.
  */
 final readonly class CategoryIdImageOrder
 {

@@ -14,10 +14,9 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
 /**
- * The filesystem-scan + DB-state merge behind `pwg.plugins.getList`
- * ({@see \Piwigo\Ws\Extensions\PluginsGetListHandler}) -- extracted so
- * `Admin\MaintenanceEnvPageRenderer` can render the same plugin list
- * server-side without going through WS (P26.1).
+ * The filesystem-scan + DB-state merge behind the plugin list -- shared by
+ * `Admin\MaintenanceEnvPageRenderer` (server-side render, P26.1) and
+ * `Controller\Api\Extensions\PluginListController` (`GET /api/v1/plugins`).
  */
 final readonly class PluginListBuilder
 {

@@ -250,15 +250,12 @@ function idcAdminPwgToken(string $cookieJar): string
         'login' => 'Login',
     ], $cookieJar);
 
-    $statusResult = idcAdminCurl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ], $cookieJar);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     if ($pwgToken === '') {
-        throw new RuntimeException('idcAdminPwgToken(): pwg.session.getStatus did not return a pwg_token');
+        throw new RuntimeException('idcAdminPwgToken(): GET /api/v1/session did not return a pwgToken');
     }
 
     return $pwgToken;
@@ -541,12 +538,9 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');

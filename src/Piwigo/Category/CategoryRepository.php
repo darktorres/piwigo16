@@ -3376,9 +3376,9 @@ final readonly class CategoryRepository
      * Real DQL -- single-table, no join. The caller's own `RLIKE`/`REGEXP`
      * operator splice is solved by
      * {@see \Piwigo\Db\DqlFunction\RegexpFunction} (registered, already
-     * used elsewhere in this file); {@see \Piwigo\Ws\Categories\GetImagesHandler}
-     * builds `c.`-prefixed DQL property paths and the portable
-     * `REGEXP(...) = true` DQL function instead of a raw SQL fragment.
+     * used elsewhere in this file); the caller builds `c.`-prefixed DQL
+     * property paths and the portable `REGEXP(...) = true` DQL function
+     * instead of a raw SQL fragment.
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {

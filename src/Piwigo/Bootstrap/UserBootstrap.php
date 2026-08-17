@@ -23,10 +23,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ApiKeyRequestFlag;
-use Piwigo\Core\ConnectedWith;
 use Piwigo\Core\ConnectedWithSession;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\MailerInterface;
@@ -34,12 +31,9 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -49,9 +43,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Ws\Session\LoginHandler;
-use Piwigo\Ws\WsErrorResponse;
-use Piwigo\Ws\WsInitializer;
 
 /**
  * Cookie/session/auto-login/Apache-auth/API-key orchestration deciding who
@@ -59,10 +50,8 @@ use Piwigo\Ws\WsInitializer;
  * fully populate $user.
  *
  * A sibling to RequestBootstrap, not a method on Piwigo\Auth\AuthService:
- * AuthService is L2aCoreDomain, and this orchestration's WS API-key branch
- * instantiates Piwigo\Ws\WsErrorResponse (L4Integration) -- Bootstrap and Ws are
- * matched by the same deptrac collector (same layer), so this is the only
- * violation-free home for the whole orchestration. AuthService's own
+ * AuthService is L2aCoreDomain, and this class is L4Integration (heavy
+ * Kernel/container-lookup dependencies throughout). AuthService's own
  * login/logout/remember-me building blocks (autoLogin()/logUser()/
  * logoutUser()) are called directly, not through free-function wrappers,
  * since this class sits right next to the real service already.
@@ -73,9 +62,6 @@ final readonly class UserBootstrap
         private AccessLevelChecker $accessLevelChecker,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private ApiKeyRequestFlag $apiKeyRequestFlag,
-        private CurrentLogger $currentLogger,
-        private WsContext $wsContext,
         private DeploymentPolicy $deploymentPolicy,
         private ConnectedWithSession $connectedWithSession,
     ) {}
@@ -108,10 +94,6 @@ final readonly class UserBootstrap
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
-        }
-        $csrfService = Kernel::container()->get(CsrfService::class);
-        if (! $csrfService instanceof CsrfService) {
-            throw new LogicException('Container returned an unexpected type for ' . CsrfService::class);
         }
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if (! $installationFlag instanceof InstallationFlag) {
@@ -214,88 +196,20 @@ final readonly class UserBootstrap
             $authService->authKeyLogin($userBootstrapRequest->authKey);
         }
 
-        // HTTP_AUTHORIZATION api_key
-        if (
-            $this->wsContext->isActive()
-            and isset($_SERVER['HTTP_X_PIWIGO_API'])
-            and is_string($_SERVER['HTTP_X_PIWIGO_API'])
-            and ! self::emptyValue($_SERVER['HTTP_X_PIWIGO_API'])
-            and $userBootstrapRequest->wsMethod !== null
-        ) {
-            // $_SERVER['HTTP_X_PIWIGO_API'] is already known non-empty by the
-            // enclosing condition; AuthRepository::findAuthKeyDetails() (what
-            // authKeyLogin() below ultimately calls) uses a real bound DBAL
-            // parameter. authKeyLogin() itself validates this value against
-            // a strict regex ([a-z0-9]{30} or pkid-... only), so it can't
-            // contain anything needing SQL escaping in the first place.
-            $auth_header = $_SERVER['HTTP_X_PIWIGO_API'];
-            assert(is_string($auth_header));
-
-            if ((bool) $auth_header) {
-                $authenticate = $authService->authKeyLogin($auth_header, true);
-                if (! $authenticate) {
-                    // A plain local read of WsInitializer::init()'s return
-                    // value -- no `global $service;` needed.
-                    $wsInitializer = Kernel::container()->get(WsInitializer::class);
-                    if (! $wsInitializer instanceof WsInitializer) {
-                        throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
-                    }
-                    $service = $wsInitializer->init();
-                    throw new ResponseReadyException($service->sendResponse(new WsErrorResponse(401, 'Invalid api_key')));
-                }
-                $this->apiKeyRequestFlag->activate();
-
-                // set pwg_token for api_key request -- load-bearing write, not
-                // covered by Request\UserBootstrapRequest (see its own
-                // docblock): must stay visible to later $_POST/$_GET reads
-                // in this same request (Ws\Request\WsRawRequest::fromGlobals()
-                // and any downstream CSRF check).
-                $_POST['pwg_token'] = $_GET['pwg_token'] = $csrfService->getToken();
-
-                // logger
-                $logger = $this->currentLogger->get();
-                $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $userBootstrapRequest->wsMethod . ']');
-            }
-        }
-
-        if (
-            $this->wsContext->isActive()
-            and $userBootstrapRequest->wsMethod === 'pwg.images.uploadAsync'
-            and $userBootstrapRequest->username !== null
-            and $userBootstrapRequest->password !== null
-        ) {
-            $wsInitializer = Kernel::container()->get(WsInitializer::class);
-            if (! $wsInitializer instanceof WsInitializer) {
-                throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
-            }
-            $service = $wsInitializer->init();
-
-            $credentials = [
-                'username' => $userBootstrapRequest->username,
-                'password' => $userBootstrapRequest->password,
-            ];
-
-            $loginHandler = Kernel::container()->get(LoginHandler::class);
-            if (! $loginHandler instanceof LoginHandler) {
-                throw new LogicException('Container returned an unexpected type for ' . LoginHandler::class);
-            }
-            $login = $loginHandler($credentials);
-
-            if ($login !== true) {
-                throw new ResponseReadyException($service->sendResponse($login));
-            }
-            // SEC finding 2: do NOT unconditionally overwrite this --
-            // LoginHandler already set 'ws_session_login_api_key' above when
-            // $credentials['username'] was an API key (pkid-...), and
-            // Server::isAuthorizedMethodForAPIKEY() keys off that exact
-            // literal to keep apiKeyForbiddenMethods enforced for the rest
-            // of the session. Overwriting it here unconditionally erased
-            // that marker, silently lifting every restriction an API key is
-            // supposed to carry for the remainder of the session.
-            if ($this->connectedWithSession->get() !== ConnectedWith::WsSessionLoginApiKey) {
-                $this->connectedWithSession->set(ConnectedWith::UploadAsync);
-            }
-        }
+        // The HTTP_X_PIWIGO_API header branch and the pwg.images.uploadAsync
+        // branch that used to live here were both gated on
+        // $userBootstrapRequest->wsMethod (== $_REQUEST['method'], the
+        // legacy ws.php?method=... convention) being non-null/matching a
+        // specific method name. Neither ws.php (deleted, P27) nor the
+        // /api/v1 REST surface (real URL paths, never a `method` request
+        // param) can ever populate that field, so both branches were
+        // already fully unreachable dead code before this deletion pass
+        // even started -- confirmed via a full-codebase search, not
+        // assumed. Removed along with WsInitializer/Ws\Session\LoginHandler
+        // themselves (P27, WS layer deletion). The still-live api-key
+        // login path is the simpler, always-active
+        // $userBootstrapRequest->authKeyPresent branch above (`?auth=`
+        // query param), unrelated to either of these.
 
         // $user['id'] is always numeric here (either \Piwigo\Config\CurrentConfig::guestId(), a
         // $_SESSION['pwg_uid'] set by a prior login, or the int|false result of

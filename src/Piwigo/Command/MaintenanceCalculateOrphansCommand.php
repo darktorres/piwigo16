@@ -41,7 +41,8 @@ final class MaintenanceCalculateOrphansCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $categoryId = (int) $input->getArgument('category-id');
+        $rawCategoryId = $input->getArgument('category-id');
+        $categoryId = is_numeric($rawCategoryId) ? (int) $rawCategoryId : 0;
 
         $impact = $this->categoryService->calculateOrphanImpact($categoryId);
 

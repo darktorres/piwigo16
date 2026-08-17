@@ -31,7 +31,8 @@ use Piwigo\Users\UserStatus;
  * Piwigo\Admin\CommentsPageRenderer -- zero-constructor,
  * method-param-injected (B3 Tier 1 shape). No dedicated Integration/
  * Browser spec -- reached only via the "comments" page slug (real
- * moderation is a client-side ws.php/AJAX flow this class never touches).
+ * moderation is a client-side /api/v1/comments AJAX flow this class never
+ * touches).
  *
  * Tabsheet::select('', ...) needs CoreTabs::addCoreTabs() registered as
  * a TabsheetBeforeSelect handler on the same EventDispatcher, same real

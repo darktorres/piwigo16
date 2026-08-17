@@ -9,11 +9,10 @@ use Piwigo\Permission\SqlCondition;
 
 /**
  * Typed replacement for
- * {@see \Piwigo\Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()}'s own former raw
+ * {@see ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()}'s own former raw
  * `Piwigo\Permission\SqlCondition` return -- the shared "f_*" range-filter
- * set merged into every WS method that exposes generic image filtering
- * (`pwg.images.search`, `pwg.categories.getImages`,
- * `pwg.getMissingDerivatives`, `pwg.tags.getImages`): 5 simple numeric
+ * set merged into every REST endpoint that exposes generic image filtering
+ * (image search, category images, missing-derivatives, tag images): 5 simple numeric
  * range pairs (rate/hit/ratio, each min+max), 1 upper-bound-only level
  * check, and 2 date range pairs (available/created). Every field null =
  * "no restriction on this dimension" -- each consuming repository method

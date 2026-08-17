@@ -620,7 +620,6 @@ PHPStan/ECS/deptrac, no CI job, no `composer` script).
 | Command | What it does |
 | --- | --- |
 | `composer test:integration` | Pest `Integration` — needs `.env.test` + `piwigo_test` DB |
-| `composer test:contract` | Pest `Contract` — WS API contract tests against the committed fixture |
 | `composer test:browser` | Pest `Browser` — E2E via `pest-plugin-browser` (Chromium) |
 | `composer test:visual` | Visual regression only — **run in isolation**, see below |
 | `composer test:install` | Install-flow E2E only (its own Browser group) |
@@ -629,7 +628,7 @@ PHPStan/ECS/deptrac, no CI job, no `composer` script).
 
 Tests run against a throw-away `piwigo_test` database, never production.
 `PIWIGO_BASE_URL` must point at a running webserver for this checkout —
-Integration/Contract/Browser all make real HTTP requests.
+Integration/Browser both make real HTTP requests.
 
 The env-switch mechanism (`Piwigo\Core\Env`, wired into request
 bootstrap): an `X-Piwigo-Env: test` header, honored only from loopback,
@@ -640,19 +639,18 @@ tests set it per-context via Playwright's `extraHTTPHeaders`.
 
 **Fixture**: `tests/Fixtures/piwigo-17.0.sql`, a committed dump
 (`fixture_admin`/`fixture_admin`, seed content). `composer test:integration`/
-`test:contract`/`test:browser`/`test:visual` all self-provision a
+`test:browser`/`test:visual` all self-provision a
 pristine DB before running — none depend on run order or on
 `test:fixture-regen` having been run first.
 
-**Contract tests**: `tests/Contract/ContractTestCase` drives the WS API
-over curl, validating against JSON Schema files in `tests/Contract/schemas/`.
-38 `Ws*Test` classes (`WsHelperTest.php` split into 7 single-responsibility
-test files during P25's own `WsHelper` decomposition, `08eee7350d`) lock
-the legacy WS response shapes for as long as the WS API exists — P27
-removes it in favor of a REST `/api/v1` and retires these in favor of REST
-contract tests.
-<!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find tests/Contract -maxdepth 1 -iname "Ws*Test.php" | wc -l' expect="38" -->
+**Contract tests are gone**: `tests/Contract/` (the WS API contract suite,
+curl-driven, validated against JSON Schema files) was deleted along with
+the WS layer itself (P27) — its 38 `Ws*Test` classes locked wire-protocol
+response shapes that no longer exist. A REST-focused contract suite
+against `/api/v1` is real, separate follow-up work, not yet started; the
+Browser suite's own `BrowserTestHelpers::wsCall()`/`curlApi()` (below)
+cover `/api/v1` fixture-setup needs in the meantime, not response-schema
+locking.
 
 **Browser tests**: 95 files in `tests/Browser/` (93 E2E flows, plus the
 two special-purpose files below) via `pestphp/pest-plugin-browser`.

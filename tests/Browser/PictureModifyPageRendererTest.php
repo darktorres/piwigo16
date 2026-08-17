@@ -464,24 +464,18 @@ it('honors the session edit context as the delete redirect target instead of the
     $curl = $session['curl'];
     $baseUrl = $session['baseUrl'];
 
-    $statusResponse = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $statusData = json_decode($statusResponse['body'], true);
-    $statusResult = is_array($statusData) ? ($statusData['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResult) ? ($statusResult['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($session['cookieJar'], 'GET', '/api/v1/session');
+    $statusData = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($statusData) ? ($statusData['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) ? $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');
 
-    $albumResponse = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.categories.add',
+    $albumBody = H::curlApi($session['cookieJar'], 'POST', '/api/v1/categories', [
         'name' => 'PM Delete Context Album ' . uniqid(),
-        'pwg_token' => $pwgToken,
-    ]);
-    $albumData = json_decode($albumResponse['body'], true);
-    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
-    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    ], $pwgToken);
+    $albumData = json_decode($albumBody, true);
+    $albumIdRaw = is_array($albumData) ? ($albumData['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
     expect($albumId)
         ->toBeGreaterThan(0);

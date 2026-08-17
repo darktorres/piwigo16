@@ -112,7 +112,6 @@ use Piwigo\Controller\SearchController;
 use Piwigo\Controller\TagsController;
 use Piwigo\Controller\TestErrorsController;
 use Piwigo\Controller\VitalsController;
-use Piwigo\Controller\WsController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -212,10 +211,6 @@ final class RouteDefinitions
 
         $routes->add('action', new Route('/action.php', [
             '_controller' => ActionController::class,
-        ]));
-
-        $routes->add('ws', new Route('/ws.php', [
-            '_controller' => WsController::class,
         ]));
 
         // Clean URL (no .php), rewritten to analytics_vitals.php by .htaccess --

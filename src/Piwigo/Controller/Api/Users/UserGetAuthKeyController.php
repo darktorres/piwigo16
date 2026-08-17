@@ -58,13 +58,13 @@ final readonly class UserGetAuthKeyController implements ControllerInterface
         }
 
         return ResponseFactory::json([
-            'authKey' => $authKey['auth_key'] ?? null,
-            'authKeyId' => $authKey['auth_key_id'] ?? null,
-            'userId' => $authKey['user_id'] ?? null,
-            'createdOn' => $authKey['created_on'] ?? null,
-            'duration' => $authKey['duration'] ?? null,
-            'expiredOn' => $authKey['expired_on'] ?? null,
-            'keyType' => $authKey['key_type'] ?? null,
+            'authKey' => $authKey['auth_key'],
+            'authKeyId' => $authKey['auth_key_id'],
+            'userId' => $authKey['user_id'],
+            'createdOn' => $authKey['created_on'],
+            'duration' => $authKey['duration'],
+            'expiredOn' => $authKey['expired_on'],
+            'keyType' => $authKey['key_type'],
         ]);
     }
 }

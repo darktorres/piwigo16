@@ -7,9 +7,9 @@ namespace Piwigo\Image\Projection;
 /**
  * {@see \Piwigo\Image\ImageRepository::findPathsAndLevelForIds()}'s own
  * row shape (same 3 columns as {@see PathRepresentativeExt}, plus
- * `level`) -- {@see \Piwigo\Ws\Categories\GetListHandler}'s real (and
- * only) consumer, its "does the viewer's privacy level allow this
- * thumbnail" check.
+ * `level`) -- {@see \Piwigo\Controller\Api\Categories\CategoryAvailableListController}'s
+ * real (and only) consumer, its "does the viewer's privacy level allow
+ * this thumbnail" check.
  *
  * `toArray()` preserves the exact original snake_case shape:
  * {@see \Piwigo\Image\DerivativeImage::url()} accepts

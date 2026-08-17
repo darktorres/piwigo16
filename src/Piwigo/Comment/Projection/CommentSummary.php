@@ -9,9 +9,9 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Typed row shape for {@see \Piwigo\Ws\Images\GetInfoHandler}'s own
- * "related comments" block (`pwg.images.getInfo`'s `SELECT id, date,
- * author, content FROM comments ...`).
+ * Typed row shape for {@see \Piwigo\Controller\Api\Images\ImageGetController}'s
+ * own "related comments" block (`SELECT id, date, author, content FROM
+ * comments ...`).
  *
  * `date` stays `?string`, not `SqlDateTime`, at the DTO level -- this
  * Projection's own convention (matches `Comment\Projection\Comment::$date`).

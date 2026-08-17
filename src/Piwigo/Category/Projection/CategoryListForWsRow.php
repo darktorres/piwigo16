@@ -6,19 +6,20 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findListForWs()}'s own row
- * shape -- {@see \Piwigo\Ws\Categories\GetListHandler}'s real (and only)
- * consumer, its paginated category rollup. This is a raw
+ * shape -- {@see \Piwigo\Controller\Api\Categories\CategoryAvailableListController}'s
+ * real consumer (via {@see \Piwigo\Category\CategoryService::getListForWs()}),
+ * its paginated category rollup. This is a raw
  * `Connection::fetchAllAssociative()` DBAL row (no Doctrine Type
  * conversion applies, unlike this domain's DQL-backed methods), so each
  * field is narrowed to its real `categories`-table column type at
  * construction time here, once, instead of scattering the same
- * `is_numeric()`/`is_string()` guards through the WS response-building
+ * `is_numeric()`/`is_string()` guards through the response-building
  * consumer.
  *
  * `toArray()` exists for that consumer: it splices a large number of
  * derived keys (`nb_images`, `url`, `user_representative_picture_id`,
  * `name_raw`, `comment_raw`, ...) onto each row before building the final
- * WS response, so it `toArray()`s the whole paginated result once, up
+ * JSON response, so it `toArray()`s the whole paginated result once, up
  * front.
  */
 final readonly class CategoryListForWsRow

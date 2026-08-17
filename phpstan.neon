@@ -115,17 +115,11 @@ parameters:
             path: tests/Integration/ImageStdParamsTest.php
         -
             # MySQL's `ON DUPLICATE KEY UPDATE` / Postgres's `ON CONFLICT`
-            # inside driver-conditional code (upsertConfig()'s own docblock
-            # documents the split) -- phpstan-dba validates the string
-            # literal from BOTH branches against whichever one connection
-            # it currently has; only the branch matching the configured
-            # driver ever actually executes.
-            identifier: dba.syntaxError
-            path: tests/Contract/ContractTestCase.php
-        -
-            # Same MySQL-dialect-vs-Postgres-connection limitation as
-            # ContractTestCase.php above (seedFlag()'s own comment
-            # documents the ON DUPLICATE KEY UPDATE / ON CONFLICT split).
+            # inside driver-conditional code (own comment documents the
+            # split) -- phpstan-dba validates the string literal from BOTH
+            # branches against whichever one connection it currently has;
+            # only the branch matching the configured driver ever actually
+            # executes.
             identifier: dba.syntaxError
             path: tests/Integration/NoPhotoYetRendererTest.php
         -
@@ -141,11 +135,6 @@ parameters:
             # bound parameter's type inside a function call) is misread by
             # phpstan-dba's own placeholder-scanning regex as a bound
             # parameter named "text".
-            identifier: dba.syntaxError
-            path: tests/Contract/WsCategoriesMutationTest.php
-        -
-            # Same `::text`-cast-misread-as-placeholder limitation as
-            # WsCategoriesMutationTest.php above.
             identifier: dba.syntaxError
             path: tests/Integration/GroupServiceTest.php
         -
@@ -195,16 +184,6 @@ parameters:
             # the cast look redundant from that one connection's view alone.
             identifier: cast.useless
             path: tests/Integration/NotificationByMailSenderTest.php
-        -
-            # images.rating_score is declared FLOAT on MySQL (DBAL returns
-            # a native float) but numeric(5,4) on Postgres (DBAL returns a
-            # string, to preserve exact decimal precision) -- the (float)
-            # cast is required for Postgres portability even though
-            # phpstan-dba's currently-configured mysqli connection already
-            # reports the column as float, making the cast look redundant
-            # from that one connection's view alone.
-            identifier: cast.useless
-            path: tests/Contract/ImageFilterCriteriaBuilderTest.php
         -
             # ImageRepository::findIdsGroupedByDuplicateFields() is inferred
             # as returning `array{}` -- but only when called with an inline

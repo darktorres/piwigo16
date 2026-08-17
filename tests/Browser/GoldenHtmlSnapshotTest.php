@@ -92,8 +92,8 @@ function goldenHtmlCurlPost(string $cookieJar, string $path, array $fields): arr
 }
 
 /**
- * Logs in as the fixture admin via the WS API (the same code path Piwigo
- * uses internally) rather than a raw form POST -- matches
+ * Logs in as the fixture admin via the real `/api/v1` session API (the same
+ * code path Piwigo uses internally) rather than a raw form POST -- matches
  * RegenerateFixtureTest.php's own established preference: avoids flaky
  * form-login mechanics (anti-bot key timing, CSRF token scraping) that have
  * nothing to do with what this capture is checking. Returns a fresh cookie
@@ -107,33 +107,25 @@ function goldenHtmlLoginAsAdmin(): string
         throw new RuntimeException('tempnam() failed');
     }
 
-    $ch = curl_init(H::baseUrl() . '/ws.php?format=json');
-    if ($ch === false) {
-        throw new RuntimeException('curl_init failed');
-    }
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-        'method' => 'pwg.session.login',
+    $body = H::curlApi($cookieJar, 'POST', '/api/v1/session', [
         'username' => H::ADMIN_USER,
         'password' => H::ADMIN_PASS,
-    ]));
-    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
-    $body = curl_exec($ch);
-    unset($ch);
+    ]);
 
-    if (! is_string($body)) {
+    if ($body === '') {
         unlink($cookieJar);
 
-        throw new RuntimeException('pwg.session.login returned no body');
+        throw new RuntimeException('POST /api/v1/session returned no body');
     }
+    // A failed login returns an RFC 9457 problem+json body, which also
+    // happens to carry its own 'status' key (the HTTP status code) --
+    // 'username' is SessionStatusPresenter's own field, only ever present
+    // on a real success body, so it's the real discriminator here.
     $decoded = json_decode($body, true);
-    if (! is_array($decoded) || ($decoded['stat'] ?? null) !== 'ok') {
+    if (! is_array($decoded) || ! isset($decoded['username'])) {
         unlink($cookieJar);
 
-        throw new RuntimeException('pwg.session.login failed: ' . $body);
+        throw new RuntimeException('POST /api/v1/session login failed: ' . $body);
     }
 
     return $cookieJar;

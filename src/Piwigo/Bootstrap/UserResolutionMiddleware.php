@@ -17,14 +17,11 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\ConnectedWithSession;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Html\HtmlService;
@@ -72,9 +69,6 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
         private Lang $lang,
         private UserService $userService,
         private UrlServiceInterface $urlService,
-        private ApiKeyRequestFlag $apiKeyRequestFlag,
-        private CurrentLogger $currentLogger,
-        private WsContext $wsContext,
         private DeploymentPolicy $deploymentPolicy,
     ) {}
 
@@ -117,9 +111,6 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
             $this->accessLevelChecker,
             new RedirectService($this->lang, $this->userService, $this->eventDispatcher, $this->pageState),
             $this->urlService,
-            $this->apiKeyRequestFlag,
-            $this->currentLogger,
-            $this->wsContext,
             $this->deploymentPolicy,
             new ConnectedWithSession(),
         )->initialize();

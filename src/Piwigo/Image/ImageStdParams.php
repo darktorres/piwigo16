@@ -75,12 +75,12 @@ final class ImageStdParams
     private const array DISABLED_TYPES_BY_DEFAULT = [self::THREE_XLARGE, self::FOUR_XLARGE];
 
     /**
-     * @var DerivativeParams[]
+     * @var array<string, DerivativeParams>
      */
     private array $all_type_map = [];
 
     /**
-     * @var DerivativeParams[]
+     * @var array<string, DerivativeParams>
      */
     private array $type_map = [];
 
@@ -119,7 +119,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public function getAllTypeMap(): array
     {
@@ -168,7 +168,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public function getDefinedTypeMap(): array
     {
@@ -429,7 +429,7 @@ final class ImageStdParams
     /**
      * @see ImageStdParams::save()
      *
-     * @param DerivativeParams[] $map
+     * @param array<string, DerivativeParams> $map
      */
     public function setAndSave(array $map): void
     {

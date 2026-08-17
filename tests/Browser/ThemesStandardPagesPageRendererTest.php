@@ -165,12 +165,9 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
-        'method' => 'pwg.session.getStatus',
-    ]);
-    $decodedStatus = json_decode($statusResult['body'], true);
-    $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
-    $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
+    $statusBody = H::curlApi($cookieJar, 'GET', '/api/v1/session');
+    $decodedStatus = json_decode($statusBody, true);
+    $pwgTokenRaw = is_array($decodedStatus) ? ($decodedStatus['pwgToken'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
     expect($pwgToken)
         ->not->toBe('');

@@ -8,16 +8,16 @@ use Override;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Controller\Api\ImageFilterQueryInput;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsErrorResponse;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageFilterCriteriaBuilder;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageUrlBuilder;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
-use Piwigo\Ws\ImageFilterCriteriaBuilder;
-use Piwigo\Ws\ImageUrlBuilder;
-use Piwigo\Ws\WsErrorResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -88,16 +88,16 @@ final readonly class ImageSearchController implements ControllerInterface
             foreach ($this->imageRepository->findByIds(array_keys($imageIdsFlipped)) as $imageRow) {
                 $row = $imageRow->toArray();
 
-                $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($row['name'] ?? null) ? $row['name'] : '', 'search'));
-                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($row['comment'] ?? null) ? $row['comment'] : '', 'search'));
+                $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($row['name']) ? $row['name'] : '', 'search'));
+                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($row['comment']) ? $row['comment'] : '', 'search'));
 
                 $image = array_merge(
                     [
                         'isFavorite' => isset($favoriteIds[$imageRow->id->value]),
                         'id' => $row['id'],
-                        'width' => $row['width'] ?? null,
-                        'height' => $row['height'] ?? null,
-                        'hit' => $row['hit'] ?? null,
+                        'width' => $row['width'],
+                        'height' => $row['height'],
+                        'hit' => $row['hit'],
                         'file' => $row['file'],
                         'name' => strip_tags($nameEvent->elementName),
                         'comment' => $descriptionEvent->elementDescription,

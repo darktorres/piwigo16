@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser;
 
-use CURLFile;
 use mysqli;
 use Override;
 use PgSql\Connection;
 use PHPUnit\Framework\Attributes\Group;
 use Piwigo\Core\Env;
+use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers;
 use Piwigo\Tests\Browser\Helpers\FixturePhotoGenerator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use RuntimeException;
@@ -35,8 +35,16 @@ use RuntimeException;
  * to pgsql beforehand (the real, live-server-facing side of this test;
  * unlike most Integration tests, it can't be driven by an env-var override
  * on the CLI invocation alone, since the *real running web server* --
- * not this CLI process -- is what actually executes install.php/ws.php
- * and re-reads .env.test itself for every request).
+ * not this CLI process -- is what actually executes install.php/the
+ * `/api/v1` endpoints below and re-reads .env.test itself for every
+ * request).
+ *
+ * Fixture creation goes through `/api/v1` (matching every other Browser
+ * test's own conversion off `ws.php` -- see
+ * `BrowserTestHelpers::wsCall()`'s own docblock), via
+ * `BrowserTestHelpers::curlApi()`/`::uploadPhotoViaApi()` (both
+ * cookie-jar-based, not `Webpage`-based, since this test drives raw curl
+ * against `install.php` directly and never opens a real Playwright page).
  */
 #[Group('fixture-regen')]
 final class RegenerateFixtureTest extends IntegrationTestCase
@@ -166,36 +174,39 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ]);
         self::assertStringContainsString('Congratulations', $installBody, 'install.php must report success');
 
-        // 3. Log in as fixture_admin via WS (same code path Piwigo uses
-        // internally; avoids flaky form-login on a freshly installed gallery).
-        $login = $this->callWs('pwg.session.login', [
+        // 3. Log in as fixture_admin via POST /api/v1/session (same code
+        // path Piwigo uses internally; avoids flaky form-login on a
+        // freshly installed gallery), matching
+        // BrowserTestHelpers::uploadPhotoViaApi()'s own login+CSRF-token
+        // pattern.
+        BrowserTestHelpers::curlApi($this->cookieJar(), 'POST', '/api/v1/session', [
             'username' => self::ADMIN_USER,
             'password' => self::ADMIN_PASS,
         ]);
-        self::assertSame('ok', $login['stat'], 'fixture_admin login must succeed');
-        $statusResult = $this->callWs('pwg.session.getStatus', [])['result'];
-        self::assertIsArray($statusResult, 'pwg.session.getStatus result must be an array');
-        $pwgTokenValue = $statusResult['pwg_token'];
-        self::assertIsString($pwgTokenValue, 'pwg.session.getStatus result must include a string pwg_token');
+        $statusBody = BrowserTestHelpers::curlApi($this->cookieJar(), 'GET', '/api/v1/session');
+        $statusDecoded = json_decode($statusBody, true);
+        self::assertIsArray($statusDecoded, 'GET /api/v1/session response is not valid JSON: ' . $statusBody);
+        $pwgTokenValue = $statusDecoded['pwgToken'] ?? null;
+        self::assertIsString($pwgTokenValue, 'GET /api/v1/session response must include a string pwgToken (fixture_admin login must have succeeded)');
         $pwgToken = $pwgTokenValue;
 
         // 4. Two albums: one root, one nested sub-album.
-        $rootAlbumResult = $this->callWs('pwg.categories.add', [
+        $rootAlbumResult = $this->apiPost('/api/v1/categories', [
             'name' => 'Sample Album',
-        ])['result'];
-        self::assertIsArray($rootAlbumResult, 'pwg.categories.add result must be an array');
-        $rootAlbumId = self::idFromWsValue($rootAlbumResult['id'], 'pwg.categories.add');
-        $subAlbum = $this->callWs('pwg.categories.add', [
+        ], $pwgToken);
+        $rootAlbumId = self::idFromApiValue($rootAlbumResult['id'] ?? null, 'POST /api/v1/categories');
+        $subAlbumResult = $this->apiPost('/api/v1/categories', [
             'name' => 'Nested Sub Album',
-            'parent' => (string) $rootAlbumId,
-        ]);
-        self::assertSame('ok', $subAlbum['stat']);
-        $subAlbumResult = $subAlbum['result'];
-        self::assertIsArray($subAlbumResult, 'pwg.categories.add result must be an array');
-        $subAlbumId = self::idFromWsValue($subAlbumResult['id'], 'pwg.categories.add');
+            'parentId' => $rootAlbumId,
+        ], $pwgToken);
+        $subAlbumId = self::idFromApiValue($subAlbumResult['id'] ?? null, 'POST /api/v1/categories');
 
         // 5. Five photos, generated via GD (solid color + label), uploaded
-        // through the real pwg.images.addSimple pipeline.
+        // through the real tus pipeline (BrowserTestHelpers::uploadPhotoViaApi()
+        // -- its own fresh login as fixture_admin/fixture_admin is a real
+        // no-op alongside this test's own already-logged-in session, not a
+        // conflict; it also does the "flush the lounge" step
+        // pwg.images.emptyLounge used to do here, defensively, every call).
         $tmpDir = sys_get_temp_dir() . '/piwigo-fixture-' . bin2hex(random_bytes(4));
         mkdir($tmpDir);
         $photoIds = [];
@@ -205,7 +216,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
                 FixturePhotoGenerator::write($i, $filePath);
 
                 $albumId = $i <= 3 ? $rootAlbumId : $subAlbumId;
-                $photoIds[] = $this->uploadPhoto($filePath, $albumId, 'Photo ' . $i);
+                $photoIds[] = BrowserTestHelpers::uploadPhotoViaApi($filePath, $albumId, 'Photo ' . $i);
             }
         } finally {
             $tmpFiles = glob($tmpDir . '/*');
@@ -215,18 +226,14 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             rmdir($tmpDir);
         }
 
-        // 6. Three tags, attached to images so pwg.tags.getList sees them
-        // (the WS only returns tags actually used by >=1 image).
+        // 6. Three tags, attached to images so GET /api/v1/tags sees them
+        // (only tags actually used by >=1 image are returned).
         $tagIds = [];
         foreach (['nature', 'travel', 'family'] as $name) {
-            $res = $this->callWs('pwg.tags.add', [
+            $res = $this->apiPost('/api/v1/tags', [
                 'name' => $name,
-                'pwg_token' => $pwgToken,
-            ]);
-            self::assertSame('ok', $res['stat'], "tag {$name} should be created");
-            $tagAddResult = $res['result'];
-            self::assertIsArray($tagAddResult, 'pwg.tags.add result must be an array');
-            $tagIds[] = self::idFromWsValue($tagAddResult['id'], 'pwg.tags.add');
+            ], $pwgToken);
+            $tagIds[] = self::idFromApiValue($res['id'] ?? null, "POST /api/v1/tags ({$name})");
         }
         $db = $this->dbDriver === 'pgsql' ? $this->newPgsqlConnection($this->dbName) : $this->newMysqli($this->dbName);
         $this->dbQuery($db, sprintf(
@@ -246,19 +253,11 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 7. Two additional users with different permission levels.
         $userIds = [];
         foreach (['regular_user', 'power_user'] as $username) {
-            $res = $this->callWs('pwg.users.add', [
+            $res = $this->apiPost('/api/v1/users', [
                 'username' => $username,
                 'password' => $username . '_pass',
-                'pwg_token' => $pwgToken,
-            ]);
-            self::assertSame('ok', $res['stat'], "user {$username} should be created");
-            $userAddResult = $res['result'];
-            self::assertIsArray($userAddResult, 'pwg.users.add result must be an array');
-            $addedUsers = $userAddResult['users'];
-            self::assertIsArray($addedUsers, 'pwg.users.add result must include a users list');
-            $firstAddedUser = $addedUsers[0];
-            self::assertIsArray($firstAddedUser, 'pwg.users.add users[0] must be an array');
-            $userIds[$username] = self::idFromWsValue($firstAddedUser['id'], 'pwg.users.add');
+            ], $pwgToken);
+            $userIds[$username] = self::idFromApiValue($res['id'] ?? null, "POST /api/v1/users ({$username})");
         }
 
         // 8. Five comments across different users/photos (1 unvalidated).
@@ -300,18 +299,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 9. Three groups with user memberships.
         $groupIds = [];
         foreach (['Editors', 'Reviewers', 'Guests'] as $name) {
-            $res = $this->callWs('pwg.groups.add', [
+            $res = $this->apiPost('/api/v1/groups', [
                 'name' => $name,
-                'pwg_token' => $pwgToken,
-            ]);
-            self::assertSame('ok', $res['stat'], "group {$name} should be created");
-            $groupAddResult = $res['result'];
-            self::assertIsArray($groupAddResult, 'pwg.groups.add result must be an array');
-            $addedGroups = $groupAddResult['groups'];
-            self::assertIsArray($addedGroups, 'pwg.groups.add result must include a groups list');
-            $firstAddedGroup = $addedGroups[0];
-            self::assertIsArray($firstAddedGroup, 'pwg.groups.add groups[0] must be an array');
-            $groupIds[] = self::idFromWsValue($firstAddedGroup['id'], 'pwg.groups.add');
+            ], $pwgToken);
+            $groupIds[] = self::idFromApiValue($res['id'] ?? null, "POST /api/v1/groups ({$name})");
         }
         $this->dbQuery($db, sprintf(
             'INSERT INTO user_group (user_id, group_id) VALUES (1,%d),(%d,%d),(%d,%d),(%d,%d)',
@@ -574,62 +565,34 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         return $body;
     }
 
-    private function uploadPhoto(string $imagePath, int $albumId, string $name): int
+    /**
+     * POSTs JSON to a mutating, admin+CSRF-gated `/api/v1` endpoint (via
+     * `BrowserTestHelpers::curlApi()`, sharing this test's own
+     * already-logged-in cookie jar) and returns the decoded response body.
+     *
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
+    private function apiPost(string $path, array $body, string $pwgToken): array
     {
-        $url = $this->baseUrl . '/ws.php?format=json';
-        $ch = curl_init($url);
-        self::assertNotFalse($ch);
-        $userAgent = self::USER_AGENT;
-        $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            'method' => 'pwg.images.addSimple',
-            'category' => (string) $albumId,
-            'name' => $name,
-            'image' => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
-        ]);
-        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-        $body = curl_exec($ch);
-        unset($ch);
-        self::assertIsString($body, 'photo upload returned no body');
-        $decoded = json_decode($body, true);
-        self::assertIsArray($decoded, 'photo upload response is not valid JSON: ' . $body);
-        self::assertSame('ok', $decoded['stat'], 'photo upload failed: ' . $body);
+        $responseBody = BrowserTestHelpers::curlApi($this->cookieJar(), 'POST', $path, $body, $pwgToken);
+        $decoded = json_decode($responseBody, true);
+        self::assertIsArray($decoded, "POST {$path} response is not valid JSON: {$responseBody}");
 
-        // After enough photos accumulate, Piwigo's "lounge" holds uploads
-        // pending until released — flush it so fixtures see what was just
-        // uploaded.
-        $this->callWs('pwg.images.emptyLounge', []);
-
-        $uploadResult = $decoded['result'];
-        self::assertIsArray($uploadResult, 'photo upload result must be an array');
-
-        return self::idFromWsValue($uploadResult['image_id'], 'pwg.images.addSimple');
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
     }
 
     /**
-     * Narrows a WS response id field down to a real int. Piwigo's WS layer
-     * surfaces ids in two different but equally real shapes depending on
-     * the call: the repository layer's insert path (e.g.
-     * CategoryRepository::insertCategory(), TagRepository::insert())
-     * returns int|string (see CategoryService::createVirtualCategory()/
-     * TagService::createTag(), backing pwg.categories.add/pwg.tags.add,
-     * and Ws\Images::addSimple()'s own declared return shape of
-     * WsErrorResponse or array{image_id: int|string, url: string}), while ids
-     * that come back through a getList-style response (pwg.groups.add ->
-     * pwg.groups.getList, pwg.users.add -> pwg.users.getList) are either
-     * intval()'d server-side (real int) or, for pwg.groups.add, surfaced
-     * verbatim from a raw DB row (numeric string, per this codebase's DB
-     * layer invariant that every column value is string|null). Either way,
-     * a WS JSON id is always an int or a numeric string, never anything
-     * else.
+     * Narrows an `/api/v1` create-response `id` field down to a real int.
+     * Every family used here (`POST /api/v1/{tags,users,groups}`) always
+     * returns a native JSON int; `POST /api/v1/categories` is the one
+     * exception -- `CategoryCreateOutcome::$id` stays `int|string` (see its
+     * own docblock), matching `CategoryRepository::insertCategory()`'s own
+     * historical int|string insert-id shape -- so this narrowing is kept
+     * general rather than assuming every caller returns a real int.
      */
-    private static function idFromWsValue(mixed $value, string $context): int
+    private static function idFromApiValue(mixed $value, string $context): int
     {
         if (is_int($value)) {
             return $value;
@@ -639,40 +602,6 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             return (int) $value;
         }
 
-        self::fail(sprintf('%s result id must be an int or a numeric string, got %s', $context, get_debug_type($value)));
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    private function callWs(string $method, array $params): array
-    {
-        $url = $this->baseUrl . '/ws.php?format=json';
-        $ch = curl_init($url);
-        self::assertNotFalse($ch);
-        $userAgent = self::USER_AGENT;
-        $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
-            'method' => $method,
-        ], $params)));
-        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
-        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
-        $body = curl_exec($ch);
-        unset($ch);
-        self::assertIsString($body, "WS call to {$method} returned no body");
-        $decoded = json_decode($body, true);
-        self::assertIsArray($decoded, "WS {$method} response is not valid JSON: {$body}");
-
-        // ws.php's JSON envelope is always a JSON object (stat/result/err
-        // keys), never a JSON array, so the decoded top level is always
-        // string-keyed.
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
+        self::fail(sprintf('%s response id must be an int or a numeric string, got %s', $context, get_debug_type($value)));
     }
 }

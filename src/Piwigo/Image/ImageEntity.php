@@ -33,9 +33,14 @@ use Piwigo\Users\UserEntity;
  * calendar-round-trip validation would reject. That Type only protected
  * the narrow ORM `find()` read path though -- most real reads
  * (`Controller\PictureController`, most of `ImageRepository`) go
- * through raw DBAL and were never covered by it. Migration
- * `Version20260809083506` backfills every surviving sentinel to real
- * `NULL` instead, closing the gap for every consumer at once.
+ * through raw DBAL and were never covered by it. `Db\DbConnection::
+ * SQL_MODE`'s `NO_ZERO_DATE`/`NO_ZERO_IN_DATE` close the gap at the
+ * write side instead, rejecting the sentinel outright rather than
+ * letting a row carry it -- and since this is a clean fork with no
+ * in-place upgrade from an existing Piwigo install (`docs/REFERENCE.md`
+ * -- "Migration path"), no real database reaching this schema via
+ * `migrations:migrate` can carry one forward from before that pin
+ * existed either.
  *
  * The one real entity-level write path,
  * {@see \Piwigo\Image\ImageRepository::updateDescriptiveFields()}, has

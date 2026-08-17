@@ -49,8 +49,8 @@ final class DbConnection
      * NO_ENGINE_SUBSTITUTION` -- no `ONLY_FULL_GROUP_BY` and no
      * `NO_ZERO_DATE`/`NO_ZERO_IN_DATE`. Without this, a query invalid under
      * `ONLY_FULL_GROUP_BY` fails on MySQL but passes on MariaDB, and the
-     * zero-date sentinel that `Version20260809083506` exists to eliminate
-     * remains writable there.
+     * zero-date sentinel (`'0000-00-00 00:00:00'`, see `Image\ImageEntity`'s
+     * own docblock) remains writable there.
      */
     private const string SQL_MODE = 'STRICT_TRANS_TABLES,ONLY_FULL_GROUP_BY,NO_ZERO_DATE,NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION';
 

@@ -1029,9 +1029,10 @@ final readonly class PictureController implements ControllerInterface
         // fall back to an empty string instead of feeding formatDate()/
         // substr() a null. $picture['current'] comes from a raw DBAL row
         // here, not ImageEntity, so this was never protected by the former
-        // Db\Type\GracefulSqlDateTimeType anyway -- Version20260809083506
-        // backfilled the only other historical risk (a raw MySQL zero-date
-        // sentinel) to real NULL at the data source instead.
+        // Db\Type\GracefulSqlDateTimeType anyway -- the only other
+        // historical risk (a raw MySQL zero-date sentinel) is closed at
+        // the write side instead, by Db\DbConnection::SQL_MODE's
+        // NO_ZERO_DATE/NO_ZERO_IN_DATE.
         $date_available = $picture['current']['date_available'];
         if (is_string($date_available) && $date_available !== '' && $date_available !== '0') {
             $val = DateHelper::formatDate($date_available);

@@ -1053,15 +1053,27 @@ final class BrowserTestHelpers
      * called while zero relevant <img> tags exist yet.
      *
      * `imgs.length > 0` guards exactly that: Array.prototype.every() on an
-     * empty array is vacuously true, so without this guard the very first,
-     * synchronous check() call (before the ajax response has landed) would
-     * resolve the wait immediately having waited for nothing -- a real,
-     * observed intermittent failure (assertScreenshotMatches() capturing a
-     * comments list still empty/mid-render), not merely a theoretical one.
-     * Once real <img> tags exist, the poll loop already re-queries the DOM
-     * fresh every 100ms (see relevant()'s own call sites below), so no
-     * separate ajax-completion wait is needed once this vacuous-success
-     * case is closed.
+     * empty array is vacuously true, so without a real image count check
+     * the very first, synchronous check() call (before the ajax response
+     * has landed) would resolve the wait immediately having waited for
+     * nothing.
+     *
+     * That guard alone is NOT sufficient with the default `'img'` selector,
+     * though -- confirmed live, not assumed: the admin shell around
+     * admin.php?page=comments has its own already-loaded chrome images
+     * (sidebar icons, the Piwigo logo) present the instant the document
+     * loads, well before comments.js's ajax call even fires. Those alone
+     * satisfy `imgs.length > 0 && imgs.every(loaded)` on the very first
+     * check, resolving the wait successfully having verified nothing about
+     * the actual comment thumbnails -- pwg.userComments.getList's own real
+     * response time (four chained CommentService calls: summary counts,
+     * the page of rows, the date range, the author counts) can still be
+     * running when assertScreenshotMatches() then fires, capturing the
+     * list mid-render. $selector exists for exactly this: callers with a
+     * specific, late-arriving element to wait for (comment thumbnails, not
+     * "any image anywhere on the page") pass its selector explicitly
+     * rather than relying on the page having no OTHER images at all, which
+     * this admin shell demonstrably doesn't.
      *
      * Two categories of <img> are deliberately excluded, not waited on:
      * an empty/unset `src` (self-references the current page URL, always
@@ -1071,13 +1083,13 @@ final class BrowserTestHelpers
      * see common.inc.php's own comment -- these never load by design in
      * this fork, real or test).
      */
-    public static function waitUntilImagesLoaded(Webpage|PendingAwaitablePage|AwaitableWebpage $page, float $timeoutSeconds = 5.0): void
+    public static function waitUntilImagesLoaded(Webpage|PendingAwaitablePage|AwaitableWebpage $page, float $timeoutSeconds = 5.0, string $selector = 'img'): void
     {
         $timeoutMs = (int) ($timeoutSeconds * 1000.0);
         $js = <<<JS
         new Promise((resolve, reject) => {
             const deadline = Date.now() + {$timeoutMs};
-            const relevant = () => Array.from(document.querySelectorAll('img'))
+            const relevant = () => Array.from(document.querySelectorAll('{$selector}'))
                 .filter((img) => img.getAttribute('src') && !img.src.includes('upstream.example.invalid'));
             const check = () => {
                 const imgs = relevant();

@@ -124,7 +124,7 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             // race against assertScreenshotMatches()'s own networkidle
             // wait, which resolves once outstanding requests finish, not
             // once every <img> has actually painted.
-            H::waitUntilImagesLoaded($page, 10.0);
+            H::waitUntilImagesLoaded($page, 10.0, '.comment-img');
         }
 
         $page->assertScreenshotMatches();

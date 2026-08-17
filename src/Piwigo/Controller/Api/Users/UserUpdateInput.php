@@ -6,11 +6,12 @@ namespace Piwigo\Controller\Api\Users;
 
 /**
  * `PATCH /api/v1/users/{id}` body DTO -- mirrors `Ws\Users\SetInfoParams`'s
- * own optional fields ("leave a field blank to keep the current value").
- * The 6 fields `Ws\Users\UsersMethodRegistrar`'s own comment already
- * flags as "removed in a future version" (nb_image_page, recent_period,
- * expand, show_nb_comments, show_nb_hits, enabled_high) are dropped here
- * entirely rather than carried into a fresh surface.
+ * own optional fields ("leave a field blank to keep the current value"),
+ * including the 6 per-user UI-preference fields (nbImagePage/
+ * recentPeriod/expand/showNbComments/showNbHits/enabledHigh) --
+ * `user_list.js`'s edit-user popup reads and writes all 6 through its
+ * preferences tab, so dropping them broke that tab's controls entirely
+ * when this endpoint got its first real JS caller.
  */
 final readonly class UserUpdateInput
 {
@@ -26,6 +27,12 @@ final readonly class UserUpdateInput
         public ?string $language,
         public ?string $theme,
         public ?array $groupIds,
+        public ?int $nbImagePage,
+        public ?int $recentPeriod,
+        public ?bool $expand,
+        public ?bool $showNbComments,
+        public ?bool $showNbHits,
+        public ?bool $enabledHigh,
     ) {}
 
     /**
@@ -41,6 +48,12 @@ final readonly class UserUpdateInput
         $language = $raw['language'] ?? null;
         $theme = $raw['theme'] ?? null;
         $groupIds = $raw['groupIds'] ?? null;
+        $nbImagePage = $raw['nbImagePage'] ?? null;
+        $recentPeriod = $raw['recentPeriod'] ?? null;
+        $expand = $raw['expand'] ?? null;
+        $showNbComments = $raw['showNbComments'] ?? null;
+        $showNbHits = $raw['showNbHits'] ?? null;
+        $enabledHigh = $raw['enabledHigh'] ?? null;
 
         return new self(
             username: is_string($username) ? $username : null,
@@ -51,6 +64,12 @@ final readonly class UserUpdateInput
             language: is_string($language) ? $language : null,
             theme: is_string($theme) ? $theme : null,
             groupIds: is_array($groupIds) ? self::intList($groupIds) : null,
+            nbImagePage: is_int($nbImagePage) ? $nbImagePage : null,
+            recentPeriod: is_int($recentPeriod) ? $recentPeriod : null,
+            expand: is_bool($expand) ? $expand : null,
+            showNbComments: is_bool($showNbComments) ? $showNbComments : null,
+            showNbHits: is_bool($showNbHits) ? $showNbHits : null,
+            enabledHigh: is_bool($enabledHigh) ? $enabledHigh : null,
         );
     }
 

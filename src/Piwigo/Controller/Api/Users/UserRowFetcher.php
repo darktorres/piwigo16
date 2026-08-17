@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Api\Users;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\DateHelper;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupService;
+use Piwigo\History\HistoryEntity;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
 
@@ -17,11 +22,12 @@ use Piwigo\Users\UserService;
  * A fixed display column set replaces `pwg.users.getList`'s own
  * client-controlled `display` string mini-language -- a JSON API returns
  * correctly-typed, complete rows rather than a payload-size optimization
- * that made sense for XML. The per-user UI-preference fields
- * (nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits,
- * enabled_high) and the last-visit History-table fallback enrichment are
- * both dropped -- niche fields a REST client can fetch separately if
- * ever needed, not core identity/admin data.
+ * that made sense for XML. The 6 per-user UI-preference fields and the
+ * last-visit History-table fallback (both ported here verbatim from
+ * `Ws\Users\GetListHandler`) are real fields `user_list.js`'s edit-user
+ * popup reads and writes through its preferences tab -- restored after
+ * that JS conversion showed dropping them broke the tab's controls
+ * entirely, not just trimmed a payload-size optimization.
  */
 final readonly class UserRowFetcher
 {
@@ -38,11 +44,19 @@ final readonly class UserRowFetcher
         'ui.theme' => 'theme',
         'ui.registration_date' => 'registration_date',
         'ui.last_visit' => 'last_visit',
+        'ui.nb_image_page' => 'nb_image_page',
+        'ui.recent_period' => 'recent_period',
+        'ui.expand' => 'expand',
+        'ui.show_nb_comments' => 'show_nb_comments',
+        'ui.show_nb_hits' => 'show_nb_hits',
+        'ui.enabled_high' => 'enabled_high',
     ];
 
     public function __construct(
         private UserService $userService,
         private GroupService $groupService,
+        private AuthService $authService,
+        private EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -73,7 +87,7 @@ final readonly class UserRowFetcher
     {
         $paginated = $this->userService->getListForWs(
             self::DISPLAY_COLUMNS,
-            false,
+            true,
             $criteria,
             $orderBy,
             $includeTotalCount,
@@ -84,6 +98,17 @@ final readonly class UserRowFetcher
         $users = [];
         foreach ($paginated->rows as $row) {
             $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $registrationDate = is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null;
+
+            $lastVisit = is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null;
+            if (! SqlDialect::getBoolean($row['last_visit_from_history'] ?? null) && in_array($lastVisit, [null, ''], true)) {
+                $lastVisit = $this->authService->getUserLastVisitFromHistory(
+                    $id,
+                    $this->entityManager->getRepository(HistoryEntity::class),
+                    true
+                );
+            }
+
             $users[$id] = [
                 'id' => $id,
                 'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
@@ -93,8 +118,18 @@ final readonly class UserRowFetcher
                 'groups' => [],
                 'language' => is_string($row['language'] ?? null) ? $row['language'] : null,
                 'theme' => is_string($row['theme'] ?? null) ? $row['theme'] : null,
-                'registrationDate' => is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null,
-                'lastVisit' => is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null,
+                'registrationDate' => $registrationDate,
+                'registrationDateString' => DateHelper::formatDate($registrationDate ?? false, ['day', 'month', 'year']),
+                'registrationDateSince' => DateHelper::timeSince($registrationDate ?? '', 'month'),
+                'lastVisit' => $lastVisit,
+                'lastVisitString' => DateHelper::formatDate($lastVisit ?? false, ['day', 'month', 'year']),
+                'lastVisitSince' => DateHelper::timeSince($lastVisit ?? '', 'day'),
+                'nbImagePage' => is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : null,
+                'recentPeriod' => is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : null,
+                'expand' => SqlDialect::getBoolean($row['expand'] ?? null),
+                'showNbComments' => SqlDialect::getBoolean($row['show_nb_comments'] ?? null),
+                'showNbHits' => SqlDialect::getBoolean($row['show_nb_hits'] ?? null),
+                'enabledHigh' => SqlDialect::getBoolean($row['enabled_high'] ?? null),
             ];
         }
 

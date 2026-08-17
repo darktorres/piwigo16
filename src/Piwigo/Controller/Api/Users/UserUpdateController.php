@@ -66,6 +66,12 @@ final readonly class UserUpdateController implements ControllerInterface
             language: $input->language,
             theme: $input->theme,
             groupIds: $input->groupIds,
+            nbImagePage: $input->nbImagePage,
+            recentPeriod: $input->recentPeriod,
+            expand: $input->expand,
+            showNbComments: $input->showNbComments,
+            showNbHits: $input->showNbHits,
+            enabledHigh: $input->enabledHigh,
         ), $this->pageState);
 
         if ($result->isFailure) {

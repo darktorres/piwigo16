@@ -267,13 +267,13 @@
   },
   "themes/admin/default/js/user_list.js": {
     "eqeqeq": {
-      "count": 73
+      "count": 62
     },
     "no-implicit-coercion": {
       "count": 10
     },
     "no-undef": {
-      "count": 100
+      "count": 104
     }
   },
   "themes/default/js/mcs.js": {

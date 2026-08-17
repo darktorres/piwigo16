@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Api\Users;
 
+use InvalidArgumentException;
 use Override;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Http\AdminGuard;
@@ -18,10 +20,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/users` -- `pwg.users.getList`'s real replacement, admin
- * only. `min_register`/`max_register` date-range filtering and the
- * fuzzy `filter` (username/email/group-name) search are both dropped for
- * this pass -- real but secondary filters, not needed to make the
+ * only. The fuzzy `filter` (username/email/group-name) search is dropped
+ * for this pass -- a real but secondary filter, not needed to make the
  * resource usable; can be added later without a breaking change.
+ * `minRegister`/`maxRegister` accept the same partial-date shape
+ * (`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`) as `Ws\Users\GetListHandler`'s own
+ * `min_register`/`max_register`, needed for real parity with
+ * `user_list.js`'s registration-date range filter.
  */
 final readonly class UserListController implements ControllerInterface
 {
@@ -58,6 +63,27 @@ final readonly class UserListController implements ControllerInterface
             return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid minLevel.');
         }
 
+        $maxLevel = isset($query['maxLevel']) && is_numeric($query['maxLevel']) ? (int) $query['maxLevel'] : null;
+        if ($maxLevel !== null && ! in_array($maxLevel, $this->currentConfig->availablePermissionLevels, true)) {
+            return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid maxLevel.');
+        }
+
+        $minRegister = null;
+        if (isset($query['minRegister']) && is_string($query['minRegister']) && $query['minRegister'] !== '') {
+            $minRegister = self::parseRegisterBound($query['minRegister'], isMax: false);
+            if ($minRegister === false) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid minRegister.');
+            }
+        }
+
+        $maxRegister = null;
+        if (isset($query['maxRegister']) && is_string($query['maxRegister']) && $query['maxRegister'] !== '') {
+            $maxRegister = self::parseRegisterBound($query['maxRegister'], isMax: true);
+            if ($maxRegister === false) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid maxRegister.');
+            }
+        }
+
         $groupIds = self::intList($query['groupIds'] ?? null);
         $exclude = self::intList($query['exclude'] ?? null);
         $perPage = isset($query['perPage']) && is_numeric($query['perPage']) ? (int) $query['perPage'] : 100;
@@ -66,13 +92,19 @@ final readonly class UserListController implements ControllerInterface
         $criteria = new UserListCriteria(
             userId: $userIds !== [] ? array_map(UserId::from(...), $userIds) : null,
             username: isset($query['username']) && is_string($query['username']) ? $query['username'] : null,
+            minRegister: $minRegister,
+            maxRegister: $maxRegister,
             status: $matchedStatus !== [] ? $matchedStatus : null,
             minLevel: $minLevel,
+            maxLevel: $maxLevel,
             groupId: $groupIds !== [] ? $groupIds : null,
             exclude: $exclude !== [] ? $exclude : null,
         );
 
-        $result = $this->userRowFetcher->page($criteria, $orderBy, $perPage, $perPage * $page);
+        // perPage=0 means "no limit", matching Ws\Users\GetListHandler's own
+        // per_page=0 contract -- user_list.js's select-all-filtered action
+        // depends on this to fetch every matching id in one request.
+        $result = $this->userRowFetcher->page($criteria, $orderBy, $perPage === 0 ? null : $perPage, $perPage * $page);
 
         return ResponseFactory::json([
             'users' => $result['rows'],
@@ -99,6 +131,43 @@ final readonly class UserListController implements ControllerInterface
         }
 
         return $ids;
+    }
+
+    /**
+     * Parses a `YYYY`/`YYYY-MM`/`YYYY-MM-DD` partial date into a
+     * day-bounded `SqlDateTime` (`00:00:00` for a min bound, `23:59:59`
+     * for a max bound; a missing month/day defaults to the first day for
+     * a min bound and the last day of the month for a max bound) --
+     * ported verbatim from `Ws\Users\GetListHandler`'s own parsing.
+     * Returns `false` on a shape or calendar validation failure.
+     */
+    private static function parseRegisterBound(string $raw, bool $isMax): SqlDateTime|false
+    {
+        if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $raw)) {
+            return false;
+        }
+
+        $tokens = explode('-', $raw);
+        $year = $tokens[0];
+        $month = $tokens[1] ?? ($isMax ? 12 : 1);
+
+        if (isset($tokens[2])) {
+            $day = $tokens[2];
+        } elseif ($isMax) {
+            $monthTimestamp = strtotime($year . '-' . $month . '-1');
+            assert($monthTimestamp !== false);
+            $day = date('t', $monthTimestamp);
+        } else {
+            $day = 1;
+        }
+
+        $date = sprintf('%u-%02u-%02u', (int) $year, (int) $month, (int) $day);
+
+        try {
+            return SqlDateTime::from($date . ($isMax ? ' 23:59:59' : ' 00:00:00'));
+        } catch (InvalidArgumentException) {
+            return false;
+        }
     }
 
     /**

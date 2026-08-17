@@ -7,6 +7,7 @@ use Piwigo\Bootstrap\FinalizeBridgeMiddleware;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Bootstrap\UserResolutionMiddleware;
 use Piwigo\Http\BaselineSecurityHeaders;
+use Piwigo\Http\Middleware\ApiErrorMiddleware;
 use Piwigo\Http\Middleware\ConfigBootstrapMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
@@ -1044,7 +1045,6 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // directly and stop, deliberately not falling through to the
         // full page/template render that follows in the same method.
         'Admin/AdminShell.php' => 1,
-        'Admin/MaintenanceSysPageRenderer.php' => 1,
         'Admin/PluginsInstalledPageRenderer.php' => 2,
         'Admin/Maintenance/MaintenanceActionDispatcher.php' => 1,
         'Admin/UserActivityPageRenderer.php' => 1,
@@ -1285,6 +1285,7 @@ test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing class
         ExceptionHandlerMiddleware::class,
         SecurityHeadersMiddleware::class,
         RoutingMiddleware::class,
+        ApiErrorMiddleware::class,
         ControllerInvokerMiddleware::class,
         Router::class,
         RouteResult::class,

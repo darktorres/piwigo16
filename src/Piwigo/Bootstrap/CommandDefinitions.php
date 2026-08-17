@@ -12,6 +12,7 @@ use Piwigo\Command\LintLatteCommand;
 use Piwigo\Command\MaintenanceCacheSizeCommand;
 use Piwigo\Command\MaintenanceCalculateOrphansCommand;
 use Piwigo\Command\MaintenanceDeleteOrphansCommand;
+use Piwigo\Command\MaintenanceEmptyLoungeCommand;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
@@ -34,10 +35,10 @@ use Symfony\Component\Messenger\Command\ConsumeMessagesCommand;
  * and Piwigo\Bootstrap\RouteDefinitions.
  *
  * The 4 original Maintenance*Command classes autowire DbMaintenanceRepository
- * with zero new container entries; the 4 newer ones (CalculateOrphans/
- * DeleteOrphans/SyncMetadata/CacheSize) autowire CategoryService/
- * ImageService/MetadataService/CacheSizeCalculator instead, same
- * zero-new-entries autowiring.
+ * with zero new container entries; the 5 newer ones (CalculateOrphans/
+ * DeleteOrphans/SyncMetadata/CacheSize/EmptyLounge) autowire
+ * CategoryService/ImageService/MetadataService/CacheSizeCalculator
+ * instead, same zero-new-entries autowiring.
  *
  * [Finding 6] ConsumeMessagesCommand needs its own explicit
  * config/container.php factory entry (RoutableMessageBus/receiver
@@ -66,6 +67,7 @@ final class CommandDefinitions
             MaintenanceDeleteOrphansCommand::class,
             MaintenanceSyncMetadataCommand::class,
             MaintenanceCacheSizeCommand::class,
+            MaintenanceEmptyLoungeCommand::class,
             MigrateCommand::class,
             SchemaDumpCommand::class,
             LintLatteCommand::class,

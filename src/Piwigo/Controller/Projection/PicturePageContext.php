@@ -33,7 +33,11 @@ use Piwigo\Core\TemplatePageContext;
  * when `picture_content.latte` (its one real consumer) parses. `$relatedTags`/
  * `$relatedCategories` are `null` when the original loop never ran at all
  * (matching its own `isset($related_tags)`/`isset($related_categories)`
- * template guards), a real, non-empty list otherwise.
+ * template guards), a real, non-empty list otherwise. `$csrfToken`
+ * matches the `'CSRF_TOKEN' => $this->pwgToken` convention ~24 other
+ * `*PageContext` classes already follow -- picture.latte's own caddie
+ * AJAX script (gated on `U_CADDIE`) reads it to set the `X-CSRF-Token`
+ * header on its `POST /api/v1/session/caddie` call.
  */
 final readonly class PicturePageContext implements TemplatePageContext
 {
@@ -85,6 +89,7 @@ final readonly class PicturePageContext implements TemplatePageContext
         public string $uCanonical,
         public ?array $relatedTags,
         public ?array $relatedCategories,
+        public string $csrfToken,
     ) {}
 
     /**
@@ -107,6 +112,7 @@ final readonly class PicturePageContext implements TemplatePageContext
             'display_info' => $this->displayInfo,
             'ELEMENT_CONTENT' => $this->elementContent,
             'U_CANONICAL' => $this->uCanonical,
+            'CSRF_TOKEN' => $this->csrfToken,
         ];
 
         if ($this->navFirst !== null) {

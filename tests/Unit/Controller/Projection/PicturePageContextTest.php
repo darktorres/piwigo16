@@ -77,6 +77,7 @@ function makePicturePageContextForTest(
         uCanonical: '/picture.php?/5',
         relatedTags: $relatedTags,
         relatedCategories: $relatedCategories,
+        csrfToken: 'test-csrf-token',
     );
 }
 
@@ -90,7 +91,8 @@ test('toArray flattens every fixed property, and omits every optional key when n
         ->and($result['INFO_VISITS'])->toBe('42')
         ->and($result['display_info'])->toBe([
             'file' => true,
-        ]);
+        ])
+        ->and($result['CSRF_TOKEN'])->toBe('test-csrf-token');
 });
 
 test('toArray includes navCurrent under "current" when set', function (): void {

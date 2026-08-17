@@ -1228,6 +1228,7 @@ final readonly class PictureController implements ControllerInterface
             uCanonical: $u_canonical,
             relatedTags: $related_tags !== [] ? $related_tags : null,
             relatedCategories: $related_categories_display !== [] ? $related_categories_display : null,
+            csrfToken: $this->csrfService->getToken(),
         ));
 
         $this->pictureRateRenderer

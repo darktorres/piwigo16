@@ -35,11 +35,17 @@ use Piwigo\Controller\Api\Groups\GroupListController;
 use Piwigo\Controller\Api\Groups\GroupMergeController;
 use Piwigo\Controller\Api\Groups\GroupRemoveUserController;
 use Piwigo\Controller\Api\Groups\GroupUpdateController;
+use Piwigo\Controller\Api\Images\ImageAddCommentController;
 use Piwigo\Controller\Api\Images\ImageDeleteController;
 use Piwigo\Controller\Api\Images\ImageFilteredSearchCreateController;
 use Piwigo\Controller\Api\Images\ImageFormatDeleteController;
 use Piwigo\Controller\Api\Images\ImageFormatSearchController;
 use Piwigo\Controller\Api\Images\ImageGetController;
+use Piwigo\Controller\Api\Images\ImageRateController;
+use Piwigo\Controller\Api\Images\ImageSearchController;
+use Piwigo\Controller\Api\Images\ImageSetCategoryController;
+use Piwigo\Controller\Api\Images\ImageSetPrivacyLevelController;
+use Piwigo\Controller\Api\Images\ImageSetRankController;
 use Piwigo\Controller\Api\Images\ImageUpdateController;
 use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\Session\ApiKeyCreateController;
@@ -592,6 +598,39 @@ final class RouteDefinitions
 
         $routes->add('api_v1_images_filtered_search_create', new Route('/api/v1/images/searches', defaults: [
             '_controller' => ImageFilteredSearchCreateController::class,
+        ], methods: ['POST']));
+
+        // External-only images methods -- addComment/rate/search are
+        // public (no requiresAuth on the WS side); setCategory/
+        // setPrivacyLevel/setRank are requiresAuth: true, which really
+        // means admin_only (Ws\Server::invoke()'s own enforcement), not
+        // merely "must be logged in".
+        $routes->add('api_v1_images_add_comment', new Route('/api/v1/images/{id}/comments', defaults: [
+            '_controller' => ImageAddCommentController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_rate', new Route('/api/v1/images/{id}/rating', defaults: [
+            '_controller' => ImageRateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PUT']));
+
+        $routes->add('api_v1_images_search', new Route('/api/v1/images/search', defaults: [
+            '_controller' => ImageSearchController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_images_set_category', new Route('/api/v1/images/actions/set-category', defaults: [
+            '_controller' => ImageSetCategoryController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_set_privacy_level', new Route('/api/v1/images/actions/set-privacy-level', defaults: [
+            '_controller' => ImageSetPrivacyLevelController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_set_rank', new Route('/api/v1/images/actions/set-rank', defaults: [
+            '_controller' => ImageSetRankController::class,
         ], methods: ['POST']));
 
         return $routes;

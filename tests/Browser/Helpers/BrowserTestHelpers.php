@@ -1040,11 +1040,28 @@ final class BrowserTestHelpers
 
     /**
      * Same polling shape as waitUntilHidden(), but for <img> elements
-     * finishing to load rather than a selector disappearing -- lazily
-     * generated derivative thumbnails (i.php) race
-     * assertScreenshotMatches() the same way an async content panel does,
-     * just via the browser's own image-loading pipeline instead of an
-     * explicit ajax call.
+     * finishing to load rather than a selector disappearing. Two distinct
+     * races this closes, not one: lazily generated derivative thumbnails
+     * (i.php) racing assertScreenshotMatches() via the browser's own
+     * image-loading pipeline (the <img> already exists in the DOM, its
+     * bytes just aren't in yet) -- and, for admin-comments specifically,
+     * the <img class="comment-img"> elements not existing in the DOM AT
+     * ALL until themes/admin/default/js/comments.js's own
+     * pwg.userComments.getList ajax call resolves and displayComments()
+     * inserts them. navigateOk() only waits for the initial document to
+     * load, not that ajax round trip, so this function can otherwise be
+     * called while zero relevant <img> tags exist yet.
+     *
+     * `imgs.length > 0` guards exactly that: Array.prototype.every() on an
+     * empty array is vacuously true, so without this guard the very first,
+     * synchronous check() call (before the ajax response has landed) would
+     * resolve the wait immediately having waited for nothing -- a real,
+     * observed intermittent failure (assertScreenshotMatches() capturing a
+     * comments list still empty/mid-render), not merely a theoretical one.
+     * Once real <img> tags exist, the poll loop already re-queries the DOM
+     * fresh every 100ms (see relevant()'s own call sites below), so no
+     * separate ajax-completion wait is needed once this vacuous-success
+     * case is closed.
      *
      * Two categories of <img> are deliberately excluded, not waited on:
      * an empty/unset `src` (self-references the current page URL, always
@@ -1064,13 +1081,15 @@ final class BrowserTestHelpers
                 .filter((img) => img.getAttribute('src') && !img.src.includes('upstream.example.invalid'));
             const check = () => {
                 const imgs = relevant();
-                const allLoaded = imgs.every((img) => img.complete && img.naturalWidth > 0);
+                const allLoaded = imgs.length > 0 && imgs.every((img) => img.complete && img.naturalWidth > 0);
                 if (allLoaded) {
                     return resolve(true);
                 }
                 if (Date.now() > deadline) {
-                    const pending = imgs.filter((img) => !(img.complete && img.naturalWidth > 0))
-                        .map((img) => img.src + ' (complete=' + img.complete + ', naturalWidth=' + img.naturalWidth + ')');
+                    const pending = imgs.length === 0
+                        ? ['no relevant <img> elements found in the DOM']
+                        : imgs.filter((img) => !(img.complete && img.naturalWidth > 0))
+                            .map((img) => img.src + ' (complete=' + img.complete + ', naturalWidth=' + img.naturalWidth + ')');
                     return reject(new Error('Timed out waiting for images to load: ' + pending.join(', ')));
                 }
                 setTimeout(check, 100);

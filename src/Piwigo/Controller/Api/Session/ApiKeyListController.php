@@ -18,9 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/session/api-keys` -- `pwg.users.api_key.get`'s real
  * replacement. Requires a signed-in (non-guest) session established via
  * `identification.php` -- `ApiKeyService::connectedWithPwgUi()`'s own
- * check, same as its WS predecessor: you can manage your own api keys
- * only from a real login session, not from an api-key-authenticated
- * request.
+ * check: you can manage your own api keys only from a real login
+ * session, not from an api-key-authenticated request.
  */
 final readonly class ApiKeyListController implements ControllerInterface
 {

@@ -18,8 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/uploads/actions/complete-batch` --
- * `pwg.images.uploadCompleted`'s real replacement, admin + CSRF (its WS
- * predecessor already checked CSRF too). Notifies the server that a
+ * `pwg.images.uploadCompleted`'s real replacement, admin + CSRF.
+ * Notifies the server that a
  * batch of tus uploads is finished; empties the lounge, if any.
  */
 final readonly class UploadCompleteBatchController implements ControllerInterface

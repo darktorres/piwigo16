@@ -15,9 +15,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `PUT /api/v1/session/preferences/{param}` --
- * `pwg.users.preferences.set`'s real replacement. No auth gate at all,
- * matching its WS predecessor (no `requiresAuth` on its own
- * registration) -- preferences are stored per session-user, even a
+ * `pwg.users.preferences.set`'s real replacement. No auth gate at all --
+ * preferences are stored per session-user, even a
  * guest pseudo-user's own. `{param}` is route-constrained to
  * `[a-zA-Z0-9_-]+`, so an invalid name 404s at the routing layer
  * instead of a generic error response.

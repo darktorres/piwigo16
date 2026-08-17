@@ -19,12 +19,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * `GET /api/v1/info` -- `pwg.getInfos`'s real replacement, admin only
- * (same gate as its WS predecessor). A fresh implementation rather than a
- * shared extraction: the WS handler's own `NamedArray` `{name, value}`
- * list is a wire-format artifact of the old XML-first envelope (P27
- * Locked Decision D3 -- "correct JSON types" at the source, not a
- * name/value list a JSON client has to fold back into an object itself).
+ * `GET /api/v1/info` -- `pwg.getInfos`'s real replacement, admin only.
+ * Returns a real typed JSON object (P27 Locked Decision D3 -- "correct
+ * JSON types" at the source), not a name/value list a JSON client would
+ * have to fold back into an object itself.
  */
 final readonly class InfoController implements ControllerInterface
 {

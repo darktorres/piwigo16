@@ -18,10 +18,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/actions/delete-orphans` --
- * `pwg.images.deleteOrphans`'s real replacement, admin + CSRF (its WS
- * predecessor already checked CSRF too). Deletes photos linked to no
- * album, one block at a time -- the Batch Manager "global" panel's own
- * delete-orphans action.
+ * `pwg.images.deleteOrphans`'s real replacement, admin + CSRF. Deletes
+ * photos linked to no album, one block at a time -- the Batch Manager
+ * "global" panel's own delete-orphans action.
  */
 final readonly class ImageDeleteOrphansController implements ControllerInterface
 {

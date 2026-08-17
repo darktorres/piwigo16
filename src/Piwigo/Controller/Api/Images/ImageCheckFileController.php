@@ -19,9 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `GET /api/v1/images/{id}/actions/check-file?highSum=...&fileSum=...` --
  * `pwg.images.checkFiles`'s real replacement, admin only. `thumbnail_sum`
- * is dropped -- WS's own registrar description already calls it
- * backward-compat cruft (its value is never read, only its presence,
- * and the response for it is unconditionally `'equals'`).
+ * is dropped -- backward-compat cruft (its value was never read, only
+ * its presence, and the response for it was unconditionally `'equals'`).
  */
 final readonly class ImageCheckFileController implements ControllerInterface
 {

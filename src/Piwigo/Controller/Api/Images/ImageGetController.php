@@ -31,11 +31,11 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/images/{id}` -- `pwg.images.getInfo`'s real replacement.
- * Public, permission-filtered (same as its WS predecessor -- no
- * `AdminGuard` here): `PermissionService::getPermissionCriteria()`
- * already decides which images the calling session (guest included) can
- * see. An orphan/lounge photo (no visible related category) additionally
- * requires an admin session, same as the WS handler's own extra guard.
+ * Public, permission-filtered (no `AdminGuard` here):
+ * `PermissionService::getPermissionCriteria()` already decides which
+ * images the calling session (guest included) can see. An orphan/lounge
+ * photo (no visible related category) additionally requires an admin
+ * session.
  */
 final readonly class ImageGetController implements ControllerInterface
 {

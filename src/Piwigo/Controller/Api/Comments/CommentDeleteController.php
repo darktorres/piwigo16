@@ -18,8 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `POST /api/v1/comments/actions/delete` --
  * `pwg.userComments.delete`'s real replacement, admin + CSRF. Bulk by
- * design, same as its WS predecessor -- matches the admin moderation
- * UI's own batch-select workflow.
+ * design -- matches the admin moderation UI's own batch-select workflow.
  */
 final readonly class CommentDeleteController implements ControllerInterface
 {

@@ -18,7 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `POST /api/v1/comments/actions/validate` --
  * `pwg.userComments.validate`'s real replacement, admin + CSRF. Bulk by
- * design, same as its WS predecessor.
+ * design.
  */
 final readonly class CommentValidateController implements ControllerInterface
 {

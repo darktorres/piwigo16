@@ -12,9 +12,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * `GET /api/v1/version` -- P27's replacement for the WS-only
- * `pwg.getVersion`. Unauthenticated (same as its WS predecessor's
- * `requiresAuth: false`), no DB, the thin slice this whole surface's
+ * `GET /api/v1/version` -- `pwg.getVersion`'s real replacement.
+ * Unauthenticated, no DB, the thin slice this whole surface's
  * routing/response conventions were first proven against.
  */
 final readonly class VersionController implements ControllerInterface

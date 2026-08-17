@@ -23,17 +23,16 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/activity` -- `pwg.activity.getList`'s real replacement,
- * admin only. One row per real activity entry, correctly typed -- WS's
- * own consecutive-same-session/object/action line-merging-with-counter
- * scheme was a display-density optimization for the admin log page, not
- * something every JSON client needs, and merging also loses information
- * (it collapses distinct object ids into one synthetic line). This
- * response stays flat by design (D3), but carries `sessionIdx` and a
- * pre-formatted `dateFormatted` (via `DateHelper::formatDate()`, the
- * same locale-aware output WS used) specifically so a client that *does*
- * want grouped display can replicate WS's own merge key
- * (`sessionIdx~object~action`) without a second round-trip for date
- * formatting -- `user_activity.js` (the real admin log page, `admin.php?
+ * admin only. One row per real activity entry, correctly typed --
+ * deliberately not merged into consecutive-same-session/object/action
+ * display lines with a counter, a display-density optimization that
+ * would also lose information (it collapses distinct object ids into
+ * one synthetic line). This response stays flat by design (D3), but
+ * carries `sessionIdx` and a pre-formatted `dateFormatted` (via
+ * `DateHelper::formatDate()`, real locale-aware output) so a client that
+ * *does* want grouped display can merge on `sessionIdx~object~action`
+ * without a second round-trip for date formatting --
+ * `user_activity.js` (the real admin log page, `admin.php?
  * page=history`) is exactly that client, merging these flat rows
  * client-side.
  *

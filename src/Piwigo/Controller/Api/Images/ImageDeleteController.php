@@ -18,8 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/actions/delete` -- `pwg.images.delete`'s real
- * replacement, admin + CSRF. Bulk by design, same as its WS predecessor
- * -- matches the admin photo management UI's own batch-select workflow.
+ * replacement, admin + CSRF. Bulk by design -- matches the admin photo
+ * management UI's own batch-select workflow.
  */
 final readonly class ImageDeleteController implements ControllerInterface
 {

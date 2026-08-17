@@ -23,8 +23,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/categories/actions/move` -- `pwg.categories.move`'s real
- * replacement, admin + CSRF. Bulk by design (same as its WS predecessor):
- * moving a set of albums under a new parent is one atomic action, not a
+ * replacement, admin + CSRF. Bulk by design: moving a set of albums
+ * under a new parent is one atomic action, not a
  * per-album resource operation. Set `parentId` to 0 to move to the
  * gallery root. Only virtual albums can be moved.
  */

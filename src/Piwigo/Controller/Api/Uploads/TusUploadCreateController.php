@@ -22,13 +22,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * `pwg.images.{addChunk,add,addFile,addSimple,upload,uploadAsync}`'s
  * base64/multipart chunk protocols with a single binary offset-based one
  * (see `TusUploadPatchController`/`TusUploadCompletionService` for the
- * rest of the flow). Admin + CSRF (`requiresAuth: true` on every one of
- * those WS predecessors).
+ * rest of the flow). Admin + CSRF.
  *
  * `imageId`/`formatOf` existence is checked here, before any byte is
- * uploaded, rather than only at completion time the way the WS handlers
- * did -- cheap up front, and it means a caller never uploads a whole
- * file only to learn its target was invalid all along.
+ * uploaded, rather than only at completion time -- cheap up front, and
+ * it means a caller never uploads a whole file only to learn its target
+ * was invalid all along.
  */
 final readonly class TusUploadCreateController implements ControllerInterface
 {

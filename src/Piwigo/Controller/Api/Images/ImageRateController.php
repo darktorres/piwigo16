@@ -19,8 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `PUT /api/v1/images/{id}/rating` -- `pwg.images.rate`'s real
- * replacement. Public, permission-filtered (no `AdminGuard`), same as
- * its WS predecessor.
+ * replacement. Public, permission-filtered (no `AdminGuard`).
  */
 final readonly class ImageRateController implements ControllerInterface
 {

@@ -19,9 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/actions/sync-metadata` --
- * `pwg.images.syncMetadata`'s real replacement, admin + CSRF (its WS
- * predecessor already checked CSRF too). Re-reads EXIF/IPTC metadata
- * from disk for the given photos -- the Batch Manager "unit"/"global"
+ * `pwg.images.syncMetadata`'s real replacement, admin + CSRF. Re-reads
+ * EXIF/IPTC metadata from disk for the given photos -- the Batch Manager "unit"/"global"
  * panels' own sync action.
  */
 final readonly class ImageSyncMetadataController implements ControllerInterface

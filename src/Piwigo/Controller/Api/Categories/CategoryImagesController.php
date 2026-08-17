@@ -28,7 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/categories/images` -- `pwg.categories.getImages`'s real
  * replacement. Public, permission-filtered. A collection-level query
  * (matching one or more albums via `catIds`), not a single-album
- * sub-resource -- same shape as its WS predecessor.
+ * sub-resource.
  */
 final readonly class CategoryImagesController implements ControllerInterface
 {

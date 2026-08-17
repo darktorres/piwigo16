@@ -36,8 +36,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `POST /api/v1/plugins/{id}/actions/perform` --
  * `pwg.plugins.performAction`'s real replacement, webmaster + CSRF
- * (stricter than plain admin, matching its WS predecessor's own
- * `AccessControl::isWebmaster()` check).
+ * (stricter than plain admin, gated by `AccessControl::isWebmaster()`).
  */
 final readonly class PluginPerformActionController implements ControllerInterface
 {

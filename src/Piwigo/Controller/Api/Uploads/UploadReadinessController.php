@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/uploads/readiness` -- `pwg.images.checkUpload`'s real
- * replacement, admin only (`requiresAuth: true` on the WS side).
+ * replacement, admin only.
  */
 final readonly class UploadReadinessController implements ControllerInterface
 {

@@ -21,8 +21,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/categories` -- `pwg.categories.getAdminList`'s real
- * replacement, admin only (permissions are not taken into account, same
- * as its WS predecessor). Query params: `parentId`, `search`,
+ * replacement, admin only (permissions are not taken into account).
+ * Query params: `parentId`, `search`,
  * `recursive` (default true). `additional_output=full_name_with_admin_links`
  * is dropped -- an XML-era opt-in for embedding admin-link HTML in every
  * row; a JSON client that wants an admin link can build one itself from

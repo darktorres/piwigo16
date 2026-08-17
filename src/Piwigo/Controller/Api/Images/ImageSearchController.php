@@ -23,8 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/images/search` -- `pwg.images.search`'s real replacement.
- * Public, permission-filtered (no `AdminGuard`), same as its WS
- * predecessor.
+ * Public, permission-filtered (no `AdminGuard`).
  */
 final readonly class ImageSearchController implements ControllerInterface
 {

@@ -18,9 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/history/log` -- `pwg.history.log`'s real replacement.
- * Public, no auth gate at all (matches WS, which has neither
- * `requiresAuth` nor a CSRF check) -- every gallery-page-view fires this,
- * anonymous visitors included.
+ * Public, no auth gate and no CSRF check -- every gallery-page-view
+ * fires this, anonymous visitors included.
  */
 final readonly class HistoryLogController implements ControllerInterface
 {

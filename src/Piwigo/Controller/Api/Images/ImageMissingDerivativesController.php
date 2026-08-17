@@ -26,8 +26,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * `POST /api/v1/images/actions/missing-derivatives` --
  * `pwg.getMissingDerivatives`'s real replacement, admin only. Returns a
  * page of URLs for not-yet-generated derivative thumbnails (visiting
- * each URL triggers on-the-fly generation, same as its WS predecessor);
- * `nextPage` is present when more results remain for the caller to
+ * each URL triggers on-the-fly generation); `nextPage` is present
+ * when more results remain for the caller to
  * request with a follow-up call.
  */
 final readonly class ImageMissingDerivativesController implements ControllerInterface

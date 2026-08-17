@@ -15,8 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `GET /api/v1/tags` -- `pwg.tags.getAdminList`'s real replacement, admin
- * only (permissions are not taken into account -- same as its WS
- * predecessor). `pwg.tags.getList`'s own permission-filtered browsing
+ * only (permissions are not taken into account). `pwg.tags.getList`'s own permission-filtered browsing
  * shape (`TagService::getAvailableTags()`, a genuinely different query,
  * not just a field-visibility difference on this one) is a separate,
  * external-only REST concern -- not this endpoint.

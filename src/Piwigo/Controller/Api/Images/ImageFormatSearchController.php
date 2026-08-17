@@ -18,9 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `POST /api/v1/images/formats/actions/search` --
  * `pwg.images.formats.searchImage`'s real replacement, admin only
- * (read-only, no CSRF needed -- same reasoning as its WS predecessor,
- * which is `postOnly` for transport reasons, not because it mutates
- * anything). Checks, for each candidate filename supplied, whether a
+ * (read-only, no CSRF needed -- POST is a transport choice here, not
+ * because it mutates anything). Checks, for each candidate filename supplied, whether a
  * matching photo already exists (by filename with known format
  * extensions stripped) and whether a format with that extension is
  * already associated with it.

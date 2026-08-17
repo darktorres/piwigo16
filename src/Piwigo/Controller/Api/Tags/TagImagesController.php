@@ -28,8 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/tags/images` -- `pwg.tags.getImages`'s real replacement.
  * Public, permission-filtered. A collection-level query (matching one or
  * more tags via `tagIds`/`tagUrlNames`/`tagNames`), not a single-tag
- * sub-resource -- same shape as its WS predecessor, which is one method
- * taking a tag list, not per-tag.
+ * sub-resource.
  */
 final readonly class TagImagesController implements ControllerInterface
 {

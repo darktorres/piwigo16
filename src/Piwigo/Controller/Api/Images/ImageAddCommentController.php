@@ -18,9 +18,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/{id}/comments` -- `pwg.images.addComment`'s real
- * replacement. Public, permission-filtered (no `AdminGuard`), same as
- * its WS predecessor. `key` is the ephemeral anti-spam token
- * `GET /api/v1/images/{id}`'s own `commentPost.key` field hands out.
+ * replacement. Public, permission-filtered (no `AdminGuard`). `key` is
+ * the ephemeral anti-spam token `GET /api/v1/images/{id}`'s own
+ * `commentPost.key` field hands out.
  */
 final readonly class ImageAddCommentController implements ControllerInterface
 {

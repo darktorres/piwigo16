@@ -18,8 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/uploads/duplicates?md5sums=...&filenames=...` --
  * `pwg.images.exist`'s real replacement, admin only. A caller checks
  * candidate photos for duplicates before starting an upload; only the
- * query param matching `CurrentConfig::uniquenessMode` is consulted,
- * same as its WS predecessor.
+ * query param matching `CurrentConfig::uniquenessMode` is consulted.
  */
 final readonly class UploadDuplicatesController implements ControllerInterface
 {

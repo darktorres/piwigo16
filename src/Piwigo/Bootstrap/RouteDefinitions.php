@@ -8,9 +8,11 @@ use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
 use Piwigo\Controller\Api\ActivityListController;
+use Piwigo\Controller\Api\Categories\CategoryAvailableListController;
 use Piwigo\Controller\Api\Categories\CategoryCreateController;
 use Piwigo\Controller\Api\Categories\CategoryDeleteController;
 use Piwigo\Controller\Api\Categories\CategoryDeleteRepresentativeController;
+use Piwigo\Controller\Api\Categories\CategoryImagesController;
 use Piwigo\Controller\Api\Categories\CategoryListController;
 use Piwigo\Controller\Api\Categories\CategoryMoveController;
 use Piwigo\Controller\Api\Categories\CategoryRefreshRepresentativeController;
@@ -340,6 +342,17 @@ final class RouteDefinitions
         // so it's folded into this family too.
         $routes->add('api_v1_categories_list', new Route('/api/v1/categories', defaults: [
             '_controller' => CategoryListController::class,
+        ], methods: ['GET']));
+
+        // Public, permission-filtered browsing shape (pwg.categories.
+        // getList/getImages) -- kept as its own resource, same reasoning
+        // as the Tags family's own available/images split.
+        $routes->add('api_v1_categories_available', new Route('/api/v1/categories/available', defaults: [
+            '_controller' => CategoryAvailableListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_categories_images', new Route('/api/v1/categories/images', defaults: [
+            '_controller' => CategoryImagesController::class,
         ], methods: ['GET']));
 
         $routes->add('api_v1_categories_create', new Route('/api/v1/categories', defaults: [

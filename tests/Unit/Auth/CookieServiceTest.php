@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\CookieService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 beforeEach(function (): void {
-    unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
+    unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME']);
 });
 
 /**
@@ -76,6 +77,20 @@ function cookieServiceTestWithMountDepth(int $depth, callable $fn): mixed
 {
     return KernelContainerOverride::with([
         RequestMountDepth::class => new RequestMountDepth($depth),
+    ], $fn);
+}
+
+/**
+ * CookieService's own private lazy configuredBasePath() helper gracefully
+ * falls back to null (letting cookiePath()'s $_SERVER heuristic run) when
+ * Kernel hasn't booted -- most tests in this file need no container at
+ * all. Tests needing a real (possibly gallery_url-configured)
+ * CurrentConfig boot one via KernelContainerOverride::with().
+ */
+function cookieServiceTestWithConfig(CurrentConfig $config, callable $fn): mixed
+{
+    return KernelContainerOverride::with([
+        CurrentConfig::class => $config,
     ], $fn);
 }
 
@@ -325,6 +340,45 @@ test('cookiePath requires both the redirect-vs-path-info mismatch and the suffix
 
     expect(new CookieService()->cookiePath())
         ->toBe('/foo/');
+});
+
+test('cookiePath uses a configured gallery_url path over any $_SERVER heuristic when one is set', function (): void {
+    // Deliberately conflicting $_SERVER values -- if the configured path
+    // wins, none of these are even read.
+    $_SERVER['REDIRECT_SCRIPT_NAME'] = '/should-not-be-used/index.php';
+    $_SERVER['SCRIPT_NAME'] = '/also-not-used/index.php';
+
+    $config = new CurrentConfig();
+    $config->galleryUrl = 'http://example.org/mounted/gallery';
+
+    $path = cookieServiceTestWithConfig($config, static fn (): string => new CookieService()
+        ->cookiePath());
+
+    expect($path)
+        ->toBe('/mounted/gallery/');
+});
+
+test('cookiePath falls back to the $_SERVER heuristic when gallery_url is not configured', function (): void {
+    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
+
+    $path = cookieServiceTestWithConfig(new CurrentConfig(), static fn (): string => new CookieService()
+        ->cookiePath());
+
+    expect($path)
+        ->toBe('/piwigo/');
+});
+
+test('cookiePath falls back to the $_SERVER heuristic when gallery_url has no path component', function (): void {
+    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
+
+    $config = new CurrentConfig();
+    $config->galleryUrl = 'http://example.org';
+
+    $path = cookieServiceTestWithConfig($config, static fn (): string => new CookieService()
+        ->cookiePath());
+
+    expect($path)
+        ->toBe('/piwigo/');
 });
 
 test('setCookieVar casts a scalar non-string value to a string before handing it to setcookie()', function (): void {

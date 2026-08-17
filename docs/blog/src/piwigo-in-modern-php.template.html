@@ -1,0 +1,1331 @@
+<title>Piwigo in Modern PHP</title>
+<style>
+  @font-face {
+    font-family: 'Plex Serif';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url(data:font/woff2;base64,{{SERIF_400}}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Plex Serif';
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: url(data:font/woff2;base64,{{SERIF_700}}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Plex Sans';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url(data:font/woff2;base64,{{SANS_400}}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Plex Sans';
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: url(data:font/woff2;base64,{{SANS_600}}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Plex Mono';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url(data:font/woff2;base64,{{MONO_400}}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Plex Mono';
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    src: url(data:font/woff2;base64,{{MONO_500}}) format('woff2');
+  }
+
+  :root {
+    --paper: #E8E5DC;
+    --paper-raised: #DDD9CD;
+    --paper-line: #C9C4B5;
+    --ink: #211D17;
+    --ink-dim: #5E5848;
+    --brass: #C6963C;
+    --brass-text: #8A5A10;
+    --brass-bg: rgba(140, 96, 16, 0.08);
+    --cyan: #2B4C6F;
+    --danger: #A13A2E;
+    --danger-bg: rgba(161, 58, 46, 0.08);
+    --good: #3D6B3D;
+    --good-bg: rgba(61, 107, 61, 0.08);
+    --shadow: rgba(33, 29, 23, 0.12);
+
+    --font-display: 'Plex Serif', Georgia, 'Iowan Old Style', serif;
+    --font-body: 'Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16130F;
+      --paper-raised: #1F1B15;
+      --paper-line: #38322A;
+      --ink: #ECE6D8;
+      --ink-dim: #A79C87;
+      --brass: #E0AE55;
+      --brass-text: #E0AE55;
+      --brass-bg: rgba(224, 174, 85, 0.1);
+      --cyan: #82AFDA;
+      --danger: #D9695A;
+      --danger-bg: rgba(217, 105, 90, 0.12);
+      --good: #7FB37F;
+      --good-bg: rgba(127, 179, 127, 0.1);
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #16130F;
+    --paper-raised: #1F1B15;
+    --paper-line: #38322A;
+    --ink: #ECE6D8;
+    --ink-dim: #A79C87;
+    --brass: #E0AE55;
+    --brass-text: #E0AE55;
+    --brass-bg: rgba(224, 174, 85, 0.1);
+    --cyan: #82AFDA;
+    --danger: #D9695A;
+    --danger-bg: rgba(217, 105, 90, 0.12);
+    --good: #7FB37F;
+    --good-bg: rgba(127, 179, 127, 0.1);
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    z-index: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+
+  .layout {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 2rem);
+    display: grid;
+    grid-template-columns: 200px minmax(0, 780px);
+    justify-content: center;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: start;
+  }
+
+  .page {
+    position: relative;
+    min-width: 0;
+    padding: clamp(2rem, 6vw, 5rem) 0 4rem;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brass-text);
+    font-weight: 500;
+  }
+
+  /* ---------- Hero ---------- */
+
+  .hero { padding-bottom: clamp(1.5rem, 4vw, 2.5rem); }
+
+  .hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .aperture {
+    flex: none;
+    width: 64px;
+    height: 64px;
+    opacity: 0.85;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.3rem, 6vw, 3.4rem);
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+    margin: 0.5rem 0 0;
+    text-wrap: balance;
+  }
+
+  .dek {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 2.4vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--ink-dim);
+    margin: 1.1rem 0 0;
+    max-width: 42em;
+    text-wrap: pretty;
+  }
+
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    margin-top: 1.6rem;
+  }
+  .byline b { color: var(--ink); font-weight: 500; }
+  .byline .dot { opacity: 0.5; }
+
+  .hero-rule {
+    border: none;
+    border-top: 1px solid var(--brass);
+    margin: 1.8rem 0 0;
+  }
+
+  /* spec strip */
+  .spec-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 0;
+  }
+  .spec-strip .spec {
+    padding: 1rem 1rem 0.9rem 0;
+    border-right: 1px solid var(--paper-line);
+  }
+  .spec-strip .spec:last-child { border-right: none; padding-right: 0; }
+  .spec-strip .spec:first-child { padding-left: 0; }
+  .spec-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.15rem, 3.4vw, 1.55rem);
+    font-weight: 500;
+    color: var(--ink);
+    display: block;
+  }
+  .spec-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    display: block;
+    margin-top: 0.2rem;
+  }
+
+  /* ---------- TL;DR ---------- */
+  .tldr {
+    margin: clamp(1.8rem, 4vw, 2.6rem) 0 0;
+    padding: 1.3rem 1.5rem 1.4rem;
+    background: var(--paper-raised);
+    border: 1px solid var(--paper-line);
+    border-left: 3px solid var(--brass);
+    border-radius: 3px;
+  }
+  .tldr .eyebrow { margin-bottom: 0.55rem; }
+  .tldr p {
+    margin: 0;
+    max-width: none;
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  /* ---------- WIP callout (unfinished-on-purpose, visually distinct from
+     everything else in this piece, which is written as done) ---------- */
+  .wip-flag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    border: 1px dashed var(--ink-dim);
+    border-radius: 2px;
+    padding: 0.15em 0.55em;
+    margin-bottom: 0.7rem;
+  }
+  .wip {
+    margin: 1.5rem 0;
+    padding: 1.2rem 1.4rem 1.3rem;
+    border: 1.5px dashed var(--paper-line);
+    border-radius: 4px;
+  }
+  .wip p { color: var(--ink-dim); }
+  .wip p:last-child { margin-bottom: 0; }
+  .spec-row.pending .value { color: var(--ink-dim); font-style: italic; }
+
+  /* ---------- Code block (fixed dark surface, independent of page theme —
+     an instrument-panel readout, not a themed component) ---------- */
+  .codeblock {
+    margin: 1.4rem 0;
+    padding: 1rem 1.25rem;
+    background: #17140F;
+    border: 1px solid rgba(198, 150, 60, 0.28);
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  .codeblock pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #C9C2AE;
+    white-space: pre;
+  }
+  .codeblock .cm { color: #8A8272; }
+  .codeblock .kw { color: #D9A94A; }
+  .codeblock-cap {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin: 0.9rem 0 -0.4rem;
+  }
+
+  /* ---------- Diagram (real architecture, theme-aware via CSS vars) ---------- */
+  .diagram-wrap {
+    margin: 1.5rem 0;
+    padding: 1rem 0.5rem;
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  .diagram-wrap svg { display: block; margin: 0 auto; width: 100%; height: auto; min-width: 480px; max-width: 620px; }
+  .diagram-node-label { font-family: var(--font-mono); font-size: 12px; fill: var(--ink); }
+  .diagram-node-sub { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-dim); }
+  .diagram-cap {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    text-align: center;
+    margin-top: 0.6rem;
+  }
+
+  /* ---------- Sidebar navigation ---------- */
+  .sidenav {
+    padding-top: clamp(2rem, 6vw, 5rem);
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .sidenav-label {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 0.9rem;
+  }
+  .sidenav a {
+    display: block;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    padding: 0.3rem 0 0.3rem 0.65rem;
+    border-left: 2px solid transparent;
+    margin-bottom: 0.05rem;
+  }
+  .sidenav a b {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--brass-text);
+    margin-right: 0.4em;
+  }
+  .sidenav a:hover { color: var(--ink); border-left-color: var(--paper-line); }
+  .sidenav a:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+  .sidenav a.active {
+    color: var(--ink);
+    border-left-color: var(--brass);
+    font-weight: 600;
+  }
+  .sidenav a.active b { color: var(--brass-text); }
+  .sidenav-sub {
+    margin: 0.1rem 0 0.4rem 0;
+    padding-left: 0.6rem;
+    border-left: 1px dashed var(--paper-line);
+  }
+  .sidenav-sub a { font-size: 0.74rem; padding: 0.2rem 0 0.2rem 0.65rem; }
+
+  /* ---------- Article body ---------- */
+
+  article { margin-top: clamp(2.5rem, 6vw, 3.5rem); }
+
+  section { margin-top: clamp(2.6rem, 6vw, 3.6rem); }
+  section:first-child { margin-top: 0; }
+
+  /* Part-level banner (#intro wraps s01-s11, same nesting shape section 12
+     uses for its epochs) -- eyebrow + title stand in for a numbered
+     section-head, since the numbers already belong to the children. */
+  .part-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 3.8vw, 2.1rem);
+    margin: 0.4rem 0 0;
+    text-wrap: balance;
+  }
+  #intro > .lede { margin: 0.9rem 0 0; max-width: 40em; }
+  #intro > section:first-of-type { margin-top: clamp(2.2rem, 5vw, 3rem); }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7em;
+    margin-bottom: 1.3rem;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    color: var(--brass-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.35rem, 3.2vw, 1.75rem);
+    margin: 0;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.28rem;
+    margin: 2.4rem 0 0.9rem;
+  }
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.08rem;
+    margin: 1.8rem 0 0.6rem;
+  }
+
+  p { margin: 0 0 1.1em; max-width: 40em; }
+  p:last-child { margin-bottom: 0; }
+
+  section > p:first-of-type::first-letter {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 3.4em;
+    float: left;
+    line-height: 0.82;
+    padding: 0.03em 0.08em 0 0;
+    color: var(--brass-text);
+  }
+
+  a { color: var(--cyan); text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--paper-raised);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+
+  strong { font-weight: 600; }
+
+  .pull {
+    margin: 2rem 0;
+    padding: 0.2rem 0 0.2rem 1.3rem;
+    border-left: 3px solid var(--brass);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.45;
+    color: var(--ink);
+    max-width: 34em;
+  }
+
+  /* ---------- Frame list (bug catalog) ---------- */
+
+  ol.frame-list {
+    list-style: none;
+    margin: 1.6rem 0;
+    padding: 0;
+    counter-reset: frame;
+    border-top: 1px solid var(--paper-line);
+  }
+  ol.frame-list li {
+    counter-increment: frame;
+    position: relative;
+    padding: 0.95rem 0 0.95rem 4.6rem;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  ol.frame-list li::before {
+    content: "No." counter(frame, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--danger);
+    background: var(--danger-bg);
+    padding: 0.15em 0.5em;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  ol.frame-list li p { margin: 0; max-width: none; }
+
+  /* ---------- Spec sheet (results table) ---------- */
+
+  .spec-sheet {
+    margin: 1.6rem 0;
+    border-top: 1px solid var(--paper-line);
+  }
+  .spec-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    padding: 0.68rem 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .spec-row .label {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  .spec-row .leader {
+    flex: 1;
+    border-bottom: 1px dotted var(--paper-line);
+    height: 0.6em;
+    min-width: 1rem;
+  }
+  .spec-row .value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.92rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* ---------- Plain lists ---------- */
+
+  ul.check {
+    list-style: none;
+    margin: 1.3rem 0;
+    padding: 0;
+  }
+  ul.check li {
+    position: relative;
+    padding-left: 1.5em;
+    margin-bottom: 0.9em;
+    max-width: 40em;
+  }
+  ul.check li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--brass-text);
+  }
+
+  /* ---------- Epoch blocks (Part 2) ---------- */
+
+  .epoch {
+    margin-top: 2.8rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--paper-line);
+  }
+  .epoch:first-of-type { margin-top: 1.6rem; }
+  .epoch-head {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.1rem;
+  }
+  .epoch-letter {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--brass-text);
+    border: 1.5px solid var(--brass);
+    border-radius: 4px;
+    width: 2.1em;
+    height: 2.1em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .epoch-titles h3 { margin: 0; font-size: 1.2rem; }
+  .epoch-range {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.03em;
+    margin-top: 0.15rem;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--brass-text);
+    background: var(--brass-bg);
+    border: 1px solid var(--brass);
+    border-radius: 2px;
+    padding: 0.03em 0.4em;
+    white-space: nowrap;
+    line-height: 1.6;
+  }
+
+  .phase { margin-bottom: 0.85em; max-width: 42em; }
+  .phase .tag { margin-right: 0.5em; }
+
+  h4 .tag { font-size: 0.66rem; vertical-align: middle; margin-right: 0.5em; position: relative; top: -0.1em; }
+
+  /* ---------- Per-phase beat labels (PROBLEM/PLAN/FIX/FRICTION/VERIFICATION/RESULT) ---------- */
+  .beat {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brass-text);
+    margin: 1.25rem 0 0.4rem;
+  }
+  h4 + .beat { margin-top: 0.9rem; }
+
+  .lede {
+    color: var(--ink-dim);
+    font-style: normal;
+  }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    margin-top: 4.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--paper-line);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 780px); }
+    .sidenav { display: none; }
+  }
+
+  @media (max-width: 560px) {
+    .spec-strip { grid-template-columns: repeat(2, 1fr); row-gap: 1rem; }
+    .spec-strip .spec:nth-child(2) { border-right: none; }
+    ol.frame-list li { padding-left: 0; padding-top: 2.6rem; }
+    ol.frame-list li::before { position: static; display: inline-block; margin-bottom: 0.5rem; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero { animation: rise 0.5s ease-out; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<svg class="grain" aria-hidden="true">
+  <filter id="noise">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence>
+    <feColorMatrix type="saturate" values="0"></feColorMatrix>
+  </filter>
+  <rect width="100%" height="100%" filter="url(#noise)"></rect>
+</svg>
+
+<div class="layout">
+
+  <nav class="sidenav" aria-label="Table of contents">
+    <div class="sidenav-label">Contents</div>
+    <a href="#tldr"><b>—</b>TL;DR</a>
+    <a href="#intro"><b>&mdash;</b>Where we started</a>
+    <div class="sidenav-sub">
+      <a href="#s01">01 · No packaging, no PSR</a>
+      <a href="#s02">02 · Global state</a>
+      <a href="#s03">03 · Static singletons</a>
+      <a href="#s04">04 · MyISAM tables</a>
+      <a href="#s05">05 · Untyped templates</a>
+      <a href="#s06">06 · The WS god-class</a>
+      <a href="#s07">07 · What review found</a>
+      <a href="#s08">08 · Plugin roulette</a>
+      <a href="#s09">09 · jQuery &amp; IE shims</a>
+      <a href="#s10">10 · Untranslatable</a>
+      <a href="#s11">11 · Zero tests</a>
+    </div>
+    <a href="#s12"><b>12</b>Ten epochs</a>
+    <div class="sidenav-sub">
+      <a href="#epoch-a">A · Foundation</a>
+      <a href="#epoch-b">B · Composer &amp; PSR-4</a>
+      <a href="#epoch-c">C · Kernel &amp; HTTP</a>
+      <a href="#epoch-d">D · Config, DB &amp; lang</a>
+      <a href="#epoch-e">E · Service layer</a>
+      <a href="#epoch-f">F · Remediation</a>
+      <a href="#epoch-g">G · WS layer &amp; REST</a>
+      <a href="#epoch-h">H · Security</a>
+      <a href="#epoch-i">I · Plugins &amp; layering</a>
+      <a href="#epoch-j">J · Presentation &amp; frontend</a>
+    </div>
+    <a href="#s13"><b>13</b>Keeping it that way</a>
+    <a href="#s14"><b>14</b>By the numbers</a>
+    <a href="#s15"><b>15</b>Benchmarks (WIP)</a>
+    <a href="#s16"><b>16</b>What broke</a>
+    <a href="#s17"><b>17</b>Where it stands</a>
+  </nav>
+
+  <div class="page">
+
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">A complete rewrite log</div>
+        <h1>Piwigo in Modern&nbsp;PHP</h1>
+      </div>
+      <svg class="aperture" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="var(--brass)" stroke-width="1.2"/>
+        <circle cx="50" cy="50" r="18" fill="none" stroke="var(--brass)" stroke-width="1.2"/>
+        <g stroke="var(--brass)" stroke-width="1.2">
+          <line x1="50" y1="4" x2="50" y2="14"/>
+          <line x1="50" y1="86" x2="50" y2="96"/>
+          <line x1="4" y1="50" x2="14" y2="50"/>
+          <line x1="86" y1="50" x2="96" y2="50"/>
+          <line x1="17.6" y1="17.6" x2="24.7" y2="24.7"/>
+          <line x1="75.3" y1="75.3" x2="82.4" y2="82.4"/>
+          <line x1="17.6" y1="82.4" x2="24.7" y2="75.3"/>
+          <line x1="75.3" y1="24.7" x2="82.4" y2="17.6"/>
+        </g>
+      </svg>
+    </div>
+
+    <p class="dek">Photo gallery software doesn't get less popular as it gets older, and Piwigo turned twenty-three this year — old enough that most of its code predates PHP having namespaces. This is the complete account: everything that was wrong with it, and all fifty-five phases it took to fix.</p>
+
+    <div class="byline">
+      <b>Rodrigo Torres</b><span class="dot">·</span><span>August 2026</span>
+    </div>
+
+    <hr class="hero-rule">
+
+    <div class="spec-strip">
+      <div class="spec"><span class="spec-num">4,579</span><span class="spec-label">Commits</span></div>
+      <div class="spec"><span class="spec-num">16 wks</span><span class="spec-label">Elapsed</span></div>
+      <div class="spec"><span class="spec-num">0</span><span class="spec-label">Layer violations</span></div>
+      <div class="spec"><span class="spec-num">L10</span><span class="spec-label">Static analysis</span></div>
+    </div>
+  </div>
+
+  <div class="tldr" id="tldr">
+    <div class="eyebrow">TL;DR</div>
+    <p>Piwigo is a 23-year-old PHP photo gallery that, until this rewrite, had no automated test suite — the one file with "test" in its name was a manual, framework-free bootstrap script — plus zero Composer, every table on MyISAM, and a home-rolled 94-method RPC API that turned out to have real, live security bugs — I found and fixed seven of them in one week, including a session-privilege-escalation bug and an authenticated arbitrary-file-write. The rewrite replaces all of it: PSR-4 plus dependency injection plus Doctrine ORM, a six-layer architecture Deptrac enforces at zero violations, PHPStan at its strictest level with zero errors, a real REST API (<code>/api/v1</code>, OpenAPI, tus uploads) replacing the legacy RPC layer, Smarty swapped for Latte with one typed view object per template, jQuery and every IE-era shim gone, a real plugin/theme contract with dependency resolution so a core upgrade stops being a coin flip for every installed extension, and translations moved to real <code>.po</code> files a tool like Weblate can actually read. Fifty-five phases, 4,579 commits, about sixteen weeks, 9,246 real tests replacing that one manual script.</p>
+  </div>
+
+  <article>
+
+    <section id="intro">
+      <div class="eyebrow">Part one</div>
+      <h2 class="part-title">Where we started</h2>
+      <p class="lede">Eleven problems, each a direct symptom of the same twenty-three-year-old shape of codebase — not independently fixable bugs, which is the whole case for a rewrite rather than a cleanup pass.</p>
+
+    <section id="s01">
+      <div class="section-head"><span class="section-num">01</span><h2>No packaging, no PSR, not even a place to start</h2></div>
+      <p>Piwigo's first commit is dated May 9, 2003. Whatever you're picturing when I say "twenty-three-year-old PHP," picture something with no <code>composer.json</code> in it at all — not deprecated, not half-migrated, absent, because there was never a package manager to omit it from. I checked the pristine tree directly before writing this:</p>
+      <ul class="check">
+        <li>Zero <code>composer.json</code>, anywhere in the tree — every dependency is either vendored by hand or not managed at all.</li>
+        <li>Zero namespaces, zero PSR-anything — one flat procedural include graph.</li>
+        <li>A declared floor of PHP 7.4 — not literally PHP 5, whatever it might look like — but eleven call sites still reach for functions PHP removed outright in version 7.0.</li>
+        <li>No static analysis, because there's no type system disciplined enough to analyze; no CI, because there's no test suite for a pipeline to run.</li>
+      </ul>
+      <div class="codeblock-cap">install/piwigo_structure-mysql.sql · admin/include/pclzip.lib.php</div>
+      <div class="codeblock"><pre><span class="cm">// ereg() is deprecated with PHP 5.3</span>
+if (<span class="kw">ereg</span>($p_options[PCLZIP_OPT_BY_EREG], $v_header['stored_filename'])) {</pre></div>
+      <p>That comment is original to the file — someone already knew, in the PHP 5.3 era, that this call site was on borrowed time. It's still there. This isn't a codebase that skipped a few modern conveniences. It's a codebase from before most of them existed, that never got a second pass.</p>
+    </section>
+
+    <section id="s02">
+      <div class="section-head"><span class="section-num">02</span><h2>State lived in whatever global was closest</h2></div>
+      <p>Every request built its working state out of five superglobal-adjacent variables any of a few hundred files could read and mutate, in any order, with no compiler or type checker able to say who owned what:</p>
+      <div class="codeblock-cap">include/functions.inc.php:426</div>
+      <div class="codeblock"><pre>global $conf, $user, $page;</pre></div>
+      <p>Underneath that sat a roughly 230-call-site service locator, the same shape you'd get from a container if a container ever bothered to enforce what it handed out. None of it was hidden or embarrassing by the standards of when it was written — PHP in 2003 didn't have autoloading, so a global was often the honest, idiomatic answer. The problem is what happens when the honest 2003 answer is still the load-bearing one twenty years later.</p>
+    </section>
+
+    <section id="s03">
+      <div class="section-head"><span class="section-num">03</span><h2>Singletons pretending to be services</h2></div>
+      <p>Layered on top of the globals was a second flavor of shared state: static classes and service-locator singletons holding process-persistent data with no way to reset between requests short of restarting PHP. Under classic per-request execution that's merely ugly — the process dies at the end of the request and takes its accumulated state with it. It stops being merely ugly the moment you want a process to survive across requests, which turns out to matter a great deal later in this piece.</p>
+    </section>
+
+    <section id="s04">
+      <div class="section-head"><span class="section-num">04</span><h2>MyISAM tables under a photo gallery</h2></div>
+      <p>The data layer was hand-built SQL string concatenation, glued together by a <code>Tables::</code> helper whose entire job was returning a table name as a string — opaque enough to defeat any static SQL tool that wants to see a literal string, which is exactly what it was handed instead. There was no ORM and no schema-migration mechanism; the schema was whatever the install script last wrote and whatever ad hoc <code>ALTER TABLE</code> a version bump remembered to run.</p>
+      <p>The detail that actually surprised me: every one of the 34 tables in the pristine install schema is declared <code>ENGINE=MyISAM</code>. Not a mixed bag, not "most tables" — all of them, on an application whose entire job is concurrent writes racing concurrent reads: uploads, comments, ratings, tag assignments, session rows, all fighting for the same table-level lock MyISAM hands out, with no transactions and no foreign keys to catch a half-finished write.</p>
+      <div class="codeblock-cap">install/piwigo_structure-mysql.sql</div>
+      <div class="codeblock"><pre>CREATE TABLE `piwigo_categories` (
+  `id` smallint(5) unsigned NOT NULL auto_increment,
+  `name` varchar(255) NOT NULL default '',
+  [&hellip;]
+) <span class="kw">ENGINE=MyISAM</span>;</pre></div>
+      <p>That's not a nitpick you'd only notice under heavy load. It's a structural ceiling on how much traffic the thing could ever safely serve.</p>
+    </section>
+
+    <section id="s05">
+      <div class="section-head"><span class="section-num">05</span><h2>One template, one untyped bag of everything</h2></div>
+      <p>Templating ran on Smarty, and the working contract between a controller and its template was "whatever got assigned to the one shared variable bag, under whatever string key the controller author chose that day." Nothing checked that a template's expectations matched what a controller actually sent it — a typo in a variable name failed silently, rendering an empty string instead of an error. Nothing stopped a template from reaching back into a controller's internals, or a controller from reaching forward into template state. The boundary existed only as a convention two different people had to remember to respect.</p>
+    </section>
+
+    <section id="s06">
+      <div class="section-head"><span class="section-num">06</span><h2>Ninety-four ways to reach into the same god-class</h2></div>
+      <p>Every mobile app, every third-party client, and a good chunk of the site's own UI talked to Piwigo through a single hand-rolled JSON/XML RPC layer — 94 methods deep. They didn't look like 94 independent, well-scoped endpoints:</p>
+      <ul class="check">
+        <li>All 94 were entries in one shared registration array, dispatched by a single method whose entire job — registering the other 94 — ran to 1,322 lines by itself.</li>
+        <li>Parameters arrived as <code>array $params</code>, read back out by string key, with no type anywhere between "whatever the client sent" and "whatever the handler assumed."</li>
+        <li>Errors and early exits didn't return — they called <code>exit()</code> straight from deep inside business logic, a fine way to end a script and a terrible way to compose one.</li>
+      </ul>
+    </section>
+
+    <section id="s07">
+      <div class="section-head"><span class="section-num">07</span><h2>What a week of careful reading turned up</h2></div>
+      <p>I went into the WS layer expecting to modernize its internals without changing a single byte on the wire. Somewhere in the middle of reading it carefully, the read turned into a security review, and the security review turned up seven real, exploitable findings. All seven were fixed the same day they were found:</p>
+
+      <ol class="frame-list">
+        <li><p>Every superglobal, on every single request, ran through a blanket <code>addslashes()</code> call — silent data corruption on anything containing a backslash or quote, server-wide, on every request the app served.</p></li>
+        <li><p>An upload endpoint used a session type meant to stay maximally restricted — an API-key session, scoped to a small handful of calls. A bootstrap ordering bug let it silently upgrade itself into a fully authenticated session, unlocking eight endpoints that were supposed to be permanently unreachable from it.</p></li>
+        <li><p>One upload endpoint wrote a file to disk using a checksum and MIME type read straight off the request, unvalidated — an authenticated user could write to a directory of their choosing.</p></li>
+        <li><p>One admin action was missing an authorization gate that its nearly identical sibling action already had.</p></li>
+        <li><p>CSRF protection on three state-changing endpoints was optional, because the same token field doubled as an unrelated "allow raw HTML" flag — and one of the three was reachable over a plain GET.</p></li>
+        <li><p>CSRF tokens were compared with <code>!==</code> instead of a constant-time comparison — a timing side-channel on the one check standing between a real form submission and a forged one.</p></li>
+        <li><p>Four separate <code>exec()</code> call sites passed their arguments straight through with no escaping at all.</p></li>
+      </ol>
+
+      <p>None of these seven tripped a single existing test. The suite covering that API — six hundred and four tests deep, covering all ninety-four methods — was there to check that the wire format hadn't changed. It was never asked whether the wire format was safe, so it never had a chance to say no.</p>
+
+      <p>You can fix seven bugs like that in an afternoon, and I did. What you can't do is code-review your way out of the thing that produced them: an architecture where safety is something each of ninety-four independent handlers has to remember to do for itself, in a codebase where state lives in whichever superglobal or static class property happened to be closest at the time. Blanket <code>addslashes()</code> on every request wasn't a one-off mistake — it's what happens when there's no single, typed choke point request data is forced through.</p>
+    </section>
+
+    <section id="s08">
+      <div class="section-head"><span class="section-num">08</span><h2>A plugin ecosystem playing roulette with every release</h2></div>
+      <p>Roughly four hundred real plugins exist for Piwigo, plus a long tail of themes, and every one of them was written against undocumented internals rather than a contract:</p>
+      <ul class="check">
+        <li>No real contract — only header-comment marker files (<code>main.inc.php</code>, <code>themeconf.inc.php</code>) declaring a name and a version string nobody actually enforced.</li>
+        <li>No dependency resolution between plugins.</li>
+        <li>No real negotiation between a plugin's declared compatibility and core's actual version.</li>
+      </ul>
+      <p>The practical result, if you've run a Piwigo install with more than a couple of plugins through more than one upgrade: every core release is a coin flip for every installed extension, because plugins reach directly into whatever internal shape core happened to have that particular week. Nothing stood between them.</p>
+    </section>
+
+    <section id="s09">
+      <div class="section-head"><span class="section-num">09</span><h2>jQuery, IE7 shims, and a home-rolled bundler</h2></div>
+      <p>The frontend was jQuery-dependent front to back, and everything downstream of that one dependency stayed frozen at roughly the same era:</p>
+      <ul class="check">
+        <li>IE6/7 conditional comments and fallback stylesheets, still live in the tree.</li>
+        <li>No TypeScript, no modern CSS architecture, no CSS containment or cascade layers — none of that existed yet when most of the stylesheet was written, and nobody had been back to use it since.</li>
+        <li>No build tool in the sense anyone shipping a frontend in 2026 would recognize one — instead, a roughly thousand-line hand-rolled PHP class walked templates at request time looking for script and style declarations to concatenate and minify itself.</li>
+        <li>No dark mode. No responsive image pipeline.</li>
+      </ul>
+    </section>
+
+    <section id="s10">
+      <div class="section-head"><span class="section-num">10</span><h2>Translations only a PHP developer could touch</h2></div>
+      <p>I checked this one directly too: the pristine tree has zero <code>.po</code> or <code>.mo</code> files anywhere. Every locale — sixty-plus of them — is a <code>.lang.php</code> file, a bespoke PHP array (<code>admin.lang.php</code>, <code>common.lang.php</code>, one file per locale per page-group) that no translation platform on earth speaks. Weblate, Crowdin, POEditor — they all work in gettext/PO, and none of them work in "PHP array a Piwigo maintainer hand-edited in a text editor." Translating a string meant being comfortable opening a PHP file and not breaking its syntax. That's a strange bar to clear for a job that has nothing to do with programming.</p>
+    </section>
+
+    <section id="s11">
+      <div class="section-head"><span class="section-num">11</span><h2>No quality gates worth the name</h2></div>
+      <p>Last, and in a sense the root cause behind letting all the rest persist this long: I checked, and the pristine tree has —</p>
+      <ul class="check">
+        <li>No <code>tests/</code> directory, and no automated test suite worth the name.</li>
+        <li>No CI.</li>
+        <li>No mutation testing.</li>
+        <li>No accessibility or performance budget.</li>
+      </ul>
+      <p>There's exactly one file in the whole tree with "test" in its name — <code>tools/test_piwigo.php</code> — and it's worth being precise about rather than waving away: 339 lines, no framework, no real assertions. It installs a fresh Piwigo, logs in, creates an album, then shells out to a separate Perl script to upload a photo and prints <code>"Add a Picture OK!"</code> or <code>"...KO!"</code> to the terminal based on a raw row count — no pass/fail exit code, nothing a pipeline could act on, and its own picture-upload verification branch is half commented-out dead code. It's a manual bootstrap script a developer runs by hand and reads with their own eyes, not a test suite. Nothing in this tree — that file included — would have caught any of the eleven findings above automatically, because nothing was actually looking. A codebase can drift a long way in twenty-three years when nothing pushes back.</p>
+      <p>None of these eleven things are independently fixable bugs. They're symptoms of one shape of codebase — one where nothing enforces a boundary, nothing types a contract, and nothing runs on every change to notice when a boundary gets crossed anyway. You can patch a `addslashes()` call. You cannot patch your way out of an architecture that made blanket `addslashes()` the path of least resistance in the first place. That's the case for a rewrite, not a cleanup pass — and what follows is all fifty-five phases of it.</p>
+    </section>
+
+    </section>
+
+    <section id="s12">
+      <div class="section-head"><span class="section-num">12</span><h2>The rewrite, in ten epochs</h2></div>
+      <p class="lede">Fifty-five phases, P0 through P54, sequenced so every backend phase lands before any frontend phase touches it. None of it got copy-pasted forward — the rule for the whole effort was read the target behavior, then reimplement it by hand, tests first or in the same commit, full gate suite green before the next commit group started. What follows is all of it, epoch by epoch.</p>
+
+      <div class="epoch" id="epoch-a">
+        <div class="epoch-head">
+          <span class="epoch-letter">A</span>
+          <div class="epoch-titles"><h3>Foundation</h3><div class="epoch-range">P0 – P4</div></div>
+        </div>
+        <p>Five phases, and not one line of first-party application behavior changes in any of them. Epoch A's entire job is standing up the tools, harnesses and infrastructure everything after it gets held to — additive only, on purpose, so that when P5 makes its first real code-modifying pass, there's already a baseline to measure drift against instead of a guess.</p>
+
+        <h4><span class="tag">P0</span>Every checker, installed before a single line changes</h4>
+
+        <span class="beat">Problem</span>
+        <p>Section 01 already made the case in the abstract: no static analysis, no test framework worth the name, no dependency-hygiene tooling, nothing gating a CVE from entering the tree. Concretely, at the moment this phase starts, there is no way to answer the question "did the last change make this codebase better or worse" with anything other than a guess.</p>
+
+        <span class="beat">Plan</span>
+        <p>Install every tool the rest of the project will eventually be held to, but run all of them in measurement-only mode first, before any code-modifying pass touches the tree — so the first real refactor (P5) and the tooling adoption itself never get tangled into one diff nobody can bisect. And pick the strictest PHPStan level immediately rather than ramp up incrementally: ratcheting a level up later means re-auditing everything that already passed at a lower one, which is strictly more work than starting at the ceiling.</p>
+
+        <span class="beat">Fix</span>
+        <p>Pest as the sole test framework, pulled in with its architecture, browser, mutation-testing, PHPStan-bridge and type-coverage plugins so one runner covers five different kinds of test from day one instead of stitching PHPUnit, Behat and a separate mutation tool together by hand. Easy Coding Standard for style — ECS is itself a thin orchestrator over two different underlying engines, not one: PHP-CS-Fixer for the formatting rules (spacing, import order, <code>declare(strict_types=1)</code> placement) and, layered on top of that, a raw PHP_CodeSniffer sniff for the one thing PHP-CS-Fixer's rule set structurally can't do — renaming. PSR-1's camelCase method-name requirement needs an identifier-aware sniff, not a formatter, and it runs report-only by design: auto-renaming a method could silently break an interface implementation or a plugin override, so a human has to make that call, the tool only has to flag it.</p>
+        <p>PHPStan runs at <code>level: 10</code> — the strictest rung the tool offers — with <code>vendor/phpstan/phpstan/conf/bleedingEdge.neon</code> included on top, which pulls in rule tightenings the PHPStan project itself considers correct but hasn't stabilized into a numbered level yet. Layered onto that: extensions for Doctrine, PHPUnit, Symfony and a general strict-rules pack, plus <code>staabm/phpstan-dba</code>, a SQL-string analyzer that validates query text against the real schema — but only works against literal strings, since it has to parse the SQL statically. That one constraint turns out to matter a great deal later: it becomes part of the actual case, several epochs on, for deleting a table-name helper whose entire job was building query fragments as opaque, non-literal strings — the helper wasn't just an abstraction nobody liked, it was invisible to this analyzer by construction.</p>
+        <p>Rounding out the PHP side: Rector for mechanical modernization (its actual PHP 8.5 rule set doesn't get turned loose tree-wide until P5 — this phase only installs it); Deptrac for the architecture-boundary checker, with its real six-layer ruleset still three phases away in P6; Psalm as a second, deliberately non-blocking opinion, since two gates that can both flag the same line teach people to distrust whichever one cries wolf more; ComposerRequireChecker and ComposerUnused for dependency hygiene; PHPBench for microbenchmarks; pcov as the code-coverage driver rather than Xdebug, chosen specifically because it's faster for coverage collection and nothing here needs Xdebug's step debugger in CI; and <code>roave/security-advisories</code>, pinned to <code>dev-latest</code>, which does something quietly aggressive by design — it's a metapackage with deliberately conflicting version constraints against every package with a known CVE, so <code>composer install</code> fails outright the moment a vulnerable version enters the dependency tree, rather than waiting for a nightly scanner to notice after the fact.</p>
+
+        <span class="beat">Friction</span>
+        <div class="codeblock-cap">phpstan.neon</div>
+        <div class="codeblock"><pre><span class="cm"># Defaults to the machine-wide sys_get_temp_dir()/phpstan, shared by
+# every worktree on this box -- the dead-code-detector extension's own
+# UsageCacheStorage keys its cache purely by content hash and garbage-
+# collects entries its own process didn't read, so two worktrees
+# analysing overlapping content concurrently race on the same cache
+# files ("DCD cache file not found for hash ..." is the symptom).</span>
+tmpDir: <span class="kw">/tmp/phpstan%currentWorkingDirectory%</span></pre></div>
+        <p>PHPStan's own dead-code-detector extension caches analysis results keyed by content hash in a shared temp directory, and two people — or two worktrees on the same machine — running an analysis at the same time race on the same cache files, one process garbage-collecting entries the other hasn't read yet. Not a hypothetical: the symptom string in that comment is a real error a real run produced. The fix folds the current working directory into the cache path itself, giving every worktree its own real, collision-free location — the kind of operational scar tissue that only shows up once real people are running the tool concurrently, which is the entire point of turning it on this early rather than after the first real refactor is already in flight.</p>
+
+        <span class="beat">Verification</span>
+        <p>The measurement-only sequencing is verified less by a single check than by what didn't have to happen afterward: every tool named above is still, identity for identity, what's running today — nothing needed to be swapped out once real usage started. P5's later switch from report-only to code-modifying never had to re-litigate which tools to trust; it only had to flip a mode.</p>
+
+        <span class="beat">Result</span>
+        <p>Every phase after this one has somewhere to stand. P5's tree-wide Rector and ECS pass has a baseline to diff against instead of a guess, and because the strictest PHPStan level was the starting point rather than a later goal, no phase downstream of this one ever had to stop and re-audit code that had already passed a lower bar.</p>
+
+        <h4><span class="tag">P1</span>Bun, Vite, and a real frontend quality bar</h4>
+
+        <span class="beat">Problem</span>
+        <p>Section 09's indictment, restated concretely for this phase: no bundler, no linter, no perf budget, nothing standing between a change and the page it ships to. A jQuery-era frontend with no tooling has no way to notice its own regressions either.</p>
+
+        <span class="beat">Plan</span>
+        <p>Mirror P0's additive-first approach on the frontend — install the full modern toolchain before any frontend code gets touched, so the eventual TypeScript/CSS modernization work several epochs later inherits gates that already exist rather than having to build them mid-migration.</p>
+
+        <span class="beat">Fix</span>
+        <p>bun as the package manager and script runner, Vite as the bundler, TypeScript, ESLint on a flat config with <code>typescript-eslint</code>, Stylelint, Vitest with real <code>v8</code> coverage, knip for dead-export and dead-dependency detection, size-limit for bundle budgets, commitlint enforcing the conventional-commit convention this project's own git history depends on to stay legible, and Lighthouse CI for performance and accessibility scoring — collect-only at this phase, reporting real numbers into <code>.lighthouseci/</code> with nothing yet enforced against them; turning those numbers into a real blocking threshold is P54's job, once there's a finished frontend worth holding to one.</p>
+        <p>knip's configuration is worth a look on its own, because it's a small, concrete example of a tool needing real domain knowledge to not lie: its entry-point list has to explicitly exclude the vendored jQuery bundle, jQuery's cookie plugin, and the IE-era PNG-alpha shim from dead-code analysis — not because they're used in a way knip can't see, but because they're third-party files this project doesn't touch and doesn't want flagged as unused exports of its own code. Get that exclusion list wrong and a legitimate finding tool starts crying wolf about files nobody was ever going to act on, which is the fastest way to get a whole category of tooling ignored.</p>
+
+        <span class="beat">Friction</span>
+        <div class="codeblock-cap">vite.config.ts</div>
+        <div class="codeblock"><pre><span class="cm">// Vite's own default publicDir ("&lt;root&gt;/public") collides with this
+// project's public/ -- the PHP app's web root -- not a "static assets to
+// copy into the build output" directory in Vite's sense. Left at the
+// default, the build's own publicDir-copy step walks into public/dist (a
+// symlink back to this very outDir) and recursively copies dist/ into
+// itself without bound -- real bug: a `vite build` run filled the disk
+// (dist/dist/dist/... nested ~100 levels deep, ENOSPC) before this was set.</span>
+publicDir: <span class="kw">false</span>,</pre></div>
+        <p>Not a hypothetical risk written up defensively after the fact — a real incident, caught during setup: a routine build run silently recursed into its own output directory through a symlink loop and kept copying until the disk filled up. The fix is one line, because nothing here actually needed Vite's copy step in the first place — the build's own <code>outDir</code> already is what <code>public/dist</code> symlinks to, so the built assets are reachable at <code>/dist/...</code> with zero copying required.</p>
+        <p>A second, quieter gap sat unnoticed for longer: <code>web-vitals</code> got installed on day one but was never wired to anywhere real field metrics could go — a library in <code>package.json</code> measuring nothing, until someone noticed.</p>
+
+        <span class="beat">Verification</span>
+        <p>The <code>web-vitals</code> gap is closed by a small <code>build/vitals.ts</code> collector calling <code>navigator.sendBeacon()</code> against a real <code>VitalsController</code> and route, loaded on every page — log-only, no dashboard, but a real endpoint now receiving real Core Web Vitals numbers from real page loads. The proof it works is the plainest kind: the endpoint has traffic.</p>
+
+        <span class="beat">Result</span>
+        <p>The frontend modernization epoch, several dozen phases away, inherits a proven toolchain instead of standing one up mid-migration — and a Lighthouse baseline is already being collected years before P54 turns it into a real blocking gate.</p>
+
+        <h4><span class="tag">P2</span>An environment split, a fixture database, and suites that didn't exist yet</h4>
+
+        <span class="beat">Problem</span>
+        <p>Section 11's indictment: no automated test suite anywhere — the one file with "test" in its name is a manual, framework-free bootstrap script, not something a pipeline could run. Even once P0 installs Pest, there's nowhere disposable to run it against and no way to guarantee two runs start from the same state.</p>
+
+        <span class="beat">Plan</span>
+        <p>Build the harness before any domain code migrates — env split, fixture database, five real test suites — so every phase from here forward has somewhere to write a test on day one, rather than inventing test infrastructure ad hoc, differently, each time a new phase needs it.</p>
+
+        <span class="beat">Fix</span>
+        <p>A dedicated test mode — a separate <code>.env.test</code> file plus an <code>X-Piwigo-Env: test</code> header the app checks on every request through one small <code>Env</code> class — so the exact same code path that serves production can run against a disposable fixture database in CI without a single <code>if (testing)</code> branch anywhere in application code. The same env file pins a frozen test clock, so nothing built against "today" flakes on whatever day CI happens to run, and points a trio of alternate PEM-mirror URLs at local fixtures instead of the real network, so the plugin/theme catalog work several epochs later has something deterministic to test against from day one.</p>
+        <p>The fixture itself is a real, reimportable SQL dump — <code>tests/Fixtures/piwigo-17.0.sql</code>, 39 real tables, with a Postgres variant sitting alongside it well before the multi-provider work that would come to depend on it — so every test run starts from a known, identical state rather than whatever the last run happened to leave behind. Five real test suites get their directories here: Unit, Arch, Integration, Contract and Browser, each wired into its own <code>phpunit.xml.dist</code> testsuite entry so any of them can run in isolation. A WS Contract suite gets one dedicated file per RPC method family from the start — <code>WsCategoriesTest</code>, <code>WsCommentsTest</code>, <code>WsGroupsTest</code>, <code>WsApiKeyTest</code> and dozens more, 42 files in total.</p>
+
+        <span class="beat">Verification</span>
+        <p>Neither Browser nor Contract has much real coverage yet at this phase — they exist here so later phases have something to run against, not because P2 itself proves much. The real verification of this phase's value doesn't land for several epochs: it's the WS Contract suite staying completely unmodified all the way through P25's ninety-four-handler RPC modernization. A suite built now, untouched then, is the whole proof that migration changed nothing on the wire.</p>
+
+        <span class="beat">Result</span>
+        <p>Every phase after this one gets to write tests immediately instead of asking "against what." The frozen clock and fixture PEM URLs mean determinism was a day-one property, not something bolted on once flaky tests started showing up.</p>
+
+        <h4><span class="tag">P3</span>Thirty-four jobs, and the rule that all of them have to pass</h4>
+
+        <span class="beat">Problem</span>
+        <p>P0 through P2 install real tools and build a real harness, but a tool that only runs when someone remembers to run it locally isn't a gate — it's a suggestion. Nothing yet forces any of it to run on every single change.</p>
+
+        <span class="beat">Plan</span>
+        <p>Wire every already-installed tool into a real pipeline immediately, sequenced right after the harness so CI has real suites to run rather than empty placeholders — and treat supply-chain scanning as day-one scope alongside it, not a hardening pass added after an incident.</p>
+
+        <span class="beat">Fix</span>
+        <p>The pipeline this whole project runs on, clustered by what each group actually checks rather than just named: <code>pest</code> (<code>composer test</code>) and a separate <code>coverage</code> job running the same suite again under pcov; <code>ecs</code>/<code>phpstan</code>/<code>rector</code>/<code>deptrac</code> for static analysis, each invoking the real composer script rather than a bare binary call so local and CI runs can never quietly drift apart; <code>audit</code> (<code>composer audit --abandoned=report</code>, flagging both known vulnerabilities and dependencies their own maintainers have marked abandoned); <code>require-checker</code>, <code>composer-unused</code> and <code>composer-normalize</code> for dependency hygiene; <code>phpbench</code>; a matching frontend cluster — <code>vitest</code>, <code>eslint</code>, <code>stylelint</code>, <code>knip</code>, <code>prettier</code>, <code>markdownlint</code>; <code>size-limit</code>, which runs a real production build first so the budget check measures the real shipped bundle, not an estimate; <code>commitlint</code>, run three different ways depending on whether the trigger is a pull request, a push, or a single commit; <code>actionlint</code>, linting the CI configuration's own YAML; a <code>doc-drift</code> job re-executing every machine-checkable claim embedded in <code>docs/PLAN.md</code>; a <code>db-multi-provider</code> matrix plus dedicated <code>integration</code>, <code>contract</code>, <code>browser</code>, <code>install-flow</code> and <code>visual-regression</code> jobs, the last four driven by a real headless Chromium through Playwright; a <code>restore-drill</code> job; <code>lighthouse</code>; an <code>sbom</code> job; and <code>apache-deny-rules</code>/<code>container-deny-rules</code>, which don't just lint the deny-rule configuration — <code>container-deny-rules</code> builds the real production image, boots it, and curls the denied paths against a live running container. Thirty-four jobs today.</p>
+        <p>The <code>sbom</code> job generates two separate software bills of materials — one for the PHP tree via <code>composer sbom</code>, one for npm via a locked-down <code>cyclonedx-npm</code> invocation — then runs <code>actions/attest-build-provenance</code> against them, a real, cryptographically signed provenance attestation tying the artifact back to the exact workflow run that produced it. Every third-party GitHub Action across the pipeline is pinned to a full commit SHA rather than a mutable tag, so a compromised or re-tagged upstream action can't silently swap in different code under a name CI already trusts. OSV vulnerability scanning and an OpenSSF Scorecard check both run as their own scheduled workflows, every Saturday at 1:30am, independent of any commit — so a new CVE published against an already-merged, otherwise-unchanged dependency still gets caught within the week.</p>
+
+        <span class="beat">Verification</span>
+        <p>The pipeline verifies itself by construction: nothing lands unless CI is green on a clean checkout. Not a local machine, not "it passed on my branch" — the clean-checkout run in CI is the only claim of "passing" this project recognizes.</p>
+
+        <span class="beat">Result</span>
+        <p>Every phase from here forward is held to the exact same gate, automatically, with no opt-out. A regression or a security finding closed once can't silently reopen later without CI noticing on the very next push.</p>
+
+        <h4><span class="tag">P4</span>Three server targets, one set of rules</h4>
+
+        <span class="beat">Problem</span>
+        <p>Nothing yet says how this actually runs anywhere real. No reproducible build, no documented deploy path, no verified way to recover from a bad restore — "it works on the machine that built it" isn't a runtime story.</p>
+
+        <span class="beat">Plan</span>
+        <p>Build real, independently buildable server targets rather than one image behind a flag, so the primary FrankenPHP runtime and an Apache fallback are both genuinely production-shaped, not one blessed path and an afterthought. Mirror security policy across every target deliberately rather than trust one canonical source to stay in sync by memory. And prove restore capability with an actual rehearsed drill, not a documented hope.</p>
+
+        <span class="beat">Fix</span>
+        <p>Six real, independently buildable Dockerfile stages. A Composer builder resolves PHP dependencies with <code>--ignore-platform-reqs</code>, since the bare <code>composer:2</code> image isn't the target runtime. A bun-based frontend builder runs the real production build. The production stage runs on <code>dunglas/frankenphp:1-php8.5</code> — the primary runtime this whole project is aimed at — installing only the five PHP extensions the base image doesn't already ship (verified directly against <code>php -m</code>), then deliberately skipping <code>--auto-remove</code> when purging the <code>-dev</code>/headers packages those extensions needed to compile, since auto-removing would cascade into deleting the runtime shared libraries — <code>libpng16</code>, <code>libicuio</code>, <code>libMagickWand</code> — those same packages pulled in and the compiled extensions still need loaded at runtime. A dev variant layers Composer and bun back onto the production image for a single container with both toolchains available. A frontend-only test stage runs Vitest in isolation. And a separate <code>php:8.5-apache</code> fallback shares the same extension list, with its own vhost pointed at <code>public/</code> instead of the whole source tree.</p>
+
+        <div class="diagram-wrap">
+          <svg viewBox="0 0 620 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dockerfile stage dependency diagram: builder and frontend feed production and production-apache; production feeds dev; frontend feeds test">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--brass)"/>
+              </marker>
+            </defs>
+            <g fill="none" stroke="var(--brass)" stroke-width="1.3" marker-end="url(#arrow)">
+              <line x1="95" y1="72" x2="95" y2="127"/>
+              <line x1="95" y1="72" x2="300" y2="127"/>
+              <line x1="295" y1="72" x2="100" y2="127"/>
+              <line x1="295" y1="72" x2="305" y2="127"/>
+              <line x1="295" y1="72" x2="510" y2="127"/>
+              <line x1="95" y1="182" x2="95" y2="227"/>
+            </g>
+            <g>
+              <rect x="20" y="20" width="150" height="52" rx="4" fill="var(--paper-raised)" stroke="var(--brass)" stroke-width="1.2"/>
+              <text x="95" y="43" text-anchor="middle" class="diagram-node-label">builder</text>
+              <text x="95" y="58" text-anchor="middle" class="diagram-node-sub">composer:2</text>
+
+              <rect x="220" y="20" width="150" height="52" rx="4" fill="var(--paper-raised)" stroke="var(--brass)" stroke-width="1.2"/>
+              <text x="295" y="43" text-anchor="middle" class="diagram-node-label">frontend</text>
+              <text x="295" y="58" text-anchor="middle" class="diagram-node-sub">oven/bun:1</text>
+
+              <rect x="20" y="130" width="160" height="52" rx="4" fill="var(--paper-raised)" stroke="var(--brass)" stroke-width="1.6"/>
+              <text x="100" y="153" text-anchor="middle" class="diagram-node-label">production</text>
+              <text x="100" y="168" text-anchor="middle" class="diagram-node-sub">frankenphp (primary)</text>
+
+              <rect x="220" y="130" width="180" height="52" rx="4" fill="var(--paper-raised)" stroke="var(--brass)" stroke-width="1.2"/>
+              <text x="310" y="153" text-anchor="middle" class="diagram-node-label">production-apache</text>
+              <text x="310" y="168" text-anchor="middle" class="diagram-node-sub">php:8.5-apache (fallback)</text>
+
+              <rect x="440" y="130" width="150" height="52" rx="4" fill="var(--paper-raised)" stroke="var(--brass)" stroke-width="1.2"/>
+              <text x="515" y="153" text-anchor="middle" class="diagram-node-label">test</text>
+              <text x="515" y="168" text-anchor="middle" class="diagram-node-sub">vitest, isolated</text>
+
+              <rect x="20" y="230" width="150" height="52" rx="4" fill="var(--paper-raised)" stroke="var(--brass)" stroke-width="1.2"/>
+              <text x="95" y="253" text-anchor="middle" class="diagram-node-label">dev</text>
+              <text x="95" y="268" text-anchor="middle" class="diagram-node-sub">+ composer, bun</text>
+            </g>
+          </svg>
+          <div class="diagram-cap">Six Dockerfile stages — arrows show COPY --from / FROM relationships</div>
+        </div>
+        <p>The production container listens on port 80 as the non-root <code>www-data</code> user, needing exactly one Linux capability — <code>CAP_NET_BIND_SERVICE</code> — to bind a privileged port without being root. Verified empirically: FrankenPHP wants that capability at startup regardless of which port it ends up binding, so a high port bought nothing. Compose and Helm both grant it the same narrow way — <code>cap_drop: [ALL]</code> then <code>cap_add: [NET_BIND_SERVICE]</code>, one specific exception carved back out of nothing, not Docker's ~14-capability default and not root. The web-root deny policy (SEC-01) is written once in intent and mirrored across all three real targets — Apache's <code>.htaccess</code>, the Caddyfile, and the CI job that checks the container at runtime — because a rule that exists in one config and not its siblings is a rule an attacker only has to find the gap in.</p>
+
+        <span class="beat">Friction</span>
+        <p>That mirroring is what caught a real bug during the P4 audit, not a hypothetical one: the Apache rule denying access to <code>vendor/</code> was written as an unanchored pattern matching <code>/vendor/</code> anywhere in the request path, which also matched and 403'd every icon glyph under <code>themes/default/vendor/fontello/</code> — a real, legitimate, publicly-servable bundled font, sitewide, the moment <code>AllowOverride All</code> made the rule active. Found via a real <code>curl</code> returning 403 and a matching Apache access-log entry, root-caused rather than written off as a browser timing flake, and fixed by excluding any <code>vendor/</code> nested under <code>themes/*/</code> or <code>plugins/*/</code>.</p>
+        <div class="codeblock-cap">docker/Caddyfile</div>
+        <div class="codeblock"><pre><span class="cm"># root * /app/public alone doesn't make upload/galleries/local/language/
+# plugins/_data "structurally unreachable" -- php_server's default
+# try_files is `{path} {path}/index.php index.php`, so any request that
+# isn't a real static file under /app/public silently falls through to
+# index.php instead of 404ing at the web-server layer.</span>
+@deniedRelocated path <span class="kw">/upload/* /galleries/* /local/* /language/* /plugins/*</span>
+respond @deniedRelocated <span class="kw">403</span></pre></div>
+        <p>A second finding on the Caddy side, distinct from the Apache one: moving the document root to <code>public/</code> made most of the source tree structurally unreachable by construction, but a handful of directories the app still needs at runtime — uploads, gallery storage, local overrides — live <em>outside</em> <code>public/</code> too, and Caddy's own catch-all fallback quietly routes anything that isn't a static file straight to <code>index.php</code> rather than 404ing. "The document root doesn't cover it" and "it's unreachable" turned out to be two different claims, and the gap between them needed its own explicit deny rule. Caddy's <code>path</code> matcher, checked directly rather than assumed safe by similarity, turned out not to share the Apache anchoring bug at all — it anchors each pattern to the start of the URI, so <code>/vendor/*</code> there only ever matches the real top-level Composer directory.</p>
+
+        <span class="beat">Verification</span>
+        <p><code>container-deny-rules</code> doesn't just lint the configuration — it builds the real production image, boots it, and curls the denied paths against a live running container to prove the rule holds at runtime, not just on paper. And the restore drill actually restores the tracked fixture dump into a scratch database and asserts real row counts and a schema smoke query against it — kept deliberately independent of the project's own backup-restore CLI command, so the mechanism proving disaster recovery works isn't allowed to depend on the same application stack it exists to rehearse recovering.</p>
+
+        <span class="beat">Result</span>
+        <p>Three real, working server targets instead of one blessed path. SEC-01 proven to hold identically across all of them, not assumed to. Two narrower rules round out the posture: SEC-06 marks every content-hashed Vite asset immutable for a year, since a hash change is the only way its content ever changes; SEC-21 forces any uploaded <code>.svg</code>/<code>.html</code> file to download rather than render inline, defense in depth alongside the real fix that strips <code>&lt;script&gt;</code> tags and event handlers out of uploaded SVGs at upload time. And <code>/health</code>/<code>/ready</code> stay deliberately outside the normal request pipeline on both server configs, so the one part of the app that's supposed to answer honestly when everything else is on fire doesn't depend on any of the things that might be on fire.</p>
+      </div>
+
+      <div class="epoch" id="epoch-b">
+        <div class="epoch-head">
+          <span class="epoch-letter">B</span>
+          <div class="epoch-titles"><h3>Composer, Rector, PHPStan &amp; PSR-4</h3><div class="epoch-range">P5 – P6</div></div>
+        </div>
+        <p class="phase"><span class="tag">P5</span>The single largest phase by commit volume: a whole-tree style pass, PHPStan's bleeding-edge ruleset applied file by file across what was still a non-namespaced procedural tree, and every vendored or ad hoc third-party dependency replaced with a real, native-platform-first equivalent — Symfony Mailer over a bundled mailer library, a real QR-code and HTML-inlining package, `password_hash()` over a hand-rolled hashing shim. Rector's full PHP 8.5 and type-declaration rule sets run tree-wide. Property hooks and asymmetric visibility land on the config object specifically, cutting it by more than half while removing real boilerplate, not just reformatting it.</p>
+        <p class="phase"><span class="tag">P6</span>Every first-party class gets physically extracted out of the procedural `include/`/`admin/` files it used to live inside, into a real PSR-4 tree under one namespace root. This is extraction and namespacing only — no renaming, no DI, no behavior change beyond what the move itself forces — but it's the phase that makes everything after it possible, and it's where the six-layer Deptrac architecture model gets established for the first time.</p>
+      </div>
+
+      <div class="epoch" id="epoch-c">
+        <div class="epoch-head">
+          <span class="epoch-letter">C</span>
+          <div class="epoch-titles"><h3>Kernel &amp; HTTP foundation</h3><div class="epoch-range">P7 – P12</div></div>
+        </div>
+        <p class="phase"><span class="tag">P7</span>A real kernel and boot skeleton — and the payoff the rest of this piece keeps pointing toward: FrankenPHP running in genuine worker mode, the app process staying booted in memory and handling a long run of requests back to back instead of booting fresh for every single one. Every static-singleton removal described later in this piece exists to make this safe.</p>
+        <p class="phase"><span class="tag">P8</span>A real dependency-injection container, autowired by default — a constructor with only class-typed parameters needs zero explicit container configuration.</p>
+        <p class="phase"><span class="tag">P9</span>A full PSR-15 middleware pipeline and routing layer, replacing the ad hoc bootstrap-then-run sequence every request used to be walked through by hand — plus a real CSRF and security-header hardening pass, fixing timing-unsafe comparisons that had sat unnoticed for years.</p>
+        <p class="phase"><span class="tag">P10</span>Structured logging, request timing headers, and distributed tracing — observability that answers "what actually happened on this request" instead of forcing someone to grep a flat log file.</p>
+        <p class="phase"><span class="tag">P11</span>A real cache layer with named pools tuned per use case — config, permissions, category tree, tag cloud, rate limiter, general — plus a real async job queue with actual admin-visible failure handling, not a queue whose failures vanish silently.</p>
+        <p class="phase"><span class="tag">P12</span>A proper CLI tool, real backup and restore commands, graceful shutdown on SIGTERM so an interrupted backup doesn't leave temp files scattered around, and a full set of maintenance commands for the janitorial work every long-running gallery eventually needs — orphaned tags, stale history, expired sessions, table repair.</p>
+      </div>
+
+      <div class="epoch" id="epoch-d">
+        <div class="epoch-head">
+          <span class="epoch-letter">D</span>
+          <div class="epoch-titles"><h3>Config, DB &amp; language</h3><div class="epoch-range">P13 – P16</div></div>
+        </div>
+        <p class="phase"><span class="tag">P13</span>A typed configuration service — 277 real settings, each with a real type instead of "whatever was in the database row" — with its required-value and sensitive-value markers actually wired into boot and the error handler, not left as decoration.</p>
+        <p class="phase"><span class="tag">P14</span>Doctrine ORM replaces hand-rolled, string-built SQL across the board: 38 domain repositories, each either a real entity repository or, where the access pattern was genuinely too dynamic for a mapping to fit honestly, built directly on the entity manager instead of pretending otherwise.</p>
+        <p class="phase"><span class="tag">P15</span>The schema itself: InnoDB and utf8mb4 uniformly across every table — the direct fix for the MyISAM problem from section 04 — real foreign-key constraints, and a genuine audit log.</p>
+        <p class="phase"><span class="tag">P16</span>Typed facades for paths, the current user and page state replace scattered constant lookups; the translation migration described in section 10 lands here for real — the `.lang.php` files are gone, replaced by real `.po` files and ICU MessageFormat pluralization.</p>
+      </div>
+
+      <div class="epoch" id="epoch-e">
+        <div class="epoch-head">
+          <span class="epoch-letter">E</span>
+          <div class="epoch-titles"><h3>Service layer</h3><div class="epoch-range">P17 – P23</div></div>
+        </div>
+        <p class="phase"><span class="tag">P17–P20</span>Roughly 35 domain namespaces migrate out of the legacy tree in four dependency-ordered tiers, each tier depending only on the ones already landed: URL, session, HTML and CSRF handling first; mail, users, auth, tags and comments next; category, image, search and calendar after that; page renderers, menus and jobs last. Each tier's legacy file is deleted the moment its replacement lands — nothing gets batched to the end and left to rot in parallel with its own replacement.</p>
+        <p class="phase"><span class="tag">P21</span>Every admin page becomes a real, decomposed sub-controller — 37 of them — with no god-class dispatcher reproducing the old monoliths under a new name.</p>
+        <p class="phase"><span class="tag">P22</span>19 real frontend controllers. Install correctly stays a special unrouted entry point rather than becoming a controller (it has to work before any database or config exists), and there's no upgrade controller at all — a clean fork doesn't need one.</p>
+        <p class="phase"><span class="tag">P23</span>The big one: `include/` and `admin/` are deleted as directories, outright. Every `global` statement is gone, every bridge free-function is gone, and the legacy hand-rolled data-access layer is gone with them. This is the phase where the old codebase actually stops existing underneath the new one, rather than lingering as a shadow the new code quietly still depends on.</p>
+      </div>
+
+      <div class="epoch" id="epoch-f">
+        <div class="epoch-head">
+          <span class="epoch-letter">F</span>
+          <div class="epoch-titles"><h3>Post-migration remediation</h3><div class="epoch-range">P24</div></div>
+        </div>
+        <p>One phase, but the hardening pass after the big structural move, covering several tracks worth naming individually.</p>
+        <p class="phase"><span class="tag">P24</span>The last hand-rolled data-access code gets migrated onto real Doctrine repositories project-wide. Every remaining `$GLOBALS` and static-bridge reference — `$template`, `$lang`, `$user`, `$conf`, `$page`, and roughly 25 smaller globals — gets retired for good. The event-dispatch and localization free-function bridges get retargeted onto real classes. Every remaining untyped `Template::assign()` call becomes one of 130 typed template-context classes. Roughly eighty controller actions get a typed request object of their own, replacing raw `$_POST`/`$_GET` reads, guarded going forward by a standing architectural test. And the table-prefix mechanism — a holdover from an era of shared hosting where one database served several installs — gets deleted outright rather than merely made optional, inlining well over a thousand call sites from a verified mapping.</p>
+
+        <h4><span class="tag">P24</span>Killing the singletons</h4>
+        <p>The one piece of this epoch worth its own paragraph. About fifty-five classes across three different static-singleton and service-locator shapes get converted to constructor-injected dependency injection over seventy-four commits — including the WS layer's entire static-dispatch mechanism as its own sub-phase. The mechanism was deliberately conservative: each class got a transitional, explicitly deprecated static shim for callers not yet converted, tracked by a shrinking architectural-test allow-list, with a hard rule that the campaign isn't done until that list hits zero. It hit zero, and stayed there.</p>
+        <p>This was never a style argument. It's the precondition for P7's worker mode actually being safe: process-persistent static state is not a performance nitpick under a model where the app process survives across many requests — it's a correctness bug waiting to happen, one request's leftover state quietly becoming the next, unrelated request's starting condition. Fixing that after the fact, one class at a time, forever, would have cost more than removing the pattern outright, once.</p>
+      </div>
+
+      <div class="epoch" id="epoch-g">
+        <div class="epoch-head">
+          <span class="epoch-letter">G</span>
+          <div class="epoch-titles"><h3>WS layer &amp; REST</h3><div class="epoch-range">P25 – P27</div></div>
+        </div>
+        <p>The centerpiece migration, and the one that produced section 07's bug catalog along the way.</p>
+
+        <h4><span class="tag">P25</span>The RPC layer, twice</h4>
+        <p>The ninety-four-method WS API didn't get replaced in one step — it got modernized in place first, then replaced. Stage one kept the wire format byte-for-byte identical (the unmodified 604-test Contract suite from P2 was the proof) while gutting everything behind it: the 1,322-line registration method split into thirteen per-domain registrars, ninety-four hand-written callback registrations became ninety-four constructor-injected handler classes, and seventy-eight typed parameter objects replaced <code>array $params</code> read by string key. This is also the pass that surfaced and fixed the seven security findings in section 07, the same day they were found.</p>
+
+        <h4><span class="tag">P26</span>Moving the UI off its own back channel</h4>
+        <p>Roughly fifteen WS methods existed purely to feed the site's own admin UI over the same JSON/XML envelope external clients used. Those move onto server-rendered fragments instead — the UI stops round-tripping through its own public API just to update part of a page.</p>
+
+        <h4><span class="tag">P27</span>A real public API</h4>
+        <p>Only once every handler had a real type signature instead of a string-keyed bag of whatever the client happened to send did the actual replacement begin: a REST surface at <code>/api/v1</code>, described by a real OpenAPI 3.1 specification, backed by a generated and typed TypeScript client, with the old nine-step chunked-upload dance replaced by the real tus resumable-upload protocol. The legacy layer — every handler, every encoder, the envelope format itself — comes out in the same phase its replacement covers it. Not before.</p>
+
+        <h4><span class="tag">P27</span>A plugin ecosystem that stops playing roulette</h4>
+        <p>This is the direct answer to section 08's problem. <code>ExtensionInterface</code> replaces undocumented internal reaching with one shared, documented contract for both plugins and themes. Manifest files (<code>plugin.json</code>/<code>theme.json</code>) replace the old header-comment markers entirely, and — the actually new capability — a manifest can now declare a real version constraint against core and against other plugins it depends on, resolved into a real dependency graph. Activating a plugin whose requirement isn't met now fails cleanly instead of installing something broken; deactivating a plugin another active plugin still depends on refuses instead of silently breaking the dependent. It's the same category of guarantee a package manager gives an ordinary dependency tree, applied to Piwigo's own extension ecosystem for the first time.</p>
+        <p>The seven extensions this fork bundles aren't merely "supported" in the passive sense either — they're maintained in-house, shipped through the project's own manifest mirror, ported onto the new contract, and kept in lockstep with core releases instead of left to drift the way third-party plugins historically did the moment a maintainer moved on. The version bump to 17.0.0 is a one-time, deliberate break — every pre-17 plugin stops working, on purpose — specifically so that from here forward, breaks stop being routine. And the migration path for an existing install isn't a rolling in-place upgrade at all: a one-time <code>import:legacy</code> command moves an old install's data onto the new schema and contract once, cleanly, rather than trying to keep two incompatible worlds patched together indefinitely.</p>
+      </div>
+
+      <div class="epoch" id="epoch-h">
+        <div class="epoch-head">
+          <span class="epoch-letter">H</span>
+          <div class="epoch-titles"><h3>Security hardening</h3><div class="epoch-range">P28</div></div>
+        </div>
+        <p class="phase"><span class="tag">P28</span>Passkey/WebAuthn support and OIDC single sign-on, a real nonce-based Content-Security-Policy instead of an unenforced one, cross-origin isolation headers, CSP violation reporting, and the rate limiter that P11's cache pools had been sitting ready for all along.</p>
+      </div>
+
+      <div class="epoch" id="epoch-i">
+        <div class="epoch-head">
+          <span class="epoch-letter">I</span>
+          <div class="epoch-titles"><h3>Plugins &amp; layering</h3><div class="epoch-range">P29 – P30</div></div>
+        </div>
+        <p class="phase"><span class="tag">P29</span>The registry machinery behind P27's contract: a real plugin and theme registry, built after actually reading roughly four hundred real plugins and a full theme library in the wild rather than guessing at what a real extension API needs — 162 distinct legacy hook names got mapped in the process, and all seven bundled extensions now run on the new contract for real.</p>
+        <p class="phase"><span class="tag">P30</span>The web root gets fully isolated from application code, and the repository layout itself gets the same decoupling discipline applied to the rest of the codebase — no leftover shortcuts from the migration order the earlier epochs had to take.</p>
+      </div>
+
+      <div class="epoch" id="epoch-j">
+        <div class="epoch-head">
+          <span class="epoch-letter">J</span>
+          <div class="epoch-titles"><h3>Presentation, templating &amp; extension surface</h3><div class="epoch-range">P31 – P54</div></div>
+        </div>
+        <p>By far the longest epoch — every backend phase above had to land before any of it could start, and the frontend gets the same rigor the backend just went through.</p>
+
+        <h4><span class="tag">P31</span>Smarty, gone</h4>
+        <p>All 135 templates move off Smarty and onto Latte over about eighty commits, and the point of switching engines was never syntax. Smarty let a controller reach back into template internals, and a template reach forward into the controller's — Latte's own visibility rules make that a compile error instead of a code-review convention. The old dependency, its patches, and every last template file in the old format are gone. Not deprecated. Gone.</p>
+
+        <h4><span class="tag">P32</span>Tooling nobody else had built yet</h4>
+        <p>No prior art existed for either half of this phase, so both are genuinely new work rather than an off-the-shelf integration. A Piwigo-native static-analysis pipeline compiles all 135 templates with typed variable injection and analyzes the result with the same strict PHPStan configuration the rest of the codebase runs under, mapping errors back to real template lines. Alongside it, a hand-written Latte-aware code formatter — a real recursive-descent parser producing a typed syntax tree, printed through the same document-builder architecture a production-grade formatter would use — because nothing like it existed for this template language before.</p>
+
+        <h4><span class="tag">P33</span>Eight small campaigns to make Latte read like Latte</h4>
+        <p>A content pass cleaning up Smarty-era patterns that survived the mechanical P31 conversion, without changing rendered output: modern whitespace and loop-scoping features turned on; type-declaration blocks generated from a live variable map instead of hand-maintained; 451 conditional and loop constructs converted to native Latte attribute syntax across 91 templates; unsafe-escape-bypass usage reduced across more than a thousand call sites, with the genuinely unsafe remainder explicitly deferred rather than silently dropped; native translation tags; locale-correct number formatting (proven, not assumed — a French locale's grouping character genuinely differs from what the old formatting call produced); and a development-only debug bar that stays off in production by default.</p>
+
+        <p class="phase"><span class="tag">P34</span>The event system gets rebuilt on a standard, PSR-14-conformant dispatcher, and the dead machinery the old bespoke dispatcher existed to support — none of which had a real caller left — gets deleted along with it. Roughly 156 event classes get pruned down to the ones with actual evidence behind them and given names that describe what they represent instead of what they used to be called.</p>
+        <p class="phase"><span class="tag">P35</span>A committed, explicit browser-support baseline, and everything that baseline obsoletes removed with it — IE6 PNG-alpha shims, IE7 conditional stylesheets, every `-ms-filter`/`zoom:1` fallback rule still sitting in the tree.</p>
+        <p class="phase"><span class="tag">P36</span>Real asset-manifest resolution through Vite replaces the roughly thousand-line hand-rolled PHP combiner from section 09 — the delivery mechanism the next several phases build on, not a content change by itself.</p>
+        <p class="phase"><span class="tag">P37</span>One typed payload per page, exposed as a real JSON data island, replacing dozens of ad hoc inline `json_encode()` calls smuggling PHP state into JavaScript.</p>
+        <p class="phase"><span class="tag">P38–P39</span>Every inline <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> block still living inside a template — including the ones hidden inside footer-captured script blocks, not just the obvious ones — moves out to real, separately loaded files.</p>
+
+        <h4><span class="tag">P40</span>One typed view per page</h4>
+        <p>The largest single change in the epoch. Every template gets one real, immutable view object of its own, carrying exactly the data that template needs with a real declared type for each field — and the template's own header collapses from a large block of generated type declarations down to one line naming that class. That one change deletes all 93,420 lines of generated boilerplate that section 05's untyped variable bag had been forcing every template to carry, deletes the array-conversion method every old template-context class needed, and lets the old 1,370-line, 36-method `Template` god-class finally get split into what it always should have been: a renderer, a template locator, a theme-inheritance resolver, and a handful of other single-purpose pieces. A leftover, essentially unused "extend templates" feature — samples only, no real installs depending on it — gets deleted along with the tooling that existed only to support it.</p>
+
+        <p class="phase"><span class="tag">P41</span>Rendering flips to compose the page shell after the content instead of before it, letting the old 800-line header and 700-line footer templates finally merge into one real layout with real template inheritance. The old page-state god-object gets split by actual concern — page messages, layout chrome, debug metrics — instead of staying one 25-property grab bag.</p>
+
+        <h4><span class="tag">P42</span>One typed way for a plugin to add anything to a page</h4>
+        <p>Core used to ship two different ad hoc mechanisms for the same need — one collector for admin buttons, a separate string-concatenation point for admin actions — because each need got solved locally as it came up, the same story as section 08's plugin problem playing out inside core's own code. The fix isn't a bigger version of the same idea; a survey of the plugin ecosystem found that a huge share of real customization — well over a hundred of the roughly four hundred plugins surveyed — exists purely to inject content Piwigo simply never gave a documented place to put. That demand sorts into a genuinely finite list of kinds: an admin form field, a row of picture info, a profile field, an auth button, a thumbnail overlay. Since the kinds are finite, contributions became typed value objects instead of string-keyed slots carrying raw HTML — the type determines where something renders, so there's no slot name left to typo into a silently disconnected dead end. A wrong kind is a compile-time type error. A wrong target is an invalid enum case Latte itself would reject. Both core and every theme render every contribution, so a theme can restyle what a plugin contributes rather than being stuck with whatever markup the plugin author guessed at.</p>
+
+        <p class="phase"><span class="tag">P43</span>The residual HTML-escaping cleanup, sized honestly after P40 rather than guessed at up front — the URL-and-pre-escaped-value pattern that's left once typed views have already absorbed the JavaScript-context cases P38 handled.</p>
+        <p class="phase"><span class="tag">P44</span>The lint and formatting tooling P32 built finally gets wired into CI and pre-commit hooks for real, rather than existing but running nowhere.</p>
+        <p class="phase"><span class="tag">P45</span>Every JavaScript file becomes a real TypeScript file with real types satisfying a strict compiler configuration — mechanical, same behavior, same output.</p>
+        <p class="phase"><span class="tag">P46</span>Typed consumption of P37's page-data payload, with TypeScript's escape-hatch `any` type driven to zero as its own tracked metric rather than left as a someday goal.</p>
+        <p class="phase"><span class="tag">P47</span>Monolithic per-page scripts get broken into real ES modules — shared utilities factored out, one real bundle entry per actual page rather than one enormous shared blob.</p>
+        <p class="phase"><span class="tag">P48</span>jQuery removed, per surface rather than all at once in a way that would have silently missed something: first-party call sites onto native DOM and fetch, the vendored library itself deleted once nothing references it anymore, UI widgets replaced or deliberately kept vendored case by case, and — the surface most likely to get missed — the installer's own separate jQuery load, checked and handled on its own.</p>
+        <p class="phase"><span class="tag">P49</span>A small catalog of real web components, built only for the handful of widgets P48 found no reasonable vanilla-DOM replacement for. Most of the frontend didn't need this at all.</p>
+        <p class="phase"><span class="tag">P50</span>An idiomatic pass over the now-modular, fully typed, jQuery-free frontend the previous six phases produced — same behavior, cleaner shape.</p>
+        <p class="phase"><span class="tag">P51</span>A real modern CSS architecture — container queries, cascade layers, a utility framework adopted rather than another decade of accreted overrides — with every visual output checked against the previous rendering, pixel for pixel, not just eyeballed.</p>
+        <p class="phase"><span class="tag">P52</span>A real modern image pipeline: AVIF and WebP variants served through the standard <code>&lt;picture&gt;</code> element, with blurred low-resolution placeholders while a full image loads instead of a blank gap.</p>
+        <p class="phase"><span class="tag">P53</span>Dark mode — a real theme toggle plus automatic `prefers-color-scheme` support, built on P51's cascade layers rather than a second parallel stylesheet.</p>
+        <p class="phase"><span class="tag">P54</span>The closing gate: real, enforced Lighthouse performance, accessibility and best-practices thresholds, and real per-bundle size budgets — both of which existed only as unenforced placeholders before this phase, collecting numbers nobody was required to act on.</p>
+      </div>
+    </section>
+
+    <section id="s13">
+      <div class="section-head"><span class="section-num">13</span><h2>Keeping it that way</h2></div>
+      <p>Individual phases above mention their own piece of this in passing — P0 and P5's static analysis, P6's architecture boundary, P32's from-scratch Latte tooling, P45's TypeScript linting. Worth pulling into one picture, because none of it works as isolated tools; it works as one discipline applied consistently across three different languages.</p>
+
+      <h3>Lint and format, three languages, one discipline</h3>
+      <ul class="check">
+        <li><strong>PHP</strong> — a style checker holding zero violations as a blocking gate, a modernization tool applying the full PHP 8.5 rule set tree-wide, and static analysis at level 10 (the strictest the tool offers) at zero errors, also blocking. A second, independent static analyzer runs alongside as a best-effort second opinion, deliberately non-blocking — two gates that both cry wolf on the same thing teach people to ignore gates, so only one gets to actually block a merge.</li>
+        <li><strong>JavaScript / TypeScript</strong> — its own linter, a stylesheet linter, and dead-export detection.</li>
+        <li><strong>Templates</strong> — the formatter and analysis pipeline from P32, purpose-built because nothing off the shelf existed for this template language.</li>
+        <li><strong>Architecture</strong> — the six-layer boundary from Epoch B isn't a one-time migration check; it runs on every push, still at zero violations, same as the day it was introduced.</li>
+      </ul>
+
+      <h3>Mutation testing as the check on the checkers</h3>
+      <p>All of the above proves the code is well-typed and consistently styled. None of it proves the code does the right thing. Mutation testing closes that gap by deliberately breaking the code — flipping a comparison, dropping a line, shifting a boundary by one — and failing the build if no test notices. It's the gate that caught real, previously undiagnosed bugs the rest of the tooling structurally cannot see, because they're about behavior, not shape or style — a full account of what it found is in section 16. The pitch for running it at all: a gate suite is only as good as what it actually forces someone to look at, and static types don't look at behavior.</p>
+
+      <h3>Type coverage and CI, both blocking</h3>
+      <p>A dedicated type-coverage gate keeps PHP's typed surface from eroding one untyped parameter at a time instead of trusting that it won't; TypeScript's <code>any</code> escape hatch is tracked down to zero the same way. All of it runs across 34 CI jobs on every push, including a genuine three-way database matrix — MySQL, MariaDB and PostgreSQL, not just "works on my machine's database" — plus dependency and supply-chain scanning and a lint pass over the CI configuration itself. The rule that makes all of it mean something: nothing lands unless CI is green on a clean checkout. CI, not a local machine, is the source of truth for "passing."</p>
+    </section>
+
+    <section id="s14">
+      <div class="section-head"><span class="section-num">14</span><h2>By the numbers</h2></div>
+
+      <div class="spec-sheet">
+        <div class="spec-row"><span class="label">Commits</span><span class="leader"></span><span class="value">4,579</span></div>
+        <div class="spec-row"><span class="label">Elapsed time</span><span class="leader"></span><span class="value">~16 weeks</span></div>
+        <div class="spec-row"><span class="label">Phases shipped</span><span class="leader"></span><span class="value">55 (P0–P54)</span></div>
+        <div class="spec-row"><span class="label">PHP, application code</span><span class="leader"></span><span class="value">175,562 lines</span></div>
+        <div class="spec-row"><span class="label">TypeScript</span><span class="leader"></span><span class="value">85,618 lines / 329 files</span></div>
+        <div class="spec-row"><span class="label">Templates</span><span class="leader"></span><span class="value">135 (Latte)</span></div>
+        <div class="spec-row"><span class="label">Tests</span><span class="leader"></span><span class="value">9,246</span></div>
+        <div class="spec-row"><span class="label">Static analysis</span><span class="leader"></span><span class="value">level 10 · 0 errors</span></div>
+        <div class="spec-row"><span class="label">Architecture boundaries</span><span class="leader"></span><span class="value">0 violations / 53 namespaces</span></div>
+        <div class="spec-row"><span class="label">CI jobs per push</span><span class="leader"></span><span class="value">34</span></div>
+        <div class="spec-row"><span class="label">Database matrix</span><span class="leader"></span><span class="value">MySQL · MariaDB · PostgreSQL</span></div>
+        <div class="spec-row"><span class="label">Typed event classes</span><span class="leader"></span><span class="value">~156</span></div>
+        <div class="spec-row"><span class="label">Typed page views</span><span class="leader"></span><span class="value">135 (one per template)</span></div>
+        <div class="spec-row"><span class="label">Typed value objects</span><span class="leader"></span><span class="value">19</span></div>
+        <div class="spec-row"><span class="label">Translated locales</span><span class="leader"></span><span class="value">73, real .po files</span></div>
+        <div class="spec-row"><span class="label">jQuery dependency</span><span class="leader"></span><span class="value">removed</span></div>
+        <div class="spec-row"><span class="label">TypeScript <code>any</code></span><span class="leader"></span><span class="value">0</span></div>
+      </div>
+
+      <p>The sharpest single row in that table against the old codebase isn't a big number, it's the smallest one that used to be zero: 9,246 real tests against a pristine tree that had none at all — not thin coverage, none.</p>
+    </section>
+
+    <section id="s15">
+      <div class="section-head"><span class="section-num">15</span><h2>Benchmarks</h2></div>
+      <div class="wip-flag">Work in progress</div>
+      <p>Everything else in this piece is written as finished, because it is. This section isn't, and it's here anyway rather than quietly left out — the harness for real performance numbers already exists, the numbers themselves don't yet, and pretending otherwise would be the one dishonest claim in an otherwise fact-checked piece.</p>
+
+      <div class="wip">
+        <p>What's real today: PHPBench has run as a real microbenchmark suite since P0, with its own CI job producing a fresh report on every push — the mechanism is there, a curated set of benchmarks worth reporting publicly isn't, yet. The <code>k6-load</code> CI job has been scaffolded and wired into the pipeline since P3, but currently runs a stand-in step rather than a real load-test surface — the job exists so that plugging in real scenarios later is a config change, not a new pipeline. And the <code>build/vitals.ts</code> collector from P1 has been receiving real Core Web Vitals from real page loads since it landed — the data is accumulating; it just isn't aggregated or reported anywhere in this piece yet.</p>
+        <p>What's still pending: page-load latency (p50/p95) old codebase vs. new, image-derivative generation and serving throughput, <code>/api/v1</code> request latency under concurrent load, upload throughput against the tus resumable protocol, and query performance across the three-provider database matrix — plus the number this whole piece has been building toward, FrankenPHP worker mode against classic per-request execution. None of these are hard to produce; none of them have been produced honestly yet, so none of them are in this piece yet.</p>
+      </div>
+
+      <div class="spec-sheet">
+        <div class="spec-row pending"><span class="label">Page load (p50 / p95)</span><span class="leader"></span><span class="value">pending</span></div>
+        <div class="spec-row pending"><span class="label">Image-derivative throughput</span><span class="leader"></span><span class="value">pending</span></div>
+        <div class="spec-row pending"><span class="label">/api/v1 latency under load</span><span class="leader"></span><span class="value">pending</span></div>
+        <div class="spec-row pending"><span class="label">Upload throughput (tus)</span><span class="leader"></span><span class="value">pending</span></div>
+        <div class="spec-row pending"><span class="label">Query performance, 3-provider matrix</span><span class="leader"></span><span class="value">pending</span></div>
+        <div class="spec-row pending"><span class="label">Worker mode vs. classic per-request</span><span class="leader"></span><span class="value">pending</span></div>
+      </div>
+    </section>
+
+    <section id="s16">
+      <div class="section-head"><span class="section-num">16</span><h2>What broke, and got caught</h2></div>
+      <p>The gates in section 13 aren't decorative, and the honest way to show that is with what they actually found — real defects, caught and fixed during the work, that a reviewer reading the same code by eye had already missed.</p>
+
+      <ul class="check">
+        <li>A bound-parameter sweep across the codebase turned up several real, live SQL injection vulnerabilities beyond the WS layer's own — three in the image repository, one in comments, one spanning history and notifications, and a plugin-hook injection point, all fixed as part of moving every raw SQL splice onto bound parameters.</li>
+        <li>A config-synchronization bug where a value written to the database never actually reached the live, in-memory config object that security-sensitive code read from — the concrete symptom was a CSRF service silently operating with an empty secret key.</li>
+        <li>A distributed-lock naming scheme was using a hash of the (now-removed) table-prefix setting as its uniqueness entropy — silently unsafe on any shared database server, fixed by keying on the database name instead, which is actually guaranteed unique per install.</li>
+        <li>The architecture-boundary checker itself had a real bug — a hyphen in a layer name silently broke its rule resolution, misreporting every legal cross-layer dependency as a violation. Worth remembering: when a tool's output looks structurally wrong, suspect the tool before you suspect the code.</li>
+        <li>Mutation testing surfaced four bugs nothing else caught: a maintenance job reading the real wall clock instead of the injectable one tests can freeze; a URL builder appending a stray trailing colon nobody had ever noticed because nothing rendered it visibly; a French pluralization file with a corrupted accented character sitting inside a regular expression; and a leaked process file-creation mask in the upload handler.</li>
+      </ul>
+    </section>
+
+    <section id="s17">
+      <div class="section-head"><span class="section-num">17</span><h2>Where it stands</h2></div>
+      <p>Fifty-five phases, ten epochs, a codebase that went from no automated tests and thirty-four MyISAM tables to a fully typed, layer-enforced, worker-mode-ready application without losing a photo along the way. The parts I'd point to if someone asked what actually mattered, rather than what was merely satisfying to delete: giving every unit of state an actual owner, giving every plugin a real contract instead of undocumented internals to guess at, and giving translators a format a normal tool understands instead of a PHP file only a developer could safely touch. None of those are glamorous. All three were load-bearing.</p>
+      <p>Twenty-three years from now, someone else can tell me whether any of this held up. For now: the architecture checker passes, the strictest static-analysis level the tooling offers passes at zero errors, and the photos still load.</p>
+    </section>
+
+  </article>
+
+  <footer>
+    <span>Set in IBM Plex Serif, Sans &amp; Mono.</span>
+    <span>Every number above checked against the project's own build gates.</span>
+  </footer>
+
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.sidenav a[href^="#"]'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var targets = Array.prototype.slice.call(document.querySelectorAll('section[id], .epoch[id], .tldr[id]'));
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      var link = byId[entry.target.id];
+      if (!link) return;
+      links.forEach(function (a) { a.classList.remove('active'); });
+      link.classList.add('active');
+      if (entry.target.classList.contains('epoch')) {
+        var parent = byId['s12'];
+        if (parent) parent.classList.add('active');
+      }
+      if (/^s(0[1-9]|1[01])$/.test(entry.target.id)) {
+        var introParent = byId['intro'];
+        if (introParent) introParent.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+  targets.forEach(function (t) { observer.observe(t); });
+})();
+</script>

@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
+use Piwigo\Controller\Api\ActivityListController;
 use Piwigo\Controller\Api\Categories\CategoryCreateController;
 use Piwigo\Controller\Api\Categories\CategoryDeleteController;
 use Piwigo\Controller\Api\Categories\CategoryDeleteRepresentativeController;
@@ -401,6 +402,15 @@ final class RouteDefinitions
         $routes->add('api_v1_comments_validate', new Route('/api/v1/comments/actions/validate', defaults: [
             '_controller' => CommentValidateController::class,
         ], methods: ['POST']));
+
+        // pwg.history.search is deliberately NOT ported here -- its own WS
+        // handler builds admin-page HTML strings/ALL_CAPS Latte-template
+        // keys and writes a display cookie, genuinely entangled with
+        // admin.php?page=history's own rendering, not a mechanical port
+        // candidate. Needs its own dedicated redesign pass later.
+        $routes->add('api_v1_activity_list', new Route('/api/v1/activity', defaults: [
+            '_controller' => ActivityListController::class,
+        ], methods: ['GET']));
 
         return $routes;
     }

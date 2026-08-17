@@ -7,6 +7,14 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
+use Piwigo\Controller\Api\Groups\GroupAddUserController;
+use Piwigo\Controller\Api\Groups\GroupCreateController;
+use Piwigo\Controller\Api\Groups\GroupDeleteController;
+use Piwigo\Controller\Api\Groups\GroupDuplicateController;
+use Piwigo\Controller\Api\Groups\GroupListController;
+use Piwigo\Controller\Api\Groups\GroupMergeController;
+use Piwigo\Controller\Api\Groups\GroupRemoveUserController;
+use Piwigo\Controller\Api\Groups\GroupUpdateController;
 use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\SessionController;
 use Piwigo\Controller\Api\Tags\TagCreateController;
@@ -225,6 +233,50 @@ final class RouteDefinitions
 
         $routes->add('api_v1_tags_merge', new Route('/api/v1/tags/actions/merge', defaults: [
             '_controller' => TagMergeController::class,
+        ], methods: ['POST']));
+
+        // Groups resource family -- admin-consumed, mirroring the Tags
+        // family's own shape.
+        $routes->add('api_v1_groups_list', new Route('/api/v1/groups', defaults: [
+            '_controller' => GroupListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_groups_create', new Route('/api/v1/groups', defaults: [
+            '_controller' => GroupCreateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_groups_update', new Route('/api/v1/groups/{id}', defaults: [
+            '_controller' => GroupUpdateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_groups_delete', new Route('/api/v1/groups/{id}', defaults: [
+            '_controller' => GroupDeleteController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['DELETE']));
+
+        $routes->add('api_v1_groups_duplicate', new Route('/api/v1/groups/{id}/actions/duplicate', defaults: [
+            '_controller' => GroupDuplicateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_groups_add_user', new Route('/api/v1/groups/{id}/actions/add-user', defaults: [
+            '_controller' => GroupAddUserController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_groups_remove_user', new Route('/api/v1/groups/{id}/actions/remove-user', defaults: [
+            '_controller' => GroupRemoveUserController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_groups_merge', new Route('/api/v1/groups/actions/merge', defaults: [
+            '_controller' => GroupMergeController::class,
         ], methods: ['POST']));
 
         return $routes;

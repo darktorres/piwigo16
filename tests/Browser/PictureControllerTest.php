@@ -16,9 +16,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * own moderation actions (comments.php), covered separately.
  *
  * Every real navigation below uses the pretty-URL form
- * `picture.php?/{imageId}/category/{albumId}` (the exact form
- * pwg.images.addSimple's own WS response returns as the new photo's URL),
- * not a bare `picture.php?image_id={imageId}`, since the bare form makes
+ * `picture.php?/{imageId}/category/{albumId}`, not a bare
+ * `picture.php?image_id={imageId}`, since the bare form makes
  * SectionPopulator default to the flat "categories" section with no
  * specific category selected -- whether a freshly uploaded photo's id
  * lands inside that default (unfiltered, sorted, paginated) items list is
@@ -977,7 +976,7 @@ function pictureRemoveImageFromAllCategories(int $imageId): void
 }
 
 /**
- * Directly inserts an image_format row -- for the format-list building test below (download-URL fallback/Lang-key label lookup/filesize MB-formatting), not reachable through any WS method that lets a test control the stored filesize precisely.
+ * Directly inserts an image_format row -- for the format-list building test below (download-URL fallback/Lang-key label lookup/filesize MB-formatting), not reachable through any real endpoint that lets a test control the stored filesize precisely.
  */
 function pictureInsertImageFormat(int $imageId, string $ext, int $filesizeKb): void
 {
@@ -1926,7 +1925,7 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
     // end-to-end (UploadServiceTest's own uploadFilePdf() coverage is
     // Unit-level, calling the static conversion method directly, never
     // through a live HTTP request) -- and CurrentConfig::
-    // uploadFormAllTypes() defaults false, gating the WS upload pipeline's
+    // uploadFormAllTypes() defaults false, gating the tus upload pipeline's
     // own non-image branch. Rather than flipping that global config for
     // the whole shared dev server (affecting every concurrent request
     // while active) just to exercise ONE unrelated template-var branch,

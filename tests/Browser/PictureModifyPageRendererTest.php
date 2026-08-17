@@ -144,8 +144,8 @@ function pictureModifySetRotationCode(int $imageId, int $rotationCode): void
 /**
  * Real filesystem sync, same site_update mechanism (and same real
  * repo-root `galleries/` directory) as Controller\Admin\
- * SiteUpdateSubControllerTest -- only a sync (never a pwg.images.addSimple
- * WS upload, what every other test in this file uses) ever writes a
+ * SiteUpdateSubControllerTest -- only a sync (never a tus upload, what
+ * every other test in this file uses) ever writes a
  * non-null `storage_category_id` or an `image_format` row, per
  * Controller\Admin\SiteUpdateSubController's own `$insert[
  * 'storage_category_id']`/`$insert_formats` and Image\ImageRepository's

@@ -174,12 +174,13 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
     $page = H::loginAsAdmin($this);
 
     // Real client flow (themes/admin/default/js/photos_add_direct.js's
-    // ".dont-show-again" handler): a plain WS preferences write, using the
-    // literal string 'false' -- PreferencesService::updateParam()'s own
-    // 'true'/'false' string check exists specifically because a real
-    // browser's url-encoded POST body delivers exactly this, not a JSON
-    // boolean. This is the only way a real admin ever flips
-    // 'promote-mobile-apps' to false; there's no admin.php GET param for it.
+    // ".dont-show-again" handler): a real `PUT /api/v1/session/
+    // preferences/promote-mobile-apps` write, using the literal JSON
+    // string value 'false' (not a JSON boolean) -- PreferencesService::
+    // updateParam()'s own 'true'/'false' string check exists specifically
+    // to match what that real client actually sends. This is the only way
+    // a real admin ever flips 'promote-mobile-apps' to false; there's no
+    // admin.php GET param for it.
     $prefResponse = H::wsCall($page, 'pwg.users.preferences.set', [
         'param' => 'promote-mobile-apps',
         'value' => 'false',
@@ -209,8 +210,8 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         // externally-observable signal for.
         $page->assertDontSee('Piwigo is also on mobile.');
     } finally {
-        // No pwg.users.preferences.delete WS method exists to unset the key
-        // outright -- setting it back to the literal default (true) is
+        // No endpoint exists to unset the key outright -- setting it back
+        // to the literal default (true) is
         // behaviorally identical to the pristine unset state, since
         // getPromoteMobileApps() ?? true's own default is also true.
         H::wsCall($page, 'pwg.users.preferences.set', [

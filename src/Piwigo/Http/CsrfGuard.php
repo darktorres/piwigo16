@@ -9,13 +9,11 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * The `/api/v1` surface's own CSRF check (P27) -- every real mutating
- * endpoint needs this, so it's shared infrastructure the same way
- * ResponseFactory is, not a one-off. `Ws\WsCsrfGuard`'s real counterpart:
- * that one reads `pwg_token` from the request body/query (a form-post
- * convention), this one reads the `X-CSRF-Token` header instead, so the
- * token never has to be threaded into a REST resource's own JSON body
- * shape.
+ * The `/api/v1` surface's own CSRF check -- every real mutating endpoint
+ * needs this, so it's shared infrastructure the same way ResponseFactory
+ * is, not a one-off. Reads the `X-CSRF-Token` header rather than a
+ * `pwg_token` body/query field, so the token never has to be threaded
+ * into a REST resource's own JSON body shape.
  */
 final readonly class CsrfGuard
 {

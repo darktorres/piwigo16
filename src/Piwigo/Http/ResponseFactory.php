@@ -76,8 +76,8 @@ final class ResponseFactory
 
     /**
      * A genuinely empty body -- the `/api/v1` surface's shape for a
-     * mutation whose WS predecessor returned `null` (no data worth
-     * confirming beyond the 2xx status itself).
+     * mutation with no data worth confirming beyond the 2xx status
+     * itself.
      */
     public static function noContent(): ResponseInterface
     {
@@ -86,8 +86,7 @@ final class ResponseFactory
 
     /**
      * RFC 9457 `application/problem+json` -- the `/api/v1` surface's error
-     * shape (P27 Locked Decision D3), replacing WS's `{stat, err, message}`
-     * envelope. `type` defaults to the spec's own "no more specific URI"
+     * shape. `type` defaults to the spec's own "no more specific URI"
      * placeholder; pass a real one once a problem type is documented.
      */
     public static function problem(string $title, int $status, ?string $detail = null, string $type = 'about:blank'): ResponseInterface

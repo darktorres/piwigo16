@@ -246,8 +246,7 @@ final class RouteDefinitions
             '_controller' => TestErrorsController::class,
         ]));
 
-        // Public API v1 (P27) -- one route per resource/method, mirroring
-        // WS's own pwg.* methods but as proper REST paths/verbs. No
+        // Public API v1 -- one route per resource/method. No
         // catch-all here on purpose: a route that unconditionally matches
         // every method would shadow a real route's own 405 on a method
         // mismatch (symfony/routing only throws MethodNotAllowedException
@@ -320,10 +319,8 @@ final class RouteDefinitions
             'imageId' => '\d+',
         ], methods: ['DELETE']));
 
-        // pwg.caddie.add is requiresAuth: true, which really means
-        // admin_only (Ws\Server::invoke()'s own enforcement) -- the
-        // caddie/lightbox is a Batch Manager feature, not a general
-        // visitor one.
+        // Admin-gated -- the caddie/lightbox is a Batch Manager feature,
+        // not a general visitor one.
         $routes->add('api_v1_session_caddie_add', new Route('/api/v1/session/caddie', defaults: [
             '_controller' => CaddieAddController::class,
         ], methods: ['POST']));
@@ -498,12 +495,10 @@ final class RouteDefinitions
             'id' => '\d+',
         ], methods: ['GET']));
 
-        // Users resource family -- admin-consumed. pwg.users.preferences.set
-        // isn't included: it's a self-service action on the calling user's
-        // own account (no requiresAuth flag at all in its WS registration),
-        // not an admin-management action -- deferred to the same later pass
-        // as setMyInfo/favorites/getAuthKey/api_key.* (all external-only per
-        // the plan's own method classification).
+        // Users resource family -- admin-consumed. The self-service
+        // preferences-set action on the calling user's own account isn't
+        // included here -- not an admin-management action, deferred to
+        // the same later pass as setMyInfo/favorites/getAuthKey/api_key.*.
         $routes->add('api_v1_users_list', new Route('/api/v1/users', defaults: [
             '_controller' => UserListController::class,
         ], methods: ['GET']));
@@ -536,18 +531,14 @@ final class RouteDefinitions
             'id' => '\d+',
         ], methods: ['POST']));
 
-        // Admin-gated: requiresAuth: true on the WS side really means
-        // admin_only (Ws\Server::invoke()'s own enforcement), not merely
-        // "must be logged in" -- see UserGetAuthKeyController's own
-        // docblock.
+        // Admin-gated -- see UserGetAuthKeyController's own docblock.
         $routes->add('api_v1_users_get_auth_key', new Route('/api/v1/users/{id}/actions/get-auth-key', defaults: [
             '_controller' => UserGetAuthKeyController::class,
         ], requirements: [
             'id' => '\d+',
         ], methods: ['POST']));
 
-        // pwg.rates.delete is requiresAuth: true, which really means
-        // admin_only (Ws\Server::invoke()'s own enforcement).
+        // Admin-gated.
         $routes->add('api_v1_users_delete_ratings', new Route('/api/v1/users/{id}/actions/delete-ratings', defaults: [
             '_controller' => UserDeleteRatingsController::class,
         ], requirements: [
@@ -555,9 +546,8 @@ final class RouteDefinitions
         ], methods: ['POST']));
 
         // Comments (userComments) resource family -- admin moderation view.
-        // Bulk actions, matching the WS predecessors' own shape and the
-        // admin moderation UI's batch-select workflow -- no per-comment
-        // resource verbs.
+        // Bulk actions, matching the admin moderation UI's batch-select
+        // workflow -- no per-comment resource verbs.
         $routes->add('api_v1_comments_list', new Route('/api/v1/comments', defaults: [
             '_controller' => CommentListController::class,
         ], methods: ['GET']));
@@ -574,9 +564,8 @@ final class RouteDefinitions
             '_controller' => ActivityListController::class,
         ], methods: ['GET']));
 
-        // pwg.history.log -- public, no auth gate at all (matches WS,
-        // which has neither requiresAuth nor a CSRF check); every
-        // gallery-page-view fires this, anonymous visitors included.
+        // Public, no auth gate at all; every gallery-page-view fires
+        // this, anonymous visitors included.
         $routes->add('api_v1_history_log', new Route('/api/v1/history/log', defaults: [
             '_controller' => HistoryLogController::class,
         ], methods: ['POST']));
@@ -616,8 +605,8 @@ final class RouteDefinitions
         ], methods: ['POST']));
 
         // Images resource family -- admin-consumed. getInfo is public/
-        // permission-filtered (no AdminGuard), same as its WS predecessor;
-        // filteredSearch.create is public too (the front-end's own
+        // permission-filtered (no AdminGuard); filteredSearch.create is
+        // public too (the front-end's own
         // advanced-search page calls it, not just admin). The upload-flow
         // methods (add/addChunk/addFile/addSimple/checkFiles/checkUpload/
         // exist/upload/uploadAsync/uploadCompleted) fold into tus later;
@@ -652,10 +641,7 @@ final class RouteDefinitions
         ], methods: ['POST']));
 
         // External-only images methods -- addComment/rate/search are
-        // public (no requiresAuth on the WS side); setCategory/
-        // setPrivacyLevel/setRank are requiresAuth: true, which really
-        // means admin_only (Ws\Server::invoke()'s own enforcement), not
-        // merely "must be logged in".
+        // public; setCategory/setPrivacyLevel/setRank are admin-gated.
         $routes->add('api_v1_images_add_comment', new Route('/api/v1/images/{id}/comments', defaults: [
             '_controller' => ImageAddCommentController::class,
         ], requirements: [

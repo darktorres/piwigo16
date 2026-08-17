@@ -24,12 +24,6 @@ use SensitiveParameter;
  * docblock), so passing `null` through for a non-string value is
  * behaviorally identical to the original passing the raw array; only the
  * presence check needs preserving separately from the narrowed value.
- *
- * `wsMethod` (`$_REQUEST['method']`, the legacy `ws.php?method=...`
- * convention) was removed here when the WS layer itself was deleted
- * (P27) -- its only two real readers were both already-dead branches in
- * `UserBootstrap::initialize()` (see that class's own note), and no
- * request format this app still serves can populate a `method` field.
  */
 final readonly class UserBootstrapRequest
 {

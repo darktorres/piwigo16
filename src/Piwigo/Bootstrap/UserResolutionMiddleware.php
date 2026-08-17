@@ -76,9 +76,8 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
         // returns the event object unchanged, so TryLogUser's own
         // constructor-set $success (false) stays false; that credential
         // path needs the handler registered this early; every other real
-        // caller of tryLogUser() (the normal pwg.session.login WS
-        // dispatch, later in this same pipeline) is unaffected by this
-        // ordering.
+        // caller of tryLogUser() (SessionLoginController, later in this
+        // same pipeline) is unaffected by this ordering.
         $this->eventDispatcher->registerSubscriber(new AuthListener(new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
             $this->activityService($conn),

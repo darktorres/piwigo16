@@ -356,7 +356,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $this->accessLevelChecker(),
             new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
         )->getCategoryInfo($catId);
-        // $catId isn't existence-validated by callers (WS/URL param) -- a
+        // $catId isn't existence-validated by callers (a URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
         $upper_names = $cat_info->upperNames ?? [];
         return $this->getCatDisplayName($upper_names, $url);
@@ -374,8 +374,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
      * `render_comment_content` plugin hook (registered via
      * `EventDispatcher::addTypedHandler()` in
      * `Bootstrap\RequestBootstrap::finalize()`) -- every real caller
-     * (Ws\Comments, Picture\PictureCommentRenderer,
-     * Controller\CommentsController) reaches it through
+     * (`Picture\PictureCommentRenderer`, `Controller\CommentsController`,
+     * `Controller\Api\Comments\CommentListController`) reaches it through
      * `dispatch(new RenderCommentContent(...))`, not directly.
      */
     public function renderCommentContent(RenderCommentContent $event): RenderCommentContent

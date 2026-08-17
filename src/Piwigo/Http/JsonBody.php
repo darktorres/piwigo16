@@ -8,12 +8,10 @@ use JsonException;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * The `/api/v1` surface's own request-body decoder (P27) -- shared the
- * same way CsrfGuard/AdminGuard are, since every mutating endpoint needs
- * to turn its JSON body into a plain array before building its own typed
- * input DTO (mirroring `Ws\WsParams::fromArray()`'s own per-method shape,
- * just fed from a decoded JSON body instead of WS's already-array
- * `$params`).
+ * The `/api/v1` surface's own request-body decoder -- shared the same
+ * way CsrfGuard/AdminGuard are, since every mutating endpoint needs to
+ * turn its JSON body into a plain array before building its own typed
+ * input DTO.
  */
 final class JsonBody
 {

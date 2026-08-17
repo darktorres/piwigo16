@@ -9,7 +9,7 @@ namespace Piwigo\Cache;
  * and per-extension outcomes) -- P25 Stage 2 item 9. Replaces
  * `$_SESSION['need_update' . AppInfo::VERSION]`/`$_SESSION[
  * 'extensions_need_update']`, session-scoped process state that made the
- * WS method non-idempotent (SEC-60). 86400s TTL matches
+ * update-check operation non-idempotent (SEC-60). 86400s TTL matches
  * `Config\CurrentConfig::$updateNotifyCheckPeriod`'s own default -- the
  * established "how often to re-check for updates" cadence elsewhere in
  * this codebase (`Bootstrap\PageTail::checkForUpdates()`). Namespace/TTL

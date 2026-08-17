@@ -17,18 +17,12 @@ namespace Piwigo\Core;
  * private lazy apiKeyRequestFlag() helper (session persistence gate);
  * `Controller\Api\SessionLoginController`/`SessionLogoutController` read
  * isActive() to reject login/logout on an already-api_key-authenticated
- * request, matching WS's own `apiKeyForbiddenMethods` restriction.
+ * request.
  *
- * activate() currently has no caller: the old WS-only mechanism that used
- * to set it (`UserBootstrap`'s `HTTP_X_PIWIGO_API` stateless-header
- * branch, gated on the legacy `ws.php?method=...` convention) was deleted
- * along with the WS layer itself (P27) rather than ported, since it keyed
- * off a request shape (`$_REQUEST['method']`) `/api/v1` never sends and was
- * consequently already unreachable for REST callers before this deletion.
- * `/api/v1`'s own api_key login path (`SessionLoginController`'s `pkid-...`
- * username branch) creates a real persistent session instead, so it never
- * needs this flag either. A stateless per-request-header auth mode for
- * `/api/v1`, if wanted, is unbuilt new REST work, not a WS port.
+ * activate() currently has no caller. `/api/v1`'s own api_key login path
+ * (`SessionLoginController`'s `pkid-...` username branch) creates a real
+ * persistent session instead, so it never needs this flag. A stateless
+ * per-request-header auth mode for `/api/v1`, if wanted, is unbuilt.
  */
 final class ApiKeyRequestFlag
 {

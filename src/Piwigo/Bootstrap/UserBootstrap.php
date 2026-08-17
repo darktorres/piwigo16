@@ -196,20 +196,9 @@ final readonly class UserBootstrap
             $authService->authKeyLogin($userBootstrapRequest->authKey);
         }
 
-        // The HTTP_X_PIWIGO_API header branch and the pwg.images.uploadAsync
-        // branch that used to live here were both gated on
-        // $userBootstrapRequest->wsMethod (== $_REQUEST['method'], the
-        // legacy ws.php?method=... convention) being non-null/matching a
-        // specific method name. Neither ws.php (deleted, P27) nor the
-        // /api/v1 REST surface (real URL paths, never a `method` request
-        // param) can ever populate that field, so both branches were
-        // already fully unreachable dead code before this deletion pass
-        // even started -- confirmed via a full-codebase search, not
-        // assumed. Removed along with WsInitializer/Ws\Session\LoginHandler
-        // themselves (P27, WS layer deletion). The still-live api-key
-        // login path is the simpler, always-active
+        // The still-live api-key login path is the simpler, always-active
         // $userBootstrapRequest->authKeyPresent branch above (`?auth=`
-        // query param), unrelated to either of these.
+        // query param).
 
         // $user['id'] is always numeric here (either \Piwigo\Config\CurrentConfig::guestId(), a
         // $_SESSION['pwg_uid'] set by a prior login, or the int|false result of

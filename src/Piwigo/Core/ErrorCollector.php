@@ -14,8 +14,8 @@ use Piwigo\Config\DeploymentPolicy;
  * Network -> Response Headers.
  *
  * Prevents PHP notices/warnings/deprecations from corrupting JSON, XML, or
- * binary responses (e.g. ws.php) while keeping them inspectable in the
- * browser. Errors still reach error_log() so the Apache error log remains
+ * binary responses while keeping them inspectable in the browser. Errors
+ * still reach error_log() so the Apache error log remains
  * the authoritative server-side record.
  *
  * Install once, early in the bootstrap — see Piwigo\Bootstrap\

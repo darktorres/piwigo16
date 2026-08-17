@@ -6,7 +6,7 @@ use Piwigo\Activity\Projection\SystemActionCount;
 
 test('constructs with distinct values for every property', function (): void {
     // The second argument is an ActivitySystem constant (Theme = 3), not a
-    // row id -- the overload Version20260815230000 split out of object_id.
+    // row id -- the overload Version20260804122302 split out of object_id.
     $row = new SystemActionCount('system', 3, 'activate', 1);
 
     expect($row->object)

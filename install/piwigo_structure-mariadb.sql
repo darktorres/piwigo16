@@ -26,12 +26,12 @@ CREATE TABLE `activity` (
   `occured_on` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'when the action was recorded',
   `details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'per-action heterogeneous payload, e.g. config diffs, batch-edit fields, install metadata' CHECK (json_valid(`details`)),
   `user_agent` varchar(255) DEFAULT NULL COMMENT 'browser user agent string, only captured on login actions',
-  `user_id` int(11) DEFAULT NULL,
-  `category_id` int(11) DEFAULT NULL,
-  `image_id` int(11) DEFAULT NULL,
-  `tag_id` int(11) DEFAULT NULL,
-  `group_id` int(11) DEFAULT NULL,
-  `system_scope` smallint(6) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL COMMENT 'typed reference for object = user, ON DELETE SET NULL',
+  `category_id` int(11) DEFAULT NULL COMMENT 'typed reference for object = album, ON DELETE SET NULL',
+  `image_id` int(11) DEFAULT NULL COMMENT 'typed reference for object = photo, ON DELETE SET NULL',
+  `tag_id` int(11) DEFAULT NULL COMMENT 'typed reference for object = tag, ON DELETE SET NULL',
+  `group_id` int(11) DEFAULT NULL COMMENT 'typed reference for object = group, ON DELETE SET NULL',
+  `system_scope` smallint(6) DEFAULT NULL COMMENT 'ActivitySystem constant for object = system rows, which store no row id in object_id',
   PRIMARY KEY (`activity_id`),
   KEY `fk_activity_performed_by` (`performed_by`),
   KEY `fk_activity_user_id` (`user_id`),
@@ -61,7 +61,7 @@ CREATE TABLE `audit_log` (
   `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
   `prev_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
   `row_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
-  `group_id` int(11) DEFAULT NULL,
+  `group_id` int(11) DEFAULT NULL COMMENT 'typed reference for entity_type = group, ON DELETE SET NULL',
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
@@ -430,15 +430,6 @@ CREATE TABLE `search` (
   CONSTRAINT `fk_search_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_search_forked_from` FOREIGN KEY (`forked_from`) REFERENCES `search` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='saved/shareable search queries';
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `search_filter_view` (
-  `name` varchar(64) NOT NULL COMMENT 'saved filter view name',
-  `config_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'encoded search filter configuration' CHECK (json_valid(`config_json`)),
-  `created_at` datetime NOT NULL COMMENT 'when the filter view was saved',
-  PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='named, reusable saved search-filter presets, unused: not read or written by any repository or service in this codebase';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;

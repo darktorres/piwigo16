@@ -26,12 +26,12 @@ CREATE TABLE `activity` (
   `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when the action was recorded',
   `details` json DEFAULT NULL COMMENT 'per-action heterogeneous payload, e.g. config diffs, batch-edit fields, install metadata',
   `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'browser user agent string, only captured on login actions',
-  `user_id` int DEFAULT NULL,
-  `category_id` int DEFAULT NULL,
-  `image_id` int DEFAULT NULL,
-  `tag_id` int DEFAULT NULL,
-  `group_id` int DEFAULT NULL,
-  `system_scope` smallint DEFAULT NULL,
+  `user_id` int DEFAULT NULL COMMENT 'typed reference for object = user, ON DELETE SET NULL',
+  `category_id` int DEFAULT NULL COMMENT 'typed reference for object = album, ON DELETE SET NULL',
+  `image_id` int DEFAULT NULL COMMENT 'typed reference for object = photo, ON DELETE SET NULL',
+  `tag_id` int DEFAULT NULL COMMENT 'typed reference for object = tag, ON DELETE SET NULL',
+  `group_id` int DEFAULT NULL COMMENT 'typed reference for object = group, ON DELETE SET NULL',
+  `system_scope` smallint DEFAULT NULL COMMENT 'ActivitySystem constant for object = system rows, which store no row id in object_id',
   PRIMARY KEY (`activity_id`),
   KEY `fk_activity_performed_by` (`performed_by`),
   KEY `fk_activity_user_id` (`user_id`),
@@ -61,7 +61,7 @@ CREATE TABLE `audit_log` (
   `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
   `prev_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
   `row_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
-  `group_id` int DEFAULT NULL,
+  `group_id` int DEFAULT NULL COMMENT 'typed reference for entity_type = group, ON DELETE SET NULL',
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
@@ -230,11 +230,11 @@ CREATE TABLE `history` (
   `auth_key_id` int DEFAULT NULL COMMENT 'API auth key the request was authenticated with, if any',
   PRIMARY KEY (`id`),
   KEY `idx_history_date_desc` (`date` DESC,`id` DESC),
-  KEY `fk_history_auth_key_id` (`auth_key_id`),
-  KEY `fk_history_category_id` (`category_id`),
-  KEY `fk_history_format_id` (`format_id`),
   KEY `fk_history_image_id` (`image_id`),
+  KEY `fk_history_category_id` (`category_id`),
   KEY `fk_history_search_id` (`search_id`),
+  KEY `fk_history_format_id` (`format_id`),
+  KEY `fk_history_auth_key_id` (`auth_key_id`),
   KEY `fk_history_user_id` (`user_id`),
   CONSTRAINT `fk_history_auth_key_id` FOREIGN KEY (`auth_key_id`) REFERENCES `user_auth_keys` (`auth_key_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_history_category_id` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
@@ -433,15 +433,6 @@ CREATE TABLE `search` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `search_filter_view` (
-  `name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'saved filter view name',
-  `config_json` json NOT NULL COMMENT 'encoded search filter configuration',
-  `created_at` datetime NOT NULL COMMENT 'when the filter view was saved',
-  PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='named, reusable saved search-filter presets, unused: not read or written by any repository or service in this codebase';
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sessions` (
   `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'composite PHP session id, IP-hash-prefixed by SessionService',
   `data` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'serialized PHP session payload',
@@ -556,7 +547,7 @@ CREATE TABLE `user_infos` (
   `expand` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether the album tree auto-expands in the menu',
   `show_nb_comments` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether comment counts are shown alongside thumbnails',
   `show_nb_hits` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether view counts are shown alongside thumbnails',
-  `recent_period` smallint NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
+  `recent_period` int NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
   `theme` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'modus' COMMENT 'interface theme, references themes.id',
   `registration_date` datetime DEFAULT NULL COMMENT 'account creation date',
   `enabled_high` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether the user may view/download the original, high-definition photo',

@@ -52,7 +52,7 @@ final class ActivityEntity
          * The historical fact: which thing this event was about, at the
          * time it happened. Never nulled, so a record of a deletion still
          * says what was deleted -- see the typed columns below, and
-         * Version20260815230000 for why both exist.
+         * Version20260804122302/Version20260804122303 for why both exist.
          *
          * For `object = 'system'` this is not a row id at all; that meaning
          * moved to $systemScope.

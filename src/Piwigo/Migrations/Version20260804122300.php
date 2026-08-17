@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// +-----------------------------------------------------------------------+
+// | This file is part of Piwigo.                                          |
+// |                                                                       |
+// | For copyright and license information, please view the COPYING.txt    |
+// | file that was distributed with this source code.                      |
+// +-----------------------------------------------------------------------+
+
 namespace Piwigo\Migrations;
 
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
@@ -13,12 +20,12 @@ use Override;
 /**
  * Baseline bootstrap, content domain: categories, images, tags, comments,
  * image_category, image_tag, image_format, caddie, favorites, lounge,
- * rate, old_permalinks -- 12 of the 39 tables `install/
+ * rate, old_permalinks -- 12 of the 38 tables `install/
  * piwigo_structure-mysql.sql` defines, split by domain purely for
  * authoring/review size. This is the first migration -- nothing runs
  * before it -- see this migration's own sibling files for the users/auth
  * and admin/system domains, plus a final migration adding every FK
- * constraint once all 39 tables exist.
+ * constraint once all 38 tables exist.
  *
  * MySQL/MariaDB: the exact `CREATE TABLE` text from `install/
  * piwigo_structure-mysql.sql`, copied verbatim rather than re-derived
@@ -33,14 +40,6 @@ use Override;
  * (FORCE)`-adjacent Postgres-specific behavior, `CHECK` constraint
  * introspection format, etc.). Translation rules applied uniformly across
  * every table in this migration set:
- * - MySQL `unsigned` has no Postgres equivalent -- widened to the next
- *   signed type covering the full declared range: `tinyint unsigned`
- *   (max 255) -> `smallint`; `smallint unsigned` (max 65535, exceeds
- *   Postgres `smallint`'s own 32767 ceiling) -> `integer`; `mediumint
- *   unsigned` (max 16777215) -> `integer`; `int unsigned` (max ~4.29B,
- *   exceeds Postgres `integer`'s ~2.15B ceiling) -> `bigint`. A signed
- *   MySQL column (no `unsigned` keyword) keeps the directly-corresponding
- *   Postgres width since both ranges already match.
  * - `tinyint(1)` columns that are real boolean flags (not a genuinely
  *   numeric small value like `level`/`rotation`/`rate`) -> Postgres
  *   `boolean` -- matches Doctrine DBAL's own real `Types::BOOLEAN`
@@ -54,13 +53,6 @@ use Override;
  * - `JSON` -> `JSONB` (idiomatic, indexable Postgres; DBAL's own
  *   `Types::JSON` round-trips through json_encode()/json_decode() either
  *   way, so this is transparent to every real consumer).
- * - `TIMESTAMP ... DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
- *   -> `timestamp DEFAULT now()` plus a shared `set_lastmodified()`
- *   trigger function (created once, in this migration) + one `BEFORE
- *   UPDATE` trigger per affected table -- the real gap the reverted prior
- *   attempt left unbuilt ("no application code targets a non-MySQL/
- *   MariaDB connection today" was its own stated reason; no longer true
- *   once Postgres support lands).
  * - `FULLTEXT KEY ... WITH PARSER ngram` -> a generated `tsvector` column
  *   (`'simple'` text search config -- whitespace/punctuation tokenizer,
  *   no stemming/stopwords, the closest behavioral match to ngram's
@@ -72,6 +64,24 @@ use Override;
  *   Postgres requires index names unique per-schema, so every Postgres
  *   index name below is table-prefixed even where the MySQL source
  *   wasn't.
+ *
+ * `lastmodified` columns are declared `timestamp(0)` on Postgres, not
+ * bare `timestamp`: PostgreSQL's bare `timestamp` defaults to microsecond
+ * precision, but MySQL's `TIMESTAMP` (this schema's other real target)
+ * has zero fractional digits by default. `Common\ValueObject\
+ * SqlDateTime::from()`'s own canonical `Y-m-d H:i:s` form (no fractional
+ * seconds) reads a real fetched row on MySQL fine, but throws on Postgres
+ * once this column is Doctrine-Type-mapped, since a raw `now()`-derived
+ * value carries microseconds. `timestamp(0)` truncates to whole seconds
+ * on write, matching MySQL's real behavior exactly. This same rule
+ * applies to every OTHER `sql_datetime`-Doctrine-Type column in this
+ * schema, not just `lastmodified`.
+ *
+ * No DB-level auto-bump exists for `lastmodified` on either platform --
+ * `Piwigo\Db\LastModifiedListener` (entity-flush writes) plus explicit
+ * `Env::now()` sets added at every DQL/`BatchWriter` write site own this
+ * column exclusively, so it reads and freezes correctly under
+ * `Env::now()`'s own `PIWIGO_TEST_NOW` override.
  */
 final class Version20260804122300 extends AbstractMigration
 {
@@ -145,30 +155,30 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `caddie` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'owning user id',
-              `element_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'image id added to the caddie',
+              `user_id` int NOT NULL default '0' COMMENT 'owning user id',
+              `element_id` int NOT NULL default '0' COMMENT 'image id added to the caddie',
               PRIMARY KEY  (`user_id`,`element_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user temporary photo selection (caddie/basket) used by batch operations'
             SQL);
 
         $this->addSql($this->withNgramParser(<<<'SQL'
             CREATE TABLE `categories` (
-              `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
+              `id` int NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'album display name',
-              `id_uppercat` smallint(5) unsigned default NULL COMMENT 'parent album id, null for a root album',
+              `id_uppercat` int default NULL COMMENT 'parent album id, null for a root album',
               `comment` text COMMENT 'album description shown on its page',
-              `dir` varchar(255) default NULL COMMENT 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album',
-              `rank` smallint(5) unsigned default NULL COMMENT 'sibling display order within the same parent, distinct from global_rank',
+              `dir` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin default NULL COMMENT 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album',
+              `rank` int default NULL COMMENT 'sibling display order within the same parent, distinct from global_rank',
               `status` enum('public','private') NOT NULL default 'public' COMMENT 'private albums require an explicit user_access or group_access grant to view',
-              `site_id` tinyint(4) unsigned default NULL COMMENT 'owning site id, resolves to sites.galleries_url for a physical album',
+              `site_id` smallint default NULL COMMENT 'owning site id, resolves to sites.galleries_url for a physical album',
               `visible` tinyint(1) NOT NULL default 1 COMMENT 'whether the album is shown in navigation, forced false at creation if its parent is not visible',
-              `representative_picture_id` mediumint(8) unsigned default NULL COMMENT 'image id used as the album thumbnail',
+              `representative_picture_id` int default NULL COMMENT 'image id used as the album thumbnail',
               `uppercats` varchar(255) NOT NULL default '' COMMENT 'comma-separated ancestor album id path, from root to this album',
               `commentable` tinyint(1) NOT NULL default 1 COMMENT 'whether photo comments are allowed for images in this album',
               `global_rank` varchar(255) default NULL COMMENT 'full-tree sort key derived from rank along the ancestor path, used to order albums across different parents',
               `image_order` varchar(128) default NULL COMMENT 'preferred ORDER BY expression for images in this album, inheritable to descendant albums',
               `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin default NULL COMMENT 'unique URL-friendly slug for this album',
-              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
               PRIMARY KEY  (`id`),
               UNIQUE KEY `categories_i3` (`permalink`),
               KEY `categories_i2` (`id_uppercat`),
@@ -179,12 +189,12 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `comments` (
-              `id` int(11) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
-              `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'commented image id',
+              `id` int NOT NULL auto_increment COMMENT 'surrogate primary key',
+              `image_id` int NOT NULL default '0' COMMENT 'commented image id',
               `date` datetime default NULL COMMENT 'when the comment was submitted',
               `author` varchar(255) default NULL COMMENT 'display name shown with the comment, the account username for a logged-in user or the guest-entered name otherwise',
               `email` varchar(255) default NULL COMMENT 'guest-provided email address',
-              `author_id` mediumint(8) unsigned DEFAULT NULL COMMENT 'commenting user id, null for a guest comment',
+              `author_id` int DEFAULT NULL COMMENT 'commenting user id, null for a guest comment',
               `anonymous_id` varchar(45) NOT NULL COMMENT 'full IP address of a guest commenter, used for anti-flood throttling',
               `website_url` varchar(255) DEFAULT NULL COMMENT 'guest-provided homepage link',
               `content` longtext COMMENT 'comment body',
@@ -198,17 +208,17 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `favorites` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'owning user id',
-              `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'image the user marked as a favorite',
+              `user_id` int NOT NULL default '0' COMMENT 'owning user id',
+              `image_id` int NOT NULL default '0' COMMENT 'image the user marked as a favorite',
               PRIMARY KEY  (`user_id`,`image_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user favorited images'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `image_category` (
-              `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'member image id',
-              `category_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'album the image belongs to',
-              `rank` mediumint(8) unsigned default NULL COMMENT 'manual sort position of the image within this specific album',
+              `image_id` int NOT NULL default '0' COMMENT 'member image id',
+              `category_id` int NOT NULL default '0' COMMENT 'album the image belongs to',
+              `rank` int default NULL COMMENT 'manual sort position of the image within this specific album',
               PRIMARY KEY  (`image_id`,`category_id`),
               KEY `image_category_i1` (`category_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-album membership, an image can belong to more than one album'
@@ -216,18 +226,18 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `image_format` (
-              `format_id` int(11) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
-              `image_id` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT 'image this alternate format file belongs to',
+              `format_id` int NOT NULL auto_increment COMMENT 'surrogate primary key',
+              `image_id` int NOT NULL DEFAULT '0' COMMENT 'image this alternate format file belongs to',
               `ext` varchar(255) NOT NULL COMMENT 'file extension of this alternate format, e.g. a RAW file stored alongside the main JPEG',
-              `filesize` mediumint(9) unsigned DEFAULT NULL COMMENT 'file size of this alternate format in KB',
+              `filesize` int DEFAULT NULL COMMENT 'file size of this alternate format in KB',
               PRIMARY KEY  (`format_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='alternate format files stored alongside an image (the multiple formats feature)'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `image_tag` (
-              `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'tagged image id',
-              `tag_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'tag applied to the image',
+              `image_id` int NOT NULL default '0' COMMENT 'tagged image id',
+              `tag_id` int NOT NULL default '0' COMMENT 'tag applied to the image',
               PRIMARY KEY  (`image_id`,`tag_id`),
               KEY `image_tag_i1` (`tag_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-tag associations'
@@ -235,30 +245,30 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql($this->withNgramParser(<<<'SQL'
             CREATE TABLE `images` (
-              `id` mediumint(8) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
+              `id` int NOT NULL auto_increment COMMENT 'surrogate primary key',
               `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'base filename of the original file',
               `date_available` datetime default NULL COMMENT 'date the photo is considered added/visible in the gallery, can be mapped from EXIF/IPTC or admin-edited',
               `date_creation` datetime default NULL COMMENT 'date the photo was taken, typically synced from EXIF/IPTC metadata',
               `name` varchar(255) default NULL COMMENT 'display title, distinct from the filename',
               `comment` text COMMENT 'photo description shown on its page',
               `author` varchar(255) default NULL COMMENT 'photographer/author credit',
-              `hit` int(10) unsigned NOT NULL default '0' COMMENT 'view counter',
-              `filesize` mediumint(9) unsigned default NULL COMMENT 'original file size in KB',
-              `width` smallint(9) unsigned default NULL COMMENT 'original pixel width',
-              `height` smallint(9) unsigned default NULL COMMENT 'original pixel height',
+              `hit` int NOT NULL default '0' COMMENT 'view counter',
+              `filesize` int default NULL COMMENT 'original file size in KB',
+              `width` int default NULL COMMENT 'original pixel width',
+              `height` int default NULL COMMENT 'original pixel height',
               `coi` char(4) default NULL COMMENT 'center of interest',
               `representative_ext` varchar(4) default NULL COMMENT 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video',
               `date_metadata_update` date default NULL COMMENT 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced',
-              `rating_score` float(5,2) unsigned default NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
-              `path` varchar(255) NOT NULL default '' COMMENT 'full relative filesystem path to the original file',
-              `storage_category_id` smallint(5) unsigned default NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
-              `level` tinyint unsigned NOT NULL default '0' COMMENT 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels',
-              `md5sum` char(32) default NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
-              `added_by` mediumint(8) unsigned default NULL COMMENT 'uploading user id',
-              `rotation` tinyint unsigned default NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
+              `rating_score` float(5,2) default NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
+              `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'full relative filesystem path to the original file',
+              `storage_category_id` int default NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
+              `level` smallint NOT NULL default '0' COMMENT 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels',
+              `md5sum` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin default NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
+              `added_by` int default NULL COMMENT 'uploading user id',
+              `rotation` smallint default NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
               `latitude` double(8, 6) default NULL COMMENT 'GPS latitude, from EXIF',
               `longitude` double(9, 6) default NULL COMMENT 'GPS longitude, from EXIF',
-              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
               PRIMARY KEY  (`id`),
               KEY `images_i2` (`date_available`),
               KEY `images_i3` (`rating_score`),
@@ -278,29 +288,29 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `lounge` (
-              `image_id` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT 'newly uploaded image pending album association',
-              `category_id` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'album the image is intended for once the lounge is emptied',
+              `image_id` int NOT NULL DEFAULT '0' COMMENT 'newly uploaded image pending album association',
+              `category_id` int NOT NULL DEFAULT '0' COMMENT 'album the image is intended for once the lounge is emptied',
               PRIMARY KEY (`image_id`,`category_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='pending image-to-album associations, applied in bulk by ImageService::emptyLounge'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `old_permalinks` (
-              `cat_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'album the removed permalink used to point to',
+              `cat_id` int NOT NULL default '0' COMMENT 'album the removed permalink used to point to',
               `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'the retired URL slug, kept so it is not immediately reusable by another album',
               `date_deleted` datetime default NULL COMMENT 'when the permalink was retired',
               `last_hit` datetime default NULL COMMENT 'when the dead permalink was last visited',
-              `hit` int(10) unsigned NOT NULL default '0' COMMENT 'visit count against the dead permalink',
+              `hit` int NOT NULL default '0' COMMENT 'visit count against the dead permalink',
               PRIMARY KEY  (`permalink`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='retired album permalinks, kept to block reuse and shown on the admin permalinks page'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `rate` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'rating user id, the guest user id for anonymous visitors',
-              `element_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'rated image id',
+              `user_id` int NOT NULL default '0' COMMENT 'rating user id, the guest user id for anonymous visitors',
+              `element_id` int NOT NULL default '0' COMMENT 'rated image id',
               `anonymous_id` varchar(45) NOT NULL default '' COMMENT 'truncated IP address identifying an anonymous rater, from the anonymous_rater cookie',
-              `rate` tinyint(2) unsigned NOT NULL default '0' COMMENT 'submitted rating value, restricted to the configured rate_items',
+              `rate` smallint NOT NULL default '0' COMMENT 'submitted rating value, restricted to the configured rate_items',
               `date` date default NULL COMMENT 'date the rate was submitted',
               PRIMARY KEY  (`element_id`,`user_id`,`anonymous_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user or per-anonymous-visitor image ratings, aggregated into images.rating_score'
@@ -308,10 +318,10 @@ final class Version20260804122300 extends AbstractMigration
 
         $this->addSql($this->withNgramParser(<<<'SQL'
             CREATE TABLE `tags` (
-              `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
+              `id` int NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'tag display name',
               `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'URL-friendly slug derived from name',
-              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp, set on insert only',
+              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
               PRIMARY KEY  (`id`),
               KEY `tags_i1` (`url_name`),
               KEY `lastmodified` (`lastmodified`),
@@ -322,48 +332,6 @@ final class Version20260804122300 extends AbstractMigration
 
     private function upPostgres(): void
     {
-        // Shared BEFORE UPDATE trigger function backing every
-        // `ON UPDATE CURRENT_TIMESTAMP`-equivalent `lastmodified` column
-        // in the whole schema (this migration's own categories/images/tags,
-        // plus groups/user_infos in the users-domain migration) -- created
-        // once here since this is the first migration to need it.
-        //
-        // Every `lastmodified` column below is declared `timestamp(0)`, not
-        // bare `timestamp`:
-        // PostgreSQL's bare `timestamp` defaults to microsecond
-        // precision, but MySQL's `TIMESTAMP` (this schema's other real
-        // target, see the *-mysql.sql reference) has zero fractional
-        // digits by default. `Common\ValueObject\SqlDateTime::from()`'s
-        // own canonical `Y-m-d H:i:s` form (no fractional seconds) reads a
-        // real fetched `now()`-populated row on MySQL fine, but throws on
-        // Postgres once this column is Doctrine-Type-mapped, since
-        // `now()`'s real return value carries microseconds. `timestamp(0)`
-        // makes Postgres truncate to whole seconds on write (both the
-        // trigger's `now()` assignment and this column's own `DEFAULT
-        // now()`), matching MySQL's real behavior exactly.
-        //
-        // This same rule applies to every OTHER `sql_datetime`-Doctrine-Type
-        // column in this schema, not just `lastmodified`:
-        // `user_infos.activation_key_expire`,
-        // populated via a raw `NOW() + INTERVAL '1 hour'` test fixture
-        // insert (same class of write as this trigger's own `now()`), throws
-        // the identical `SqlDateTime::from()` rejection once read back
-        // through `UserService::getUserData()`'s full-entity hydration. Every
-        // bare-`timestamp` column below and in the other 2 migration files
-        // (`comments.date`/`validation_date`, `old_permalinks.date_deleted`,
-        // `user_auth_keys.created_on`/`expired_on`,
-        // `user_infos.registration_date`/`activation_key_expire`/
-        // `last_visit`, `search.created_on`, `audit_log.created_at`,
-        // `activity.occured_on`) is switched to `timestamp(0)` alongside this
-        // one, closing the gap for the whole schema at once rather than
-        // patching call sites as each one gets hit. `search_filter_view.
-        // created_at` is deliberately NOT included here: that table has no
-        // Doctrine entity / `sql_datetime` mapping at all (no real callers
-        // of the `search_filter_view` table exist beyond its own
-        // definition), so it never routes through `SqlDateTime::from()` and
-        // isn't exposed to this bug.
-        $this->addSql('CREATE FUNCTION set_lastmodified() RETURNS trigger AS $$ BEGIN NEW.lastmodified = now(); RETURN NEW; END; $$ LANGUAGE plpgsql');
-
         $this->addSql('CREATE TABLE caddie (user_id integer NOT NULL, element_id integer NOT NULL, PRIMARY KEY (user_id, element_id))');
         $this->addSql("COMMENT ON TABLE caddie IS 'per-user temporary photo selection (caddie/basket) used by batch operations'");
         $this->addSql("COMMENT ON COLUMN caddie.user_id IS 'owning user id'");
@@ -394,7 +362,6 @@ final class Version20260804122300 extends AbstractMigration
         $this->addSql('CREATE INDEX categories_i2 ON categories (id_uppercat)');
         $this->addSql('CREATE INDEX categories_lastmodified_idx ON categories (lastmodified)');
         $this->addSql('CREATE INDEX categories_ft_name_comment ON categories USING GIN (tsv_search)');
-        $this->addSql('CREATE TRIGGER trg_categories_lastmodified BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
         $this->addSql("COMMENT ON TABLE categories IS 'photo albums, both physical filesystem-synced and virtual'");
         $this->addSql("COMMENT ON COLUMN categories.id IS 'surrogate primary key'");
         $this->addSql("COMMENT ON COLUMN categories.name IS 'album display name'");
@@ -488,7 +455,7 @@ final class Version20260804122300 extends AbstractMigration
             'name varchar(255) DEFAULT NULL, ' .
             'comment text DEFAULT NULL, ' .
             'author varchar(255) DEFAULT NULL, ' .
-            'hit bigint NOT NULL DEFAULT 0, ' .
+            'hit integer NOT NULL DEFAULT 0, ' .
             'filesize integer DEFAULT NULL, ' .
             'width integer DEFAULT NULL, ' .
             'height integer DEFAULT NULL, ' .
@@ -522,7 +489,6 @@ final class Version20260804122300 extends AbstractMigration
         $this->addSql('CREATE INDEX idx_images_date_desc ON images (date_available DESC, id DESC)');
         $this->addSql('CREATE INDEX images_ft_name_comment ON images USING GIN (tsv_search)');
         $this->addSql('CREATE INDEX images_ft_author ON images USING GIN (tsv_author)');
-        $this->addSql('CREATE TRIGGER trg_images_lastmodified BEFORE UPDATE ON images FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
         $this->addSql("COMMENT ON TABLE images IS 'photo/media metadata and file location, one row per uploaded image'");
         $this->addSql("COMMENT ON COLUMN images.id IS 'surrogate primary key'");
         $this->addSql("COMMENT ON COLUMN images.file IS 'base filename of the original file'");
@@ -563,7 +529,7 @@ final class Version20260804122300 extends AbstractMigration
             "permalink varchar(64) COLLATE \"C\" NOT NULL DEFAULT '', " .
             'date_deleted timestamp(0) DEFAULT NULL, ' .
             'last_hit timestamp DEFAULT NULL, ' .
-            'hit bigint NOT NULL DEFAULT 0, ' .
+            'hit integer NOT NULL DEFAULT 0, ' .
             'PRIMARY KEY (permalink))'
         );
         $this->addSql("COMMENT ON TABLE old_permalinks IS 'retired album permalinks, kept to block reuse and shown on the admin permalinks page'");
@@ -598,11 +564,10 @@ final class Version20260804122300 extends AbstractMigration
         $this->addSql('CREATE INDEX tags_i1 ON tags (url_name)');
         $this->addSql('CREATE INDEX tags_lastmodified_idx ON tags (lastmodified)');
         $this->addSql('CREATE INDEX tags_ft_name ON tags USING GIN (tsv_search)');
-        $this->addSql('CREATE TRIGGER trg_tags_lastmodified BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
         $this->addSql("COMMENT ON TABLE tags IS 'photo tags/keywords'");
         $this->addSql("COMMENT ON COLUMN tags.id IS 'surrogate primary key'");
         $this->addSql("COMMENT ON COLUMN tags.name IS 'tag display name'");
         $this->addSql("COMMENT ON COLUMN tags.url_name IS 'URL-friendly slug derived from name'");
-        $this->addSql("COMMENT ON COLUMN tags.lastmodified IS 'row last-update timestamp, set on insert only'");
+        $this->addSql("COMMENT ON COLUMN tags.lastmodified IS 'row last-update timestamp'");
     }
 }

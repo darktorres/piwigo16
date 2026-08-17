@@ -13,11 +13,9 @@ use Override;
  * Baseline bootstrap, users/auth domain: users, user_infos, groups,
  * user_group, user_access, group_access, user_auth_keys,
  * user_failed_logins, sessions, user_feed, user_mail_notification -- 11
- * of the 39 tables. See Version20260804122300's own docblock for the
+ * of the 38 tables. See Version20260804122300's own docblock for the
  * full translation-rule rationale shared by every migration in this set
- * (unsigned widening table, boolean mapping, COLLATE "C", JSONB,
- * lastmodified trigger, FULLTEXT->tsvector+GIN, per-schema-unique index
- * naming).
+ * (boolean mapping, COLLATE "C", JSONB, per-schema-unique index naming).
  */
 final class Version20260804122301 extends AbstractMigration
 {
@@ -51,18 +49,18 @@ final class Version20260804122301 extends AbstractMigration
     {
         $this->addSql(<<<'SQL'
             CREATE TABLE `group_access` (
-              `group_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'granted group id',
-              `cat_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'private album the group is granted access to',
+              `group_id` int NOT NULL default '0' COMMENT 'granted group id',
+              `cat_id` int NOT NULL default '0' COMMENT 'private album the group is granted access to',
               PRIMARY KEY  (`group_id`,`cat_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-group private album permission grants'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `groups` (
-              `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
+              `id` int NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'group display name, unique',
               `is_default` tinyint(1) NOT NULL default '0' COMMENT 'every newly registered user is automatically added to groups marked default',
-              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp, set on insert only',
+              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
               PRIMARY KEY  (`id`),
               UNIQUE KEY `groups_ui1` (`name`),
               KEY `lastmodified` (`lastmodified`)
@@ -80,20 +78,20 @@ final class Version20260804122301 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_access` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'granted user id',
-              `cat_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'private album the user is granted access to',
+              `user_id` int NOT NULL default '0' COMMENT 'granted user id',
+              `cat_id` int NOT NULL default '0' COMMENT 'private album the user is granted access to',
               PRIMARY KEY  (`user_id`,`cat_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user private album permission grants'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_auth_keys` (
-              `auth_key_id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-              `auth_key` varchar(255) NOT NULL COMMENT 'the token value: a random persistent-login token for key_type=auth_key, or the public pkid-... identifier for key_type=api_key',
-              `apikey_secret` VARCHAR(255) DEFAULT NULL COMMENT 'hashed secret half of a key_type=api_key pair, null for auth_key rows',
-              `user_id` mediumint(8) unsigned NOT NULL COMMENT 'owning user id',
+              `auth_key_id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+              `auth_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'the token value: a random persistent-login token for key_type=auth_key, or the public pkid-... identifier for key_type=api_key',
+              `apikey_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'hashed secret half of a key_type=api_key pair, null for auth_key rows',
+              `user_id` int NOT NULL COMMENT 'owning user id',
               `created_on` datetime NOT NULL COMMENT 'when the key was issued',
-              `duration` int(11) unsigned DEFAULT NULL COMMENT 'requested key lifetime, seconds for auth_key rows or days for api_key rows, see expired_on for the actual cutoff',
+              `duration` int DEFAULT NULL COMMENT 'requested key lifetime, seconds for auth_key rows or days for api_key rows, see expired_on for the actual cutoff',
               `expired_on` datetime NOT NULL COMMENT 'when the key stops being valid',
               `apikey_name` VARCHAR(100) DEFAULT NULL COMMENT 'user-given label for a key_type=api_key row, null for auth_key rows',
               `key_type` VARCHAR(40) DEFAULT NULL COMMENT 'auth_key for a persistent-login/URL-login token, api_key for a personal API key',
@@ -107,7 +105,7 @@ final class Version20260804122301 extends AbstractMigration
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_feed` (
               `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'private feed token, passed as ?feed= to authenticate as the owning user without a login',
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'user this feed token authenticates as',
+              `user_id` int NOT NULL default '0' COMMENT 'user this feed token authenticates as',
               `last_check` datetime default NULL COMMENT 'when this feed URL was last polled',
               PRIMARY KEY  (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user private RSS feed tokens'
@@ -115,31 +113,31 @@ final class Version20260804122301 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_group` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'member user id',
-              `group_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'group the user belongs to',
+              `user_id` int NOT NULL default '0' COMMENT 'member user id',
+              `group_id` int NOT NULL default '0' COMMENT 'group the user belongs to',
               PRIMARY KEY  (`group_id`,`user_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='user to group membership'
             SQL);
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_infos` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'the owning users.id row, application-assigned, never auto-generated here',
-              `nb_image_page` smallint(3) unsigned NOT NULL default '15' COMMENT 'photos per page preference',
+              `user_id` int NOT NULL default '0' COMMENT 'the owning users.id row, application-assigned, never auto-generated here',
+              `nb_image_page` int NOT NULL default '15' COMMENT 'photos per page preference',
               `status` enum('webmaster','admin','normal','generic','guest') NOT NULL default 'guest' COMMENT 'account role, gates admin access and permission checks',
-              `language` varchar(50) NOT NULL default 'en_UK' COMMENT 'interface language, references languages.id',
+              `language` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default 'en_UK' COMMENT 'interface language, references languages.id',
               `expand` tinyint(1) NOT NULL default '0' COMMENT 'whether the album tree auto-expands in the menu',
               `show_nb_comments` tinyint(1) NOT NULL default '0' COMMENT 'whether comment counts are shown alongside thumbnails',
               `show_nb_hits` tinyint(1) NOT NULL default '0' COMMENT 'whether view counts are shown alongside thumbnails',
-              `recent_period` tinyint(3) unsigned NOT NULL default '7' COMMENT 'number of days considered recent for the recent photos/albums views',
-              `theme` varchar(255) NOT NULL default 'modus' COMMENT 'interface theme, references themes.id',
+              `recent_period` int NOT NULL default '7' COMMENT 'number of days considered recent for the recent photos/albums views',
+              `theme` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default 'modus' COMMENT 'interface theme, references themes.id',
               `registration_date` datetime default NULL COMMENT 'account creation date',
               `enabled_high` tinyint(1) NOT NULL default '1' COMMENT 'whether the user may view/download the original, high-definition photo',
-              `level` tinyint unsigned NOT NULL default '0' COMMENT 'effective permission level, gates access to images.level-restricted photos',
-              `activation_key` varchar(255) default NULL COMMENT 'hashed password-reset token, see AuthService::setActivationKey and password.php',
+              `level` smallint NOT NULL default '0' COMMENT 'effective permission level, gates access to images.level-restricted photos',
+              `activation_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin default NULL COMMENT 'hashed password-reset token, see AuthService::setActivationKey and password.php',
               `activation_key_expire` datetime default NULL COMMENT 'when activation_key stops being valid',
               `last_visit` datetime default NULL COMMENT 'when the user was last seen, refreshed once per session length',
               `last_visit_from_history` tinyint(1) NOT NULL default '0' COMMENT 'whether last_visit was already backfilled from the history table, avoids repeating that lookup',
-              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+              `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
               `preferences` JSON default NULL COMMENT 'generic per-user key-value bag for preferences with no dedicated column',
               PRIMARY KEY (`user_id`),
               KEY `lastmodified` (`lastmodified`)
@@ -148,7 +146,7 @@ final class Version20260804122301 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_mail_notification` (
-              `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'subscribing user id',
+              `user_id` int NOT NULL default '0' COMMENT 'subscribing user id',
               `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'private token used in subscribe/unsubscribe confirmation email links',
               `enabled` tinyint(1) NOT NULL default '0' COMMENT 'whether the user currently receives new-photo notification emails',
               `last_send` datetime default NULL COMMENT 'when a notification email was last sent to this user',
@@ -159,9 +157,9 @@ final class Version20260804122301 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `users` (
-              `id` mediumint(8) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key, referenced by user_id everywhere else',
+              `id` int NOT NULL auto_increment COMMENT 'surrogate primary key, referenced by user_id everywhere else',
               `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'login name, unique',
-              `password` varchar(255) default NULL COMMENT 'hashed login password',
+              `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin default NULL COMMENT 'hashed login password',
               `mail_address` varchar(255) default NULL COMMENT 'account email address',
               PRIMARY KEY  (`id`),
               UNIQUE KEY `users_ui1` (`username`)
@@ -170,8 +168,8 @@ final class Version20260804122301 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE `user_failed_logins` (
-              `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
-              `user_id` mediumint(8) unsigned DEFAULT NULL COMMENT 'targeted user id, if the attempted username resolved to a real account',
+              `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+              `user_id` int DEFAULT NULL COMMENT 'targeted user id, if the attempted username resolved to a real account',
               `ip` varchar(45) NOT NULL COMMENT 'REMOTE_ADDR the failed login attempt came from',
               `attempted_at` DATETIME NOT NULL COMMENT 'when the failed attempt occurred',
               PRIMARY KEY (`id`),
@@ -198,12 +196,11 @@ final class Version20260804122301 extends AbstractMigration
         );
         $this->addSql('ALTER TABLE groups ADD CONSTRAINT groups_ui1_unique UNIQUE (name)');
         $this->addSql('CREATE INDEX groups_lastmodified_idx ON groups (lastmodified)');
-        $this->addSql('CREATE TRIGGER trg_groups_lastmodified BEFORE UPDATE ON groups FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
         $this->addSql("COMMENT ON TABLE groups IS 'user groups for bulk permission and membership management'");
         $this->addSql("COMMENT ON COLUMN groups.id IS 'surrogate primary key'");
         $this->addSql("COMMENT ON COLUMN groups.name IS 'group display name, unique'");
         $this->addSql("COMMENT ON COLUMN groups.is_default IS 'every newly registered user is automatically added to groups marked default'");
-        $this->addSql("COMMENT ON COLUMN groups.lastmodified IS 'row last-update timestamp, set on insert only'");
+        $this->addSql("COMMENT ON COLUMN groups.lastmodified IS 'row last-update timestamp'");
 
         $this->addSql(
             'CREATE TABLE sessions (' .
@@ -229,7 +226,7 @@ final class Version20260804122301 extends AbstractMigration
             'apikey_secret varchar(255) DEFAULT NULL, ' .
             'user_id integer NOT NULL, ' .
             'created_on timestamp(0) NOT NULL, ' .
-            'duration bigint DEFAULT NULL, ' .
+            'duration integer DEFAULT NULL, ' .
             'expired_on timestamp(0) NOT NULL, ' .
             'apikey_name varchar(100) DEFAULT NULL, ' .
             'key_type varchar(40) DEFAULT NULL, ' .
@@ -292,7 +289,6 @@ final class Version20260804122301 extends AbstractMigration
             'PRIMARY KEY (user_id))'
         );
         $this->addSql('CREATE INDEX user_infos_lastmodified_idx ON user_infos (lastmodified)');
-        $this->addSql('CREATE TRIGGER trg_user_infos_lastmodified BEFORE UPDATE ON user_infos FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
         $this->addSql("COMMENT ON TABLE user_infos IS 'per-user profile and preferences, one row per users.id'");
         $this->addSql("COMMENT ON COLUMN user_infos.user_id IS 'the owning users.id row, application-assigned, never auto-generated here'");
         $this->addSql("COMMENT ON COLUMN user_infos.nb_image_page IS 'photos per page preference'");

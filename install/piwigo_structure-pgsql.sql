@@ -113,6 +113,42 @@ COMMENT ON COLUMN public.activity.details IS 'per-action heterogeneous payload, 
 COMMENT ON COLUMN public.activity.user_agent IS 'browser user agent string, only captured on login actions';
 
 --
+-- Name: COLUMN activity.user_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.activity.user_id IS 'typed reference for object = user, ON DELETE SET NULL';
+
+--
+-- Name: COLUMN activity.category_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.activity.category_id IS 'typed reference for object = album, ON DELETE SET NULL';
+
+--
+-- Name: COLUMN activity.image_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.activity.image_id IS 'typed reference for object = photo, ON DELETE SET NULL';
+
+--
+-- Name: COLUMN activity.tag_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.activity.tag_id IS 'typed reference for object = tag, ON DELETE SET NULL';
+
+--
+-- Name: COLUMN activity.group_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.activity.group_id IS 'typed reference for object = group, ON DELETE SET NULL';
+
+--
+-- Name: COLUMN activity.system_scope; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.activity.system_scope IS 'ActivitySystem constant for object = system rows, which store no row id in object_id';
+
+--
 -- Name: activity_activity_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -215,6 +251,12 @@ COMMENT ON COLUMN public.audit_log.prev_hash IS 'row_hash of the previous row, n
 --
 
 COMMENT ON COLUMN public.audit_log.row_hash IS 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash';
+
+--
+-- Name: COLUMN audit_log.group_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.audit_log.group_id IS 'typed reference for entity_type = group, ON DELETE SET NULL';
 
 --
 -- Name: audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -853,7 +895,7 @@ COMMENT ON COLUMN public.history.ip IS 'REMOTE_ADDR of the request, truncated to
 -- Name: COLUMN history.section; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.history.section IS 'gallery navigation view the visit occurred in, plugin-defined sections are appended to this enum automatically';
+COMMENT ON COLUMN public.history.section IS 'gallery navigation view the visit occurred in, plugin-defined sections stored as-is';
 
 --
 -- Name: COLUMN history.category_id; Type: COMMENT; Schema: public; Owner: -
@@ -1617,40 +1659,6 @@ COMMENT ON COLUMN public.search.forked_from IS 'search this one was refined/deri
 --
 
 COMMENT ON COLUMN public.search.rules IS 'encoded search criteria (query terms, filters) evaluated by SearchService';
-
---
--- Name: search_filter_view; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.search_filter_view (
-    name character varying(64) NOT NULL,
-    config_json jsonb NOT NULL,
-    created_at timestamp without time zone NOT NULL
-);
-
---
--- Name: TABLE search_filter_view; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.search_filter_view IS 'named, reusable saved search-filter presets, unused: not read or written by any repository or service in this codebase';
-
---
--- Name: COLUMN search_filter_view.name; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_filter_view.name IS 'saved filter view name';
-
---
--- Name: COLUMN search_filter_view.config_json; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_filter_view.config_json IS 'encoded search filter configuration';
-
---
--- Name: COLUMN search_filter_view.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_filter_view.created_at IS 'when the filter view was saved';
 
 --
 -- Name: search_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -2510,13 +2518,6 @@ ALTER TABLE ONLY public.plugins
 
 ALTER TABLE ONLY public.rate
     ADD CONSTRAINT rate_pkey PRIMARY KEY (element_id, user_id, anonymous_id);
-
---
--- Name: search_filter_view search_filter_view_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.search_filter_view
-    ADD CONSTRAINT search_filter_view_pkey PRIMARY KEY (name);
 
 --
 -- Name: search search_pkey; Type: CONSTRAINT; Schema: public; Owner: -

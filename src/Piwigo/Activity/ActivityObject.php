@@ -12,7 +12,7 @@ namespace Piwigo\Activity;
  * This does not change that -- {@see ActivityService::record()} still takes a
  * string, because retyping every caller is a separate job -- but it gives the
  * discriminator-to-column mapping a single home, so the exclusive arc cannot
- * drift away from the constraints in `Version20260815230000`.
+ * drift away from the constraints in `Version20260804122303`.
  *
  * `System` is the odd one and the reason this enum is worth having:
  * `object = 'system'` rows never referenced a row at all. They carry an

@@ -41,6 +41,8 @@ use Piwigo\Controller\Api\Images\ImageGetController;
 use Piwigo\Controller\Api\Images\ImageUpdateController;
 use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\SessionController;
+use Piwigo\Controller\Api\SessionLoginController;
+use Piwigo\Controller\Api\SessionLogoutController;
 use Piwigo\Controller\Api\Tags\TagCreateController;
 use Piwigo\Controller\Api\Tags\TagDeleteController;
 use Piwigo\Controller\Api\Tags\TagDuplicateController;
@@ -226,6 +228,14 @@ final class RouteDefinitions
         $routes->add('api_v1_session', new Route('/api/v1/session', defaults: [
             '_controller' => SessionController::class,
         ], methods: ['GET']));
+
+        $routes->add('api_v1_session_login', new Route('/api/v1/session', defaults: [
+            '_controller' => SessionLoginController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_session_logout', new Route('/api/v1/session', defaults: [
+            '_controller' => SessionLogoutController::class,
+        ], methods: ['DELETE']));
 
         $routes->add('api_v1_info', new Route('/api/v1/info', defaults: [
             '_controller' => InfoController::class,

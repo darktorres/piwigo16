@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Narrows the `result.users[0].id` of a pwg.users.add WS response to an
- * int. Users::add() (src/Piwigo/Ws/Users.php) internally
- * re-invokes pwg.users.getList and returns its {users: [...]} shape
- * directly, so that's the real path; a flatter {id: ...} shape is also
- * tolerated defensively in case that internal call ever changes.
+ * Narrows the `result.users[0].id` of a pwg.users.add WS-shaped response
+ * (`H::wsCall()`'s own dispatcher onto the real `POST /api/v1/users`,
+ * {@see \Piwigo\Controller\Api\Users\UserCreateController}) to an int. A
+ * flatter {id: ...} shape is also tolerated defensively in case that
+ * dispatcher's own reshaping ever changes.
  *
  * @param  array<string, mixed>  $response
  */

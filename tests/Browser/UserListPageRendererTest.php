@@ -8,7 +8,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * Piwigo\Admin\UserListPageRenderer (admin.php?page=user_list) -- add
  * users and manage the users list; no write logic of its own (user
- * create/delete/status-change go through the WS API). This suite covers
+ * create/delete/status-change go through `/api/v1/users`). This suite covers
  * the group/status/level aggregation queries, the group/user_id/
  * show_add_user filter echo, and the line/grid pagination-default branch.
  */

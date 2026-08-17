@@ -37,6 +37,7 @@ use Piwigo\Controller\Api\Groups\GroupRemoveUserController;
 use Piwigo\Controller\Api\Groups\GroupUpdateController;
 use Piwigo\Controller\Api\History\HistoryLogController;
 use Piwigo\Controller\Api\Images\ImageAddCommentController;
+use Piwigo\Controller\Api\Images\ImageCheckFileController;
 use Piwigo\Controller\Api\Images\ImageDeleteController;
 use Piwigo\Controller\Api\Images\ImageFilteredSearchCreateController;
 use Piwigo\Controller\Api\Images\ImageFormatDeleteController;
@@ -70,6 +71,8 @@ use Piwigo\Controller\Api\Tags\TagImagesController;
 use Piwigo\Controller\Api\Tags\TagListController;
 use Piwigo\Controller\Api\Tags\TagMergeController;
 use Piwigo\Controller\Api\Tags\TagRenameController;
+use Piwigo\Controller\Api\Uploads\UploadDuplicatesController;
+use Piwigo\Controller\Api\Uploads\UploadReadinessController;
 use Piwigo\Controller\Api\Users\UserCreateController;
 use Piwigo\Controller\Api\Users\UserDeleteController;
 use Piwigo\Controller\Api\Users\UserDeleteRatingsController;
@@ -658,6 +661,26 @@ final class RouteDefinitions
         $routes->add('api_v1_images_set_rank', new Route('/api/v1/images/actions/set-rank', defaults: [
             '_controller' => ImageSetRankController::class,
         ], methods: ['POST']));
+
+        $routes->add('api_v1_images_check_file', new Route('/api/v1/images/{id}/actions/check-file', defaults: [
+            '_controller' => ImageCheckFileController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['GET']));
+
+        // Uploads -- admin-only readiness/duplicate-detection helpers
+        // (pwg.images.checkUpload/exist's replacements). The actual
+        // byte-transfer surface (addChunk/add/addFile/addSimple/upload/
+        // uploadAsync) folds into a tus-protocol endpoint, and
+        // uploadCompleted into a batch-finish action -- both separate,
+        // later sub-items.
+        $routes->add('api_v1_uploads_readiness', new Route('/api/v1/uploads/readiness', defaults: [
+            '_controller' => UploadReadinessController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_uploads_duplicates', new Route('/api/v1/uploads/duplicates', defaults: [
+            '_controller' => UploadDuplicatesController::class,
+        ], methods: ['GET']));
 
         return $routes;
     }

@@ -124,12 +124,10 @@ it('populates the private-album permission_url and direct/indirect notified-user
         'name' => $groupName,
     ]);
     $groupResult = $group['result'] ?? null;
-    $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
-    $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;
-    if (! is_array($firstGroup) || ! is_numeric($firstGroup['id'] ?? null)) {
+    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
         throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $firstGroup['id'];
+    $groupId = (int) $groupResult['id'];
 
     $usernameIndirect = 'album_notif_indirect_' . uniqid();
     $password = 'a-strong-test-password-1';
@@ -198,19 +196,18 @@ it('sends an album notification email to a group and reports the group name', fu
     }
     $albumId = (int) $albumResult['id'];
 
-    // pwg.groups.add's own response nests the created group under
-    // result.groups[0], not a bare result.id, unlike
-    // pwg.categories.add's flat result.id shape.
+    // pwg.groups.add returns the created group directly under result.id,
+    // the same flat shape as pwg.categories.add above -- GroupCreateController
+    // (POST /api/v1/groups) returns the created resource directly, not
+    // wrapped in a "groups" collection key.
     $group = H::wsCall($page, 'pwg.groups.add', [
         'name' => 'Notification Test Group ' . uniqid(),
     ]);
     $groupResult = $group['result'] ?? null;
-    $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
-    $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;
-    if (! is_array($firstGroup) || ! is_numeric($firstGroup['id'] ?? null)) {
+    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
         throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $firstGroup['id'];
+    $groupId = (int) $groupResult['id'];
 
     $result = H::adminPost($page, '/admin.php?page=album-' . $albumId . '-notification', [
         'pwg_token' => H::pwgToken($page),

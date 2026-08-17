@@ -19,13 +19,11 @@ it('renders the group list with real groups, member counts, and member names', f
         'name' => 'Group List Test Group ' . uniqid(),
     ]);
     $groupResult = $group['result'] ?? null;
-    $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
-    $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;
-    if (! is_array($firstGroup) || ! is_numeric($firstGroup['id'] ?? null)) {
+    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
         throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $firstGroup['id'];
-    $groupName = is_string($firstGroup['name'] ?? null) ? $firstGroup['name'] : '';
+    $groupId = (int) $groupResult['id'];
+    $groupName = is_string($groupResult['name'] ?? null) ? $groupResult['name'] : '';
 
     $addUserResult = H::wsCall($page, 'pwg.groups.addUser', [
         'group_id' => (string) $groupId,

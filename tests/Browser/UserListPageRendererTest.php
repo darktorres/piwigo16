@@ -91,12 +91,10 @@ it('echoes a group filter, a user_id search, and show_add_user into the form', f
         'name' => 'User List Filter Group ' . uniqid(),
     ]);
     $groupResult = $group['result'] ?? null;
-    $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
-    $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;
-    if (! is_array($firstGroup) || ! is_numeric($firstGroup['id'] ?? null)) {
+    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
         throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $firstGroup['id'];
+    $groupId = (int) $groupResult['id'];
 
     $page = H::navigateOk($page, '/admin.php?page=user_list&group=' . $groupId . '&user_id=1&show_add_user=1');
 

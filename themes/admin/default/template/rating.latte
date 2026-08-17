@@ -828,28 +828,29 @@ $(document).ready(function() {
 </table>
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
 {capture $tmpFooterScript2}
+const pwg_token = "{$CSRF_TOKEN}";
+
 function del(node,id,uid,aid){
   var tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),
     data = {
-      image_id: id,
-      user_id: uid
+      imageId: id,
+      anonymousId: aid || null
     };
-  if (aid)
-    data.anonymous_id = aid;
 
-  (new PwgWS('{$ROOT_URL|escapeJavascript|noescape}')).callService(
-    'pwg.rates.delete', data,
-    {
-      method: 'POST',
-      onFailure: function(num, text) { tr.stop(); tr.fadeTo(0,1); alert(num + " " + text); },
-      onSuccess: function(result){
-        if (result)
-          tr.remove();
-        else
-          alert(result);
-      }
+  $.ajax({
+    url: "{$ROOT_URL|escapeJavascript|noescape}api/v1/users/" + uid + "/actions/delete-ratings",
+    method: "POST",
+    contentType: "application/json",
+    data: JSON.stringify(data),
+    headers: {'X-CSRF-Token': pwg_token},
+    error: function(jqXHR) { tr.stop(); tr.fadeTo(0,1); alert(jqXHR.status + " " + jqXHR.statusText); },
+    success: function(result){
+      if (result.deletedCount)
+        tr.remove();
+      else
+        alert(result.deletedCount);
     }
-  );
+  });
   return false;
 }
 {/capture}

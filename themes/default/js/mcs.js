@@ -1420,14 +1420,51 @@ $(document).ready(function () {
 })
 
 function performSearch(params, reload = false) {
+  // PS_params uses snake_case field names (also used elsewhere in this
+  // file to drive the active-filter-chip UI) -- translated to
+  // POST /api/v1/images/searches's camelCase body shape here, the one
+  // place that actually sends it. `expert` has no equivalent on this
+  // endpoint, so it's not sent.
+  const body = {
+    allwords: params.allwords,
+    allwordsFields: params.allwords_fields,
+    allwordsMode: params.allwords_mode,
+    tags: params.tags,
+    tagsMode: params.tags_mode,
+    datePostedPreset: params.date_posted_preset,
+    datePostedCustom: params.date_posted_custom,
+    dateCreatedPreset: params.date_created_preset,
+    dateCreatedCustom: params.date_created_custom,
+    categories: params.categories,
+    categoriesWithsubs: params.categories_withsubs,
+    authors: params.authors,
+    addedBy: params.added_by,
+    filetypes: params.filetypes,
+    ratios: params.ratios,
+    ratings: params.ratings,
+  };
+  if (params.search_id) {
+    body.searchId = params.search_id;
+  }
+  [
+    ['filesize_min', 'filesizeMin'], ['filesize_max', 'filesizeMax'],
+    ['width_min', 'widthMin'], ['width_max', 'widthMax'],
+    ['height_min', 'heightMin'], ['height_max', 'heightMax'],
+  ].forEach(([from, to]) => {
+    if (params[from] !== '' && params[from] != null) {
+      body[to] = Number(params[from]);
+    }
+  });
+
   $.ajax({
-    url: "ws.php?format=json&method=pwg.images.filteredSearch.create",
-    type:"POST",
+    url: "api/v1/images/searches",
+    type: "POST",
+    contentType: "application/json",
     dataType: "json",
-    data: params,
+    data: JSON.stringify(body),
     success:function(data) {
-      if (reload && typeof data.result.search_url !== 'undefined') {
-       reloadPage(data.result.search_url);
+      if (reload && typeof data.searchUrl !== 'undefined') {
+       reloadPage(data.searchUrl);
       }
     },
     error:function(e) {

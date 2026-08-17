@@ -732,7 +732,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
 
 test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PWG_CHARSET/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
     // All 7 are fully retired, zero-tolerance -- typed replacements
-    // (Piwigo\Core\AdminContext/WsContext/InstallationFlag/
+    // (Piwigo\Core\AdminContext/ApiContext/InstallationFlag/
     // AppInfo::DOMAIN/AppInfo::URL/Bootstrap\RequestBootstrap::pemUrl())
     // cover every real caller, and PWG_CHARSET's own 2 former readers
     // (CharsetHelper::getPwgCharset()/StringHelper::pwgTransliterate())
@@ -1014,22 +1014,6 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // ServerTimingMiddleware's header silently skipped on every
         // redirect/error page).
 
-        // Ws/ImageFilterCriteriaBuilder.php's own former exit() site
-        // (stdImageSqlFilterCriteria()'s invalid-date-field branch) is
-        // gone -- it now returns a WsErrorResponse and lets the standard
-        // Server::invoke() -> sendResponse() flow carry it out, the same
-        // real error-response mechanism Ws/Images.php's own upload-error
-        // sites already use instead of a raw die(). P25 Stage 2 finished
-        // the job for the rest of Ws/*: Server::run()/sendResponse() now
-        // return a real ResponseInterface instead of echo+exit(),
-        // WsController.php returns it directly, UploadService.php throws
-        // UnsupportedMediaTypeException instead of reaching into a Server
-        // to send+exit, and UserBootstrap.php's api_key/uploadAsync gates
-        // throw Piwigo\Http\ResponseReadyException like every other
-        // sanctioned short-circuit in this list -- zero die()/exit() left
-        // anywhere under Ws/, Controller/WsController.php,
-        // Bootstrap/UserBootstrap.php or Admin/Upload/UploadService.php.
-
         // AJAX/JSON action endpoints: echo a JSON (or CSV/file) body
         // directly and stop, deliberately not falling through to the
         // full page/template render that follows in the same method.
@@ -1073,15 +1057,14 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // Low-level decode/library-availability/upload-validation errors
         // throw Piwigo\Admin\Image\ImageProcessingException instead of
         // die(): Http\Middleware\ExceptionHandlerMiddleware catches/logs/
-        // Sentry-reports any \Throwable for the real HTTP callers
-        // (Ws/Images.php, Controller/ImageDerivativeController.php),
-        // and Symfony Messenger's own consumer loop does the same for the
-        // Job/BatchUploadJob.php background-job caller. UploadService.php's
-        // former IN_WS-branch exit() is gone too (see the Ws/* comment
-        // above) -- it now throws
+        // Sentry-reports any \Throwable for real HTTP callers (e.g.
+        // Controller/ImageDerivativeController.php), and Symfony
+        // Messenger's own consumer loop does the same for the
+        // Job/BatchUploadJob.php background-job caller.
+        // Admin/Upload/UploadService.php throws
         // Piwigo\Admin\Upload\UnsupportedMediaTypeException, a sibling of
-        // ImageProcessingException, mapped onto a 415 WsErrorResponse by
-        // Ws\Server::invoke()'s own catch clause.
+        // ImageProcessingException, mapped onto a 415 problem+json response
+        // by TusUploadCompletionService::completePhoto()'s own catch clause.
 
         // Core/ShutdownHandler.php: exit(143), a deliberate, documented
         // signal-termination exit code (128 + SIGTERM), not an error path.

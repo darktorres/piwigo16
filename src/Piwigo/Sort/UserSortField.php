@@ -37,7 +37,7 @@ enum UserSortField
     }
 
     /**
-     * `UserRepository::findListForWs()`'s own query joins `user_infos AS
+     * `UserRepository::findList()`'s own query joins `user_infos AS
      * ui` unconditionally, so `Level`'s `ui.` prefix carries no
      * conditional-join risk.
      */

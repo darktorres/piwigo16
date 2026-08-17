@@ -12,8 +12,9 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\Projection\ActivePermalinkRow;
 use Piwigo\Category\Projection\Category;
-use Piwigo\Category\Projection\CategoryAdminListForWsRow;
+use Piwigo\Category\Projection\CategoryAdminListRow;
 use Piwigo\Category\Projection\CategoryAlbumTreeRow;
+use Piwigo\Category\Projection\CategoryAvailableListRow;
 use Piwigo\Category\Projection\CategoryChildRow;
 use Piwigo\Category\Projection\CategoryDateRange;
 use Piwigo\Category\Projection\CategoryFulldirRow;
@@ -23,7 +24,6 @@ use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryIdNameUppercat;
 use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
 use Piwigo\Category\Projection\CategoryIdStatus;
-use Piwigo\Category\Projection\CategoryListForWsRow;
 use Piwigo\Category\Projection\CategoryListingRow;
 use Piwigo\Category\Projection\CategoryMoveDetailRow;
 use Piwigo\Category\Projection\CategoryMoveRow;
@@ -3406,7 +3406,7 @@ final readonly class CategoryRepository
     }
 
     /**
-     * The scope condition shared by findListForWs()/findAdminListForWs()
+     * The scope condition shared by findAvailableList()/findAdminList()
      * below -- exactly one of 3 mutually-exclusive branches (non-recursive
      * with a real $catId / non-recursive without / recursive with a real
      * $catId), or none at all (recursive with no $catId -- matches the
@@ -3459,7 +3459,7 @@ final readonly class CategoryRepository
      * (single-category scope), to detect "more remain" without a second
      * query. The total is only computed when $limit !== null.
      *
-     * @return PaginatedResult<CategoryListForWsRow>
+     * @return PaginatedResult<CategoryAvailableListRow>
      *
      * Computes the total via `COUNT(*) OVER() AS total_count` in the same
      * query as the row data (no `DISTINCT`/`GROUP BY` here, so the window
@@ -3468,7 +3468,7 @@ final readonly class CategoryRepository
      * it's not part of this method's own row shape, only
      * `PaginatedResult::$total`.
      */
-    public function findListForWs(
+    public function findAvailableList(
         CategoryListCriteria $criteria,
         ?string $searchTerm,
         int $searchLimit,
@@ -3558,22 +3558,22 @@ final readonly class CategoryRepository
             $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
         }
 
-        return new PaginatedResult(array_map(CategoryListForWsRow::fromRow(...), $rows), $total);
+        return new PaginatedResult(array_map(CategoryAvailableListRow::fromRow(...), $rows), $total);
     }
 
     /**
      * Ws\Categories::getAdminList()'s own paginated category rollup, via
      * CategoryAdminListCriteria (no forbidden-categories/public-only fields
      * at all -- this WS method is admin-only). Always computes the total,
-     * unlike {@see findListForWs()}'s own $limit-gated fetch.
+     * unlike {@see findAvailableList()}'s own $limit-gated fetch.
      *
-     * @return PaginatedResult<CategoryAdminListForWsRow>
+     * @return PaginatedResult<CategoryAdminListRow>
      *
-     * Computes the total the same way as {@see findListForWs()} above
+     * Computes the total the same way as {@see findAvailableList()} above
      * (`COUNT(*) OVER() AS total_count`) -- no `DISTINCT`/`GROUP BY` here
      * either.
      */
-    public function findAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
+    public function findAdminList(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
         $conn = $this->em
             ->getConnection();
@@ -3607,7 +3607,7 @@ final readonly class CategoryRepository
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
         $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
 
-        return new PaginatedResult(array_map(CategoryAdminListForWsRow::fromRow(...), $rows), $total);
+        return new PaginatedResult(array_map(CategoryAdminListRow::fromRow(...), $rows), $total);
     }
 
     /**

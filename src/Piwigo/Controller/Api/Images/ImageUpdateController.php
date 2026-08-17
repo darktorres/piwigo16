@@ -11,8 +11,8 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\OperationError;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Core\WsErrorResponse;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\CsrfGuard;
@@ -144,7 +144,7 @@ final readonly class ImageUpdateController implements ControllerInterface
                 $input->categories,
                 $input->multipleValueMode === 'replace'
             );
-            if ($result instanceof WsErrorResponse) {
+            if ($result instanceof OperationError) {
                 return ResponseFactory::problem('Unprocessable Entity', 422, $result->message());
             }
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Api\Uploads;
 
+use Piwigo\Admin\Upload\UnsupportedMediaTypeException;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\ImageId;
@@ -19,17 +20,12 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * The tus completion step -- runs once a `PATCH` brings an upload's
- * offset up to its full `uploadLength`. Unifies what
- * `Ws\Images\{AddHandler,AddSimpleHandler,UploadHandler,
- * UploadAsyncHandler}` each did at their own completion point: a plain
- * photo add/replace calls `UploadService::addUploadedFile()` the same
- * way `UploadAsyncHandler` did (tags, descriptive fields, permission
- * cache invalidation); a `formatOf` upload calls `UploadService::
- * addFormat()` the same way `UploadHandler`'s own `format_of` branch
- * did. Deliberately minimal on success -- `imageId`/`addStatus` only,
- * not the full category-name/URL enrichment those WS handlers used to
- * return -- a client fetches `GET /api/v1/images/{id}` for that instead
- * (per D3, this is a fresh implementation, not a WS-handler port).
+ * offset up to its full `uploadLength`. A plain photo add/replace calls
+ * `UploadService::addUploadedFile()` (tags, descriptive fields,
+ * permission cache invalidation); a `formatOf` upload calls
+ * `UploadService::addFormat()`. Deliberately minimal on success --
+ * `imageId`/`addStatus` only; a client fetches `GET /api/v1/images/{id}`
+ * for the rest.
  */
 final readonly class TusUploadCompletionService
 {
@@ -94,19 +90,23 @@ final readonly class TusUploadCompletionService
     }
 
     /**
-     * @return array{imageId: int, addStatus: string}
+     * @return ResponseInterface|array{imageId: int, addStatus: string}
      */
-    private function completePhoto(TusUploadSession $session, string $dataFilePath): array
+    private function completePhoto(TusUploadSession $session, string $dataFilePath): ResponseInterface|array
     {
-        $imageId = $this->uploadService->addUploadedFile(
-            $dataFilePath,
-            $this->urlService,
-            $session->filename,
-            $session->categoryIds,
-            $session->level,
-            $session->imageId,
-            null,
-        );
+        try {
+            $imageId = $this->uploadService->addUploadedFile(
+                $dataFilePath,
+                $this->urlService,
+                $session->filename,
+                $session->categoryIds,
+                $session->level,
+                $session->imageId,
+                null,
+            );
+        } catch (UnsupportedMediaTypeException $e) {
+            return ResponseFactory::problem('Unsupported Media Type', 415, $e->getMessage());
+        }
 
         if ($session->tagIds !== []) {
             $this->tagService->setTags(

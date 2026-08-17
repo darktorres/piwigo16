@@ -581,10 +581,7 @@ final class RouteDefinitions
             '_controller' => HistoryLogController::class,
         ], methods: ['POST']));
 
-        // pwg.history.search's real replacement -- P27.history, a
-        // dedicated redesign (see HistorySearchController's own
-        // docblock), not the mechanical port every other family above
-        // got. Admin-gated read, no CSRF needed.
+        // Admin-gated read, no CSRF needed.
         $routes->add('api_v1_history_search', new Route('/api/v1/history/search', defaults: [
             '_controller' => HistorySearchController::class,
         ], methods: ['GET']));

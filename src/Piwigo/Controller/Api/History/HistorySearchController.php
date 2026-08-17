@@ -28,38 +28,21 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * `GET /api/v1/history/search` -- `pwg.history.search`'s real
- * replacement, admin only (a read, no CSRF needed -- matches
- * `ActivityListController`). Ported from `Ws\History\SearchHandler`
- * (deleted with the rest of `Piwigo\Ws\*` in `959b717344`) with a real
- * redesign, not a mechanical port -- see `docs/PLAN.md`'s P27.history
- * section:
+ * `GET /api/v1/history/search` -- filtered/paginated history log lines
+ * for the admin history page, admin only (a read, no CSRF needed).
+ * Response fields are flat and typed (`imageThumbnailUrl`,
+ * `imageEditUrl`, `categoryId`, ...); the client builds any markup from
+ * them directly.
  *
- * - No more server-built HTML blobs (`<img>` tags, `+`-filter links) --
- *   flat typed fields (`imageThumbnailUrl`, `imageEditUrl`, `categoryId`)
- *   the client builds markup from, matching every other P27 family.
- * - No more `search` table self-insert. The old handler persisted the
- *   admin's *own current filter* as a brand new saved-search row on
- *   every single call purely to mint a `search_id` for `+`-filter links
- *   that nothing in this rewrite's `HistoryPageRenderer`/
- *   `HistoryFilterRequest` ever reads back (`search_id` is not a
- *   recognised query param there) -- confirmed dead via the old
- *   handler's own `// Remove redirect for ajax` comment, a leftover from
- *   a pre-AJAX full-page-redirect flow. `searchDetails` below is a
- *   *different*, real `search_id` -- one created by an actual front-end
- *   gallery search (`search.php`/`SearchService::saveSearch()`) and
- *   referenced by a genuine `history.search_id` value on that row.
- * - No more `display_thumbnail` cookie write. `history.latte` hardcodes
- *   `display_thumbnail: "display_thumbnail_classic"` and `history.js`'s
- *   `lineConstructor()` never reads its own `imageDisplay` parameter --
- *   no control in this rewrite's UI can actually change it, so the
- *   round-trip was already inert.
+ * Never writes a `search` row: `searchId`/`searchDetails` in the
+ * response refer to a pre-existing saved search (created by a front-end
+ * gallery search via `SearchService::saveSearch()`) that a row's own
+ * `history.search_id` column may reference -- filtering here never
+ * creates one.
  *
- * The known "fetches every matching row, then slices 300 per page in
- * PHP instead of a real SQL `LIMIT`/`OFFSET`" pagination is carried over
- * unchanged -- `HistoryService::getHistory()`'s own docblock (via the
- * deleted handler) already flagged this as "a real, non-trivial
- * optimization opportunity... not a defect," out of scope here.
+ * Fetches every matching row, then slices 300 per page in PHP rather
+ * than a SQL `LIMIT`/`OFFSET` -- a known, accepted cost on large history
+ * tables, not a defect.
  */
 final readonly class HistorySearchController implements ControllerInterface
 {

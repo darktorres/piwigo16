@@ -148,7 +148,7 @@
   },
   "themes/admin/default/js/history.js": {
     "eqeqeq": {
-      "count": 25
+      "count": 21
     },
     "no-case-declarations": {
       "count": 7
@@ -157,7 +157,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 111
+      "count": 108
     }
   },
   "themes/admin/default/js/intro_tooltips.js": {
@@ -174,22 +174,6 @@
   "themes/admin/default/js/maintenance.js": {
     "no-undef": {
       "count": 5
-    }
-  },
-  "themes/admin/default/js/maintenance_env.js": {
-    "eqeqeq": {
-      "count": 1
-    },
-    "no-undef": {
-      "count": 10
-    }
-  },
-  "themes/admin/default/js/maintenance_sys.js": {
-    "eqeqeq": {
-      "count": 1
-    },
-    "no-case-declarations": {
-      "count": 3
     }
   },
   "themes/admin/default/js/photos_add_direct.js": {
@@ -278,7 +262,7 @@
   },
   "themes/default/js/mcs.js": {
     "eqeqeq": {
-      "count": 77
+      "count": 78
     },
     "no-redeclare": {
       "count": 1
@@ -298,21 +282,18 @@
       "count": 1
     },
     "no-undef": {
-      "count": 10
+      "count": 9
     },
     "no-with": {
       "count": 1
     }
   },
   "themes/default/js/scripts.js": {
-    "eqeqeq": {
-      "count": 11
-    },
     "no-redeclare": {
-      "count": 3
+      "count": 2
     },
     "no-undef": {
-      "count": 12
+      "count": 10
     }
   },
   "themes/default/js/switchbox.js": {
@@ -330,13 +311,13 @@
   },
   "themes/standard_pages/js/profile.js": {
     "eqeqeq": {
-      "count": 12
+      "count": 9
     },
     "no-constant-binary-expression": {
       "count": 1
     },
     "no-undef": {
-      "count": 44
+      "count": 43
     }
   },
   "themes/standard_pages/js/standard_pages.js": {

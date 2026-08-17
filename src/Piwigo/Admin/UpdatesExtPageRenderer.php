@@ -26,10 +26,8 @@ use Piwigo\Template\CurrentTemplate;
  * after this render() call.
  *
  * This page's own ignore/reset/update actions are CSRF-protected by
- * ws.php?method=pwg.extensions.ignoreUpdate/pwg.extensions.update, which
- * check get_pwg_token() against $params['pwg_token'] in
- * include/ws_functions/pwg.extensions.php -- render() itself performs no
- * CSRF check.
+ * their `/api/v1/extensions/*` endpoints' own `CsrfGuard` checks --
+ * render() itself performs no CSRF check.
  */
 final class UpdatesExtPageRenderer
 {

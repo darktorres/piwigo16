@@ -209,27 +209,12 @@
                      two bare `$_POST['filter_level']` reads a couple lines
                      below it. -->
                 <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
-                <!-- TagService::createTag() is declared
-                     `@return array{info: string, id: int|string}|array{error:
-                     string}` — a real disjoint union. After the
-                     `isset($creation_output['error'])` early-return, only
-                     the `array{info, id}` member remains, which PHPStan's
-                     nullCoalesce.offset "always exists" check confirms;
-                     Psalm's union narrowing across an isset() guard on a
-                     disjoint array-shape union doesn't reach the same
-                     conclusion. -->
-                <file name="src/Piwigo/Ws/Tags.php"/>
                 <!-- str2DateTime()'s `count($ymdhms) < 3` early-return
                      guarantees offsets 0-2 exist by the setDate() call;
                      PHPStan's list<T> flow-length tracking proves it
                      (nullCoalesce.offset "always exists"), Psalm's doesn't
                      carry the count() guard into a list-length guarantee. -->
                 <file name="src/Piwigo/Core/DateHelper.php"/>
-                <!-- Same $_POST/$params-shape-narrowing disagreement as
-                     ConfigurationSubController above:
-                     `is_numeric($params['max_level'] ?? null)` guards the
-                     bare `$params['max_level']` reads a few tokens later. -->
-                <file name="src/Piwigo/Ws/Users.php"/>
                 <!-- Same $_POST-shape-narrowing disagreement, this time on
                      username/password/redirect (each guarded by its own
                      `is_string($_POST['x'] ?? null)` a few tokens earlier). -->
@@ -250,11 +235,6 @@
                      by its own `in_array($params['x'] ?? null, [...])` a
                      few lines earlier. -->
                 <file name="src/Piwigo/Template/Template.php"/>
-                <!-- $image['id'] is proven int by `assert(is_int($image['id']
-                     ?? null))` the line before; PHPStan's assert-narrowing
-                     carries through to the array-offset read that follows,
-                     Psalm's doesn't. -->
-                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- Same disagreement on login/mail_address, each guarded
                      by its own `is_string($_POST['x'] ?? null)` a few
                      tokens earlier. -->
@@ -494,15 +474,6 @@
                 <!-- Same $apps[$appName]['counter'] disagreement as the
                      RedundantCondition suppression below. -->
                 <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
-                <!-- $_FILES['image']/$_FILES['file'] is_array() guards
-                     (upload endpoints) — Psalm's stub assumes $_FILES
-                     entries always match its precise upload-error shape,
-                     but a real client (malformed multipart, an attacker
-                     probing the upload endpoint) can send $_FILES data that
-                     doesn't match — same "$_SERVER/$_FILES stub is more
-                     optimistic than reality" class as ActivityService's
-                     $_SERVER guards above, extended to file uploads. -->
-                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- $searchFields = &$mySearch['fields'] is a by-ref alias
                      (project's known "by-ref loses narrowing" limitation,
                      already documented for this same file's EmptyArrayAccess
@@ -608,7 +579,6 @@
                      $counterValue`) — the two tools disagree in opposite
                      directions. -->
                 <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
-                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- Same by-ref-loses-narrowing class as above ($searchFields
                      sites), plus $cacheApplicable
                      (! preg_match('/^image_id IN/', $filterClause)) — a real,
@@ -681,27 +651,8 @@
                      ImageDerivativeController.php above (see the method's
                      own inline comment). -->
                 <file name="src/Piwigo/Section/SectionInitializer.php"/>
-                <!-- $category_id ($category['id']) is docblock-typed int
-                     already; the is_numeric() re-check is defensive against
-                     a real row shape drift, not dead code in practice. -->
-                <file name="src/Piwigo/Ws/Categories.php"/>
-                <!-- $type ($this narrowed to a single enum case in a match
-                     arm) — real, structurally-necessary comparison, not
-                     dead logic. -->
-                <file name="src/Piwigo/Ws/Extensions.php"/>
             </errorLevel>
         </RedundantCondition>
-        <!-- $added_size ($added_size is docblock-typed int; PHPStan agrees
-             but doesn't flag the re-check as redundant) and $key
-             (docblock-typed non-empty-string; the is_numeric literal-0
-             re-check is defensive) — both real, harmless defensive
-             re-validation, not dead code. -->
-        <RedundantConditionGivenDocblockType>
-            <errorLevel type="suppress">
-                <file name="src/Piwigo/Ws/Core.php"/>
-                <file name="src/Piwigo/Ws/NamedStruct.php"/>
-            </errorLevel>
-        </RedundantConditionGivenDocblockType>
         <!-- Each entry below is a genuine PHPStan-vs-Psalm disagreement,
              verified per file: adding the real code guard makes PHPStan
              flag it as identical.alwaysFalse/notIdentical.alwaysTrue
@@ -743,14 +694,6 @@
                      composer analyse:phpstan is clean here with zero
                      changes. -->
                 <file name="tests/Integration/MetadataServiceTest.php"/>
-                <!-- strtotime('+1 month') is a literal, always-valid
-                     relative-time string — PHPStan's own stub treats its
-                     return as certain int here and flags an explicit
-                     `=== false` guard as identical.alwaysFalse (provably
-                     dead code). Psalm's stub is more pessimistic
-                     (int|false). composer analyse:phpstan is clean here
-                     with zero changes. -->
-                <file name="src/Piwigo/Ws/Core.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
         <PossiblyNullArgument>
@@ -765,18 +708,6 @@
                      composer analyse:phpstan is clean here with zero
                      changes. -->
                 <file name="src/Piwigo/Image/DerivativeImage.php"/>
-                <!-- $format_ext is already proven a real, non-empty string
-                     by the `isset($params['format_of'])` guard earlier in
-                     this method (it returns a PwgError before this point
-                     unless $format_ext narrows to non-empty-string).
-                     PHPStan's flow analysis proves this correlation across
-                     the two separate isset($params['format_of']) branches
-                     and flags a re-derived guard here as
-                     function.alreadyNarrowedType (provably redundant).
-                     Psalm loses the narrowing across the intervening
-                     chunk-upload code. composer analyse:phpstan is clean
-                     here with zero changes. -->
-                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- $mailAddress is already proven non-null here by
                      $isEmpty (see $isEmpty's own definition two lines above:
                      $isEmpty = $mailAddress === null || $mailAddress === '',
@@ -790,17 +721,6 @@
                 <file name="src/Piwigo/Users/UserService.php"/>
             </errorLevel>
         </PossiblyNullArgument>
-        <!-- filter_var()'s FILTER_VALIDATE_INT/FLOAT options-array stub
-             requires its "numeric" pseudo-type on min_range but doesn't
-             accept Psalm's own literal int(0)/int(1) (or float(0)/float(1))
-             types as satisfying it — a Psalm stub limitation, not a real
-             type mismatch (0 and 1 are numeric). composer analyse:phpstan
-             is clean here with zero changes. -->
-        <InvalidArgument>
-            <errorLevel type="suppress">
-                <file name="src/Piwigo/Ws/Server.php"/>
-            </errorLevel>
-        </InvalidArgument>
         <!-- FileCombiner.php: $file is only ever null-typed for Psalm's
              benefit (see the method's own inline comment declaring it null
              so PossiblyUndefinedVariable is resolvable); by the time
@@ -945,18 +865,6 @@
                 <file name="src/Piwigo/Cache/CacheFactory.php"/>
             </errorLevel>
         </UndefinedClass>
-        <DocblockTypeContradiction>
-            <errorLevel type="suppress">
-                <!-- PwgCore.php: $added_size's is_int() re-guard is the
-                     real runtime safety net for an @-suppressed possibly-
-                     undefined array offset read; PHPStan's
-                     treatPhpDocTypesAsCertain makes it (wrongly) prove the
-                     offset always exists and is always int. Already carries
-                     a matching @phpstan-ignore function.alreadyNarrowedType
-                     immediately above it. -->
-                <file name="src/Piwigo/Ws/Core.php"/>
-            </errorLevel>
-        </DocblockTypeContradiction>
         <UnsupportedReferenceUsage>
             <errorLevel type="suppress">
                 <!-- AlbumsPageRenderer.php: $the_place = &$associatedTree[...]
@@ -967,11 +875,6 @@
                      would mean rewriting the tree-build algorithm itself,
                      not a type-annotation fix. -->
                 <file name="src/Piwigo/Admin/AlbumsPageRenderer.php"/>
-                <!-- WsHelper.php: $tree[] = &$node / $sub_categories->_content[] = &$node
-                     build a category tree by reference during a single
-                     foreach ($categories as $key => &$node) pass — same
-                     by-ref tree-build shape as AlbumsPageRenderer above. -->
-                <file name="src/Piwigo/Ws/WsHelper.php"/>
             </errorLevel>
         </UnsupportedReferenceUsage>
         <ReferenceReusedFromConfusingScope>
@@ -1042,17 +945,6 @@
         </ParadoxicalCondition>
         <InvalidReturnType>
             <errorLevel type="suppress">
-                <!-- PwgCategories::add() (lines 803/841): CategoryService::
-                     createVirtualCategory()'s declared union return type
-                     array{error: string}|array{info: string, id:
-                     int|string} is correct at every one of its own return
-                     statements, but Psalm doesn't narrow the union away
-                     from the error-shape branch through the caller's
-                     isset($creation_output['error']) guard the way
-                     PHPStan does — pre-existing, documented in project
-                     memory as deferred for its own dedicated triage pass,
-                     not introduced or touched by this batch. -->
-                <file name="src/Piwigo/Ws/Categories.php"/>
                 <!-- MessengerFactory::transport(): same DoctrineTransportFactory
                      generic-resolution gap documented on the matching
                      InvalidReturnStatement suppression below — PHPStan
@@ -1064,7 +956,6 @@
         </InvalidReturnType>
         <InvalidReturnStatement>
             <errorLevel type="suppress">
-                <file name="src/Piwigo/Ws/Categories.php"/>
                 <!-- MessengerFactory::transport(): DoctrineTransportFactory::
                      createTransport()'s own signature returns the wider
                      TransportInterface, but its `@implements
@@ -1265,17 +1156,6 @@
                 <file name="src/Piwigo/Admin/ThemeMaintain.php"/>
             </errorLevel>
         </ClassMustBeFinal>
-        <!-- CommentsTest.php: `[...pwgCommentsTestBaseParams(), 'status' =>
-             'not-a-real-status']` — a real, standard, safe PHP idiom
-             (spread the base fixture, then override one field; the literal
-             key always wins over anything the spread also carries). Psalm's
-             duplicate-key check doesn't model that a later literal key
-             deliberately overrides an earlier spread entry. -->
-        <DuplicateArrayKey>
-            <errorLevel type="suppress">
-                <file name="tests/Unit/Ws/CommentsTest.php"/>
-            </errorLevel>
-        </DuplicateArrayKey>
         <!-- ExtendForTemplatesPageRenderer.php: CurrentConfig::
              $extentsForTemplates is a PHP 8.4 property-hook property —
              `set(array $value) { ... = self::sanitizeExtentsForTemplates

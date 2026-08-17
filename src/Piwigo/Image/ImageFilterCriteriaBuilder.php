@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Core\DateHelper;
-use Piwigo\Core\WsErrorResponse;
+use Piwigo\Core\OperationError;
 
 /**
  * Builds the shared `f_*` image-filter criteria (images table only) that
@@ -25,7 +25,7 @@ use Piwigo\Core\WsErrorResponse;
  * not WS-protocol-specific).
  *
  * The `1003` literal below is `Ws\WsError::InvalidParam->value` inlined
- * -- no real caller reads `WsErrorResponse::code()` anymore (every REST
+ * -- no real caller reads `OperationError::code()` anymore (every REST
  * controller reads only `->message()`, mapping it onto its own real HTTP
  * status via `ResponseFactory::problem()`), so keeping the whole
  * WS-protocol numeric error-code taxonomy alive just for this one
@@ -42,11 +42,11 @@ final readonly class ImageFilterCriteriaBuilder
      *
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      */
-    public function stdImageSqlFilterCriteria(array $params): ImageFilterCriteria|WsErrorResponse
+    public function stdImageSqlFilterCriteria(array $params): ImageFilterCriteria|OperationError
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
-                return new WsErrorResponse('Invalid ' . $datefield);
+                return new OperationError('Invalid ' . $datefield);
             }
         }
 

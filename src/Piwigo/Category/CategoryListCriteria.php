@@ -14,7 +14,7 @@ use Piwigo\Common\ValueObject\CategoryId;
  * exclusion (identically shaped whichever of the 3 branches -- public/
  * isAdmin()/else -- computed it, only the *value* differs by branch), plus,
  * in the public branch only, an extra `status = 'public' AND visible = 1`
- * pair. `CategoryRepository::findListForWs()` decides internally which of
+ * pair. `CategoryRepository::findAvailableList()` decides internally which of
  * these to add, from these plain fields, instead of the caller handing
  * over pre-built SQL text.
  */

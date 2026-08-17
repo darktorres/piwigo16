@@ -644,7 +644,7 @@ test('updateCategoryParent() is a no-op for no ids', function (): void {
 test('findMaxRankForParent() returns the highest rank among root categories', function (): void {
     // >= 1 rather than exactly 1 -- a bare MAX(rank) aggregate has
     // nothing to filter down to known-real ids the way a row list could
-    // (unlike findListForWs()/findAdminListForWs() above), so it's
+    // (unlike findAvailableList()/findAdminList() above), so it's
     // directly observable whenever another --parallel worker's own
     // FULLTEXT-deadlock-exempted categories-creating test (e.g.
     // deleteSite()'s own disposable root category, itself correctly
@@ -1065,7 +1065,7 @@ test('findIdNameUppercatsRankBySite() filters on site id', function (): void {
 });
 
 /**
- * Every findListForWs() test below that reads an unrestricted (or
+ * Every findAvailableList() test below that reads an unrestricted (or
  * catId=1-subtree) slice of `categories` filters its result down to
  * known-real ids rather than an unfiltered toBe() -- another --parallel
  * worker's own FULLTEXT-deadlock-exempted categories-creating test
@@ -1075,22 +1075,22 @@ test('findIdNameUppercatsRankBySite() filters on site id', function (): void {
  * term' is naturally immune (none of those disposable category names
  * ever contain "Nested").
  */
-test('findListForWs() scopes to root categories when recursive is false and catId is null', function (): void {
+test('findAvailableList() scopes to root categories when recursive is false and catId is null', function (): void {
     $criteria = new CategoryListCriteria(catId: null, recursive: false, forbiddenCategoryIds: [], publicOnly: false);
 
     $result = categoryTestRepo()
-        ->findListForWs($criteria, null, 10, null, false);
+        ->findAvailableList($criteria, null, 10, null, false);
 
     $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
     expect($realIds)
         ->toBe([1]);
 });
 
-test('findListForWs() matches a category and its direct children when recursive is false and catId is set', function (): void {
+test('findAvailableList() matches a category and its direct children when recursive is false and catId is set', function (): void {
     $criteria = new CategoryListCriteria(catId: CategoryId::from(1), recursive: false, forbiddenCategoryIds: [], publicOnly: false);
 
     $result = categoryTestRepo()
-        ->findListForWs($criteria, null, 10, null, false);
+        ->findAvailableList($criteria, null, 10, null, false);
 
     $ids = array_values(array_intersect(array_column($result->rows, 'id'), [1, 2]));
     sort($ids);
@@ -1098,11 +1098,11 @@ test('findListForWs() matches a category and its direct children when recursive 
         ->toBe([1, 2]);
 });
 
-test('findListForWs() matches the full subtree when recursive', function (): void {
+test('findAvailableList() matches the full subtree when recursive', function (): void {
     $criteria = new CategoryListCriteria(catId: CategoryId::from(1), recursive: true, forbiddenCategoryIds: [], publicOnly: false);
 
     $result = categoryTestRepo()
-        ->findListForWs($criteria, null, 10, null, false);
+        ->findAvailableList($criteria, null, 10, null, false);
 
     $ids = array_values(array_intersect(array_column($result->rows, 'id'), [1, 2]));
     sort($ids);
@@ -1110,46 +1110,46 @@ test('findListForWs() matches the full subtree when recursive', function (): voi
         ->toBe([1, 2]);
 });
 
-test('findListForWs() excludes forbidden category ids', function (): void {
+test('findAvailableList() excludes forbidden category ids', function (): void {
     $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [2], publicOnly: false);
 
     $result = categoryTestRepo()
-        ->findListForWs($criteria, null, 10, null, false);
+        ->findAvailableList($criteria, null, 10, null, false);
 
     $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
     expect($realIds)
         ->toBe([1]);
 });
 
-test('findListForWs() publicOnly excludes non-public categories', function (): void {
+test('findAvailableList() publicOnly excludes non-public categories', function (): void {
     $conn = DbConnection::build();
     $conn->executeStatement("UPDATE categories SET status = 'private' WHERE id = 2");
 
     $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: true);
 
     $result = categoryTestRepoForConn($conn)
-        ->findListForWs($criteria, null, 10, null, false);
+        ->findAvailableList($criteria, null, 10, null, false);
 
     $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
     expect($realIds)
         ->toBe([1]);
 });
 
-test('findListForWs() applies the search term', function (): void {
+test('findAvailableList() applies the search term', function (): void {
     $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
 
     $result = categoryTestRepo()
-        ->findListForWs($criteria, 'Nested', 10, null, false);
+        ->findAvailableList($criteria, 'Nested', 10, null, false);
 
     expect(array_column($result->rows, 'id'))
         ->toBe([2]);
 });
 
-test('findListForWs() applies the limit and reports the total', function (): void {
+test('findAvailableList() applies the limit and reports the total', function (): void {
     $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
 
     $result = categoryTestRepo()
-        ->findListForWs($criteria, null, 10, 1, false);
+        ->findAvailableList($criteria, null, 10, 1, false);
 
     // total reflects the real (unlimited) count, not just count($rows) --
     // >= 2 rather than exactly 2, since it's as susceptible to the same
@@ -1163,15 +1163,15 @@ test('findListForWs() applies the limit and reports the total', function (): voi
 });
 
 /**
- * Same reasoning as findListForWs()'s own leading docblock -- another
+ * Same reasoning as findAvailableList()'s own leading docblock -- another
  * --parallel worker's own FULLTEXT-deadlock-exempted categories-creating
  * test can leave a real, briefly-committed extra category visible here.
  */
-test('findAdminListForWs() scopes to root categories when recursive is false and catId is null', function (): void {
+test('findAdminList() scopes to root categories when recursive is false and catId is null', function (): void {
     $criteria = new CategoryAdminListCriteria(catId: null, recursive: false);
 
     $result = categoryTestRepo()
-        ->findAdminListForWs($criteria, null, 10);
+        ->findAdminList($criteria, null, 10);
 
     $realIds = array_values(array_intersect(array_column($result->rows, 'id'), [1]));
     expect($realIds)
@@ -1183,11 +1183,11 @@ test('findAdminListForWs() scopes to root categories when recursive is false and
         ->toBeGreaterThanOrEqual(1);
 });
 
-test('findAdminListForWs() matches the full subtree when recursive', function (): void {
+test('findAdminList() matches the full subtree when recursive', function (): void {
     $criteria = new CategoryAdminListCriteria(catId: CategoryId::from(1), recursive: true);
 
     $result = categoryTestRepo()
-        ->findAdminListForWs($criteria, null, 10);
+        ->findAdminList($criteria, null, 10);
 
     $ids = array_values(array_intersect(array_column($result->rows, 'id'), [1, 2]));
     sort($ids);
@@ -1195,11 +1195,11 @@ test('findAdminListForWs() matches the full subtree when recursive', function ()
         ->toBe([1, 2]);
 });
 
-test('findAdminListForWs() applies the search term', function (): void {
+test('findAdminList() applies the search term', function (): void {
     $criteria = new CategoryAdminListCriteria(catId: null, recursive: true);
 
     $result = categoryTestRepo()
-        ->findAdminListForWs($criteria, 'Nested', 10);
+        ->findAdminList($criteria, 'Nested', 10);
 
     expect(array_column($result->rows, 'id'))
         ->toBe([2]);

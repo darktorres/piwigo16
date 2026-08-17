@@ -35,7 +35,7 @@ This runs `tests/Browser/RegenerateFixtureTest.php` (tagged `fixture-regen`,
 excluded from `composer test:browser`): drops and recreates the test database,
 drives a real `install.php` submission (which creates the final schema via the
 real Doctrine Migrations baseline `InstallWizard::performInstall()` runs, not a
-static SQL file), seeds the content listed above via the WS API, then dumps the
+static SQL file), seeds the content listed above via `/api/v1`, then dumps the
 result over this file. Rerun it whenever the fixture's shape needs to change
 (new tables/columns, more seed data needed by a new test) — not part of the
 normal day-to-day test loop, which just loads the file as committed.

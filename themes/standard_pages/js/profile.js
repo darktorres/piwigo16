@@ -185,39 +185,58 @@ $(function() {
   getAllApiKeys();
 });
 
+// Callers (email/preferences/password/the plugin-extension
+// standardSaveSelector loop, currently always empty -- see profile.latte's
+// PLUGINS_PROFILE extension point, no live plugin in this rewrite) use
+// snake_case field names -- translated to PATCH /api/v1/session's
+// camelCase body here. Any key this doesn't recognise passes through
+// unchanged and is silently ignored server-side.
+function myInfoBody(params) {
+  const rename = {
+    nb_image_page: 'nbImagePage',
+    recent_period: 'recentPeriod',
+    show_nb_comments: 'showNbComments',
+    show_nb_hits: 'showNbHits',
+    new_password: 'newPassword',
+    conf_new_password: 'confNewPassword',
+  };
+  const numeric = ['nbImagePage', 'recentPeriod'];
+  const body = {};
+  Object.keys(params).forEach((key) => {
+    const newKey = rename[key] || key;
+    body[newKey] = numeric.includes(newKey) ? Number(params[key]) : params[key];
+  });
+  return body;
+}
+
+const API_KEY_ENDPOINTS = {
+  'pwg.users.setMyInfo': (params) => ({ url: 'api/v1/session', httpMethod: 'PATCH', body: myInfoBody(params) }),
+  'pwg.users.api_key.create': (params) => ({ url: 'api/v1/session/api-keys', httpMethod: 'POST', body: { keyName: params.key_name, duration: params.duration } }),
+  'pwg.users.api_key.edit': (params) => ({ url: `api/v1/session/api-keys/${params.pkid}`, httpMethod: 'PATCH', body: { keyName: params.key_name } }),
+  'pwg.users.api_key.revoke': (params) => ({ url: `api/v1/session/api-keys/${params.pkid}`, httpMethod: 'DELETE', body: null }),
+};
+
 function setInfos(params, method='pwg.users.setMyInfo', callback=null, errCallback=null) {
   // for debug
   // console.log('setInfos', params);
-  const all_params = {
-    ...params,
-    pwg_token: PWG_TOKEN
-  }
+  const { url, httpMethod, body } = API_KEY_ENDPOINTS[method](params);
   $.ajax({
-    url: `ws.php?format=json&method=${method}`,
-    type: "POST",
+    url: url,
+    method: httpMethod,
+    contentType: "application/json",
     dataType: "json",
-    data: all_params,
+    data: body !== null ? JSON.stringify(body) : undefined,
+    headers: {'X-CSRF-Token': PWG_TOKEN},
     success: (data) => {
-      if (data.stat == 'ok') {
-        user = {...user, ...params};
-        if (typeof callback === 'function') {
-          callback(data.result);
-          return;
-        };
-        pwgToaster({ text: data.result, icon: 'success' });
+      user = {...user, ...params};
+      if (typeof callback === 'function') {
+        callback(data);
         return;
-      } else if (data.stat == 'fail') {
-        pwgToaster({ text: data.message, icon: 'error' });
-      } else {
-        pwgToaster({ text: str_handle_error, icon: 'error' });
-      }
-      if (typeof errCallback === 'function') {
-        errCallback(data);
-        return;
-      }
+      };
+      pwgToaster({ text: str_infos_saved, icon: 'success' });
     },
     error: function (e) {
-      pwgToaster({ text: e.responseJSON?.message ?? str_handle_error, icon: 'error' });
+      pwgToaster({ text: e.responseJSON?.detail ?? str_handle_error, icon: 'error' });
       if (typeof errCallback === 'function') {
         errCallback(e);
         return;
@@ -228,23 +247,18 @@ function setInfos(params, method='pwg.users.setMyInfo', callback=null, errCallba
 
 function getAllApiKeys(reset = false) {
   $.ajax({
-    url: 'ws.php?format=json&method=pwg.users.api_key.get',
-    type: "POST",
+    url: 'api/v1/session/api-keys',
+    type: "GET",
     dataType: 'json',
-    data: {
-      pwg_token: PWG_TOKEN
-    },
     success: function(res) {
-      if (res.stat == 'ok') {
-        if (typeof res.result === 'string' || res.result === false) {
-          // No keys
-        } else {
-          AddApiLine(res.result, reset);
-        }
+      if (!res.apiKeys || res.apiKeys.length === 0) {
+        // No keys
+      } else {
+        AddApiLine(res.apiKeys, reset);
       }
     },
     error: function(e) {
-      pwgToaster({ text: e.responseJSON?.message ?? str_handle_error + 'getAllApiKeys', icon: 'error' });
+      pwgToaster({ text: e.responseJSON?.detail ?? str_handle_error + 'getAllApiKeys', icon: 'error' });
     }
   });
 }
@@ -259,28 +273,28 @@ function AddApiLine(lines, reset) {
   lines.forEach((line, i) => {
     const api_line = $('#api_line').clone();
     const api_collapse = $('#api_collapse').clone();
-    const tmp_id = line.auth_key.slice(24, 34);
+    const tmp_id = line.authKey.slice(24, 34);
 
     api_line.removeClass('template-api').addClass('api-tab');
     api_line.attr('id', `api_${tmp_id}`);
     api_line.find('.icon-collapse').data('api', tmp_id);
-    api_line.find('.api_name').text(line.apikey_name).attr('title', line.apikey_name);
-    api_line.find('.api_creation').text(line.created_on_format);
-    api_line.find('.api_last_use').text(line.last_used_on_since).attr('title', line.last_used_on_since);
+    api_line.find('.api_name').text(line.apikeyName).attr('title', line.apikeyName);
+    api_line.find('.api_creation').text(line.createdOn);
+    api_line.find('.api_last_use').text(line.lastUsedOn || no_time_elapsed).attr('title', line.lastUsedOn || no_time_elapsed);
     api_line.find('.api_expiration').text(line.expiration);
     api_line.find('.api-icon-action').attr('data-api', `api_${tmp_id}`);
-    api_line.find('.api-icon-action').attr('data-pkid', line.auth_key);
+    api_line.find('.api-icon-action').attr('data-pkid', line.authKey);
 
     api_collapse.attr('id', `api_collapse_${tmp_id}`);
     api_collapse.removeClass('template-api');
-    api_collapse.find('.api_key').text(line.auth_key);
+    api_collapse.find('.api_key').text(line.authKey);
     api_collapse.find('.icon-clone').attr({
-      'data-copy': line.auth_key,
+      'data-copy': line.authKey,
       'data-success': `api_copy_success_${tmp_id}`
     });
     api_collapse.find('.api-copy').attr('id', `api_copy_success_${tmp_id}`);
 
-    if (!line.revoked_on && !line.is_expired) {
+    if (!line.revokedOn && !line.isExpired) {
       api_list.append(api_line);
       api_line.after(api_collapse);
     } else {
@@ -288,13 +302,13 @@ function AddApiLine(lines, reset) {
       api_list_expired.append(api_line);
       api_line.after(api_collapse);
       api_line.find('.api-icon-action').remove();
-      if (line.is_expired) {
-        api_line.find('.api_expiration').html(`<i class="gallery-icon-skull api-skull"></i> <span data-tooltip="${line.expired_on_format}">${line.expired_on_since}</span>`);
+      if (line.isExpired) {
+        api_line.find('.api_expiration').html(`<i class="gallery-icon-skull api-skull"></i> <span>${line.expiredOn}</span>`);
       } else {
-        api_line.find('.api_expiration').html(`<i class="gallery-icon-skull api-skull"></i> <span>${/\d/.test(line.revoked_on_since) ? line.revoked_on_since : no_time_elapsed}</span> <i data-tooltip="${line.revoked_on_message}" class="icon-info-circled-1 api-info"></i>`);
+        api_line.find('.api_expiration').html(`<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn}</span>`);
       }
     }
-    
+
   });
 
   apiLineEvent();
@@ -537,7 +551,7 @@ function saveApiKeyEvent() {
       (res) => {
         pwgToaster({ text: str_api_added, icon: 'success' });
         getAllApiKeys(true);
-        successApiModal(res.apikey_secret, res.auth_key);
+        successApiModal(res.apikeySecret, res.authKey);
       },
       (err) => {
         saveApiKeyEvent();

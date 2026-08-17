@@ -880,14 +880,15 @@
           {
             if (aElement.disabled) return;
             aElement.disabled=true;
-            var y = new PwgWS(rootUrl);
-            y.callService(
-              "pwg.caddie.add", { image_id: id} ,
-              {
-                onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
-                onSuccess: function(result) { aElement.disabled = false; }
-              }
-            );
+            $.ajax({
+              url: rootUrl + "api/v1/session/caddie",
+              method: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ imageIds: [id] }),
+              headers: {'X-CSRF-Token': "{$CSRF_TOKEN|escapeJavascript|noescape}"},
+              error: function(jqXHR) { alert(jqXHR.status + " " + jqXHR.statusText); document.location=aElement.href; },
+              success: function(result) { aElement.disabled = false; }
+            });
           }
           {/capture}
           {do footerScript($tmpFooterScriptCaddie)}

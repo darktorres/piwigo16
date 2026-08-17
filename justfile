@@ -26,7 +26,7 @@ dev:
 # just's prerequisite lists can't mark a step fallible, and this matches
 # ci.yml's ecs job + lefthook's pre-commit hook, both non-blocking until
 # P5's whole-codebase reformat.
-test: analyse require-checker unused test-php test-integration test-contract test-browser test-visual test-js
+test: analyse require-checker unused test-php test-integration test-browser test-visual test-js
     -composer lint:php
 
 # Run the JS/TS test suite (Vitest)
@@ -40,10 +40,6 @@ test-php:
 # Integration tests (needs .env.test + a running piwigo_test DB)
 test-integration:
     composer test:integration
-
-# WS API contract tests (needs .env.test + the fixture loaded)
-test-contract:
-    composer test:contract
 
 # Browser E2E flows via pest-plugin-browser (needs .env.test + Apache + Chromium)
 test-browser:

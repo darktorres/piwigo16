@@ -748,7 +748,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * GROUP BY, before LIMIT/OFFSET) reports the correct post-grouping
      * row count -- unlike its incorrect behavior on `SELECT
      * DISTINCT` queries, see
-     * {@see \Piwigo\Users\UserRepository::findListForWs()}'s own
+     * {@see \Piwigo\Users\UserRepository::findList()}'s own
      * docblock.
      *
      * Raw DBAL (not DQL) -- every numeric column below comes back as

@@ -19,13 +19,13 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageUrlBuilder;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Image\ImageUrlBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

@@ -8,11 +8,10 @@ use Piwigo\Auth\AccessControl;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * The `/api/v1` surface's own admin-only gate (P27) -- shared by every
+ * The `/api/v1` surface's own admin-only gate -- shared by every
  * admin-only endpoint, the same reasoning as CsrfGuard. Real 401 (no
- * session at all) vs 403 (signed in, not an admin) instead of WS's own
- * collapsed-to-401 `WsErrorResponse` shape (Server.php's `admin_only`
- * check) -- RFC 9457 problem+json can express the two correctly.
+ * session at all) vs 403 (signed in, not an admin), expressed as RFC
+ * 9457 problem+json.
  */
 final readonly class AdminGuard
 {

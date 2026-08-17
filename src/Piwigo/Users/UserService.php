@@ -1551,7 +1551,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getListForWs(
+    public function getList(
         array $displayColumns,
         bool $includeLastVisitFromHistory,
         UserListCriteria $criteria,
@@ -1560,6 +1560,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         ?int $limit,
         int $offset
     ): PaginatedResult {
-        return $this->repo->findListForWs($displayColumns, $includeLastVisitFromHistory, $criteria, $orderBy, $includeTotalCount, $limit, $offset);
+        return $this->repo->findList($displayColumns, $includeLastVisitFromHistory, $criteria, $orderBy, $includeTotalCount, $limit, $offset);
     }
 }

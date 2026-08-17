@@ -178,9 +178,10 @@ deptrac:
     # Listener\* match below and reassigned to L4Integration instead (see
     # that layer's own collector) -- it exists purely to delegate to
     # Piwigo\Admin\Upload\UploadService's static per-format handlers,
-    # which is itself L4Integration (heavy Kernel/WsContext/DB
-    # dependencies, genuinely an edge-of-the-app class, not something to
-    # relocate just to satisfy this one caller). Nothing outside
+    # which is itself L4Integration (heavy EntityManagerInterface/
+    # DbCredentials/StorageRegistry dependencies, genuinely an
+    # edge-of-the-app class, not something to relocate just to satisfy
+    # this one caller). Nothing outside
     # RequestBootstrap (also L4Integration, same-layer deps always
     # allowed) depends on it, so this carve-out is safe.
     # Piwigo\PluginConfig\{ExtensionInterface,ExtensionContext,

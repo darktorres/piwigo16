@@ -10,9 +10,9 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
-use Piwigo\Core\WsContext;
 use Piwigo\Lang\Translator;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
@@ -818,9 +818,9 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
  *   `(string)` cast, so dropping the cast immediately before a
  *   concatenation is a no-op for every scalar value.
  */
-test('addUrlParams switches the default separator to a plain ampersand inside a WS request context', function (): void {
+test('addUrlParams switches the default separator to a plain ampersand inside an API request context', function (): void {
     KernelContainerOverride::with([
-        WsContext::class => new WsContext(true),
+        ApiContext::class => new ApiContext(true),
     ], function (): void {
         $service = UrlServiceTestFactory::build();
 

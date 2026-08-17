@@ -653,9 +653,9 @@ final class UserRepositoryTest extends IntegrationTestCase
     /**
      * @return list<int>
      */
-    private function findListForWsIds(UserListCriteria $criteria): array
+    private function findListIds(UserListCriteria $criteria): array
     {
-        $result = $this->repo->findListForWs([
+        $result = $this->repo->findList([
             'u.id' => 'id',
         ], false, $criteria, 'u.id ASC', false, null, 0);
 
@@ -670,74 +670,74 @@ final class UserRepositoryTest extends IntegrationTestCase
     // normal, level 0, groups 1 and 2), user 4 (power_user, status normal,
     // level 0, group 3). All 4 share registration_date 2026-08-01 00:00:00.
 
-    public function testFindListForWsReturnsEveryUserForAnEmptyCriteria(): void
+    public function testFindListReturnsEveryUserForAnEmptyCriteria(): void
     {
-        self::assertSame([1, 2, 3, 4], $this->findListForWsIds(new UserListCriteria()));
+        self::assertSame([1, 2, 3, 4], $this->findListIds(new UserListCriteria()));
     }
 
-    public function testFindListForWsFiltersByUserId(): void
+    public function testFindListFiltersByUserId(): void
     {
-        self::assertSame([1, 3], $this->findListForWsIds(new UserListCriteria(userId: [UserId::from(1), UserId::from(3)])));
+        self::assertSame([1, 3], $this->findListIds(new UserListCriteria(userId: [UserId::from(1), UserId::from(3)])));
     }
 
-    public function testFindListForWsFiltersByUsername(): void
+    public function testFindListFiltersByUsername(): void
     {
-        self::assertSame([1], $this->findListForWsIds(new UserListCriteria(username: 'fixture_admin')));
+        self::assertSame([1], $this->findListIds(new UserListCriteria(username: 'fixture_admin')));
     }
 
-    public function testFindListForWsFilterMatchesUsernameDirectly(): void
+    public function testFindListFilterMatchesUsernameDirectly(): void
     {
-        self::assertSame([3], $this->findListForWsIds(new UserListCriteria(filter: 'regular')));
+        self::assertSame([3], $this->findListIds(new UserListCriteria(filter: 'regular')));
     }
 
-    public function testFindListForWsFilterFallsBackToTheResolvedGroupIds(): void
+    public function testFindListFilterFallsBackToTheResolvedGroupIds(): void
     {
         // filteredGroupIds is the caller-resolved GroupService::getIdsByNameLike()
         // output -- the raw $filter text itself matches no username/email
         // here, only via the OR ug.group_id IN (...) branch.
-        $ids = $this->findListForWsIds(new UserListCriteria(filter: 'no-such-username-match', filteredGroupIds: [3]));
+        $ids = $this->findListIds(new UserListCriteria(filter: 'no-such-username-match', filteredGroupIds: [3]));
 
         self::assertSame([4], $ids);
     }
 
-    public function testFindListForWsFiltersByMinRegister(): void
+    public function testFindListFiltersByMinRegister(): void
     {
-        self::assertSame([], $this->findListForWsIds(new UserListCriteria(minRegister: SqlDateTime::from('2026-08-02 00:00:00'))));
+        self::assertSame([], $this->findListIds(new UserListCriteria(minRegister: SqlDateTime::from('2026-08-02 00:00:00'))));
     }
 
-    public function testFindListForWsFiltersByMaxRegister(): void
+    public function testFindListFiltersByMaxRegister(): void
     {
-        self::assertSame([], $this->findListForWsIds(new UserListCriteria(maxRegister: SqlDateTime::from('2026-07-31 23:59:59'))));
+        self::assertSame([], $this->findListIds(new UserListCriteria(maxRegister: SqlDateTime::from('2026-07-31 23:59:59'))));
     }
 
-    public function testFindListForWsFiltersByStatus(): void
+    public function testFindListFiltersByStatus(): void
     {
-        self::assertSame([1], $this->findListForWsIds(new UserListCriteria(status: ['webmaster'])));
+        self::assertSame([1], $this->findListIds(new UserListCriteria(status: ['webmaster'])));
     }
 
-    public function testFindListForWsFiltersByMinLevel(): void
+    public function testFindListFiltersByMinLevel(): void
     {
-        self::assertSame([1], $this->findListForWsIds(new UserListCriteria(minLevel: 5)));
+        self::assertSame([1], $this->findListIds(new UserListCriteria(minLevel: 5)));
     }
 
-    public function testFindListForWsFiltersByMaxLevel(): void
+    public function testFindListFiltersByMaxLevel(): void
     {
-        self::assertSame([2, 3, 4], $this->findListForWsIds(new UserListCriteria(maxLevel: 0)));
+        self::assertSame([2, 3, 4], $this->findListIds(new UserListCriteria(maxLevel: 0)));
     }
 
-    public function testFindListForWsFiltersByGroupId(): void
+    public function testFindListFiltersByGroupId(): void
     {
-        self::assertSame([4], $this->findListForWsIds(new UserListCriteria(groupId: [3])));
+        self::assertSame([4], $this->findListIds(new UserListCriteria(groupId: [3])));
     }
 
-    public function testFindListForWsFiltersByExclude(): void
+    public function testFindListFiltersByExclude(): void
     {
-        self::assertSame([1, 3, 4], $this->findListForWsIds(new UserListCriteria(exclude: [2])));
+        self::assertSame([1, 3, 4], $this->findListIds(new UserListCriteria(exclude: [2])));
     }
 
-    public function testFindListForWsAppliesTheLimitAndReportsTheTotal(): void
+    public function testFindListAppliesTheLimitAndReportsTheTotal(): void
     {
-        $result = $this->repo->findListForWs([
+        $result = $this->repo->findList([
             'u.id' => 'id',
         ], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
 

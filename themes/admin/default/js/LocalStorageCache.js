@@ -205,7 +205,7 @@
    * @param options {object}
    *    - serverId (recommended) identifier of the Piwigo instance
    *    - serverKey (required) state of collection server-side
-   *    - rootUrl (required) used for WS call
+   *    - rootUrl (required) used for the /api/v1 call
    */
   var CategoriesCache = function(options) {
     options.key = 'categoriesAdminList';
@@ -254,7 +254,7 @@
    * @param options {object}
    *    - serverId (recommended) identifier of the Piwigo instance
    *    - serverKey (required) state of collection server-side
-   *    - rootUrl (required) used for WS call
+   *    - rootUrl (required) used for the /api/v1 call
    */
   var TagsCache = function(options) {
     options.key = 'tagsAdminList';
@@ -303,7 +303,7 @@
    * @param options {object}
    *    - serverId (recommended) identifier of the Piwigo instance
    *    - serverKey (required) state of collection server-side
-   *    - rootUrl (required) used for WS call
+   *    - rootUrl (required) used for the /api/v1 call
    */
   var GroupsCache = function(options) {
     options.key = 'groupsAdminList';
@@ -350,7 +350,7 @@
    * @param options {object}
    *    - serverId (recommended) identifier of the Piwigo instance
    *    - serverKey (required) state of collection server-side
-   *    - rootUrl (required) used for WS call
+   *    - rootUrl (required) used for the /api/v1 call
    */
   var UsersCache = function(options) {
     options.key = 'usersAdminList';

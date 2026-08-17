@@ -39,9 +39,7 @@ use RuntimeException;
  * `/api/v1` endpoints below and re-reads .env.test itself for every
  * request).
  *
- * Fixture creation goes through `/api/v1` (matching every other Browser
- * test's own conversion off `ws.php` -- see
- * `BrowserTestHelpers::wsCall()`'s own docblock), via
+ * Fixture creation goes through `/api/v1`, via
  * `BrowserTestHelpers::curlApi()`/`::uploadPhotoViaApi()` (both
  * cookie-jar-based, not `Webpage`-based, since this test drives raw curl
  * against `install.php` directly and never opens a real Playwright page).
@@ -202,11 +200,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $subAlbumId = self::idFromApiValue($subAlbumResult['id'] ?? null, 'POST /api/v1/categories');
 
         // 5. Five photos, generated via GD (solid color + label), uploaded
-        // through the real tus pipeline (BrowserTestHelpers::uploadPhotoViaApi()
-        // -- its own fresh login as fixture_admin/fixture_admin is a real
-        // no-op alongside this test's own already-logged-in session, not a
-        // conflict; it also does the "flush the lounge" step
-        // pwg.images.emptyLounge used to do here, defensively, every call).
+        // through the real tus pipeline (BrowserTestHelpers::uploadPhotoViaApi(),
+        // which also does its own defensive lounge-flush after each upload;
+        // its fresh per-call login as fixture_admin/fixture_admin is a
+        // harmless no-op alongside this test's own already-logged-in session).
         $tmpDir = sys_get_temp_dir() . '/piwigo-fixture-' . bin2hex(random_bytes(4));
         mkdir($tmpDir);
         $photoIds = [];
@@ -585,12 +582,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
     /**
      * Narrows an `/api/v1` create-response `id` field down to a real int.
-     * Every family used here (`POST /api/v1/{tags,users,groups}`) always
-     * returns a native JSON int; `POST /api/v1/categories` is the one
-     * exception -- `CategoryCreateOutcome::$id` stays `int|string` (see its
-     * own docblock), matching `CategoryRepository::insertCategory()`'s own
-     * historical int|string insert-id shape -- so this narrowing is kept
-     * general rather than assuming every caller returns a real int.
+     * `POST /api/v1/categories` is the one endpoint here whose id can be a
+     * numeric string rather than a native int (`CategoryCreateOutcome::$id`
+     * is `int|string`); the others (tags/users/groups) always return int.
      */
     private static function idFromApiValue(mixed $value, string $context): int
     {

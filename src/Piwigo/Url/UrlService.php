@@ -17,6 +17,7 @@ use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -27,7 +28,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsContext;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
@@ -78,7 +78,7 @@ final readonly class UrlService implements UrlServiceInterface
         private RequestMountDepth $requestMountDepth,
         private CurrentConfig $currentConfig,
         private DeploymentPolicy $deploymentPolicy,
-        private WsContext $wsContext,
+        private ApiContext $apiContext,
         private CurrentUser $currentUser,
         private Lang $lang,
         private EventDispatcher $eventDispatcher,
@@ -364,7 +364,7 @@ final readonly class UrlService implements UrlServiceInterface
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         if ($params !== []) {
-            if ($this->wsContext->isActive() and $argSeparator === '&amp;') {
+            if ($this->apiContext->isActive() and $argSeparator === '&amp;') {
                 $argSeparator = '&';
             }
 

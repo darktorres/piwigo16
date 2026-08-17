@@ -56,30 +56,29 @@ function updateRating(e)
 		return false; //nothing to do
 
 	for (var i=0; i<gRatingButtons.length; i++) gRatingButtons[i].disabled=true;
-	var y = new PwgWS(gRatingOptions.rootUrl);
-	y.callService(
-		"pwg.images.rate", {image_id: gRatingOptions.image_id, rate: rateButton.initialRateValue } ,
-		{
-			method: "POST",
-			onFailure: function(num, text) {
-				alert(num + " " + text);
-				document.location = rateButton.form.action + "&rate="+rateButton.initialRateValue;
-			},
-			onSuccess: function(result) {
-				gUserRating = rateButton.initialRateValue;
-				for (var i=0; i<gRatingButtons.length; i++) gRatingButtons[i].disabled=false;
-				if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
-				if (gRatingOptions.updateRateElement) gRatingOptions.updateRateElement.innerHTML = gRatingOptions.updateRateText;
-				if (gRatingOptions.ratingSummaryElement)
-				{
-					var t = gRatingOptions.ratingSummaryText;
-					var args =[result.score, result.count, result.average], idx = 0, rexp = new RegExp( /%\.?\d*[sdf]/ );
-					while (idx<args.length) t=t.replace(rexp, args[idx++]);
-					gRatingOptions.ratingSummaryElement.innerHTML = t;
-				}
+	$.ajax({
+		url: gRatingOptions.rootUrl + "api/v1/images/" + gRatingOptions.image_id + "/rating",
+		method: "PUT",
+		contentType: "application/json",
+		data: JSON.stringify({ rate: rateButton.initialRateValue }),
+		error: function(jqXHR) {
+			alert(jqXHR.status + " " + jqXHR.statusText);
+			document.location = rateButton.form.action + "&rate="+rateButton.initialRateValue;
+		},
+		success: function(result) {
+			gUserRating = rateButton.initialRateValue;
+			for (var i=0; i<gRatingButtons.length; i++) gRatingButtons[i].disabled=false;
+			if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
+			if (gRatingOptions.updateRateElement) gRatingOptions.updateRateElement.innerHTML = gRatingOptions.updateRateText;
+			if (gRatingOptions.ratingSummaryElement)
+			{
+				var t = gRatingOptions.ratingSummaryText;
+				var args =[result.score, result.count, result.average], idx = 0, rexp = new RegExp( /%\.?\d*[sdf]/ );
+				while (idx<args.length) t=t.replace(rexp, args[idx++]);
+				gRatingOptions.ratingSummaryElement.innerHTML = t;
 			}
 		}
-	);
+	});
 	return false;
 }
 

@@ -9,7 +9,7 @@ use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Every field here is null when its filter wasn't requested --
- * `UserRepository::findListForWs()` decides for itself, per field,
+ * `UserRepository::findList()` decides for itself, per field,
  * whether to add a condition.
  *
  * $filter/$filteredGroupIds are two separate pieces of the original's one
@@ -23,11 +23,9 @@ use Piwigo\Common\ValueObject\UserId;
  * box this fed is a deliberately deferred filter (see
  * `Controller\Api\Users\UserListController`'s own docblock).
  *
- * $minRegister/$maxRegister are `SqlDateTime`-typed --
- * `Ws\Users::getList()` validates the raw `min_register`/
- * `max_register` WS params through `SqlDateTime::from()` itself (a real
- * WsErrorResponse on an invalid calendar date, e.g. `min_register=9999-13-99`,
- * which the WS layer's own shape-only regex doesn't catch) before ever
+ * $minRegister/$maxRegister are `SqlDateTime`-typed -- `Controller\Api\
+ * Users\UserListController::parseRegisterBound()` rejects an invalid
+ * calendar date (e.g. `minRegister=9999-13-99`) with a 422 before ever
  * constructing this criteria object.
  */
 final readonly class UserListCriteria

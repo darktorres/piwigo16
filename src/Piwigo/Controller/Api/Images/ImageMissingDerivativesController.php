@@ -7,7 +7,7 @@ namespace Piwigo\Controller\Api\Images;
 use Override;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Api\ImageFilterQueryInput;
-use Piwigo\Core\WsErrorResponse;
+use Piwigo\Core\OperationError;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\JsonBody;
@@ -90,7 +90,7 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
         $qlimit = (int) min(5000, ceil(max($imageCount / 500, $maxUrls / count($types))));
 
         $filterCriteria = $this->imageFilterCriteriaBuilder->stdImageSqlFilterCriteria(ImageFilterQueryInput::fromQueryParams($body));
-        if ($filterCriteria instanceof WsErrorResponse) {
+        if ($filterCriteria instanceof OperationError) {
             return ResponseFactory::problem('Unprocessable Entity', 422, $filterCriteria->message());
         }
 

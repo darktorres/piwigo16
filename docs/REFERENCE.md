@@ -16,26 +16,26 @@ migration classes, `src/Piwigo\Migrations\Version*`) matches no layer
 collector — confirmed by reading `deptrac.yaml` directly.
 
 `Common` holds this codebase's typed-primitives layer: `Common\ValueObject`
-(19 files — `UserId`/`Email`/`TagId`/`CategoryId`/etc.), `Common\Dto`
+(26 files — `UserId`/`Email`/`TagId`/`CategoryId`/etc.), `Common\Dto`
 (`PaginatedResult`/`UserGroupPair`), `Common\Enum` (`Section`/
-`SortOrder`). `Event` holds 138 typed event classes across 13
-sub-namespaces (`Location`, `Picture`, `Admin`, `Search`, `BlockManager`,
-`Lifecycle`, `Album`, `Tag`, `Ws`, `User`, `Mail`, `Site`, `Template`) —
-the shared home for most of the ~156 typed events; a handful of others
-(e.g. `Ws\Event\WsAddMethods`) deliberately live under their own domain
-namespace instead, where a first-party class they carry (like
-`PwgServer`) would otherwise create an illegal upward dependency from
-L0Data — see that class's own docblock. `Exception` is empty, no
-directory on disk yet.
+`SortOrder`). `Event` holds one typed event class today
+(`Event\Search\QsearchGetScopes`) — every other event moved out to its
+own dispatching module's namespace during P32 Stage A5's catalogue/
+rename/co-location pass (see `docs/events-legacy-map.md`);
+`QsearchGetScopes` stayed behind because its loosely-typed `array<mixed>`
+payload carries no first-party type for deptrac to see, so it needs none
+of the `Piwigo\Search\Event\` namespace override every other
+`Search`-domain event does — see the class's own docblock. `Exception` is
+empty, no directory on disk yet.
 
 | Layer | Namespaces |
 | --- | --- |
-| **L4 Integration** | `Admin` (+ `Admin\Image`, `Admin\Integrity`), `Bootstrap`, `Command`, `Controller`, `Job`, `Ws` (+ `Ws\Encoder`, `Ws\Protocol`); `Listener\UploadFormatListener` is carved out of the general `Listener\*` L3 match (below) into this layer instead — see "Plugin/theme contract surface" below |
+| **L4 Integration** | `Admin` (+ `Admin\Image`, `Admin\Integrity`), `Bootstrap`, `Command`, `Controller`, `Job`; `Listener\UploadFormatListener` is carved out of the general `Listener\*` L3 match (below) into this layer instead — see "Plugin/theme contract surface" below |
 | **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`, `Listener\*` (except `UploadFormatListener`, above), `PluginConfig\{ExtensionInterface,ExtensionContext,ExtensionContextFactory,ExtensionSession,PluginManifest,ThemeManifest,PluginRegistry,ThemeRegistry,PluginValidationException,PluginDependencyException,ThemeValidationException,ThemeDependencyException,SettingsPageInterface,CurrentPluginRegistry}`, `PluginConfig\Facade\*`; reserves `Asset` (not a directory yet, same as L0Data's `Exception` reservation) |
 | **L2b Extended Domain** | `Activity`, `Caddie`, `Calendar`, `Comment`, `Csrf`, `Feed`, `Filter`, `History`, `Metadata`, `Notification`, `Permalink`, `PluginConfig\{PluginRepository,PluginEntity,Projection\Plugin,PluginMigrationEntity,PluginMigrationRepository}`, `Rate`, `Search`, `Section`, `Site`, `Telemetry`, `Url` |
 | **L2a Core Domain** | `Auth`, `Category`, `Group`, `Image`, `Permission`, `Tag`, `Users` |
 | **L1 Infrastructure** | `Audit`, `Backup`, `Cache`, `Config`, `Core`, `Db`, `Lang`, `PluginConfig\EventDispatcher` (+ `EventHandler`), `Session`, `Storage`, `Validation` |
-| **L0 Data** | `Common` (23 files — see above), `Event` (138 files — see above), `Exception` (reserved, no classes yet) |
+| **L0 Data** | `Common` (31 files — see above), `Event` (1 file — see above), `Exception` (reserved, no classes yet) |
 | *(uncovered)* | `Migrations` — 4 classes, matches no collector; not currently flagged as a violation only because nothing else in the layer graph depends on them |
 
 Each layer may depend only on itself or a layer below it. 0 violations,
@@ -79,7 +79,8 @@ Three structural notes worth surfacing here:
   exception to "listeners live at L3Presentation"** — it exists purely
   to delegate to `Admin\Upload\UploadService`'s static per-format
   handlers, and `UploadService` itself is genuinely L4Integration (heavy
-  `Kernel`/`WsContext`/DB dependencies) — relocating it just to satisfy
+  `EntityManagerInterface`/`DbCredentials`/`StorageRegistry` dependencies)
+  — relocating it just to satisfy
   this one caller wasn't worth it, so the listener follows its
   dependency to L4Integration instead of staying with its `Listener\*`
   siblings.
@@ -591,7 +592,7 @@ fails on any drift between that snapshot and what a fresh
 | `composer unused` | Composer-unused |
 | `composer bench` | PHPBench (`tests/Bench/`, one real subject so far — `KernelBootBench::benchColdBoot()`, landed P11; no others yet) |
 | `composer test:coverage` | Pest `Unit`+`Arch` with pcov coverage |
-| `composer test:coverage:integration`/`:web`/`:all` | Wider pcov coverage variants — Integration alone, Browser/Contract ("web"), or the full combined measurement across all 5 suites |
+| `composer test:coverage:integration`/`:web`/`:all` | Wider pcov coverage variants — Integration alone, Browser ("web"), or the full combined measurement across all 3 suites |
 | `composer sbom` | CycloneDX SBOM for Composer deps |
 | `bun run build` | Vite build — 2 real entries today (`noop` placeholder, `vitals` — the web-vitals RUM beacon) |
 | `bun run dev` | Vite dev server |
@@ -717,12 +718,12 @@ concluding it's real — never dismiss (or accept) a failure on sight.
 ### CI
 
 `.github/workflows/ci.yml` runs on every push/PR (docs-only changes
-excluded via `paths-ignore`). 32 jobs: `pest`, `ecs`, `phpstan`, `rector`,
+excluded via `paths-ignore`). 31 jobs: `pest`, `ecs`, `phpstan`, `rector`,
 `coverage`, `audit`, `deptrac`, `require-checker`, `composer-unused`,
 `composer-normalize`, `phpbench`, `vitest`, `eslint`, `stylelint`, `knip`,
 `size-limit`, `k6-load` (no-op until a load-test track lands),
 `commitlint`, `actionlint`, `test-file-inventory`, `doc-drift`,
-`db-multi-provider`, `integration`, `contract`, `browser`,
+`db-multi-provider`, `integration`, `browser`,
 `install-flow`, `visual-regression`, `restore-drill`, `lighthouse`,
 `sbom`, `apache-deny-rules`, `container-deny-rules`.
 
@@ -759,7 +760,7 @@ not almost nothing. `phpstan/phpstan-deprecation-rules` is in
 Every DB-backed job gets a real ephemeral `mysql:9.7` service container,
 fixture imported fresh via `mysql < tests/Fixtures/piwigo-17.0.sql`.
 `integration` runs directly in-process against that DB — no webserver
-involved at all. `contract`/`browser`/`visual-regression`/`install-flow`/
+involved at all. `browser`/`visual-regression`/`install-flow`/
 `lighthouse` each start PHP's built-in server (`php -S`) themselves and
 drive it over real HTTP, not Apache (`install-flow` is the one exception
 serving from `public/` specifically, matching real document-root

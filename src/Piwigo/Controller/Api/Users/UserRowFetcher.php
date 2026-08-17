@@ -15,7 +15,7 @@ use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
 
 /**
- * Shared `UserService::getListForWs()` wrapper for the `/api/v1/users`
+ * Shared `UserService::getList()` wrapper for the `/api/v1/users`
  * family -- `ListController`/`CreateController`/`UpdateController` all
  * need to resolve one or more user ids into full, camelCased rows.
  *
@@ -85,7 +85,7 @@ final readonly class UserRowFetcher
      */
     private function fetch(UserListCriteria $criteria, string $orderBy, ?int $limit, int $offset, bool $includeTotalCount): array
     {
-        $paginated = $this->userService->getListForWs(
+        $paginated = $this->userService->getList(
             self::DISPLAY_COLUMNS,
             true,
             $criteria,

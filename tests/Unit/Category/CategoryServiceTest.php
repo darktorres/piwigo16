@@ -1333,7 +1333,7 @@ test('createVirtualCategory() with inherit propagates the parent\'s groups and u
     // user_access grants -- not real fixture category 1 -- rather than
     // flipping category 1's own status column and adding a user_access
     // row on it directly, both of which CategoryRepositoryTest.php's own
-    // findListForWs(publicOnly)/findPrivateCategoriesGrantedToUser()
+    // findAvailableList(publicOnly)/findPrivateCategoriesGrantedToUser()
     // exact assertions can observe for the whole span this real commit
     // is live before this test's own cleanup runs (confirmed live via a
     // 15-run --parallel verification loop). Proves the exact same

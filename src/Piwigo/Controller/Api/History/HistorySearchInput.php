@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\History;
 
 /**
- * `GET /api/v1/history/search` query-param DTO -- mirrors the deleted
- * `Ws\History\SearchParams`' field set. `userId` keeps the WS `-1` "no
- * filter" sentinel (matching `history.js`'s own `current_param.user_id`
- * convention) rather than `?int`, so a caller can't confuse "filter by
- * user -1" (impossible, `UserId` is a positive int) with "no filter".
+ * `GET /api/v1/history/search` query-param DTO. `userId` keeps a `-1`
+ * "no filter" sentinel (matching `history.js`'s own
+ * `current_param.user_id` convention) rather than `?int`, so a caller
+ * can't confuse "filter by user -1" (impossible, `UserId` is a positive
+ * int) with "no filter".
  */
 final readonly class HistorySearchInput
 {

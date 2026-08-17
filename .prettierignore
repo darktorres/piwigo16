@@ -17,7 +17,6 @@ themes/**/*.css
 themes/**/*.json
 themes/**/*.md
 template-extension/**/*.css
-tools/ws/
 
 # Large hand-formatted docs (tables, deliberate line breaks) — excluded
 # from auto-reformatting, not from review. README.md/SECURITY.md/

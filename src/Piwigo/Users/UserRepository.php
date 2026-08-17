@@ -1515,12 +1515,12 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * The condition list shared by findListForWs() below -- a `1=1` base
+     * The condition list shared by findList() below -- a `1=1` base
      * plus one condition per non-null UserListCriteria field, mirroring
      * Ws\Users::getList()'s own original "appended only when its
      * corresponding $params key is present" chain.
      */
-    private static function buildListForWsCondition(UserListCriteria $criteria): SqlCondition
+    private static function buildListCondition(UserListCriteria $criteria): SqlCondition
     {
         $conditions = [];
 
@@ -1611,7 +1611,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
     /**
      * Ws\Users::getList()'s own paginated, dynamically-columned user
-     * listing; see buildListForWsCondition() above for how each criteria
+     * listing; see buildListCondition() above for how each criteria
      * field maps to its own WHERE condition. $displayColumns is the
      * already-built `field expr => alias` map (always includes at least
      * `u.<idColumn> => id`), matching the WS method's client-controlled
@@ -1627,7 +1627,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * Stays on raw DBAL, not DQL -- `$displayColumns` is a dynamic
      * field-expression => alias map, `$orderBy` concatenates a
      * caller-validated raw fragment, and the WHERE clause comes from
-     * buildListForWsCondition() above's SqlCondition-building machinery.
+     * buildListCondition() above's SqlCondition-building machinery.
      *
      * Groups by `u.id` rather than using `SELECT DISTINCT`: `u.id` (the
      * `users` table's own primary key) is exactly the dedup key this
@@ -1659,7 +1659,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function findListForWs(
+    public function findList(
         array $displayColumns,
         bool $includeLastVisitFromHistory,
         UserListCriteria $criteria,
@@ -1680,7 +1680,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
         $columnsSql = implode(', ', $columnPairs);
 
-        $combined = self::buildListForWsCondition($criteria);
+        $combined = self::buildListCondition($criteria);
         $params = $combined->parameters;
         $types = $combined->types;
 

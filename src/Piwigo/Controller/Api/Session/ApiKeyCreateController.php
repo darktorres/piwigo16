@@ -68,6 +68,7 @@ final readonly class ApiKeyCreateController implements ControllerInterface
             'createdOn' => $created->createdOn,
             'duration' => $created->duration,
             'expiredOn' => $created->expiredOn,
+            'expiration' => $created->expiration,
         ], 201);
     }
 }

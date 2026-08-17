@@ -97,7 +97,7 @@ abstract class IntegrationTestCase extends TestCase
         // real container resolve throws. Only boot here when nothing has
         // booted the Kernel yet: a subclass whose own setUp() calls
         // Kernel::boot() *after* parent::setUp() (several do, for its
-        // mountDepth/isWs/isAdmin params or to layer its own container
+        // mountDepth/isApi/isAdmin params or to layer its own container
         // wiring on top) would have that later call silently no-op against
         // Kernel::boot()'s own idempotency guard if this ran
         // unconditionally -- a subclass needing a genuinely different root

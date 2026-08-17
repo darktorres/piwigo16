@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Category\Projection;
 
 /**
- * {@see \Piwigo\Category\CategoryRepository::findListForWs()}'s own row
+ * {@see \Piwigo\Category\CategoryRepository::findAvailableList()}'s own row
  * shape -- {@see \Piwigo\Controller\Api\Categories\CategoryAvailableListController}'s
- * real consumer (via {@see \Piwigo\Category\CategoryService::getListForWs()}),
+ * real consumer (via {@see \Piwigo\Category\CategoryService::getAvailableList()}),
  * its paginated category rollup. This is a raw
  * `Connection::fetchAllAssociative()` DBAL row (no Doctrine Type
  * conversion applies, unlike this domain's DQL-backed methods), so each
@@ -22,7 +22,7 @@ namespace Piwigo\Category\Projection;
  * JSON response, so it `toArray()`s the whole paginated result once, up
  * front.
  */
-final readonly class CategoryListForWsRow
+final readonly class CategoryAvailableListRow
 {
     public function __construct(
         public int $id,

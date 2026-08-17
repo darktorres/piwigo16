@@ -7,7 +7,7 @@ namespace Piwigo\Core;
 /**
  * "This request is past the install-check gate" marker -- typed
  * replacement for the raw PHPWG_INSTALLED constant, fully retiring it the
- * same way Piwigo\Core\AdminContext/WsContext fully retire IN_ADMIN/IN_WS:
+ * same way Piwigo\Core\AdminContext/ApiContext fully retire IN_ADMIN/IN_WS:
  * no raw-constant fallback, `mark()` is the only way `isActive()` ever
  * becomes true.
  *

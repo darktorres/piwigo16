@@ -36,24 +36,13 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Third real per-request bootstrap middleware (workstream C3 Phase 1) --
- * verbatim-ported from the last block of `RequestBootstrap::connect()`
- * (the `TryLogUser` handler registration + `UserBootstrap::initialize()`
- * call). Runs after `Http\Middleware\PluginBootstrapMiddleware`/
- * `Admin\LoadedPluginsMiddleware`, matching `connect()`'s own ordering.
+ * Third real per-request bootstrap middleware. Runs after
+ * `Http\Middleware\PluginBootstrapMiddleware`/`Admin\LoadedPluginsMiddleware`.
  *
  * Lives in `Piwigo\Bootstrap\` (L4Integration), not `Http\Middleware\`
- * (L3Presentation), unlike every other Phase 1 middleware --
- * `UserBootstrap` itself genuinely cannot move to L3: its own class
- * docblock explains its WS api_key branch instantiates `Ws\
- * WsErrorResponse` (L4Integration, matched by the same deptrac collector
- * as `Bootstrap\*`), so L4 is "the only violation-free home for the whole
- * orchestration." This is the P25 Stage 2 item 5 WS-auth logic finally
- * running as real middleware -- its 2 api_key/uploadAsync branches already
- * throw `ResponseReadyException` (P25 Stage 2's own fix), safe now that
- * workstream C3 Phase 0 makes that propagate correctly through
- * `SecurityHeadersMiddleware`/`ServerTimingMiddleware` regardless of which
- * middleware throws it.
+ * (L3Presentation), unlike every other Phase 1 middleware -- this class
+ * itself calls `DbConnection::build()`/`EntityManagerFactory` directly
+ * to construct `AuthService`/`AuthListener`, genuine L4Integration work.
  */
 final readonly class UserResolutionMiddleware implements MiddlewareInterface
 {

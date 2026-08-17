@@ -35,7 +35,7 @@ use Piwigo\Core\Kernel;
  * alongside these for the same reason -- all 3 confirmed genuinely dead
  * (zero real callers anywhere) once `BatchUploadHandler`'s own
  * constructor collapsed to `UploadService` + `urlService()` (Finding 1's
- * container-sharing fix absorbed the `WsContext`/`StorageRegistry`/
+ * container-sharing fix absorbed the `ApiContext`/`StorageRegistry`/
  * `DbCredentials` construction those 3 resolvers used to feed it) and
  * removed.
  */

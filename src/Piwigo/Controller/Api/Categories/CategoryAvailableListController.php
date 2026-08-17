@@ -135,7 +135,7 @@ final readonly class CategoryAvailableListController implements ControllerInterf
             publicOnly: $publicOnly,
         );
 
-        $paginatedCats = $this->categoryService->getListForWs(
+        $paginatedCats = $this->categoryService->getAvailableList(
             $criteria,
             $search,
             $this->currentConfig->linkedAlbumSearchLimit,

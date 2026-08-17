@@ -33,14 +33,14 @@ final class Container
      *   merged after config/container.php so they win. $extraDefinitions
      *   stays the first (positional-compatible) parameter -- callers
      *   passing $paths use the named-argument form (`build(paths: $paths)`).
-     * $mountDepth/$isWs/$isAdmin: RequestMountDepth/WsContext/AdminContext
+     * $mountDepth/$isApi/$isAdmin: RequestMountDepth/ApiContext/AdminContext
      *   are immutable per-request facts known only by the one entry-shell file
      *   that sets them, threaded through here the same way $paths already
      *   is, and always bound (unlike $paths, these 3 have safe zero-value
      *   defaults, so there's no "caller doesn't have one yet" case to
      *   guard against).
      */
-    public static function build(array $extraDefinitions = [], ?Paths $paths = null, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): ContainerInterface
+    public static function build(array $extraDefinitions = [], ?Paths $paths = null, int $mountDepth = 0, bool $isApi = false, bool $isAdmin = false): ContainerInterface
     {
         $builder = new ContainerBuilder();
         $builder->addDefinitions(dirname(__DIR__, 3) . '/config/container.php');
@@ -51,7 +51,7 @@ final class Container
         }
         $builder->addDefinitions([
             RequestMountDepth::class => new RequestMountDepth($mountDepth),
-            WsContext::class => new WsContext($isWs),
+            ApiContext::class => new ApiContext($isApi),
             AdminContext::class => new AdminContext($isAdmin),
         ]);
         if ($extraDefinitions !== []) {

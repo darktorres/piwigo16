@@ -19,8 +19,9 @@ use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\ActivePermalinkRow;
 use Piwigo\Category\Projection\Category;
-use Piwigo\Category\Projection\CategoryAdminListForWsRow;
+use Piwigo\Category\Projection\CategoryAdminListRow;
 use Piwigo\Category\Projection\CategoryAlbumTreeRow;
+use Piwigo\Category\Projection\CategoryAvailableListRow;
 use Piwigo\Category\Projection\CategoryChildRow;
 use Piwigo\Category\Projection\CategoryCreateOutcome;
 use Piwigo\Category\Projection\CategoryGroupAuthorizationRow;
@@ -29,7 +30,6 @@ use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryIdNameUppercat;
 use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
 use Piwigo\Category\Projection\CategoryInfo;
-use Piwigo\Category\Projection\CategoryListForWsRow;
 use Piwigo\Category\Projection\CategoryListingRow;
 use Piwigo\Category\Projection\CategoryMoveDetailRow;
 use Piwigo\Category\Projection\CategoryNextRankByParentRow;
@@ -2388,46 +2388,46 @@ final readonly class CategoryService
     }
 
     /**
-     * Stays `array<string, mixed>` by design, despite `CategoryListForWsRow`
+     * Stays `array<string, mixed>` by design, despite `CategoryAvailableListRow`
      * existing: `Ws\Categories::getList()`, the one real caller, extensively
      * mutates each row in place to build the WS JSON response (adding
      * synthetic keys like `nb_images`/`total_nb_images`/`url`/
      * `user_representative_picture_id` that have no corresponding
-     * `CategoryListForWsRow` property at all) -- a typed return would break
+     * `CategoryAvailableListRow` property at all) -- a typed return would break
      * that caller outright, same "Ws response encoder" rationale as
      * `Ws\PwgCore.php`'s own already-documented protocol shape.
      *
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getListForWs(
+    public function getAvailableList(
         CategoryListCriteria $criteria,
         ?string $searchTerm,
         int $searchLimit,
         ?int $limit,
         bool $limitPlusOne
     ): PaginatedResult {
-        $result = $this->repo->findListForWs($criteria, $searchTerm, $searchLimit, $limit, $limitPlusOne);
+        $result = $this->repo->findAvailableList($criteria, $searchTerm, $searchLimit, $limit, $limitPlusOne);
 
         return new PaginatedResult(
-            array_map(static fn (CategoryListForWsRow $row): array => $row->toArray(), $result->rows),
+            array_map(static fn (CategoryAvailableListRow $row): array => $row->toArray(), $result->rows),
             $result->total
         );
     }
 
     /**
-     * Same "Ws response encoder" rationale as getListForWs() above --
+     * Same "Ws response encoder" rationale as getAvailableList() above --
      * `Ws\Categories::getAdminList()`, the one real caller, extensively
      * mutates each row in place too (`nb_images`/`name_raw`/`fullname`/
-     * `comment_raw`/etc., none of which exist on `CategoryAdminListForWsRow`).
+     * `comment_raw`/etc., none of which exist on `CategoryAdminListRow`).
      *
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
+    public function getAdminList(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
-        $result = $this->repo->findAdminListForWs($criteria, $searchTerm, $searchLimit);
+        $result = $this->repo->findAdminList($criteria, $searchTerm, $searchLimit);
 
         return new PaginatedResult(
-            array_map(static fn (CategoryAdminListForWsRow $row): array => $row->toArray(), $result->rows),
+            array_map(static fn (CategoryAdminListRow $row): array => $row->toArray(), $result->rows),
             $result->total
         );
     }

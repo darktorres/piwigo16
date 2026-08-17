@@ -13,7 +13,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Core\WsErrorResponse;
+use Piwigo\Core\OperationError;
 
 /**
  * Sets an image's category associations -- originally shared by WS's
@@ -35,7 +35,7 @@ final readonly class ImageCategoryRelationsHelper
      * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
      * @param bool $replace_mode - removes old associations
      */
-    public function addImageCategoryRelations(ImageId $image_id, string $categories_string, bool $replace_mode = false): true|WsErrorResponse
+    public function addImageCategoryRelations(ImageId $image_id, string $categories_string, bool $replace_mode = false): true|OperationError
     {
         $categoryService = $this->categoryService;
 
@@ -92,7 +92,7 @@ final readonly class ImageCategoryRelationsHelper
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
         if (count($unknown_cat_ids) !== 0) {
-            return new WsErrorResponse(
+            return new OperationError(
                 '[ws_add_image_category_relations] the following categories are unknown: ' . implode(', ', $unknown_cat_ids)
             );
         }

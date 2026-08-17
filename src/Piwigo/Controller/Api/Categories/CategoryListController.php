@@ -58,7 +58,7 @@ final readonly class CategoryListController implements ControllerInterface
             recursive: $recursive,
         );
 
-        $paginated = $this->categoryService->getAdminListForWs($criteria, $search, $this->currentConfig->linkedAlbumSearchLimit);
+        $paginated = $this->categoryService->getAdminList($criteria, $search, $this->currentConfig->linkedAlbumSearchLimit);
         $rows = $paginated->rows;
         $counter = $paginated->total ?? 0;
 

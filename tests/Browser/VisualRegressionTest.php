@@ -49,12 +49,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     override, so there's no way to pin that content via a URL param.
  *     H::truncateHistory() wipes history right before this one
  *     screenshot instead, the same freeze-a-narrow-DB-slice approach as
- *     freezeImageHits(). P27.history rebuilt the results panel's own
- *     request onto `GET /api/v1/history/search` (the old `ws.php` one
- *     404'd after the WS layer was deleted, so `.loading` could never
- *     actually hide — this baseline may need `--update-snapshots`
- *     regeneration in a real browser environment to pick up the
- *     properly-rendered "No results" state).
+ *     freezeImageHits(). The results panel calls `GET /api/v1/
+ *     history/search` — this baseline may need `--update-snapshots`
+ *     regeneration in a real browser environment to confirm `.loading`
+ *     actually hides and the "No results" state renders.
  *   - admin-tags races the same way, for a different reason:
  *     themes/admin/default/js/tags.js restores a "per page" cookie on
  *     document.ready by simulating a click on the matching pagination

@@ -8,12 +8,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Admin\HistoryPageRenderer (admin.php?page=history) -- renders the
  * filter FORM only; the actual history line listing is fetched
  * client-side via `GET /api/v1/history/search`
- * ({@see \Piwigo\Controller\Api\History\HistorySearchController}, P27's
- * dedicated redesign of the WS-deleted `pwg.history.search` -- not a
- * mechanical port, see that class's own docblock). Most of this suite
- * still only covers the form's own filter-echo/default-date/
- * valid-vs-invalid-user_id branches; the 2 tests at the bottom exercise
- * the results endpoint itself directly.
+ * ({@see \Piwigo\Controller\Api\History\HistorySearchController}). Most
+ * of this suite still only covers the form's own filter-echo/default-
+ * date/valid-vs-invalid-user_id branches; the 2 tests at the bottom
+ * exercise the results endpoint itself directly.
  */
 it('renders with today\'s date pre-filled and no filter applied', function (): void {
     $page = H::loginAsAdmin($this);

@@ -140,10 +140,10 @@ final class RequestBootstrap
      * middleware chain -- and therefore `FinalizeBridgeMiddleware` -- never
      * runs at all for this request.
      *
-     * `$mountDepth`/`$isWs`/`$isAdmin` -- the pre-`Kernel::boot()` marker
-     * trio (RequestMountDepth/WsContext/AdminContext) is threaded through
+     * `$mountDepth`/`$isApi`/`$isAdmin` -- the pre-`Kernel::boot()` marker
+     * trio (RequestMountDepth/ApiContext/AdminContext) is threaded through
      * from whichever entry-shell file called this
-     * (`public/admin/popuphelp.php`, `public/ws.php`, `public/admin.php`
+     * (`public/admin/popuphelp.php`, `public/admin.php`, `public/api.php`
      * -- the only 3 that pass anything other than the defaults) all the
      * way down to `Piwigo\Core\Container`'s own build() method.
      *
@@ -156,7 +156,7 @@ final class RequestBootstrap
      * `ServerTiming` instance with it immediately after `Kernel::boot()`
      * returns.
      */
-    public static function bootEntryPoint(Paths $paths, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
+    public static function bootEntryPoint(Paths $paths, int $mountDepth = 0, bool $isApi = false, bool $isAdmin = false): void
     {
         CoverageCollector::registerIfActive($paths);
         SentryBootstrap::init();
@@ -165,7 +165,7 @@ final class RequestBootstrap
         $t2 = microtime(true);
 
         try {
-            self::configure($paths, $t2, $mountDepth, $isWs, $isAdmin);
+            self::configure($paths, $t2, $mountDepth, $isApi, $isAdmin);
             self::installationFlag()->mark();
         } catch (ResponseReadyException $e) {
             self::serverTiming()->stop('boot');
@@ -223,9 +223,9 @@ final class RequestBootstrap
      * booting this early changes nothing observable until something
      * actually resolves a service.
      */
-    public static function configure(Paths $paths, float $requestStart, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
+    public static function configure(Paths $paths, float $requestStart, int $mountDepth = 0, bool $isApi = false, bool $isAdmin = false): void
     {
-        Kernel::boot($paths, $mountDepth, $isWs, $isAdmin);
+        Kernel::boot($paths, $mountDepth, $isApi, $isAdmin);
 
         // Seeds the 'boot' timer with the same instant $requestStart itself
         // captures (both taken back-to-back, before this method's own

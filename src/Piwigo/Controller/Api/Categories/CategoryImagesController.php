@@ -8,8 +8,8 @@ use Override;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Controller\Api\ImageFilterQueryInput;
+use Piwigo\Core\OperationError;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\WsErrorResponse;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Http\ControllerInterface;
@@ -87,7 +87,7 @@ final readonly class CategoryImagesController implements ControllerInterface
 
         if ($cats !== []) {
             $filterCriteria = $this->imageFilterCriteriaBuilder->stdImageSqlFilterCriteria(ImageFilterQueryInput::fromQueryParams($query));
-            if ($filterCriteria instanceof WsErrorResponse) {
+            if ($filterCriteria instanceof OperationError) {
                 return ResponseFactory::problem('Unprocessable Entity', 422, $filterCriteria->message());
             }
 

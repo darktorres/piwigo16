@@ -8,9 +8,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * `GET /api/v1/session` -- `pwg.session.getStatus`'s real replacement.
  * Real end-to-end proof (over a real browser session, so real cookies
- * carry) that ApiErrorMiddleware/RoutingMiddleware's `isWs: true` wiring
- * (public/api.php) resolves the same session-based auth every other admin
- * page already gets, no special-casing needed for this surface.
+ * carry) that `/api/v1` resolves the same session-based auth every other
+ * admin page already gets, no special-casing needed for this surface.
  */
 it('reports guest status for an anonymous visitor', function (): void {
     $page = H::visitPwg($this, '/identification.php');

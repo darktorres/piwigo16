@@ -55,7 +55,7 @@ final class Kernel
 
     private static ?Paths $boundPaths = null;
 
-    public static function boot(?Paths $paths = null, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
+    public static function boot(?Paths $paths = null, int $mountDepth = 0, bool $isApi = false, bool $isAdmin = false): void
     {
         if (self::$booted) {
             if ($paths instanceof Paths && self::$boundPaths instanceof Paths && $paths->root !== self::$boundPaths->root) {
@@ -70,7 +70,7 @@ final class Kernel
         self::$booted = true;
         self::$boundPaths = $paths;
 
-        self::$container = Container::build(paths: $paths, mountDepth: $mountDepth, isWs: $isWs, isAdmin: $isAdmin);
+        self::$container = Container::build(paths: $paths, mountDepth: $mountDepth, isApi: $isApi, isAdmin: $isAdmin);
     }
 
     /**

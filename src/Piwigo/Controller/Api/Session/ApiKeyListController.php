@@ -52,6 +52,7 @@ final readonly class ApiKeyListController implements ControllerInterface
                 'revokedOn' => $key->revokedOn,
                 'lastUsedOn' => $key->lastUsedOn,
                 'isExpired' => $key->isExpired,
+                'expiration' => $key->expiration,
             ],
             $apiKeys
         );

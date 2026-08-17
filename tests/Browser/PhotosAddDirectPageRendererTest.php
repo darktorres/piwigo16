@@ -185,10 +185,10 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         'value' => 'false',
     ]);
     $prefResult = $prefResponse['result'] ?? null;
-    if (! is_array($prefResult)) {
-        throw new RuntimeException('pwg.users.preferences.set did not return an array result: ' . var_export($prefResponse, true));
+    if (! is_array($prefResult) || ! is_array($prefResult['preferences'] ?? null)) {
+        throw new RuntimeException('pwg.users.preferences.set did not return a {preferences: {...}} result: ' . var_export($prefResponse, true));
     }
-    expect($prefResult['promote-mobile-apps'] ?? null)->toBeFalse();
+    expect($prefResult['preferences']['promote-mobile-apps'] ?? null)->toBeFalse();
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=photos_add');

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\PhotosAddDirectUploadFormPageContext;
 
-test('toArray flattens every fixed property, and omits every optional key when null', function (): void {
+test('toArray flattens every fixed property, and omits every nullable optional key when null', function (): void {
     $context = new PhotosAddDirectUploadFormPageContext(
         fAddAction: '/admin.php?page=photos_add',
         chunkSize: 500000,
@@ -31,20 +31,24 @@ test('toArray flattens every fixed property, and omits every optional key when n
         cacheKeys: [
             'categories' => '123_4',
         ],
-        setupWarnings: null,
+        setupWarnings: [],
         hideWarningsLink: null,
     );
 
     $result = $context->toArray();
 
     expect($result)
-        ->not->toHaveKeys(['max_upload_width', 'max_upload_height', 'max_upload_resolution', 'original_resize_maxwidth', 'original_resize_maxheight', 'ADD_TO_ALBUM', 'selected_category_name', 'setup_warnings', 'hide_warnings_link'])
+        ->not->toHaveKeys(['max_upload_width', 'max_upload_height', 'max_upload_resolution', 'original_resize_maxwidth', 'original_resize_maxheight', 'ADD_TO_ALBUM', 'selected_category_name', 'hide_warnings_link'])
         ->and($result['F_ADD_ACTION'])->toBe('/admin.php?page=photos_add')
         ->and($result['chunk_size'])->toBe(500000)
         ->and($result['NB_ALBUMS'])->toBe(3)
         ->and($result['CACHE_KEYS'])->toBe([
             'categories' => '123_4',
-        ]);
+        ])
+        // setup_warnings is present but empty when there's nothing to
+        // show -- unlike the other optional keys above, it's never
+        // omitted (see the class's own docblock for why).
+        ->and($result['setup_warnings'])->toBe([]);
 });
 
 test('toArray includes every optional key when set', function (): void {
@@ -117,7 +121,7 @@ test('toArray includes selected_category_name when set instead of ADD_TO_ALBUM',
         levelOptionsSelected: [0],
         setupErrors: [],
         cacheKeys: [],
-        setupWarnings: null,
+        setupWarnings: [],
         hideWarningsLink: null,
     );
 

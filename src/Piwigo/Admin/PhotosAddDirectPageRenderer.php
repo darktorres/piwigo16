@@ -317,7 +317,7 @@ final readonly class PhotosAddDirectPageRenderer
             $_SESSION['upload_hide_warnings'] = true;
         }
 
-        $setup_warnings = null;
+        $setup_warnings = [];
         $hide_warnings_link = null;
 
         if (! isset($_SESSION['upload_hide_warnings'])) {

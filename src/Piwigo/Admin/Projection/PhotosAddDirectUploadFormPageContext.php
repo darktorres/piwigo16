@@ -16,10 +16,16 @@ use Piwigo\Core\TemplatePageContext;
  * its own runtime condition, omitted here (not present as a null value)
  * to match that exact original behavior. `$maxUploadWidth`/
  * `$maxUploadHeight`/`$maxUploadResolution` are only ever assigned
- * together, as are `$originalResizeMaxwidth`/`$originalResizeMaxheight`
- * and `$setupWarnings`/`$hideWarningsLink`. `$addToAlbum` and
- * `$selectedCategoryName` are mutually exclusive (if/else branches) but
- * map to different template keys, so stay as 2 separate fields.
+ * together, as are `$originalResizeMaxwidth`/`$originalResizeMaxheight`.
+ * `$addToAlbum` and `$selectedCategoryName` are mutually exclusive
+ * (if/else branches) but map to different template keys, so stay as 2
+ * separate fields. `$setupWarnings` is never null (an empty list, not an
+ * omitted key, when the user hid warnings or none apply -- the
+ * `n:if="count($setup_warnings) > 0"` template guard treats both cases
+ * identically, so there's no state a null would distinguish);
+ * `$hideWarningsLink` stays independently nullable and gated on its own
+ * null check, since the template only reads it inside that same
+ * warnings-present block.
  */
 final readonly class PhotosAddDirectUploadFormPageContext implements TemplatePageContext
 {
@@ -29,7 +35,7 @@ final readonly class PhotosAddDirectUploadFormPageContext implements TemplatePag
      * @param list<mixed> $levelOptionsSelected
      * @param list<string> $setupErrors
      * @param array<array-key, string> $cacheKeys
-     * @param list<string>|null $setupWarnings
+     * @param list<string> $setupWarnings
      */
     public function __construct(
         public string $fAddAction,
@@ -53,7 +59,7 @@ final readonly class PhotosAddDirectUploadFormPageContext implements TemplatePag
         public array $levelOptionsSelected,
         public array $setupErrors,
         public array $cacheKeys,
-        public ?array $setupWarnings,
+        public array $setupWarnings,
         public ?string $hideWarningsLink,
     ) {}
 
@@ -78,6 +84,7 @@ final readonly class PhotosAddDirectUploadFormPageContext implements TemplatePag
             'level_options_selected' => $this->levelOptionsSelected,
             'setup_errors' => $this->setupErrors,
             'CACHE_KEYS' => $this->cacheKeys,
+            'setup_warnings' => $this->setupWarnings,
         ];
 
         if ($this->maxUploadWidth !== null) {
@@ -99,8 +106,7 @@ final readonly class PhotosAddDirectUploadFormPageContext implements TemplatePag
             $result['selected_category_name'] = $this->selectedCategoryName;
         }
 
-        if ($this->setupWarnings !== null) {
-            $result['setup_warnings'] = $this->setupWarnings;
+        if ($this->hideWarningsLink !== null) {
             $result['hide_warnings_link'] = $this->hideWarningsLink;
         }
 

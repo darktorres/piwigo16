@@ -9,6 +9,12 @@ use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
 use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\SessionController;
+use Piwigo\Controller\Api\Tags\TagCreateController;
+use Piwigo\Controller\Api\Tags\TagDeleteController;
+use Piwigo\Controller\Api\Tags\TagDuplicateController;
+use Piwigo\Controller\Api\Tags\TagListController;
+use Piwigo\Controller\Api\Tags\TagMergeController;
+use Piwigo\Controller\Api\Tags\TagRenameController;
 use Piwigo\Controller\Api\VersionController;
 use Piwigo\Controller\CommentsController;
 use Piwigo\Controller\CustomLogoController;
@@ -186,6 +192,40 @@ final class RouteDefinitions
         $routes->add('api_v1_info', new Route('/api/v1/info', defaults: [
             '_controller' => InfoController::class,
         ], methods: ['GET']));
+
+        // Tags resource family -- admin-consumed (pwg.tags.getAdminList's
+        // own audience, permissions not taken into account). The public,
+        // permission-filtered browsing shape (pwg.tags.getList/getImages)
+        // is a separate external-only REST concern, not this family.
+        $routes->add('api_v1_tags_list', new Route('/api/v1/tags', defaults: [
+            '_controller' => TagListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_tags_create', new Route('/api/v1/tags', defaults: [
+            '_controller' => TagCreateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_tags_rename', new Route('/api/v1/tags/{id}', defaults: [
+            '_controller' => TagRenameController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_tags_delete', new Route('/api/v1/tags/{id}', defaults: [
+            '_controller' => TagDeleteController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['DELETE']));
+
+        $routes->add('api_v1_tags_duplicate', new Route('/api/v1/tags/{id}/actions/duplicate', defaults: [
+            '_controller' => TagDuplicateController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_tags_merge', new Route('/api/v1/tags/actions/merge', defaults: [
+            '_controller' => TagMergeController::class,
+        ], methods: ['POST']));
 
         return $routes;
     }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Users;
 
 use Override;
-use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
+use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\CsrfGuard;
 use Piwigo\Http\ResponseFactory;
@@ -15,18 +15,22 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/users/{id}/actions/get-auth-key` --
- * `pwg.users.getAuthKey`'s real replacement. Any signed-in (non-guest)
- * caller, not admin-gated -- `Ws\Users\GetAuthKeyHandler`'s own
- * registration is `requiresAuth: true` (any authenticated session), not
- * an admin-only method; the real safety boundary is
- * `AuthService::createUserAuthKey()` itself, which only works for
- * normal/generic-status target accounts (its own docblock), not
- * admins/webmasters.
+ * `pwg.users.getAuthKey`'s real replacement, admin + CSRF.
+ * `Ws\Users\GetAuthKeyHandler`'s own `requiresAuth: true` registration
+ * genuinely means admin-only here (`Ws\Server::invoke()` maps
+ * `requiresAuth` straight onto its `admin_only` gate, not merely "must
+ * be logged in" -- confirmed by reading the real enforcement site, not
+ * just the flag's name). Combined with `AuthService::
+ * createUserAuthKey()`'s own target-side restriction (only works for
+ * normal/generic-status accounts, never admins/webmasters), the real
+ * feature is an admin generating a magic-login link for a normal user
+ * -- an account-recovery/support tool, not a general-purpose "any user
+ * can log in as any other user" capability.
  */
 final readonly class UserGetAuthKeyController implements ControllerInterface
 {
     public function __construct(
-        private AccessControl $accessControl,
+        private AdminGuard $adminGuard,
         private AuthService $authService,
         private CsrfGuard $csrfGuard,
     ) {}
@@ -34,8 +38,9 @@ final readonly class UserGetAuthKeyController implements ControllerInterface
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        if ($this->accessControl->isAGuest()) {
-            return ResponseFactory::problem('Unauthorized', 401, 'Access denied.');
+        $denied = $this->adminGuard->check();
+        if ($denied instanceof ResponseInterface) {
+            return $denied;
         }
 
         $csrfDenied = $this->csrfGuard->check($request);

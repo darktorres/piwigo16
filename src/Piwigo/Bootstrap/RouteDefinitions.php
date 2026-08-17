@@ -494,8 +494,10 @@ final class RouteDefinitions
             'id' => '\d+',
         ], methods: ['POST']));
 
-        // Not admin-gated: any signed-in (non-guest) caller, matching
-        // pwg.users.getAuthKey's own requiresAuth-only WS registration.
+        // Admin-gated: requiresAuth: true on the WS side really means
+        // admin_only (Ws\Server::invoke()'s own enforcement), not merely
+        // "must be logged in" -- see UserGetAuthKeyController's own
+        // docblock.
         $routes->add('api_v1_users_get_auth_key', new Route('/api/v1/users/{id}/actions/get-auth-key', defaults: [
             '_controller' => UserGetAuthKeyController::class,
         ], requirements: [

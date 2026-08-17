@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use LogicException;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\RequestMountDepth;
 
@@ -47,35 +46,6 @@ final class CookieService
     }
 
     /**
-     * A configured `gallery_url` is a canonical, admin-set base URL --
-     * trusted outright for the same reason `UrlService::configuredHost()`
-     * already trusts its host under [SEC-29]: it's known, not guessed
-     * from per-request $_SERVER values that a rewrite rule can make lie
-     * (see cookiePath()'s own docblock). Guarded the same way
-     * requestMountDepth() already guards its own container resolve.
-     */
-    private function configuredBasePath(): ?string
-    {
-        if (! Kernel::isBooted()) {
-            return null;
-        }
-
-        $currentConfig = Kernel::container()->get(CurrentConfig::class);
-        if (! $currentConfig instanceof CurrentConfig) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
-        }
-
-        $galleryUrl = $currentConfig->galleryUrl;
-        if (! is_string($galleryUrl) || $galleryUrl === '') {
-            return null;
-        }
-
-        $path = parse_url($galleryUrl, \PHP_URL_PATH);
-
-        return is_string($path) && $path !== '' ? $path : null;
-    }
-
-    /**
      * Returns the path to use for the Piwigo cookie.
      * If Piwigo is installed on:
      * http://domain.org/meeting/gallery/
@@ -83,67 +53,61 @@ final class CookieService
      */
     public function cookiePath(): string
     {
-        $configuredBasePath = $this->configuredBasePath();
+        $redirectScriptName = isset($_SERVER['REDIRECT_SCRIPT_NAME']) && is_string($_SERVER['REDIRECT_SCRIPT_NAME'])
+            ? $_SERVER['REDIRECT_SCRIPT_NAME']
+            : '';
 
-        if ($configuredBasePath !== null) {
-            $scr = $configuredBasePath;
-        } else {
-            $redirectScriptName = isset($_SERVER['REDIRECT_SCRIPT_NAME']) && is_string($_SERVER['REDIRECT_SCRIPT_NAME'])
-                ? $_SERVER['REDIRECT_SCRIPT_NAME']
+        if ($redirectScriptName !== '') {
+            $scr = $redirectScriptName;
+        } elseif (isset($_SERVER['REDIRECT_URL'])) {
+            $redirect_url = is_string($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : '';
+            $path_info = isset($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])
+                ? $_SERVER['PATH_INFO']
                 : '';
 
-            if ($redirectScriptName !== '') {
-                $scr = $redirectScriptName;
-            } elseif (isset($_SERVER['REDIRECT_URL'])) {
-                $redirect_url = is_string($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : '';
-                $path_info = isset($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])
-                    ? $_SERVER['PATH_INFO']
-                    : '';
-
-                // mod_rewrite is activated for upper level directories. we must set the
-                // cookie to the path shown in the browser otherwise it will be discarded.
-                if (
-                    $path_info !== '' and
-                    ($_SERVER['REDIRECT_URL'] !== ($_SERVER['PATH_INFO'] ?? null)) and
-                    (str_ends_with($redirect_url, $path_info))
-                ) {
-                    $scr = substr(
-                        $redirect_url,
-                        0,
-                        strlen($redirect_url) - strlen($path_info)
-                    );
-                } else {
-                    // REDIRECT_URL alone (no PATH_INFO to subtract) is the
-                    // pre-rewrite URL, not a script path -- for a
-                    // multi-segment clean-URL rewrite (e.g. /api/v1/... ->
-                    // api.php) it's the wrong source entirely: stripping
-                    // just its last segment yields the rewrite's own
-                    // subdirectory ("/piwigo17/api/v1/"), not the app's
-                    // real root. SCRIPT_NAME is the actually-dispatched
-                    // script and is accurate here regardless of rewrite
-                    // depth, since every real rewrite target in this app
-                    // lives in the same docroot (see public/.htaccess).
-                    $scr = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['REDIRECT_URL'];
-                }
+            // mod_rewrite is activated for upper level directories. we must set the
+            // cookie to the path shown in the browser otherwise it will be discarded.
+            if (
+                $path_info !== '' and
+                ($_SERVER['REDIRECT_URL'] !== ($_SERVER['PATH_INFO'] ?? null)) and
+                (str_ends_with($redirect_url, $path_info))
+            ) {
+                $scr = substr(
+                    $redirect_url,
+                    0,
+                    strlen($redirect_url) - strlen($path_info)
+                );
             } else {
-                $scr = $_SERVER['SCRIPT_NAME'] ?? null;
+                // REDIRECT_URL alone (no PATH_INFO to subtract) is the
+                // pre-rewrite URL, not a script path -- for a
+                // multi-segment clean-URL rewrite (e.g. /api/v1/... ->
+                // api.php) it's the wrong source entirely: stripping
+                // just its last segment yields the rewrite's own
+                // subdirectory ("/piwigo17/api/v1/"), not the app's
+                // real root. SCRIPT_NAME is the actually-dispatched
+                // script and is accurate here regardless of rewrite
+                // depth, since every real rewrite target in this app
+                // lives in the same docroot (see public/.htaccess).
+                $scr = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['REDIRECT_URL'];
             }
-
-            // This fallback (and the
-            // $redirect_url/$path_info fallbacks above, and the 3-clause `and`
-            // chain above them) only ever feed into strrpos()/substr()/
-            // str_ends_with() calls, all of which treat any slash-free string
-            // identically to '' -- so a mutated non-'' fallback
-            // produces the exact same final cookiePath()
-            // result as long as the replacement text contains no '/', which is
-            // true of pest's own mutation placeholder text. Not chased further
-            // (would require asserting against that specific undocumented
-            // internal placeholder string, which is fragile and tests the tool
-            // rather than real behavior).
-            $scr = is_string($scr) ? $scr : '';
-            $slash_pos = strrpos($scr, '/');
-            $scr = $slash_pos !== false ? substr($scr, 0, $slash_pos) : '';
+        } else {
+            $scr = $_SERVER['SCRIPT_NAME'] ?? null;
         }
+
+        // This fallback (and the
+        // $redirect_url/$path_info fallbacks above, and the 3-clause `and`
+        // chain above them) only ever feed into strrpos()/substr()/
+        // str_ends_with() calls, all of which treat any slash-free string
+        // identically to '' -- so a mutated non-'' fallback
+        // produces the exact same final cookiePath()
+        // result as long as the replacement text contains no '/', which is
+        // true of pest's own mutation placeholder text. Not chased further
+        // (would require asserting against that specific undocumented
+        // internal placeholder string, which is fragile and tests the tool
+        // rather than real behavior).
+        $scr = is_string($scr) ? $scr : '';
+        $slash_pos = strrpos($scr, '/');
+        $scr = $slash_pos !== false ? substr($scr, 0, $slash_pos) : '';
 
         // add a trailing '/' if needed
         if ((strlen($scr) === 0) or ($scr[strlen($scr) - 1] !== '/')) {

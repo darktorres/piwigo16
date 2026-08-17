@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\CookieService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
@@ -21,24 +20,24 @@ beforeEach(function (): void {
  *
  * 1. requestMountDepth()'s `return 0;` fallback (Line 45,
  *    DecrementInteger) and cookiePath()'s own `$mountDepth > 0` boundary
- *    (Line 115, DecrementInteger/GreaterToGreaterOrEqual): already
- *    documented in the source's own inline comment above Line 115 --
+ *    (Line 124, DecrementInteger/GreaterToGreaterOrEqual): already
+ *    documented in the source's own inline comment above Line 124 --
  *    entering the `../`-normalization block with mountDepth=0 is a
  *    provable no-op (str_repeat('../', 0) === '', and the while loop's
  *    own preg_replace() finds nothing to normalize), so $scr comes out
  *    identical whether the boundary is `> 0`, `>= 0`, or `> -1`.
  * 2. The 4 EmptyStringToNotEmpty mutations on cookiePath()'s own
- *    string-typed fallbacks (Lines 63, 66, 71, 98 -- $redirect_url,
+ *    string-typed fallbacks (Lines 63, 66, 71, 108 -- $redirect_url,
  *    $path_info, the `path_info !== ''` guard, and $scr itself): each
  *    replaces a literal `''` with pest's own placeholder text ('PEST
  *    Mutator was here!'), which contains no '/' character -- every
  *    consumer of these values (str_ends_with(), strrpos(), substr())
  *    treats any slash-free string identically to '', so the exact
  *    placeholder text (or any real-world non-'/'-containing fallback)
- *    produces byte-identical output. Line 98 additionally matches this
+ *    produces byte-identical output. Line 108 additionally matches this
  *    file's own already-documented substr(X, 0, strlen(X)) === X
  *    reasoning for the mountDepth boundary above.
- * 3. Line 103's DecrementInteger/IncrementInteger (the trailing-slash
+ * 3. Line 113's DecrementInteger/IncrementInteger (the trailing-slash
  *    check's `strlen($scr) - 1` index) are BOTH already killed by
  *    existing tests ("does not double the trailing slash..." and
  *    "strips a trailing non-slash character..." respectively) --
@@ -47,11 +46,11 @@ beforeEach(function (): void {
  *    live scoped scan reporting them untested. Not chased further: this
  *    is a tool-attribution quirk on already-covered code, not a gap.
  * 4. The entire setCookieVar() setcookie() call-construction cluster
- *    (Lines 162-186: both cookie-name concatenations, every options-
+ *    (Lines 172-196: both cookie-name concatenations, every options-
  *    array key removal/cast-removal, the $expire is_numeric() ternary,
  *    and the $value_str is_scalar() ternary) is the SAME already-
  *    documented "not independently verifiable from CLI" limitation this
- *    file's own inline comments above Lines 149 and 172 already
+ *    file's own inline comments above Lines 158 and 180 already
  *    establish: setcookie() doesn't emit real, inspectable headers under
  *    CLI SAPI (headers_list() stays empty after a real call), its own
  *    bool return value doesn't vary with any of these mutations
@@ -77,20 +76,6 @@ function cookieServiceTestWithMountDepth(int $depth, callable $fn): mixed
 {
     return KernelContainerOverride::with([
         RequestMountDepth::class => new RequestMountDepth($depth),
-    ], $fn);
-}
-
-/**
- * CookieService's own private lazy configuredBasePath() helper gracefully
- * falls back to null (letting cookiePath()'s $_SERVER heuristic run) when
- * Kernel hasn't booted -- most tests in this file need no container at
- * all. Tests needing a real (possibly gallery_url-configured)
- * CurrentConfig boot one via KernelContainerOverride::with().
- */
-function cookieServiceTestWithConfig(CurrentConfig $config, callable $fn): mixed
-{
-    return KernelContainerOverride::with([
-        CurrentConfig::class => $config,
     ], $fn);
 }
 
@@ -340,45 +325,6 @@ test('cookiePath requires both the redirect-vs-path-info mismatch and the suffix
 
     expect(new CookieService()->cookiePath())
         ->toBe('/foo/');
-});
-
-test('cookiePath uses a configured gallery_url path over any $_SERVER heuristic when one is set', function (): void {
-    // Deliberately conflicting $_SERVER values -- if the configured path
-    // wins, none of these are even read.
-    $_SERVER['REDIRECT_SCRIPT_NAME'] = '/should-not-be-used/index.php';
-    $_SERVER['SCRIPT_NAME'] = '/also-not-used/index.php';
-
-    $config = new CurrentConfig();
-    $config->galleryUrl = 'http://example.org/mounted/gallery';
-
-    $path = cookieServiceTestWithConfig($config, static fn (): string => new CookieService()
-        ->cookiePath());
-
-    expect($path)
-        ->toBe('/mounted/gallery/');
-});
-
-test('cookiePath falls back to the $_SERVER heuristic when gallery_url is not configured', function (): void {
-    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
-
-    $path = cookieServiceTestWithConfig(new CurrentConfig(), static fn (): string => new CookieService()
-        ->cookiePath());
-
-    expect($path)
-        ->toBe('/piwigo/');
-});
-
-test('cookiePath falls back to the $_SERVER heuristic when gallery_url has no path component', function (): void {
-    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
-
-    $config = new CurrentConfig();
-    $config->galleryUrl = 'http://example.org';
-
-    $path = cookieServiceTestWithConfig($config, static fn (): string => new CookieService()
-        ->cookiePath());
-
-    expect($path)
-        ->toBe('/piwigo/');
 });
 
 test('setCookieVar casts a scalar non-string value to a string before handing it to setcookie()', function (): void {

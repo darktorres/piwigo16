@@ -459,14 +459,22 @@ final readonly class GalleryController implements ControllerInterface
             $preferred_image_orders = $categoryService->getPreferredImageOrders();
             $order_idx = $this->sessionService->getImageOrder() ?? 0;
 
-            // get first order field and direction
+            // get first order field and direction -- toSqlBody(), not
+            // toSql(): a nullable first field (date_available, ...) renders
+            // as a leading "CASE WHEN ... END <dir>" null-ordering
+            // discriminant fragment before its own real "<column> <dir>"
+            // fragment (see SortRenderer::isNullable()'s own field list),
+            // so the first ", "-delimited fragment isn't necessarily the
+            // real column -- skip any discriminant fragment(s) to find it.
             $order_by = new SortRenderer($this->entityManager->getConnection())
-                ->toSql($this->currentConfig->orderBy);
-            $first_order = substr($order_by, 9);
-            if (($pos = strpos($first_order, ',')) !== false) {
-                $first_order = substr($first_order, 0, $pos);
+                ->toSqlBody($this->currentConfig->orderBy);
+            $first_order = '';
+            foreach (explode(', ', $order_by) as $fragment) {
+                if (! str_starts_with($fragment, 'CASE WHEN ')) {
+                    $first_order = $fragment;
+                    break;
+                }
             }
-            $first_order = trim($first_order);
 
             $url = $urlService->addUrlParams(
                 $urlService->duplicateIndexUrl(),

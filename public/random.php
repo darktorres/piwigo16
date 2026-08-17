@@ -12,6 +12,7 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Paths;
@@ -19,11 +20,13 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Psr\Http\Message\ResponseInterface;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below and RequestBootstrap::bootEntryPoint() are both Piwigo\ classes,
@@ -33,6 +36,20 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths);
+
+// This file never calls RequestPipeline::handle() -- same "raw top-level
+// script" shape as admin.php, which explains why it alone (of every other
+// real entry point) needs this explicit call: every other entry point
+// reaches CurrentUser/CurrentConfig/the plugin registry/a loaded Lang only
+// because RequestPipeline::handle()'s own BOOTSTRAP_MIDDLEWARE already ran
+// first -- see BOOTSTRAP_MIDDLEWARE's own docblock and admin.php's
+// identical call.
+$bootstrapPhaseResponse = RequestPipeline::runBootstrapPhase(RequestFactory::fromGlobals());
+if ($bootstrapPhaseResponse instanceof ResponseInterface) {
+    new ResponseEmitter()
+        ->emit($bootstrapPhaseResponse);
+    exit;
+}
 
 RequestBootstrap::accessControl()->checkStatus(AccessLevel::Guest);
 

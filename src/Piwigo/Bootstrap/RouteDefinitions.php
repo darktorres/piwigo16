@@ -20,6 +20,11 @@ use Piwigo\Controller\Api\Categories\CategoryUpdateController;
 use Piwigo\Controller\Api\Comments\CommentDeleteController;
 use Piwigo\Controller\Api\Comments\CommentListController;
 use Piwigo\Controller\Api\Comments\CommentValidateController;
+use Piwigo\Controller\Api\Extensions\CheckUpdatesController;
+use Piwigo\Controller\Api\Extensions\ExtensionUpdateController;
+use Piwigo\Controller\Api\Extensions\IgnoreUpdateController;
+use Piwigo\Controller\Api\Extensions\PluginListController;
+use Piwigo\Controller\Api\Extensions\PluginPerformActionController;
 use Piwigo\Controller\Api\Groups\GroupAddUserController;
 use Piwigo\Controller\Api\Groups\GroupCreateController;
 use Piwigo\Controller\Api\Groups\GroupDeleteController;
@@ -411,6 +416,35 @@ final class RouteDefinitions
         $routes->add('api_v1_activity_list', new Route('/api/v1/activity', defaults: [
             '_controller' => ActivityListController::class,
         ], methods: ['GET']));
+
+        // Plugins/extensions resource families -- webmaster-gated.
+        // pwg.themes.performAction has no first-party caller anywhere in
+        // this codebase (verified, per the plan's own method
+        // classification) -- no REST conversion needed.
+        $routes->add('api_v1_plugins_list', new Route('/api/v1/plugins', defaults: [
+            '_controller' => PluginListController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_plugins_perform_action', new Route('/api/v1/plugins/{id}/actions/perform', defaults: [
+            '_controller' => PluginPerformActionController::class,
+        ], requirements: [
+            'id' => '[a-zA-Z0-9_-]+',
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_extensions_check_updates', new Route('/api/v1/extensions/updates', defaults: [
+            '_controller' => CheckUpdatesController::class,
+        ], methods: ['GET']));
+
+        $routes->add('api_v1_extensions_ignore_update', new Route('/api/v1/extensions/updates/ignore', defaults: [
+            '_controller' => IgnoreUpdateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_extensions_update', new Route('/api/v1/extensions/{type}/{id}/actions/update', defaults: [
+            '_controller' => ExtensionUpdateController::class,
+        ], requirements: [
+            'type' => 'plugins|themes|languages',
+            'id' => '[a-zA-Z0-9_-]+',
+        ], methods: ['POST']));
 
         return $routes;
     }

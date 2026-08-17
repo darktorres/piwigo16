@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `PUT /api/v1/images/{id}/rating` body DTO -- mirrors
- * `Ws\Images\RateParams`'s own `rate` field.
+ * `PUT /api/v1/images/{id}/rating` body DTO.
  */
 final readonly class ImageRateInput
 {

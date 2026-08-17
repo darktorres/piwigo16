@@ -18,11 +18,10 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/actions/set-category` --
- * `pwg.images.setCategory`'s real replacement, admin + CSRF
- * (`requiresAuth: true` on the WS side really means admin_only --
- * `Ws\Server::invoke()`'s own enforcement). `action` can be `associate`
- * (add photos to this album), `dissociate` (remove them), or `move`
- * (dissociate from every other album and associate with this one).
+ * `pwg.images.setCategory`'s real replacement, admin + CSRF. `action` can
+ * be `associate` (add photos to this album), `dissociate` (remove them),
+ * or `move` (dissociate from every other album and associate with this
+ * one).
  */
 final readonly class ImageSetCategoryController implements ControllerInterface
 {

@@ -162,7 +162,7 @@ final class SrcImage
     /**
      * $infos is genuinely cross-domain by design, confirmed by tracing its
      * ~17 real construction sites: full `images` table rows
-     * (Ws\ImageUrlBuilder, Controller\ActionController), but also category-listing rows
+     * (Image\ImageUrlBuilder, Controller\ActionController), but also category-listing rows
      * (Category\CategoryCatsRenderer's own tree-cache-row shape) and
      * upload-pipeline rows (Admin\Upload\UploadService) that merely
      * happen to carry a subset of the same key names. Every key read

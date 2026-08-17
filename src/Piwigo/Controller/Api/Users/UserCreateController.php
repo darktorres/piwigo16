@@ -22,11 +22,10 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/users` -- `pwg.users.add`'s real replacement, admin +
- * CSRF. Preserves `Ws\Users\AddHandler`'s own choice to surface the real
- * "this login is already used" message to an admin caller (unlike the
- * public self-registration form, which never reveals that -- SEC-31 --
- * an authenticated admin picking a different username is a legitimate
- * need, not account enumeration).
+ * CSRF. Surfaces the real "this login is already used" message to an
+ * admin caller (unlike the public self-registration form, which never
+ * reveals that -- SEC-31 -- an authenticated admin picking a different
+ * username is a legitimate need, not account enumeration).
  */
 final readonly class UserCreateController implements ControllerInterface
 {

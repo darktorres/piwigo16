@@ -24,8 +24,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * shape decision as the Tags/Groups/Categories families). Photos owned
  * by this user are not deleted. Protects the caller's own account, the
  * guest/default/webmaster system accounts, and (for a plain admin,
- * not webmaster) every other admin account -- same protection set as
- * `Ws\Users\DeleteHandler`.
+ * not webmaster) every other admin account.
  */
 final readonly class UserDeleteController implements ControllerInterface
 {

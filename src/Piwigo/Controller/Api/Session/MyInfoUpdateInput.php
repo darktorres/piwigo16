@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Session;
 
 /**
- * `PATCH /api/v1/session` body DTO -- mirrors `Ws\Users\SetMyInfoParams`'s
- * own optional fields (a logged-in user updating their own account).
+ * `PATCH /api/v1/session` body DTO -- fields are optional, for a logged-in
+ * user updating their own account.
  */
 final readonly class MyInfoUpdateInput
 {

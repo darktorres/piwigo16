@@ -38,19 +38,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * replacement. Public, permission-filtered -- one of 3 forbidden-
  * categories computations applies depending on the caller (an explicit
  * `public=true` browse-as-guest mode, an admin session which sees
- * locked/private-but-not-permitted albums too, or a normal user session),
- * same branching as its WS predecessor. Includes the same multi-tier
+ * locked/private-but-not-permitted albums too, or a normal user session).
+ * Includes the same multi-tier
  * album-thumbnail resolution (remembered user representative -> the
  * album's own representative -> a random in-category/sub-category photo,
  * with a same-or-lower-privacy-level substitution when the chosen photo
  * outranks the caller) -- this is real, security-relevant behavior
  * (never surface a thumbnail from a photo the caller couldn't otherwise
- * see), not legacy cruft, so it's ported in full rather than simplified.
+ * see), so it's implemented in full rather than simplified.
  *
- * `tree_output` is dropped: `Ws\CategoryTreeBuilder::
- * categoriesFlatlistToTree()` injects `Ws\NamedArray` instances for each
- * node's `sub_categories`, an XML/WS-encoder-pipeline type this JSON
- * surface has no use for. Every row already carries `uppercats` (the
+ * No tree-shaped response: every row already carries `uppercats` (the
  * full ancestor-id chain), which a client can already use to reconstruct
  * a tree itself -- always returns the flat list.
  */

@@ -91,8 +91,8 @@ final readonly class TusUploadCreateController implements ControllerInterface
             }
         }
 
-        // `updateMode` mirrors Ws\Images\UploadHandler's own behavior: if
-        // set (and no explicit imageId/formatOf was already given),
+        // `updateMode`: if set (and no explicit imageId/formatOf was
+        // already given),
         // resolve a same-filename photo already in the first target
         // category and upload as a replacement of it instead of a new
         // photo. Resolved here, before any byte is transferred, same

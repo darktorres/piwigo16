@@ -38,15 +38,11 @@ use Psr\Http\Message\ServerRequestInterface;
  * `POST /api/v1/extensions/{type}/{id}/actions/update` --
  * `pwg.extensions.update`'s real replacement, webmaster + CSRF.
  *
- * `Ws\Extensions\UpdateHandler`'s own plugin branch handles "was this
- * plugin active before the update" by literally self-redirecting back to
- * `ws.php?method=pwg.extensions.update&...&reactivate=true` -- a
- * WS-specific, redirect-driven two-phase dance that can't carry over to
- * a REST POST (redirecting a JSON API call back to `ws.php` makes no
- * sense, and `RedirectServiceInterface` isn't a fit for this pipeline
- * either). Replaced with a single atomic sequence: read "was it active"
- * once up front, deactivate before updating if so, and reactivate
- * afterward -- same real effect, no redirect loop.
+ * The plugin branch's "was this plugin active before the update" handling
+ * is a single atomic sequence: read "was it active" once up front,
+ * deactivate before updating if so, and reactivate afterward -- no
+ * redirect involved (redirecting a JSON API call makes no sense, and
+ * `RedirectServiceInterface` isn't a fit for this pipeline).
  */
 final readonly class ExtensionUpdateController implements ControllerInterface
 {

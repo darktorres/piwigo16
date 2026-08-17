@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `PATCH /api/v1/images/{id}` body DTO -- mirrors
- * `Ws\Images\SetInfoHandler`'s own optional fields. `singleValueMode`
- * ("fillIfEmpty" or "replace") and `multipleValueMode` ("append" or
- * "replace") default the same way the WS registration's own
- * `single_value_mode`/`multiple_value_mode` params do.
+ * `PATCH /api/v1/images/{id}` body DTO. `singleValueMode` ("fillIfEmpty"
+ * or "replace") and `multipleValueMode` ("append" or "replace") each
+ * default to their first listed value.
  */
 final readonly class ImageUpdateInput
 {

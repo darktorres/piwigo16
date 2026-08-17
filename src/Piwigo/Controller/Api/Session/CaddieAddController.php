@@ -18,12 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/session/caddie` -- `pwg.caddie.add`'s real replacement,
- * admin + CSRF (`requiresAuth: true` on the WS side really means
- * admin_only -- the caddie/lightbox is a Batch Manager feature, not a
+ * admin + CSRF (the caddie/lightbox is a Batch Manager feature, not a
  * general visitor one). Adds images to the calling admin's own caddie.
- * `Ws\Core\CaddieAddHandler` itself has no CSRF check -- this fresh
- * implementation adds one anyway, matching every other mutating
- * `/api/v1` endpoint.
  */
 final readonly class CaddieAddController implements ControllerInterface
 {

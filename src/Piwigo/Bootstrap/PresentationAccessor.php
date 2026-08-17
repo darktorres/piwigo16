@@ -16,13 +16,12 @@ use Piwigo\Url\UrlService;
 
 /**
  * Typed accessors to container-resolved L3Presentation services, for the
- * many non-Bootstrap callers (static Ws method handlers, Admin page
- * renderers, etc.) that can't call `Kernel::container()` directly
+ * many non-Bootstrap callers (Admin page renderers, install-time services,
+ * request DTOs, etc.) that can't call `Kernel::container()` directly
  * (arch-test-restricted to `Bootstrap/` + root `index.php`,
  * `tests/Arch/StructuralTest.php`). Same shape as
- * `Bootstrap\RedirectService::userService()`, consumed cross-namespace by
- * `Ws\Extensions.php`/`Ws\Images.php` -- `Admin`/`Bootstrap`/
- * `Command`/`Controller`/`Job`/`Ws` are all the same deptrac
+ * `Bootstrap\RedirectService::userService()` -- `Admin`/`Bootstrap`/
+ * `Command`/`Controller`/`Job` are all the same deptrac
  * `L4Integration` layer, so this same-layer dependency is architecturally
  * allowed.
  *

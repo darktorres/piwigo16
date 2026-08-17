@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Categories;
 
 /**
- * `PUT /api/v1/categories/{id}/representative` body DTO -- mirrors
- * `Ws\Categories\SetRepresentativeParams`'s own `image_id` field.
+ * `PUT /api/v1/categories/{id}/representative` body DTO.
  */
 final readonly class CategorySetRepresentativeInput
 {

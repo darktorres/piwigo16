@@ -855,8 +855,8 @@ final readonly class ImageService
 
     /**
      * Raw `image_category` link insert, rows already built by the caller --
-     * Ws\Images's own "set category relations for one image, honoring
-     * caller-supplied per-category ranks" step, unlike
+     * the upload pipeline's own "set category relations for one image,
+     * honoring caller-supplied per-category ranks" step, unlike
      * associateImagesToCategories() above which always auto-assigns the
      * next rank. $rank is optional per row -- see ImageRepository::
      * massInsertImageCategory()'s own docblock.

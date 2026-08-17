@@ -17,9 +17,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `DELETE /api/v1/tags/{id}` -- `pwg.tags.delete`'s real replacement,
- * admin + CSRF, one tag per call (a REST single-resource delete;
- * `Ws\Tags\DeleteHandler`'s own batch-by-id-list shape has no first-party
- * caller that couldn't just call this once per tag). `{id}` is
+ * admin + CSRF, one tag per call (a REST single-resource delete; no
+ * first-party caller needs a batch-by-id-list shape that couldn't just
+ * call this once per tag). `{id}` is
  * route-constrained to `\d+`, so an unmatched id 404s at the routing
  * layer before this controller ever runs. `TagService::deleteTags()`
  * records its own activity entry and dispatches `Tag\Event\DeleteTags`

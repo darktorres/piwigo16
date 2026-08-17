@@ -6,8 +6,8 @@ namespace Piwigo\Image\Projection;
 
 /**
  * {@see \Piwigo\Image\ImageRepository::findForMissingDerivatives()}'s own
- * row shape -- `Ws\Core::getMissingDerivatives()`'s own cursor-paginated
- * scan, one real caller.
+ * row shape -- `Controller\Api\Images\ImageMissingDerivativesController`'s
+ * own cursor-paginated scan, one real caller.
  *
  * `toArray()` preserves the exact original snake_case shape:
  * `new SrcImage($row)` accepts `array<string, mixed>` (not this DTO), so

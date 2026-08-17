@@ -15,8 +15,7 @@ use Piwigo\Validation\InputValidator;
  * properties: `handle()`'s "param" tab reads `$_POST[$nbm_user['param']]`
  * for each DB-discovered `nbm_%` config key (a genuinely dynamic,
  * per-row key set unknowable ahead of time), the same "expose the raw
- * bag" precedent as `Ws\Request\WsRawRequest::$params` and
- * `ProfileFormSubmitRequest::$post`. `handle()` builds its own local
+ * bag" precedent as `ProfileFormSubmitRequest::$post`. `handle()` builds its own local
  * mutable working copy from this bag (its "param" tab strips tags from
  * `nbm_send_mail_as` in place before the generic per-config-key loop
  * reads it back, and `doTimeoutTreatment()` filters a selection key back

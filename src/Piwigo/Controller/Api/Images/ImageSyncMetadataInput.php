@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/actions/sync-metadata` body DTO -- mirrors
- * `Ws\Images\SyncMetadataParams`'s own `image_id` field, already
- * typed (Symfony Console/JSON both give real ints, unlike WS's own
- * wire-format string-validation loop, which this drops as unnecessary).
+ * `POST /api/v1/images/actions/sync-metadata` body DTO.
  */
 final readonly class ImageSyncMetadataInput
 {

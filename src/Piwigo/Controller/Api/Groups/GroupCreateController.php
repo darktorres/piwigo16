@@ -22,7 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `POST /api/v1/groups` -- `pwg.groups.add`'s real replacement, admin +
  * CSRF. [SEC-57]: the security-audit-trail `AuditService::record()` call
  * is external to `GroupService::create()` itself (unlike its own
- * activity-log entry), matching `Ws\Groups\AddHandler`'s own shape.
+ * activity-log entry).
  */
 final readonly class GroupCreateController implements ControllerInterface
 {

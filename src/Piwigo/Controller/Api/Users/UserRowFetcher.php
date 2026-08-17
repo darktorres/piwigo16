@@ -23,10 +23,9 @@ use Piwigo\Users\UserService;
  * client-controlled `display` string mini-language -- a JSON API returns
  * correctly-typed, complete rows rather than a payload-size optimization
  * that made sense for XML. The 6 per-user UI-preference fields and the
- * last-visit History-table fallback (both ported here verbatim from
- * `Ws\Users\GetListHandler`) are real fields `user_list.js`'s edit-user
- * popup reads and writes through its preferences tab -- restored after
- * that JS conversion showed dropping them broke the tab's controls
+ * last-visit History-table fallback are real fields `user_list.js`'s
+ * edit-user popup reads and writes through its preferences tab -- restored
+ * after that JS conversion showed dropping them broke the tab's controls
  * entirely, not just trimmed a payload-size optimization.
  */
 final readonly class UserRowFetcher

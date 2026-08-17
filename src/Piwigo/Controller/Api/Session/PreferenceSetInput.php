@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Session;
 
 /**
- * `PUT /api/v1/session/preferences/{param}` body DTO -- mirrors
- * `Ws\Users\PreferencesSetParams`'s own `value`/`is_json` fields (`param`
- * itself comes from the route).
+ * `PUT /api/v1/session/preferences/{param}` body DTO -- carries `value`/
+ * `isJson` (`param` itself comes from the route).
  */
 final readonly class PreferenceSetInput
 {

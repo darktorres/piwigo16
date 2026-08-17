@@ -61,10 +61,11 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
 
 /**
  * Inserts a `search` row directly via raw SQL, bypassing
- * SearchService::saveSearch()/the WS API entirely -- needed to construct
+ * SearchService::saveSearch() entirely -- needed to construct
  * `rules` shapes neither ever produces: a JSON object with no top-level
  * "fields" key at all, or a per-field value that isn't the array shape
- * every real writer (Ws\Images::filteredSearchCreate()) always builds.
+ * every real writer (`Controller\Api\Images\
+ * ImageFilteredSearchCreateController`) always builds.
  * SearchFilterRenderer::render()'s own defensive
  * `!isset($mySearch['fields']) || !is_array($mySearch['fields'])` (and the
  * per-field `! is_array($searchFields[x])`) re-narrowing only exists to

@@ -501,10 +501,10 @@ test('getAvailableSearchUuid() skips a colliding uuid', function (): void {
 test('saveSearch() persists the rules under a fresh uuid and returns a matching uuid+url pair', function (): void {
     // saveSearch() has no dedicated test anywhere -- not even in the
     // Integration original (a real spec gap, same shape as
-    // TagRepositoryTest.php's own findByIdsOrAll() finding this
-    // session). 2 real production callers (Ws\Images::
-    // filteredSearchCreate(), Controller\SearchController) depend on
-    // its own [uuid, url] contract.
+    // TagRepositoryTest.php's own findByIdsOrAll() finding). 2 real
+    // production callers (`Controller\Api\Images\
+    // ImageFilteredSearchCreateController`, `Controller\SearchController`)
+    // depend on its own [uuid, url] contract.
     //
     // saveSearch() also unconditionally calls
     // PreferencesService::updateParam() for a real (non-guest,

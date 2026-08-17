@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Users;
 
 /**
- * `POST /api/v1/users` body DTO -- mirrors `Ws\Users\AddParams`'s own
- * fields. `sendPasswordByMail` is accepted but ignored, matching
- * `Ws\Users\AddHandler`'s own docblock note that the equivalent WS param
- * is a registered-but-unused no-op.
+ * `POST /api/v1/users` body DTO. `sendPasswordByMail` is accepted but
+ * ignored -- a registered-but-unused no-op.
  */
 final readonly class UserCreateInput
 {

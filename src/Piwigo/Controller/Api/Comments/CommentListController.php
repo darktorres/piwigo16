@@ -33,8 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * replacement, admin only. A composite, multi-query response (summary
  * counts, a comment page, author-count filters, computed paging) --
  * genuinely complex enough that forcing one precise shape risked getting
- * it wrong unverified, same reasoning `Ws\Comments\GetListHandler`'s own
- * docblock already gives for staying `array<string, mixed>`.
+ * it wrong unverified, so this stays `array<string, mixed>`.
  */
 final readonly class CommentListController implements ControllerInterface
 {

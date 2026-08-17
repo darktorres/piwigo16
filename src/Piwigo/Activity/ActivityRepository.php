@@ -377,8 +377,8 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     }
 
     /**
-     * Paginated activity rows matching $criteria -- Ws\Core::getActivityList()'s
-     * own WS listing, one real caller.
+     * Paginated activity rows matching $criteria -- `GET /api/v1/activity`'s
+     * own listing, one real caller.
      *
      * $criteria (an immutable {@see ActivityListCriteria} value object) is
      * translated into bound `andWhere()` calls via Doctrine's `Criteria`/

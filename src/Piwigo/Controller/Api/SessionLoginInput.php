@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api;
 
 /**
- * `POST /api/v1/session` body DTO -- mirrors `Ws\Session\LoginParams`'s
- * own `username`/`password` fields.
+ * `POST /api/v1/session` body DTO.
  */
 final readonly class SessionLoginInput
 {

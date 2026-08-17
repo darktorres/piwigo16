@@ -15,10 +15,8 @@ use Piwigo\Common\ValueObject\GroupId;
  * Scoped to `findAllBasic()`'s own 3-column projection (`id`/`name`/
  * `is_default`), not every `groups` column -- {@see
  * \Piwigo\Group\GroupRepository::findWithMemberCounts()}'s own `g.*` +
- * `COUNT(...) AS nb_users` query stays a raw array, same deliberate
- * deferral as {@see \Piwigo\Tag\TagRepository::findCommonTags()}: it feeds
- * `Ws\Groups::getList()`'s own JSON response directly, with exactly one
- * real caller and no per-field access to centralise.
+ * `COUNT(...) AS nb_users` query has its own typed row shape, {@see
+ * \Piwigo\Group\Projection\GroupListing}.
  *
  * `id` is `GroupId`, not `int` -- the first Projection DTO in this
  * codebase to get real id typing (the Common\ValueObject VO layer). This

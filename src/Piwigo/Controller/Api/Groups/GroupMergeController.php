@@ -19,8 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * `POST /api/v1/groups/actions/merge` -- `pwg.groups.merge`'s real
  * replacement, admin + CSRF. The merge-source groups' rows are fetched
  * *before* calling `GroupService::merge()` -- it deletes them as part of
- * the merge, same ordering `Ws\Groups\MergeHandler` uses for its own
- * `deleted_group` field.
+ * the merge, and this response's own `deletedGroups` field needs them
+ * beforehand.
  */
 final readonly class GroupMergeController implements ControllerInterface
 {

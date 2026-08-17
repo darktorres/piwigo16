@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Extensions;
 
 /**
- * `POST /api/v1/extensions/updates/ignore` body DTO -- mirrors
- * `Ws\Extensions\IgnoreUpdateParams`'s own `type`/`id`/`reset` fields.
+ * `POST /api/v1/extensions/updates/ignore` body DTO.
  */
 final readonly class IgnoreUpdateInput
 {

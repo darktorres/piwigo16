@@ -16,8 +16,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/plugins` -- `pwg.plugins.getList`'s real replacement,
  * admin only. The actual filesystem-scan + DB-state merge lives in
  * `Admin\Extensions\PluginListBuilder`, shared with the Maintenance ->
- * Environment admin screen's server-rendered plugin list and
- * `Ws\Extensions\PluginsGetListHandler`.
+ * Environment admin screen's server-rendered plugin list.
  */
 final readonly class PluginListController implements ControllerInterface
 {

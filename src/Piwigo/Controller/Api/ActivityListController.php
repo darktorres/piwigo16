@@ -128,13 +128,12 @@ final readonly class ActivityListController implements ControllerInterface
         $activities = [];
         foreach ($rows as $index => $row) {
             // sessionIdx/dateFormatted exist for a client-side line-merging
-            // consumer (user_activity.js) to replicate
-            // Ws\Activity\GetListHandler's own consecutive-row grouping
-            // (same sessionIdx~object~action key) and locale-aware date
+            // consumer (user_activity.js) to group consecutive rows by the
+            // same sessionIdx~object~action key with locale-aware date
             // display -- this response deliberately doesn't merge rows
             // itself (see this class's own docblock), but a client that
             // wants to needs the same grouping key and the same
-            // DateHelper::formatDate() output WS used, not a raw ISO date.
+            // DateHelper::formatDate() output, not a raw ISO date.
             [$occuredOnDate] = explode(' ', $row->occuredOn->value);
             $activities[] = [
                 'position' => $offset + $index,

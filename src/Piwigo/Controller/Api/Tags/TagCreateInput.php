@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Tags;
 
 /**
- * `POST /api/v1/tags` body DTO -- mirrors `Ws\Tags\AddParams`'s own shape,
- * fed from a decoded JSON body instead of WS's `$params` array.
+ * `POST /api/v1/tags` body DTO.
  */
 final readonly class TagCreateInput
 {

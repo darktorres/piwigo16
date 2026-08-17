@@ -8,11 +8,11 @@ use Piwigo\Common\ValueObject\CategoryId;
 
 /**
  * {@see \Piwigo\Category\CategoryService::getRandomImageInCategory()}'s
- * parameter object. The 4 real callers (`CategoryCatsRenderer`,
- * `Ws\Categories`) each build this from a differently-sourced row (a
- * tree-cache rollup merge, a WS listing row) that already carries or can
- * trivially extract these 3 fields -- four pipelines that never got
- * unified onto one shape, not genuinely dynamic data.
+ * parameter object. The 4 real call sites (2 in `CategoryCatsRenderer`, 2
+ * in `Controller\Api\Categories\CategoryAvailableListController`) each build
+ * this from a differently-sourced row that already carries or can trivially
+ * extract these 3 fields -- four pipelines that never got unified onto one
+ * shape, not genuinely dynamic data.
  */
 final readonly class RandomImageCategoryQuery
 {

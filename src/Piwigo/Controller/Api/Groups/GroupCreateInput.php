@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Groups;
 
 /**
- * `POST /api/v1/groups` body DTO -- mirrors `Ws\Groups\AddParams`'s own
- * `name`/`is_default` fields, fed from a decoded JSON body instead of
- * WS's `$params` array.
+ * `POST /api/v1/groups` body DTO.
  */
 final readonly class GroupCreateInput
 {

@@ -15,17 +15,12 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/users/{id}/actions/get-auth-key` --
- * `pwg.users.getAuthKey`'s real replacement, admin + CSRF.
- * `Ws\Users\GetAuthKeyHandler`'s own `requiresAuth: true` registration
- * genuinely means admin-only here (`Ws\Server::invoke()` maps
- * `requiresAuth` straight onto its `admin_only` gate, not merely "must
- * be logged in" -- confirmed by reading the real enforcement site, not
- * just the flag's name). Combined with `AuthService::
- * createUserAuthKey()`'s own target-side restriction (only works for
- * normal/generic-status accounts, never admins/webmasters), the real
- * feature is an admin generating a magic-login link for a normal user
- * -- an account-recovery/support tool, not a general-purpose "any user
- * can log in as any other user" capability.
+ * `pwg.users.getAuthKey`'s real replacement, admin + CSRF. Combined with
+ * `AuthService::createUserAuthKey()`'s own target-side restriction (only
+ * works for normal/generic-status accounts, never admins/webmasters), the
+ * real feature is an admin generating a magic-login link for a normal
+ * user -- an account-recovery/support tool, not a general-purpose "any
+ * user can log in as any other user" capability.
  */
 final readonly class UserGetAuthKeyController implements ControllerInterface
 {

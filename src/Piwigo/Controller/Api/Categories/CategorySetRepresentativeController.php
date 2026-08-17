@@ -21,12 +21,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `PUT /api/v1/categories/{id}/representative` --
- * `pwg.categories.setRepresentative`'s real replacement, admin + CSRF.
- * `Ws\Categories\SetRepresentativeHandler` itself has no CSRF check (a
- * real, standing gap in its own registered params) -- this fresh
- * implementation adds one anyway, matching every other mutating
- * `/api/v1` endpoint in this family; nothing about P27's own surface
- * inherits WS's specific historical gap.
+ * `pwg.categories.setRepresentative`'s real replacement, admin + CSRF,
+ * matching every other mutating `/api/v1` endpoint in this family.
  */
 final readonly class CategorySetRepresentativeController implements ControllerInterface
 {
@@ -72,8 +68,7 @@ final readonly class CategorySetRepresentativeController implements ControllerIn
 
         // Invalidates every user's own remembered-representative cache
         // entry -- PSR-6 has no per-key-prefix bulk delete, so this
-        // clears the whole pool, same reasoning as
-        // Ws\Categories\SetRepresentativeHandler's own identical call.
+        // clears the whole pool.
         $this->categoryTreeCachePool->clear();
 
         $this->activityService->record('album', $categoryId, 'edit', [

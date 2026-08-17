@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Categories;
 
 /**
- * `PATCH /api/v1/categories/{id}` body DTO -- mirrors
- * `Ws\Categories\SetInfoParams`'s own optional fields ("leave a field
- * blank to keep the current value"): a genuinely absent JSON key means
- * "don't touch this field". `visible`/`commentable` are real JSON
- * booleans here rather than WS's hand-validated `/^(true|false)$/i`
- * string params.
+ * `PATCH /api/v1/categories/{id}` body DTO -- fields are optional ("leave a
+ * field blank to keep the current value"): a genuinely absent JSON key
+ * means "don't touch this field". `visible`/`commentable` are real JSON
+ * booleans.
  */
 final readonly class CategoryUpdateInput
 {

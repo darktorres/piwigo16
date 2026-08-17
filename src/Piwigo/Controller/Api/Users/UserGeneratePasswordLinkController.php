@@ -96,8 +96,7 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
                 ? $this->mailService->generateSetPasswordMail($userLostUsername, $generatedLink['password_link'], $galleryTitle, $generatedLink['time_validation'])
                 : $this->mailService->generateResetPasswordMail($userLostUsername, $generatedLink['password_link'], $galleryTitle, $generatedLink['time_validation']);
 
-            // Errors from mail() are suppressed the same way
-            // Ws\Users\GeneratePasswordLinkHandler's own call is -- a
+            // Errors from mail() are suppressed deliberately -- a
             // failed send degrades to sendByMail: false, not a 5xx.
             $sendByMailResponse = @$this->mailService->mail($userLostEmail, $emailParams->toArray())
                 ? 'Mail sent at : ' . $userLostEmail

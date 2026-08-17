@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Users;
 
 /**
- * `PATCH /api/v1/users/{id}` body DTO -- mirrors `Ws\Users\SetInfoParams`'s
- * own optional fields ("leave a field blank to keep the current value"),
- * including the 6 per-user UI-preference fields (nbImagePage/
- * recentPeriod/expand/showNbComments/showNbHits/enabledHigh) --
- * `user_list.js`'s edit-user popup reads and writes all 6 through its
- * preferences tab, so dropping them broke that tab's controls entirely
- * when this endpoint got its first real JS caller.
+ * `PATCH /api/v1/users/{id}` body DTO. Fields are all optional (leave one
+ * blank to keep the current value), including the 6 per-user
+ * UI-preference fields (nbImagePage/recentPeriod/expand/showNbComments/
+ * showNbHits/enabledHigh) -- `user_list.js`'s edit-user popup reads and
+ * writes all 6 through its preferences tab, so dropping them broke that
+ * tab's controls entirely when this endpoint got its first real JS
+ * caller.
  */
 final readonly class UserUpdateInput
 {

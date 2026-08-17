@@ -19,8 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `POST /api/v1/session/api-keys` -- `pwg.users.api_key.create`'s real
  * replacement. Requires a signed-in (non-guest) session established via
- * `identification.php`, same as `Ws\Users\CreateApiKeyHandler`'s own
- * `ApiKeyService::connectedWithPwgUi()` check.
+ * `identification.php` -- `ApiKeyService::connectedWithPwgUi()`'s own
+ * check.
  */
 final readonly class ApiKeyCreateController implements ControllerInterface
 {

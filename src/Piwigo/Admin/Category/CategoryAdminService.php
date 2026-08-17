@@ -25,9 +25,8 @@ use Piwigo\Users\CurrentUser;
  * setCatCommentable()/etc.).
  *
  * createVirtualCategory() delegates to the constructor-injected
- * CategoryService::createVirtualCategory() -- the same method the WS API
- * (Ws\Categories) calls directly -- and only adds a typed return shape
- * for admin call sites.
+ * CategoryService::createVirtualCategory() and only adds a typed return
+ * shape for admin call sites.
  *
  * Controller\Admin\CatOptionsSubController and AlbumSubController call
  * setCategoryOption(), setCategoryPermissions(), and saveImageOrder() as

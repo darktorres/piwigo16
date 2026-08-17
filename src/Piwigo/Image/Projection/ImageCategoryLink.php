@@ -13,8 +13,10 @@ namespace Piwigo\Image\Projection;
  * tables.
  *
  * `toArray()` exists for {@see \Piwigo\Image\ImageService::emptyLounge()}'s
- * own WS-response boundary (`Ws\Images::emptyLounge()`/`uploadCompleted()`
- * expect the original `array{image_id: int, category_id: int}` shape).
+ * own callers (`Controller\Api\Uploads\UploadCompleteBatchController`,
+ * `Command\MaintenanceEmptyLoungeCommand`, `Admin\Maintenance\
+ * MaintenanceActionDispatcher`), which expect the original
+ * `array{image_id: int, category_id: int}` shape.
  */
 final readonly class ImageCategoryLink
 {

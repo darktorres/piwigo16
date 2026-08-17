@@ -6,7 +6,7 @@ namespace Piwigo\Image\Projection;
 
 /**
  * {@see \Piwigo\Image\ImageRepository::findUploadResultInfoById()}'s own
- * row shape -- `Ws\Images::upload()`'s own "what does the
+ * row shape -- the tus upload pipeline's own "what does the
  * just-uploaded/replaced photo look like" lookup, used to build the
  * response's thumbnail URLs.
  *

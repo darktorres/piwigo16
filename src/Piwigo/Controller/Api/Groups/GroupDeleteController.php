@@ -21,9 +21,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * shape decision as `TagDeleteController`). Users and photos are not
  * deleted. `GroupService::delete()` records its own activity entry and
  * [SEC-57] audit trail internally, but deliberately not the permission
- * cache invalidation -- its own docblock says callers do that, matching
- * `Ws\Groups\DeleteHandler`'s own explicit `PermissionCacheInvalidator::
- * invalidate()` call.
+ * cache invalidation -- its own docblock says callers do that, so this
+ * controller calls `PermissionCacheInvalidator::invalidate()` explicitly.
  */
 final readonly class GroupDeleteController implements ControllerInterface
 {

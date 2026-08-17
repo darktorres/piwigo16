@@ -7,10 +7,10 @@ namespace Piwigo\Controller\Api\Groups;
 use Piwigo\Group\Projection\GroupListing;
 
 /**
- * Shared `GroupListing` -> REST JSON row shape, camelCased -- every Group
- * mutation in `Ws\Groups\*` returns `Ws\Groups\GetListHandler::resolve()`'s
- * own row shape for the group(s) it touched, so every mutating controller
- * here needs this same mapping, not just the list endpoint.
+ * Shared `GroupListing` -> REST JSON row shape, camelCased -- every group
+ * mutation in this family returns this same row shape for the group(s) it
+ * touched, so every mutating controller here needs this same mapping, not
+ * just the list endpoint.
  */
 final class GroupPresenter
 {

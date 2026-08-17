@@ -28,15 +28,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `PATCH /api/v1/images/{id}` -- `pwg.images.setInfo`'s real replacement,
- * admin + CSRF.
- *
- * `Ws\Images\SetInfoHandler`'s own "batch manager unit mode" branch
- * (reading a `tag_list` straight off `$_REQUEST` via
- * `Ws\Request\TagListRequest::fromGlobals()`) is deliberately not
- * carried over -- its own docblock already calls it temporary, "not to
- * be used by an external application", slated for deletion once a real
- * tag selector exists. Nothing for a JSON API to read from raw
- * superglobals anyway.
+ * admin + CSRF. Nothing here reads a `tag_list` straight off raw
+ * superglobals -- there is nothing for a JSON API to read from those
+ * anyway.
  */
 final readonly class ImageUpdateController implements ControllerInterface
 {

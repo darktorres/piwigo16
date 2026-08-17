@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Tags;
 
 /**
- * `POST /api/v1/tags/{id}/actions/duplicate` body DTO -- mirrors
- * `Ws\Tags\DuplicateParams`'s own `copy_name` field, fed from a decoded
- * JSON body instead of WS's `$params` array.
+ * `POST /api/v1/tags/{id}/actions/duplicate` body DTO.
  */
 final readonly class TagDuplicateInput
 {

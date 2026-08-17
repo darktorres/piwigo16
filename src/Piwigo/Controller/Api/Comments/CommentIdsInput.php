@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Comments;
 
 /**
- * Shared `POST .../actions/{delete,validate}` body DTO -- mirrors
- * `Ws\Comments\DeleteParams`/`ValidateParams`'s own identical
- * `comment_id` shape.
+ * Shared `POST .../actions/{delete,validate}` body DTO -- carries
+ * `commentIds`.
  */
 final readonly class CommentIdsInput
 {

@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Categories;
 
 /**
- * `POST /api/v1/categories` body DTO -- mirrors `Ws\Categories\AddParams`'s
- * own fields, fed from a decoded JSON body instead of WS's `$params`
- * array. `visible`/`commentable` are real JSON booleans here rather than
- * WS's `WsParamType::BOOL`-coerced string params.
+ * `POST /api/v1/categories` body DTO. `visible`/`commentable` are real
+ * JSON booleans.
  */
 final readonly class CategoryCreateInput
 {

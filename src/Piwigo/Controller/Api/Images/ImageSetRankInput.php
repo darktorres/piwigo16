@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/actions/set-rank` body DTO -- mirrors
- * `Ws\Images\SetRankParams`'s own dual-mode shape: an `imageIds` list
- * with more than one entry means "here is the full, already-ordered
- * list for this album" (`rank` becomes meaningless); exactly one id
- * plus `rank` means "insert this one photo at this position among its
- * album siblings".
+ * `POST /api/v1/images/actions/set-rank` body DTO -- an `imageIds` list
+ * with more than one entry means "here is the full, already-ordered list
+ * for this album" (`rank` becomes meaningless); exactly one id plus
+ * `rank` means "insert this one photo at this position among its album
+ * siblings".
  */
 final readonly class ImageSetRankInput
 {

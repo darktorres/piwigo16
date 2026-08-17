@@ -18,10 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/actions/set-rank` -- `pwg.images.setRank`'s real
- * replacement, admin + CSRF (`requiresAuth: true` on the WS side really
- * means admin_only). `Ws\Images\SetRankHandler` itself has no CSRF
- * check -- this fresh implementation adds one anyway, matching every
- * other mutating `/api/v1` endpoint.
+ * replacement, admin + CSRF, matching every other mutating `/api/v1`
+ * endpoint.
  */
 final readonly class ImageSetRankController implements ControllerInterface
 {

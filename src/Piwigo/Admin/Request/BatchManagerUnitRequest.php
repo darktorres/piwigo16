@@ -15,8 +15,8 @@ use Piwigo\Validation\InputValidator;
  * `date_creation-{id}`, `tags-{id}`) are dynamically keyed by each row's
  * own id, discovered only after a DB query the renderer runs itself, so
  * there is no fixed set of named properties this DTO could expose for
- * them -- same "expose the raw bag, let the caller do dynamic lookups"
- * shape as `Ws\Request\WsRawRequest::$params`. The original never
+ * them -- an "expose the raw bag, let the caller do dynamic lookups"
+ * shape. The original never
  * validated or type-narrowed these fields either (they're written
  * straight through to `BatchWriter::massUpdate()`), so `post` keeps that
  * exact behavior.

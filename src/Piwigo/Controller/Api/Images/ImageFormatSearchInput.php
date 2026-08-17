@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/formats/actions/search` body DTO -- mirrors
- * `Ws\Images\FormatsSearchImageParams`'s own `filename_list` shape, but
- * as a real JSON object (`{uniqueId: filename}`) instead of a JSON
- * string that itself has to be `json_decode()`d again.
+ * `POST /api/v1/images/formats/actions/search` body DTO -- `filenames` is
+ * a real JSON object (`{uniqueId: filename}`), not a JSON string that
+ * itself has to be `json_decode()`d again.
  */
 final readonly class ImageFormatSearchInput
 {

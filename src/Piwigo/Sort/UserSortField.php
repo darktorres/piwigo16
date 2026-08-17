@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Sort;
 
 /**
- * The typed column vocabulary backing `pwg.users.getList`'s `order` param
- * (`UsersMethodRegistrar`'s own registration info: "id, username, level,
- * email"). Unlike {@see PhotoSortField}, an unrecognized token is a hard
- * error rather than a silently-dropped one -- `Ws\Users\GetListHandler` has
- * an existing, tested contract that a malformed `order` returns a real 1003
- * error, and silently ignoring an unknown-but-shape-valid token would just
- * quietly bypass that instead of genuinely closing the allow-list gap.
+ * The typed column vocabulary backing `GET /api/v1/users`'s `order` query
+ * param (id, username, level, email). Unlike {@see PhotoSortField}, an
+ * unrecognized token is a hard error rather than a silently-dropped one --
+ * `Controller\Api\Users\UserListController` returns a real error response
+ * for a malformed `order`, and silently ignoring an unknown-but-shape-valid
+ * token would just quietly bypass that instead of genuinely closing the
+ * allow-list gap.
  *
  * `Username` bakes in `LOWER()` directly, replacing the handler's own
  * former `str_ireplace('username', 'LOWER(username)', $order)` -- a latent

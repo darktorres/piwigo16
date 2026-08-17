@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Users;
 
 /**
- * `POST /api/v1/users/{id}/actions/generate-password-link` body DTO --
- * mirrors `Ws\Users\GeneratePasswordLinkParams`'s own `send_by_mail`
- * field.
+ * `POST /api/v1/users/{id}/actions/generate-password-link` body DTO.
  */
 final readonly class UserGeneratePasswordLinkInput
 {

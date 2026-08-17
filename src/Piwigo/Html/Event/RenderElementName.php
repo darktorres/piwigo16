@@ -8,8 +8,8 @@ namespace Piwigo\Html\Event;
  * Typed event for the legacy `render_element_name` filter. No handler is
  * registered for it anywhere today -- a pure information carrier.
  * `$context` is a genuine union: `Html\HtmlService.php`'s dispatch site
- * passes the full element row (array), while every `Ws\*.php` dispatch
- * site passes `__FUNCTION__` (string) instead. Mutable on
+ * passes the full element row (array), while every `Controller\Api\*`
+ * dispatch site passes a short caller-identifying string instead. Mutable on
  * `$elementName`; `$context` stays context.
  */
 final class RenderElementName

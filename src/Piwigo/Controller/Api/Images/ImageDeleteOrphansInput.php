@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/actions/delete-orphans` body DTO -- mirrors
- * `Ws\Images\DeleteOrphansParams`'s own `block_size` field (default
- * 1000).
+ * `POST /api/v1/images/actions/delete-orphans` body DTO -- carries
+ * `block_size` (default 1000).
  */
 final readonly class ImageDeleteOrphansInput
 {

@@ -20,12 +20,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/actions/set-privacy-level` --
- * `pwg.images.setPrivacyLevel`'s real replacement, admin + CSRF
- * (`requiresAuth: true` on the WS side really means admin_only).
- * `Ws\Images\SetPrivacyLevelHandler` itself has no CSRF check (a real,
- * standing gap in its own registered params) -- this fresh
- * implementation adds one anyway, matching every other mutating
- * `/api/v1` endpoint.
+ * `pwg.images.setPrivacyLevel`'s real replacement, admin + CSRF, matching
+ * every other mutating `/api/v1` endpoint.
  */
 final readonly class ImageSetPrivacyLevelController implements ControllerInterface
 {

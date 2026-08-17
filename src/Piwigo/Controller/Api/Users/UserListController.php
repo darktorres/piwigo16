@@ -23,10 +23,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * only. The fuzzy `filter` (username/email/group-name) search is dropped
  * for this pass -- a real but secondary filter, not needed to make the
  * resource usable; can be added later without a breaking change.
- * `minRegister`/`maxRegister` accept the same partial-date shape
- * (`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`) as `Ws\Users\GetListHandler`'s own
- * `min_register`/`max_register`, needed for real parity with
- * `user_list.js`'s registration-date range filter.
+ * `minRegister`/`maxRegister` accept a partial-date shape (`YYYY`,
+ * `YYYY-MM`, or `YYYY-MM-DD`), needed for real parity with `user_list.js`'s
+ * registration-date range filter.
  */
 final readonly class UserListController implements ControllerInterface
 {
@@ -101,9 +100,8 @@ final readonly class UserListController implements ControllerInterface
             exclude: $exclude !== [] ? $exclude : null,
         );
 
-        // perPage=0 means "no limit", matching Ws\Users\GetListHandler's own
-        // per_page=0 contract -- user_list.js's select-all-filtered action
-        // depends on this to fetch every matching id in one request.
+        // perPage=0 means "no limit" -- user_list.js's select-all-filtered
+        // action depends on this to fetch every matching id in one request.
         $result = $this->userRowFetcher->page($criteria, $orderBy, $perPage === 0 ? null : $perPage, $perPage * $page);
 
         return ResponseFactory::json([
@@ -137,8 +135,7 @@ final readonly class UserListController implements ControllerInterface
      * Parses a `YYYY`/`YYYY-MM`/`YYYY-MM-DD` partial date into a
      * day-bounded `SqlDateTime` (`00:00:00` for a min bound, `23:59:59`
      * for a max bound; a missing month/day defaults to the first day for
-     * a min bound and the last day of the month for a max bound) --
-     * ported verbatim from `Ws\Users\GetListHandler`'s own parsing.
+     * a min bound and the last day of the month for a max bound).
      * Returns `false` on a shape or calendar validation failure.
      */
     private static function parseRegisterBound(string $raw, bool $isMax): SqlDateTime|false

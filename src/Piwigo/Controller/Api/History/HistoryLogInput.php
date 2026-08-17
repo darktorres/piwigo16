@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\History;
 
 /**
- * `POST /api/v1/history/log` body DTO -- mirrors `Ws\History\LogParams`'s
- * own shape (`imageId` mandatory, everything else optional).
+ * `POST /api/v1/history/log` body DTO -- `imageId` is mandatory, everything
+ * else optional.
  */
 final readonly class HistoryLogInput
 {

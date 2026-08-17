@@ -47,9 +47,9 @@ use Piwigo\Users\UserEntity;
  * Doctrine mapping -- the DB driver itself already rejects or silently
  * zero-dates a malformed value on write today, so moving that same
  * rejection earlier (a clear PHP exception instead of a DB-level error
- * or silent corruption) is not a new regression at the WS boundary
- * (`Ws\Images`'s 3 `date_creation` call sites), just an earlier,
- * clearer failure of a write that was never actually safe.
+ * or silent corruption) is not a new regression at any `date_creation`
+ * write site, just an earlier, clearer failure of a write that was
+ * never actually safe.
  *
  * `lastmodified` doesn't share the zero-date risk and is strict-typed
  * (`sql_datetime`) -- `NOT NULL DEFAULT CURRENT_TIMESTAMP ON

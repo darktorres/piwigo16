@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api;
 
 /**
- * Shared `f_*` images-table range-filter query-param parser -- the REST
- * surface's own equivalent of `Ws\SharedImageFilterParams::get()`,
- * feeding `Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`
+ * Shared `f_*` images-table range-filter query-param parser, feeding
+ * `Image\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()`
  * directly (that builder's own date validation is reused unchanged, not
- * duplicated here). Every real WS consumer of the shared block
- * (`pwg.tags.getImages`, `pwg.categories.getImages`, `pwg.images.search`)
- * gets its own REST equivalent from this one parser.
+ * duplicated here). `GET /api/v1/tags/images`, `GET /api/v1/categories/
+ * images`, and `GET /api/v1/images/search` all share this one parser.
  */
 final class ImageFilterQueryInput
 {

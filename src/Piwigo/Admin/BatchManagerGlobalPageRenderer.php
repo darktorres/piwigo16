@@ -104,8 +104,7 @@ final readonly class BatchManagerGlobalPageRenderer
         // Runs before Request\BatchManagerGlobalRequest::fromGlobals() below
         // (matching the original's own ordering exactly, CSRF check before
         // any field validation), so it can't read the DTO's own post bag
-        // yet -- a minimal, single-fact existence check, same shape as
-        // Ws\Server::isPost()'s own already-reviewed raw $_POST read.
+        // yet -- a minimal, single-fact existence check.
         if (count($_POST) > 0) {
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);

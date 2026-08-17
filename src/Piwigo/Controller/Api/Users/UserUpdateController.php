@@ -20,12 +20,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `PATCH /api/v1/users/{id}` -- `pwg.users.setInfo`'s real replacement,
- * admin + CSRF, one user per call (WS's own bulk `user_id` list only
- * changes behavior in the multi-id case by *ignoring*
- * username/password/email -- a REST single-resource PATCH needs no such
- * special case). Set `groupIds` to `[-1]` to dissociate the user from
- * every group, same sentinel `Ws\Users\SetInfoHandler` passes through
- * unchanged to `UserService::checkAndSaveUserInfos()`.
+ * admin + CSRF, one user per call. Set `groupIds` to `[-1]` to dissociate
+ * the user from every group, a sentinel passed through unchanged to
+ * `UserService::checkAndSaveUserInfos()`.
  */
 final readonly class UserUpdateController implements ControllerInterface
 {

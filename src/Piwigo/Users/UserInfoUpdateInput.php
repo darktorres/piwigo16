@@ -13,8 +13,9 @@ namespace Piwigo\Users;
 
 /**
  * Domain-shaped input for UserService::checkAndSaveUserInfos() -- built
- * by a caller's own typed request DTO (e.g. Ws\Users\SetInfoParams/
- * SetMyInfoParams), not parsed from a raw transport array directly.
+ * by a caller's own typed request DTO (e.g. `Controller\Api\Users\
+ * UserUpdateInput`/`Controller\Api\Session\MyInfoUpdateInput`), not
+ * parsed from a raw transport array directly.
  *
  * Every field but $userIds is null when not supplied by the caller, same
  * "absent means null" convention every field already used when it lived

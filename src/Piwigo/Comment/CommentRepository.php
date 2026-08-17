@@ -280,8 +280,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Shared base condition list for the 4 CommentApiCriteria-accepting
-     * methods below -- mirrors Ws\Comments::getList()'s own real
-     * behavior: a non-empty $criteria->search resets every other filter
+     * methods below -- a non-empty $criteria->search resets every other filter
      * (its own "reset all filters during search" comment), otherwise each
      * of authorId/imageId/minDate/maxDate applies independently when set.
      * $includeAuthorId is false only for findAuthorCounts()'s own call --
@@ -512,8 +511,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Paginated `id, date, author, content` summaries for a single image,
-     * ordered by date ascending -- Ws\Images::getInfo()'s own "related
-     * comments" block, a different (narrower, no user join) shape from
+     * ordered by date ascending -- `Controller\Api\Images\
+     * ImageGetController`'s own "related comments" block, a different
+     * (narrower, no user join) shape from
      * findForImage() above. Single-table, static WHERE/ORDER BY/LIMIT --
      * no join or aggregate here that DQL can't express.
      *
@@ -841,8 +841,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Total/validated/pending counts matching $criteria -- Ws\Comments::
-     * getList()'s own summary block. Deliberately ignores $criteria->status:
+     * Total/validated/pending counts matching $criteria -- `GET /api/v1/comments`'s
+     * own summary block. Deliberately ignores $criteria->status:
      * this computes all/validated/pending counts itself via SUM(), so it
      * needs the status-unfiltered condition set, unlike the 3 sibling
      * methods below.
@@ -878,7 +878,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Paginated admin comment listing (joined with the commenting image
-     * and user) matching $criteria -- Ws\Comments::getList()'s own row
+     * and user) matching $criteria -- `GET /api/v1/comments`'s own row
      * listing.
      *
      * Stays on DBAL -- keeps using the SqlCondition/DBAL-based
@@ -974,8 +974,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Earliest/latest `date` matching $criteria -- Ws\Comments::
-     * getList()'s own "filters" date range. MIN()/MAX() are standard DQL
+     * Earliest/latest `date` matching $criteria -- `GET /api/v1/comments`'s
+     * own "filters" date range. MIN()/MAX() are standard DQL
      * functions, so this is straightforward once
      * {@see applyApiConditionsWithStatus()} builds the condition set.
      */
@@ -1000,8 +1000,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Per-author comment counts matching $criteria -- Ws\Comments::
-     * getList()'s own "filters.nb_authors" breakdown. Deliberately ignores
+     * Per-author comment counts matching $criteria -- `GET /api/v1/comments`'s
+     * own "filters.nbAuthors" breakdown. Deliberately ignores
      * $criteria->authorId -- "how many comments per author" scoped to a
      * single author would be trivially 1, defeating the point of the
      * breakdown; mirrors the original's own
@@ -1053,8 +1053,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Total row count of `comments` -- Ws\Core::getInfos()'s own
-     * "nb_comments" summary figure. Single-table, no WHERE or join here
+     * Total row count of `comments` -- `Controller\Api\InfoController`'s own
+     * "nbComments" summary figure. Single-table, no WHERE or join here
      * that DQL can't express.
      */
     public function countAll(): int
@@ -1070,8 +1070,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Total count of unvalidated (pending) comments -- Ws\Core::
-     * getInfos()'s own "nb_unvalidated_comments" summary figure.
+     * Total count of unvalidated (pending) comments -- `Controller\Api\
+     * InfoController`'s own "nbUnvalidatedComments" summary figure.
      * Single-table, static WHERE -- no join here that DQL can't express.
      */
     public function countUnvalidated(): int

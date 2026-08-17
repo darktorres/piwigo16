@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/formats/actions/delete` body DTO -- mirrors
- * `Ws\Images\FormatsDeleteParams`'s own `format_id` shape.
+ * `POST /api/v1/images/formats/actions/delete` body DTO.
  */
 final readonly class ImageFormatDeleteInput
 {

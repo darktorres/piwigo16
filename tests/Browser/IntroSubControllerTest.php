@@ -383,9 +383,9 @@ it('adds the cached filesystem cache size onto the storage chart when configured
 
     try {
         H::setConfigValue('add_cache_to_storage_chart', 'true');
-        // CacheSizesSnapshot::fromArray() expects the real pwg.getCacheSize
-        // {name, value} pair-list wire shape (see Ws\Core::getCacheSize()),
-        // not a flat {value, time} object.
+        // CacheSizesSnapshot::fromArray() expects a {name, value}
+        // pair-list shape (see CacheSizeCalculator), not a flat
+        // {value, time} object.
         H::setConfigValue('cache_sizes', H::jsonEncode([
             [
                 'name' => 'cache_size',

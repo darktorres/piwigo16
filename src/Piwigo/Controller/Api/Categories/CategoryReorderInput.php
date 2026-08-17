@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Categories;
 
 /**
- * `POST /api/v1/categories/actions/reorder` body DTO -- mirrors
- * `Ws\Categories\SetRankParams`'s own dual-mode shape: a `categoryIds`
+ * `POST /api/v1/categories/actions/reorder` body DTO -- a `categoryIds`
  * list with more than one entry means "here is the full, already-ordered
  * sibling list" (`rank` becomes meaningless); exactly one id plus `rank`
  * means "insert this one album at this position among its siblings".

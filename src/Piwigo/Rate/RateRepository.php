@@ -451,8 +451,9 @@ final class RateRepository extends EntityRepository
 
     /**
      * Deletes rates matching $userId, and optionally further narrowed to
-     * $anonymousId and/or $elementId -- Ws\Core::ratesDelete()'s own
-     * "delete this user's rates, optionally scoped" WS method, a
+     * $anonymousId and/or $elementId --
+     * `Controller\Api\Users\UserDeleteRatingsController`'s own "delete
+     * this user's rates, optionally scoped" method, a
      * different contract from {@see deleteByUserAnonymousAndElements()}
      * above (that one requires both a non-null anonymousId and a
      * non-empty elementIds list; every condition here is independently

@@ -18,8 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/tags` -- `pwg.tags.add`'s real replacement, admin +
- * CSRF, one tag per call (same known limitation as `Ws\Tags\AddHandler`'s
- * own docblock -- batch creation would need a list-of-names body shape).
+ * CSRF, one tag per call -- batch creation would need a list-of-names
+ * body shape, a known limitation.
  */
 final readonly class TagCreateController implements ControllerInterface
 {

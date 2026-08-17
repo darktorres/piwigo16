@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Groups;
 
 /**
- * `POST /api/v1/groups/actions/merge` body DTO -- mirrors
- * `Ws\Groups\MergeParams`'s own `destination_group_id`/`merge_group_id`
- * fields.
+ * `POST /api/v1/groups/actions/merge` body DTO.
  */
 final readonly class GroupMergeInput
 {

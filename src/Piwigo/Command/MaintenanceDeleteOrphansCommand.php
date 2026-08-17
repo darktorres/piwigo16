@@ -16,11 +16,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * CLI wrapper for `pwg.images.deleteOrphans` -- deletes photos linked to
- * no album, one block at a time (`--block-size`, default 1000, matching
- * `Ws\Images\DeleteOrphansParams`'s own default). Its WS predecessor's
+ * no album, one block at a time (`--block-size`, default 1000). Its
  * orchestration (`ImageService::getOrphans()`/`deleteElements()` +
  * `PermissionCacheInvalidator::invalidate()`) is thin enough to call
- * directly here too, same as the WS handler does.
+ * directly here, shared with `Controller\Api\Images\ImageDeleteOrphansController`.
  */
 #[AsCommand(name: 'maintenance:delete-orphans', description: 'Delete photos linked to no album, one block at a time')]
 final class MaintenanceDeleteOrphansCommand extends Command

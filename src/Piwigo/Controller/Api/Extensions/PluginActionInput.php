@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Extensions;
 
 /**
- * `POST /api/v1/plugins/{id}/actions/perform` body DTO -- mirrors
- * `Ws\Extensions\PluginsPerformActionParams`'s own `action` field
+ * `POST /api/v1/plugins/{id}/actions/perform` body DTO -- carries `action`
  * (install, activate, deactivate, uninstall, delete).
  */
 final readonly class PluginActionInput

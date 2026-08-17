@@ -6,7 +6,7 @@ namespace Piwigo\Comment\Projection;
 
 /**
  * {@see \Piwigo\Comment\CommentRepository::findSummaryCounts()}'s own
- * total/validated/pending row shape -- `Ws\Comments::getList()`'s own
+ * total/validated/pending row shape -- `GET /api/v1/comments`'s own
  * summary block.
  */
 final readonly class CommentSummaryCounts

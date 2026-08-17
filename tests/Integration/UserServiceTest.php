@@ -456,14 +456,13 @@ namespace Piwigo\Tests\Integration {
                 PageStateTestFactory::get()
             );
 
-            // Real production bug, fixed as a byproduct of standalone item A
-            // (P25 plan): the old raw-array error shape used the literal key
-            // 'code ' (trailing space) here, not 'code', so
-            // Ws\Users\SetInfoHandler/SetMyInfoHandler's own defensive
-            // `is_int($error['code'] ?? null)` narrowing silently fell back
-            // to WsError::InvalidParam->value (1003) instead of the intended
-            // 403 -- UserInfoUpdateFailureReason::Forbidden has no string key
-            // to typo, so this now returns the correct reason for real.
+            // Real bug found live: the old raw-array error shape used the
+            // literal key 'code ' (trailing space) here, not 'code', so a
+            // defensive `is_int($error['code'] ?? null)` narrowing check
+            // silently fell back to the generic invalid-param error instead
+            // of the intended 403 -- UserInfoUpdateFailureReason::Forbidden
+            // has no string key to typo, so this now returns the correct
+            // reason for real.
             self::assertTrue($result->isFailure);
             self::assertSame(UserInfoUpdateFailureReason::Forbidden, $result->failureReason);
             self::assertSame('Only webmasters can grant "webmaster/admin" status', $result->failureMessage);

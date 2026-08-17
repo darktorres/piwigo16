@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Categories;
 
 /**
- * `POST /api/v1/categories/actions/move` body DTO -- mirrors
- * `Ws\Categories\MoveParams`'s own `category_id`/`parent` fields.
+ * `POST /api/v1/categories/actions/move` body DTO.
  */
 final readonly class CategoryMoveInput
 {

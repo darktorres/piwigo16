@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/actions/set-privacy-level` body DTO -- mirrors
- * `Ws\Images\SetPrivacyLevelParams`'s own `image_id`/`level` fields.
+ * `POST /api/v1/images/actions/set-privacy-level` body DTO.
  */
 final readonly class ImageSetPrivacyLevelInput
 {

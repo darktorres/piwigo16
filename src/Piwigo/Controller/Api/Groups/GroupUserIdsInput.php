@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Groups;
 
 /**
- * Shared `POST .../actions/{add-user,remove-user}` body DTO -- mirrors
- * `Ws\Groups\AddUserParams`/`DeleteUserParams`'s own identical shape
- * (both are just `user_id: list<int>` plus the CSRF token).
+ * Shared `POST .../actions/{add-user,remove-user}` body DTO -- carries
+ * `userIds`.
  */
 final readonly class GroupUserIdsInput
 {

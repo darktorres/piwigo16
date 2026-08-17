@@ -6,7 +6,7 @@ namespace Piwigo\Comment\Projection;
 
 /**
  * {@see \Piwigo\Comment\CommentRepository::findDateRange()}'s own
- * earliest/latest `date` row shape -- `Ws\Comments::getList()`'s own
+ * earliest/latest `date` row shape -- `GET /api/v1/comments`'s own
  * "filters" date range. `MIN()`/`MAX()` aggregates around
  * `CommentEntity::$date` (`SqlDateTime`-typed) stay plain scalars under
  * hydration -- aggregates never get the column's custom Doctrine Type

@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Tags;
 
 /**
- * `POST /api/v1/tags/actions/merge` body DTO -- mirrors
- * `Ws\Tags\MergeParams`'s own `destination_tag_id`/`merge_tag_id` fields,
- * fed from a decoded JSON body instead of WS's `$params` array.
+ * `POST /api/v1/tags/actions/merge` body DTO.
  */
 final readonly class TagMergeInput
 {

@@ -11,9 +11,9 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\ProfileController}. `$defaultUserValues`
- * stays a loose row shape -- it's `Ws\Users`-style default-user row
- * data with 3 fields coerced to JS-literal 'true'/'false' strings for
- * profile.latte's own inline JS, not a fixed structural shape worth
+ * stays a loose row shape -- default-user row data with 3 fields coerced
+ * to JS-literal 'true'/'false' strings for profile.latte's own inline JS,
+ * not a fixed structural shape worth
  * minting its own DTO for here.
  */
 final readonly class ProfilePageContext implements TemplatePageContext

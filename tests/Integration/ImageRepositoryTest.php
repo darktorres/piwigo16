@@ -1021,9 +1021,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     /**
      * [SEC-20] regression: findIdsByMd5sum()'s own real caller
-     * (Ws\Images::add()'s `original_sum` param) has zero WS-level type
-     * constraints -- a value containing SQL syntax must be treated as a
-     * literal, matching nothing, not injected as SQL structure.
+     * (`Admin\Upload\UploadService`'s upload-time duplicate check) has no
+     * type constraints on the value it passes -- a value containing SQL
+     * syntax must be treated as a literal, matching nothing, not injected
+     * as SQL structure.
      */
     public function testFindIdsByMd5sumTreatsSqlSyntaxAsALiteralValue(): void
     {
@@ -1046,11 +1047,9 @@ final class ImageRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * [SEC-20] regression: existsWithColumnValue()'s own real caller
-     * (Ws\Images::add()'s unvalidated original_sum/original_filename
-     * params) has zero WS-level type constraints -- a value containing SQL
-     * syntax must be treated as a literal, matching nothing, not injected
-     * as a tautology.
+     * [SEC-20] regression: a value passed to existsWithColumnValue()
+     * containing SQL syntax must be treated as a literal, matching
+     * nothing, not injected as a tautology.
      */
     public function testExistsWithColumnValueTreatsSqlSyntaxAsALiteralValue(): void
     {

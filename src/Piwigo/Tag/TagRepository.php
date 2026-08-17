@@ -658,8 +658,8 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Renames a tag -- Ws\Tags::rename()'s own single-tag name/url_name
-     * update. Goes through the ORM entity (unlike insert()/
+     * Renames a tag -- `Controller\Api\Tags\TagRenameController`'s own
+     * single-tag name/url_name update. Goes through the ORM entity (unlike insert()/
      * insertWithoutTimestamp() above) since this mutates an already-persisted
      * row rather than creating one -- Doctrine's change-tracking only
      * writes the name/url_name columns that actually changed, `lastmodified`
@@ -785,7 +785,8 @@ final class TagRepository extends EntityRepository
 
     /**
      * $ignore matches Category\CategoryRepository::massInsertGroupAccess()'s
-     * own `ignore` convention -- Ws\Tags::merge() needs INSERT IGNORE so
+     * own `ignore` convention -- `Controller\Api\Tags\TagMergeController`
+     * needs INSERT IGNORE so
      * an image already tagged with the destination tag doesn't collide with
      * one it's picking up from a merged-away tag.
      *
@@ -853,7 +854,8 @@ final class TagRepository extends EntityRepository
 
     /**
      * Comma-joined tag ids per image, for images linked to any of $tagIds
-     * -- Ws\Tags::getImages()'s own "OR mode" per-image tag list.
+     * -- `Controller\Api\Tags\TagImagesController`'s own "OR mode"
+     * per-image tag list.
      *
      * The rows are joined here rather than by `GROUP_CONCAT(it.tagId)`,
      * which this replaces. That aggregate truncates at
@@ -979,8 +981,9 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Every tag name except $excludeId's own -- Ws\Tags::rename()'s
-     * own "is the new name already taken by a different tag" check.
+     * Every tag name except $excludeId's own --
+     * `Controller\Api\Tags\TagRenameController`'s own "is the new name
+     * already taken by a different tag" check.
      *
      * Single-table, static WHERE, no join DQL can't express. t.name is a
      * plain string column, no custom Doctrine Type involved (unlike t.id

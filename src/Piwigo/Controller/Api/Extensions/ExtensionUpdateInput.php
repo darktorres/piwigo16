@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Extensions;
 
 /**
- * `POST /api/v1/extensions/{type}/{id}/actions/update` body DTO --
- * mirrors `Ws\Extensions\UpdateParams`'s own `revision` field. `type`/
- * `id` come from the route, not the body.
+ * `POST /api/v1/extensions/{type}/{id}/actions/update` body DTO -- carries
+ * `revision`; `type`/`id` come from the route, not the body.
  */
 final readonly class ExtensionUpdateInput
 {

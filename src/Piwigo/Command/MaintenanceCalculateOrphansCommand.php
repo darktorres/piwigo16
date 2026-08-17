@@ -17,8 +17,9 @@ use Symfony\Component\Console\Output\OutputInterface;
  * photos would become orphan (linked to no other album) if the given
  * album (and its sub-albums) were deleted, via
  * `CategoryService::calculateOrphanImpact()` (shared with
- * `Ws\Categories\CalculateOrphansHandler`, which the admin/Batch-Manager
- * "delete album" confirmation dialog still calls). `getCacheSize`'s
+ * `Controller\Api\Categories\CategoryOrphanImpactController`, which the
+ * admin/Batch-Manager "delete album" confirmation dialog still calls).
+ * `getCacheSize`'s
  * sibling classes in this same commit are the other 3 -- see
  * `MaintenanceCacheSizeCommand`/`MaintenanceDeleteOrphansCommand`/
  * `MaintenanceSyncMetadataCommand`.

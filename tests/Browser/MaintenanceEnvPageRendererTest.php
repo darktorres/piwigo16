@@ -80,7 +80,7 @@ it('server-renders a real active plugin\'s name and badge count in the env tab p
 it('shows the time-since-last-calculation when a real cache_sizes config value is present', function (): void {
     $snapshot = H::snapshotConfig(['cache_sizes']);
     // cache_sizes is a `[{name, value}, ...]` list persisted by
-    // Ws\Core's cache-size calculation -- index 3's own 'value' (a date
+    // CacheSizeCalculator -- index 3's own 'value' (a date
     // string) is what MaintenanceEnvPageRenderer
     // reads for its "time since last calculation" display. Hand-crafted
     // here rather than triggering a real calculation, since only that one

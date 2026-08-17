@@ -12,11 +12,10 @@ use Piwigo\Core\Paths;
  * Filesystem-backed store for in-progress tus uploads -- one `.data` file
  * (the growing byte buffer, appended to at each `PATCH`) and one `.json`
  * sidecar (the `TusUploadSession` metadata) per upload, under
- * `<uploadDir>/buffer/tus/`. Mirrors the existing chunk-upload handlers'
- * own assumption that this buffer directory is always local disk (see
- * `Ws\Images\UploadAsyncHandler`'s own docblock) -- `PATCH`'s
- * append-at-offset semantics need real `fseek()`, not a portable
- * `StorageRegistry` write, so this deliberately bypasses it.
+ * `<uploadDir>/buffer/tus/`. Assumes this buffer directory is always
+ * local disk -- `PATCH`'s append-at-offset semantics need real
+ * `fseek()`, not a portable `StorageRegistry` write, so this
+ * deliberately bypasses it.
  */
 final readonly class TusUploadStore
 {

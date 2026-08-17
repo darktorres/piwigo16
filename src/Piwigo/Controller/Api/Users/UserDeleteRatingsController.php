@@ -19,11 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/users/{id}/actions/delete-ratings` --
- * `pwg.rates.delete`'s real replacement, admin + CSRF
- * (`requiresAuth: true` on the WS side really means admin_only).
- * `Ws\Rates\DeleteHandler` itself has no CSRF check -- this fresh
- * implementation adds one anyway, matching every other mutating
- * `/api/v1` endpoint.
+ * `pwg.rates.delete`'s real replacement, admin + CSRF, matching every
+ * other mutating `/api/v1` endpoint.
  */
 final readonly class UserDeleteRatingsController implements ControllerInterface
 {

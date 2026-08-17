@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/{id}/comments` body DTO -- mirrors
- * `Ws\Images\AddCommentParams`'s own `author`/`content`/`key` fields.
- * `author` defaults to 'guest' when absent, matching the WS
- * registration's own dynamic default (accepting either a plain string
- * or, for a real signed-in caller, the current username).
+ * `POST /api/v1/images/{id}/comments` body DTO. `author` defaults to
+ * 'guest' when absent (or, for a real signed-in caller, the current
+ * username).
  */
 final readonly class ImageAddCommentInput
 {

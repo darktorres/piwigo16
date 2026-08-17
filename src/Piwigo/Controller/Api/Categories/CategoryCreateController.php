@@ -22,8 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `POST /api/v1/categories` -- `pwg.categories.add`'s real replacement,
  * admin + CSRF. HTML in name/comment is allowed only when
- * `CurrentConfig::allowHtmlDescriptions` is enabled, matching
- * `Ws\Categories\AddHandler`'s own behavior.
+ * `CurrentConfig::allowHtmlDescriptions` is enabled.
  */
 final readonly class CategoryCreateController implements ControllerInterface
 {
@@ -54,8 +53,8 @@ final readonly class CategoryCreateController implements ControllerInterface
 
         if (in_array($input->position, ['first', 'last'], true)) {
             // In-memory override only (this request's own CurrentConfig
-            // property), not a real persisted preference -- same known
-            // limitation as Ws\Categories\AddHandler's own behavior.
+            // property), not a real persisted preference -- a known
+            // limitation.
             $this->currentConfig->newcatDefaultPosition = $input->position;
         }
 

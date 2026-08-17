@@ -15,10 +15,10 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * `GET /api/v1/groups` -- `pwg.groups.getList`'s real replacement, admin
  * only. No filter/pagination params yet (matches `TagListController`'s
- * own current scope) -- `Ws\Groups\GetListHandler`'s `group_id`/`name`/
- * `per_page`/`page`/`order` params can be added once this family's own
- * pagination design lands, same deferral the REST design section already
- * calls out for the whole surface.
+ * own current scope) -- a `group_id`/`name`/`per_page`/`page`/`order`
+ * filter set can be added once this family's own pagination design lands,
+ * same deferral the REST design section already calls out for the whole
+ * surface.
  */
 final readonly class GroupListController implements ControllerInterface
 {

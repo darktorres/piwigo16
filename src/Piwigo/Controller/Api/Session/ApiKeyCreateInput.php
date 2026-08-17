@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Session;
 
 /**
- * `POST /api/v1/session/api-keys` body DTO -- mirrors
- * `Ws\Users\CreateApiKeyParams`'s own `key_name`/`duration` fields.
+ * `POST /api/v1/session/api-keys` body DTO.
  */
 final readonly class ApiKeyCreateInput
 {

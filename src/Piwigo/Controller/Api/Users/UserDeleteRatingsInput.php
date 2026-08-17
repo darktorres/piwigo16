@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Users;
 
 /**
- * `POST /api/v1/users/{id}/actions/delete-ratings` body DTO -- mirrors
- * `Ws\Rates\DeleteParams`'s own optional `anonymousId`/`imageId` fields
- * (`userId` itself comes from the route).
+ * `POST /api/v1/users/{id}/actions/delete-ratings` body DTO -- carries
+ * optional `anonymousId`/`imageId` fields (`userId` itself comes from the
+ * route).
  */
 final readonly class UserDeleteRatingsInput
 {

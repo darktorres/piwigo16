@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Groups;
 
 /**
- * `POST /api/v1/groups/{id}/actions/duplicate` body DTO -- mirrors
- * `Ws\Groups\DuplicateParams`'s own `copy_name` field.
+ * `POST /api/v1/groups/{id}/actions/duplicate` body DTO.
  */
 final readonly class GroupDuplicateInput
 {

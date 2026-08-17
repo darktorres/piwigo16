@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Images;
 
 /**
- * `POST /api/v1/images/actions/set-category` body DTO -- mirrors
- * `Ws\Images\SetCategoryParams`'s own `image_id`/`category_id`/`action`
- * fields.
+ * `POST /api/v1/images/actions/set-category` body DTO.
  */
 final readonly class ImageSetCategoryInput
 {

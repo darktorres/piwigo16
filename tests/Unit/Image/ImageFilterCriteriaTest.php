@@ -6,10 +6,9 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Image\ImageFilterCriteria;
 
 /**
- * Piwigo\Image\ImageFilterCriteria -- typed replacement for
- * Ws\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria()'s own former
- * raw SqlCondition return. Pure logic, no I/O -- no dedicated
- * Integration/Browser spec of its own.
+ * Piwigo\Image\ImageFilterCriteria -- typed return shape for
+ * Image\ImageFilterCriteriaBuilder::stdImageSqlFilterCriteria(). Pure
+ * logic, no I/O -- no dedicated Integration/Browser spec of its own.
  */
 test('isEmpty is true when every field is null', function (): void {
     $criteria = new ImageFilterCriteria();

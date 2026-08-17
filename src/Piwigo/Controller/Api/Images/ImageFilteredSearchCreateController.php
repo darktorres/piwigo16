@@ -17,17 +17,14 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/images/searches` -- `pwg.images.filteredSearch.create`'s
- * real replacement. Public, no `AdminGuard` -- its WS predecessor has no
- * `requiresAuth` flag either (the front-end's own advanced-search page
- * calls this, not just admin).
+ * real replacement. Public, no `AdminGuard` -- the front-end's own
+ * advanced-search page calls this, not just admin.
  *
  * Every field here is genuinely optional and independently validated
- * (~20 of them), the same shape `Ws\Images\FilteredSearchCreateHandler`'s
- * own docblock already justifies reading straight off the raw request
- * array instead of a dedicated input DTO -- this reads the decoded JSON
- * body the same way, camelCased. `expert` (a raw search-string escape
- * hatch, deliberately undocumented and not a registered WS param even
- * in the original) is dropped -- not carried over to this fresh surface.
+ * (~20 of them) -- this reads the decoded JSON body straight off the raw
+ * request array, camelCased, rather than through a dedicated input DTO.
+ * `expert` (a raw search-string escape hatch, deliberately undocumented)
+ * is dropped -- not carried over to this surface.
  */
 final readonly class ImageFilteredSearchCreateController implements ControllerInterface
 {

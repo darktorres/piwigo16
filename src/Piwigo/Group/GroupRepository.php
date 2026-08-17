@@ -645,8 +645,8 @@ final class GroupRepository extends EntityRepository
 
     /**
      * Raw (user_id, group_id) membership pairs for every id in $userIds --
-     * Ws\Users::getList()'s own "which groups does each returned user
-     * belong to" step, the reverse direction of
+     * `Controller\Api\Users\UserRowFetcher`'s own "which groups does each
+     * returned user belong to" step, the reverse direction of
      * {@see findMembersByGroupIds()} above (that one is keyed by group,
      * this one by user).
      *
@@ -672,8 +672,8 @@ final class GroupRepository extends EntityRepository
         // (Gotcha #1) -- ug.userId/ug.groupId hydrate into real
         // UserId/GroupId VOs under a partial-field DQL select, so this
         // extracts ->value explicitly with an instanceof check. Callers
-        // (Ws\Users::getList()) expect raw scalars under the
-        // 'user_id'/'group_id' keys, unchanged from the DBAL shape.
+        // expect raw scalars under the 'user_id'/'group_id' keys, unchanged
+        // from the DBAL shape.
         $result = [];
         foreach ($rows as $row) {
             if (! $row['userId'] instanceof UserId || ! $row['groupId'] instanceof GroupId) {

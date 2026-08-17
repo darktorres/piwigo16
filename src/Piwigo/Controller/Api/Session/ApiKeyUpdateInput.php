@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Session;
 
 /**
- * `PATCH /api/v1/session/api-keys/{pkid}` body DTO -- mirrors
- * `Ws\Users\EditApiKeyParams`'s own `key_name` field.
+ * `PATCH /api/v1/session/api-keys/{pkid}` body DTO.
  */
 final readonly class ApiKeyUpdateInput
 {

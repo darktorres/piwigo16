@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Session;
 
 /**
- * `POST /api/v1/session/caddie` body DTO -- mirrors
- * `Ws\Core\CaddieAddParams`'s own `image_id` shape.
+ * `POST /api/v1/session/caddie` body DTO.
  */
 final readonly class CaddieAddInput
 {

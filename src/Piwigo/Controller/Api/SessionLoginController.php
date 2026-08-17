@@ -17,8 +17,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `POST /api/v1/session` -- `pwg.session.login`'s real replacement. No
- * CSRF check, matching `Ws\Session\LoginHandler`'s own shape -- there's
- * no session-scoped token to present before a session exists. Returns
+ * CSRF check -- there's no session-scoped token to present before a
+ * session exists. Returns
  * the resulting session status (`SessionStatusPresenter`, shared with
  * `GET`/`DELETE /api/v1/session`) on success, matching REST's own
  * "return the resource after mutating it" convention rather than a bare

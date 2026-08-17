@@ -968,7 +968,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * "add_to_favorites" action, unlike deleteFavoritesForImages() above
      * which is a bulk removal. $ignoreDuplicate matches
      * Category\CategoryRepository::massInsertGroupAccess()'s own `ignore`
-     * convention -- Ws\Users::favoritesAdd() needs INSERT IGNORE so a
+     * convention -- `Controller\Api\Session\FavoriteAddController` needs
+     * INSERT IGNORE so a
      * repeat "add favorite" call for an already-favorited image (the
      * `(user_id, image_id)` primary key) stays a no-op instead of a
      * duplicate-key error; PictureController's own call keeps the
@@ -1150,8 +1151,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
     /**
      * Every column of every favorite image for $userId matching
-     * $condition -- Ws\Users::favoritesGetList()'s own full row
-     * listing, a different contract from
+     * $condition -- `Controller\Api\Session\FavoriteListController`'s own
+     * full row listing, a different contract from
      * {@see findVisibleFavoriteImageIds()} above (that one is
      * `image_id`-only, this one is `i.*`).
      *
@@ -1516,9 +1517,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
     /**
      * The condition list shared by findList() below -- a `1=1` base
-     * plus one condition per non-null UserListCriteria field, mirroring
-     * Ws\Users::getList()'s own original "appended only when its
-     * corresponding $params key is present" chain.
+     * plus one condition per non-null UserListCriteria field, appended
+     * only when its corresponding field is non-null.
      */
     private static function buildListCondition(UserListCriteria $criteria): SqlCondition
     {
@@ -1610,16 +1610,16 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Ws\Users::getList()'s own paginated, dynamically-columned user
+     * `Controller\Api\Users\UserRowFetcher`'s own paginated,
+     * dynamically-columned user
      * listing; see buildListCondition() above for how each criteria
      * field maps to its own WHERE condition. $displayColumns is the
      * already-built `field expr => alias` map (always includes at least
-     * `u.<idColumn> => id`), matching the WS method's client-controlled
-     * `display` param -- still caller-composed, since it shapes SELECT
+     * `u.<idColumn> => id`), caller-composed since it shapes SELECT
      * columns, not a WHERE condition. $orderBy concatenates directly into
      * ORDER BY -- caller must resolve this to real column names first
-     * (the WS method's own {@see \Piwigo\Sort\UserSortField::
-     * parseOrderClause()} call), same contract as
+     * (via {@see \Piwigo\Sort\UserSortField::
+     * parseOrderClause()}), same contract as
      * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
      * $order. The total count is only fetched when $includeTotalCount.
      * LIMIT/OFFSET are only applied when $limit !== null.
@@ -1638,7 +1638,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * the SELECT list. `GROUP BY`'s functional-dependency exception,
      * unlike `DISTINCT`'s strict same-row-literal requirement, also
      * permits the `ORDER BY LOWER(username)`-style expressions
-     * Ws\Users::getList() can build, which aren't literally present in
+     * a caller-supplied order can build, which aren't literally present in
      * the SELECT list. The total count uses a separate `COUNT(DISTINCT
      * u.id)` query rather than a window function or
      * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` (MySQL-only, no Postgres

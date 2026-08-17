@@ -14,7 +14,7 @@ use Throwable;
 /**
  * BatchWriter's happy paths (singleInsert()/massInsert()/singleUpdate()/
  * the plain SET-to-NULL branch of updateRow()) are already fully exercised
- * by its ~20 real call sites across Category/Image/Ws/Admin/Controller/
+ * by its ~20 real call sites across Category/Image/Admin/Controller/
  * Mail. This file closes the specific branches none of those happen to
  * hit: singleInsert()'s empty-$data guard, the rollback+rethrow path in
  * both massInsert() and massUpdate() (a real UNIQUE constraint violation

@@ -9,10 +9,10 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET['section']` for PluginSubController::handle() (page
  * slug "plugin") -- extracts just the plugin id. `Admin\AdminShell`'s own
- * `?page=plugin-<id>` alias always rewrites this to `<id>/admin.php`,
- * its own former file-inclusion target from before P27.15 retargeted
- * `PluginSubController` onto `PluginConfig\SettingsPageInterface` (no
- * more file path is ever constructed from this value now), so the id is
+ * `?page=plugin-<id>` alias always rewrites this to `<id>/admin.php`;
+ * `PluginSubController` dispatches through `PluginConfig\
+ * SettingsPageInterface`, and no file path is ever constructed from this
+ * value, so the id is
  * always the leading segment before the first `/` -- everything after it
  * is ignored, not validated.
  */

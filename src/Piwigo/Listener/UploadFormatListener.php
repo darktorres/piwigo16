@@ -18,10 +18,7 @@ use Piwigo\Core\SubscriberInterface;
  * `UploadService` is a real constructor dependency (not a static call) --
  * `RequestBootstrap` passes its own container-resolved instance, the
  * same one every other real `UploadService` consumer gets, standard
- * container hygiene rather than an event-dedup concern -- see that
- * class's own docblock (P32 Stage A4 deleted `EventDispatcher::
- * callablesEqual()`'s closure-identity dedup, which an earlier version
- * of this docblock cited instead).
+ * container hygiene rather than an event-dedup concern.
  */
 final readonly class UploadFormatListener implements SubscriberInterface
 {

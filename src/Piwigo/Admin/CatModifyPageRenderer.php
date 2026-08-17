@@ -69,11 +69,9 @@ final class CatModifyPageRenderer
         // Administrator-gated, SQL injection shape. $category['id'] (this
         // method's own $category parameter, already the real DB row
         // AlbumSubController loaded via a validated cat_id) is the actual
-        // source of truth for this same value, so this now derives
-        // $category_id once, up front, and uses it everywhere below --
-        // removing the redundant/broken $_GET re-read entirely rather
-        // than replacing it with a new validating DTO for data this
-        // method already had.
+        // source of truth for this same value, so $category_id is derived
+        // once here, up front, and used everywhere below instead of
+        // re-reading $_GET.
         $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
 
         // --------------------------------------------------------- form criteria check

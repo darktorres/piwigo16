@@ -18,11 +18,7 @@ use Piwigo\Users\CurrentUser;
  * Returns an array map of urls (thumb/element) for image_row -- a shared
  * shape used across several `/api/v1/images*`-family endpoints
  * (`ImageGetController`, `ImageSearchController`, `FavoriteListController`,
- * `CategoryImagesController`, `TagImagesController`). Moved here from
- * `Piwigo\Ws` (P25 Stage 1 step 6 first split it out of the former
- * WsHelper god-class; P27 moved it again when the WS layer itself was
- * deleted, since it turned out to be real, live domain logic every REST
- * family above still needs, not WS-protocol-specific).
+ * `CategoryImagesController`, `TagImagesController`).
  */
 final readonly class ImageUrlBuilder
 {

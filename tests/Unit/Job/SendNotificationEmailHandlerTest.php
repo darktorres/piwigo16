@@ -55,9 +55,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // from the call being removed outright (both produce zero
     // observable side effects). A non-empty $to pushes mail() past that
     // guard for real; a MailServiceTestSpyTransport (swapped in via
-    // MailServiceTestTransportSwap, replacing the old 'before_send_mail'
-    // event-hook interception -- P32 Stage A5 found that event had zero
-    // production listeners) captures the fully-built Email one step
+    // MailServiceTestTransportSwap) captures the fully-built Email one step
     // before a real Transport::send() would run -- this environment's
     // own real sendmail_path config means letting it proceed further
     // would attempt a genuine delivery, not a test double.

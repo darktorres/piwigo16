@@ -11,7 +11,7 @@ namespace Piwigo\Admin\Upload\Event;
  * that type doesn't exist on this branch yet; the real dispatch site
  * (`UploadService::addUploadedFile()`) passes
  * `ImageService::getImageRow()`'s own real (here non-null, already
- * guarded) `array<string, mixed>` return shape instead. Renamed and co-located here from `Piwigo\Event\Location\LocEndAddUploadedFile` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * guarded) `array<string, mixed>` return shape instead.
  */
 final readonly class UploadedFileAdded
 {

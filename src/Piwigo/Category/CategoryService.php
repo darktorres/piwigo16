@@ -181,7 +181,7 @@ final readonly class CategoryService
 
     /**
      * Generic cross-domain sort comparator -- 12 real call sites across
-     * Category/Ws/Admin/Controller/Picture pass wildly different row
+     * Category/Admin/Controller/Picture pass wildly different row
      * shapes (category rows, picture rows, image rows, ...) that merely
      * happen to share a 'global_rank' key; only that one key is read, and
      * defensively (is_scalar()-checked), so $a/$b can't be narrowed to any
@@ -458,8 +458,9 @@ final readonly class CategoryService
     }
 
     /**
-     * The 4 real callers (`CategoryCatsRenderer`, `Ws\Categories`)
-     * build {@see RandomImageCategoryQuery} explicitly from their own
+     * The real callers (`CategoryCatsRenderer`, `Controller\Api\
+     * Categories\CategoryAvailableListController`) build
+     * {@see RandomImageCategoryQuery} explicitly from their own
      * differently-sourced category row -- see that DTO's docblock.
      */
     public function getRandomImageInCategory(RandomImageCategoryQuery $query, bool $recursive = true): ?int
@@ -1281,7 +1282,8 @@ final readonly class CategoryService
      * category
      *
      * $categories is raw request input (Admin\AlbumsPageRenderer's $_POST-
-     * derived array, Ws\Categories' $order_new WS param) -- already
+     * derived array, `Controller\Api\Categories\CategoryReorderController`'s
+     * `orderNew` param) -- already
      * defensively is_array()/is_int()/is_string()-checked per element; a
      * real validating shape belongs to a dedicated Request DTO, not a
      * retroactive narrow here.
@@ -1426,10 +1428,10 @@ final readonly class CategoryService
      * Change the **commentable** property on a set of categories. Unlike
      * {@see setCatVisible()}, this has no parent/child cascade of its own
      * -- callers wanting to also apply the change to sub-albums pass their
-     * own already-expanded id list (e.g. Ws\Categories::setInfo()'s
-     * `apply_commentable_to_subalbums`). Same `bool|string` acceptance as
-     * setCatVisible() -- Ws\Categories::setInfo()'s own $params still
-     * carry the WS API's 'true'/'false' string wire format.
+     * own already-expanded id list (e.g. `Controller\Api\Categories\
+     * CategoryUpdateController`'s `applyCommentableToSubalbums`). Same
+     * `bool|string` acceptance as setCatVisible() -- real callers' own
+     * $params can still carry a 'true'/'false' string wire format.
      *
      * @param int[] $categories
      */
@@ -1943,8 +1945,9 @@ final readonly class CategoryService
      *   default (WsParamType::INT param, unset by the caller), admin/cat_list.php
      *   passes a raw, unvalidated $_GET['parent_id'] string
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
-     *   Ws\Categories::add() (the only real caller ever populating this) --
-     *   visible/commentable are real WsParamType::BOOL params, status is
+     *   `Controller\Api\Categories\CategoryCreateController` (the real
+     *   caller populating this) -- visible/commentable are real bool
+     *   params, status is
      *   only ever set after an in_array(['private', 'public']) check,
      *   comment already required a real string today (strip_tags() throws
      *   a TypeError otherwise, under this codebase's strict_types=1),
@@ -2125,8 +2128,9 @@ final readonly class CategoryService
     }
 
     /**
-     * Clears $categoryId's representative image -- Ws\Categories::
-     * deleteRepresentative()'s own action; caller clears the
+     * Clears $categoryId's representative image --
+     * `Controller\Api\Categories\CategoryDeleteRepresentativeController`'s
+     * own action; caller clears the
      * EntityManager afterward (same contract as
      * {@see setRepresentativeImage()} above).
      */
@@ -2389,13 +2393,13 @@ final readonly class CategoryService
 
     /**
      * Stays `array<string, mixed>` by design, despite `CategoryAvailableListRow`
-     * existing: `Ws\Categories::getList()`, the one real caller, extensively
-     * mutates each row in place to build the WS JSON response (adding
+     * existing: `Controller\Api\Categories\CategoryAvailableListController`,
+     * the one real caller, extensively
+     * mutates each row in place to build its JSON response (adding
      * synthetic keys like `nb_images`/`total_nb_images`/`url`/
      * `user_representative_picture_id` that have no corresponding
      * `CategoryAvailableListRow` property at all) -- a typed return would break
-     * that caller outright, same "Ws response encoder" rationale as
-     * `Ws\PwgCore.php`'s own already-documented protocol shape.
+     * that caller outright.
      *
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -2415,8 +2419,9 @@ final readonly class CategoryService
     }
 
     /**
-     * Same "Ws response encoder" rationale as getAvailableList() above --
-     * `Ws\Categories::getAdminList()`, the one real caller, extensively
+     * Same rationale as getAvailableList() above --
+     * `Controller\Api\Categories\CategoryListController`, the one real
+     * caller, extensively
      * mutates each row in place too (`nb_images`/`name_raw`/`fullname`/
      * `comment_raw`/etc., none of which exist on `CategoryAdminListRow`).
      *
@@ -2513,9 +2518,8 @@ final readonly class CategoryService
 
     /**
      * How many photos would become orphan (linked to no other category) if
-     * this category (and its sub-categories) were deleted -- the
-     * `pwg.categories.calculateOrphans` computation, shared by
-     * `Ws\Categories\CalculateOrphansHandler` and
+     * this category (and its sub-categories) were deleted -- shared by
+     * `Controller\Api\Categories\CategoryOrphanImpactController` and
      * `Command\MaintenanceCalculateOrphansCommand` so this 2-branch
      * performance optimization (below ~1000 recursive images, let MySQL do
      * the set difference; above that, avoid a huge SQL IN-list and diff in

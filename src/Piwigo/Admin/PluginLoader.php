@@ -11,17 +11,12 @@ namespace Piwigo\Admin;
 use Piwigo\Core\Paths;
 
 /**
- * `pluginsPath()` is the last surviving member of this class -- its own
- * former per-request plugin-loading methods (`loadPlugins()`/
- * `loadPlugin()`/`autoupdatePlugin()`, `was include/functions_plugins.
- * inc.php`'s `load_plugins()`/`load_plugin()`/`autoupdate_plugin()`)
- * were retired in P27.4, replaced by `PluginConfig\PluginRegistry::
- * bootActive()` (`Bootstrap\RequestBootstrap::connect()`). This method
- * itself stays: `Admin\Extensions\ExtensionScanner`/`ExtensionType`/
+ * `pluginsPath()` is the last surviving member of this class.
+ * `Admin\Extensions\ExtensionScanner`/`ExtensionType`/
  * `ExtensionLifecycle` and `Controller\Admin\PluginSubController` all
- * still resolve the real `plugins/` directory through it, serving the
+ * resolve the real `plugins/` directory through it, serving the
  * legacy/external-PEM-catalog admin machinery that stays explicitly out
- * of scope for the P27 plugin/theme contract rewrite (see
+ * of scope for the plugin/theme contract rewrite (see
  * `Admin\Extensions\ExtensionScanner`'s own docblock).
  */
 final class PluginLoader

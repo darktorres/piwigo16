@@ -28,7 +28,7 @@ use Piwigo\Users\UserService;
 
 /**
  * Builds a fresh `ExtensionContext` per plugin/theme -- `PluginRegistry`/
- * `ThemeRegistry` (P27.3) both need this identically, only the
+ * `ThemeRegistry` both need this identically, only the
  * `$extensionId` argument varies per call, so this factors out what would
  * otherwise be the same 20-collaborator constructor call duplicated in
  * both registries. Every collaborator here is a real, already-composed

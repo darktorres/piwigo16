@@ -16,20 +16,16 @@ use Psr\Http\Server\RequestHandlerInterface;
 /**
  * Repopulates `LoadedPlugins` from the plugin registry `Http\Middleware\
  * PluginBootstrapMiddleware` already booted and published to
- * `CurrentPluginRegistry` (workstream C3 Phase 1) -- verbatim-ported from
- * `Bootstrap\RequestBootstrap::connect()`'s own identical block.
+ * `CurrentPluginRegistry`.
  *
  * Lives in `Piwigo\Admin\` (L4Integration), a separate real middleware
  * from `PluginBootstrapMiddleware` (L3Presentation, `Http\Middleware\*`)
- * specifically because `LoadedPlugins` itself is L4Integration --
- * `connect()`'s own original comment already explained this exact split:
- * "`PluginRegistry` (P27.3, `PluginConfig\`, L3Presentation) can't take
- * `Admin\LoadedPlugins` (`Admin\`, L4Integration) as a constructor param
- * itself without an L3->L4 deptrac violation, so this glue stays here."
- * That reasoning still holds once the glue becomes real middleware instead
- * of a procedural bootstrap step -- it just means the glue is its own
- * middleware now, positioned immediately after `PluginBootstrapMiddleware`
- * in `RequestPipeline::DEFAULT_MIDDLEWARE` rather than folded into it.
+ * specifically because `LoadedPlugins` itself is L4Integration:
+ * `PluginConfig\PluginRegistry` (L3Presentation) can't take `Admin\
+ * LoadedPlugins` (`Admin\`, L4Integration) as a constructor param without
+ * an L3->L4 deptrac violation, so this glue stays as its own middleware,
+ * positioned immediately after `PluginBootstrapMiddleware` in
+ * `RequestPipeline::DEFAULT_MIDDLEWARE`.
  */
 final readonly class LoadedPluginsMiddleware implements MiddlewareInterface
 {

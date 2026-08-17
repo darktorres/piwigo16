@@ -21,16 +21,9 @@ use Closure;
  *
  * Entries are bound `Closure`s (`$this->onFoo(...)`), never method-name
  * strings, deliberately diverging from Symfony's own
- * `EventSubscriberInterface::getSubscribedEvents()` shape -- not because
- * of a PHPStan rule collision (an earlier version of this docblock
- * claimed `method.dynamicName` bans this; verified false: that rule only
- * flags a literal `$obj->$var()` AST node, which this pattern never
- * writes anywhere, and shipmonk/dead-code-detector's
- * `SymfonyUsageProvider` already has first-class support for tracing
- * `getSubscribedEvents()`'s string method names as real usages --
- * confirmed with a throwaway probe class analysed clean under the full,
- * unscoped `composer analyse`). The real, load-bearing reason:
- * `EventSubscriberInterface::getSubscribedEvents()` is declared `public
+ * `EventSubscriberInterface::getSubscribedEvents()` shape. The real,
+ * load-bearing reason: `EventSubscriberInterface::getSubscribedEvents()`
+ * is declared `public
  * static function`, so it has no `$this` -- confirmed both ways, PHPStan
  * itself rejects `$this->onFoo(...)` written inside a static method
  * (`return.type`/`method.nonObject`/`variable.undefined`), and actually

@@ -13,10 +13,10 @@ use Piwigo\Session\SessionService;
 /**
  * Piwigo\Http\SessionBootstrap -- installs Piwigo's DB-backed session save
  * handler before session_start(). No dedicated Integration/Browser spec of
- * its own. Moved here from Piwigo\Bootstrap\SessionBootstrap (workstream
- * C3 Phase 1) once Http\Middleware\ConfigBootstrapMiddleware (L3) needed
- * to call it too -- Piwigo\Bootstrap\* is L4Integration, which
- * Http\Middleware\* (L3Presentation) may not depend upward on.
+ * its own. Lives in Piwigo\Http\ since Http\Middleware\
+ * ConfigBootstrapMiddleware (L3) needs to call it -- Piwigo\Bootstrap\*
+ * is L4Integration, which Http\Middleware\* (L3Presentation) may not
+ * depend upward on.
  *
  * Only the no-op guard is covered here: `register()`'s real body calls
  * `session_set_save_handler()`/`session_name()`/

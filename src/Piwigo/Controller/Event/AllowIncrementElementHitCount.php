@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\ImageId;
  * `$imageId` in addition to the reference's own `$contentNotSet` -- this
  * branch's real dispatch site (`PictureController.php`) passes it as
  * extra context, which the reference's own class doesn't. Mutable on
- * `$incHitCount`; `$imageId` stays context. Co-located here from `Piwigo\Event\Picture\AllowIncrementElementHitCount` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `$incHitCount`; `$imageId` stays context.
  */
 final class AllowIncrementElementHitCount
 {

@@ -10,9 +10,8 @@ namespace Piwigo\Activity\Projection;
  * "activities.system" telemetry bucket, its real (and only) consumer.
  *
  * $systemScope is an {@see \Piwigo\Core\ActivitySystem} constant
- * (`Core`/`Plugin`/`Theme`), not a row id. It used to be read out of
- * `object_id`, which for `object = 'system'` rows never held one -- the
- * overload Version20260815230000 split apart. Nullable because the column
+ * (`Core`/`Plugin`/`Theme`), not a row id -- see Version20260815230000
+ * for the `object_id`/`systemScope` split. Nullable because the column
  * is: a row predating that split, or written by something that bypassed
  * ActivityService, has none.
  */

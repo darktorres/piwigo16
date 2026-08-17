@@ -10,7 +10,7 @@ namespace Piwigo\Html\Event;
  * `$context` is a genuine union: `Html\HtmlService.php`'s dispatch site
  * passes the full element row (array), while every `Ws\*.php` dispatch
  * site passes `__FUNCTION__` (string) instead. Mutable on
- * `$elementName`; `$context` stays context. Co-located here from `Piwigo\Event\Picture\RenderElementName` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `$elementName`; `$context` stays context.
  */
 final class RenderElementName
 {

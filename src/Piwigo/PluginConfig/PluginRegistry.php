@@ -20,12 +20,10 @@ use RuntimeException;
 
 /**
  * Registry for Piwigo 17+ plugins -- replaces `Admin\PluginLoader`'s
- * DB-query-and-raw-`include_once` per-request loop (P27.4 retargets the
- * actual call site).
+ * DB-query-and-raw-`include_once` per-request loop.
  *
  * Adapted, not copied, from `../piwigo16-rewrite`'s own `Plugin\
- * PluginRegistry` -- see this fork's own P27 plan for the full
- * reference-verdict discussion and every correction made here.
+ * PluginRegistry`.
  */
 final class PluginRegistry
 {
@@ -41,7 +39,7 @@ final class PluginRegistry
 
     /**
      * The same instances `bootActive()`'s own two-pass loop already
-     * constructs and `boot()`s -- cached here (P27.15) so
+     * constructs and `boot()`s -- cached here so
      * `getBootedInstance()` can hand `Controller\Admin\
      * PluginSubController` the real, already-booted instance a settings
      * page needs, not a freshly re-booted duplicate whose `boot()`-time
@@ -356,7 +354,7 @@ final class PluginRegistry
      * The real, already-`boot()`ed instance for an active plugin id --
      * `null` before `bootActive()` has run, or for an id it never booted
      * (never active, or `enablePlugins` off). `Controller\Admin\
-     * PluginSubController` (P27.15) is the one real reader, via
+     * PluginSubController` is the one real reader, via
      * `CurrentPluginRegistry` -- see that class's own docblock for why a
      * fresh, container-autowired `PluginRegistry` can't just call
      * `bootActive()` again itself.
@@ -455,7 +453,7 @@ final class PluginRegistry
     }
 
     /**
-     * `install()`/`activate()`'s own manifest-authoring check (P27.15):
+     * `install()`/`activate()`'s own manifest-authoring check:
      * a manifest declaring `hasSettings` (`true` or `'webmaster'`) but
      * whose main class doesn't implement `SettingsPageInterface` is
      * caught here, at the one place a real authoring mistake should

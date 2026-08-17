@@ -49,7 +49,7 @@ final readonly class IgnoreUpdateController implements ControllerInterface
         }
 
         $input = IgnoreUpdateInput::fromArray(JsonBody::decode($request));
-        $type = $input->type !== null ? ExtensionType::fromPluralWsParam($input->type) : null;
+        $type = $input->type !== null ? ExtensionType::fromPluralParam($input->type) : null;
 
         if ($input->reset) {
             if ($type instanceof ExtensionType) {

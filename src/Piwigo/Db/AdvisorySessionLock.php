@@ -14,15 +14,13 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
  * full research trail: reentrancy per session, the `unpack('J', ...)`
  * bigint-key derivation, why a poll loop is needed to emulate
  * `GET_LOCK()`'s blocking-with-a-timeout since `pg_try_advisory_lock()`
- * never blocks at all). `UniqueExecLock` and two other real, independent
- * call sites (`Ws\Images::add()`'s upload-uniqueness lock,
- * `Admin\Upload\UploadService::upload()`'s duplicate-detection lock) each
- * build their own already-hashed, MySQL-shaped lock-name string (capped at
- * MySQL's own 64-character `GET_LOCK()` limit) and use it verbatim for the
- * MySQL branch -- {@see key()} re-hashes that same string for the Postgres
+ * never blocks at all). `UniqueExecLock` and `Admin\Upload\
+ * UploadService::upload()`'s duplicate-detection lock each build their
+ * own already-hashed, MySQL-shaped lock-name string (capped at MySQL's
+ * own 64-character `GET_LOCK()` limit) and use it verbatim for the MySQL
+ * branch -- {@see key()} re-hashes that same string for the Postgres
  * branch's bigint key, so every caller only ever has to build and carry
- * one string, matching the shape they already had before Postgres support
- * existed.
+ * one string.
  */
 final class AdvisorySessionLock
 {

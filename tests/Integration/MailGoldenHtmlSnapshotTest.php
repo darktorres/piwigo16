@@ -129,9 +129,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         // *CaptureBeforeSend() helpers below -- wiring the spy once here,
         // rather than per-call, matches this class's own docblock claim
         // that all 4 sends are deliberate golden-content coverage, never a
-        // genuine network attempt. Replaces the old `BeforeSendMail`
-        // event-hook interception (P32 Stage A5 found that event had zero
-        // production listeners).
+        // genuine network attempt.
         $this->mailerSpy = new MailServiceTestSpyTransport();
         $this->mailer = MailServiceTestTransportSwap::with($mailer, $this->mailerSpy);
 

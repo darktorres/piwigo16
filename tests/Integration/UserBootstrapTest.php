@@ -40,13 +40,6 @@ use Piwigo\Users\UserService;
  *  - the authKeyLogin() call site itself (resolveApacheRemoteUser() the
  *    pure function is Unit-tested; nothing calls initialize() with
  *    `$_GET['auth']` set).
- *
- * The WS `HTTP_X_PIWIGO_API`/`pwg.images.uploadAsync` branches this class
- * used to also cover here were deleted along with the WS layer itself
- * (P27) -- both were already fully unreachable dead code before that
- * deletion (gated on `$_REQUEST['method']`, a request shape `/api/v1`
- * never sends), confirmed via a full-codebase search; see
- * UserBootstrap's own docblock.
  */
 final class UserBootstrapTest extends IntegrationTestCase
 {

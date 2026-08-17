@@ -634,12 +634,9 @@ final class Lang
 
     /**
      * Also seeds Translator's own mirror (t()'s fallback path for keys
-     * with no gettext entry) -- matches this method's own pre-"nothing is
-     * frozen" behavior, when self::$data and $GLOBALS['lang'] were the
-     * same reference and Translator::translate() read that same global;
-     * one loadArray() call making both has() and t() resolve is the real
-     * test-ergonomics contract callers rely on, not an accident of how
-     * the old bridge happened to be wired.
+     * with no gettext entry) -- one loadArray() call making both has()
+     * and t() resolve is a real, intentional test-ergonomics contract
+     * callers rely on.
      *
      * @param array<string, string|array<int, string>> $data
      */

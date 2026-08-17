@@ -113,22 +113,21 @@ final readonly class SearchService
 
     /**
      * Same as getSearchInfo(), plus request-context validation: dies on a
-     * malformed candidate, refuses (outside the web-service API) to
-     * resolve an old-style numeric-only id once the search row already
-     * has a search_uuid (spies shouldn't be able to walk
-     * index.php?/search/123, .../124, ...), and hands the resolved id
-     * back through $resolvedSearchId for HistoryService::logVisit() to
-     * read later, when rendering the "search" section.
+     * malformed candidate, refuses to resolve an old-style numeric-only
+     * id once the search row already has a search_uuid (spies shouldn't
+     * be able to walk index.php?/search/123, .../124, ...), and hands the
+     * resolved id back through $resolvedSearchId for HistoryService::
+     * logVisit() to read later, when rendering the "search" section.
      *
      * $section and $resolvedSearchId are explicit params. This method's
      * two real callers are SearchService::getValidatedSearchArray()
      * (reached from SearchFilterRenderer::render(), which passes
      * SectionContext::section, always available there, and returns the
      * resolved id up its own call chain to GalleryController) and
-     * Ws\Images::filteredSearchCreate() (a WS method that never runs
-     * SectionPopulator, passes null section and no out-param --
-     * `$page['section']` is never 'search' for a WS request either, so
-     * nothing is written for that caller).
+     * `Controller\Api\Images\ImageFilteredSearchCreateController` (never
+     * runs SectionPopulator, passes null section and no out-param --
+     * `$page['section']` is never 'search' for that caller either, so
+     * nothing is written for it).
      *
      * @param int|null $resolvedSearchId in/out; set to the resolved
      *   search id when $section === 'search', left untouched otherwise
@@ -1401,8 +1400,9 @@ final readonly class SearchService
      *
      * $orderByOverride, when given, is used instead of
      * `$this->currentConfig->orderBy` for this call only -- callers that
-     * need a request-scoped sort order (e.g. Ws\Images\SearchHandler's own
-     * `order` param) pass it explicitly instead of mutating the shared
+     * need a request-scoped sort order (e.g. `Controller\Api\Images\
+     * ImageSearchController`'s own `order` query param) pass it explicitly
+     * instead of mutating the shared
      * CurrentConfig instance, which would otherwise leak into every other
      * consumer for the rest of the request (and across requests under
      * worker mode).

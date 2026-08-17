@@ -126,10 +126,10 @@ final readonly class SearchRepository
     }
 
     /**
-     * $createdOn/$searchUuid default to null for Ws\Core::historySearch()'s
-     * ephemeral, metadata-less inserts (no user-facing permalink, never
-     * forked) -- SearchService::saveSearch() always passes real values for
-     * both.
+     * $createdOn/$searchUuid default to null for an ephemeral,
+     * metadata-less insert (no user-facing permalink, never forked) --
+     * no current real caller passes null for either: SearchService::
+     * saveSearch() always passes real values for both.
      *
      * Uses `persist()`/`flush()` -- DQL has no INSERT statement.
      * `saveSearch()`'s own `$createdOn` is `Env::now()`-computed in PHP,
@@ -154,9 +154,10 @@ final readonly class SearchRepository
 
     /**
      * Batch lookup of decoded `rules` for a list of search ids, used by
-     * Ws\Core::historySearch()'s history-listing enrichment (one query
-     * for every `search_id` referenced across a page of history rows,
-     * instead of unserialize()-ing a raw per-row string itself).
+     * `Controller\Api\History\HistorySearchController`'s history-listing
+     * enrichment (one query for every `search_id` referenced across a
+     * page of history rows, instead of unserialize()-ing a raw per-row
+     * string itself).
      *
      * @param list<int> $ids
      * @return array<int, array<string, mixed>|null> keyed by search id

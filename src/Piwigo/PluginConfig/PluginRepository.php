@@ -87,19 +87,13 @@ final class PluginRepository extends EntityRepository
     }
 
     /**
-     * `PluginRegistry::install()`'s own write (P27.3) -- this class's
-     * pre-P27 real caller (`Admin\PluginLoader`) only ever reads, so
-     * insert/updateState/delete didn't exist here before; the admin-side
-     * write path went through `Admin\Extensions\ExtensionRepository::
-     * insertPlugin()`/`updatePluginState()` instead (raw DBAL against the
-     * `plugins` table by string id, no `PluginEntity` involved at all).
-     * `insertPlugin()` became genuinely dead once P27.5 retargeted
-     * `ExtensionLifecycle` onto this registry -- deleted in P27.8.
-     * `updatePluginState()` did **not**: `Admin\PluginsInstalledPageRenderer`
-     * still calls it directly for its own "merged into core" auto-
-     * deactivation, unrelated to `ExtensionLifecycle`'s own dispatch --
-     * confirmed live before assuming P27.5's own original text (which
-     * expected both to go dead together) still held.
+     * `PluginRegistry::install()`'s own write. The admin-side write path
+     * goes through `Admin\Extensions\ExtensionRepository::
+     * updatePluginState()` instead (raw DBAL against the
+     * `plugins` table by string id, no `PluginEntity` involved at all):
+     * `Admin\PluginsInstalledPageRenderer`
+     * calls it directly for its own "merged into core" auto-
+     * deactivation, unrelated to `ExtensionLifecycle`'s own dispatch.
      */
     public function insert(PluginId $id, string $version, PluginState $state = PluginState::Inactive): void
     {

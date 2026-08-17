@@ -17,8 +17,7 @@ namespace Piwigo\Activity;
  * `System` is the odd one and the reason this enum is worth having:
  * `object = 'system'` rows never referenced a row at all. They carry an
  * {@see \Piwigo\Core\ActivitySystem} constant (`Core`, `Plugin`, `Theme`),
- * which used to be stuffed into `object_id` alongside genuine row ids. It now
- * has its own column, so one column no longer means two unrelated things.
+ * stored in its own column separate from `object_id`'s genuine row ids.
  */
 enum ActivityObject: string
 {

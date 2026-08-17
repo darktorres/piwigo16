@@ -840,13 +840,12 @@ final class BrowserTestHelpers
     /**
      * Translates a legacy WS method call onto its real `/api/v1` replacement
      * and reshapes the JSON response back into the `{stat, result}`/
-     * `{stat, err, message}` WS envelope this suite's ~50 call sites were
-     * already written against -- P27 deleted the WS layer, not those call
-     * sites' own response-shape assumptions, and rewriting every one of
-     * them (most only need an `id`/`username`/... field back out) would be
-     * pure churn against a mechanically equivalent read. Only the WS
-     * methods this suite's own fixture-setup code actually calls are
-     * covered -- add a new match() arm if a future test needs one that
+     * `{stat, err, message}` WS envelope this suite's ~50 call sites are
+     * already written against -- rewriting every one of them (most only
+     * need an `id`/`username`/... field back out) would be pure churn
+     * against a mechanically equivalent read. Only the WS methods this
+     * suite's own fixture-setup code actually calls are covered -- add a
+     * new match() arm if a future test needs one that
      * isn't listed here.
      *
      * @param  array<string, mixed>  $params
@@ -2259,9 +2258,8 @@ final class BrowserTestHelpers
      * Browser test files' own local curl-cookie-jar sessions (raw
      * `CURLINFO_REDIRECT_URL`-observing helpers `H::rawGet()`'s in-page
      * fetch(manual) can't replace -- see e.g. PictureControllerTest's own
-     * pictureCurlLoginSession() docblock) that previously called `ws.php`
-     * directly through their own local closure and now call this instead
-     * for the same fixture-creation need. Every caller always passes
+     * pictureCurlLoginSession() docblock), all consolidated onto this
+     * shared helper for the same fixture-creation need. Every caller always passes
      * `tempnam()`'s result, so `$cookieJar` is always a real path.
      *
      * @param array<string, mixed> $body

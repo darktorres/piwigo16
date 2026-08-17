@@ -27,7 +27,7 @@ use Piwigo\Core\SubscriberInterface;
  * (`Admin\Extensions\ExtensionLifecycle`), never from a real request's
  * boot path.
  *
- * `subscribedEvents()` (P32 Stage A6: inherited from `Core\
+ * `subscribedEvents()` (inherited from `Core\
  * SubscriberInterface`, not redeclared here -- see that interface's own
  * docblock for the shared shape/rationale) must declare the full,
  * unconditional union of every event this extension might ever care

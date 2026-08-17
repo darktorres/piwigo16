@@ -29,7 +29,7 @@ use Piwigo\Users\UserStatus;
  * Browser spec -- reached only via the "sys" tab of the "maintenance"
  * page slug.
  *
- * P26.2: the activity log is server-rendered directly now, no ajax
+ * The activity log is server-rendered directly, no ajax
  * round-trip -- a webmaster always gets a real
  * findSystemObjectLogWithUsernames() query result (the fixture DB's own
  * install-time system log, 3 rows), a non-webmaster gets none.

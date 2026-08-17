@@ -76,18 +76,14 @@ final class PluginsInstalledPageRenderer
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig, $entityManager);
 
-        // P27.5's own original gap here: ExtensionScanner used to recognize
-        // only the legacy main.inc.php header-comment format, so a
-        // new-contract plugin (plugin.json only) was invisible to it. Since
-        // P27.10 retired that legacy scan entirely, ExtensionScanner::
-        // scanPlugin() reads plugin.json directly -- the same marker file
-        // $pluginRegistry->getAllManifests() itself scans, just without its
-        // stricter opis/json-schema validation, so every id the registry
-        // can find, the fs scan above already finds first (a schema-valid
-        // plugin.json is by construction also a valid one for the fs
-        // scan's own looser read). This merge is very likely fully
-        // redundant now -- kept as-is rather than removed in the same pass
-        // that made it redundant, pending its own dedicated verification.
+        // ExtensionScanner::scanPlugin() reads plugin.json directly -- the
+        // same marker file $pluginRegistry->getAllManifests() itself
+        // scans, just without its stricter opis/json-schema validation,
+        // so every id the registry can find, the fs scan above already
+        // finds first (a schema-valid plugin.json is by construction also
+        // a valid one for the fs scan's own looser read). This merge is
+        // very likely fully redundant -- kept as-is pending its own
+        // dedicated verification.
         foreach ($pluginRegistry->getAllManifests() as $manifestId => $manifest) {
             if (isset($fs_plugins[$manifestId])) {
                 continue;

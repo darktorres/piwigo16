@@ -165,11 +165,8 @@ function tagsPagePluginsPath(): string
 
 /**
  * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
- * class -- the P27 plugin/theme contract's own fixture shape, replacing
- * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
- * loadPlugins()` used to run (retired in P27.4, replaced by
- * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
- * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * class -- the plugin/theme contract's own fixture shape, loaded via
+ * `PluginConfig\PluginRegistry::bootActive()`. `$bootBodySource` is spliced verbatim into the
  * fixture class's own `boot()` method body. The namespace is derived
  * from random bytes, not `$pluginId` (which can start with a digit --
  * not a legal leading character for a PHP identifier).

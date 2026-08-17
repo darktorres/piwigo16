@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\UserId;
  * from the reference's non-nullable `int` -- since its one real dispatch
  * site (`AuthService::logoutUser()`) reads `$_SESSION['pwg_uid'] ?? null`,
  * genuinely null for a session that requests logout without ever having
- * logged in. Co-located here from `Piwigo\Event\User\UserLogout` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * logged in.
  */
 final readonly class UserLogout
 {

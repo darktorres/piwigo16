@@ -84,19 +84,17 @@ use Piwigo\Validation\InputValidator;
  * The per-request bootstrap; bootEntryPoint() is the entry point every
  * root `public/*.php` file calls directly.
  *
- * Boot proceeds in two stages now, not three (workstream C3 Phase 1):
- * `bootEntryPoint()` itself only runs configure() (Kernel::boot() +
- * ServerTiming seed + the install-sentinel redirect check) and
- * `InstallationFlag::mark()`. What used to be connect()'s and finalize()'s
- * own bodies now run as real PSR-15 middleware
- * (`Http\Middleware\ConfigBootstrapMiddleware`/`SessionMiddleware`/
- * `PluginBootstrapMiddleware`/`Admin\LoadedPluginsMiddleware`/
- * `UserResolutionMiddleware`/`Http\Middleware\LanguageMiddleware`/
- * `FinalizeBridgeMiddleware`) inside `RequestPipeline::handle()`, called
- * by every entry point immediately after `bootEntryPoint()` returns.
- * `finalize()` itself still exists on this class -- its still-legacy,
- * Template-dependent remainder (gated on Plan 2 P38/P39 for a real
- * decomposition, workstream C3 Phase 2) is now called by
+ * Boot proceeds in two stages: `bootEntryPoint()` itself only runs
+ * configure() (Kernel::boot() + ServerTiming seed + the install-sentinel
+ * redirect check) and `InstallationFlag::mark()`. The rest runs as real
+ * PSR-15 middleware (`Http\Middleware\ConfigBootstrapMiddleware`/
+ * `SessionMiddleware`/`PluginBootstrapMiddleware`/`Admin\
+ * LoadedPluginsMiddleware`/`UserResolutionMiddleware`/`Http\Middleware\
+ * LanguageMiddleware`/`FinalizeBridgeMiddleware`) inside
+ * `RequestPipeline::handle()`, called by every entry point immediately
+ * after `bootEntryPoint()` returns. `finalize()` itself still exists on
+ * this class -- its still-legacy, Template-dependent remainder (gated on
+ * Plan 2 P38/P39 for a real decomposition) is called by
  * `FinalizeBridgeMiddleware`, not by `bootEntryPoint()` directly.
  * bootConfigOnly() is a separate, lighter, standalone-callable path
  * (config + globals only, no install-check/session/DB-user machinery) that
@@ -284,7 +282,7 @@ final class RequestBootstrap
      * through CurrentConfig/ConfigLoader::applyEnvOverrides() (a genuine
      * no-op today, called with zero arguments at over 100 real call
      * sites -- see its own docblock). Lets each sibling repo's local
-     * extension mirror (P27.9) be pointed at independently of the
+     * extension mirror be pointed at independently of the
      * single, generic $alternativePemUrl override, which stays exactly
      * as-is for every caller that doesn't pass $type.
      */
@@ -345,7 +343,7 @@ final class RequestBootstrap
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'ws' and DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
                 $theme = ThemeId::from(self::currentConfig()->mobileTheme);
             }
-            // PluginConfig\ThemeRegistry::bootCurrent() (P27.4) -- only the
+            // PluginConfig\ThemeRegistry::bootCurrent() -- only the
             // classic (public-gallery) theme, never the admin theme above:
             // themes/admin/ is a separate, non-manifest-scanned directory
             // tree (Admin\Extensions\ExtensionType::scanDirectory()'s own
@@ -420,21 +418,11 @@ final class RequestBootstrap
         $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes);
 
         // Default event handlers -- extracted into Piwigo\Listener\*
-        // classes (P27.0). Must stay after PluginRegistry::bootActive()
-        // (now `Http\Middleware\PluginBootstrapMiddleware`, earlier in the
-        // same pipeline -- P27.4) so a plugin's own 'upload_file'
-        // handler (if any) keeps first crack in the trigger_change() chain.
-        // The 2 dead 'pwg_image_resize' registrations this block used to
-        // carry (no function by that name exists anywhere in this
-        // codebase, neither event was ever triggered) were deleted
-        // outright rather than ported: no Core\SubscriberInterface
-        // implementor's shape can express "register a string that isn't
-        // callable yet and only fail lazily," and preserving genuinely
-        // dead code isn't worth contorting the new mechanism for. The 2
-        // orphaned event classes themselves (UploadImageResize/
-        // UploadThumbnailResize) were later deleted outright too (P32
-        // Stage A5), once zero dispatch site anywhere confirmed they
-        // served no purpose at all.
+        // classes. Must stay after `Http\Middleware\
+        // PluginBootstrapMiddleware`'s own `PluginRegistry::bootActive()`
+        // call, earlier in the same pipeline, so a plugin's own
+        // 'upload_file' handler (if any) keeps first crack in the
+        // trigger_change() chain.
         self::eventDispatcher()->registerSubscriber(new HtmlRenderingListener(self::htmlService(), self::currentConfig()));
         // checkForSpam() is an instance method (matching UploadFormatListener's
         // own now-instance upload_file handlers below, both container-shared
@@ -447,8 +435,7 @@ final class RequestBootstrap
         // see that method's own docblock for why every real UploadService
         // consumer (this listener included) now resolves the same object
         // instead of constructing its own (standard container hygiene,
-        // not an event-dedup concern -- EventDispatcher::callablesEqual()
-        // is gone, deleted in P32 Stage A4).
+        // not an event-dedup concern).
         self::eventDispatcher()->registerSubscriber(new UploadFormatListener(self::uploadService()));
         self::eventDispatcher()->dispatch(new Init());
 
@@ -483,7 +470,7 @@ final class RequestBootstrap
 
     /**
      * Narrow, purpose-built read facade for PluginConfig\ExtensionContext
-     * (P27.2) -- reuses the request's own shared Connection, same
+     * -- reuses the request's own shared Connection, same
      * "no extra physical DB connection" discipline as every other
      * repository accessor here. Piwigo\Category\CategoryRepository isn't
      * a Doctrine EntityRepository subclass (a plain service wrapping
@@ -511,7 +498,7 @@ final class RequestBootstrap
     }
 
     /**
-     * Builds a fresh ExtensionContextFactory (P27.3) -- cheap, pure
+     * Builds a fresh ExtensionContextFactory -- cheap, pure
      * composition of already-resolved accessors, no I/O of its own, so
      * building one per registry-construction call site (pluginRegistry()/
      * themeRegistry() below) rather than caching a single shared instance
@@ -559,7 +546,7 @@ final class RequestBootstrap
     }
 
     /**
-     * PluginConfig\ThemeRegistry::bootCurrent() (P27.4) -- called once
+     * PluginConfig\ThemeRegistry::bootCurrent() -- called once
      * per request in finalize(), right after the classic (non-admin)
      * theme is resolved and before Template is constructed.
      */
@@ -1111,8 +1098,7 @@ final class RequestBootstrap
      * Controller\Admin\ConfigurationSubController,
      * Controller\Admin\PhotosAddSubController) now resolves too, instead
      * of each constructing its own -- standard container hygiene, not an
-     * event-dedup concern (EventDispatcher::callablesEqual() is gone,
-     * deleted in P32 Stage A4).
+     * event-dedup concern.
      */
     private static function uploadService(): UploadService
     {

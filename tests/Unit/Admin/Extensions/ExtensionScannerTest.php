@@ -33,15 +33,8 @@ use Piwigo\Users\User;
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
 // [Mutation] Remaining untested mutations, checked per-instance via
-// hand-mutation (not assumed by category alone). P27.10 dropped
-// scanPlugin()/scanTheme()'s entire regex/header-comment-parsing
-// mechanism (main.inc.php/themeconf.inc.php -> plugin.json/theme.json),
-// so most of the plugin/theme-specific findings this block used to
-// document (Version-header trim, multi-line theme_conf glue, the
-// 2048-byte read window, case-insensitive "webmaster") no longer have
-// any code to be mutations *of* -- removed along with the tests that
-// exercised them, not left describing dead lines. Findings that still
-// apply, post-rewrite:
+// hand-mutation (not assumed by category alone). Findings that still
+// apply:
 // - `if ((bool) preg_match(...))` in scanLanguage()'s own header parsing
 //   (the only remaining preg_match() call in this class) -- inert for
 //   the same universal-PHP-if()-coercion reason as the campaign's own

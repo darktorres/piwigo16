@@ -9,9 +9,8 @@ use Piwigo\Common\ValueObject\GroupId;
 
 /**
  * Typed row shape for `groups`. `fromRow()` centralises the
- * `is_string($row['x']) ? ... :
- * default` narrowing {@see \Piwigo\Group\GroupRepository::findAllBasic()}
- * used to do inline, same shape as {@see \Piwigo\Tag\Projection\Tag}.
+ * `is_string($row['x']) ? ... : default` narrowing, same shape as
+ * {@see \Piwigo\Tag\Projection\Tag}.
  *
  * Scoped to `findAllBasic()`'s own 3-column projection (`id`/`name`/
  * `is_default`), not every `groups` column -- {@see

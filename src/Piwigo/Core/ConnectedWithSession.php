@@ -12,16 +12,17 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Typed get/set for `$_SESSION['connected_with']` (P25 Stage 2 item 7).
+ * Typed get/set for `$_SESSION['connected_with']`.
  * Holds no state of its own -- every call reads/writes the superglobal
  * live -- so, like `Csrf\CsrfService`/`Auth\CookieService` elsewhere in
  * this codebase, callers construct it inline (`new
- * ConnectedWithSession()`) rather than constructor-injecting it. That
- * matters here specifically: `Ws\Server` and `Activity\ActivityService`
- * are each constructed ad-hoc (bypassing the container) in 30+ files, so
- * adding a required constructor parameter to either would cascade far
- * beyond this item's real scope for zero behavioral benefit over inline
- * construction.
+ * ConnectedWithSession()`) rather than constructor-injecting it: several
+ * real callers (`Auth\ApiKeyService`, `Users\UserService`, `Bootstrap\
+ * UserResolutionMiddleware`, `Activity\ActivityService`, `Controller\
+ * Api\SessionStatusPresenter`) are themselves constructed ad-hoc
+ * (bypassing the container), so adding a required constructor parameter
+ * to any of them would cascade well beyond this class for zero
+ * behavioral benefit over inline construction.
  */
 final class ConnectedWithSession
 {

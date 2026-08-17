@@ -19,9 +19,9 @@ use Piwigo\Common\ValueObject\UserId;
  * constraint onto `users.id`. `forkedFrom` stays plain `?int`: a self-FK
  * onto this same table's own `id`, which stays a plain `?int` primary key
  * (out of `0.3`'s scope, see the SQL-modernization plan). `createdOn` is
- * `SqlDateTime`-typed -- nullable for `Ws\Core::
- * historySearch()`'s ephemeral, metadata-less inserts (no user-facing
- * permalink, never forked); `SearchService::saveSearch()`'s own real
+ * `SqlDateTime`-typed -- nullable for an ephemeral, metadata-less insert
+ * (no user-facing permalink, never forked), though no current real
+ * caller creates one that way; `SearchService::saveSearch()`'s own real
  * inserts trace to an `Env::now()`-derived value. `rules` maps as native Doctrine
  * `json` (the column really is JSON), same precedent as
  * {@see \Piwigo\Users\UserInfoEntity::$preferences} -- Doctrine decodes

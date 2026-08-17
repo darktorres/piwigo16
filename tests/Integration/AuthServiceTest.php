@@ -482,12 +482,8 @@ namespace Piwigo\Tests\Integration {
             // documented install credentials -- a real username+password
             // that passes pwgLogin()'s own password_verify() check, so
             // execution reaches the finalize-login decision rather than
-            // being rejected earlier for a wrong password. Replaces the old
-            // FinalizeLogin plugin-event handler (P32 Stage A5 -- zero
-            // production listeners; every real auth-extension plugin in the
-            // surveyed corpus hooks the earlier TryLogUser event instead)
-            // with a real constructor-injected FinalizeLoginDecision
-            // override.
+            // being rejected earlier for a wrong password, using a real
+            // constructor-injected FinalizeLoginDecision override.
             $override = new FinalizeLoginDecision(canLogin: false, reason: 'blocked_by_test_handler', authenticated: false);
             $service = $this->buildAuthService($override);
 

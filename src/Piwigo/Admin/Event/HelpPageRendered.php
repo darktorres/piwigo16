@@ -6,6 +6,6 @@ namespace Piwigo\Admin\Event;
 
 /**
  * Typed marker event for the legacy `loc_end_help` notification. No
- * payload, no handler registered anywhere today. Renamed and co-located here from `Piwigo\Event\Location\LocEndHelp` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * payload, no handler registered anywhere today.
  */
 final readonly class HelpPageRendered {}

@@ -30,14 +30,9 @@ final class ImageBackend implements ImageInterface
     /**
      * @var ImageInterface|null null until __construct() sets it -- either
      *   to the caller-provided $image override, or to the library class it
-     *   instantiates itself. The 'load_image_library' event that used to
-     *   let a plugin pre-set this and short-circuit __construct() is gone
-     *   (P32 Stage A5 -- zero production listeners, zero wild-plugin
-     *   hooks against it across the entire surveyed 433-plugin/188-theme
-     *   corpus); the one real use the event survey missed -- tests
-     *   injecting a spy/fake ImageInterface to isolate pwgResize()/
-     *   destroy() from a real GD/Imagick/ext_imagick backend -- is served
-     *   directly by the $image constructor param instead.
+     *   instantiates itself. $image exists specifically so tests can
+     *   inject a spy/fake ImageInterface to isolate pwgResize()/destroy()
+     *   from a real GD/Imagick/ext_imagick backend.
      */
     public ?ImageInterface $image = null;
 

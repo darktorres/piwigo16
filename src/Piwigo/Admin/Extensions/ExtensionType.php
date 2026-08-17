@@ -50,12 +50,12 @@ enum ExtensionType: string
     }
 
     /**
-     * The plural form used by the WS API's own `pwg.extensions.ignoreUpdate`
-     * wire parameter -- plural, unlike $this->value (singular). Null for an
+     * The plural form used by `/api/v1/extensions/*`'s own `type` query
+     * parameter -- plural, unlike $this->value (singular). Null for an
      * unrecognized string, so callers can reject an invalid `type` param
      * the same way they already reject any other malformed input.
      */
-    public static function fromPluralWsParam(string $value): ?self
+    public static function fromPluralParam(string $value): ?self
     {
         return match ($value) {
             'plugins' => self::Plugin,
@@ -79,10 +79,10 @@ enum ExtensionType: string
      * extension of this type (also the files searched for by basename
      * inside a downloaded archive to locate the extension's root -- any one
      * match is enough). Plugin/Theme carry only the new
-     * PluginConfig\ExtensionInterface manifest filename (P27.10: no legacy
-     * main.inc.php/themeconf.inc.php support anywhere in this codebase,
-     * not even as a fallback marker) -- a downloaded archive that only
-     * ships the legacy format simply isn't locatable here any more,
+     * PluginConfig\ExtensionInterface manifest filename -- there is no
+     * legacy main.inc.php/themeconf.inc.php support anywhere in this
+     * codebase, not even as a fallback marker, so a downloaded archive
+     * that only ships the legacy format simply isn't locatable here,
      * matching Admin\Extensions\ExtensionScanner's own theme.json/
      * plugin.json-only scan.
      *

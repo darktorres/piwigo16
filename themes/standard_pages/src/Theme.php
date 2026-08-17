@@ -16,11 +16,11 @@ use Piwigo\PluginConfig\ExtensionInterface;
  * its listing; Template::setTheme() substitutes it in automatically for
  * identification/register/password/profile pages). Exists only so
  * ThemeRegistry::load()'s manifest scan -- and this theme's own
- * dependents, like Admin\Extensions\ExtensionScanner post-P27.10 -- see
+ * dependents, like Admin\Extensions\ExtensionScanner -- see
  * a real, schema-valid theme.json for it, same as every other theme in
- * this codebase (P27.10: no theme directory keeps a legacy
- * themeconf.inc.php any more, none gets a special-cased exemption from
- * the new contract either).
+ * this codebase: no theme directory keeps a legacy
+ * themeconf.inc.php, none gets a special-cased exemption from
+ * the contract either.
  */
 final class Theme implements ExtensionInterface
 {

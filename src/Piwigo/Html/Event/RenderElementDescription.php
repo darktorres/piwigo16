@@ -8,7 +8,7 @@ namespace Piwigo\Html\Event;
  * Typed event for the legacy `render_element_description` filter.
  * `$action` defaults to `''` -- `Ws\Core.php`'s own dispatch site omits
  * it entirely, matching `HtmlService::renderElementDescription()`'s own
- * `string $param = ''` default. Co-located here from `Piwigo\Event\Picture\RenderElementDescription` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `string $param = ''` default.
  */
 final class RenderElementDescription
 {

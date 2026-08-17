@@ -62,9 +62,8 @@ final class ThemeRepository extends EntityRepository
     }
 
     /**
-     * `ThemeRegistry::activate()`'s own write (P27.3) -- this class's
-     * pre-P27 real callers only ever read; the admin-side write path went
-     * through `Admin\Extensions\ExtensionRepository::insertNamed()`/
+     * `ThemeRegistry::activate()`'s own write. The admin-side write path
+     * goes through `Admin\Extensions\ExtensionRepository::insertNamed()`/
      * `delete()` instead (raw DBAL against the `themes` table by string
      * id, no `ThemeEntity` involved at all). Unlike plugins, a `themes`
      * row's mere existence already means "active" -- there is no

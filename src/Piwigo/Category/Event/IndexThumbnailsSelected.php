@@ -10,7 +10,7 @@ namespace Piwigo\Category\Event;
  * loosely `array<mixed>` -- the one real consumer already defensively
  * filters each element (is_int()/is_string()), and a precise element
  * type would make PHPStan treat that filter as dead code. No context --
- * every real call site passes only the selection list. Renamed and co-located here from `Piwigo\Event\Location\LocIndexThumbnailsSelection` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * every real call site passes only the selection list.
  */
 final class IndexThumbnailsSelected
 {

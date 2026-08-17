@@ -43,19 +43,13 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     }
 
     /**
-     * Real DQL replacement for {@see \Piwigo\Category\
-     * CategoryRepository::deleteSiteRow()} (removed) -- that method
-     * existed only because `Category` couldn't depend on `Site` directly
-     * back when `Site` was `L2bExtendedDomain`; the delete itself is
-     * trivial once it lives in the domain that actually owns the table.
-     * `0.3` later moved `Site` into `L2aCoreDomain` alongside `Category`
-     * (to let `CategoryEntity` associate to `SiteEntity`), so the layer
-     * constraint that originally motivated this indirection no longer
-     * applies, but the event-based decoupling itself is still the
-     * intended shape, not just a workaround. {@see \Piwigo\Category\
+     * Deletes a site row -- trivial DQL, since it lives in the domain
+     * that actually owns the table. {@see \Piwigo\Category\
      * CategoryService::deleteSite()} dispatches {@see \Piwigo\Category\
-     * Event\DeleteSite} instead of calling this directly -- the listener
-     * is registered in {@see \Piwigo\Bootstrap\RequestBootstrap}.
+     * Event\DeleteSite} instead of calling this directly: the event-based
+     * decoupling is the intended shape here, not a layer-constraint
+     * workaround -- `Site` and `Category` are both `L2aCoreDomain`. The
+     * listener is registered in {@see \Piwigo\Bootstrap\RequestBootstrap}.
      */
     public function delete(int $id): void
     {
@@ -101,13 +95,11 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     }
 
     /**
-     * Real DQL replacement for the raw DBAL read
-     * {@see \Piwigo\Category\CategoryRepository::findSiteGalleriesUrls()}
-     * used to do directly -- `Category` couldn't depend on `Site` back
-     * when `Site` was `L2bExtendedDomain` (both are `L2aCoreDomain` now,
-     * see {@see delete()}'s own docblock above), so {@see \Piwigo\Category\CategoryService::getFulldirs()}
-     * now takes {@see SiteGalleriesUrlLookupInterface} as an explicit
-     * parameter instead.
+     * All sites' galleries_url, id => galleries_url. {@see \Piwigo\
+     * Category\CategoryService::getFulldirs()} takes this via
+     * {@see SiteGalleriesUrlLookupInterface} as an explicit parameter
+     * rather than a constructor dependency -- see that interface's own
+     * docblock.
      *
      * @return array<int|string, string> id => galleries_url
      */
@@ -132,12 +124,10 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     }
 
     /**
-     * Real DQL replacement for the raw DBAL read
-     * {@see \Piwigo\Category\CategoryRepository::findGalleriesUrlForCategory()}
-     * used to do directly -- same reasoning as {@see findAllGalleriesUrls()}
-     * above. `Site` and `Category` are both `L2aCoreDomain` (see
-     * {@see delete()}'s own docblock above), so this join is a legal
-     * same-layer, same-repository DQL query, not a boundary crossing.
+     * $categoryId's own site's galleries_url, via the site_id FK join.
+     * `Site` and `Category` are both `L2aCoreDomain`, so this join is a
+     * legal same-layer, same-repository DQL query, not a boundary
+     * crossing.
      */
     #[Override]
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string

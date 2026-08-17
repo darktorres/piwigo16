@@ -7,8 +7,7 @@ namespace Piwigo\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 
 /**
- * Replaces the `list<string> $where`
- * `Ws\Categories::getList()` used to build -- exactly one of 3
+ * Exactly one of 3
  * mutually-exclusive scope conditions (recursive/non-recursive, with/
  * without a $catId), plus a permission-sourced forbidden-categories
  * exclusion (identically shaped whichever of the 3 branches -- public/

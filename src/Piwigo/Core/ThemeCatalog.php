@@ -80,8 +80,7 @@ final class ThemeCatalog
      *
      * Checks for the PluginConfig\ExtensionInterface `theme.json`
      * manifest -- the only marker a real theme directory has in this
-     * codebase (P27.10: no legacy `themeconf.inc.php` support anywhere,
-     * not even as a fallback).
+     * codebase; there is no `themeconf.inc.php` fallback.
      */
     public static function checkThemeInstalled(string $themeId, Paths $paths, CurrentConfig $currentConfig): bool
     {

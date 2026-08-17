@@ -12,15 +12,10 @@ use Doctrine\ORM\Mapping as ORM;
  * page-slug form, `{plugins: [...], themes: [...], languages: [...]}`).
  *
  * `extensionType` stores `ExtensionType::value` (singular: 'plugin'/
- * 'theme'/'language'), not the plural form the old blob and the WS API's
- * own wire parameter both use -- there is no legacy blob shape left to
- * match in a brand-new table, and carrying the plural convention forward
- * would repeat the exact singular/plural bug this codebase already shipped
- * once (see ExtensionType::updatesIgnoredKey()'s own former docblock: a
- * previous version of checkExtensions() indexed the old blob with
- * ExtensionType::value directly by mistake, silently breaking the whole
- * ignore-list feature). Real callers translate between the plural wire
- * form and ExtensionType via ExtensionType::fromPluralWsParam().
+ * 'theme'/'language'), not the plural form `/api/v1/extensions/*`'s own
+ * `type` query parameter uses -- there is no legacy blob shape left to
+ * match in a brand-new table. Real callers translate between the plural
+ * query form and ExtensionType via ExtensionType::fromPluralParam().
  */
 #[ORM\Entity(repositoryClass: ExtensionIgnoredUpdateRepository::class)]
 #[ORM\Table(name: 'extension_ignored_updates')]

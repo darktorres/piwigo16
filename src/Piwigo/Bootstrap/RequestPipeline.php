@@ -140,18 +140,16 @@ final class RequestPipeline
      * -- the one real entry point that never calls `handle()` at all
      * (see BOOTSTRAP_MIDDLEWARE's own docblock for why). Returns `null`
      * when the chain completed normally (every real caller then proceeds
-     * to build and run `Admin\AdminShell` itself, exactly as if
-     * connect()/finalize() had returned normally pre-Phase-1); returns a
-     * real `ResponseInterface` when a bootstrap-phase middleware
+     * to build and run `Admin\AdminShell` itself); returns a real
+     * `ResponseInterface` when a bootstrap-phase middleware
      * short-circuited (a `Http\ResponseReadyException` -- the
      * install-sentinel redirect can't reach here since `configure()`
      * already handled it inside `bootEntryPoint()`, but the gallery-locked
      * 503 check and `Http\Middleware\ConfigBootstrapMiddleware`'s own
      * DB-unreachable `fatalError()` both still can) -- the caller must
-     * emit that response and stop, exactly what `bootEntryPoint()`'s own
-     * combined try/catch used to do for connect()/finalize() pre-Phase-1,
-     * now split across two callers since admin.php doesn't go through
-     * `handle()`'s own real `MiddlewarePipeline` at all.
+     * emit that response and stop. `admin.php` doesn't go through
+     * `handle()`'s own real `MiddlewarePipeline` at all, so this method
+     * lets both entry points share the same short-circuit contract.
      *
      * Distinguishes "short-circuited" from "completed normally" by
      * identity against a private, single-use sentinel response this

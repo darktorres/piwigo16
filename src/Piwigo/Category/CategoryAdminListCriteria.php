@@ -7,12 +7,11 @@ namespace Piwigo\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 
 /**
- * Replaces the `list<string> $where`
- * `Ws\Categories::getAdminList()` used to build -- a `1=1`
- * base plus exactly one of 3 mutually-exclusive scope conditions
+ * A `1=1` base plus exactly one of 3 mutually-exclusive scope conditions
  * (non-recursive-with-cat_id / non-recursive-without / recursive), same
  * scope-condition shape as {@see CategoryListCriteria} but with no
- * permission filtering at all (this WS method is admin-only).
+ * permission filtering at all -- this criteria is for the admin-only
+ * category list.
  */
 final readonly class CategoryAdminListCriteria
 {

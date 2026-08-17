@@ -6,6 +6,6 @@ namespace Piwigo\Page\Event;
 
 /**
  * Typed marker event for the legacy `loc_end_no_photo_yet`
- * notification. No payload, no handler registered anywhere today. Renamed and co-located here from `Piwigo\Event\Location\LocEndNoPhotoYet` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * notification. No payload, no handler registered anywhere today.
  */
 final readonly class NoPhotoYetRendered {}

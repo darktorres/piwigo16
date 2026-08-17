@@ -7,8 +7,8 @@ namespace Piwigo\Common\ValueObject;
 use Piwigo\Common\Enum\SortOrder;
 
 /**
- * A photo sort order, as a value rather than the `"ORDER BY file ASC, id
- * ASC"` string it used to be threaded around as.
+ * A photo sort order, as a value -- vocabulary and direction, never a raw
+ * `"ORDER BY file ASC, id ASC"` string.
  *
  * Vocabulary and direction only -- no columns, no dialect functions, no DQL
  * paths, no connection. {@see \Piwigo\Db\SortRenderer} turns one of these
@@ -22,8 +22,8 @@ use Piwigo\Common\Enum\SortOrder;
  * builds `order_by`/`order_by_inside_category` from its own `$sort_fields`
  * allow-list, and the web-service `order` parameter maps through
  * {@see PhotoSortField}. There is no escape hatch for text outside it:
- * `order_by_custom` used to be one, but it was reachable only as a `config`
- * row no code wrote and no form exposed, and its only effects were to
+ * `order_by_custom` doesn't count -- it's reachable only as a `config`
+ * row no code writes and no form exposes, and its only effects are to
  * disable the admin sort form and force four repositories onto raw DBAL. An
  * order this class cannot represent is invalid config data, and
  * {@see fromConfigFragment()} substitutes {@see default()} for it. A sort a

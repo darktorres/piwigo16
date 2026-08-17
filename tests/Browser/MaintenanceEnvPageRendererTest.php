@@ -19,7 +19,7 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
 
         $page->assertSee(PHP_VERSION);
         $page->assertSee('MySQL');
-        // P26.1: the plugin list is server-rendered now, no AJAX round-trip
+        // The plugin list is server-rendered, no AJAX round-trip
         // -- this environment's plugins/ directory has no real plugin
         // subdirectories (confirmed live, same as WsPluginsTest's own
         // comment), so the empty-state branch is what a plain page load

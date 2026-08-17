@@ -6,7 +6,7 @@ namespace Piwigo\Image\Event;
 
 /**
  * Typed event for the legacy `delete_elements` notification. No handler
- * is registered for it anywhere today. Co-located here from `Piwigo\Event\Picture\DeleteElements` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * is registered for it anywhere today.
  */
 final readonly class DeleteElements
 {

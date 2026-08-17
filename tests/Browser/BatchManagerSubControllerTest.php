@@ -32,11 +32,8 @@ function bmDbConnect(): mysqli|Connection
 
 /**
  * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
- * class -- the P27 plugin/theme contract's own fixture shape, replacing
- * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
- * loadPlugins()` used to run (retired in P27.4, replaced by
- * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
- * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * class -- the plugin/theme contract's own fixture shape, loaded via
+ * `PluginConfig\PluginRegistry::bootActive()`. `$bootBodySource` is spliced verbatim into the
  * fixture class's own `boot()` method body.
  */
 function bmWriteFixturePlugin(string $pluginDir, string $bootBodySource): void
@@ -1142,7 +1139,7 @@ it('proceeds with an empty filter set when a perform_batch_manager_prefilters ha
     // complete no-op for every other concurrent request against this
     // shared dev server while active (matches PictureControllerTest.php's
     // own "bogus comment action" fixture-plugin test). Since dispatch()
-    // no longer enforces a return-type instanceof check (P32 Stage A2),
+    // no longer enforces a return-type instanceof check,
     // a handler returning the wrong type is simply ignored -- $filterSets
     // stays whatever it already was rather than crashing the request.
     $marker = 'pwgtest_bogus_prefilter_' . uniqid();
@@ -1190,7 +1187,7 @@ it('proceeds with an empty filter set when a batch_manager_perform_filters handl
     // Always invoked, at the very end of computeCurrentSet(). Same
     // fixture-plugin technique as the sibling test above, gated on its
     // own distinct marker. Since dispatch() no longer enforces a
-    // return-type instanceof check (P32 Stage A2), a handler returning
+    // return-type instanceof check, a handler returning
     // the wrong type is simply ignored -- $filterSets stays whatever it
     // already was rather than crashing the request.
     $marker = 'pwgtest_bogus_filters_' . uniqid();

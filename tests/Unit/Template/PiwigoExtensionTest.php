@@ -20,11 +20,7 @@ use Piwigo\Users\CurrentUser;
  * correctness. LatteEngineWiringTest.php's own docblock deliberately
  * limits itself to end-to-end wiring proof ("not testing individual
  * filter/function correctness"), which left every method here with zero
- * dedicated coverage -- this file closes that gap. Each of the ~20
- * dead Smarty-side tests these methods replace (Template::modExplode()/
- * modTernary(), the registered is_admin/is_classic_user modifier
- * closures) was deleted as part of the Smarty-engine removal; this file
- * exists so that removal is not a net coverage loss.
+ * dedicated coverage -- this file closes that gap.
  *
  * `combineScript`/`combineCss`/`getCombinedScripts`/`getCombinedCss`/
  * `defineDerivative`/`htmlHead`/`htmlStyle`/`footerScript`/

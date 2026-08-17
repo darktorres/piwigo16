@@ -6,6 +6,6 @@ namespace Piwigo\Admin\Event;
 
 /**
  * Typed marker event for the legacy `loc_end_cat_modify` notification.
- * No payload, no handler registered anywhere today. Renamed and co-located here from `Piwigo\Event\Location\LocEndCatModify` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * No payload, no handler registered anywhere today.
  */
 final readonly class CatModifyPageRendered {}

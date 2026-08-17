@@ -11,13 +11,13 @@ use Piwigo\PluginConfig\ExtensionInterface;
 /**
  * ExtensionInterface implementation for Piwigo's own built-in default
  * theme (themes/default/) -- distinct from the 3 externally-sourced
- * bundled themes P27.6 ports (elegant/modus/smartpocket). Needed so
+ * bundled themes (elegant/modus/smartpocket). Needed so
  * Admin\Install\InstallService::activateCoreThemes() (runs on every
- * fresh install) keeps working post-P27.5: ExtensionLifecycle::
- * performThemeAction()'s 'activate' case now retargets onto
+ * fresh install) keeps working: ExtensionLifecycle::
+ * performThemeAction()'s 'activate' case retargets onto
  * ThemeRegistry::activate(), which requires a real, schema-valid
  * theme.json for every theme it activates -- a bare themeconf.inc.php
- * header alone is no longer enough.
+ * header alone is not enough.
  */
 final class Theme implements ExtensionInterface
 {

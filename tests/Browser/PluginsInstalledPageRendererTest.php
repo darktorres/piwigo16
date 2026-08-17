@@ -92,7 +92,7 @@ function pluginsInstalledPluginsPath(): string
  * composer.json's test:browser script), so there is no other test able to
  * observe it mid-flight.
  *
- * Writes ONLY plugin.json (P27.10: ExtensionScanner::scanPlugin() reads
+ * Writes ONLY plugin.json (ExtensionScanner::scanPlugin() reads
  * plugin.json exclusively, no legacy main.inc.php support at all) -- no
  * PSR-4-autoloadable class, so PluginConfig\PluginRegistry::bootActive()
  * can never actually boot it even if a caller inserts a DB row for it;
@@ -106,7 +106,7 @@ function pluginsInstalledPluginsPath(): string
  * "Description:"/"Has Settings:" lines) so none of this file's own real
  * call sites needed to change when the underlying fixture format moved
  * from main.inc.php to plugin.json -- parsed here with the exact same
- * regexes ExtensionScanner::scanPlugin() itself used pre-P27.10.
+ * regexes ExtensionScanner::scanPlugin() itself once used.
  */
 function pluginsInstalledWriteFixturePlugin(string $pluginId, string $mainIncPhpSource): void
 {
@@ -149,8 +149,8 @@ function pluginsInstalledParseHeaderFields(string $pluginId, string $mainIncPhpS
  * description/hasSettings, per pluginsInstalledWriteFixturePlugin()'s
  * own docblock -- a single write, not two conflicting ones) + a
  * PSR-4-autoloadable ExtensionInterface class (so PluginConfig\
- * PluginRegistry::bootActive() -- the only mechanism that still executes
- * anything, post-P27.4 -- actually boots it). $bootBodySource is spliced
+ * PluginRegistry::bootActive() -- the only mechanism that executes
+ * anything -- actually boots it). $bootBodySource is spliced
  * verbatim into the fixture class's own boot() method body. The
  * namespace is derived from random bytes, not $pluginId (which can
  * start with a digit -- not a legal leading character for a PHP
@@ -244,7 +244,7 @@ function pluginsInstalledDb(): mysqli|Connection
  * ExtensionScanner (main.inc.php header-comment only) is genuinely blind
  * to a fixture built this way; the only thing that can make it appear in
  * the admin listing is PluginsInstalledPageRenderer's own PluginRegistry
- * manifest merge (P27.5's deferred gap, closed here) -- the concrete
+ * manifest merge -- the concrete
  * regression this test exists to prove fixed.
  */
 function pluginsInstalledWriteManifestOnlyFixturePlugin(string $pluginId): void

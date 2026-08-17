@@ -16,7 +16,7 @@ namespace Piwigo\Comment\Event;
  * (`CommentService::insertComment()`/`updateComment()`) -- the latter's
  * own docblock already documents this as deliberately generic since its
  * own defensive is_scalar()/is_string() narrowing treats every field as
- * untrusted regardless. Co-located here from `Piwigo\Event\User\UserCommentCheck` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * untrusted regardless.
  */
 final class UserCommentCheck
 {

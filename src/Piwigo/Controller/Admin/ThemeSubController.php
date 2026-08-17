@@ -26,7 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * into this controller -- validates the requested theme id against
  * ExtensionScanner's own scan (already migrated off the legacy
  * themes.class.php god-class), then dispatches to that theme's own
- * `PluginConfig\SettingsPageInterface::handleSettingsRequest()` (P27.15),
+ * `PluginConfig\SettingsPageInterface::handleSettingsRequest()`,
  * booted fresh for this one request via `ThemeRegistry::
  * bootForSettingsPage()` -- see that method's own docblock for why a
  * page-scoped, throwaway boot is the right shape here (unlike

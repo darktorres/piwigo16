@@ -93,10 +93,7 @@ use Symfony\Component\Mime\Email;
  * result.
  *
  * `$transportOverride` is the real test seam for isolating mail() from a
- * genuine network/sendmail send (P32 Stage A5 -- the old `BeforeSendMail`
- * plugin event had zero production listeners and was only ever used by
- * this project's own tests as a side channel to intercept the send one
- * line early). Mirrors `Sentry\Transport\TransportInterface`'s own
+ * genuine network/sendmail send. Mirrors `Sentry\Transport\TransportInterface`'s own
  * spy-transport precedent in this exact codebase
  * (`SentryMiddlewareTest.php`) -- production code never sets it (always
  * `null`, so buildMailer() resolves a real transport from the DSN as

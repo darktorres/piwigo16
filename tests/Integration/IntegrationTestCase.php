@@ -448,16 +448,11 @@ abstract class IntegrationTestCase extends TestCase
         // path, so both stay in lockstep instead of drifting apart as 2
         // independently-written implementations.
         //
-        // dirname(__DIR__, 2) rather than a real, container-bound Paths->root:
-        // ContractTestCase (a real loadFixture() caller) never calls
-        // parent::setUp(), so no Paths is ever bound in its own
-        // process -- confirmed live (a Contract suite run threw "CurrentPaths
-        // not initialised" here before this fix, back when this read
-        // through the CurrentPaths::get() shim). Computed directly instead,
-        // same technique this class's own setUp() below and
+        // dirname(__DIR__, 2) rather than a real, container-bound
+        // Paths->root: self-contained, no initialization-order dependency
+        // -- same technique this class's own setUp() below and
         // tests/Browser/CatModifyPageRendererTest.php both already use for
-        // the identical "this checkout's real root" value -- self-contained,
-        // no initialization-order dependency.
+        // the identical "this checkout's real root" value.
         FixtureNormalizer::apply(DbConnection::build(), $this->dbDriver, dirname(__DIR__, 2) . '/');
 
         $this->settleDatabase();

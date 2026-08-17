@@ -14,7 +14,7 @@ use InvalidArgumentException;
  * runner here, see the plan's Key Decision 2), adds `require` (genuinely
  * new: legacy/upstream Piwigo has no plugin-dependency mechanism at all).
  *
- * Constructed by `PluginRegistry` (P27.3) after `json_decode` +
+ * Constructed by `PluginRegistry` after `json_decode` +
  * `opis/json-schema` acceptance against `docs/schemas/plugin.schema.json`
  * -- every property mirrors a field documented there, and that schema's
  * own `additionalProperties: false` rejects any unrecognised key before

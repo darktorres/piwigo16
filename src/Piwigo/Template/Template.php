@@ -1178,9 +1178,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Loads the configuration file from a theme directory and returns it.
      *
      * No legacy `themeconf.inc.php` support -- every theme in this
-     * codebase (bundled core themes and P27.6-ported extensions alike)
-     * is `theme.json`-only, by design (P27.10: full legacy-file
-     * retirement, not a dual fallback).
+     * codebase is `theme.json`-only, by design: full legacy-file
+     * retirement, not a dual fallback.
      *
      * @return array<string, mixed>
      */
@@ -1223,8 +1222,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * + `json_decode()`, not `PluginConfig\ThemeManifest`/`ThemeRegistry`:
      * those are the same L3Presentation layer as this class but pull in
      * DB/EntityManager dependencies this purely-file-based lookup has no
-     * reason to need. A malformed/missing `theme.json` degrades to `[]`
-     * (matching `loadThemeconf()`'s own pre-P27.10 not-found behavior),
+     * reason to need. A malformed/missing `theme.json` degrades to `[]`,
      * not a thrown exception.
      *
      * `icon_dir`/`admin_icon_dir`/`img_dir`/`mime_icon_dir`

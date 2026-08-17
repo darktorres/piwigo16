@@ -18,18 +18,14 @@ use Piwigo\Core\OperationError;
  * Builds the shared `f_*` image-filter criteria (images table only) that
  * every real `/api/v1` image-listing endpoint accepts (`ImageSearchController`,
  * `ImageMissingDerivativesController`, `CategoryImagesController`,
- * `TagImagesController`) -- moved here from `Piwigo\Ws` (P25 Stage 1
- * step 6 first split it out of the former WsHelper god-class; P27 moved
- * it again when the WS layer itself was deleted, since this class turned
- * out to be real, live domain logic every REST family above still needs,
- * not WS-protocol-specific).
+ * `TagImagesController`).
  *
- * The `1003` literal below is `Ws\WsError::InvalidParam->value` inlined
- * -- no real caller reads `OperationError::code()` anymore (every REST
- * controller reads only `->message()`, mapping it onto its own real HTTP
- * status via `ResponseFactory::problem()`), so keeping the whole
- * WS-protocol numeric error-code taxonomy alive just for this one
- * call site wasn't worth it.
+ * The `1003` literal below is Piwigo's legacy numeric error code for this
+ * exact validation failure, inlined directly -- no real caller needs a
+ * numeric code (every REST controller reads only `OperationError::
+ * message()`, mapping it onto its own real HTTP status via
+ * `ResponseFactory::problem()`), so a full numeric error-code taxonomy
+ * isn't worth keeping around for this one call site.
  */
 final readonly class ImageFilterCriteriaBuilder
 {

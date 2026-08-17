@@ -687,11 +687,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     // raw read was introduced and must be migrated onto a Request DTO,
     // not allowlisted -- the 3 files below are the only real exceptions
     // that survived a full repo audit, each already documented at its own
-    // call site (the WS layer's own 2 former exceptions, Ws/Server.php's
-    // isPost() and Ws/Images/UploadHandler.php's $_FILES !== [] check,
-    // were deleted along with it, P27 -- as was Bootstrap/UserBootstrap.php's
-    // former api_key pwg_token synthesis, its only own raw superglobal
-    // write, once its dead WS-gated branches were removed):
+    // call site:
     //   - Admin/AdminShell.php: runDispatch()'s own page-slug alias
     //     rewriting ($_GET['page']/['section']/['tab']) -- load-bearing,
     //     must survive into RequestFactory::fromGlobals()'s own later
@@ -824,19 +820,14 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
 });
 
 test('EventDispatcher implements real PSR-14 EventDispatcherInterface conformance', function (): void {
-    // P27.0 gives EventDispatcher real Psr\EventDispatcher\
+    // EventDispatcher has real Psr\EventDispatcher\
     // EventDispatcherInterface conformance via dispatch(), the single verb
-    // for both value-transform and fire-and-forget dispatch. This used to
-    // be paired with a token-walking scan for string-keyed
-    // ->addEventHandler(...) call sites (the one remaining string-keyed
-    // registration method, back when it still existed) -- P32 Stage A4
-    // deleted addEventHandler()/removeEventHandler()/includePath/
-    // callablesEqual() outright, once every real caller had migrated onto
-    // addTypedHandler()/removeTypedHandler(), so that scan is now
-    // redundant with what composer analyse (PHPStan, whole codebase,
-    // level 10) already guarantees for free: calling a method that no
-    // longer exists is a real static-analysis error, not something this
-    // test needs to duplicate by hand.
+    // for both value-transform and fire-and-forget dispatch. No separate
+    // scan for string-keyed handler-registration call sites is needed:
+    // composer analyse (PHPStan, whole codebase, level 10) already
+    // guarantees a call to a method that doesn't exist is a real
+    // static-analysis error, not something this test needs to duplicate
+    // by hand.
     expect(new ReflectionClass(EventDispatcher::class)->implementsInterface(EventDispatcherInterface::class))
         ->toBeTrue();
 });

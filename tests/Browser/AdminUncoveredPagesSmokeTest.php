@@ -20,7 +20,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * AdminPopuphelpController (admin/popuphelp.php), RatingUserSubController
  * (?page=rating_user), PluginSubController (?page=plugin), and
  * ThemeSubController (?page=theme&theme=..., the per-theme
- * SettingsPageInterface dispatch, P27.15 -- singular "theme", distinct
+ * SettingsPageInterface dispatch -- singular "theme", distinct
  * from the "themes" tab-dispatch shell above; no real caller of the
  * former appeared anywhere in this project's test suite before this
  * file).
@@ -108,9 +108,8 @@ it('theme page reports "no settings page" for a real, scanned theme with none', 
     // fixture (themes/default/theme.json exists), so it clears the
     // "theme not found" gate above and reaches ThemeSubController's 2nd
     // real branch: neither bundled theme (default/standard_pages)
-    // implements PluginConfig\SettingsPageInterface -- P27.15
-    // (970e2c77e8) replaced the old raw include_once/"Missing file"
-    // dispatch this test used to assert with this fatalError() instead.
+    // implements PluginConfig\SettingsPageInterface, so this reaches a
+    // real fatalError() call.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=theme&theme=default');
 
@@ -121,12 +120,11 @@ it('theme page reports "no settings page" for a real, scanned theme with none', 
 /**
  * Covers ThemeSubController's happy-path branch: a real theme whose
  * main class implements both ExtensionInterface and
- * SettingsPageInterface (P27.15) -- neither bundled theme does, and
+ * SettingsPageInterface -- neither bundled theme does, and
  * this fork's own Unit-suite ThemeSubControllerTest.php explicitly
  * leaves this branch uncovered ("needs a real theme directory with a
- * marker theme.json on disk, not attempted here"). Same
- * throwaway-fixture-under-the-live-root technique the original
- * (pre-P27.15) version of this test used -- ThemeRegistry::
+ * marker theme.json on disk, not attempted here"). Uses a
+ * throwaway-fixture-under-the-live-root technique -- ThemeRegistry::
  * bootForSettingsPage() never checks "installed" state (see its own
  * docblock), so this never touches the `theme` config row or any DB
  * table, unlike ThemesInstalledPageRendererTest.php's own documented
@@ -170,8 +168,7 @@ function themeSubWriteFixtureTheme(string $themeId, string $namespaceSuffix): st
     // Tests/Integration/PluginSettingsPageDispatchTest.php's own
     // writeFixtureSettingsPlugin() already exercises for plugins -- this
     // embeds the marker inside the normal admin page chrome (a real DOM
-    // descendant of <html>), unlike the pre-P27.15 raw include_once
-    // mechanism this test used to work around via H::rawGet().
+    // descendant of <html>), so a normal page fetch finds it directly.
     file_put_contents($dir . '/src/' . $className . '.php', <<<PHP
         <?php
 
@@ -291,10 +288,9 @@ it('maintenance env tab renders real server, database and version info', functio
 });
 
 it('maintenance sys tab server-renders the webmaster-only activity log table, no ajax round-trip', function (): void {
-    // P26.2: the fixture DB's install-time system log (Core install + 2
+    // The fixture DB's install-time system log (Core install + 2
     // default-theme activations, see tests/Fixtures/piwigo-17.0.sql) is
-    // now server-rendered directly -- this used to only be reachable via
-    // the deleted `?method=pwg.activity_sys.getList` ajax endpoint.
+    // server-rendered directly.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=sys');
 
@@ -418,12 +414,12 @@ function pluginSubPluginsPath(): string
 }
 
 /**
- * `PluginSubController::handle()` checks `Admin\LoadedPlugins` (P27.4:
+ * `PluginSubController::handle()` checks `Admin\LoadedPlugins`,
  * populated from `PluginConfig\PluginRegistry::getActiveIds()`/
  * `getManifest()`, which skips any active DB row with no valid
- * `plugin.json` -- see `Bootstrap\RequestBootstrap::connect()`'s own
- * `if ($manifest === null) { continue; }`), so a bare `main.inc.php`
- * placeholder (this helper's pre-P27.4 shape) no longer makes a plugin
+ * `plugin.json` -- see `PluginRegistry`'s own
+ * `if ($manifest === null) { continue; }` guards. A bare `main.inc.php`
+ * placeholder does not make a plugin
  * "active" for its purposes -- a real manifest + PSR-4 class is required
  * even though neither call site below needs any actual boot() behavior.
  * Deliberately does NOT implement SettingsPageInterface -- reused as-is
@@ -503,7 +499,7 @@ function pluginSubRemoveFixturePlugin(string $pluginId): void
 /**
  * Covers PluginSubController's happy-path branch: a real, active plugin
  * whose main class implements both ExtensionInterface and
- * SettingsPageInterface (P27.15) -- this fork's own Unit-suite
+ * SettingsPageInterface -- this fork's own Unit-suite
  * PluginSubControllerTest.php explicitly leaves this branch uncovered
  * ("needs a real, booted plugin instance, not attempted here"), and
  * Tests/Integration/PluginSettingsPageDispatchTest.php covers the

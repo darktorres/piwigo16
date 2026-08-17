@@ -16,7 +16,7 @@ use Piwigo\Core\ThemeRepository;
  * Grounded in `../piwigo16-plugins/AdminTools_16.3.0/include/
  * MultiView.class.php`'s own real `ws_get_data()` query, which lists
  * every installed theme's id for its custom `multiView.getData` WS
- * method (P27.14), alongside the users/languages it already covers.
+ * method, alongside the users/languages it already covers.
  */
 final readonly class ThemeReadFacade
 {

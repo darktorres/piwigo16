@@ -285,11 +285,12 @@ return [
     // InputValidator()` sites keep their "never wired up" behavior) is left
     // at its default even when the interface itself is bound above and the
     // container is fully booted. Without this entry, every
-    // container-resolved InputValidator (i.e. every real WS/admin caller
-    // via createStatic()) silently loses its renderer, so fatalError()
-    // falls through to a bare RuntimeException instead of the intended
-    // ResponseReadyException (HtmlService::fatalError()'s own real "[Hacking
-    // attempt]" error page) -- caught by ExceptionHandlerMiddleware's
+    // container-resolved InputValidator (i.e. every real Admin/Controller
+    // Request DTO or PageRenderer construction site) silently loses its
+    // renderer, so fatalError() falls through to a bare RuntimeException
+    // instead of the intended ResponseReadyException
+    // (HtmlService::fatalError()'s own real "[Hacking attempt]" error page)
+    // -- caught by ExceptionHandlerMiddleware's
     // generic catch-all and flattened to a content-free 500. This factory
     // makes the intent (real renderer whenever one exists) explicit instead
     // of relying on autowiring to do something it never did.

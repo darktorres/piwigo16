@@ -65,19 +65,16 @@ use RuntimeException;
  * The business-rule layer (existence checks, last-theme/mobile-theme/
  * parent-theme guards, default-theme reassignment, activity logging)
  * stays here; only the innermost mechanical step retargets onto
- * PluginConfig\PluginRegistry/ThemeRegistry (P27.5, replacing the old
- * buildPluginMaintain()/buildThemeMaintain() dynamic include/`new
- * $classname(...)` dispatch). Every registry call is wrapped in a
- * `catch (RuntimeException)`, since PluginValidationException/
+ * PluginConfig\PluginRegistry/ThemeRegistry. Every registry call is
+ * wrapped in a `catch (RuntimeException)`, since PluginValidationException/
  * PluginDependencyException/ThemeValidationException/
  * ThemeDependencyException are how the registries report failure --
  * `$errors`/`activityDetails['result']` is this class's own contract,
  * the registries know nothing about either. A caught
  * *ValidationException ("no validated manifest") is the expected,
  * common outcome for a legacy (main.inc.php/themeconf.inc.php-only)
- * target: nothing has booted it since P27.4, so this class making its
- * own admin actions fail loudly instead of quietly no-op'ing via a
- * PluginMaintain/ThemeMaintain base-class stub is the intentional,
+ * target that nothing has booted, so this class making its own admin
+ * actions fail loudly instead of quietly no-op'ing is the intentional,
  * accepted consequence, not a bug to route around.
  */
 /**
@@ -189,24 +186,22 @@ final readonly class ExtensionLifecycle
                 // never empty($errors)). Preserved as-is rather than
                 // "fixed" -- changing it would silently change behavior
                 // for the one existing caller
-                // (Controller\Api\Extensions\ExtensionUpdateController),
-                // which is out of this phase's scope to also migrate.
+                // (Controller\Api\Extensions\ExtensionUpdateController).
                 $extraction = $this->pemCatalog->extractArchive(ExtensionType::Plugin, 'upgrade', $options['revision'], $id);
                 $errors[0] = $extraction->status;
 
                 if ($errors[0] === 'ok') {
-                    // P27.10 retired ExtensionScanner's own legacy
-                    // main.inc.php header scan entirely -- it now only ever
-                    // recognizes a plugin.json (the same marker
-                    // PluginRegistry itself scans, just without its
-                    // stricter opis/json-schema validation), so there is no
-                    // longer a real "legacy, no-plugin.json" case reachable
-                    // here to branch on: PemCatalog::extractArchive()'s own
-                    // marker search (ExtensionType::markerFilenames(),
-                    // plugin.json-only since the same phase) already can't
-                    // even locate a main.inc.php-only archive's root in the
-                    // first place, so $errors[0] would already be
-                    // 'archive_error', never reaching this branch at all.
+                    // ExtensionScanner only ever recognizes a plugin.json
+                    // (the same marker PluginRegistry itself scans, just
+                    // without its stricter opis/json-schema validation),
+                    // so there is no real "legacy, no-plugin.json" case
+                    // reachable here to branch on: PemCatalog::
+                    // extractArchive()'s own marker search
+                    // (ExtensionType::markerFilenames(), plugin.json-only)
+                    // already can't even locate a main.inc.php-only
+                    // archive's root in the first place, so $errors[0]
+                    // would already be 'archive_error', never reaching
+                    // this branch at all.
                     // Force a fresh manifest scan (PluginRegistry::load()
                     // is memoized per-request, so without reload() it would
                     // still see whatever it scanned before this extraction
@@ -587,8 +582,7 @@ final readonly class ExtensionLifecycle
      * ExtensionScanner's own plugin.json fs scan ($fsEntry, passed in by
      * the caller from whatever it scanned earlier in the same request) or
      * a fresh PluginRegistry::getManifest() lookup here. Both ultimately
-     * read the same plugin.json marker (P27.10 retired ExtensionScanner's
-     * legacy main.inc.php header scan entirely), but a bare
+     * read the same plugin.json marker, but a bare
      * $fsEntry === null check alone would still wrongly no-op every
      * lifecycle action whenever the caller's own $fsEntry snapshot is
      * stale relative to a plugin.json that only started existing after

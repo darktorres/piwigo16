@@ -38,14 +38,13 @@ use Piwigo\Users\UserStatus;
  * conversion, plugin's webmaster-gated hasSettings flag) are handled
  * per-type below rather than forced into a false-generic shape.
  *
- * Plugin/Theme read `plugin.json`/`theme.json` (P27.10: no legacy
+ * Plugin/Theme read `plugin.json`/`theme.json` -- there is no legacy
  * `main.inc.php`/`themeconf.inc.php` header-comment scanning anywhere in
  * this codebase, not even as a fallback -- a plain, tolerant
  * `json_decode()`, not a schema-validated `PluginConfig\PluginManifest`/
  * `ThemeManifest::fromArray()` read; see `scanPlugin()`/`scanTheme()`'s
- * own docblocks for why). Language reads `common.po` (gettext), never
- * touched by P27.10 -- it was already migrated off the old
- * `common.lang.php` convention before this phase.
+ * own docblocks for why. Language reads `common.po` (gettext), never the
+ * legacy `common.lang.php` convention.
  */
 final class ExtensionScanner
 {
@@ -61,12 +60,12 @@ final class ExtensionScanner
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
      *
-     * $lang is vestigial (P27.10 dropped scanPlugin()/scanTheme()'s own
-     * description.txt load along with the rest of the legacy header-
-     * comment format they read it for) -- kept on this public signature
-     * rather than removed, matching the same "stable seam" precedent
-     * PemCatalog's own P27.9 redesign already established: ~20 real
-     * call sites construct this method's arguments today, and a bare
+     * $lang is vestigial (scanPlugin()/scanTheme() no longer load a
+     * description.txt or read any other legacy header-comment format) --
+     * kept on this public signature rather than removed, matching the
+     * same "stable seam" precedent `PemCatalog` already established:
+     * ~20 real call sites construct this method's arguments today, and a
+     * bare
      * unused parameter costs nothing to keep vs. a 20-file blast radius
      * to drop.
      */
@@ -124,14 +123,14 @@ final class ExtensionScanner
     }
 
     /**
-     * Reads `plugin.json` -- P27.10 dropped `main.inc.php` header-comment
-     * scanning entirely, no legacy fallback. A plain, tolerant
-     * `json_decode()` (not `PluginConfig\PluginManifest::fromArray()` +
-     * full `opis/json-schema` validation): this is a display-listing
-     * read, not an activation gate -- real validation already happens
-     * inside `PluginConfig\PluginRegistry::install()`/`activate()`
-     * (P27.3), and a malformed `plugin.json` here should degrade to
-     * "not found" rather than break a whole admin listing page.
+     * Reads `plugin.json` -- no `main.inc.php` header-comment scanning,
+     * no legacy fallback. A plain, tolerant `json_decode()` (not
+     * `PluginConfig\PluginManifest::fromArray()` + full `opis/json-schema`
+     * validation): this is a display-listing read, not an activation
+     * gate -- real validation already happens inside `PluginConfig\
+     * PluginRegistry::install()`/`activate()`, and a malformed
+     * `plugin.json` here should degrade to "not found" rather than break
+     * a whole admin listing page.
      *
      * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|null
      */
@@ -185,8 +184,8 @@ final class ExtensionScanner
     }
 
     /**
-     * Reads `theme.json` -- P27.10 dropped `themeconf.inc.php` header-
-     * comment scanning entirely, no legacy fallback. Same plain, tolerant
+     * Reads `theme.json` -- no `themeconf.inc.php` header-comment
+     * scanning, no legacy fallback. Same plain, tolerant
      * `json_decode()` rationale as `scanPlugin()` above (a display-listing
      * read, not `ThemeRegistry`'s own schema-validated activation gate).
      * `activable` is never set here (no `ThemeManifest` equivalent, see
@@ -252,7 +251,7 @@ final class ExtensionScanner
         // ThemeManifest has no 'activable' field either -- no bundled or
         // ported theme has ever needed it, and ThemesInstalledPageRenderer's
         // own registry-merge fallback already defaults an unset key to
-        // "activable" (P27.5), matching a real theme.json-scanned entry's
+        // "activable", matching a real theme.json-scanned entry's
         // behavior here exactly.
 
         $screenshotPath = $path . '/screenshot.png';

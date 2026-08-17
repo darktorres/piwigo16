@@ -82,7 +82,7 @@ function template_instance_test_rrmdir(string $dir): void
 
 /**
  * Writes a minimal, real theme.json fixture -- exercised through a
- * genuine `json_decode()` (loadThemeconf()'s own post-P27.10 contract),
+ * genuine `json_decode()` (loadThemeconf()'s own real contract),
  * matching the schema-shaped fields every real themes/*\/theme.json in
  * this repo uses. Callers pass the same snake_case keys `Template::
  * loadThemeJson()`'s own returned `$themeconf` array uses (`parent`,
@@ -1742,10 +1742,9 @@ test('loadThemeconf reads theme.json and maps its known fields onto the $themeco
 });
 
 test('loadThemeconf assigns standard_pages\' own dynamic template vars, never a general themeconf-driven assign', function (): void {
-    // The old include-based mechanism let ANY theme push arbitrary
-    // $theme_template_vars via assign() -- gone by design post-P27.10
-    // (Template::assign() is private, no plugin/theme reaches it except
-    // this one hardcoded core exception). Only a theme directory literally
+    // Template::assign() is private, so no plugin/theme can push arbitrary
+    // $theme_template_vars via assign() except this one hardcoded core
+    // exception. Only a theme directory literally
     // named 'standard_pages' gets its own live CurrentConfig reads
     // assigned; every other theme.json read never touches assign() at all.
     // standardPagesSelectedSkin/Logo are private(set) on CurrentConfig (no

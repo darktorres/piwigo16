@@ -499,7 +499,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
     }
 
     /**
-     * activate() (P27.15) -- same manifest-authoring check as
+     * activate() -- same manifest-authoring check as
      * `PluginRegistryTest`'s own identically-named test.
      */
     public function testActivateThrowsWhenHasSettingsIsDeclaredButSettingsPageInterfaceIsNotImplemented(): void
@@ -561,7 +561,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
     }
 
     /**
-     * bootForSettingsPage() (P27.15) -- boots a theme that is NOT the
+     * bootForSettingsPage() -- boots a theme that is NOT the
      * current request's own theme (never touched via bootCurrent() in
      * this test), proving the real reason this method exists separately:
      * an admin can open any installed theme's settings page.

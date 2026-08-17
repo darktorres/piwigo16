@@ -181,11 +181,10 @@ test('findImageIdsByRawWhere() returns empty for no match', function (): void {
     // ImageServiceTest.php's randomized 600000-699999 range) specifically
     // to stay clear of the fixture's own low ids, which an
     // unbounded-above condition here could catch mid-test under
-    // --parallel (confirmed live: this exact test raced against
-    // ImageServiceTest.php this way, back when that file used a fixed
-    // literal id pair instead of a randomized one). This condition
-    // matches nothing regardless of what any row's real id ever is, so
-    // no threshold can ever need raising again.
+    // --parallel (confirmed live: this exact test has raced against
+    // ImageServiceTest.php this way). This condition matches nothing
+    // regardless of what any row's real id ever is, so no threshold can
+    // ever need raising again.
     expect(searchTestRepo()->findImageIdsByRawWhere('id > ? AND id < ?', [10, 10]))->toBe([]);
 });
 

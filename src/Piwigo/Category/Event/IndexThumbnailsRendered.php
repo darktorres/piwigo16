@@ -7,7 +7,7 @@ namespace Piwigo\Category\Event;
 /**
  * Typed event for the legacy `loc_end_index_thumbnails` filter. No
  * handler is registered for it anywhere today. Mutable on
- * `$tplThumbnailsVar`; `$pictures` stays context. Renamed and co-located here from `Piwigo\Event\Location\LocEndIndexThumbnails` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `$tplThumbnailsVar`; `$pictures` stays context.
  */
 final class IndexThumbnailsRendered
 {

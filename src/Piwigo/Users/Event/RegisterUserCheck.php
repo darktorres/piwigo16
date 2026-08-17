@@ -13,7 +13,7 @@ namespace Piwigo\Users\Event;
  * PHPStan treat that filter as dead code (same reasoning as
  * GetAdminPluginMenuLinks/GetBatchManagerPrefilters from the
  * Admin/Integrity/Upload batch). Mutable on `$errors`; `$user` stays
- * context. Co-located here from `Piwigo\Users\Event\RegisterUserCheck` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * context.
  */
 final class RegisterUserCheck
 {

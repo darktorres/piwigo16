@@ -6,6 +6,6 @@ namespace Piwigo\Admin\Event;
 
 /**
  * Typed marker event for the legacy `loc_begin_cat_list` notification.
- * No payload, no handler registered anywhere today. Renamed and co-located here from `Piwigo\Event\Location\LocBeginCatList` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * No payload, no handler registered anywhere today.
  */
 final readonly class CatListPageRendering {}

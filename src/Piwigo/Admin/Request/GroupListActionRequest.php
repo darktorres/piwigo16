@@ -9,8 +9,8 @@ namespace Piwigo\Admin\Request;
  * "group_list"). No values are ever read out of
  * `$_POST`/`$_GET` here (confirmed via GroupListSubController's own
  * docblock: `delete`/`toggle_is_default` are dead validation, nothing in
- * this page acts on them -- group create/delete/rename all go through the
- * WS API instead), so there's nothing to pattern-validate with
+ * this page acts on them -- group create/delete/rename all go through
+ * `/api/v1/groups` instead), so there's nothing to pattern-validate with
  * `InputValidator`; this DTO only names the one real decision the raw
  * superglobals were being read for -- whether a CSRF token must be
  * checked before rendering.

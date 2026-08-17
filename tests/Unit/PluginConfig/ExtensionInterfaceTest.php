@@ -7,7 +7,7 @@ use Piwigo\Tests\Unit\PluginConfig\ExtensionInterfaceTestFakeEvent;
 use Piwigo\Tests\Unit\PluginConfig\ExtensionInterfaceTestFakePlugin;
 
 /**
- * PluginRegistry (P27.3) reads subscribedEvents() off a manifest-resolved
+ * PluginRegistry reads subscribedEvents() off a manifest-resolved
  * `ExtensionInterface $plugin` variable, never the concrete class name --
  * this is the real call shape to exercise.
  *
@@ -48,7 +48,7 @@ test('subscribedEvents works correctly on a bare new $class() with no injected s
 
 /**
  * Calls every ExtensionInterface lifecycle hook through the interface
- * type itself, not the concrete fake -- PluginRegistry (P27.3) will call
+ * type itself, not the concrete fake -- PluginRegistry will call
  * these against a manifest-resolved `ExtensionInterface $plugin`
  * variable, never a concrete class name, so this is the real call shape
  * to exercise.

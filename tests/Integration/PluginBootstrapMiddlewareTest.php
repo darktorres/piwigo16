@@ -25,20 +25,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * `Http\Middleware\PluginBootstrapMiddleware` is the real, direct
- * successor of the second half of `Bootstrap\RequestBootstrap::connect()`
- * (workstream C3 Phase 1) -- plugin registry boot through
- * lounge-emptying, minus the `Admin\LoadedPlugins` repopulation glue
- * (see `LoadedPluginsMiddlewareTest` for that). Replaces the equivalent
- * cases from the now-deleted `RequestBootstrapConnectTest`'s
- * `testConnectStampsAFreshInstalledVersionAndLastMajorUpdateAppliesTheCustomOrderAndEmptiesTheLounge()`/
- * `testConnectRecordsAnAutoupdateActivityAndRestampsTheVersionWhenItDiffersFromAppinfo()`,
- * ported onto the new middleware boundary rather than mechanically moved
- * (Plan 3's own "Test portability correction").
+ * `Http\Middleware\PluginBootstrapMiddleware` covers plugin registry boot
+ * through lounge-emptying, minus the `Admin\LoadedPlugins` repopulation
+ * glue (see `LoadedPluginsMiddlewareTest` for that).
  *
- * Unlike `connect()` itself, this middleware no longer calls
- * `ConfigService::loadConfFromDb()` (that moved to `ConfigBootstrapMiddleware`,
- * earlier in the real pipeline) -- so each test here hydrates
+ * This middleware does not call `ConfigService::loadConfFromDb()` --
+ * that runs in `ConfigBootstrapMiddleware`, earlier in the real pipeline
+ * -- so each test here hydrates
  * `CurrentConfig` directly via the same container-shared `ConfigService`
  * this middleware itself injects, the minimal real precondition this
  * middleware actually depends on, rather than running the whole earlier

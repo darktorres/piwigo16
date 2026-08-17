@@ -57,9 +57,8 @@ use Piwigo\Users\UserStatus;
  * category/element name rendering, thumbnail titles -- for the rest of
  * the page around a rejected submission, not just setStatusHeader()) and
  * only intercepts setStatusHeader() itself, capturing what render()
- * passed instead of letting a real header() call fire. Replaces the old
- * `SetStatusHeader` event-hook interception (P32 Stage A5 -- that event
- * had zero production listeners); a real header() call is also
+ * passed instead of letting a real header() call fire -- a real
+ * header() call is also
  * unreliable to observe directly here since PHP's own
  * "headers already sent" bookkeeping is shared process-wide under CLI
  * SAPI (confirmed empirically: a prior header('HTTP/...') call anywhere
@@ -794,9 +793,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // real HtmlRenderingInterface call to the real, container-shared
         // HtmlService (render() genuinely needs several of them for the
         // rest of the page) and only captures setStatusHeader()'s own
-        // return value -- P32 Stage A5 replaced the old `SetStatusHeader`
-        // plugin event (zero production listeners) with a real return
-        // value from setStatusHeader() itself.
+        // real return value.
         $capture = new HttpStatusLineCapture();
         $spyHtmlRenderer = new PictureCommentRendererTestSpyHtmlRenderer(PresentationAccessor::htmlService(), $capture);
 

@@ -11,10 +11,8 @@ namespace Piwigo\Menu\Event;
  * dispatch site (`BlockManager::prepareDisplay()`) always passes `$this`
  * -- matches the reference's own deliberate choice, keeping this class
  * free of a same-file circular dependency on `BlockManager` (which
- * constructs this event) even now that both live in the same
- * `L3Presentation` layer. Co-located here from
- * `Piwigo\Event\BlockManager\BlockManagerPrepareDisplay` (P32 Stage A5 --
- * see `docs/events-legacy-map.md`).
+ * constructs this event) even though both live in the same
+ * `L3Presentation` layer.
  */
 final readonly class BlockManagerPrepareDisplay
 {

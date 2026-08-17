@@ -19,30 +19,20 @@ use Symfony\Component\EventDispatcher\EventDispatcher as SymfonyEventDispatcher;
  * and fire-and-forget ("notify") dispatch -- matches this codebase's own
  * PSR-11/PSR-7/PSR-15/PSR-3 conformance elsewhere.
  *
- * **P32 Stage A4**: storage/dispatch is a thin, direct wrapper over a real
+ * Storage/dispatch is a thin, direct wrapper over a real
  * `Symfony\Component\EventDispatcher\EventDispatcher` (`$inner`) --
  * `addTypedHandler()`/`removeTypedHandler()` pass straight through to
  * `$inner->addListener()`/`removeListener()`, no wrapping or side table.
- * That's only possible because the untyped legacy API (`addEventHandler()`/
- * `removeEventHandler()`/`includePath`/`callablesEqual()`, plus the
- * `EventHandler` value object A3 already found dead) is gone: it existed
- * solely to let a caller register a not-yet-existing function name (PHP's
- * native `callable` type validates eagerly; Symfony's own `addListener()`
- * parameter is `callable|array`, same eager check) -- `Bootstrap\
- * RequestBootstrap`'s own docblock confirms the one real registration that
- * ever needed this (`'pwg_image_resize'`, for `UploadImageResize`/
- * `UploadThumbnailResize`) was deleted outright during the P27.0 Listener
- * migration, not ported, since dead-but-lazily-tolerated registrations
- * aren't worth a permanent mechanism. Every real caller left --
- * `src/Piwigo/Admin/Integrity/C13yInternal.php` included, once cited as
- * `callablesEqual()`'s own real-usage justification -- already used
- * `addTypedHandler()`. Symfony's own `removeListener()` already compares
- * callables the same way the deleted `callablesEqual()` did by hand
+ * Every real caller -- `src/Piwigo/Admin/Integrity/C13yInternal.php`
+ * included -- registers via `addTypedHandler()`; there is no
+ * not-yet-existing-function-name registration path (PHP's native
+ * `callable` type on that method's parameter validates eagerly, same as
+ * Symfony's own `addListener()`). Symfony's own `removeListener()`
+ * compares callables correctly with no dedup helper needed here
  * (verified: PHP's native `==` on two `$this->method(...)`-produced
  * Closures is true for the same bound object + method, exactly the
  * loose-but-correct comparison a fresh Closure needs on every
- * registration call), so no replacement dedup/removal helper was needed
- * either.
+ * registration call).
  *
  * Not adopting Symfony's own `EventSubscriberInterface` anywhere in this
  * codebase: see `Core\SubscriberInterface`'s own docblock for why (a
@@ -101,12 +91,12 @@ final class EventDispatcher implements EventDispatcherInterface
      * Registers every entry of a `Core\SubscriberInterface` implementor's
      * own `subscribedEvents()` map (a first-party `Listener\*` instance,
      * or a plugin/theme's `ExtensionInterface` instance) onto
-     * `addTypedHandler()` -- the one shared implementation of a loop that
-     * used to be duplicated across `Bootstrap\RequestBootstrap::
-     * registerListener()`, `Bootstrap\UserResolutionMiddleware`'s early
-     * `AuthListener` registration, `PluginConfig\PluginRegistry::
-     * bootActive()` and `PluginConfig\ThemeRegistry::bootCurrent()` (P32
-     * Stage A6). `$subscriber` is already fully constructed by the
+     * `addTypedHandler()` -- the one shared implementation of this loop,
+     * used by `Bootstrap\RequestBootstrap::registerListener()`,
+     * `Bootstrap\UserResolutionMiddleware`'s early `AuthListener`
+     * registration, `PluginConfig\PluginRegistry::bootActive()` and
+     * `PluginConfig\ThemeRegistry::bootCurrent()`. `$subscriber` is
+     * already fully constructed by the
      * caller; this method only wires its declared events onto the
      * dispatcher, in whatever order `subscribedEvents()` returns them.
      */
@@ -133,14 +123,10 @@ final class EventDispatcher implements EventDispatcherInterface
      * Delegates straight to `$inner`: Symfony's own `dispatch()` already
      * handles priority ordering and stops calling further handlers once
      * `Psr\EventDispatcher\StoppableEventInterface::isPropagationStopped()`
-     * turns true, identically to what this method used to do by hand.
-     * There's no "not callable" guard to raise here anymore either -- PHP's
-     * own `callable` type on `addTypedHandler()`'s own parameter already
+     * turns true. No "not callable" guard is needed here -- PHP's own
+     * `callable` type on `addTypedHandler()`'s own parameter already
      * rejects a not-yet-real callable at the registration call site
-     * itself, before it ever reaches `$inner`, so a dead handler
-     * registration that only fails lazily at dispatch time (the old
-     * `addEventHandler()`'s whole reason to exist) is no longer
-     * constructible at all.
+     * itself, before it ever reaches `$inner`.
      *
      * @template T of object
      * @param T $event

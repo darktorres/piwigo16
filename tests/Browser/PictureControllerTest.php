@@ -47,11 +47,8 @@ function pictureDbConnect(): mysqli|Connection
 
 /**
  * Writes a real `plugin.json` + PSR-4-autoloadable `ExtensionInterface`
- * class -- the P27 plugin/theme contract's own fixture shape, replacing
- * the legacy `main.inc.php` raw-include mechanism `Admin\PluginLoader::
- * loadPlugins()` used to run (retired in P27.4, replaced by
- * `PluginConfig\PluginRegistry::bootActive()`, which has no knowledge of
- * `main.inc.php` at all). `$bootBodySource` is spliced verbatim into the
+ * class -- the plugin/theme contract's own fixture shape, loaded via
+ * `PluginConfig\PluginRegistry::bootActive()`. `$bootBodySource` is spliced verbatim into the
  * fixture class's own `boot()` method body -- the same "runs once, early
  * in the request" timing the old top-level `main.inc.php` code had.
  * The namespace is derived from random bytes, not `$pluginId` (which can
@@ -1738,8 +1735,8 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
     // the `user_comment_check` event (its own contract explicitly
     // requires one of those 3 strings back), not reachable through normal
     // request input alone. Reaching it for real needs a real plugin --
-    // PluginConfig\PluginRegistry::bootActive() (P27.4, replacing
-    // Admin\PluginLoader::loadPlugins()) boots every DB-active plugin's
+    // PluginConfig\PluginRegistry::bootActive() boots every DB-active
+    // plugin's
     // main class on every request, the same real mechanism a genuine
     // misbehaving 3rd-party plugin would use. Content-marker-gated (only
     // ever intervenes for THIS test's own unique comment content) so it's
@@ -2266,7 +2263,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
     H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
     // No cache-clear needed: PluginConfig\PluginRegistry::bootActive()
-    // (P27.4) always re-queries active plugins fresh on every request,
+    // always re-queries active plugins fresh on every request,
     // same as this file's own "logs a PHP warning..." test above already
     // established.
 

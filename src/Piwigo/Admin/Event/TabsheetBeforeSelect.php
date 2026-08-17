@@ -23,7 +23,7 @@ namespace Piwigo\Admin\Event;
  * defensively regardless of what this property declares; a precise
  * shape here would only fight that -- and PHPStan itself -- for both
  * this file's own tests (which deliberately construct malformed shapes
- * to exercise that defense) and any real plugin. Co-located here from `Piwigo\Event\Admin\TabsheetBeforeSelect` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * to exercise that defense) and any real plugin.
  */
 final class TabsheetBeforeSelect
 {

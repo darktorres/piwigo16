@@ -11,7 +11,7 @@ namespace Piwigo\Metadata\Event;
  * real dispatch site (`MetadataService::getExifData()`) has a real
  * null-payload dispatch (before falling back to a real exif_read_data()
  * array at its second dispatch site). Mutable on `$exif`; `$filename`/
- * `$map` stay context. Co-located here from `Piwigo\Event\Picture\FormatExifData` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `$map` stay context.
  */
 final class FormatExifData
 {

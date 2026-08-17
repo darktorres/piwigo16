@@ -90,9 +90,9 @@ final class LoadedPluginsMiddlewareTest extends IntegrationTestCase
     }
 
     /**
-     * `connect()`'s own `PluginRegistry::bootActive()`/`LoadedPlugins`
-     * repopulation glue (P27.4, replacing `Admin\PluginLoader::
-     * loadPlugins()`'s former direct writes) has no coverage anywhere
+     * `PluginBootstrapMiddleware`'s own `PluginRegistry::bootActive()`/
+     * `LoadedPluginsMiddleware`'s own `LoadedPlugins`
+     * repopulation glue has no coverage anywhere
      * else: `PluginRegistryTest.php` builds `PluginRegistry` directly
      * against an isolated temp `Paths::plugins` root, never through this
      * real call site, and this class doesn't override `Paths::class` (it

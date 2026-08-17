@@ -13,7 +13,7 @@ namespace Piwigo\Category\Event;
  * real consumer already defensively filters each element
  * (is_array()/isset()/is_string()), and a precise element type would
  * make PHPStan treat that filter as dead code. No context -- every real
- * call site passes only the orders list. Co-located here from `Piwigo\Event\Album\GetCategoryPreferredImageOrders` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * call site passes only the orders list.
  */
 final class GetCategoryPreferredImageOrders
 {

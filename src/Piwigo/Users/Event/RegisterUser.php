@@ -6,7 +6,7 @@ namespace Piwigo\Users\Event;
 
 /**
  * Typed event for the legacy `register_user` notification. No handler is
- * registered for it anywhere today. Co-located here from `Piwigo\Event\User\RegisterUser` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * registered for it anywhere today.
  */
 final readonly class RegisterUser
 {

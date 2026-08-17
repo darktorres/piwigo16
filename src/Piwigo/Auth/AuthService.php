@@ -57,10 +57,9 @@ use SensitiveParameter;
  * hatch for a legitimately locked-out user.
  *
  * `$finalizeLoginOverride` is the real test seam for pwgLogin()'s own
- * post-credential-check decision (P32 Stage A5 -- the old `FinalizeLogin`
- * plugin event it replaces had zero production listeners). Always `null`
- * in production; tests inject a real `FinalizeLoginDecision` instead of
- * registering an event handler.
+ * post-credential-check decision. Always `null` in production; tests
+ * inject a real `FinalizeLoginDecision` instead of registering an event
+ * handler.
  */
 final readonly class AuthService
 {

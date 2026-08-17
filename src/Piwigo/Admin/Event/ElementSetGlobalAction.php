@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Event;
 
 /**
  * Typed event for the legacy `element_set_global_action` notification.
- * No handler is registered for it anywhere today. Co-located here from `Piwigo\Event\Admin\ElementSetGlobalAction` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * No handler is registered for it anywhere today.
  */
 final readonly class ElementSetGlobalAction
 {

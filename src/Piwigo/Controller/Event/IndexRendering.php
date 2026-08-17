@@ -6,6 +6,6 @@ namespace Piwigo\Controller\Event;
 
 /**
  * Typed marker event for the legacy `loc_begin_index` notification. No
- * payload, no handler registered anywhere today. Renamed and co-located here from `Piwigo\Event\Location\LocBeginIndex` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * payload, no handler registered anywhere today.
  */
 final readonly class IndexRendering {}

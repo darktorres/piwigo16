@@ -211,10 +211,9 @@ final readonly class CategoryRepository
     }
 
     /**
-     * A single category's id/name/permalink, or null if it doesn't exist --
-     * Ws\Images::add()'s own "resolve the just-associated category, for
-     * the response URL" lookup. Unlike findAllIdNamePermalink() above
-     * (every row, cache warm-up), this is a single-id lookup.
+     * A single category's id/name/permalink, or null if it doesn't exist.
+     * Unlike findAllIdNamePermalink() above (every row, cache warm-up),
+     * this is a single-id lookup.
      *
      * @return ?CategoryIdNamePermalink
      *
@@ -857,9 +856,10 @@ final readonly class CategoryRepository
 
     /**
      * image_id for every link outside $excludeIds, NOT deduplicated
-     * (matches Ws\Categories::calculateOrphans()'s own large-category
-     * fallback path, which dedupes in PHP after intersecting against the
-     * recursive image id set) -- a different contract from
+     * (matches CategoryService::calculateOrphanImpact()'s own
+     * large-category fallback path, which dedupes in PHP after
+     * intersecting against the recursive image id set) -- a different
+     * contract from
      * {@see findNonOrphanImageIds()} above (that one is DISTINCT and
      * pre-filtered to a specific image id set; this one returns every
      * matching row so the caller can avoid sending a huge `image_id IN
@@ -2416,8 +2416,8 @@ final readonly class CategoryRepository
 
     /**
      * Same generic dynamic-field update as updateCategoryAfterInsert()
-     * above, distinct name/call site -- Ws\Categories::setInfo()'s own
-     * name/comment edit, not a post-insert patch.
+     * above, distinct name/call site -- CategoryService's own name/comment
+     * edit, not a post-insert patch.
      *
      * @param array<string, mixed> $data
      *
@@ -2611,8 +2611,8 @@ final readonly class CategoryRepository
 
     /**
      * Count of categories with no physical directory (virtual) or with
-     * one (physical) -- Ws\Core::getInfos()'s own "nb_virtual"/
-     * "nb_physical" summary figures.
+     * one (physical) -- `Controller\Api\InfoController`'s own "nbVirtual"/
+     * "nbPhysical" summary figures.
      *
      * Same reasoning as {@see findIdsByDirNull()} above.
      */
@@ -3282,8 +3282,9 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Whether a category with this id exists -- Ws\Categories'
-     * setRepresentative()'s own existence check.
+     * Whether a category with this id exists -- used by several real
+     * `Controller\Api\Categories\*` controllers' own existence checks
+     * (e.g. `CategorySetRepresentativeController`).
      *
      * Single-table, static WHERE, COUNT aggregate.
      */
@@ -3300,8 +3301,8 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Ids from $ids that really exist -- Ws\Categories' own "do these
-     * categories really exist" checks (getImages()/delete()).
+     * Ids from $ids that really exist -- CategoryService's own "do these
+     * categories really exist" checks.
      *
      * @param  list<int>  $ids
      * @return list<int>
@@ -3360,8 +3361,8 @@ final readonly class CategoryRepository
 
     /**
      * id/image_order for categories matching already-built $conditions --
-     * Ws\Categories::getImages()'s own "which categories are we
-     * fetching images for" step.
+     * `Controller\Api\Categories\CategoryImagesController`'s own "which
+     * categories are we fetching images for" step.
      *
      * @param  list<SqlCondition>  $conditions
      * @return list<CategoryIdImageOrder>
@@ -3450,7 +3451,8 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Ws\Categories::getList()'s own paginated category rollup. Builds
+     * `Controller\Api\Categories\CategoryAvailableListController`'s own
+     * paginated category rollup. Builds
      * its own scope/forbidden-categories/public-only conditions internally
      * via {@see categoryScopeCondition()} and SqlCondition::combine(), from
      * a typed CategoryListCriteria. $searchTerm/$searchLimit/$limit/
@@ -3562,9 +3564,10 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Ws\Categories::getAdminList()'s own paginated category rollup, via
-     * CategoryAdminListCriteria (no forbidden-categories/public-only fields
-     * at all -- this WS method is admin-only). Always computes the total,
+     * `Controller\Api\Categories\CategoryListController`'s own paginated
+     * category rollup, via CategoryAdminListCriteria (no
+     * forbidden-categories/public-only fields at all -- this list is
+     * admin-only). Always computes the total,
      * unlike {@see findAvailableList()}'s own $limit-gated fetch.
      *
      * @return PaginatedResult<CategoryAdminListRow>
@@ -3611,8 +3614,8 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Subcategory counts grouped by parent id -- Ws\Categories::
-     * getAdminList()'s own non-recursive "nb_categories" column.
+     * Subcategory counts grouped by parent id -- `CategoryListController`'s
+     * own non-recursive "nb_categories" column.
      *
      * @param  list<int>  $parentIds
      * @return array<int, int> keyed by id_uppercat -- the `(string)` cast
@@ -3653,7 +3656,7 @@ final readonly class CategoryRepository
     }
 
     /**
-     * id/id_uppercat/rank for $ids -- Ws\Categories::setRank()'s own
+     * id/id_uppercat/rank for $ids -- `CategoryReorderController`'s own
      * "does the category really exist" check plus the sibling data it
      * needs afterward.
      *
@@ -3693,7 +3696,7 @@ final readonly class CategoryRepository
 
     /**
      * Ids of every category directly under $parentId (or top-level, when
-     * null), ordered by id -- Ws\Categories::setRank()'s own
+     * null), ordered by id -- `CategoryReorderController`'s own
      * "does the caller-provided order cover every sibling" check, which
      * relies on this exact id-ascending order to compare against the
      * caller's own numerically-sorted id list.
@@ -3724,7 +3727,7 @@ final readonly class CategoryRepository
 
     /**
      * Ids of every sibling of $excludeId under $parentId (or top-level,
-     * when null), ordered by rank -- Ws\Categories::setRank()'s own
+     * when null), ordered by rank -- `CategoryReorderController`'s own
      * "insert the new category into its siblings' existing rank order"
      * step.
      *
@@ -3756,7 +3759,7 @@ final readonly class CategoryRepository
     }
 
     /**
-     * id/name/dir/uppercats for $ids -- Ws\Categories::move()'s own
+     * id/name/dir/uppercats for $ids -- `CategoryMoveController`'s own
      * "reject physical categories, and remember every ancestor to
      * refresh" step. A different 4-column shape from
      * {@see findCategoriesForMove()} above (that one is

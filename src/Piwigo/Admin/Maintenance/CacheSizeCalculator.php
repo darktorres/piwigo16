@@ -12,11 +12,11 @@ use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageStdParams;
 
 /**
- * The `pwg.getCacheSize` computation (`du -sk` over the cache/derivative/
- * compiled-template directories), extracted out of
- * `Ws\Core\GetCacheSizeHandler` so `Command\MaintenanceCacheSizeCommand`
- * can reuse it too, same discipline P26.1 already used for
- * `Admin\Extensions\PluginListBuilder`. Persists the same
+ * The `du -sk` computation over the cache/derivative/
+ * compiled-template directories, shared by `Controller\Api\
+ * CacheSizeController` and `Command\MaintenanceCacheSizeCommand`, same
+ * discipline `Admin\Extensions\PluginListBuilder` uses for its own
+ * shared consumers. Persists the same
  * `cache_sizes` config value both callers' predecessors already wrote
  * (real admin pages read it back via `CurrentConfig::cacheSizes`/
  * `CacheSizesSnapshot`) so running this from either surface keeps those

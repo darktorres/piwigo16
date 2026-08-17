@@ -371,20 +371,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             Email::tryFrom($mailAddress),
         );
 
-        // This used to call
-        // $this->groupRepo->addMembers($userId, $defaultGroupIds) directly,
-        // passing the arguments in the wrong shape entirely --
-        // addMembers(GroupId $groupId, list<UserId> $userIds) adds many
-        // users to ONE group, but the call needs the opposite (add ONE new
-        // user to EACH of several default groups). That wrote
-        // (group_id, user_id) = ($userId, each default group's id) to
-        // user_group -- backwards. Matches 16.x-rewrite's
-        // correct ['user_id' => $userId, 'group_id' => $groupId] per
-        // default group; no test exercised registration + default-group
-        // assignment together, so this was never caught. Looping per
-        // group (addMembers() already loops per-user for one group)
-        // matches the repository's existing contract without changing its
-        // shape.
+        // Loops per default group (addMembers() itself loops per-user for
+        // one group) rather than calling addMembers($userId,
+        // $defaultGroupIds) directly: that method's real shape is
+        // addMembers(GroupId $groupId, list<UserId> $userIds) -- adds many
+        // users to ONE group -- but this needs the opposite, one new user
+        // added to EACH of several default groups. Matches 16.x-rewrite's
+        // ['user_id' => $userId, 'group_id' => $groupId] per default
+        // group.
         $defaultGroupIds = $this->groupRepo->findDefaultGroupIds();
         foreach ($defaultGroupIds as $groupId) {
             $this->groupRepo->addMembers($groupId, [$userId]);

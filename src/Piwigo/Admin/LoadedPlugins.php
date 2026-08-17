@@ -17,7 +17,7 @@ use LogicException;
  * Holds the current request's loaded-plugins map.
  *
  * This is a container-shared instance: the writer
- * (`Admin\LoadedPluginsMiddleware`, P27.4 -- populated from
+ * (`Admin\LoadedPluginsMiddleware` -- populated from
  * `PluginConfig\PluginRegistry::getActiveIds()`/`getManifest()` after
  * `Http\Middleware\PluginBootstrapMiddleware`'s own `bootActive()` call
  * runs earlier in the same pipeline, replacing `Admin\PluginLoader::

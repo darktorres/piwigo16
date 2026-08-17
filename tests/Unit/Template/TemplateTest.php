@@ -279,7 +279,7 @@ test('setTheme does not recurse into a non-string parent themeconf value', funct
     // enough to trigger the recursive setTheme() call even when parent
     // isn't a string, appending a second, unintended themes entry with a
     // non-string 'id'. A non-string parent value proves the real `and`
-    // (not `or`) is what prevents that recursion. Since P27.10,
+    // (not `or`) is what prevents that recursion.
     // loadThemeJson() itself already drops a non-string 'parent' before
     // setTheme() ever sees it (a schema-invalid theme.json a real
     // ThemeRegistry scan would reject outright) -- this fixture writes the

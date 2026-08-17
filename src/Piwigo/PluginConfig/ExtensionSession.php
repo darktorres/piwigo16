@@ -21,9 +21,8 @@ use Piwigo\Session\SessionService;
  * Namespacing is real, not just documented convention: `ExtensionContext`
  * constructs a **fresh** instance of this class per plugin/theme,
  * parameterized by that extension's own `PluginId`/`ThemeId`
- * (`PluginRegistry`/`ThemeRegistry`, P27.3), so two extensions writing
- * the same bare key (`session()->set('key', ...)`) never collide --
- * see this fork's own P27 plan for the test that locks this in.
+ * (`PluginRegistry`/`ThemeRegistry`), so two extensions writing
+ * the same bare key (`session()->set('key', ...)`) never collide.
  */
 final readonly class ExtensionSession
 {

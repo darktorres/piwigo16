@@ -10,7 +10,7 @@ namespace Piwigo\Picture\Event;
  * from `RequestBootstrap.php`) -- mutable on `$url`. No production
  * dispatch site exists (the sibling `get_src_image_url` is the one
  * actually wired into a real request path) -- only a direct Integration
- * test call. Co-located here from `Piwigo\Event\Picture\GetElementUrl` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * test call.
  */
 final class GetElementUrl
 {

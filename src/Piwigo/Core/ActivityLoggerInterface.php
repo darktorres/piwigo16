@@ -11,19 +11,16 @@ namespace Piwigo\Core;
  * This interface lives in `Piwigo\Core` (`L1Infrastructure`, same direction
  * as `MailerInterface`) so those classes can depend downward on it instead
  * of the concrete class. `ActivityService` implements it; bound in
- * `config/container.php`. Predates `0.3`'s move of `Activity` into
- * `L2aCoreDomain` (originally needed because `Activity` was
- * `L2bExtendedDomain`, and L2a callers couldn't depend upward on L2b
- * directly) -- both now sit at the same layer, so the interface
- * indirection is no longer required by deptrac, but removing it is a
- * separate decision from that item.
+ * `config/container.php`. `Activity` and its L2a callers are the same
+ * layer today, so this interface indirection isn't required by deptrac
+ * anymore, but removing it is a separate decision.
  */
 interface ActivityLoggerInterface
 {
     /**
      * $details is a genuinely heterogeneous per-action log payload (config
      * diffs, batch-edit field lists, install metadata, permission grants,
-     * ...) -- 40+ real call sites across Admin/Ws/Controller/domain
+     * ...) -- 40+ real call sites across Admin/Controller/domain
      * services each build their own one-off shape, matching PSR-3
      * LoggerInterface's own `$context` parameter, not a single reusable
      * domain concept.

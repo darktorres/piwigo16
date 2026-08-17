@@ -44,7 +44,7 @@ namespace Piwigo\Tests\Integration {
      * ExtensionLifecycle's own docblock.
      *
      * Plugin/theme actions that need to actually SUCCEED through
-     * PluginRegistry/ThemeRegistry (P27.5) use pluginId()/themeId(),
+     * PluginRegistry/ThemeRegistry use pluginId()/themeId(),
      * which write a real, minimal, schema-valid plugin.json/theme.json +
      * PSR-4 ExtensionInterface class fixture under the real project
      * plugins//themes/ directory (both registries require a real
@@ -628,11 +628,9 @@ namespace Piwigo\Tests\Integration {
         /**
          * A synthetic plugin id with a real, minimal, schema-valid
          * plugin.json + PSR-4 ExtensionInterface class already written
-         * under the real plugins/ directory (P27.5: PluginRegistry
+         * under the real plugins/ directory: PluginRegistry
          * requires a real manifest for install/activate/deactivate/
-         * uninstall/update to do anything at all, unlike the old
-         * buildPluginMaintain()'s always-safe base-class fallback for a
-         * synthetic, never-on-disk id). Tracked for automatic
+         * uninstall/update to do anything at all. Tracked for automatic
          * tearDown() cleanup.
          */
         private function pluginId(string $version = '1.0'): string
@@ -648,9 +646,7 @@ namespace Piwigo\Tests\Integration {
          * @param string|null $mainClass overrides the manifest's own
          *   `main` field -- used to force a real PluginValidationException
          *   (deliberately a non-`class-string`, never-declared class
-         *   name) in place of the old maintain-class failure-injection
-         *   technique, which no longer has an equivalent
-         *   (buildPluginMaintain() is gone).
+         *   name).
          */
         private function writePluginManifest(string $id, string $version = '1.0', ?string $mainClass = null): void
         {
@@ -1003,8 +999,8 @@ namespace Piwigo\Tests\Integration {
             $id = $this->rawPluginId();
             $this->writePluginManifest($id, '1.0', mainClass: 'PiwigoTestFixture\\ExtensionLifecycleTest\\DoesNotExist');
             $this->createdPluginIds[] = $id;
-            // ExtensionRepository::insertPlugin() no longer exists (P27.8:
-            // zero real production callers) -- seed the row directly via
+            // ExtensionRepository::insertPlugin() no longer exists --
+            // seed the row directly via
             // DBAL instead.
             $this->conn->insert('plugins', [
                 'id' => $id,

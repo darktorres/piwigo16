@@ -80,7 +80,7 @@ final class PresentationAccessor
 
     /**
      * Admin\Extensions\ExtensionLifecycle's own 2 new constructor deps
-     * (P27.5) -- both fully autowire (every one of PluginRegistry's/
+     * -- both fully autowire (every one of PluginRegistry's/
      * ThemeRegistry's own constructor deps is already bound or a plain
      * autowirable concrete class), so no new config/container.php entry
      * was needed to add these 2 accessors.

@@ -13,18 +13,12 @@ namespace Piwigo\Core;
 final class AppInfo
 {
     // The app/codebase version Piwigo itself tracks (compared against
-    // RequestBootstrap::connect()'s own piwigo_installed_version sync,
-    // and against each plugin/theme manifest's minPiwigo). Was pinned at
-    // '16.3.0' for a while after an earlier '17.0.0' attempt hit a real
-    // upgrade.php redirect loop -- re-traced end to end for the P27.9
-    // PEM-mirror work: every current AppInfo::VERSION call site was read,
-    // and the only real upgrade.php redirect (CoreUpdateService's core
-    // self-update wizard) sits behind fetching AppInfo::URL, which is
-    // deliberately a non-resolving .invalid domain -- unreachable in
-    // practice. The original bug's cause was almost certainly in
-    // admin/update machinery since rewritten; bumped back to '17.0.0' for
-    // real, live-verified against both a fresh install and an existing DB
-    // with a stale piwigo_installed_version.
+    // Http\Middleware\PluginBootstrapMiddleware's own piwigo_installed_version
+    // sync, and against each plugin/theme manifest's minPiwigo). The only
+    // real upgrade.php redirect (CoreUpdateService's core self-update
+    // wizard) sits behind fetching AppInfo::URL, which is deliberately a
+    // non-resolving .invalid domain -- unreachable in practice, so no
+    // redirect loop risk from that path.
     public const string VERSION = '17.0.0';
 
     public const string DEFAULT_LANGUAGE = 'en_UK';

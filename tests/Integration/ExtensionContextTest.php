@@ -97,7 +97,7 @@ final class ExtensionContextTestFakePlugin implements ExtensionInterface
 
 /**
  * Covers ExtensionContext end-to-end against a real container/DB --
- * unlike Listener\* (P27.0), this class is composed almost entirely of
+ * unlike Listener\*, this class is composed almost entirely of
  * thin passthroughs to already-independently-tested collaborators, so one
  * Integration file covers every accessor instead of splitting a DB-
  * touching tier from a pure-Unit one: setLanguage()/images() genuinely
@@ -129,7 +129,7 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        // mail() (P27.13) reaches MailService::mail(), which internally
+        // mail() reaches MailService::mail(), which internally
         // constructs a Template -- its constructor needs a populated
         // CurrentConfigService, which IntegrationTestCase::tearDown()
         // resets after every test. Wired here the same way
@@ -233,7 +233,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * syncLanguageForRequest()'s whole point (P27.6, language_switch's own
+     * syncLanguageForRequest()'s whole point (language_switch's own
      * guest/generic path -- no individual user_infos row to persist a
      * session-only visitor's language choice to) is the mirror image of
      * setLanguage()'s own test above: the in-memory CurrentUser side takes
@@ -274,7 +274,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * getSetting()/setSetting() (P27.6, `elegant`'s own real
+     * getSetting()/setSetting() (`elegant`'s own real
      * admin/upgrade.inc.php self-healing config check +
      * `modus`'s own theme_activate() need) round-trip against the real
      * config table by an arbitrary, unnamed key -- not one of
@@ -306,7 +306,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * deleteSetting() (P27.12, grounded in `AdminTools`'s own real
+     * deleteSetting() (grounded in `AdminTools`'s own real
      * `uninstall()` -- `conf_delete_param('AdminTools')` -- and
      * `LocalFilesEditor`'s/`modus`'s own raw-SQL reimplementations of the
      * same thing).
@@ -324,14 +324,12 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * mail() (P27.13) -- proves the passthrough to `MailService::mail()`
+     * mail() -- proves the passthrough to `MailService::mail()`
      * genuinely reaches the real send pipeline, not just that it doesn't
      * throw. A MailServiceTestSpyTransport (swapped in via
      * MailServiceTestTransportSwap on a context built just for this test)
      * captures the fully-built Email one step before a real
-     * Transport::send() would run -- replaces the old `BeforeSendMail`
-     * event-hook interception (P32 Stage A5 found that event had zero
-     * production listeners) -- no real network attempt, no
+     * Transport::send() would run -- no real network attempt, no
      * `MailServiceTestFakeSmtpServer` subprocess needed for a passthrough
      * check this narrow.
      */
@@ -356,7 +354,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * users()->listBasic() (P27.14) -- against the real fixture's 4
+     * users()->listBasic() -- against the real fixture's 4
      * `users`/`user_infos` rows, proving id/username/status come back
      * correctly typed and ordered by username.
      */
@@ -379,7 +377,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * themes()->listBasic() (P27.14) -- the fixture's `themes` table
+     * themes()->listBasic() -- the fixture's `themes` table
      * starts empty, so this inserts one real row directly (cleaned up in
      * `finally`) rather than relying on ThemeRegistry's own heavier
      * install()/activate() flow, which ThemeRegistryTest.php already
@@ -405,7 +403,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * csrfToken()/checkCsrf() (P27.15) -- a real round trip through
+     * csrfToken()/checkCsrf() -- a real round trip through
      * `Csrf\CsrfService`'s own session-id + secret-key HMAC, proving
      * `ExtensionContext` reaches the real, container-shared collaborator
      * (not a throwaway/mocked one).
@@ -453,7 +451,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
-     * isWebmaster() (P27.15) -- backed by the real `Auth\AccessControl`
+     * isWebmaster() -- backed by the real `Auth\AccessControl`
      * service every other admin controller's own webmaster gate already
      * uses (e.g. `ConfigurationSubController`), not a bare
      * `currentUser()->status` equality this class could otherwise already
@@ -656,7 +654,7 @@ final class ExtensionContextTest extends IntegrationTestCase
         $plugin = new ExtensionContextTestFakePlugin();
 
         // Called through the interface type, not the concrete fake --
-        // PluginRegistry/ThemeRegistry (P27.3) call boot() against a
+        // PluginRegistry/ThemeRegistry call boot() against a
         // manifest-resolved `ExtensionInterface $plugin` variable, never
         // a concrete class name, so this is the real call shape to
         // exercise. Piwigo\Tests\Unit\PluginConfig\ExtensionInterfaceTest

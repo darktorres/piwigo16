@@ -91,8 +91,7 @@ test('removeTypedHandler finds a re-evaluated first-class-callable bound to the 
     // remove a handler using a fresh evaluation of the same bound
     // method -- Symfony's own removeListener() already compares Closures
     // by PHP's native `==` (same bound object + method), not `===`
-    // identity, confirmed empirically during P32 Stage A4's own
-    // investigation, so no dedicated comparison helper is needed here.
+    // identity, so no dedicated comparison helper is needed here.
     $obj = new class() {
         /**
          * @var list<string>
@@ -153,11 +152,9 @@ test('addTypedHandler registers under the event class-string, reaching dispatch'
 });
 
 test('addTypedHandler allows the same callable to be registered twice, and both firings run', function (): void {
-    // Symfony's own addListener() has no dedup -- unlike the deleted
-    // addEventHandler()'s own defensive "refuse an exact duplicate"
-    // check (P32 Stage A4 deleted the whole untyped API, dedup included),
-    // registering the identical callable twice now runs it twice,
-    // matching Symfony's native contract exactly.
+    // Symfony's own addListener() has no dedup -- registering the
+    // identical callable twice runs it twice, matching Symfony's native
+    // contract exactly.
     $dispatcher = new EventDispatcher();
     $calls = [];
     $handler = static function (TestNotifyEvent $e) use (&$calls): void {

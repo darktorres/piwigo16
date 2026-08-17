@@ -10,8 +10,7 @@ use Piwigo\Core\ArrayHelper;
 /**
  * Typed row shape for `search`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
- * default` narrowing {@see \Piwigo\Search\SearchService}'s own callers
- * used to do inline, same shape as {@see \Piwigo\Category\Projection\Category}.
+ * default` narrowing, same shape as {@see \Piwigo\Category\Projection\Category}.
  *
  * Scoped to {@see \Piwigo\Search\SearchRepository::findOneByClause()} only
  * -- that method is always fixed to `search` (unlike this same

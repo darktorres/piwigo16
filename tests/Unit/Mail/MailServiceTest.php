@@ -118,10 +118,7 @@ function mail_service_with_fake_webmaster(): MailService
  * fully-built Email one step before a real Transport::send() would run --
  * avoids a genuine send attempt against this environment's real
  * sendmail_path. Same real-injectable-transport technique as
- * SendNotificationEmailHandlerTest (replaces the old 'before_send_mail'
- * event-hook interception -- P32 Stage A5 found that event had zero
- * production listeners and was only ever this project's own test
- * infrastructure). $service is rebuilt with the spy via
+ * SendNotificationEmailHandlerTest. $service is rebuilt with the spy via
  * MailServiceTestTransportSwap rather than requiring every call site to
  * thread a transport override through its own mail_service_test_build()
  * call. Every caller of this helper expects the send to actually be

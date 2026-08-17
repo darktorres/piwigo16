@@ -17,9 +17,9 @@ use Piwigo\Common\ValueObject\ImageId;
  * $imageId is a real {@see ImageId}, not a raw int -- the
  * one real consumer ({@see \Piwigo\Job\Handler\BatchUploadHandler}) unwraps
  * `->value` at its own call into `UploadService::addUploadedFile()`, whose
- * own `?int $image_id` parameter stays untouched here (it has several
- * other real callers across `Ws\Images.php` well outside this job-queue
- * path, out of this DTO's scope).
+ * own `?int $image_id` parameter stays untouched here (its other real
+ * caller, {@see \Piwigo\Controller\Api\Uploads\TusUploadCompletionService},
+ * is well outside this job-queue path, out of this DTO's scope).
  */
 final readonly class BatchUploadJob
 {

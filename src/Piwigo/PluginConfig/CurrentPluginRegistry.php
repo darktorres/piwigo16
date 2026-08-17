@@ -13,7 +13,7 @@ use LogicException;
  * manually, threading the request's own shared `Connection` through it
  * (see that class's own private `pluginRegistry()` method for why), so a
  * later container-autowired reader -- `Controller\Admin\
- * PluginSubController` (P27.15), resolved fresh per request via the DI
+ * PluginSubController`, resolved fresh per request via the DI
  * container, not through that same manual `$conn`-scoped path -- would
  * otherwise get a *different*, never-`bootActive()`d `PluginRegistry`
  * instance whose `getBootedInstance()` cache is always empty. `set()`

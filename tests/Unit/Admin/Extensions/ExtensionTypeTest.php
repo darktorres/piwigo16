@@ -32,16 +32,16 @@ test('pemCategoryId returns each type\'s own pem category id', function (): void
         ->and(ExtensionType::Language->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemLanguagesCategory);
 });
 
-test('fromPluralWsParam maps each type\'s plural pwg.extensions.ignoreUpdate wire value back to its enum case', function (): void {
-    expect(ExtensionType::fromPluralWsParam('plugins'))->toBe(ExtensionType::Plugin)
-        ->and(ExtensionType::fromPluralWsParam('themes'))->toBe(ExtensionType::Theme)
-        ->and(ExtensionType::fromPluralWsParam('languages'))->toBe(ExtensionType::Language);
+test('fromPluralParam maps each type\'s plural type= query value back to its enum case', function (): void {
+    expect(ExtensionType::fromPluralParam('plugins'))->toBe(ExtensionType::Plugin)
+        ->and(ExtensionType::fromPluralParam('themes'))->toBe(ExtensionType::Theme)
+        ->and(ExtensionType::fromPluralParam('languages'))->toBe(ExtensionType::Language);
 });
 
-test('fromPluralWsParam returns null for an unrecognized string', function (): void {
-    expect(ExtensionType::fromPluralWsParam('plugin'))->toBeNull()
-        ->and(ExtensionType::fromPluralWsParam(''))->toBeNull()
-        ->and(ExtensionType::fromPluralWsParam('not-a-real-type'))->toBeNull();
+test('fromPluralParam returns null for an unrecognized string', function (): void {
+    expect(ExtensionType::fromPluralParam('plugin'))->toBeNull()
+        ->and(ExtensionType::fromPluralParam(''))->toBeNull()
+        ->and(ExtensionType::fromPluralParam('not-a-real-type'))->toBeNull();
 });
 
 test('scanDirectory returns each type\'s own filesystem root', function (): void {
@@ -56,8 +56,8 @@ test('markerFilenames returns each type\'s own new-contract extension marker fil
     // Language uses common.po, not common.lang.php -- this rewrite migrated
     // every locale to gettext .po format (see this enum's own docblock for
     // the real bug this fixed). Plugin/Theme carry only their new
-    // ExtensionInterface manifest filename (P27.10: no legacy
-    // main.inc.php/themeconf.inc.php marker anywhere any more).
+    // ExtensionInterface manifest filename -- there is no legacy
+    // main.inc.php/themeconf.inc.php marker anywhere anymore.
     expect(ExtensionType::Plugin->markerFilenames())->toBe(['plugin.json'])
         ->and(ExtensionType::Theme->markerFilenames())->toBe(['theme.json'])
         ->and(ExtensionType::Language->markerFilenames())->toBe(['common.po']);

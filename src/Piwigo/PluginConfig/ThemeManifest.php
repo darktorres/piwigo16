@@ -16,7 +16,7 @@ use InvalidArgumentException;
  * `name`/`version`/`main` plus theme-specific fields. Themes need
  * `minPiwigo`-gating and `require:` dependency-graph resolution exactly
  * like plugins do (`ThemeRegistry` does the same manifest-scan +
- * `composer/semver` dependency-graph work `PluginRegistry` does, P27.3),
+ * `composer/semver` dependency-graph work `PluginRegistry` does),
  * and all 3 bundled themes genuinely ship a real `admin/admin.inc.php`
  * settings page, so `hasSettings` applies here too.
  *
@@ -30,7 +30,7 @@ use InvalidArgumentException;
  * themes actually declare; "which installed theme serves mobile" stays a
  * pure admin/config pairing, not a manifest field with zero real caller.
  *
- * `iconDir`/`imgDir`/`mimeIconDir`/`loadParentLocalHead` (P27.10, real
+ * `iconDir`/`imgDir`/`mimeIconDir`/`loadParentLocalHead` (real
  * `theme.schema.json` fields a `theme.json` file can declare) are
  * deliberately **not** mirrored as properties here -- `Template::
  * loadThemeJson()` is the one and only real reader, via its own direct

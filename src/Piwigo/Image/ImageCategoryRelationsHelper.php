@@ -16,13 +16,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\OperationError;
 
 /**
- * Sets an image's category associations -- originally shared by WS's
- * `AddHandler`/`SetInfoHandler` (the god-class
- * `Images::addImageCategoryRelations()` private helper both used).
- * `Controller\Api\Images\ImageUpdateController` is its one real caller
- * now; moved here from `Piwigo\Ws\Images` when the WS layer itself was
- * deleted (P27) -- it was never WS-protocol-specific, just born inside
- * that namespace.
+ * Sets an image's category associations. `Controller\Api\Images\
+ * ImageUpdateController` is its one real caller.
  */
 final readonly class ImageCategoryRelationsHelper
 {

@@ -11,7 +11,7 @@ use Throwable;
  * Thrown when a `plugin.json` fails schema validation, is missing,
  * contains malformed JSON, or its declared `main` class doesn't resolve
  * to a real `ExtensionInterface` implementor. `PluginRegistry` throws
- * this; `Admin\Extensions\ExtensionLifecycle` (P27.5) catches
+ * this; `Admin\Extensions\ExtensionLifecycle` catches
  * `\RuntimeException` and appends `getMessage()` to its own `$errors`
  * array for the admin UI.
  */

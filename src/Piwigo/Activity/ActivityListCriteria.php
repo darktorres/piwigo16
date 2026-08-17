@@ -8,11 +8,8 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Replaces the ad hoc `list<SqlCondition>` that
- * `Ws\Core::getActivityList()` used to build and combine itself
- * before handing the finished raw fragment to
- * {@see ActivityRepository::findPaginated()}. One immutable object built
- * once by the caller from its own already-validated `$param`, passed
+ * One immutable object built once by the caller from its own
+ * already-validated `$param`, passed
  * straight through -- `findPaginated()` itself decides how each field
  * translates into a DQL condition, same shape
  * {@see \Piwigo\Comment\CommentApiCriteria} also uses.

@@ -20,11 +20,11 @@ use Piwigo\Common\ValueObject\PluginId;
  * `$pluginId` uses the `plugin_id` custom Doctrine Type
  * (`Piwigo\Common\ValueObject\PluginId`) -- this table is plugin-only (no
  * theme equivalent), unlike `Admin\Extensions\ExtensionRepository`'s own
- * deliberately-generic plugins/themes/languages wrapper. Relocated here
- * from `Admin\Extensions\` in P27.3 -- `PluginConfig\PluginRegistry`
- * needs this ledger directly, and this fork's own `deptrac.yaml`
- * boundaries only let `PluginConfig\*` classes depend on it cleanly,
- * beside `PluginEntity`/`PluginRepository`.
+ * deliberately-generic plugins/themes/languages wrapper. Lives in
+ * `PluginConfig\*` (not `Admin\Extensions\`) since `PluginConfig\
+ * PluginRegistry` needs this ledger directly, and this fork's own
+ * `deptrac.yaml` boundaries only let `PluginConfig\*` classes depend on
+ * it cleanly, beside `PluginEntity`/`PluginRepository`.
  */
 #[ORM\Entity(repositoryClass: PluginMigrationRepository::class)]
 #[ORM\Table(name: 'plugin_migrations')]

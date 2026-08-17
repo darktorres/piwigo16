@@ -17,7 +17,7 @@ use Piwigo\Template\CurrentTemplate;
 /**
  * Renders the "sys" tab of the "maintenance" admin page (dispatched by
  * MaintenanceSubController) -- webmaster-only system activity log viewer,
- * server-rendered directly (P26.2 -- no ajax round-trip).
+ * server-rendered directly, no ajax round-trip.
  *
  * The is_webmaster() check is a real, stricter guard layered on top of
  * admin.php's AccessLevel::Administrator gate, not a redundant one.

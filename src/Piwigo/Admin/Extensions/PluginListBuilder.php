@@ -15,7 +15,7 @@ use Piwigo\Users\CurrentUser;
 
 /**
  * The filesystem-scan + DB-state merge behind the plugin list -- shared by
- * `Admin\MaintenanceEnvPageRenderer` (server-side render, P26.1) and
+ * `Admin\MaintenanceEnvPageRenderer` (server-side render) and
  * `Controller\Api\Extensions\PluginListController` (`GET /api/v1/plugins`).
  */
 final readonly class PluginListBuilder

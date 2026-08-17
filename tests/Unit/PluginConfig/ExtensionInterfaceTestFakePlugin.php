@@ -9,7 +9,7 @@ use Piwigo\PluginConfig\ExtensionInterface;
 
 /**
  * Deliberately has NO constructor at all -- proves the interface's own
- * documented contract: PluginRegistry::bootInstance() (P27.3) does a bare
+ * documented contract: PluginRegistry::bootInstance() does a bare
  * `new $class()`, so subscribedEvents() must work correctly with zero
  * injected state, unlike Listener\*'s own Core\SubscriberInterface
  * implementors (which ARE constructed through normal container/DI

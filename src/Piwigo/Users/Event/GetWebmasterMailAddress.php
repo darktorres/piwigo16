@@ -11,7 +11,7 @@ use Piwigo\Common\ValueObject\Email;
  * handler is registered for it anywhere today. `$email` is nullable --
  * a webmaster without an email address on file is real, not a bug (see
  * `UserRepository::getWebmasterMailAddress()`'s own docblock). No context
- * -- every real call site passes only the email. Co-located here from `Piwigo\Event\Mail\GetWebmasterMailAddress` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * -- every real call site passes only the email.
  */
 final class GetWebmasterMailAddress
 {

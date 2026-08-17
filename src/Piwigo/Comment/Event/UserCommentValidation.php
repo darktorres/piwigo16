@@ -9,7 +9,7 @@ namespace Piwigo\Comment\Event;
  * handler is registered for it anywhere today. `$commentId` matches
  * `CommentService::validateComment()`'s own real unwrapped shape (a
  * single id, or a list of them) -- diverges from the reference's bare
- * `mixed`. Co-located here from `Piwigo\Event\User\UserCommentValidation` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `mixed`.
  */
 final readonly class UserCommentValidation
 {

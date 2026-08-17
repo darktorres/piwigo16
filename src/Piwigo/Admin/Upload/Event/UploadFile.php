@@ -12,7 +12,7 @@ namespace Piwigo\Admin\Upload\Event;
  * non-nullable `string` -- since its one real dispatch site
  * (`UploadService::uploadFile()`) starts the chain from `null`, and every
  * registered handler's own signature is `(?string $representative_ext,
- * string $file_path): ?string`. Co-located here from `Piwigo\Event\Picture\UploadFile` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * string $file_path): ?string`.
  */
 final class UploadFile
 {

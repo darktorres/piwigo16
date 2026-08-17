@@ -57,8 +57,8 @@ use Piwigo\Users\UserRepository;
  * (a plain, safely-storable identifier, not raw PHP source) drives a
  * typed Menu\Event\CheckMenuLinkVisibility dispatch instead, reusing the
  * exact dispatch()/subscribedEvents() machinery every
- * PluginConfig\ExtensionInterface plugin already has (P27.0/P27.1) --
- * no separate mechanism needed.
+ * PluginConfig\ExtensionInterface plugin already has -- no separate
+ * mechanism needed.
  */
 final class MenubarRenderer
 {

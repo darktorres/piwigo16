@@ -609,7 +609,7 @@ final class PluginRegistryTest extends IntegrationTestCase
     }
 
     /**
-     * install() (P27.15) -- a manifest declaring `hasSettings: true` whose
+     * install() -- a manifest declaring `hasSettings: true` whose
      * main class implements plain `ExtensionInterface` only (never
      * `SettingsPageInterface`) is a real authoring mistake, caught here
      * rather than surfacing confusingly deep inside

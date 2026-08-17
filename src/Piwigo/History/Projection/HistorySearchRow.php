@@ -8,13 +8,10 @@ namespace Piwigo\History\Projection;
  * {@see \Piwigo\History\HistoryRepository::search()}'s own row shape.
  *
  * `toArray()` preserves the exact original snake_case shape:
- * {@see \Piwigo\History\HistoryService::getHistory()} appends each row
- * into a caller-supplied `$data` array that a plugin's own `GetHistory`
- * event handler can also append genuinely heterogeneous
- * `array<string, mixed>` rows into (`Ws\Core::historyGet()` dispatches
- * via `dispatch()`) -- `getHistory()` calls `toArray()` before
- * appending, so this DTO never leaks into that plugin-extensible
- * boundary.
+ * {@see \Piwigo\History\HistoryService::getHistory()} (the one real
+ * caller is `Controller\Api\History\HistorySearchController`) appends
+ * each row into a caller-supplied `$data` array, calling `toArray()`
+ * before appending.
  */
 final readonly class HistorySearchRow
 {

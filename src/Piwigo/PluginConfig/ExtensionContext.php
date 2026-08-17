@@ -40,7 +40,7 @@ use Piwigo\Users\UserService;
  * services; no new infrastructure.
  *
  * `PluginRegistry`/`ThemeRegistry` construct a **fresh** instance per
- * plugin/theme (P27.3), parameterized by that extension's own
+ * plugin/theme, parameterized by that extension's own
  * `PluginId`/`ThemeId` -- not one shared instance across every plugin.
  * This is what makes `session()`'s namespacing real (see
  * `ExtensionSession`'s own docblock).

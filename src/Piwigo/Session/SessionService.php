@@ -188,7 +188,7 @@ final readonly class SessionService
     /**
      * Generic counterpart to setSessionVar() -- every other getter in this
      * class is a bespoke, narrowly-typed accessor for one of core's own
-     * known session keys, but PluginConfig\ExtensionSession (P27.2) needs
+     * known session keys, but PluginConfig\ExtensionSession needs
      * a genuinely arbitrary-key read to back a plugin/theme's own
      * namespaced session() store, the same generic-KV-bag rationale
      * setSessionVar() itself already documents.

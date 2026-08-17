@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\ImageId;
  * not the reference's `?ImageType` enum -- that type doesn't exist on
  * this branch yet (confirmed against `HistoryService::isLoggingAllowed()`'s
  * own real `?string $imageType` parameter). Mutable on `$doLog`;
- * `$imageId`/`$imageType` stay context. Co-located here from `Piwigo\Event\Picture\LogAllowed` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * `$imageId`/`$imageType` stay context.
  */
 final class LogAllowed
 {

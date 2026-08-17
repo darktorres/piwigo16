@@ -1589,10 +1589,8 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
     // mutations (one pair per status code literal) -- header() itself
     // is a genuine no-op under CLI SAPI with no way to inspect what
     // string it received after the fact, but setStatusHeader() also
-    // returns the computed HttpStatusLine directly (P32 Stage A5 -- this
-    // used to be a real side channel via the 'set_status_header'
-    // trigger_notify event; the event had zero production listeners, so
-    // returning the computed value is a real seam, not test-only surface).
+    // returns the computed HttpStatusLine directly, a real seam, not
+    // test-only surface.
     $service = HtmlServiceTestFactory::build();
 
     $expected = [

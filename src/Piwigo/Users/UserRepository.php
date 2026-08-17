@@ -1990,7 +1990,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     /**
      * Every user's id/username/status, ordered by username --
      * `PluginConfig\Facade\UserReadFacade::listBasic()`'s own real source
-     * (P27.14), grounded in `../piwigo16-plugins/AdminTools_16.3.0/
+     *, grounded in `../piwigo16-plugins/AdminTools_16.3.0/
      * include/MultiView.class.php`'s own real `ws_get_data()` query
      * listing every user for its custom `multiView.getData` WS method. A
      * user present in `users` but missing its `user_infos` row (the LEFT

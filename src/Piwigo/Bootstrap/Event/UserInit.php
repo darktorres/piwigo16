@@ -9,7 +9,7 @@ namespace Piwigo\Bootstrap\Event;
  * registered for it anywhere today. `$user` matches
  * `UserService::buildUser()`'s own `array<string, mixed>` return shape --
  * its one real dispatch site (`UserBootstrap::init()`) fires right after
- * reassigning `$user` to that method's result. Co-located here from `Piwigo\Event\User\UserInit` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * reassigning `$user` to that method's result.
  */
 final readonly class UserInit
 {

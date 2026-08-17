@@ -17,7 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces admin/plugin.php's own body (page slug "plugin"), folded
  * directly into this controller -- dispatches to the requested plugin's
  * own `PluginConfig\SettingsPageInterface::handleSettingsRequest()`
- * (P27.15), the real, already-`boot()`ed instance
+ *, the real, already-`boot()`ed instance
  * `PluginConfig\CurrentPluginRegistry` holds (see that class's own
  * docblock for why this reads through it rather than a freshly
  * container-autowired `PluginRegistry`). Doesn't touch the

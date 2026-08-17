@@ -16,15 +16,15 @@ use Piwigo\Core\TemplatePageContext;
  * and `element_url` is present, omitted here (not present as a null
  * value) to match that exact original behavior. `$pdfViewerFilesizeThreshold`
  * is `picture_content.latte`'s own real consumer (its `{if ...
- * $current['filesize'] < $PDF_VIEWER_FILESIZE_THRESHOLD}` guard) -- this
- * used to be assigned by `PicturePageContext`
- * instead, whose own `assignContext()` call in `__invoke()` runs *after*
- * this class's, so the value was never actually live when
- * `picture_content.latte` parsed (silently evaluated the comparison
- * against an undefined var, never showing the PDF `<embed>`). Computed
- * locally here from the same `$element_info['path_ext'] === 'pdf'`
- * condition the original outer computation used, since it's a pure
- * config lookup with no other per-request dependency. `$current` is
+ * $current['filesize'] < $PDF_VIEWER_FILESIZE_THRESHOLD}` guard).
+ * Computed locally here rather than via `PicturePageContext` -- that
+ * class's own `assignContext()` call in `__invoke()` runs *after* this
+ * class's, so a value assigned there would never be live when
+ * `picture_content.latte` parses (the comparison would silently evaluate
+ * against an undefined var, never showing the PDF `<embed>`). Computing
+ * it locally from the same `$element_info['path_ext'] === 'pdf'`
+ * condition works because it's a pure config lookup with no other
+ * per-request dependency. `$current` is
  * `picture_content.latte`'s own `{$current['TITLE_ESC']}`/etc. reads --
  * `defaultPictureContent()`'s own dispatch runs before `__invoke()`'s
  * later `PicturePageContext` assign, and nothing else in the codebase

@@ -154,11 +154,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
     {
         // No themes row at all (this file's own fixture starts and stays
         // empty) -- confirms 'default' is present even with nothing in
-        // the DB, not just when a real row happens to exist. Was also
-        // this class's own coverage of the `GetPwgThemes` plugin event
-        // (P32 Stage A5 -- deleted, zero production listeners, and this
-        // was its only test-suite use, testing the filter mechanism
-        // itself rather than isolating something else).
+        // the DB, not just when a real row happens to exist.
         $themes = ThemeCatalog::getPwgThemes(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), EntityManagerFactory::build($this->conn));
 
         expect($themes)

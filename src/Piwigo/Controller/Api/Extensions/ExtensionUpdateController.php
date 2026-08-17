@@ -97,7 +97,7 @@ final readonly class ExtensionUpdateController implements ControllerInterface
         $typeParam = is_string($routeArgs['type'] ?? null) ? $routeArgs['type'] : '';
         $extensionId = is_string($routeArgs['id'] ?? null) ? $routeArgs['id'] : '';
 
-        $type = ExtensionType::fromPluralWsParam($typeParam);
+        $type = ExtensionType::fromPluralParam($typeParam);
         if (! $type instanceof ExtensionType) {
             return ResponseFactory::problem('Not Found', 404, 'Invalid extension type.');
         }

@@ -53,9 +53,8 @@ use Piwigo\Users\UserRepository;
  * ProcessCache, ErrorCollector, CurrentUser, CurrentTemplate, PageState,
  * Translator, CategoryRepository (getCatDisplayNameCache()'s own need),
  * and EntityManagerInterface (getCatDisplayNameFromId()'s own throwaway
- * CategoryService construction) -- despite the "hundreds of real
- * `new HtmlService(...)` construction sites" this class used to be
- * built for defensively, there's really only one outside this class's
+ * CategoryService construction) -- there's really only one real
+ * `new HtmlService(...)` construction site outside this class's
  * own container-resolved production path
  * (Admin\Extensions\ExtensionScanner.php) and one shared test factory
  * (Tests\Support\HtmlServiceTestFactory), so requiring these two more
@@ -705,10 +704,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
      * Sets the http status header (200,401,...). Returns the resolved
      * HttpStatusLine (code + the reason phrase actually sent) rather than
      * void -- header() itself is a no-op under CLI SAPI with no way to
-     * inspect what it received after the fact, and callers/tests wanting
-     * to observe the computed line have this instead of the old
-     * `SetStatusHeader` plugin event (P32 Stage A5 -- zero production
-     * listeners).
+     * inspect what it received after the fact, so this is how a caller or
+     * test observes the computed line.
      */
     #[Override]
     public function setStatusHeader(int $code, string $text = ''): HttpStatusLine

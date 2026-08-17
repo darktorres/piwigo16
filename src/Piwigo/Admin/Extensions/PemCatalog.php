@@ -18,7 +18,7 @@ use Piwigo\Http\HttpClientService;
 /**
  * Extension-catalog communication, generalized across plugins/themes: a
  * self-hosted replacement for the real PEM (piwigo extension market)
- * protocol, not a client of it (P27.9). Each sibling repo
+ * protocol, not a client of it. Each sibling repo
  * (../piwigo16-plugins/../piwigo16-themes) already serves its own
  * manifest.json -- a plain static JSON file, no server-side PHP -- and
  * already-present .zip archives, directly over HTTP (RequestBootstrap::
@@ -53,7 +53,7 @@ final readonly class PemCatalog
     ) {}
 
     /**
-     * P27.9: no longer a real HTTP round trip. The real PEM protocol asked
+     * No longer a real HTTP round trip. The real PEM protocol asked
      * the server which of its own opaque "PEM version" ids matches the
      * caller's branch, since extension compatibility was checked against
      * that id. The local manifest.json mirror has no such catalog --
@@ -230,7 +230,7 @@ final readonly class PemCatalog
         $status = 'dl_archive_error';
         $extensionId = null;
 
-        // P27.9: no download.php?rid= indirection -- resolve the revision
+        // No download.php?rid= indirection -- resolve the revision
         // to its manifest entry's own real filename and fetch the
         // already-present sibling-repo .zip directly.
         $archiveFilename = $this->resolveRevisionFilename($type, $revision);
@@ -297,7 +297,7 @@ final readonly class PemCatalog
     }
 
     /**
-     * Fetches and decodes this type's sibling-repo manifest.json (P27.9's
+     * Fetches and decodes this type's sibling-repo manifest.json (the
      * local extension-catalog mirror -- a plain static file, not a
      * serialize()-encoded PEM endpoint), returning its `extensions` map,
      * or null on a fetch/decode failure -- the same "can't connect to
@@ -376,8 +376,8 @@ final readonly class PemCatalog
 
     /**
      * Resolves a revision_id to its manifest entry's own real `filename`
-     * -- P27.9's local mirror serves the already-present sibling-repo
-     * .zip directly, no download.php?rid= indirection.
+     * -- the local mirror serves the already-present sibling-repo .zip
+     * directly, no download.php?rid= indirection.
      */
     private function resolveRevisionFilename(ExtensionType $type, string $revision): ?string
     {

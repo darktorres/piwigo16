@@ -63,8 +63,8 @@ final class ExtensionIgnoredUpdateRepository extends EntityRepository
     }
 
     /**
-     * Deletes every ignored-update row for $type -- the WS method's own
-     * "reset" action for a single type.
+     * Deletes every ignored-update row for $type -- ExtensionUpdateChecker's
+     * own "reset" action for a single type.
      */
     public function resetType(ExtensionType $type): void
     {
@@ -78,8 +78,9 @@ final class ExtensionIgnoredUpdateRepository extends EntityRepository
     }
 
     /**
-     * Deletes every ignored-update row across every type -- the WS
-     * method's own "reset everything" action (no specific type given).
+     * Deletes every ignored-update row across every type --
+     * ExtensionUpdateChecker's own "reset everything" action (no specific
+     * type given).
      */
     public function resetAll(): void
     {

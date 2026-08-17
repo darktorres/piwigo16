@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Api\Uploads;
 
 /**
- * `POST /api/v1/uploads/actions/complete-batch` body DTO -- mirrors
- * `Ws\Images\UploadCompletedParams`'s own `category_id` field.
- * `image_id` is deliberately not carried over: WS's own registrar
- * already documents it as wire-level-only back-compat for old clients,
- * with zero real reader since P32 Stage A5 deleted its only listener.
+ * `POST /api/v1/uploads/actions/complete-batch` body DTO -- carries only
+ * `category_id`. An `image_id` field is deliberately not carried: it
+ * would have zero real reader, no production listener consumes it.
  */
 final readonly class UploadCompleteBatchInput
 {

@@ -49,13 +49,12 @@ use Piwigo\Users\UserInfoEntity;
  * (implemented by this class) rather than touching these tables directly,
  * since `Auth` is `L2aCoreDomain`, which cannot depend on `History`'s own
  * `L2bExtendedDomain` layer.
- * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\Core read
+ * `Admin\InstallationStats`/`Admin\StatsPageRenderer` read
  * `history_summary` via this repository's own findLastByType()/
  * findMonthlyRows()/findDailyRowsForMonths()/
- * findAverageDailyPageViewsSince()/sumPageViews(); Ws\Core's own
- * activity-table listing goes to
- * {@see \Piwigo\Activity\ActivityRepository::findPaginated()} instead, a
- * different table this class doesn't own.
+ * findAverageDailyPageViewsSince()/sumPageViews(). The `activity` table
+ * is a different table this class doesn't own -- see
+ * {@see \Piwigo\Activity\ActivityRepository::findPaginated()}.
  *
  * @extends EntityRepository<HistoryEntity>
  */
@@ -72,15 +71,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     ];
 
     /**
-     * Real DQL replacement for the raw DBAL read
-     * {@see \Piwigo\Auth\AuthRepository::findLastVisitFromHistory()} used
-     * to do directly -- `Auth` (`L2aCoreDomain`) can't depend on
-     * `History` (`L2bExtendedDomain`), so `AuthRepository` now
-     * constructor-injects {@see \Piwigo\Auth\LastVisitLookupInterface}
-     * instead, wired to this class at the composition root. The original
-     * looped over every row its query returned, but the query itself was
-     * already `ORDER BY id DESC LIMIT 1` -- so at most one iteration ever
-     * ran; a single-row fetch is behaviorally identical.
+     * `Auth` (`L2aCoreDomain`) can't depend on `History`
+     * (`L2bExtendedDomain`) directly, so `AuthRepository` constructor-
+     * injects {@see \Piwigo\Auth\LastVisitLookupInterface} instead, wired
+     * to this class at the composition root. `ORDER BY id DESC LIMIT 1`
+     * guarantees at most one row, so a single-row fetch is sufficient.
      */
     #[Override]
     public function findLastVisit(int $userId): ?string

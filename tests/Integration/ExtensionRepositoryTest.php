@@ -113,10 +113,10 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
 
     public function testUpdatePluginStateChangesTheColumn(): void
     {
-        // insertPlugin() no longer exists (P27.8: zero real production
-        // callers, confirmed dead once ExtensionLifecycle's own plugin
-        // 'install' case retargeted onto PluginConfig\PluginRegistry) --
-        // seeds the row directly via DBAL instead, matching this
+        // insertPlugin() no longer exists -- ExtensionLifecycle's own
+        // plugin 'install' case goes through PluginConfig\PluginRegistry
+        // instead, so this
+        // seeds the row directly via DBAL, matching this
         // repository class's own raw-DBAL shape.
         $this->conn->insert('plugins', [
             'id' => 'test-plugin-state',

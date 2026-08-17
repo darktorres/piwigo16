@@ -18,7 +18,7 @@ use Symfony\Component\Mime\RawMessage;
  * `Sentry\Transport\TransportInterface`'s own spy precedent
  * (`SentryMiddlewareTest.php`'s `$spyTransport`), applied to
  * `MailService::__construct()`'s own injectable `$transportOverride` seam.
- * Replaces the old `BeforeSendMail` event side-channel (P32 Stage A5):
+ * Replaces the old `BeforeSendMail` event side-channel:
  * tests needing to isolate `MailService::mail()` from a real send now wire
  * this in at construction time instead of registering a plugin-event
  * handler for a mechanism no plugin ever legitimately used.

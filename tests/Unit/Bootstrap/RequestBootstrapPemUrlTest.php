@@ -22,7 +22,7 @@ afterEach(function (): void {
 });
 
 /**
- * P27.9's 2 per-type overrides are read directly via getenv(), not through
+ * pemUrl()'s 2 per-type overrides are read directly via getenv(), not through
  * CurrentConfig (see pemUrl()'s own docblock for why) -- putenv() to unset
  * must save+restore the real prior value, not just clear it, or a later
  * test/run in the same process silently inherits whatever this one left

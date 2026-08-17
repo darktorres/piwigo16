@@ -10,7 +10,7 @@ namespace Piwigo\Controller\Admin\Event;
  * reference's `int` -- its one real dispatch site
  * (`SiteManagerSubController.php`) passes the site row's string id
  * (`(string) $row->id`), not the real int `$id_int` it also has in scope.
- * Mutable on `$pluginLinks`; `$siteId`/`$isRemote` stay context. Co-located here from `Piwigo\Event\Album\GetAdminsSiteLinks` (P32 Stage A5 -- see `docs/events-legacy-map.md`).
+ * Mutable on `$pluginLinks`; `$siteId`/`$isRemote` stay context.
  */
 final class GetAdminsSiteLinks
 {

@@ -53,7 +53,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
 /**
- * End-to-end coverage for the P27.15 settings-page mechanism, at the
+ * End-to-end coverage for the settings-page mechanism, at the
  * `Controller\Admin\PluginSubController` layer this fork's own
  * `PluginRegistryTest.php`/`ThemeRegistryTest.php` don't reach (those
  * stop at `PluginRegistry`/`ThemeRegistry` themselves) -- a real fixture

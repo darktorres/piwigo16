@@ -236,7 +236,7 @@ final class ThemeRegistry
     /**
      * Boots the current request's theme + its full parent-resolution
      * chain -- called once per request with whichever theme
-     * `Bootstrap\RequestBootstrap` already resolved (P27.4), right
+     * `Bootstrap\RequestBootstrap` already resolved, right
      * after picking it and before constructing `Template`.
      *
      * Chain order is furthest ancestor first, self last, for both
@@ -280,7 +280,7 @@ final class ThemeRegistry
     /**
      * Constructs and `boot()`s a single theme for
      * `Controller\Admin\ThemeSubController`'s own settings-page dispatch
-     * (P27.15) -- a page-scoped, throwaway boot, deliberately NOT
+     * -- a page-scoped, throwaway boot, deliberately NOT
      * `bootCurrent()`: an admin can open *any* installed theme's
      * settings page (configuring `modus` while the live site itself
      * runs `elegant`), not just the current request's own theme + parent
@@ -327,7 +327,7 @@ final class ThemeRegistry
      * Cross-registry `plugin/<id>` dependencies aren't resolvable here
      * (would need real coupling to `PluginRegistry`) -- deliberately
      * not built: zero bundled themes declare any `require:` entry at
-     * all yet (none have been ported, P27.6), so this would be
+     * all yet, so this would be
      * speculative-ahead-of-a-real-caller infrastructure. Add real
      * cross-registry resolution only once a real theme needs it.
      */
@@ -381,7 +381,7 @@ final class ThemeRegistry
      * {"theme/<this-id>": ...}`. Same shape as `PluginRegistry`'s own
      * guard; deliberately separate from `ExtensionLifecycle`'s existing
      * "last theme"/"child theme" guards, which stay in
-     * `ExtensionLifecycle` (P27.5) since they encode different rules
+     * `ExtensionLifecycle` since they encode different rules
      * (parent/child inheritance, not `require:` dependencies).
      */
     private function assertNoActiveDependents(string $themeId): void
@@ -409,7 +409,7 @@ final class ThemeRegistry
     }
 
     /**
-     * `install()`/`activate()`'s own manifest-authoring check (P27.15) --
+     * `install()`/`activate()`'s own manifest-authoring check --
      * same reasoning as `PluginRegistry`'s own identically-named method.
      */
     private function assertSettingsContractSatisfied(ThemeManifest $manifest, ExtensionInterface $instance): void

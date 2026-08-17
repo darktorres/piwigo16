@@ -115,18 +115,14 @@ final readonly class ThemesInstalledPageRenderer
         // instead.
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
 
-        // P27.5's own original gap here: ExtensionScanner used to recognize
-        // only the legacy themeconf.inc.php header-comment format, so a
-        // new-contract theme (theme.json only) was invisible to it. Since
-        // P27.10 retired that legacy scan entirely, ExtensionScanner::
-        // scanTheme() reads theme.json directly -- the same marker file
-        // $this->themeRegistry->getAllManifests() itself scans, just
-        // without its stricter opis/json-schema validation, so every id
-        // the registry can find, the fs scan above already finds first (a
-        // schema-valid theme.json is by construction also a valid one for
-        // the fs scan's own looser read). This merge is very likely fully
-        // redundant now -- kept as-is rather than removed in the same pass
-        // that made it redundant, pending its own dedicated verification.
+        // ExtensionScanner::scanTheme() reads theme.json directly -- the
+        // same marker file $this->themeRegistry->getAllManifests() itself
+        // scans, just without its stricter opis/json-schema validation, so
+        // every id the registry can find, the fs scan above already finds
+        // first (a schema-valid theme.json is by construction also a
+        // valid one for the fs scan's own looser read). This merge is
+        // very likely fully redundant -- kept as-is pending its own
+        // dedicated verification.
         foreach ($this->themeRegistry->getAllManifests() as $manifestId => $manifest) {
             if (isset($fs_themes[$manifestId])) {
                 continue;

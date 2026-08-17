@@ -31,18 +31,15 @@ use Piwigo\Users\UserService;
  * Piwigo-core (not extension) self-update: checking piwigo.org for a newer
  * core version and downloading/applying it. This is a genuinely separate
  * concern from the PEM extension catalog (PemCatalog/ExtensionScanner/
- * ExtensionLifecycle) -- updates.class.php's own get_piwigo_new_versions()/
- * notify_piwigo_new_versions()/upgrade_to() never touch the plugins/themes/
- * languages tables or PEM_URL at all, they talk to AppInfo::URL directly.
- * Extracted here rather than folded into PemCatalog to keep that class's
- * "one generic PEM-communication concern, parameterized by ExtensionType"
- * shape clean.
+ * ExtensionLifecycle) -- its own version-check/notify/upgrade logic never
+ * touches the plugins/themes/languages tables or PEM_URL at all, it talks
+ * to AppInfo::URL directly. Extracted here rather than folded into
+ * PemCatalog to keep that class's "one generic PEM-communication concern,
+ * parameterized by ExtensionType" shape clean.
  *
- * updates.class.php (src/Piwigo/Admin/updates.php) no longer exists in this
- * codebase -- every real caller now goes through this class instead:
- * Bootstrap\PageTail::render() constructs it directly, while
- * Ws\Extensions::checkUpdates() and UpdatesPwgPageRenderer resolve it via
- * Bootstrap\AdminAccessor::coreUpdateService().
+ * Real callers: `Bootstrap\PageTail::render()` constructs it directly;
+ * `Admin\UpdatesPwgPageRenderer` and `Controller\Api\Extensions\
+ * CheckUpdatesController` both take it via constructor injection.
  */
 final readonly class CoreUpdateService
 {

@@ -11,13 +11,12 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 
-// P27.9 revised this class's whole relationship with HTTP: getVersionsToCheck()
-// is now a pure, zero-network function (covered directly below, no fixture
+// getVersionsToCheck()
+// is a pure, zero-network function (covered directly below, no fixture
 // server needed). getServerExtensions()/getIncompatibleExtensions()/
-// extractArchive() still call HttpClientService::fetch()/fetchToFile(), but
+// extractArchive() call HttpClientService::fetch()/fetchToFile(), but
 // against a plain static manifest.json + zip, not a real external PEM
-// server -- which makes them genuinely testable now, unlike before this
-// phase (see ExtensionUpdateCheckerTest's own docblock for why *that*
+// server -- which makes them genuinely testable (see ExtensionUpdateCheckerTest's own docblock for why *that*
 // class's PEM-touching methods stay untestable: they still hit the real,
 // deliberately-unreachable AppInfo::URL). guardedFetch()'s own self-request
 // exemption (HttpClientService's docblock) legitimately allows a plain
@@ -25,7 +24,7 @@ use Piwigo\Core\Paths;
 // host[:port] -- the same real `php -S 127.0.0.1:<port>` + matching
 // HTTP_HOST technique HttpClientServiceTest.php's own docblock established,
 // reused here via pem_catalog_start_local_server()/..._stop_local_server()
-// below, with PIWIGO_ALT_PLUGINS_PEM_URL/PIWIGO_ALT_THEMES_PEM_URL (P27.9)
+// below, with PIWIGO_ALT_PLUGINS_PEM_URL/PIWIGO_ALT_THEMES_PEM_URL
 // pointed at the disposable server's own docroot.
 //
 // The 4 sort comparators and the 2 local-filesystem helpers
@@ -547,7 +546,7 @@ test('deleteObsoleteFiles does nothing, not a crash, when obsolete.list exists b
         ->toBeTrue();
 });
 
-// ---------------------------------------------------------------- P27.9
+// ----------------------------------------------------------------------
 
 /**
  * Same real `php -S 127.0.0.1:<port>` technique HttpClientServiceTest.php's
@@ -604,7 +603,7 @@ function pem_catalog_stop_local_server($proc): void
 }
 
 /**
- * Writes a manifest.json matching P27.9's real sibling-repo shape
+ * Writes a manifest.json matching the real sibling-repo shape
  * (top-level {generated, source, category_id, count, extensions}). Each
  * $entries value is a manifest record plus an optional 'zipEntries'
  * (stored-name => contents) instruction -- stripped from the written
@@ -742,8 +741,8 @@ test('getServerExtensions filters by piwigo_compat branch match, then by on-disk
             throw new RuntimeException('getServerExtensions() unexpectedly returned null.');
         }
         expect(array_keys($new))
-            // PHP auto-casts a numeric-string array key to int -- same
-            // behavior the pre-P27.9 code already had ($byExtensionId[$extensionId] = ...).
+            // PHP auto-casts a numeric-string array key to int -- expected
+            // native behavior for $byExtensionId[$extensionId] = ....
             ->toBe([100])
             ->and($new['100']['extension_name'])->toBe('Compat New')
             ->and($new['100']['extension_nb_downloads'])->toBe(0)

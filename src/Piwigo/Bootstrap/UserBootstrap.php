@@ -207,6 +207,20 @@ final readonly class UserBootstrap
         // guest_id fallback already used earlier in this file.
         $user_id_int = is_numeric($user['id']) ? (int) $user['id'] : $guest_id_int;
 
+        // A session's own pwg_uid can outlive the `users` row it names --
+        // the user was deleted after the session was established (e.g.
+        // an admin deleting an account while it still has an active
+        // session/background request in flight). buildUser() below would
+        // otherwise throw. Same "unresolvable session state -> guest"
+        // degradation this method already applies for a missing session
+        // cookie above, not a new pattern -- and the stale id is cleared
+        // so a later request on the same browser session doesn't repeat
+        // the same lookup.
+        if ($user_id_int !== $guest_id_int && ! $userService->userExists(UserId::from($user_id_int))) {
+            $user_id_int = $guest_id_int;
+            unset($_SESSION['pwg_uid']);
+        }
+
         $user = $userService->buildUser(UserId::from($user_id_int));
         // CurrentUser is synced here, not only in RequestBootstrap::connect()
         // after this method returns -- AccessControl::isAGuest()/isGeneric()

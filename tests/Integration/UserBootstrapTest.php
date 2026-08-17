@@ -189,4 +189,39 @@ final class UserBootstrapTest extends IntegrationTestCase
 
         self::assertSame(CurrentConfigTestFactory::get()->guestId, CurrentUserTestFactory::get()->get()->id->value);
     }
+
+    /**
+     * A session's own pwg_uid can outlive the `users` row it names (the
+     * user was deleted after the session was established -- a real
+     * scenario in the Browser suite, where one test's session/background
+     * beacon can still be in flight when another test deletes its own
+     * throwaway fixture user). buildUser()/getUserData() throw a raw
+     * Exception for a missing row -- confirmed live before this fix
+     * (UserService::getUserData(): no such user_id N in the app log) --
+     * this must degrade to guest instead of propagating.
+     */
+    public function testInitializeFallsBackToGuestWhenTheSessionsUserWasDeleted(): void
+    {
+        $username = 'ub_stale_session_' . bin2hex(random_bytes(4));
+        $this->conn->executeStatement(
+            'INSERT INTO users (username, password, mail_address) VALUES (?, NULL, NULL)',
+            [$username]
+        );
+        $userId = (int) $this->conn->fetchOne('SELECT id FROM users WHERE username = ?', [$username]);
+        $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$userId]);
+
+        $sessionCookieName = session_name();
+        self::assertIsString($sessionCookieName);
+        $_COOKIE[$sessionCookieName] = 'stale-session-id';
+        $_SESSION['pwg_uid'] = $userId;
+        $_GET = [];
+        $_POST = [];
+        $_REQUEST = [];
+
+        $this->bootstrap()
+            ->initialize();
+
+        self::assertSame(CurrentConfigTestFactory::get()->guestId, CurrentUserTestFactory::get()->get()->id->value);
+        self::assertArrayNotHasKey('pwg_uid', $_SESSION);
+    }
 }

@@ -617,6 +617,21 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
+     * Whether $userId still names a real `users` row -- Bootstrap\
+     * UserBootstrap::initialize()'s own pre-check before calling
+     * buildUser() with a session's pwg_uid, which can outlive the row it
+     * names (e.g. the user was deleted after the session was
+     * established). buildUser()/getUserData() throw on a missing row --
+     * appropriate for their other real callers, where "not found" is a
+     * genuine application error, not for a caller that needs to treat it
+     * as an ordinary, expected "fall back to guest" case.
+     */
+    public function userExists(UserId $userId): bool
+    {
+        return $this->repo->fetchBasicUserRow($userId) !== false;
+    }
+
+    /**
      * Finds informations related to the user identifier. Same as
      * getUserData() but with additional guest-normalization + theme checks.
      * Same "full user data bag" rationale as User::toUserArray()/

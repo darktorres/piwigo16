@@ -324,6 +324,17 @@ namespace Piwigo\Tests\Integration {
             self::assertIsString($user['last_photo_date']);
         }
 
+        /**
+         * Bootstrap\UserBootstrap::initialize()'s own pre-check before
+         * calling buildUser() with a session's pwg_uid -- must return a
+         * plain bool, not throw, for both a real and a nonexistent id.
+         */
+        public function testUserExistsReturnsTrueForAKnownUserAndFalseForAnUnknownOne(): void
+        {
+            self::assertTrue($this->service->userExists(UserId::from(1)));
+            self::assertFalse($this->service->userExists(UserId::from(999999)));
+        }
+
         public function testGetCurrentLanguageReturnsNullWhenCurrentUserIsNotInitialized(): void
         {
             CurrentUserTestFactory::get()->reset();

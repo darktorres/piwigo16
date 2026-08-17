@@ -25,7 +25,6 @@
 {varType string $API_CURRENT_DATE}
 {varType string $API_EMAIL_INFOS}
 {varType array<int|string, string> $API_EXPIRATION}
-{varType string $API_METHOD}
 {varType string|int|null $API_SELECTED_EXPIRATION}
 {varType string $APP_URL}
 {varType string $APP_VERSION}
@@ -465,8 +464,6 @@
 {varType array<string, array<string, mixed>> $display_filter}
 {varType array<string, bool>|bool $display_info}
 {varType string $display_mode}
-{varType string $display_thumbnail_selected}
-{varType array<string, string> $display_thumbnails}
 {varType list<array<string, mixed>> $elements}
 {varType array<array-key, string>|null|array<int, string>|null $errors}
 {varType list<array{replacer: string, url_parameter: mixed, original_tpl: list<string>, bound_tpl: mixed, selected_tpl: mixed, selected_url: string, selected_bound: string}>|null $extents}
@@ -724,11 +721,9 @@ var current_param = {
   image_id: {if isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if},
   filename: "",
   ip: {if isset($IP)}"{$IP}"{else}""{/if},
-  display_thumbnail: "display_thumbnail_classic",
   pageNumber: 0 {* fetch lines from line 0 to line 100*}
 }
 
-const API_METHOD = "{$API_METHOD|noescape}";
 const str_dwld = "{_ 'Downloaded'|noescape}";
 const str_most_visited = "{_ 'Most visited'|noescape}";
 const str_best_rated = "{_ 'Best rated'|noescape}";
@@ -746,11 +741,11 @@ const str_edit_img = '{_ 'Edit photo'|noescape}';
 
 const str_search_details = {
     "allwords": "{_ 'Search for words'|noescape}",
-    "date_posted": "{_ 'Post date'|noescape}",
+    "datePosted": "{_ 'Post date'|noescape}",
     "tags": str_tags,
     "cat": "{_ 'Album'|noescape}",
     "author": "{_ 'Author'|noescape}",
-    "added_by": "{_ 'Added by'|noescape}",
+    "addedBy": "{_ 'Added by'|noescape}",
     "filetypes": "{_ 'File type'|noescape}",
 };
 const str_and_more = "{_ 'and %d more'|noescape}"

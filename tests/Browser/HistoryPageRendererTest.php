@@ -6,16 +6,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Piwigo\Admin\HistoryPageRenderer (admin.php?page=history) -- renders the
- * filter FORM only; the actual history line listing was fetched
- * client-side via `pwg.history.search` (out of this class's scope, see its
- * own docblock) -- P27 deliberately never ported that WS method (its own
- * handler builds admin-page HTML strings/ALL_CAPS Latte-template keys and
- * writes a display cookie, needing a dedicated redesign rather than a
- * mechanical port), so `history.js`'s own AJAX call to it now 404s since
- * the WS layer itself was deleted; the redesign is still open, tracked in
- * the plan file, not silently fixed here. This suite covers only the
- * form's own filter-echo/default-date/valid-vs-invalid-user_id branches,
- * unaffected either way.
+ * filter FORM only; the actual history line listing is fetched
+ * client-side via `GET /api/v1/history/search`
+ * ({@see \Piwigo\Controller\Api\History\HistorySearchController}, P27's
+ * dedicated redesign of the WS-deleted `pwg.history.search` -- not a
+ * mechanical port, see that class's own docblock). Most of this suite
+ * still only covers the form's own filter-echo/default-date/
+ * valid-vs-invalid-user_id branches; the 2 tests at the bottom exercise
+ * the results endpoint itself directly.
  */
 it('renders with today\'s date pre-filled and no filter applied', function (): void {
     $page = H::loginAsAdmin($this);
@@ -78,4 +76,45 @@ it('rejects a non-digit filter_ip as an invalid request parameter', function ():
     $result = H::rawGet($page, '/admin.php?page=history&filter_ip=not-an-ip');
 
     expect($result['body'])->toContain('Invalid request parameter');
+});
+
+it('GET /api/v1/history/search returns real JSON instead of the old ws.php 404', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::truncateHistory();
+
+    $result = H::rawGet($page, '/api/v1/history/search?pageNumber=0');
+
+    expect($result['status'])->toBe(200);
+    $decoded = json_decode($result['body'], true);
+    if (! is_array($decoded)) {
+        throw new RuntimeException('GET /api/v1/history/search returned no JSON object: ' . $result['body']);
+    }
+    expect($decoded)
+        ->toMatchArray([
+            'lines' => [],
+            'pageNumber' => 0,
+            'maxPage' => 1,
+        ]);
+    expect($decoded['summary'])->toMatchArray([
+        'nbLines' => 0,
+        'nbUsers' => 0,
+        'nbGuests' => 0,
+        'members' => [],
+    ]);
+});
+
+it('renders an empty results table without hanging the loading spinner', function (): void {
+    $page = H::loginAsAdmin($this);
+    // See VisualRegressionTest.php's own class docblock -- wipe the table
+    // this page queries AFTER logging in (login itself logs a history
+    // row) and BEFORE navigating there (its JS fires the search AJAX
+    // call on document.ready), so the default (today, unfiltered) search
+    // is deterministically empty.
+    H::truncateHistory();
+
+    $page = H::navigateOk($page, '/admin.php?page=history');
+    H::waitUntilHidden($page, '.loading');
+
+    $page->assertSee('No results');
+    $page->assertNoJavaScriptErrors();
 });

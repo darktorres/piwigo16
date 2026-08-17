@@ -8,14 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\HistoryPageContext;
 use Piwigo\Admin\Request\HistoryFilterRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Auth\CookieService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\History\HistoryImageType;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\UserRepository;
@@ -24,8 +22,9 @@ use Piwigo\Validation\InputValidator;
 /**
  * Ported from admin/history.php (page slug "history") -- displays the
  * filtered history lines panel. The actual line listing is fetched
- * client-side via an async ws.php?method=pwg.history.search call
- * (Ws\Core::historySearch()); this page only renders the filter form.
+ * client-side via `GET /api/v1/history/search`
+ * ({@see \Piwigo\Controller\Api\History\HistorySearchController}); this
+ * page only renders the filter form.
  */
 final class HistoryPageRenderer
 {
@@ -40,17 +39,6 @@ final class HistoryPageRenderer
     public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager): void
     {
         $template = $currentTemplate->get();
-
-        $types = array_merge(['none'], array_map(
-            static fn (HistoryImageType $type): string => $type->value,
-            HistoryImageType::cases()
-        ));
-
-        $display_thumbnails = [
-            'no_display_thumbnail' => $lang->t('No display'),
-            'display_thumbnail_classic' => $lang->t('Classic display'),
-            'display_thumbnail_hoverbox' => $lang->t('Hoverbox display'),
-        ];
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
@@ -67,11 +55,6 @@ final class HistoryPageRenderer
         // by default, at page load, we want the selected date to be the current
         // date
         $form['start'] = $form['end'] = Env::now()->format('Y-m-d');
-        $form['types'] = $types;
-        // Hoverbox by default
-        $form['display_thumbnail'] =
-          new CookieService()
-              ->getDisplayThumbnailPref() ?? 'no_display_thumbnail';
 
         $form_param = [];
         $form_param['ip'] = $historyFilter->ip;
@@ -92,15 +75,12 @@ final class HistoryPageRenderer
 
         $template->assignContext(new HistoryPageContext(
             fAction: $urlService->getRootUrl() . 'admin.php?page=history',
-            apiMethod: 'ws.php?format=json&method=pwg.history.search',
             userId: $form_param['user_id'],
             userName: $form_param['user_name'] ?? null,
             imageId: $form_param['image_id'] ?? '',
             ip: $form_param['ip'] ?? '',
             start: $form['start'],
             end: $form['end'],
-            displayThumbnails: $display_thumbnails,
-            displayThumbnailSelected: $form['display_thumbnail'],
             guestId: $currentConfig->guestId,
             adminPageTitle: $lang->t('History'),
         ));

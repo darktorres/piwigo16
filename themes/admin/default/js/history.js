@@ -121,12 +121,12 @@ function activateLineOptions() {
 function fillSummaryResult(summary) {
   $(".user-list").empty();
 
-  $(".summary-lines .summary-data").html(summary.NB_LINES);
-  $(".summary-weight .summary-data").html(unit_MB.replace("%s", summary.FILESIZE));
-  $(".summary-users .summary-data").html(summary.USERS);
-  $(".summary-guests .summary-data").html(summary.GUESTS);
+  $(".summary-lines .summary-data").html(summary.nbLinesText);
+  $(".summary-weight .summary-data").html(unit_MB.replace("%s", summary.filesizeMb));
+  $(".summary-users .summary-data").html(summary.usersText);
+  $(".summary-guests .summary-data").html(summary.guestsText);
 
-  if ((summary.GUESTS.split(" ")[0] != "0")) {
+  if (summary.nbGuests > 0) {
     $(".summary-guests .summary-data").addClass("icon-plus-circled").on("click", function () {
       if (current_param.user_id == "-1") {
         current_param.user_id = guest_id;
@@ -144,34 +144,24 @@ function fillSummaryResult(summary) {
     $(".summary-guests").hide();
   }
 
-  var id_of = [];
-  var user_dot_title = "";
-
-  // not sorted
-  summary.MEMBERS.forEach(keyval => {
-    for (const [key, value] of Object.entries(keyval)) {
-      id_of[key] = value;
-      user_dot_title += key + ", ";
-    }
-  });
-  user_dot_title = user_dot_title.slice(0, -2);
+  var user_dot_title = summary.members.map(member => member.username).join(", ");
   $(".user-dot").attr("title", user_dot_title).addClass("tiptip");
 
   var tmp = 0;
   $(".user-dot").hide();
-  //sorted
-  for (const [key, value] of Object.entries(summary.SORTED_MEMBERS)) {
+  // summary.members is already ordered most-active-first
+  summary.members.forEach(member => {
     if (tmp < 5) {
       new_user_item = $("#-2").clone();
 
       new_user_item.removeClass("hide");
-      new_user_item.find(".user-item-name").html(key);
-      new_user_item.data("user-id", id_of[key]);
-  
+      new_user_item.find(".user-item-name").html(member.username);
+      new_user_item.data("user-id", member.userId);
+
       new_user_item.on("click", function () {
-        if (current_param.user_id != id_of[key]) {
+        if (current_param.user_id != member.userId) {
           current_param.user_id = $(this).data("user-id");
-          addUserFilter(key)
+          addUserFilter(member.username)
           fillHistoryResult(current_param);
         }
       })
@@ -180,7 +170,7 @@ function fillSummaryResult(summary) {
     } else {
       $(".user-dot").show();
     }
-  }
+  });
 }
 
 function showResults(doShow) {
@@ -195,12 +185,8 @@ function showResults(doShow) {
 }
 
 function fillHistoryResult(ajaxParam) {
-  // console.log(current_param);
-  // $(".tab .search-line").remove();
   $.ajax({
-    url: API_METHOD,
-    method: "POST",
-    dataType: "JSON",
+    url: "api/v1/history/search",
     data: ajaxParam,
     beforeSend: function () {
       showResults(false);
@@ -209,22 +195,20 @@ function fillHistoryResult(ajaxParam) {
       $(".tab").empty();
     },
     success: function (raw_data) {
-      
-      data = raw_data.result["lines"];
-      imageDisplay = raw_data.result["params"].display_thumbnail;
-      maxPage = raw_data.result["maxPage"];
-      summary = raw_data.result["summary"];
-      // console.log(raw_data);
+
+      data = raw_data.lines;
+      maxPage = raw_data.maxPage;
+      summary = raw_data.summary;
 
       //clear lines before refill
-      
+
       if (data.length > 0) {
         var id = 0;
         data.forEach(line => {
-          lineConstructor(line, id, imageDisplay)
+          lineConstructor(line, id)
           id++
         });
-  
+
         fillSummaryResult(summary);
         showResults(true);
         $(".noResults").hide();
@@ -250,7 +234,7 @@ function fillHistoryResult(ajaxParam) {
   })
 }
 
-function lineConstructor(line, id, imageDisplay) {
+function lineConstructor(line, id) {
   let newLine = $("#-1").clone();
 
   let sections = [
@@ -286,12 +270,12 @@ function lineConstructor(line, id, imageDisplay) {
   newLine.attr("id", id);
   // console.log(id);
 
-  newLine.find(".date-day").html(line.DATE);
-  newLine.find(".date-hour").html(line.TIME);
+  newLine.find(".date-day").html(line.dateFormatted);
+  newLine.find(".date-hour").html(line.time);
 
-  newLine.find(".user-name").html(line.USERNAME + '<i class="add-filter icon-plus-circled"></i>');
+  newLine.find(".user-name").html(line.username + '<i class="add-filter icon-plus-circled"></i>');
 
-  newLine.find(".user-name").attr("id", line.USERID);
+  newLine.find(".user-name").attr("id", line.userId);
   if (current_param.user_id == "-1") {
     newLine.find(".user-name").on("click", function ()  {
       current_param.user_id = $(this).attr('id') + "";
@@ -301,8 +285,8 @@ function lineConstructor(line, id, imageDisplay) {
     })
   }
 
-  newLine.find(".user-ip").html(line.IP + '<i class="add-filter icon-plus-circled"></i>');
-  newLine.find(".user-ip").data("ip", line.IP);
+  newLine.find(".user-ip").html(line.ip + '<i class="add-filter icon-plus-circled"></i>');
+  newLine.find(".user-ip").data("ip", line.ip);
   if (current_param.ip == "") {
     newLine.find(".user-ip").on("click", function () {
       current_param.ip = $(this).data("ip");
@@ -312,7 +296,7 @@ function lineConstructor(line, id, imageDisplay) {
     })
   }
 
-  newLine.find(".add-img-as-filter").data("img-id", line.IMAGEID);
+  newLine.find(".add-img-as-filter").data("img-id", line.imageId);
   if (current_param.image_id == "") {
     newLine.find(".add-img-as-filter").on("click", function () {
       current_param.image_id = $(this).data("img-id");
@@ -322,8 +306,8 @@ function lineConstructor(line, id, imageDisplay) {
     });
   }
 
-  if (line.EDIT_IMAGE != "") {
-    newLine.find(".edit-img").attr("href", line.EDIT_IMAGE);
+  if (line.imageEditUrl) {
+    newLine.find(".edit-img").attr("href", line.imageEditUrl);
   } else {
     newLine.find(".edit-img")
       .attr("href", "#")
@@ -336,19 +320,19 @@ function lineConstructor(line, id, imageDisplay) {
 
   switch (line.SECTION) {
     case "tags":
-      if (line.TAGS.length > 1 && line.TAGS.length <= 2  ) {
-        newLine.find(".type-name").html(line.TAGS[0] +", "+ line.TAGS[1] + ", ...");
-        newLine.find(".type-id").html("#" + line.TAGIDS[0] +", "+ line.TAGIDS[1] + ", ...");
-      } else if (line.TAGS.length > 2) {
-        newLine.find(".type-name").html(line.TAGS[0] +", "+ line.TAGS[1] +", "+ line.TAGS[2]  + ", ...");
-        newLine.find(".type-id").html("#" + line.TAGIDS[0] +", "+ line.TAGIDS[1] +", "+ line.TAGIDS[2] + ", ...");
+      if (line.tagNames.length > 1 && line.tagNames.length <= 2  ) {
+        newLine.find(".type-name").html(line.tagNames[0] +", "+ line.tagNames[1] + ", ...");
+        newLine.find(".type-id").html("#" + line.tagIds[0] +", "+ line.tagIds[1] + ", ...");
+      } else if (line.tagNames.length > 2) {
+        newLine.find(".type-name").html(line.tagNames[0] +", "+ line.tagNames[1] +", "+ line.tagNames[2]  + ", ...");
+        newLine.find(".type-id").html("#" + line.tagIds[0] +", "+ line.tagIds[1] +", "+ line.tagIds[2] + ", ...");
       } else {
-        newLine.find(".type-name").html(line.TAGS[0]);
-        newLine.find(".type-id").html("#" + line.TAGIDS[0]);
+        newLine.find(".type-name").html(line.tagNames[0]);
+        newLine.find(".type-id").html("#" + line.tagIds[0]);
       }
-      
+
       let detail_str = "";
-      line.TAGS.forEach(tag => {
+      line.tagNames.forEach(tag => {
         detail_str += tag + ", ";
       });
       detail_str = detail_str.slice(0, -2)
@@ -373,20 +357,20 @@ function lineConstructor(line, id, imageDisplay) {
       break;
     case "search":
       // for debug
-      // console.log('search n° : ', line.SEARCH_ID, ' ', line.SEARCH_DETAILS);
-      const search_details = line.SEARCH_DETAILS;
+      // console.log('search n° : ', line.searchId, ' ', line.searchDetails);
+      const search_details = line.searchDetails;
       const search_icons = {
         'allwords': 'gallery-icon-search',
         'tags': 'gallery-icon-tag',
-        'date_posted': 'gallery-icon-calendar-plus',
+        'datePosted': 'gallery-icon-calendar-plus',
         'cat': 'gallery-icon-album',
         'author': 'gallery-icon-user-edit',
-        'added_by': 'gallery-icon-user',
+        'addedBy': 'gallery-icon-user',
         'filetypes': 'gallery-icon-file-image',
       }
-      newLine.find(".type-name").html(line.SECTION);
-      newLine.find(".type-id").html("#" + line.SEARCH_ID);
-      if (!line.SEARCH_ID)
+      newLine.find(".type-name").html(line.section);
+      newLine.find(".type-id").html("#" + line.searchId);
+      if (!line.searchId)
       {
         newLine.find(".type-id").hide();
       }
@@ -513,9 +497,9 @@ function lineConstructor(line, id, imageDisplay) {
       newLine.find(".type-id").hide();
       break;
     case "categories":
-      newLine.find(".type-name").html(line.CATEGORY);
-      newLine.find(".detail-item-1").html(line.CATEGORY).addClass("icon-folder-open tiptip").attr("title", line.FULL_CATEGORY_PATH);
-      if (line.IMAGE == "") {
+      newLine.find(".type-name").html(line.categoryName);
+      newLine.find(".detail-item-1").html(line.categoryName).addClass("icon-folder-open tiptip").attr("title", line.categoryPath);
+      if (!line.imageThumbnailUrl) {
         newLine.find(".type-id").hide();
       }
       break;
@@ -532,32 +516,33 @@ function lineConstructor(line, id, imageDisplay) {
     break;
     default:
       newLine.find(".type-icon i").addClass("line-icon icon-help-puzzle icon-grey");
-      newLine.find(".type-name").html(line.SECTION);
+      newLine.find(".type-name").html(line.section);
       newLine.find(".type-id").hide();
     break;
   }
 
-  if (line.IMAGE != "") {
-    newLine.find(".type-name").html(line.IMAGENAME);
-    newLine.find(".type-icon").html(line.IMAGE);
-    newLine.find(".type-id").html("#" + line.IMAGEID);
-    newLine.find(".type-icon").attr("href", line.EDIT_IMAGE).removeClass("no-img")
+  if (line.imageThumbnailUrl) {
+    const img = $("<img>").attr("src", line.imageThumbnailUrl).attr("alt", line.imageLabel || "").attr("title", line.imageLabel || "");
+    newLine.find(".type-name").html(line.imageLabel);
+    newLine.find(".type-icon").empty().append(img);
+    newLine.find(".type-id").html("#" + line.imageId);
+    newLine.find(".type-icon").attr("href", line.imageEditUrl).removeClass("no-img")
     newLine.find(".type-icon img").attr("title", str_edit_img).addClass("tiptip")
     newLine.find(".type-id").show();
   } else {
     newLine.find(".type-icon .icon-file-image").removeClass("icon-file-image");
     newLine.find(".toggle-img-option").hide();
 
-    if (sections.indexOf(line.SECTION) != -1) {
-      var lineIconClass = icons[sections.indexOf(line.SECTION)];
+    if (sections.indexOf(line.section) != -1) {
+      var lineIconClass = icons[sections.indexOf(line.section)];
       newLine.find(".type-icon i").addClass(lineIconClass)
     } else {
-      console.log("Unhandled section : " + line.SECTION);
+      console.log("Unhandled section : " + line.section);
     }
   }
 
   newLine.find(".detail-item-1").removeClass("hide");
-  if (line.TYPE == "high") {
+  if (line.imageType == "high") {
     newLine.find(".detail-item-1").html(str_dwld).addClass("icon-blue").removeClass("detail-item-1").removeClass("hide");
     newLine.find(".date-dwld-icon").addClass("icon-blue icon-floppy")
   } else {

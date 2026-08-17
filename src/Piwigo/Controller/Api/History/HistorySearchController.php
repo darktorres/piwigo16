@@ -1,0 +1,425 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Controller\Api\History;
+
+use Override;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\DateHelper;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\History\HistoryImageType;
+use Piwigo\History\HistoryService;
+use Piwigo\Html\Event\RenderElementDescription;
+use Piwigo\Http\AdminGuard;
+use Piwigo\Http\ControllerInterface;
+use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Tag\TagService;
+use Piwigo\Users\UserService;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * `GET /api/v1/history/search` -- `pwg.history.search`'s real
+ * replacement, admin only (a read, no CSRF needed -- matches
+ * `ActivityListController`). Ported from `Ws\History\SearchHandler`
+ * (deleted with the rest of `Piwigo\Ws\*` in `959b717344`) with a real
+ * redesign, not a mechanical port -- see `docs/PLAN.md`'s P27.history
+ * section:
+ *
+ * - No more server-built HTML blobs (`<img>` tags, `+`-filter links) --
+ *   flat typed fields (`imageThumbnailUrl`, `imageEditUrl`, `categoryId`)
+ *   the client builds markup from, matching every other P27 family.
+ * - No more `search` table self-insert. The old handler persisted the
+ *   admin's *own current filter* as a brand new saved-search row on
+ *   every single call purely to mint a `search_id` for `+`-filter links
+ *   that nothing in this rewrite's `HistoryPageRenderer`/
+ *   `HistoryFilterRequest` ever reads back (`search_id` is not a
+ *   recognised query param there) -- confirmed dead via the old
+ *   handler's own `// Remove redirect for ajax` comment, a leftover from
+ *   a pre-AJAX full-page-redirect flow. `searchDetails` below is a
+ *   *different*, real `search_id` -- one created by an actual front-end
+ *   gallery search (`search.php`/`SearchService::saveSearch()`) and
+ *   referenced by a genuine `history.search_id` value on that row.
+ * - No more `display_thumbnail` cookie write. `history.latte` hardcodes
+ *   `display_thumbnail: "display_thumbnail_classic"` and `history.js`'s
+ *   `lineConstructor()` never reads its own `imageDisplay` parameter --
+ *   no control in this rewrite's UI can actually change it, so the
+ *   round-trip was already inert.
+ *
+ * The known "fetches every matching row, then slices 300 per page in
+ * PHP instead of a real SQL `LIMIT`/`OFFSET`" pagination is carried over
+ * unchanged -- `HistoryService::getHistory()`'s own docblock (via the
+ * deleted handler) already flagged this as "a real, non-trivial
+ * optimization opportunity... not a defect," out of scope here.
+ */
+final readonly class HistorySearchController implements ControllerInterface
+{
+    private const int PAGE_SIZE = 300;
+
+    public function __construct(
+        private AdminGuard $adminGuard,
+        private HistoryService $historyService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private UserService $userService,
+        private ImageRepository $imageRepository,
+        private ImageStdParams $imageStdParams,
+        private HtmlRenderingInterface $htmlRenderer,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
+        private Translator $translator,
+        private SearchRepository $searchRepository,
+        private CurrentConfig $currentConfig,
+    ) {}
+
+    #[Override]
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        $denied = $this->adminGuard->check();
+        if ($denied instanceof ResponseInterface) {
+            return $denied;
+        }
+
+        $input = HistorySearchInput::fromArray($request->getQueryParams());
+
+        foreach ([
+            'start' => $input->start,
+            'end' => $input->end,
+        ] as $field => $value) {
+            if ($value !== null && ! (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid ' . $field . '.');
+            }
+        }
+
+        $allTypes = array_merge(['none'], array_map(
+            static fn (HistoryImageType $type): string => $type->value,
+            HistoryImageType::cases()
+        ));
+
+        $fields = [];
+        if ($input->start !== null) {
+            $fields['date-after'] = $input->start;
+        }
+        if ($input->end !== null) {
+            $fields['date-before'] = $input->end;
+        }
+        $fields['types'] = $input->types === [] ? $allTypes : array_values(array_intersect($input->types, $allTypes));
+        $fields['user'] = $input->userId;
+        if ($input->imageId !== null) {
+            $fields['image_id'] = $input->imageId;
+        }
+        if ($input->filename !== null) {
+            $fields['filename'] = str_replace('*', '%', $input->filename);
+        }
+        if ($input->ip !== null) {
+            $fields['ip'] = str_replace('*', '%', $input->ip);
+        }
+
+        /** @var list<array{date: ?string, time: string, user_id: int, IP: string, section: ?string, category_id: ?int, search_id: ?int, tag_ids: ?string, image_id: ?int, image_type: ?string}> $rows */
+        $rows = $this->historyService->getHistory([], [
+            'fields' => $fields,
+        ], $allTypes);
+        usort($rows, $this->historyService->historyCompare(...));
+
+        /** @var array<int, true> $userIds */
+        $userIds = [];
+        /** @var array<int, true> $categoryIds */
+        $categoryIds = [];
+        /** @var array<int, true> $imageIds */
+        $imageIds = [];
+        /** @var array<int, true> $searchIds */
+        $searchIds = [];
+        $hasTags = false;
+
+        foreach ($rows as $row) {
+            $userIds[$row['user_id']] = true;
+            if ($row['category_id'] !== null) {
+                $categoryIds[$row['category_id']] = true;
+            }
+            if ($row['image_id'] !== null) {
+                $imageIds[$row['image_id']] = true;
+            }
+            if ($row['search_id'] !== null) {
+                $searchIds[$row['search_id']] = true;
+            }
+            if ($row['tag_ids'] !== null) {
+                $hasTags = true;
+            }
+        }
+
+        /** @var array<int, array<string, mixed>> $searchDetailsBySearchId */
+        $searchDetailsBySearchId = [];
+        if ($searchIds !== []) {
+            $rulesById = $this->searchRepository->findSavedSearchRulesByIds(array_keys($searchIds));
+            foreach ($rulesById as $searchId => $rulesFull) {
+                if ($rulesFull === null) {
+                    continue;
+                }
+                $rulesFieldsRaw = is_array($rulesFull['fields'] ?? null) ? $rulesFull['fields'] : [];
+                $rulesFields = array_filter($rulesFieldsRaw, is_string(...), ARRAY_FILTER_USE_KEY);
+
+                $tagsWords = is_array($rulesFields['tags'] ?? null) ? ($rulesFields['tags']['words'] ?? null) : null;
+                if (is_array($tagsWords) && $tagsWords !== []) {
+                    $hasTags = true;
+                }
+
+                $searchDetailsBySearchId[$searchId] = $rulesFields;
+            }
+        }
+
+        $usernameOf = $userIds !== [] ? $this->userService->getUsernamesByIds(array_map(strval(...), array_keys($userIds))) : [];
+
+        /** @var array<int, string> $nameOfCategory */
+        $nameOfCategory = [];
+        /** @var array<int, string> $fullCatPath */
+        $fullCatPath = [];
+        if ($categoryIds !== []) {
+            $uppercatsOf = $this->categoryService->getUppercatsById(array_keys($categoryIds));
+            foreach ($uppercatsOf as $categoryId => $uppercats) {
+                $fullCatPath[$categoryId] = strip_tags($this->htmlRenderer->getCatDisplayNameCache($uppercats, null));
+                $levels = explode(',', $uppercats);
+                $nameOfCategory[$categoryId] = strip_tags($this->htmlRenderer->getCatDisplayNameCache(end($levels), null));
+            }
+        }
+
+        $imageInfos = $imageIds !== [] ? $this->imageRepository->findHistoryDisplayInfoByIds(array_keys($imageIds)) : [];
+
+        /** @var array<int, string> $nameOfTag */
+        $nameOfTag = [];
+        if ($hasTags) {
+            foreach ($this->tagService->getAllTags($this->htmlRenderer) as $tag) {
+                $nameOfTag[$tag['id']] = $tag['name'];
+            }
+        }
+
+        $lines = [];
+        $totalFilesize = 0;
+        $guestIps = [];
+        /** @var array<int, int> $countByUserId */
+        $countByUserId = [];
+
+        foreach ($rows as $row) {
+            $lines[] = $this->buildLine(
+                $row,
+                $usernameOf,
+                $nameOfCategory,
+                $fullCatPath,
+                $imageInfos,
+                $nameOfTag,
+                $searchDetailsBySearchId,
+                $totalFilesize,
+                $guestIps,
+                $countByUserId,
+                $this->currentConfig->guestId,
+            );
+        }
+
+        $nbLines = count($lines);
+        $maxPage = (int) max(1, ceil($nbLines / self::PAGE_SIZE));
+        $lines = array_reverse($lines);
+        $lines = array_slice($lines, $input->pageNumber * self::PAGE_SIZE, self::PAGE_SIZE);
+
+        $nbGuests = count($guestIps);
+        $nbMembers = count($countByUserId);
+        arsort($countByUserId);
+        $members = [];
+        foreach (array_keys($countByUserId) as $memberId) {
+            $members[] = [
+                'userId' => $memberId,
+                'username' => $usernameOf[$memberId] ?? null,
+            ];
+        }
+
+        return ResponseFactory::json([
+            'lines' => $lines,
+            'pageNumber' => $input->pageNumber,
+            'maxPage' => $maxPage,
+            'summary' => [
+                'nbLines' => $nbLines,
+                'nbLinesText' => $this->translator->plural('%d line filtered', '%d lines filtered', $nbLines),
+                'filesizeMb' => $totalFilesize !== 0 ? (int) ceil($totalFilesize / 1024) : 0,
+                'nbUsers' => $nbMembers,
+                'nbGuests' => $nbGuests,
+                'usersText' => $this->translator->plural('%d user', '%d users', $nbMembers + $nbGuests),
+                'guestsText' => $this->translator->plural('%d guest', '%d guests', $nbGuests),
+                'members' => $members,
+            ],
+        ]);
+    }
+
+    /**
+     * @param array{date: ?string, time: string, user_id: int, IP: string, section: ?string, category_id: ?int, search_id: ?int, tag_ids: ?string, image_id: ?int, image_type: ?string} $row
+     * @param array<int, string> $usernameOf
+     * @param array<int, string> $nameOfCategory
+     * @param array<int, string> $fullCatPath
+     * @param array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}> $imageInfos
+     * @param array<int, string> $nameOfTag
+     * @param array<int, array<string, mixed>> $searchDetailsBySearchId
+     * @param array<string, true> $guestIps
+     * @param array<int, int> $countByUserId
+     * @return array<string, mixed>
+     */
+    private function buildLine(
+        array $row,
+        array $usernameOf,
+        array $nameOfCategory,
+        array $fullCatPath,
+        array $imageInfos,
+        array $nameOfTag,
+        array $searchDetailsBySearchId,
+        int &$totalFilesize,
+        array &$guestIps,
+        array &$countByUserId,
+        int $guestId,
+    ): array {
+        $date = $row['date'];
+        $userId = $row['user_id'];
+        $ip = $row['IP'];
+        $categoryId = $row['category_id'];
+        $searchId = $row['search_id'];
+        $imageId = $row['image_id'];
+        $imageType = $row['image_type'];
+
+        $imageInfo = $imageId !== null ? ($imageInfos[$imageId] ?? null) : null;
+
+        if ($imageType === 'high' && $imageInfo !== null) {
+            $totalFilesize += $imageInfo['filesize'] ?? 0;
+        }
+
+        $username = $usernameOf[$userId] ?? null;
+
+        if ($userId === $guestId) {
+            $guestIps[$ip] = true;
+        } elseif ($username !== null) {
+            $countByUserId[$userId] = ($countByUserId[$userId] ?? 0) + 1;
+        }
+
+        $imageLabel = null;
+        $imageEditUrl = null;
+        $imageThumbnailUrl = null;
+        if ($imageId !== null && $imageInfo !== null) {
+            $labelEvent = $this->eventDispatcher->dispatch(new RenderElementDescription($imageInfo['label']));
+            $imageLabel = $labelEvent->elementDescription;
+
+            $imageEditUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $imageId;
+            $imageThumbnailUrl = DerivativeImage::url($this->imageStdParams->getByType(ImageStdParams::SQUARE), [
+                'id' => $imageId,
+                'file' => $imageInfo['file'],
+                'path' => $imageInfo['path'],
+                'representative_ext' => $imageInfo['representative_ext'],
+            ]);
+        }
+
+        $tagIds = [];
+        $tagNames = [];
+        if ($row['tag_ids'] !== null && $row['tag_ids'] !== '') {
+            foreach (explode(',', $row['tag_ids']) as $rawTagId) {
+                if (! is_numeric($rawTagId)) {
+                    continue;
+                }
+                $tagId = (int) $rawTagId;
+                $tagIds[] = $tagId;
+                $tagNames[] = $nameOfTag[$tagId] ?? $rawTagId;
+            }
+        }
+
+        $searchDetails = $searchId !== null && isset($searchDetailsBySearchId[$searchId])
+            ? $this->buildSearchDetails($searchDetailsBySearchId[$searchId], $nameOfCategory, $usernameOf, $nameOfTag)
+            : null;
+
+        return [
+            'date' => $date,
+            'dateFormatted' => $date !== null ? DateHelper::formatDate($date) : null,
+            'time' => $row['time'],
+            'userId' => $userId,
+            'username' => $username,
+            'ip' => $ip,
+            'section' => $row['section'],
+            'categoryId' => $categoryId,
+            'categoryName' => $categoryId !== null ? ($nameOfCategory[$categoryId] ?? null) : null,
+            'categoryPath' => $categoryId !== null ? ($fullCatPath[$categoryId] ?? null) : null,
+            'searchId' => $searchId,
+            'searchDetails' => $searchDetails,
+            'tagIds' => $tagIds,
+            'tagNames' => $tagNames,
+            'imageId' => $imageId,
+            'imageType' => $imageType,
+            'imageLabel' => $imageLabel,
+            'imageEditUrl' => $imageEditUrl,
+            'imageThumbnailUrl' => $imageThumbnailUrl,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $rulesFields
+     * @param array<int, string> $nameOfCategory
+     * @param array<int, string> $usernameOf
+     * @param array<int, string> $nameOfTag
+     * @return array<string, mixed>
+     */
+    private function buildSearchDetails(array $rulesFields, array $nameOfCategory, array $usernameOf, array $nameOfTag): array
+    {
+        $allwords = is_array($rulesFields['allwords'] ?? null) ? ($rulesFields['allwords']['words'] ?? null) : null;
+        $allwords = is_array($allwords) ? array_values(array_filter($allwords, is_string(...))) : null;
+
+        $tagIds = is_array($rulesFields['tags'] ?? null) ? ($rulesFields['tags']['words'] ?? null) : null;
+        $tags = null;
+        if (is_array($tagIds) && $tagIds !== []) {
+            $tags = [];
+            foreach ($tagIds as $tagId) {
+                if (is_numeric($tagId)) {
+                    $tags[] = $nameOfTag[(int) $tagId] ?? (string) $tagId;
+                }
+            }
+        }
+
+        $datePosted = $rulesFields['date_posted'] ?? null;
+        $datePosted = is_string($datePosted) && $datePosted !== '' ? $datePosted : null;
+
+        $catIds = is_array($rulesFields['cat'] ?? null) ? ($rulesFields['cat']['words'] ?? null) : null;
+        $cat = null;
+        if (is_array($catIds) && $catIds !== []) {
+            $cat = [];
+            foreach ($catIds as $catId) {
+                if (is_numeric($catId)) {
+                    $cat[] = $nameOfCategory[(int) $catId] ?? (string) $catId;
+                }
+            }
+        }
+
+        $author = is_array($rulesFields['author'] ?? null) ? ($rulesFields['author']['words'] ?? null) : null;
+        $author = is_array($author) ? array_values(array_filter($author, is_string(...))) : null;
+
+        $addedByIds = $rulesFields['added_by'] ?? null;
+        $addedBy = null;
+        if (is_array($addedByIds) && $addedByIds !== []) {
+            $addedBy = [];
+            foreach ($addedByIds as $userId) {
+                if (is_numeric($userId)) {
+                    $addedBy[] = $usernameOf[(int) $userId] ?? (string) $userId;
+                }
+            }
+        }
+
+        $filetypes = $rulesFields['filetypes'] ?? null;
+
+        return [
+            'allwords' => $allwords !== [] ? $allwords : null,
+            'tags' => $tags,
+            'datePosted' => $datePosted,
+            'cat' => $cat,
+            'author' => $author !== [] ? $author : null,
+            'addedBy' => $addedBy,
+            'filetypes' => $filetypes,
+        ];
+    }
+}

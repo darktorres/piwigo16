@@ -32,8 +32,9 @@ use Piwigo\Validation\InputValidator;
 /**
  * Piwigo\Admin\HistoryPageRenderer -- zero-constructor, method-param-
  * injected (B3 Tier 1 shape). Reached only via the "history" page slug
- * (the real filtered line listing is a client-side `pwg.history.search`
- * AJAX call this class never touches -- currently broken, see
+ * (the real filtered line listing is a client-side `GET /api/v1/
+ * history/search` AJAX call this class never touches -- see
+ * {@see \Piwigo\Controller\Api\History\HistorySearchController} and
  * tests/Browser/HistoryPageRendererTest.php's own docblock).
  *
  * Only the default (no ?filter_user_id) happy path is covered -- a real
@@ -96,7 +97,7 @@ function historyPageTestAccessControl(): AccessControl
 
 test('render() defaults the date range to today and skips the user-id lookup when no filter is given', function (): void {
     $root = historyPageTestRoot();
-    unset($_GET['filter_ip'], $_GET['filter_image_id'], $_GET['filter_user_id'], $_COOKIE['pwg_display_thumbnail']);
+    unset($_GET['filter_ip'], $_GET['filter_image_id'], $_GET['filter_user_id']);
 
     try {
         $template = TemplateTestFactory::build();
@@ -138,8 +139,6 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             ->toBe(-1)
             ->and($template->getTemplateVars('USER_NAME'))
             ->toBeNull()
-            ->and($template->getTemplateVars('display_thumbnail_selected'))
-            ->toBe('no_display_thumbnail')
             ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
             ->and((string) $adminContent)

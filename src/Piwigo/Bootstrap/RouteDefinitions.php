@@ -38,6 +38,7 @@ use Piwigo\Controller\Api\Groups\GroupMergeController;
 use Piwigo\Controller\Api\Groups\GroupRemoveUserController;
 use Piwigo\Controller\Api\Groups\GroupUpdateController;
 use Piwigo\Controller\Api\History\HistoryLogController;
+use Piwigo\Controller\Api\History\HistorySearchController;
 use Piwigo\Controller\Api\Images\ImageAddCommentController;
 use Piwigo\Controller\Api\Images\ImageCheckFileController;
 use Piwigo\Controller\Api\Images\ImageDeleteController;
@@ -569,11 +570,6 @@ final class RouteDefinitions
             '_controller' => CommentValidateController::class,
         ], methods: ['POST']));
 
-        // pwg.history.search is deliberately NOT ported here -- its own WS
-        // handler builds admin-page HTML strings/ALL_CAPS Latte-template
-        // keys and writes a display cookie, genuinely entangled with
-        // admin.php?page=history's own rendering, not a mechanical port
-        // candidate. Needs its own dedicated redesign pass later.
         $routes->add('api_v1_activity_list', new Route('/api/v1/activity', defaults: [
             '_controller' => ActivityListController::class,
         ], methods: ['GET']));
@@ -584,6 +580,14 @@ final class RouteDefinitions
         $routes->add('api_v1_history_log', new Route('/api/v1/history/log', defaults: [
             '_controller' => HistoryLogController::class,
         ], methods: ['POST']));
+
+        // pwg.history.search's real replacement -- P27.history, a
+        // dedicated redesign (see HistorySearchController's own
+        // docblock), not the mechanical port every other family above
+        // got. Admin-gated read, no CSRF needed.
+        $routes->add('api_v1_history_search', new Route('/api/v1/history/search', defaults: [
+            '_controller' => HistorySearchController::class,
+        ], methods: ['GET']));
 
         // Plugins/extensions resource families -- webmaster-gated.
         // pwg.themes.performAction has no first-party caller anywhere in

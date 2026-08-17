@@ -1,5 +1,11 @@
 //{*<-- Getting and Displaying Activities -->*}
 
+// Declared before the immediately-invoked call below: get_user_activity()
+// itself is hoisted (a function declaration), but this const binding
+// would otherwise still be in its temporal dead zone at that call site
+// since top-level script execution reaches it before this line.
+const ACTIVITY_DISPLAY_PAGE_SIZE = 100;
+
 if (additional_filt_type)
 {
     object_filter = additional_filt_type;
@@ -7,69 +13,154 @@ if (additional_filt_type)
 
 get_user_activity(activity_page, uid_filter, action_filter, object_filter, [date_min_filter, date_max_filter], additional_filt_value);
 
-function get_user_activity(page, uid, action, object, date, id) {
+/*
+ * GET /api/v1/activity returns flat, unmerged rows by design (see
+ * ActivityListController's own docblock) -- Ws\Activity\GetListHandler's
+ * own consecutive-same-session/object/action line-merging-with-counter
+ * scheme is replicated here client-side instead, from those flat rows.
+ * Fetches successive pages of raw rows (using the endpoint's own
+ * offset/hasMore) and merges them adjacently, exactly like
+ * GetListHandler's own while loop, until either
+ * ACTIVITY_DISPLAY_PAGE_SIZE merged lines are accumulated or the server
+ * reports no more rows -- a merge can span a fetch boundary the same way
+ * it could span a raw-row-batch boundary server-side, so `currentKey`
+ * intentionally isn't reset between iterations of the while loop below.
+ */
+async function fetchAndMergeActivityLines(startOffset, uid, action, object, date, id) {
+    let offset = startOffset;
+    let hasMore = true;
+    const lines = [];
+    let currentKey = '';
 
-    $.ajax({
-        url: "ws.php?format=json&method=pwg.activity.getList",
-        type: "POST",
-        dataType: "json",
-        data: {
-            page: page - 1,
-            uid: uid,
-            action : action,
-            object : object,
-            offset : page_offsets[page - 1],
-            date_min : date[0],
-            date_max : date[1],
-            id : additional_filt_value
-        },
-        beforeSend: () => {
-          $('.tab').contents(':not(#-1):not(.loading)').remove();
-          $(".loading").show();
-          $('.pagination-arrow.rigth').addClass('unavailable');
-          $('.pagination-arrow.left').addClass('unavailable');
-          $(".pagination-item-container").hide();
-          $(".user-update-spinner").addClass("icon-spin6");
-        },
-        success: (data) => {
-            /* console log to help debug
-            {* console.log(data); *}*/
-            uid_filter = uid;
-            action_filter = action;
-            object_filter = object;
-            date_min_filter = date[0];
-            date_max_filter = date[1];
+    while (lines.length < ACTIVITY_DISPLAY_PAGE_SIZE && hasMore) {
+        const params = {
+            offset: offset,
+            dateMin: date[0],
+            dateMax: date[1],
+        };
+        if (uid !== undefined) params.userId = uid;
+        if (action !== undefined) params.action = action;
+        if (object !== undefined) params.object = object;
+        if (id !== undefined && id !== null) params.objectId = id;
 
-            //setCreationDate(data.result['result_lines'][data.result['result_lines'].length-1].date, data.result['result_lines'][0].date);
-            $(".loading").hide();
-            
-            if (data.result['result_lines'].length > 0)
-            {
-                data.result['result_lines'].forEach(line => {
-                    lineConstructor(line);
+        const data = await $.ajax({
+            url: "api/v1/activity",
+            type: "GET",
+            dataType: "json",
+            data: params,
+        });
+
+        hasMore = data.hasMore;
+
+        for (const row of data.activities) {
+            offset++;
+
+            if (lines.length >= ACTIVITY_DISPLAY_PAGE_SIZE) {
+                hasMore = true;
+                break;
+            }
+
+            const lineKey = row.sessionIdx + '~' + row.object + '~' + row.action + '~';
+
+            if (lineKey === currentKey) {
+                const last = lines[lines.length - 1];
+                last.counter++;
+                last.object_id.push(row.objectId);
+            } else {
+                const details = row.details ? {...row.details} : {};
+                let detailsType = null;
+                if ('method' in details) detailsType = 'method';
+                if ('script' in details) detailsType = 'script';
+                details.agent = row.userAgent;
+
+                lines.push({
+                    id: lines.length,
+                    object: row.object,
+                    object_id: [row.objectId],
+                    action: row.action,
+                    ip_address: row.ipAddress,
+                    date: row.dateFormatted,
+                    hour: row.occuredOn.split(' ')[1],
+                    user_id: row.performedBy,
+                    username: row.performedByUsername || ('user#' + row.performedBy),
+                    detailsType: detailsType,
+                    details: details,
+                    counter: 1,
                 });
-            }
-            else
-            {
-                emptyLine();
-            }
 
-            current_page_offset = page_offsets[page - 1];
-            end_page = data.result['end_page'];
-            if (!(page_offsets.includes(data.result['page_offset'])))
-            {
-                page_offsets.push(data.result['page_offset']);
+                currentKey = lineKey;
             }
-            
-            $(".user-update-spinner").removeClass("icon-spin6");
-            $(".pagination-item-container").show();
-            update_pagination_menu();
-        }, 
-        error: (e) => {
-            console.log("ajax call failed");
-            console.log(e);
         }
-    })
+    }
+
+    // Resolve display usernames for every merged "user"-object line's own
+    // object_id list -- GetListHandler's own equivalent step.
+    const userLines = lines.filter(l => l.object === 'user');
+    if (userLines.length > 0) {
+        const allUserIds = [...new Set(userLines.flatMap(l => l.object_id))];
+        const userInfo = await $.ajax({
+            url: "api/v1/users",
+            type: "GET",
+            dataType: "json",
+            data: { userIds: allUserIds, perPage: 0 },
+        });
+        const usernameOfId = {};
+        userInfo.users.forEach(u => { usernameOfId[u.id] = u.username; });
+
+        userLines.forEach(l => {
+            const usernames = l.object_id.map(uid2 => usernameOfId[uid2] || ('user#' + uid2));
+            l.details.users = usernames;
+            l.details.users_string = [...new Set(usernames)].join(', ');
+        });
+    }
+
+    return { lines: lines, endPage: !hasMore, nextOffset: offset };
+}
+
+async function get_user_activity(page, uid, action, object, date, id) {
+    $('.tab').contents(':not(#-1):not(.loading)').remove();
+    $(".loading").show();
+    $('.pagination-arrow.rigth').addClass('unavailable');
+    $('.pagination-arrow.left').addClass('unavailable');
+    $(".pagination-item-container").hide();
+    $(".user-update-spinner").addClass("icon-spin6");
+
+    try {
+        const merged = await fetchAndMergeActivityLines(page_offsets[page - 1], uid, action, object, date, id);
+
+        uid_filter = uid;
+        action_filter = action;
+        object_filter = object;
+        date_min_filter = date[0];
+        date_max_filter = date[1];
+
+        $(".loading").hide();
+
+        if (merged.lines.length > 0)
+        {
+            merged.lines.forEach(line => {
+                lineConstructor(line);
+            });
+        }
+        else
+        {
+            emptyLine();
+        }
+
+        current_page_offset = page_offsets[page - 1];
+        end_page = merged.endPage;
+        if (!(page_offsets.includes(merged.nextOffset)))
+        {
+            page_offsets.push(merged.nextOffset);
+        }
+
+        $(".user-update-spinner").removeClass("icon-spin6");
+        $(".pagination-item-container").show();
+        update_pagination_menu();
+    } catch (e) {
+        console.log("ajax call failed");
+        console.log(e);
+    }
 }
 
 function lineConstructor(line) {

@@ -25,12 +25,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/activity` -- `pwg.activity.getList`'s real replacement,
  * admin only. One row per real activity entry, correctly typed -- WS's
  * own consecutive-same-session/object/action line-merging-with-counter
- * scheme was a display-density optimization for the admin log page
- * (`Admin\Maintenance\ActivityLogEntryFormatter` already owns that
- * concern for the actual admin UI), not something a JSON client needs;
- * merging also loses information (it collapses distinct object ids into
- * one synthetic line). A client that wants grouped/deduplicated display
- * can do it itself from these flat rows.
+ * scheme was a display-density optimization for the admin log page, not
+ * something every JSON client needs, and merging also loses information
+ * (it collapses distinct object ids into one synthetic line). This
+ * response stays flat by design (D3), but carries `sessionIdx` and a
+ * pre-formatted `dateFormatted` (via `DateHelper::formatDate()`, the
+ * same locale-aware output WS used) specifically so a client that *does*
+ * want grouped display can replicate WS's own merge key
+ * (`sessionIdx~object~action`) without a second round-trip for date
+ * formatting -- `user_activity.js` (the real admin log page, `admin.php?
+ * page=history`) is exactly that client, merging these flat rows
+ * client-side.
  *
  * `position` is `offset + index` in this response, not a real activity
  * row id -- `PaginatedActivityRow` deliberately doesn't carry the
@@ -122,6 +127,15 @@ final readonly class ActivityListController implements ControllerInterface
 
         $activities = [];
         foreach ($rows as $index => $row) {
+            // sessionIdx/dateFormatted exist for a client-side line-merging
+            // consumer (user_activity.js) to replicate
+            // Ws\Activity\GetListHandler's own consecutive-row grouping
+            // (same sessionIdx~object~action key) and locale-aware date
+            // display -- this response deliberately doesn't merge rows
+            // itself (see this class's own docblock), but a client that
+            // wants to needs the same grouping key and the same
+            // DateHelper::formatDate() output WS used, not a raw ISO date.
+            [$occuredOnDate] = explode(' ', $row->occuredOn->value);
             $activities[] = [
                 'position' => $offset + $index,
                 'performedBy' => $row->performedBy,
@@ -129,8 +143,10 @@ final readonly class ActivityListController implements ControllerInterface
                 'object' => $row->object,
                 'objectId' => $row->objectId,
                 'action' => $row->action,
+                'sessionIdx' => $row->sessionIdx,
                 'ipAddress' => $row->ipAddress?->value,
                 'occuredOn' => $row->occuredOn->value,
+                'dateFormatted' => DateHelper::formatDate($occuredOnDate),
                 'userAgent' => $row->userAgent,
                 'details' => $row->details,
             ];

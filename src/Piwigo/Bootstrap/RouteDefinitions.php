@@ -71,6 +71,11 @@ use Piwigo\Controller\Api\Tags\TagImagesController;
 use Piwigo\Controller\Api\Tags\TagListController;
 use Piwigo\Controller\Api\Tags\TagMergeController;
 use Piwigo\Controller\Api\Tags\TagRenameController;
+use Piwigo\Controller\Api\Uploads\TusUploadCreateController;
+use Piwigo\Controller\Api\Uploads\TusUploadDeleteController;
+use Piwigo\Controller\Api\Uploads\TusUploadHeadController;
+use Piwigo\Controller\Api\Uploads\TusUploadOptionsController;
+use Piwigo\Controller\Api\Uploads\TusUploadPatchController;
 use Piwigo\Controller\Api\Uploads\UploadDuplicatesController;
 use Piwigo\Controller\Api\Uploads\UploadReadinessController;
 use Piwigo\Controller\Api\Users\UserCreateController;
@@ -681,6 +686,38 @@ final class RouteDefinitions
         $routes->add('api_v1_uploads_duplicates', new Route('/api/v1/uploads/duplicates', defaults: [
             '_controller' => UploadDuplicatesController::class,
         ], methods: ['GET']));
+
+        // tus 1.0.0 resumable-upload protocol -- pwg.images.{addChunk,add,
+        // addFile,addSimple,upload,uploadAsync}'s real replacement. Every
+        // predecessor is requiresAuth: true (admin-only); every mutating
+        // verb here gets CSRF too, even though none of those predecessors
+        // checked it. OPTIONS is deliberately the one ungated route in
+        // this family -- see TusUploadOptionsController's own docblock.
+        $routes->add('api_v1_uploads_options', new Route('/api/v1/uploads', defaults: [
+            '_controller' => TusUploadOptionsController::class,
+        ], methods: ['OPTIONS']));
+
+        $routes->add('api_v1_uploads_create', new Route('/api/v1/uploads', defaults: [
+            '_controller' => TusUploadCreateController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_uploads_head', new Route('/api/v1/uploads/{id}', defaults: [
+            '_controller' => TusUploadHeadController::class,
+        ], requirements: [
+            'id' => '[a-f0-9]{32}',
+        ], methods: ['HEAD']));
+
+        $routes->add('api_v1_uploads_patch', new Route('/api/v1/uploads/{id}', defaults: [
+            '_controller' => TusUploadPatchController::class,
+        ], requirements: [
+            'id' => '[a-f0-9]{32}',
+        ], methods: ['PATCH']));
+
+        $routes->add('api_v1_uploads_delete', new Route('/api/v1/uploads/{id}', defaults: [
+            '_controller' => TusUploadDeleteController::class,
+        ], requirements: [
+            'id' => '[a-f0-9]{32}',
+        ], methods: ['DELETE']));
 
         return $routes;
     }

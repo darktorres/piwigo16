@@ -42,6 +42,7 @@ test('toArray flattens every fixed property, and omits the 5 optional keys when 
         installedOn: null,
         installedSince: null,
         advancedFeatures: [],
+        activePluginNames: ['CT Fake Plugin'],
     );
 
     $result = $context->toArray();
@@ -54,7 +55,8 @@ test('toArray flattens every fixed property, and omits the 5 optional keys when 
         ])
         ->and($result['DB_DATATIME'])->toBe('2026-08-08 00:00:00')
         ->and($result['cache_sizes'])->toBeNull()
-        ->and($result['advanced_features'])->toBe([]);
+        ->and($result['advanced_features'])->toBe([])
+        ->and($result['ACTIVE_PLUGIN_NAMES'])->toBe(['CT Fake Plugin']);
 });
 
 test('toArray includes GRAPHICS_LIBRARY/U_MAINT_UNLOCK_GALLERY/INSTALLED_ON/INSTALLED_SINCE when set', function (): void {
@@ -95,6 +97,7 @@ test('toArray includes GRAPHICS_LIBRARY/U_MAINT_UNLOCK_GALLERY/INSTALLED_ON/INST
         installedOn: 'August 8, 2026',
         installedSince: '0 day',
         advancedFeatures: [],
+        activePluginNames: ['CT Fake Plugin'],
     );
 
     $result = $context->toArray();

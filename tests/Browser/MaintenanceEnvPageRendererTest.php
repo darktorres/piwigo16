@@ -19,9 +19,61 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
 
         $page->assertSee(PHP_VERSION);
         $page->assertSee('MySQL');
+        // P26.1: the plugin list is server-rendered now, no AJAX round-trip
+        // -- this environment's plugins/ directory has no real plugin
+        // subdirectories (confirmed live, same as WsPluginsTest's own
+        // comment), so the empty-state branch is what a plain page load
+        // exercises here.
+        $page->assertSee('No plugin activated');
         $page->assertNoJavaScriptErrors();
     } finally {
         H::restoreConfig($snapshot);
+    }
+});
+
+it('server-renders a real active plugin\'s name and badge count in the env tab plugin list', function (): void {
+    // Same throwaway-plugin-directory technique as Contract's
+    // WsPluginsTest::testGetListIncludesARealPluginDirectoryFromDisk(),
+    // plus a `state = 'active'` DB row -- PluginsGetListHandler's fixture
+    // there never installs the plugin, only ever exercising the
+    // 'uninstalled' fallback; this test needs the 'active' branch since
+    // that's the only state maintenance_env.latte's fragment ever renders.
+    $pluginId = 'ct_fake_plugin_' . uniqid();
+    $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+    mkdir($dir, 0775, true);
+    file_put_contents($dir . '/plugin.json', json_encode([
+        'name' => 'CT Env Tab Fake Plugin',
+        'version' => '1.2.3',
+        'description' => 'A throwaway plugin directory for Browser test coverage.',
+        'author' => 'Browser Tests',
+    ], JSON_THROW_ON_ERROR));
+
+    $db = H::connect();
+    H::dbQuery($db, sprintf(
+        "INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.2.3')",
+        H::dbEscape($db, $pluginId)
+    ));
+    H::dbClose($db);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
+
+        $page->assertSee('CT Env Tab Fake Plugin');
+        $page->assertDontSee('No plugin activated');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        $db = H::connect();
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
+        H::dbClose($db);
+
+        $entries = scandir($dir);
+        foreach ($entries !== false ? $entries : [] as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                unlink($dir . '/' . $entry);
+            }
+        }
+        rmdir($dir);
     }
 });
 

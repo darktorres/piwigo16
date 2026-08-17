@@ -23,6 +23,7 @@ final readonly class MaintenanceEnvPageContext implements TemplatePageContext
     /**
      * @param array<string, string> $purgeDerivatives
      * @param array<mixed> $advancedFeatures
+     * @param list<string> $activePluginNames
      */
     public function __construct(
         public string $maintCategories,
@@ -59,6 +60,7 @@ final readonly class MaintenanceEnvPageContext implements TemplatePageContext
         public ?string $installedOn,
         public ?string $installedSince,
         public array $advancedFeatures,
+        public array $activePluginNames,
     ) {}
 
     /**
@@ -119,6 +121,7 @@ final readonly class MaintenanceEnvPageContext implements TemplatePageContext
         }
 
         $result['advanced_features'] = $this->advancedFeatures;
+        $result['ACTIVE_PLUGIN_NAMES'] = $this->activePluginNames;
 
         return $result;
     }

@@ -4,6 +4,7 @@
 {varType bool $ACTIVATE_COMMENTS}
 {varType int $ACTIVE_MENU}
 {varType list<string> $ACTIVE_PLUGINS}
+{varType list<string> $ACTIVE_PLUGIN_NAMES}
 {varType array<array-key, mixed> $ACTIVITY_CHART_DATA}
 {varType int $ACTIVITY_CHART_NUMBER_SIZES}
 {varType array{min: string, max: string} $ACTIVITY_DATES}
@@ -41,7 +42,7 @@
 {varType string $CATEGORIES_PARENT_NAV}
 {varType bool $CAT_ADMIN_ACCESS}
 {varType string $CAT_COMMENT}
-{varType ?string $CAT_COMMENTABLE}
+{varType ?bool $CAT_COMMENTABLE}
 {varType ?string $CAT_DIR_NAME}
 {varType ?string $CAT_FULL_DIR}
 {varType int $CAT_ID}
@@ -157,7 +158,7 @@
 {varType bool $IN_CADDIE}
 {varType string $IP}
 {varType bool $IS_HOME}
-{varType string $IS_VISIBLE}
+{varType bool $IS_VISIBLE}
 {varType string $LEVEL_SEPARATOR}
 {varType ?int $LOUNGE_COUNTER}
 {varType string $L_CAT_OPTIONS_FALSE}
@@ -692,13 +693,10 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'ajax', load: 'footer', path: 'themes/admin/default/js/maintenance.js')}
-{do combineScript(id: 'activated_plugin_list', load: 'footer', path: 'themes/admin/default/js/maintenance_env.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)}
 {* order 10 is required, see issue 1080 *}
 {capture $tmpFooterScript}
 const no_time_elapsed = "{='right now'|translate}";
-const no_active_plugin = "{='No plugin activated'|translate}";
-const error_occured = "{='an error happened'|translate}";
 const unit_MB = "{='%s MB'|translate}"
 {/capture}
 {do footerScript($tmpFooterScript)}
@@ -754,9 +752,13 @@ const unit_MB = "{='%s MB'|translate}"
       class="icon-puzzle icon-green"
     ></span> {='Activated plugin list'|translate} <span
       class="badge-number"
-    ></span></legend>
+    >{=count($ACTIVE_PLUGIN_NAMES)}</span></legend>
   <ul style="font-weight:bold">
-    <i class="icon-spin6 animate-spin"></i>
+    {if $ACTIVE_PLUGIN_NAMES === []}
+      <p>{='No plugin activated'|translate}</p>
+    {else}
+      <li n:foreach="$ACTIVE_PLUGIN_NAMES as $name">{$name}</li>
+    {/if}
   </ul>
 </fieldset>
 

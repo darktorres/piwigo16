@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\GetAdminAdvancedFeaturesLinks;
+use Piwigo\Admin\Extensions\PluginListBuilder;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
@@ -80,6 +81,7 @@ final readonly class MaintenanceEnvPageRenderer
         private InputValidator $inputValidator,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
+        private PluginListBuilder $pluginListBuilder,
         private ?PersistentCache $persistentCache = null,
     ) {}
 
@@ -143,6 +145,13 @@ final readonly class MaintenanceEnvPageRenderer
         // $advanced_features is array of array composed of CAPTION & URL
         $advanced_features_event = $this->eventDispatcher->dispatch(new GetAdminAdvancedFeaturesLinks([]));
 
+        $active_plugin_names = [];
+        foreach ($this->pluginListBuilder->build() as $plugin) {
+            if ($plugin['state'] === 'active') {
+                $active_plugin_names[] = $plugin['name'];
+            }
+        }
+
         $template->assignContext(new MaintenanceEnvPageContext(
             maintCategories: sprintf($url_format, 'categories'),
             maintImages: sprintf($url_format, 'images'),
@@ -178,6 +187,7 @@ final readonly class MaintenanceEnvPageRenderer
             installedOn: $installed_on_value,
             installedSince: $installed_since_value,
             advancedFeatures: $advanced_features_event->advancedFeatures,
+            activePluginNames: $active_plugin_names,
         ));
 
         $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_env.latte');

@@ -58,24 +58,21 @@ $(document).ready(function() {
             disableLocalButton(pictureId);
             $.ajax({
               type: 'POST',
-              url: 'ws.php?format=json',
-              data: {
-                method: "pwg.images.syncMetadata",
-                pwg_token: jQuery("input[name=pwg_token]").val(),
-                image_id: pictureId
+              url: 'api/v1/images/actions/sync-metadata',
+              contentType: 'application/json',
+              headers: {
+                'X-CSRF-Token': jQuery("input[name=pwg_token]").val()
               },
+              data: JSON.stringify({
+                imageIds: [pictureId]
+              }),
               dataType: 'json',
               success: function(data) {
-                const isOk = data.stat && data.stat === "ok";
-                if (isOk) {
-                  updateBlock(pictureId);
-                } else {
-                  showErrorLocalBadge(pictureId);
-                  enableLocalButton(pictureId);
-                }
+                updateBlock(pictureId);
               },
               error: function(data) {
                 console.error("Error occurred");
+                showErrorLocalBadge(pictureId);
                 enableLocalButton(pictureId);
               }
             });

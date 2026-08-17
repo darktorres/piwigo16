@@ -178,39 +178,34 @@ jQuery(document).ready(function() {
       content : function () {
         const self = this
         return $.ajax({
-          url: "ws.php?format=json&method=pwg.categories.calculateOrphans",
+          url: "api/v1/categories/" + album_id + "/orphan-impact",
           type: "GET",
-          data: {
-            category_id: album_id,
-          },
           dataType: "json",
-          success: function (raw_data) {
-            let data = raw_data.result[0]
-
+          success: function (data) {
             let message = "<p>" + str_delete_album_and_his_x_subalbums
               .replace("%s", "<strong>"+album_name+"</strong>")
               .replace("%d", "<strong>"+nb_sub_albums+"</strong>") + "</p>"
-            
+
             message += `<div class="cat-delete-modes">`;
-            message += 
-              `<div  ${data.nb_images_recursive? "":"style='display:none'"}> 
+            message +=
+              `<div  ${data.nbImagesRecursive? "":"style='display:none'"}>
                 <input type="radio" name="deletion-mode" value="no_delete" id="no_delete" checked>
                 <label for="no_delete">${str_dont_delete_photos}</label>
               </div>`;
 
-            if (data.nb_images_recursive) {
+            if (data.nbImagesRecursive) {
               let t = 0
-              message += `<div> 
+              message += `<div>
                 <input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", _ => [data.nb_images_recursive, data.nb_images_associated_outside][t++])}</label>
+                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", _ => [data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++])}</label>
               </div>`;
             }
 
-            if (data.nb_images_becoming_orphan)
-              message += 
-              `<div> 
+            if (data.nbImagesBecomingOrphan)
+              message +=
+              `<div>
                 <input type="radio" name="deletion-mode" value="delete_orphans" id="delete_orphans">
-                <label for="delete_orphans">${str_delete_orphans.replace("%d", data.nb_images_becoming_orphan)}</label>
+                <label for="delete_orphans">${str_delete_orphans.replace("%d", data.nbImagesBecomingOrphan)}</label>
               </div>`;
             message += `</div>`;
 

@@ -524,29 +524,25 @@ function closeRenameAlbumPopIn() {
 
 function triggerDeleteAlbum(cat_id) {
   $.ajax({
-    url: "ws.php?format=json&method=pwg.categories.calculateOrphans",
+    url: "api/v1/categories/" + cat_id + "/orphan-impact",
     type: "GET",
-    data: {
-      category_id: cat_id,
-    },
     dataType: "json",
-    success: function (raw_data) {
-      let data = raw_data.result[0]
-      if (data.nb_images_recursive == 0) {
+    success: function (data) {
+      if (data.nbImagesRecursive == 0) {
         $(".deleteAlbumOptions").hide();
       } else {
         $(".deleteAlbumOptions").show();
-        if (data.nb_images_associated_outside == 0) {
+        if (data.nbImagesAssociatedOutside == 0) {
           $("#IMAGES_ASSOCIATED_OUTSIDE").hide();
         } else {
           $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").html("");
-          $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").append(has_images_associated_outside.replace('%d', data.nb_images_recursive).replace('%d', data.nb_images_associated_outside));
+          $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").append(has_images_associated_outside.replace('%d', data.nbImagesRecursive).replace('%d', data.nbImagesAssociatedOutside));
         }
-        if (data.nb_images_becoming_orphan == 0) {
+        if (data.nbImagesBecomingOrphan == 0) {
           $("#IMAGES_BECOMING_ORPHAN").hide();
         } else {
           $("#IMAGES_BECOMING_ORPHAN .innerText").html("");
-          $("#IMAGES_BECOMING_ORPHAN .innerText").append(has_images_becomming_orphans.replace('%d', data.nb_images_becoming_orphan));
+          $("#IMAGES_BECOMING_ORPHAN .innerText").append(has_images_becomming_orphans.replace('%d', data.nbImagesBecomingOrphan));
         }
       }
     },

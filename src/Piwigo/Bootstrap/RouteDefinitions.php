@@ -8,6 +8,7 @@ use Piwigo\Controller\AboutController;
 use Piwigo\Controller\ActionController;
 use Piwigo\Controller\Admin\AdminPopuphelpController;
 use Piwigo\Controller\Api\ActivityListController;
+use Piwigo\Controller\Api\CacheSizeController;
 use Piwigo\Controller\Api\Categories\CategoryAvailableListController;
 use Piwigo\Controller\Api\Categories\CategoryCreateController;
 use Piwigo\Controller\Api\Categories\CategoryDeleteController;
@@ -15,6 +16,7 @@ use Piwigo\Controller\Api\Categories\CategoryDeleteRepresentativeController;
 use Piwigo\Controller\Api\Categories\CategoryImagesController;
 use Piwigo\Controller\Api\Categories\CategoryListController;
 use Piwigo\Controller\Api\Categories\CategoryMoveController;
+use Piwigo\Controller\Api\Categories\CategoryOrphanImpactController;
 use Piwigo\Controller\Api\Categories\CategoryRefreshRepresentativeController;
 use Piwigo\Controller\Api\Categories\CategoryReorderController;
 use Piwigo\Controller\Api\Categories\CategorySetRepresentativeController;
@@ -39,6 +41,7 @@ use Piwigo\Controller\Api\History\HistoryLogController;
 use Piwigo\Controller\Api\Images\ImageAddCommentController;
 use Piwigo\Controller\Api\Images\ImageCheckFileController;
 use Piwigo\Controller\Api\Images\ImageDeleteController;
+use Piwigo\Controller\Api\Images\ImageDeleteOrphansController;
 use Piwigo\Controller\Api\Images\ImageFilteredSearchCreateController;
 use Piwigo\Controller\Api\Images\ImageFormatDeleteController;
 use Piwigo\Controller\Api\Images\ImageFormatSearchController;
@@ -48,6 +51,7 @@ use Piwigo\Controller\Api\Images\ImageSearchController;
 use Piwigo\Controller\Api\Images\ImageSetCategoryController;
 use Piwigo\Controller\Api\Images\ImageSetPrivacyLevelController;
 use Piwigo\Controller\Api\Images\ImageSetRankController;
+use Piwigo\Controller\Api\Images\ImageSyncMetadataController;
 use Piwigo\Controller\Api\Images\ImageUpdateController;
 use Piwigo\Controller\Api\InfoController;
 use Piwigo\Controller\Api\Session\ApiKeyCreateController;
@@ -330,6 +334,12 @@ final class RouteDefinitions
             '_controller' => InfoController::class,
         ], methods: ['GET']));
 
+        // pwg.getCacheSize's real replacement -- admin only, the
+        // Maintenance page's own "calculate cache size" button.
+        $routes->add('api_v1_cache_size', new Route('/api/v1/cache-size', defaults: [
+            '_controller' => CacheSizeController::class,
+        ], methods: ['GET']));
+
         // Tags resource family -- admin-consumed (pwg.tags.getAdminList's
         // own audience, permissions not taken into account).
         $routes->add('api_v1_tags_list', new Route('/api/v1/tags', defaults: [
@@ -481,6 +491,14 @@ final class RouteDefinitions
         ], requirements: [
             'id' => '\d+',
         ], methods: ['POST']));
+
+        // pwg.categories.calculateOrphans's real replacement -- the
+        // "delete album" confirmation dialog's own data source.
+        $routes->add('api_v1_categories_orphan_impact', new Route('/api/v1/categories/{id}/orphan-impact', defaults: [
+            '_controller' => CategoryOrphanImpactController::class,
+        ], requirements: [
+            'id' => '\d+',
+        ], methods: ['GET']));
 
         // Users resource family -- admin-consumed. pwg.users.preferences.set
         // isn't included: it's a self-service action on the calling user's
@@ -673,6 +691,16 @@ final class RouteDefinitions
         ], requirements: [
             'id' => '\d+',
         ], methods: ['GET']));
+
+        // pwg.images.syncMetadata/deleteOrphans's real replacements -- the
+        // Batch Manager "unit"/"global" panels' own actions.
+        $routes->add('api_v1_images_sync_metadata', new Route('/api/v1/images/actions/sync-metadata', defaults: [
+            '_controller' => ImageSyncMetadataController::class,
+        ], methods: ['POST']));
+
+        $routes->add('api_v1_images_delete_orphans', new Route('/api/v1/images/actions/delete-orphans', defaults: [
+            '_controller' => ImageDeleteOrphansController::class,
+        ], methods: ['POST']));
 
         // Uploads -- admin-only readiness/duplicate-detection helpers
         // (pwg.images.checkUpload/exist's replacements). The actual

@@ -286,19 +286,20 @@ jQuery('#applyAction').click(function(e) {
       (function(ids) {
         var thisBatchSize = ids.length;
         queuedManager.add({
-          url: "ws.php?format=json&method=pwg.images.syncMetadata",
+          url: "api/v1/images/actions/sync-metadata",
           type:"POST",
-          dataType: "json",
-          data: {
-            pwg_token: jQuery("input[name=pwg_token]").val(),
-            image_id: ids.join(',')
+          contentType: "application/json",
+          headers: {
+            "X-CSRF-Token": jQuery("input[name=pwg_token]").val()
           },
+          data: JSON.stringify({
+            imageIds: ids
+          }),
+          dataType: "json",
           success: function(data) {
             todo += thisBatchSize;
-            var isOk = data.stat && "ok" == data.stat;
-            if (isOk && data.result.nb_synchronized != thisBatchSize)
-            /*TODO: user feedback only data.nb_synchronized images out of thisBatchSize were sync*/;
-            /*TODO: user feedback if isError*/
+            if (data.nbSynchronized != thisBatchSize)
+            /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/;
             jQuery('#regenerationStatus .badge-number').html(todo.toString() + "/" + progressBar_max.toString());
             progress_bar(todo, progressBar_max, false);
           },
@@ -488,23 +489,26 @@ jQuery('#delete_orphans').click(function(e) {
 
 function delete_orphans_block(blockSize) {
   jQuery.ajax({
-    url: "ws.php?format=json&method=pwg.images.deleteOrphans",
+    url: "api/v1/images/actions/delete-orphans",
     type:"POST",
-    dataType: "json",
-    data: {
-      pwg_token: jQuery("input[name=pwg_token]").val(),
-      block_size: blockSize
+    contentType: "application/json",
+    headers: {
+      "X-CSRF-Token": jQuery("input[name=pwg_token]").val()
     },
+    data: JSON.stringify({
+      blockSize: blockSize
+    }),
+    dataType: "json",
     success:function(data) {
-      jQuery('#orphans_to_delete').html(data.result.nb_orphans);
+      jQuery('#orphans_to_delete').html(data.nbOrphans);
 
       var percent_remaining = Number(
-        (data.result.nb_orphans * 100 / jQuery('#orphans_to_delete').data('origin')).toFixed()
+        (data.nbOrphans * 100 / jQuery('#orphans_to_delete').data('origin')).toFixed()
       );
       var percent_done = 100 - percent_remaining;
       jQuery('#orphans_deleted').html(percent_done);
 
-      if (data.result.nb_orphans > 0) {
+      if (data.nbOrphans > 0) {
         delete_orphans_block();
       }
       else {

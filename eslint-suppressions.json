@@ -47,7 +47,7 @@
   },
   "themes/admin/default/js/batchManagerGlobal.js": {
     "eqeqeq": {
-      "count": 16
+      "count": 15
     },
     "no-redeclare": {
       "count": 3

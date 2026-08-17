@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 
 /**
@@ -241,18 +243,96 @@ final class ImageStdParams
             $this->custom = self::customFromJson($settings->customJson);
             $this->type_map = self::sizesFromEntities(self::sizeRepository()->findAllEnabled());
         } else {
-            $this->watermark = new WatermarkParams();
-            $this->type_map = self::getEnabledDefaultSizes();
-            $this->save(false);
+            $this->loadOrSeedEnabledSizes();
         }
 
         $this->disabled_type_map = self::sizesFromEntities(self::sizeRepository()->findAllDisabled());
         if ($this->disabled_type_map === []) {
-            $this->disabled_type_map = self::getDisabledDefaultSizes();
-            $this->saveDisabled();
+            $this->loadOrSeedDisabledSizes();
         }
 
         $this->buildMaps();
+    }
+
+    /**
+     * Two requests racing right after a fresh install/DB reimport (no
+     * `derivative_settings` row yet) can otherwise both decide "not
+     * seeded" and both try to insert the same default `derivative_size`
+     * rows -- confirmed live: `UniqueConstraintViolationException:
+     * Duplicate entry '4xlarge' for key 'derivative_size.PRIMARY'`. A
+     * blocking advisory lock (MySQL `GET_LOCK()`/Postgres
+     * `pg_try_advisory_lock()` via {@see AdvisorySessionLock}, same
+     * primitive `Admin\Upload\UploadService::upload()`'s own
+     * duplicate-detection lock uses directly, not through {@see
+     * \Piwigo\Core\UniqueExecLock}'s `Logger`-requiring wrapper --
+     * loadFromDb() runs before `Kernel::boot()`/`CurrentLogger` are
+     * guaranteed ready, per this class's own settingsRepository()
+     * docblock) serializes the seed. The loser re-checks after
+     * acquiring the lock rather than blindly re-seeding, since the
+     * winner has, by then, already written the rows.
+     */
+    private function loadOrSeedEnabledSizes(): void
+    {
+        $lockConn = DbConnection::build();
+        $lockName = self::seedLockName('enabled');
+        AdvisorySessionLock::acquire($lockConn, $lockName, 10);
+        try {
+            $settings = self::settingsRepository()->load();
+            if ($settings instanceof DerivativeSettingsEntity) {
+                $this->quality = $settings->defaultQuality;
+                $this->watermark = self::watermarkFromJson($settings->watermarkJson);
+                $this->custom = self::customFromJson($settings->customJson);
+                $this->type_map = self::sizesFromEntities(self::sizeRepository()->findAllEnabled());
+
+                return;
+            }
+
+            $this->watermark = new WatermarkParams();
+            $this->type_map = self::getEnabledDefaultSizes();
+            $this->save(false);
+        } finally {
+            AdvisorySessionLock::release($lockConn, $lockName);
+        }
+    }
+
+    /**
+     * Same race as {@see loadOrSeedEnabledSizes()}, for the disabled-sizes
+     * seed -- a separate lock name/token, since the two seeds are
+     * otherwise independent and there is no reason to serialize one
+     * behind the other.
+     */
+    private function loadOrSeedDisabledSizes(): void
+    {
+        $lockConn = DbConnection::build();
+        $lockName = self::seedLockName('disabled');
+        AdvisorySessionLock::acquire($lockConn, $lockName, 10);
+        try {
+            $this->disabled_type_map = self::sizesFromEntities(self::sizeRepository()->findAllDisabled());
+            if ($this->disabled_type_map !== []) {
+                return;
+            }
+
+            $this->disabled_type_map = self::getDisabledDefaultSizes();
+            $this->saveDisabled();
+        } finally {
+            AdvisorySessionLock::release($lockConn, $lockName);
+        }
+    }
+
+    /**
+     * Database-scoped, matching `Core\UniqueExecLock::lockName()`'s own
+     * collision-avoidance reasoning -- `GET_LOCK()` names are global to
+     * the whole MySQL server, not scoped to one database/schema, and
+     * this dev environment alone runs several Piwigo installs against
+     * one shared MySQL server. The distinguishing input (database +
+     * suffix) is hashed as a whole, not concatenated after a fixed
+     * prefix -- `GET_LOCK()` names are capped at 64 characters, and
+     * hashing keeps this name a fixed, safely-under-the-cap length
+     * regardless of the database name's own length.
+     */
+    private static function seedLockName(string $suffix): string
+    {
+        return 'piwigo_isp_seed_' . sha1(DbCredentials::fromEnv()->database . ':' . $suffix);
     }
 
     /**

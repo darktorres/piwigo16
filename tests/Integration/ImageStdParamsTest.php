@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Override;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -130,6 +131,108 @@ final class ImageStdParamsTest extends IntegrationTestCase
         self::assertSame(1, $settingsRowCount);
         $sizeRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM derivative_size');
         self::assertSame(11, $sizeRowCount);
+    }
+
+    /**
+     * Mirrors ImageStdParams::seedLockName()'s own documented formula
+     * exactly.
+     */
+    private function seedLockName(string $suffix): string
+    {
+        return 'piwigo_isp_seed_' . sha1($this->dbName . ':' . $suffix);
+    }
+
+    /**
+     * Same technique as UploadServiceTest::spawnBackgroundLockHolder() --
+     * a real, separate OS process holding $lockName for a short window (a
+     * same-process GET_LOCK() call would just re-acquire its own
+     * already-held lock).
+     *
+     * @return array{0: resource, 1: array<int, resource>}
+     */
+    private function spawnBackgroundLockHolder(string $lockName): array
+    {
+        if ($this->dbDriver === 'pgsql') {
+            $key = AdvisorySessionLock::key($lockName);
+            $sql = sprintf(
+                "SET lock_timeout = '5s'; SELECT pg_advisory_lock(%d); SELECT pg_sleep(0.3); SELECT pg_advisory_unlock(%d);",
+                $key,
+                $key,
+            );
+            $cmd = ['psql', '-U' . $this->dbUser, '-h' . $this->dbHost, '-d' . $this->dbName, '-q', '-t', '-c', $sql];
+            $env = $this->dbPass !== '' ? array_merge(getenv(), [
+                'PGPASSWORD' => $this->dbPass,
+            ]) : null;
+        } else {
+            $sql = sprintf(
+                "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); SELECT RELEASE_LOCK('%s');",
+                $lockName,
+                $lockName,
+            );
+            $cmd = ['mysql', '-u' . $this->dbUser];
+            if ($this->dbPass !== '') {
+                $cmd[] = '-p' . $this->dbPass;
+            }
+            $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
+            $cmd[] = $this->dbName;
+            $cmd[] = '-e';
+            $cmd[] = $sql;
+            $env = null;
+        }
+
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
+        self::assertIsResource($proc, 'proc_open failed for the background lock-holder process');
+
+        return [$proc, $pipes];
+    }
+
+    /**
+     * Real gap: two requests racing right after a fresh install/DB
+     * reimport (no derivative_settings row yet) used to both decide "not
+     * seeded" and both try to insert the same default derivative_size
+     * rows -- confirmed live: UniqueConstraintViolationException:
+     * Duplicate entry '4xlarge' for key 'derivative_size.PRIMARY'. A
+     * wrong lock-name formula (dropped database name, dropped separator,
+     * swapped operand order, or a hardcoded literal) would let
+     * loadFromDb() race straight past a concurrently-held lock instead
+     * of genuinely blocking on it -- a real, separate connection holding
+     * the exact documented name for a short window is the only way to
+     * prove loadFromDb() computes that same name.
+     */
+    public function testLoadFromDbBlocksOnAConcurrentlyHeldSeedLockThenProceedsOnceItsReleased(): void
+    {
+        $this->conn->executeStatement('DELETE FROM derivative_settings');
+        $this->conn->executeStatement('DELETE FROM derivative_size');
+
+        $lockName = $this->seedLockName('enabled');
+        [$proc, $pipes] = $this->spawnBackgroundLockHolder($lockName);
+
+        try {
+            // A head start for the background process to actually acquire
+            // the lock before loadFromDb() reaches it.
+            usleep(50_000);
+
+            $start = microtime(true);
+            $this->imageStdParams->loadFromDb();
+            $elapsed = microtime(true) - $start;
+
+            self::assertGreaterThan(0.15, $elapsed, 'must have genuinely blocked on the exact same held lock name computed from the documented formula, not raced past it');
+            self::assertLessThan(8.0, $elapsed, 'must unblock promptly once the background process releases, not wait anywhere near the full 10s production timeout');
+
+            // Proceeded to seed exactly once (the lock-holder never wrote
+            // any rows itself), not skipped or duplicated.
+            $settingsRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM derivative_settings');
+            self::assertSame(1, $settingsRowCount);
+        } finally {
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            $exit = proc_close($proc);
+            self::assertSame(0, $exit, "background lock-holder process failed. stdout=[{$stdout}] stderr=[{$stderr}]");
+        }
     }
 
     public function testLoadFromDbReadsARealSettingsRowAndFiltersMalformedCustomJsonEntries(): void

@@ -35,6 +35,7 @@ use Piwigo\Controller\Api\Groups\GroupListController;
 use Piwigo\Controller\Api\Groups\GroupMergeController;
 use Piwigo\Controller\Api\Groups\GroupRemoveUserController;
 use Piwigo\Controller\Api\Groups\GroupUpdateController;
+use Piwigo\Controller\Api\History\HistoryLogController;
 use Piwigo\Controller\Api\Images\ImageAddCommentController;
 use Piwigo\Controller\Api\Images\ImageDeleteController;
 use Piwigo\Controller\Api\Images\ImageFilteredSearchCreateController;
@@ -552,6 +553,13 @@ final class RouteDefinitions
         $routes->add('api_v1_activity_list', new Route('/api/v1/activity', defaults: [
             '_controller' => ActivityListController::class,
         ], methods: ['GET']));
+
+        // pwg.history.log -- public, no auth gate at all (matches WS,
+        // which has neither requiresAuth nor a CSRF check); every
+        // gallery-page-view fires this, anonymous visitors included.
+        $routes->add('api_v1_history_log', new Route('/api/v1/history/log', defaults: [
+            '_controller' => HistoryLogController::class,
+        ], methods: ['POST']));
 
         // Plugins/extensions resource families -- webmaster-gated.
         // pwg.themes.performAction has no first-party caller anywhere in

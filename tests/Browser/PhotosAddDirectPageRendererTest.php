@@ -6,14 +6,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('adds a batch of photo ids to the caddie and redirects to the batch manager', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photos Add Direct Batch Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photos Add Direct Batch Photo');
     @unlink($image);
@@ -41,15 +40,14 @@ it('rejects a batch caddie request without a valid CSRF token', function (): voi
 
 it('preselects a valid album= and shows its display name', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photos Add Direct Preselect Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
-    $albumName = is_string($albumResult['name'] ?? null) ? $albumResult['name'] : '';
+    $albumId = (int) $album['id'];
+    $albumName = is_string($album['name'] ?? null) ? $album['name'] : '';
 
     $page = H::navigateOk($page, '/admin.php?page=photos_add&album=' . $albumId);
 
@@ -96,14 +94,13 @@ it('lists a real photo\'s existing formats when formats= targets a valid origina
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Photos Add Direct Formats Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photos Add Direct Formats Photo');
         @unlink($image);
@@ -181,15 +178,14 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
     // to match what that real client actually sends. This is the only way
     // a real admin ever flips 'promote-mobile-apps' to false; there's no
     // admin.php GET param for it.
-    $prefResponse = H::wsCall($page, 'pwg.users.preferences.set', [
+    $prefResponse = H::setSessionPreference($page, [
         'param' => 'promote-mobile-apps',
         'value' => 'false',
     ]);
-    $prefResult = $prefResponse['result'] ?? null;
-    if (! is_array($prefResult) || ! is_array($prefResult['preferences'] ?? null)) {
-        throw new RuntimeException('pwg.users.preferences.set did not return a {preferences: {...}} result: ' . var_export($prefResponse, true));
+    if (! is_array($prefResponse['preferences'] ?? null)) {
+        throw new RuntimeException('setSessionPreference did not return a {preferences: {...}} result: ' . var_export($prefResponse, true));
     }
-    expect($prefResult['preferences']['promote-mobile-apps'] ?? null)->toBeFalse();
+    expect($prefResponse['preferences']['promote-mobile-apps'] ?? null)->toBeFalse();
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
@@ -214,7 +210,7 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         // to the literal default (true) is
         // behaviorally identical to the pristine unset state, since
         // getPromoteMobileApps() ?? true's own default is also true.
-        H::wsCall($page, 'pwg.users.preferences.set', [
+        H::setSessionPreference($page, [
             'param' => 'promote-mobile-apps',
             'value' => 'true',
         ]);

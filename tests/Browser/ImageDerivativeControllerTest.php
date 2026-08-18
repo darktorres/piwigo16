@@ -29,14 +29,13 @@ function idcDerivativePath(string $imagePath, string $suffix, string $ext = 'jpg
 function idcCreateTestPhoto(object $test, string $albumName): int
 {
     $page = H::loginAsAdmin($test);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => $albumName . ' ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, $albumName . ' Photo');
     @unlink($image);
@@ -95,14 +94,13 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
 {
     assert($width >= 1 && $height >= 1);
     $page = H::loginAsAdmin($test);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => $albumName . ' ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $img = imagecreatetruecolor($width, $height);
     if ($img === false) {
@@ -661,14 +659,13 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
     imagejpeg($img, $srcPath, 95);
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Derivative Rotation Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $imageId = H::uploadPhotoViaApi($srcPath, (int) $albumResult['id'], 'Derivative Rotation Photo');
+    $imageId = H::uploadPhotoViaApi($srcPath, (int) $album['id'], 'Derivative Rotation Photo');
     @unlink($srcPath);
 
     // Set *before* the first derivative request for this photo: a fresh
@@ -1567,12 +1564,11 @@ it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, w
 
 it('serves the correct Content-Type for a gif derivative', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Derivative Gif Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
 
     $img = imagecreatetruecolor(200, 150);
@@ -1598,7 +1594,7 @@ it('serves the correct Content-Type for a gif derivative', function (): void {
     // '.gif'. GD (this environment's own graphics library) reads/writes
     // GIF natively, so this goes through a real, first-time generation,
     // unlike the webp test below.
-    $imageId = H::uploadPhotoViaApi($gifPath, (int) $albumResult['id'], 'Derivative Gif Photo');
+    $imageId = H::uploadPhotoViaApi($gifPath, (int) $album['id'], 'Derivative Gif Photo');
     @unlink($gifPath);
 
     // ImageDerivativeController::parseRequest() derives BOTH the disk
@@ -1627,12 +1623,11 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     // all -- exactly how a real request for an already-generated webp
     // derivative behaves in production too, regardless of backend.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Derivative Webp Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
 
     $img = imagecreatetruecolor(200, 150);
@@ -1651,7 +1646,7 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     $webpPath = $tmpPath . '.webp';
     imagewebp($img, $webpPath);
 
-    $imageId = H::uploadPhotoViaApi($webpPath, (int) $albumResult['id'], 'Derivative Webp Photo');
+    $imageId = H::uploadPhotoViaApi($webpPath, (int) $album['id'], 'Derivative Webp Photo');
     @unlink($webpPath);
 
     // Same reasoning as the gif test above -- the disk cache path and the

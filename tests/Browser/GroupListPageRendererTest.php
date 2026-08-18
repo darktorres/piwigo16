@@ -15,22 +15,20 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 it('renders the group list with real groups, member counts, and member names', function (): void {
     $page = H::loginAsAdmin($this);
-    $group = H::wsCall($page, 'pwg.groups.add', [
+    $group = H::createGroup($page, [
         'name' => 'Group List Test Group ' . uniqid(),
     ]);
-    $groupResult = $group['result'] ?? null;
-    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
+    if (! is_numeric($group['id'] ?? null)) {
+        throw new RuntimeException('createGroup did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $groupResult['id'];
-    $groupName = is_string($groupResult['name'] ?? null) ? $groupResult['name'] : '';
+    $groupId = (int) $group['id'];
+    $groupName = is_string($group['name'] ?? null) ? $group['name'] : '';
 
-    $addUserResult = H::wsCall($page, 'pwg.groups.addUser', [
+    H::addGroupUser($page, [
         'group_id' => (string) $groupId,
         'user_id' => '1',
         'pwg_token' => H::pwgToken($page),
     ]);
-    expect($addUserResult['stat'] ?? null)->toBe('ok');
 
     $page = H::navigateOk($page, '/admin.php?page=group_list');
 

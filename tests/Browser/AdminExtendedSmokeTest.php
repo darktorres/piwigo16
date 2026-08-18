@@ -11,16 +11,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 it('admin photo editor page loads without errors', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Smoke Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! isset($albumResult['id']) || ! is_numeric($albumResult['id'])) {
+    if (! is_numeric($album['id'] ?? null)) {
         throw new RuntimeException(
-            'pwg.categories.add did not return a numeric id: ' . var_export($album, true)
+            'createCategory did not return a numeric id: ' . var_export($album, true)
         );
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Smoke Test Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Smoke Test Photo');
     @unlink($image);
@@ -32,16 +31,15 @@ it('admin photo editor page loads without errors', function (): void {
 // Config batch: picture_formats/picture_coi both need a real image_id.
 it('admin picture_formats and picture_coi pages load without errors', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Smoke Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! isset($albumResult['id']) || ! is_numeric($albumResult['id'])) {
+    if (! is_numeric($album['id'] ?? null)) {
         throw new RuntimeException(
-            'pwg.categories.add did not return a numeric id: ' . var_export($album, true)
+            'createCategory did not return a numeric id: ' . var_export($album, true)
         );
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Smoke Test Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Smoke Test Photo');
     @unlink($image);

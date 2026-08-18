@@ -118,14 +118,13 @@ it('renders the real category name when a render_category_name hook returns some
 
     $page = H::loginAsAdmin($this);
     $categoryName = 'CT Album Sub Hook Fallback ' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => $categoryName,
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     try {
         albumSubWriteFixturePlugin($pluginId, $pluginSource);
@@ -147,7 +146,7 @@ it('renders the real category name when a render_category_name hook returns some
         }
     } finally {
         H::dbClose($db);
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),

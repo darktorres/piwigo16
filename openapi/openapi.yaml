@@ -24,6 +24,11 @@ security:
 tags:
   - name: Comments
     description: Admin moderation of user-submitted image comments.
+  - name: Extensions
+    description: >-
+      Plugin/theme/language install, activation, update, and
+      update-check state -- most operations require webmaster status,
+      not just admin.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -36,6 +41,16 @@ paths:
     $ref: 'paths/comments.yaml#/~1comments~1actions~1delete'
   /comments/actions/validate:
     $ref: 'paths/comments.yaml#/~1comments~1actions~1validate'
+  /plugins:
+    $ref: 'paths/extensions.yaml#/~1plugins'
+  '/plugins/{id}/actions/perform':
+    $ref: 'paths/extensions.yaml#/~1plugins~1{id}~1actions~1perform'
+  /extensions/updates:
+    $ref: 'paths/extensions.yaml#/~1extensions~1updates'
+  /extensions/updates/ignore:
+    $ref: 'paths/extensions.yaml#/~1extensions~1updates~1ignore'
+  '/extensions/{type}/{id}/actions/update':
+    $ref: 'paths/extensions.yaml#/~1extensions~1{type}~1{id}~1actions~1update'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

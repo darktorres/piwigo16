@@ -1,0 +1,220 @@
+/plugins:
+  get:
+    operationId: pluginList
+    tags:
+      - Extensions
+    summary: List plugins
+    description: >-
+      Merges a filesystem scan with DB-stored plugin state (shared with
+      the server-rendered Maintenance > Environment admin screen).
+    responses:
+      '200':
+        description: Every discovered plugin.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plugins]
+              properties:
+                plugins:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, name, version, state, description]
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      version:
+                        type: string
+                      state:
+                        type: string
+                      description:
+                        type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/plugins/{id}/actions/perform:
+  post:
+    operationId: pluginPerformAction
+    tags:
+      - Extensions
+    summary: Install/activate/deactivate/uninstall/delete a plugin
+    description: >-
+      Webmaster status is required (stricter than plain admin), gated
+      by `AccessControl::isWebmaster()` on top of the admin session
+      check. `delete` is additionally refused when the gallery's
+      `enableExtensionsInstall` config is off.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]+$'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [action]
+            properties:
+              action:
+                type: string
+                enum: [install, activate, deactivate, uninstall, delete]
+    responses:
+      '204':
+        description: Action performed.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Not an admin, not a webmaster, or (`delete` only) extension
+          install/update/delete is disabled gallery-wide.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/extensions/updates:
+  get:
+    operationId: extensionsCheckUpdates
+    tags:
+      - Extensions
+    summary: Check for core and extension updates
+    description: >-
+      Triggers a real remote update check when the cache is cold;
+      serves the cached result otherwise.
+    responses:
+      '200':
+        description: Update-availability flags.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [piwigoNeedUpdate, extNeedUpdate]
+              properties:
+                piwigoNeedUpdate:
+                  type: [boolean, 'null']
+                  description: Null when the check itself couldn't produce a result.
+                extNeedUpdate:
+                  type: [boolean, 'null']
+                  description: Null when the check itself couldn't produce a result.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/extensions/updates/ignore:
+  post:
+    operationId: extensionsIgnoreUpdate
+    tags:
+      - Extensions
+    summary: Ignore (or reset ignored) extension updates
+    description: Webmaster status required.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              type:
+                type: [string, 'null']
+                enum: [plugins, themes, languages, null]
+                description: 'Omitted with `reset: true` resets every type at once.'
+              id:
+                type: [string, 'null']
+                description: Required unless `reset` is true.
+              reset:
+                type: boolean
+                default: false
+    responses:
+      '204':
+        description: Ignore state updated.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: '`reset` is false and `type`/`id` are missing or invalid.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/extensions/{type}/{id}/actions/update:
+  post:
+    operationId: extensionUpdate
+    tags:
+      - Extensions
+    summary: Update a plugin, theme, or language to a specific revision
+    description: >-
+      Webmaster status is required. For a currently-active plugin, this
+      is a single atomic deactivate -> update -> reactivate sequence,
+      not three separate calls.
+    parameters:
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [plugins, themes, languages]
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]+$'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [revision]
+            properties:
+              revision:
+                type: string
+    responses:
+      '200':
+        description: Extension updated.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  description: Pre-translated, human-readable confirmation.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Not an admin, not a webmaster, or extension install/update is
+          disabled gallery-wide.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`type` didn''t resolve to a known extension type.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: The download/extraction/upgrade step itself failed.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

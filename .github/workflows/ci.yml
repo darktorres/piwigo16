@@ -467,13 +467,18 @@ jobs:
   # ── DB-backed suites ─────────────────────────────────────────────────────
 
   # Proves the real install-via-Migrations path (bin/piwigo migrations:migrate)
-  # and the schema:dump drift guard across all 3 providers in
+  # and the schema:dump drift guard across all 4 providers in
   # docs/REFERENCE.md's "hard-required bleeding-edge stack" decision's
-  # provider matrix. mysql/mariadb legs stay lean (Unit/Db, Unit/Config, Arch smoke +
+  # provider matrix. mysql/mariadb/sqlite legs stay lean (Unit/Db, Unit/Config, Arch smoke +
   # migrate + schema-drift check) since MySQL is already comprehensively
   # covered by the integration/browser jobs below; MariaDB has no
   # other CI coverage at all, but this job's own smoke+migration proof is
-  # its intended scope, not a full-suite duplication. The pgsql leg
+  # its intended scope, not a full-suite duplication. sqlite is lean for a
+  # different reason -- IntegrationTestCase/BrowserTestHelpers have no
+  # SQLite branch yet (resetDatabase()/loadFixture()/settleDatabase() all
+  # assume a network-connected, concurrently-shared server), a separate,
+  # much larger campaign of its own; this job's own migrate+Unit/Db proof
+  # is what Wave 6 of the SQLite campaign actually scoped. The pgsql leg
   # additionally runs the full Integration/Browser suites --
   # IntegrationTestCase/BrowserTestHelpers support Postgres, so this is
   # the one leg with no other job anywhere proving Postgres for real.
@@ -508,6 +513,25 @@ jobs:
             port: 5432
             driver: pgsql
             user: postgres
+          # sqlite3 is file-based, no real server to connect to -- reuses
+          # the mysql leg's own image/port as an unused, harmless
+          # `services.db` placeholder (services can't be conditionally
+          # skipped per matrix leg) rather than restructuring this job's
+          # shared services block for one leg. Lean-scoped like the
+          # mysql/mariadb legs (migrate + Unit/Db,Config,Arch +
+          # schema-drift check only, no Integration/Browser): the
+          # Integration/Browser suites' own IntegrationTestCase has no
+          # SQLite branch for resetDatabase()/loadFixture()/
+          # settleDatabase() yet (each assumes a network-connected,
+          # concurrently-shared server) -- a separate, much larger
+          # campaign of its own, matching how MariaDB's own leg stays
+          # smoke+migration-only rather than duplicating pgsql's full
+          # suite run.
+          - provider: sqlite
+            image: mysql:9.7
+            port: 3306
+            driver: sqlite3
+            user: root
     services:
       db:
         image: ${{ matrix.image }}
@@ -527,11 +551,11 @@ jobs:
         with:
           php-version: "8.5"
           coverage: none
-          # pgsql (native driver, matching docs/REFERENCE.md's
+          # pgsql/sqlite3 (native drivers, matching docs/REFERENCE.md's
           # native-platform-first library policy and its mysqli-not-pdo_mysql
           # precedent) added on top of the standard set -- unused but
-          # harmless on the mysql/mariadb legs.
-          extensions: ${{ env.PHP_EXTENSIONS }},pgsql
+          # harmless on legs that don't need them.
+          extensions: ${{ env.PHP_EXTENSIONS }},pgsql,sqlite3
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       - if: matrix.provider == 'pgsql'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -564,12 +588,20 @@ jobs:
           fi
       - name: Write .env.test
         run: |
+          # sqlite3's own PIWIGO_DB_BASE doubles as a real file path, not
+          # a schema/database name (see DbCredentials' own docblock) --
+          # every other leg keeps the plain 'piwigo_test' literal.
+          if [ "${{ matrix.provider }}" = "sqlite" ]; then
+            db_base="${{ runner.temp }}/piwigo_test.sqlite3"
+          else
+            db_base="piwigo_test"
+          fi
           cat > .env.test <<ENVEOF
           PIWIGO_DB_HOST=127.0.0.1
           PIWIGO_DB_PORT=${{ matrix.port }}
           PIWIGO_DB_USER=${{ matrix.user }}
           PIWIGO_DB_PASSWORD=root
-          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_BASE=${db_base}
           PIWIGO_DB_DRIVER=${{ matrix.driver }}
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
@@ -581,7 +613,7 @@ jobs:
       - run: php bin/piwigo schema:dump
         env:
           HTTP_X_PIWIGO_ENV: test
-      - name: Verify install/piwigo_structure-{mysql,mariadb,pgsql}.sql has no drift
+      - name: Verify install/piwigo_structure-{mysql,mariadb,pgsql,sqlite}.sql has no drift
         # One committed dump per provider, mariadb included. It gets its own
         # file rather than sharing MySQL's because the two differ at the
         # engine level, not in formatting: `int unsigned` -> `int(11)
@@ -590,7 +622,9 @@ jobs:
         # `longtext ... CHECK (json_valid(...))` since MariaDB has no native
         # JSON type -- 189 differing lines in all. Sharing one file made this
         # guard unsatisfiable on that leg; see SchemaDumpService's docblock.
-        run: git diff --exit-code -- install/piwigo_structure-mysql.sql install/piwigo_structure-mariadb.sql install/piwigo_structure-pgsql.sql
+        # Checked on every leg regardless of which one generated it, same
+        # as the other 3 files already were before sqlite existed.
+        run: git diff --exit-code -- install/piwigo_structure-mysql.sql install/piwigo_structure-mariadb.sql install/piwigo_structure-pgsql.sql install/piwigo_structure-sqlite.sql
       - if: matrix.provider == 'pgsql'
         name: Start PHP built-in server
         run: |

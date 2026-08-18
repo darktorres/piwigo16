@@ -546,15 +546,18 @@ file needs to exist inside the image.
   `ext-fileinfo`, `ext-filter`, `ext-gd`, `ext-iconv`, `ext-imagick`,
   `ext-imap`, `ext-intl`, `ext-libxml`, `ext-mbstring`, `ext-mysqli`,
   `ext-openssl`, `ext-pcntl`, `ext-pgsql`, `ext-session`, `ext-simplexml`,
-  `ext-zip`, `ext-zlib`; `pcov` for coverage)
+  `ext-sqlite3`, `ext-zip`, `ext-zlib`; `pcov` for coverage)
 - Composer 2.x
 - Node 24, bun, [`just`](https://github.com/casey/just)
-- MySQL 9.7 (or MariaDB 12.x / PostgreSQL 18 — see the "hard-required
-  bleeding-edge stack" decision's provider matrix below, real and working
-  via `PIWIGO_DB_DRIVER=pgsql`/`mysqli` — the `db-multi-provider` CI job
-  runs the full Integration/Contract/Browser suites against a real
-  PostgreSQL 18 service container on every push) + a webserver serving
-  this checkout, for anything beyond `composer test`
+- MySQL 9.7 (or MariaDB 12.x / PostgreSQL 18 / SQLite — see the
+  "hard-required bleeding-edge stack" decision's provider matrix below,
+  real and working via `PIWIGO_DB_DRIVER=pgsql`/`mysqli`/`sqlite3` — the
+  `db-multi-provider` CI job runs the full Integration/Contract/Browser
+  suites against a real PostgreSQL 18 service container on every push;
+  the sqlite3 leg stays migrate + Unit/Db-only, matching MariaDB's own
+  lean scope, since IntegrationTestCase/BrowserTestHelpers have no
+  SQLite branch yet) + a webserver serving this checkout, for anything
+  beyond `composer test`
 
 ### Setup
 
@@ -565,17 +568,19 @@ node_modules/.bin/playwright install chromium
 cp .env.example .env.test   # fill in the .env.test block; see Tests below
 ```
 
-Set `PIWIGO_DB_DRIVER=mysqli` (default) or `PIWIGO_DB_DRIVER=pgsql` in
-`.env`/`.env.test` to pick the provider — see `.env.example`'s own
-commented pgsql block for the matching `PIWIGO_DB_PORT`/credential shape.
-Schema for either provider comes from Doctrine Migrations
+Set `PIWIGO_DB_DRIVER=mysqli` (default), `PIWIGO_DB_DRIVER=pgsql`, or
+`PIWIGO_DB_DRIVER=sqlite3` in `.env`/`.env.test` to pick the provider —
+see `.env.example`'s own commented pgsql block for the matching
+`PIWIGO_DB_PORT`/credential shape (`PIWIGO_DB_BASE` doubles as the
+sqlite3 file path, not a schema/database name — no port/credentials
+needed for it). Schema for any provider comes from Doctrine Migrations
 (`bin/piwigo migrations:migrate`), the mechanism both a fresh install and
 an existing install's own upgrade path run through — not a one-time
 generator. `bin/piwigo schema:dump` regenerates the checked-in
-`install/piwigo_structure-{mysql,mariadb,pgsql}.sql` snapshots from the current
-connection's live (post-migration) schema; CI's `db-multi-provider` job
-fails on any drift between that snapshot and what a fresh
-`migrations:migrate` run actually produces.
+`install/piwigo_structure-{mysql,mariadb,pgsql,sqlite}.sql` snapshots
+from the current connection's live (post-migration) schema; CI's
+`db-multi-provider` job fails on any drift between that snapshot and what
+a fresh `migrations:migrate` run actually produces.
 
 `just` runs recipes across both stacks (`just --list`).
 
@@ -909,16 +914,20 @@ installs adopt v17 via a one-time `bin/piwigo import:legacy` migration
 above), not a rolling upgrade. Version-to-version upgrades *within* v17
 run through Doctrine Migrations (`bin/piwigo migrations:migrate`) — the
 mechanism both a fresh install and an existing install's own upgrade
-path use today. `install/piwigo_structure-{mysql,mariadb,pgsql}.sql` are
-generated, human-reviewable schema snapshots + a CI drift guard
+path use today. `install/piwigo_structure-{mysql,mariadb,pgsql,sqlite}.sql`
+are generated, human-reviewable schema snapshots + a CI drift guard
 (`bin/piwigo schema:dump`), not the install-time source of truth.
 
 **Hard-required bleeding-edge stack, no capability gating.** PHP 8.5,
-MySQL 9.7 (MariaDB 12.x / PostgreSQL 18 in the provider matrix), Node
-24 — hard requirements, no version-compatibility shims.
-`PIWIGO_DB_DRIVER=pgsql`/`mysqli` picks the provider (a driver field in
-the install form too); the `db-multi-provider` CI job exercises all 3
-providers on every push (see Development → Requirements above).
+MySQL 9.7 (MariaDB 12.x / PostgreSQL 18 / SQLite in the provider
+matrix), Node 24 — hard requirements, no version-compatibility shims.
+`PIWIGO_DB_DRIVER=pgsql`/`mysqli`/`sqlite3` picks the provider (a driver
+field in the install form too); the `db-multi-provider` CI job exercises
+all 4 providers on every push (see Development → Requirements above) —
+sqlite3's own leg stays migrate + Unit/Db-only, real production support
+without the full Integration/Browser suites yet (those need their own,
+separate SQLite-branch campaign for IntegrationTestCase's DB-admin
+methods).
 
 **FrankenPHP worker-mode runtime, Apache as fallback.** FrankenPHP
 (Caddy + PHP 8.5) in worker mode is the primary production runtime,

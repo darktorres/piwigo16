@@ -775,9 +775,6 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * The section names currently in use, for resolving a page section to
      * its canonical casing.
      *
-     * Stays on DBAL: `SELECT DISTINCT` over one column, no entity to
-     * hydrate.
-     *
      * `history.section` is a plain `VARCHAR` on both platforms, so there is
      * no schema-level "currently allowed values" construct to read. The set
      * is derived from the data instead, which is self-healing: once a row
@@ -797,11 +794,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      */
     public function getSectionEnumOptions(): array
     {
-        $sections = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT DISTINCT section FROM history WHERE section IS NOT NULL
-                SQL)->fetchFirstColumn();
+        $sections = $this->createQueryBuilder('h')
+            ->select('DISTINCT h.section')
+            ->where('h.section IS NOT NULL')
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return array_values(array_unique([
             ...self::BASE_SECTIONS,

@@ -1,0 +1,1213 @@
+/images/{id}:
+  get:
+    operationId: imageGet
+    tags:
+      - Images
+    summary: Get a single photo's full detail
+    description: >-
+      Public, permission-filtered: `PermissionService::
+      getPermissionCriteria()` decides which images the calling
+      session (guest included) can see. An orphan/lounge photo (no
+      visible related category) additionally requires an admin
+      session.
+    security: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: commentsPage
+        in: query
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: commentsPerPage
+        in: query
+        description: Defaults to the gallery's configured comments-per-page.
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Full photo detail.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageDetail'
+      '401':
+        description: No visible related album, and the caller isn't an admin.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+  patch:
+    operationId: imageUpdate
+    tags:
+      - Images
+    summary: Update a photo's metadata
+    description: >-
+      Every field is optional. `singleValueMode` governs `name`/
+      `author`/`comment`/`level`/`dateCreation` (`fillIfEmpty`, the
+      default, only fills currently-empty fields; `replace` always
+      overwrites). `multipleValueMode` governs `categories`/`tagIds`
+      (`append`, the default, adds to the existing set; `replace`
+      overwrites it). `file` can only be changed on a photo not added
+      by synchronization.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+              name:
+                type: string
+              author:
+                type: string
+              dateCreation:
+                type: string
+              comment:
+                type: string
+              categories:
+                type: string
+                description: Comma-separated category ids.
+              tagIds:
+                type: string
+                description: Comma-separated tag ids.
+              level:
+                type: integer
+              singleValueMode:
+                type: string
+                enum: [fillIfEmpty, replace]
+                default: fillIfEmpty
+              multipleValueMode:
+                type: string
+                enum: [append, replace]
+                default: append
+    responses:
+      '200':
+        description: Photo updated.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, file, name, author, comment, level, dateCreation, lastmodified]
+              properties:
+                id:
+                  type: integer
+                file:
+                  type: string
+                name:
+                  type: [string, 'null']
+                author:
+                  type: [string, 'null']
+                comment:
+                  type: [string, 'null']
+                level:
+                  type: integer
+                dateCreation:
+                  type: [string, 'null']
+                lastmodified:
+                  type: string
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: Invalid `singleValueMode`/`multipleValueMode`, `file` on a synced photo, or an invalid `categories` value.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/actions/delete:
+  post:
+    operationId: imageDelete
+    tags:
+      - Images
+    summary: Bulk-delete photos
+    description: Bulk by design -- matches the admin photo management UI's own batch-select workflow.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImageIdsBody'
+    responses:
+      '200':
+        description: Photos deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deletedCount]
+              properties:
+                deletedCount:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: No image id given.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/formats/actions/delete:
+  post:
+    operationId: imageFormatDelete
+    tags:
+      - 'Images > Formats'
+    summary: Delete alternate-format files
+    description: Removes each format from the database and the filesystem.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [formatIds]
+            properties:
+              formatIds:
+                type: array
+                items:
+                  type: integer
+    responses:
+      '204':
+        description: Formats deleted.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: No format found for the given id(s).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '500':
+        description: One or more format files could not be removed from disk.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/formats/actions/search:
+  post:
+    operationId: imageFormatSearch
+    tags:
+      - 'Images > Formats'
+    summary: Match candidate filenames to existing photos and their formats
+    description: >-
+      Read-only (`POST` is a transport choice, not because it
+      mutates). For each candidate filename, checks whether a matching
+      photo already exists (by filename with known format extensions
+      stripped) and whether a format with that extension is already
+      associated with it.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [filenames]
+            properties:
+              filenames:
+                type: object
+                description: '`{uniqueId: filename}` pairs.'
+                additionalProperties:
+                  type: string
+    responses:
+      '200':
+        description: One result per candidate, keyed by the same uniqueId given.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [results]
+              properties:
+                results:
+                  type: object
+                  additionalProperties:
+                    oneOf:
+                      - type: object
+                        required: [status]
+                        properties:
+                          status:
+                            type: string
+                            enum: ['not found', multiple]
+                      - type: object
+                        required: [status, imageId, formatExists]
+                        properties:
+                          status:
+                            type: string
+                            enum: [found]
+                          imageId:
+                            type: integer
+                          formatExists:
+                            type: boolean
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/images/searches:
+  post:
+    operationId: imageFilteredSearchCreate
+    tags:
+      - Images
+    summary: Save a filtered/advanced search, returning a shareable search id
+    description: >-
+      Public, no admin gate -- the front-end's own advanced-search page
+      calls this. Every field is optional and independently validated
+      (~20 of them, each its own 422 on a bad value); `searchId` forks
+      from a pre-existing saved search instead of starting fresh.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              searchId:
+                type: [integer, string]
+                description: Forks from this pre-existing saved search.
+              allwords:
+                type: string
+              allwordsMode:
+                type: string
+                enum: [OR, AND]
+                default: AND
+              allwordsFields:
+                type: array
+                default: [name, comment, file, author, tags, cat-title, cat-desc]
+                items:
+                  type: string
+                  enum: [name, comment, file, author, tags, cat-title, cat-desc]
+              tags:
+                type: array
+                items:
+                  type: [integer, string]
+              tagsMode:
+                type: string
+                enum: [OR, AND]
+                default: AND
+              categories:
+                type: array
+                items:
+                  type: [integer, string]
+              categoriesWithsubs:
+                type: boolean
+                default: false
+              authors:
+                type: array
+                items:
+                  type: string
+              filetypes:
+                type: array
+                items:
+                  type: string
+                  pattern: '^[a-zA-Z0-9]+$'
+              addedBy:
+                type: array
+                items:
+                  type: [integer, string]
+              datePostedPreset:
+                type: string
+                enum: ['24h', 7d, 30d, 3m, 6m, custom, '']
+              datePostedCustom:
+                type: array
+                description: >-
+                  Required, non-empty, when `datePostedPreset` is
+                  `custom`. Each entry is `y<YYYY>`, `m<YYYY>-<MM>`, or
+                  `d<YYYY>-<MM>-<DD>`.
+                items:
+                  type: string
+              dateCreatedPreset:
+                type: string
+                enum: [7d, 30d, 3m, 6m, 12m, custom, '']
+              dateCreatedCustom:
+                type: array
+                description: Same shape as `datePostedCustom`, required when `dateCreatedPreset` is `custom`.
+                items:
+                  type: string
+              ratios:
+                type: array
+                items:
+                  type: string
+                  pattern: '^[a-zA-Z0-9]+$'
+              ratings:
+                type: array
+                description: Only consulted when the gallery has rating enabled.
+                items:
+                  type: string
+              filesizeMin:
+                type: integer
+              filesizeMax:
+                type: integer
+              widthMin:
+                type: integer
+              widthMax:
+                type: integer
+              heightMin:
+                type: integer
+              heightMax:
+                type: integer
+    responses:
+      '201':
+        description: Search saved.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [searchId, searchUrl]
+              properties:
+                searchId:
+                  type: string
+                searchUrl:
+                  type: string
+                  format: uri-reference
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/images/{id}/comments:
+  post:
+    operationId: imageAddComment
+    tags:
+      - Images
+    summary: Post a comment on a photo
+    description: >-
+      Public, permission-filtered. `key` is the ephemeral anti-spam
+      token `GET /images/{id}`'s own `commentPost.key` field hands out.
+    security: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [author, content, key]
+            properties:
+              author:
+                type: string
+                description: Defaults to the current username, or "guest".
+              content:
+                type: string
+              key:
+                type: string
+    responses:
+      '201':
+        description: Comment posted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, validated]
+              properties:
+                id:
+                  type: integer
+                validated:
+                  type: boolean
+                  description: False means held for moderation.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '403':
+        description: Comments are disabled gallery-wide, or this comment failed anti-spam validation.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: This image doesn't exist, isn't commentable, or the caller can't see it.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/{id}/rating:
+  put:
+    operationId: imageRate
+    tags:
+      - Images
+    summary: Rate a photo (or clear the caller's own rating)
+    description: Public, permission-filtered.
+    security: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              rate:
+                type: [integer, string, 'null']
+                description: Null removes the caller's own rating.
+    responses:
+      '200':
+        description: Updated rating summary.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [score, average, count]
+              properties:
+                score:
+                  type: [number, 'null']
+                average:
+                  type: [number, 'null']
+                count:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '403':
+        description: Rating is disabled, the caller already rated, or `rate` isn't one of the gallery's configured rate values.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: Invalid image id, or the caller can't see it.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/search:
+  get:
+    operationId: imageSearch
+    tags:
+      - Images
+    summary: Free-text search across photos
+    description: Public, permission-filtered.
+    security: []
+    parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          default: 100
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: order
+        in: query
+        description: >-
+          Comma-separated `field [asc|desc]` tokens against a fixed
+          server-side vocabulary; unrecognized tokens are silently
+          dropped.
+        schema:
+          type: string
+      - $ref: '../openapi.yaml#/components/parameters/fMinRate'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxRate'
+      - $ref: '../openapi.yaml#/components/parameters/fMinHit'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxHit'
+      - $ref: '../openapi.yaml#/components/parameters/fMinRatio'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxRatio'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxLevel'
+      - $ref: '../openapi.yaml#/components/parameters/fMinDateAvailable'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxDateAvailable'
+      - $ref: '../openapi.yaml#/components/parameters/fMinDateCreated'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxDateCreated'
+    responses:
+      '200':
+        description: One page of matching images.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images, page, perPage, totalCount]
+              properties:
+                images:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SearchImage'
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                totalCount:
+                  type: integer
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/images/actions/set-category:
+  post:
+    operationId: imageSetCategory
+    tags:
+      - 'Images > Batch Actions'
+    summary: Associate, dissociate, or move photos relative to an album
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [imageIds, categoryId, action]
+            properties:
+              imageIds:
+                type: array
+                items:
+                  type: integer
+              categoryId:
+                type: integer
+              action:
+                type: string
+                enum: [associate, dissociate, move]
+                description: '`move`: dissociate from every other album and associate with this one.'
+    responses:
+      '204':
+        description: Applied.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: Invalid `action`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/actions/set-privacy-level:
+  post:
+    operationId: imageSetPrivacyLevel
+    tags:
+      - 'Images > Batch Actions'
+    summary: Bulk-set photos' privacy level
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [imageIds, level]
+            properties:
+              imageIds:
+                type: array
+                items:
+                  type: integer
+              level:
+                type: integer
+                description: Must be one of the gallery's configured permission levels.
+    responses:
+      '200':
+        description: Applied.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [affectedRows]
+              properties:
+                affectedRows:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: Invalid `level`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/actions/set-rank:
+  post:
+    operationId: imageSetRank
+    tags:
+      - 'Images > Batch Actions'
+    summary: Reorder photos within an album
+    description: >-
+      More than one `imageIds` entry means "here is the full,
+      already-ordered list for this album" (`rank` is then
+      meaningless); exactly one id plus `rank` means "insert this one
+      photo at this position among its album siblings".
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [imageIds, categoryId]
+            properties:
+              imageIds:
+                type: array
+                items:
+                  type: integer
+              categoryId:
+                type: integer
+              rank:
+                type: [integer, 'null']
+    responses:
+      '200':
+        description: Order applied.
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  description: Bulk-reorder response (more than one imageIds entry).
+                  required: [imageIds, categoryId]
+                  properties:
+                    imageIds:
+                      type: array
+                      items:
+                        type: integer
+                      description: The album's full photo order after applying.
+                    categoryId:
+                      type: integer
+                - type: object
+                  description: Single-insert response (exactly one imageIds entry plus rank).
+                  required: [imageId, categoryId, rank]
+                  properties:
+                    imageId:
+                      type: integer
+                    categoryId:
+                      type: integer
+                    rank:
+                      type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: Unknown image id, or the image isn't associated with this album.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: Missing `imageIds`, or missing/zero `rank` for a single-insert.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/{id}/actions/check-file:
+  get:
+    operationId: imageCheckFile
+    tags:
+      - Images
+    summary: Compare a photo's on-disk file against a client-supplied checksum
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: highSum
+        in: query
+        description: Checked in preference to `fileSum` when both are given.
+        schema:
+          type: string
+      - name: fileSum
+        in: query
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Comparison result -- empty when neither `highSum` nor `fileSum` was given.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  enum: [equals, differs]
+                high:
+                  type: string
+                  enum: [equals]
+                  description: Always `equals` -- presence alone signals `highSum` was checked.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/images/actions/sync-metadata:
+  post:
+    operationId: imageSyncMetadata
+    tags:
+      - 'Images > Batch Actions'
+    summary: Re-read EXIF/IPTC metadata from disk for photos
+    description: The Batch Manager "unit"/"global" panels' own sync action.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImageIdsBody'
+    responses:
+      '200':
+        description: Metadata synchronized.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nbSynchronized]
+              properties:
+                nbSynchronized:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: None of the given ids matched an existing photo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/actions/delete-orphans:
+  post:
+    operationId: imageDeleteOrphans
+    tags:
+      - 'Images > Batch Actions'
+    summary: Delete photos linked to no album, one block at a time
+    description: The Batch Manager "global" panel's own delete-orphans action.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              blockSize:
+                type: integer
+                default: 1000
+                minimum: 1
+    responses:
+      '200':
+        description: Block processed.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nbDeleted, nbOrphans]
+              properties:
+                nbDeleted:
+                  type: integer
+                  description: Deleted in this call.
+                nbOrphans:
+                  type: integer
+                  description: Remaining orphans after this call.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/images/actions/missing-derivatives:
+  post:
+    operationId: imageMissingDerivatives
+    tags:
+      - 'Images > Batch Actions'
+    summary: List URLs for not-yet-generated derivative thumbnails
+    description: >-
+      Visiting each returned URL triggers on-the-fly generation.
+      `nextPage` is present when more results remain for a follow-up
+      call.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              types:
+                type: array
+                description: Defaults to every defined derivative size type.
+                items:
+                  type: string
+              ids:
+                type: array
+                items:
+                  type: integer
+              maxUrls:
+                type: integer
+                default: 200
+              prevPage:
+                type: integer
+                description: '`nextPage` from a previous call, to continue.'
+              fMinRate:
+                type: number
+              fMaxRate:
+                type: number
+              fMinHit:
+                type: integer
+              fMaxHit:
+                type: integer
+              fMinRatio:
+                type: number
+              fMaxRatio:
+                type: number
+              fMaxLevel:
+                type: integer
+              fMinDateAvailable:
+                type: string
+                format: date
+              fMaxDateAvailable:
+                type: string
+                format: date
+              fMinDateCreated:
+                type: string
+                format: date
+              fMaxDateCreated:
+                type: string
+                format: date
+    responses:
+      '200':
+        description: A page of derivative URLs.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [urls]
+              properties:
+                urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri-reference
+                nextPage:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: Invalid `types`, or an invalid image-filter field.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/images/actions/set-md5sum:
+  post:
+    operationId: imageSetMd5sum
+    tags:
+      - 'Images > Batch Actions'
+    summary: Backfill md5sums for photos missing one, one block at a time
+    description: The real caller polls this repeatedly until `remainingCount` reaches 0.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              blockSize:
+                type: integer
+    responses:
+      '200':
+        description: Block processed.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [addedCount, remainingCount]
+              properties:
+                addedCount:
+                  type: integer
+                remainingCount:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+components:
+  schemas:
+    ImageIdsBody:
+      type: object
+      required: [imageIds]
+      properties:
+        imageIds:
+          type: array
+          items:
+            type: integer
+    Derivatives:
+      type: object
+      additionalProperties:
+        type: object
+        required: [url, width, height]
+        properties:
+          url:
+            type: string
+            format: uri-reference
+          width:
+            type: integer
+          height:
+            type: integer
+    SearchImage:
+      type: object
+      required:
+        - isFavorite
+        - id
+        - width
+        - height
+        - hit
+        - file
+        - name
+        - comment
+        - dateCreation
+        - dateAvailable
+        - page_url
+        - download_url
+        - derivatives
+      properties:
+        isFavorite:
+          type: boolean
+        id:
+          type: integer
+        width:
+          type: [integer, 'null']
+        height:
+          type: [integer, 'null']
+        hit:
+          type: integer
+        file:
+          type: string
+        name:
+          type: string
+          description: Post render-filter display name, HTML-stripped.
+        comment:
+          type: string
+          description: Post render-filter description.
+        dateCreation:
+          type: [string, 'null']
+        dateAvailable:
+          type: [string, 'null']
+        page_url:
+          type: string
+          format: uri-reference
+        element_url:
+          type: string
+          format: uri-reference
+          description: Present only when the current user can view the full-size element.
+        download_url:
+          type: [string, 'null']
+        derivatives:
+          $ref: '#/components/schemas/Derivatives'
+    ImageDetail:
+      type: object
+      required:
+        - id
+        - file
+        - name
+        - nameRaw
+        - comment
+        - commentRaw
+        - author
+        - hit
+        - filesize
+        - width
+        - height
+        - coi
+        - dateAvailable
+        - dateCreation
+        - dateMetadataUpdate
+        - level
+        - md5sum
+        - addedBy
+        - rotation
+        - latitude
+        - longitude
+        - lastmodified
+        - pageUrl
+        - downloadUrl
+        - derivatives
+        - rating
+        - categories
+        - tags
+        - commentPost
+        - commentsPaging
+        - comments
+      properties:
+        id:
+          type: integer
+        file:
+          type: string
+        name:
+          type: string
+          description: Post render-filter display name, HTML-stripped.
+        nameRaw:
+          type: [string, 'null']
+        comment:
+          type: string
+          description: Post render-filter description.
+        commentRaw:
+          type: [string, 'null']
+        author:
+          type: [string, 'null']
+        hit:
+          type: integer
+        filesize:
+          type: [integer, 'null']
+        width:
+          type: [integer, 'null']
+        height:
+          type: [integer, 'null']
+        coi:
+          type: [string, 'null']
+          description: Center of interest, e.g. `"50x50"`.
+        dateAvailable:
+          type: [string, 'null']
+        dateCreation:
+          type: [string, 'null']
+        dateMetadataUpdate:
+          type: [string, 'null']
+        level:
+          type: integer
+        md5sum:
+          type: [string, 'null']
+        addedBy:
+          type: [integer, 'null']
+        rotation:
+          type: [integer, 'null']
+        latitude:
+          type: [number, 'null']
+        longitude:
+          type: [number, 'null']
+        lastmodified:
+          type: string
+        pageUrl:
+          type: string
+          format: uri-reference
+        elementUrl:
+          type: string
+          format: uri-reference
+          description: Present only when the current user can view the full-size element.
+        downloadUrl:
+          type: [string, 'null']
+        derivatives:
+          $ref: '#/components/schemas/Derivatives'
+        rating:
+          type: object
+          required: [score, count, average]
+          properties:
+            score:
+              type: [number, 'null']
+              description: This photo's own stored rating score.
+            count:
+              type: integer
+            average:
+              type: [number, 'null']
+        categories:
+          type: array
+          items:
+            type: object
+            required: [id, name, globalRank, url, pageUrl]
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              globalRank:
+                type: [string, 'null']
+              url:
+                type: string
+                format: uri-reference
+              pageUrl:
+                type: string
+                format: uri-reference
+        tags:
+          type: array
+          items:
+            type: object
+            required: [id, name, urlName, url, pageUrl]
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              urlName:
+                type: string
+              url:
+                type: string
+                format: uri-reference
+              pageUrl:
+                type: string
+                format: uri-reference
+        commentPost:
+          type: [object, 'null']
+          description: Null when comments aren't currently postable by this caller.
+          required: [author, key]
+          properties:
+            author:
+              type: string
+            key:
+              type: string
+              description: Ephemeral anti-spam token -- echo back as `POST .../comments`' own `key` field.
+        commentsPaging:
+          type: object
+          required: [page, perPage, count, totalCount]
+          properties:
+            page:
+              type: integer
+            perPage:
+              type: integer
+            count:
+              type: integer
+              description: Rows in this response's own `comments` array.
+            totalCount:
+              type: integer
+        comments:
+          type: array
+          items:
+            type: object
+            required: [id, date, author, content]
+            properties:
+              id:
+                type: integer
+              date:
+                type: [string, 'null']
+              author:
+                type: [string, 'null']
+              content:
+                type: [string, 'null']

@@ -65,6 +65,20 @@ tags:
     description: >-
       Album (category) CRUD, move/reorder, representative-image
       management, and category-filtered image listing.
+  - name: Images
+    description: >-
+      Single-photo detail/update, comments, rating, search, and the
+      filtered-search resource -- plus its real sub-resources, formats
+      and admin batch actions.
+  - name: 'Images > Formats'
+    parent: Images
+    description: Alternate-format (e.g. RAW sibling) files attached to a photo.
+  - name: 'Images > Batch Actions'
+    parent: Images
+    description: >-
+      The admin Batch Manager's own bulk operations -- category/
+      privacy/rank changes, metadata sync, orphan cleanup, derivative
+      pre-generation, md5sum backfill.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -173,6 +187,38 @@ paths:
     $ref: 'paths/categories.yaml#/~1categories~1{id}~1actions~1refresh-representative'
   '/categories/{id}/orphan-impact':
     $ref: 'paths/categories.yaml#/~1categories~1{id}~1orphan-impact'
+  '/images/{id}':
+    $ref: 'paths/images.yaml#/~1images~1{id}'
+  /images/actions/delete:
+    $ref: 'paths/images.yaml#/~1images~1actions~1delete'
+  /images/formats/actions/delete:
+    $ref: 'paths/images.yaml#/~1images~1formats~1actions~1delete'
+  /images/formats/actions/search:
+    $ref: 'paths/images.yaml#/~1images~1formats~1actions~1search'
+  /images/searches:
+    $ref: 'paths/images.yaml#/~1images~1searches'
+  '/images/{id}/comments':
+    $ref: 'paths/images.yaml#/~1images~1{id}~1comments'
+  '/images/{id}/rating':
+    $ref: 'paths/images.yaml#/~1images~1{id}~1rating'
+  /images/search:
+    $ref: 'paths/images.yaml#/~1images~1search'
+  /images/actions/set-category:
+    $ref: 'paths/images.yaml#/~1images~1actions~1set-category'
+  /images/actions/set-privacy-level:
+    $ref: 'paths/images.yaml#/~1images~1actions~1set-privacy-level'
+  /images/actions/set-rank:
+    $ref: 'paths/images.yaml#/~1images~1actions~1set-rank'
+  '/images/{id}/actions/check-file':
+    $ref: 'paths/images.yaml#/~1images~1{id}~1actions~1check-file'
+  /images/actions/sync-metadata:
+    $ref: 'paths/images.yaml#/~1images~1actions~1sync-metadata'
+  /images/actions/delete-orphans:
+    $ref: 'paths/images.yaml#/~1images~1actions~1delete-orphans'
+  /images/actions/missing-derivatives:
+    $ref: 'paths/images.yaml#/~1images~1actions~1missing-derivatives'
+  /images/actions/set-md5sum:
+    $ref: 'paths/images.yaml#/~1images~1actions~1set-md5sum'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

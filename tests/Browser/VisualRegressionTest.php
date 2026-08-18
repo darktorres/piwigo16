@@ -130,6 +130,17 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             H::waitUntilImagesLoaded($page, 10.0, '.comment-img');
         }
 
+        if ($name === 'admin-themes-standard-pages') {
+            // The 5 color-theme mini-previews plus the 2 large light/dark
+            // mode previews are real static <img> elements
+            // (themes/standard_pages/skins/*.jpg, scaled down via CSS
+            // object-fit) -- the same "networkidle fires before every <img>
+            // has actually painted" race as admin-comments above, not
+            // font/animation rendering non-determinism (that's already
+            // handled by assertScreenshotMatches()'s own addStyleTag()).
+            H::waitUntilImagesLoaded($page, 10.0, '.std_pgs_mini_previews img, .std_pgs_selected_preview img');
+        }
+
         $page->assertScreenshotMatches();
     })->group('visual-regression');
 }

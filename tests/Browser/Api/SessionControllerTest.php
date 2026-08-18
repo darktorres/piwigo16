@@ -14,11 +14,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 it('reports guest status for an anonymous visitor', function (): void {
     $page = H::visitPwg($this, '/identification.php');
 
-    $result = H::rawGet($page, '/api/v1/session');
+    $exchange = H::apiFetchPsr7($page, 'GET', '/api/v1/session');
+    $this->assertPsr7ExchangeMatchesOpenApiSchema($exchange['request'], $exchange['response']);
 
-    expect($result['status'])
+    expect($exchange['response']->getStatusCode())
         ->toBe(200);
-    $decoded = json_decode($result['body'], true);
+    $decoded = json_decode((string) $exchange['response']->getBody(), true);
     $body = is_array($decoded) ? $decoded : [];
     expect($body['username'])->toBe('guest')
         ->and($body['status'])->toBe('guest')
@@ -33,11 +34,12 @@ it('reports guest status for an anonymous visitor', function (): void {
 it('reports admin status and the extra upload fields for a logged-in admin', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = H::rawGet($page, '/api/v1/session');
+    $exchange = H::apiFetchPsr7($page, 'GET', '/api/v1/session');
+    $this->assertPsr7ExchangeMatchesOpenApiSchema($exchange['request'], $exchange['response']);
 
-    expect($result['status'])
+    expect($exchange['response']->getStatusCode())
         ->toBe(200);
-    $decoded = json_decode($result['body'], true);
+    $decoded = json_decode((string) $exchange['response']->getBody(), true);
     $body = is_array($decoded) ? $decoded : [];
     expect($body['username'])->toBe(H::ADMIN_USER)
         ->and($body['status'])->toBe('webmaster')
@@ -60,14 +62,15 @@ it('POST /api/v1/session (login) reports the new status in its own response, not
     // at all (identification.php's own real login, not this REST route).
     $page = H::visitPwg($this, '/identification.php');
 
-    $result = H::rawPostJson($page, '/api/v1/session', [
+    $exchange = H::apiFetchPsr7($page, 'POST', '/api/v1/session', [
         'username' => H::ADMIN_USER,
         'password' => H::ADMIN_PASS,
     ]);
+    $this->assertPsr7ExchangeMatchesOpenApiSchema($exchange['request'], $exchange['response']);
 
-    expect($result['status'])
+    expect($exchange['response']->getStatusCode())
         ->toBe(200);
-    $decoded = json_decode($result['body'], true);
+    $decoded = json_decode((string) $exchange['response']->getBody(), true);
     $body = is_array($decoded) ? $decoded : [];
     expect($body['username'])->toBe(H::ADMIN_USER)
         ->and($body['status'])->toBe('webmaster');

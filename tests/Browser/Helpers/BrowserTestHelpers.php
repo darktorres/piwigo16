@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Browser\Helpers;
 use InvalidArgumentException;
 use mysqli;
 use mysqli_result;
+use Nyholm\Psr7\Response;
+use Nyholm\Psr7\ServerRequest;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
@@ -18,6 +20,8 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionsCachePool;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
@@ -1234,6 +1238,133 @@ final class BrowserTestHelpers
     }
 
     /**
+     * PSR-7-object-returning variant of apiFetch(), for Gesso OpenAPI
+     * contract assertions (`OpenApiAssertions::
+     * assertPsr7ExchangeMatchesOpenApiSchema()`). The request side is
+     * built entirely from what this call site already knows it's
+     * sending -- method/path/headers/body -- there's nothing to
+     * "capture" there; only the live server's real response
+     * (status/headers/body) comes back over the wire and needs
+     * wrapping. `document.cookie` is captured too and set as the
+     * ServerRequest's own cookie params: Gesso's session-cookie
+     * security-scheme check reads
+     * `ServerRequestInterface::getCookieParams()`, not a raw `Cookie`
+     * request header, and a same-origin fetch() never exposes the
+     * cookie it sent any other way.
+     *
+     * @param array<string, mixed>|null $jsonBody null omits the request body entirely (a GET/DELETE with no payload)
+     * @return array{request: ServerRequestInterface, response: ResponseInterface}
+     */
+    public static function apiFetchPsr7(
+        Webpage|PendingAwaitablePage|AwaitableWebpage $page,
+        string $httpMethod,
+        string $path,
+        ?array $jsonBody = null,
+        ?string $csrfToken = null,
+    ): array {
+        $url = self::baseUrl() . $path;
+        $hasBody = $jsonBody !== null;
+        $bodyExpr = $hasBody ? "atob('" . base64_encode(self::jsonEncode($jsonBody)) . "')" : 'undefined';
+        $csrfHeaderLine = $csrfToken !== null ? "'X-CSRF-Token': " . self::jsonEncode($csrfToken) . ",\n                " : '';
+        $js = <<<JS
+        fetch('{$url}', {
+            method: '{$httpMethod}',
+            headers: {
+                'Content-Type': 'application/json',
+                {$csrfHeaderLine}
+            },
+            body: {$bodyExpr}
+        }).then(async r => {
+            const headers = {};
+            r.headers.forEach((value, key) => { headers[key] = value; });
+            return JSON.stringify({status: r.status, headers: headers, body: await r.text(), cookie: document.cookie});
+        })
+        JS;
+
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new ExpectationFailedException(
+                "apiFetchPsr7 {$httpMethod} {$path} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (
+            ! is_array($decoded)
+            || ! is_int($decoded['status'] ?? null)
+            || ! is_array($decoded['headers'] ?? null)
+            || ! is_string($decoded['body'] ?? null)
+            || ! is_string($decoded['cookie'] ?? null)
+        ) {
+            throw new ExpectationFailedException(
+                "apiFetchPsr7 {$httpMethod} {$path} did not return the expected shape: " . var_export($result, true)
+            );
+        }
+
+        $responseHeaders = [];
+        foreach ($decoded['headers'] as $name => $value) {
+            if (is_string($name) && is_string($value)) {
+                $responseHeaders[$name] = $value;
+            }
+        }
+
+        $requestHeaders = [
+            'Content-Type' => 'application/json',
+        ];
+        if ($csrfToken !== null) {
+            $requestHeaders['X-CSRF-Token'] = $csrfToken;
+        }
+
+        $cookieParams = [];
+        foreach (explode(';', $decoded['cookie']) as $pair) {
+            $pair = trim($pair);
+            if ($pair === '') {
+                continue;
+            }
+            [$cookieName, $cookieValue] = array_pad(explode('=', $pair, 2), 2, '');
+            $cookieParams[$cookieName] = urldecode($cookieValue);
+        }
+
+        // The session cookie (CurrentConfig::sessionName, 'pwg_id' by
+        // default -- the exact name the spec's own sessionCookie security
+        // scheme documents) is set HttpOnly (SessionBootstrap.php),
+        // confirmed live via a real Set-Cookie response header --
+        // structurally invisible to document.cookie, a real browser
+        // security boundary, not a gap in this parsing. The fetch()
+        // above still sent it correctly (same-origin requests always
+        // attach HttpOnly cookies; only *reading* them back via JS is
+        // blocked), so a synthetic non-empty placeholder here is
+        // accurate, not a lie: Gesso's own apiKey-cookie security check
+        // (SecurityValidator::checkApiKeySatisfied()) only verifies
+        // presence/non-emptiness, never the real value -- it has no way
+        // to validate a real signed session either way. Whether the
+        // request was genuinely authenticated is independently proven by
+        // this test file's own real status-code/body assertions right
+        // next to this call, not by this presence check.
+        if (! isset($cookieParams['pwg_id']) || $cookieParams['pwg_id'] === '') {
+            $cookieParams['pwg_id'] = 'httponly-not-readable-from-js';
+        }
+
+        // $path, not $url: the real HTTP call above needs baseUrl()'s
+        // real host + any local subdirectory mount (e.g. this worktree's
+        // own /piwigo17) to actually reach the live server, but the spec's
+        // own `servers: url: /api/v1` has no way to know about that
+        // deployment-specific subdirectory -- Gesso matches operations by
+        // path alone, so the PSR-7 object handed to it must carry the
+        // logical, app-root-relative path, or every real call here 404s
+        // against the spec ("No matching path found").
+        $request = new ServerRequest($httpMethod, $path, $requestHeaders, $hasBody ? self::jsonEncode($jsonBody) : null);
+        $request = $request->withCookieParams($cookieParams);
+
+        $response = new Response($decoded['status'], $responseHeaders, $decoded['body']);
+
+        return [
+            'request' => $request,
+            'response' => $response,
+        ];
+    }
+
+    /**
      * POSTs to an arbitrary admin.php-style path through the SAME
      * authenticated browser session, via a same-origin fetch() executed in
      * the page — same rationale as apiFetch(), but for admin form-submission
@@ -2318,5 +2449,97 @@ final class BrowserTestHelpers
         unset($ch);
 
         return is_string($responseBody) ? $responseBody : '';
+    }
+
+    /**
+     * PSR-7-object-returning variant of `curlApi()`, for Gesso OpenAPI
+     * contract assertions against a call site that has no Playwright
+     * page at all (a fresh curl-only session, or a check that
+     * deliberately avoids browser overhead) -- `apiFetchPsr7()` above
+     * covers the in-page-fetch() call sites, this one covers curl's own.
+     * Same "build the request from what we already know we're sending,
+     * only the response needs capturing" reasoning.
+     *
+     * Tolerant of an empty/missing cookie jar (unlike `parseCookieJar()`,
+     * which throws on that) -- a public, unauthenticated endpoint's own
+     * curl call never receives a `Set-Cookie` header, so this must not
+     * fail the request/response validation over having no session
+     * cookie to report.
+     *
+     * @param array<string, mixed>|null $jsonBody null omits the request body entirely (a GET/DELETE with no payload)
+     * @return array{request: ServerRequestInterface, response: ResponseInterface}
+     */
+    public static function curlApiPsr7(string $cookieJar, string $httpMethod, string $path, ?array $jsonBody = null, ?string $csrfToken = null): array
+    {
+        assert($cookieJar !== '');
+        if ($httpMethod === '') {
+            throw new ExpectationFailedException('curlApiPsr7(): $httpMethod must not be empty');
+        }
+
+        $url = self::baseUrl() . $path;
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new ExpectationFailedException('curl_init failed');
+        }
+
+        $requestHeaderLines = self::testHeaders();
+        $requestHeaderLines[] = 'Content-Type: application/json';
+        if ($csrfToken !== null) {
+            $requestHeaderLines[] = 'X-CSRF-Token: ' . $csrfToken;
+        }
+
+        /** @var array<string, string> $responseHeaders */
+        $responseHeaders = [];
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $httpMethod);
+        if ($jsonBody !== null) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, self::jsonEncode($jsonBody));
+        }
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaderLines);
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function (mixed $curlHandle, string $headerLine) use (&$responseHeaders): int {
+            $trimmed = trim($headerLine);
+            $colonPos = strpos($trimmed, ':');
+            if ($colonPos !== false) {
+                $responseHeaders[trim(substr($trimmed, 0, $colonPos))] = trim(substr($trimmed, $colonPos + 1));
+            }
+
+            return strlen($headerLine);
+        });
+        $responseBody = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        $requestHeaders = [];
+        foreach ($requestHeaderLines as $line) {
+            [$name, $value] = array_pad(explode(':', $line, 2), 2, '');
+            $requestHeaders[trim($name)] = trim($value);
+        }
+
+        $cookieParams = [];
+        $cookieJarContents = is_file($cookieJar) ? file($cookieJar, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : false;
+        foreach ($cookieJarContents !== false ? $cookieJarContents : [] as $line) {
+            $fields = explode("\t", str_starts_with($line, '#HttpOnly_') ? substr($line, strlen('#HttpOnly_')) : $line);
+            if (count($fields) !== 7 || ($line[0] === '#' && ! str_starts_with($line, '#HttpOnly_'))) {
+                continue;
+            }
+            [, , , , , $cookieName, $cookieValue] = $fields;
+            $cookieParams[$cookieName] = $cookieValue;
+        }
+
+        // $path, not $url -- same reasoning as apiFetchPsr7()'s own
+        // identical substitution: the real curl call needs the full
+        // external URL, the PSR-7 object handed to Gesso needs the
+        // logical, app-root-relative path the spec actually documents.
+        $request = new ServerRequest($httpMethod, $path, $requestHeaders, $jsonBody !== null ? self::jsonEncode($jsonBody) : null);
+        $request = $request->withCookieParams($cookieParams);
+
+        $response = new Response($status, $responseHeaders, is_string($responseBody) ? $responseBody : '');
+
+        return [
+            'request' => $request,
+            'response' => $response,
+        ];
     }
 }

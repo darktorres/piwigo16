@@ -11,11 +11,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 it('returns a 401 problem+json for an anonymous visitor (no session at all)', function (): void {
     $page = H::visitPwg($this, '/identification.php');
 
-    $result = H::rawGet($page, '/api/v1/info');
+    $exchange = H::apiFetchPsr7($page, 'GET', '/api/v1/info');
+    $this->assertPsr7ExchangeMatchesOpenApiSchema($exchange['request'], $exchange['response']);
 
-    expect($result['status'])
+    expect($exchange['response']->getStatusCode())
         ->toBe(401);
-    $decoded = json_decode($result['body'], true);
+    $decoded = json_decode((string) $exchange['response']->getBody(), true);
     $body = is_array($decoded) ? $decoded : [];
     expect($body['title'] ?? null)
         ->toBe('Unauthorized');
@@ -24,11 +25,12 @@ it('returns a 401 problem+json for an anonymous visitor (no session at all)', fu
 it('returns real installation counts as correctly-typed JSON for a logged-in admin', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = H::rawGet($page, '/api/v1/info');
+    $exchange = H::apiFetchPsr7($page, 'GET', '/api/v1/info');
+    $this->assertPsr7ExchangeMatchesOpenApiSchema($exchange['request'], $exchange['response']);
 
-    expect($result['status'])
+    expect($exchange['response']->getStatusCode())
         ->toBe(200);
-    $decoded = json_decode($result['body'], true);
+    $decoded = json_decode((string) $exchange['response']->getBody(), true);
     $body = is_array($decoded) ? $decoded : [];
     expect($body['version'])->toBe(AppInfo::VERSION)
         ->and($body['nbElements'])->toBeInt()

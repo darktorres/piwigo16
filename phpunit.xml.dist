@@ -27,4 +27,12 @@
             <directory>src/Piwigo</directory>
         </include>
     </source>
+
+    <extensions>
+        <bootstrap class="Studio\Gesso\PHPUnit\OpenApiCoverageExtension">
+            <parameter name="spec_base_path" value="openapi"/>
+            <parameter name="specs" value="openapi"/>
+            <parameter name="strip_prefixes" value="/api/v1"/>
+        </bootstrap>
+    </extensions>
 </phpunit>

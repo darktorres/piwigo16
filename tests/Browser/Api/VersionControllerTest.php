@@ -45,6 +45,20 @@ it('returns the real app version as JSON, no envelope, no auth required', functi
         ->toBe([
             'version' => AppInfo::VERSION,
         ]);
+
+    // Same real request, wrapped as PSR-7 for the OpenAPI contract check --
+    // no Playwright page exists in this file at all, so this goes through
+    // curlApiPsr7() (curlApi()'s own PSR-7 counterpart), not apiFetchPsr7().
+    // The 404/405 tests below deliberately aren't wired the same way: they
+    // exercise routing behavior for an unmatched path/method, neither of
+    // which has a matching operation in the spec to validate against.
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_openapi_version_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+    $exchange = H::curlApiPsr7($cookieJar, 'GET', '/api/v1/version');
+    @unlink($cookieJar);
+    $this->assertPsr7ExchangeMatchesOpenApiSchema($exchange['request'], $exchange['response']);
 });
 
 it('returns an RFC 9457 problem+json 404 for an unmatched /api/v1 path', function (): void {

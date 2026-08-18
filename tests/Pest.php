@@ -3,9 +3,22 @@
 declare(strict_types=1);
 
 use Piwigo\Tests\Support\DbTransactionTestOverride;
+use Piwigo\Tests\Support\OpenApiContractAssertions;
 
 uses()
     ->in('tests/Arch', 'tests/Integration', 'tests/Contract', 'tests/Browser');
+
+/**
+ * Mixes Gesso's PSR-7 OpenAPI assertion trait into every plain-functional
+ * Pest test file under tests/Browser/Api -- OpenApiCoverageExtension
+ * (phpunit.xml.dist) already configured the spec loader at bootstrap, this
+ * just makes assertPsr7ExchangeMatchesOpenApiSchema() (and friends)
+ * callable as $this->... from inside an it()/test() closure in that
+ * directory, resolved to the 'openapi' spec via
+ * OpenApiContractAssertions::openApiSpec().
+ */
+uses(OpenApiContractAssertions::class)
+    ->in('Browser/Api');
 
 /**
  * Every Unit test runs inside one real, never-committed transaction:

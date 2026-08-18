@@ -365,6 +365,18 @@ foreach ($routes as $name => [$path, $needsAuth]) {
         $cookieJar = '';
 
         if ($needsAuth) {
+            if ($name === 'admin-user-activity') {
+                // Same reasoning as VisualRegressionTest.php, and same
+                // deliberate ordering (before login, not after -- see that
+                // file's own comment): every needsAuth route captured
+                // earlier in this same loop did its own real
+                // goldenHtmlLoginAsAdmin() login, and each one logs a real
+                // `activity` row (see H::truncateGuestActivity()'s own
+                // docblock), so this page's unpaginated row list (and its
+                // raw HTML) isn't deterministic without this.
+                H::truncateGuestActivity();
+            }
+
             $cookieJar = goldenHtmlLoginAsAdmin();
 
             if ($name === 'admin-history') {

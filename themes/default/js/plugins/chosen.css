@@ -4,8 +4,6 @@
   display: inline-block;
   vertical-align: middle;
   font-size: 13px;
-  zoom: 1;
-  *display: inline;
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;

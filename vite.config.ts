@@ -27,6 +27,10 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     manifest: true,
+    // Matches .browserslistrc's floor (docs/PLAN.md P35) -- esbuild target
+    // strings, not browserslist queries, so this can't just read the
+    // .browserslistrc file directly.
+    target: ["chrome94", "edge94", "firefox93", "safari15"],
     rollupOptions: {
       input: {
         // Placeholder only — 68 real entries land in P43.

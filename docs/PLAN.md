@@ -125,7 +125,7 @@ Three structural changes produced that drift:
 | P32 | Latte lint/format tooling | Done — enforcement is P44 | 11 |
 | P33 | Latte idiomatic modernization | Done — all 8 sub-items | 8 |
 | P34 | Event system rewrite | Done — all 5 items complete and verified, including all 6 named core hooks (see Epoch J) | 13 |
-| P35 | Browserslist decision + IE back-compat removal | Not started | 0 |
+| P35 | Browserslist decision + IE back-compat removal | Done | 1 |
 | P36 | Asset-pipeline foundation (ViteManifest) | Not started | 0 |
 | P37 | Typed page-data exposure (PHP half) | Not started | 0 |
 | P38 | Inline JS extraction | Not started | 0 |
@@ -1477,16 +1477,54 @@ file.
    per-upload insert site for the same "react to a newly-added element"
    capability -- no new class needed).
 
-**P35 — Browserslist decision + IE back-compat removal.** One phase, not
-two — the removal is the decision's mechanical consequence. Commit a
-`browserslist` config (none exists today, in neither `.browserslistrc`
-nor `package.json`), setting Vite's build target and confirming
-`tsconfig.json`'s `ES2022` lib target against it. Then remove what that
-obsoletes: `themes/default/js/pngfix.js` (an IE6 PNG-alpha shim) and its
-`<script>` reference, the IE conditional comments in `header.latte` and
-`local_head.latte`, the four IE7-specific fontello stylesheets, and the
-`-ms-filter`/`zoom:1`/`\9` rules across 11 files. Proven via
-`composer test:visual`.
+**P35 — Browserslist decision + IE back-compat removal.** Done. Committed
+`.browserslistrc` (Chrome/Edge ≥94, Firefox ≥93, Safari ≥15 — the
+evergreen floor that actually supports `tsconfig.json`'s existing
+`ES2022` target/lib, confirmed against it rather than picked
+independently), and mirrored it into `vite.config.ts`'s
+`build.target` as esbuild target strings (`browserslist` queries and
+esbuild targets aren't interchangeable, so this is a second, matching
+declaration, not a derived one). Removed everything that floor
+obsoletes: `themes/default/js/pngfix.js` (IE6 PNG-alpha shim) and its
+`<script>` reference in `header.latte`; the `fix-ie5-ie6.css`/
+`fix-ie7.css` files and their `<!--[if IE]>` links in `local_head.latte`
+(plus a dangling `admin/default/fix-ie7.css` link in `install.latte`
+that pointed at a file that no longer existed even before this phase);
+the four unreferenced IE7 fontello stylesheets
+(`fontello-ie7[-codes].css` ×2 theme copies). Also swept every
+`-ms-filter`, `zoom:1`/`*zoom:1`, `*`-hack property
+(`*display`/`*cursor`/`*margin-top`), and legacy
+`filter:progid(...)`/`filter:alpha(...)` declaration out of the 14
+vendored plugin/theme CSS files that had them (`theme.css`,
+`iconset.css`, `chosen.css`, `jquery.dataTables.css`,
+`jquery.jgrowl.css`, `jquery.Jcrop.css`, `jquery.ui.progressbar.css`,
+`selectize.clear/dark.css`, all 5 `colorbox/style*/colorbox.css`
+variants) — broader than the shorthand "`-ms-filter`/`zoom:1`/`\9`"
+description first used to scope this, once the real grep was run
+end to end; the modern (non-IE) vendor-prefixed declarations
+(`-webkit-`/`-moz-`/`-o-`) sitting alongside them were left alone as
+out of scope. Verified: brace-balance check on every edited CSS file,
+`bun run typecheck`/`lint:js` clean, then `composer test:visual` (66/66)
+and `GoldenHtmlSnapshotTest` regenerated for the pages whose rendered
+`<head>` lost the dead `<!--[if IE]>` markup.
+
+Running the full (unfiltered) `composer test:visual` for this also
+surfaced a genuine pre-existing latent bug unrelated to any of the
+above, in `admin-user-activity`'s own VR/golden-HTML baselines: every
+`needsAuth` route's `H::loginAsAdmin()` does a real, fresh POST login
+each time (confirmed via a live debug trace on
+`AuthService::logUser()`), and each one legitimately logs an `activity`
+row. `admin-user-activity` renders that table as a full unpaginated list
+(unlike `admin-dashboard`'s chart, which only needs deterministic weekly
+bucketing), so its row count — and rendered height — depended on how
+many other `needsAuth` routes happened to run before it, not on a fixed
+baseline; the committed baseline itself already carried ~20 such
+accumulated rows, meaning it was never actually deterministic, just
+never previously exercised by a full unfiltered run. Fixed the same way
+`admin-history` already handles the identical class of problem:
+`H::truncateGuestActivity()` (new), called right before
+`H::loginAsAdmin()` in both `VisualRegressionTest.php` and
+`GoldenHtmlSnapshotTest.php`.
 
 **P36 — Asset-pipeline foundation.** Retires `ScriptLoader`, `CssLoader`,
 `FileCombiner`, `Combinable`, `Script` and `Css` (~1,038 lines — the

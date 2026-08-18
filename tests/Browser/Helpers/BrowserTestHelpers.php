@@ -1681,6 +1681,38 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Deletes every ('login', performed_by = the guest pseudo-user) row
+     * from `activity` before a visual-regression screenshot of
+     * admin.php?page=user_activity. `performed_by` records who was making
+     * the request, not who the login was about (that's `object_id`) —
+     * confirmed live via a debug trace on AuthService::logUser(): every
+     * needsAuth route's H::loginAsAdmin() does a real, fresh POST to
+     * identification.php every single time (no session/cookie reuse), and
+     * that real login is logged with performed_by = guest (the requester's
+     * identity right before the login completes) and object_id = the
+     * admin user id, exactly matching AuthService::login()'s
+     * `login_failure_*` sibling calls a few lines above. That's correct,
+     * intentional behavior, not noise — but it also means this page's full
+     * unpaginated row list (and so its rendered height) is a function of
+     * how many other needsAuth routes happen to run before this one in
+     * VisualRegressionRoutes.php, not of this test's own baseline: a full
+     * `composer test:visual` run left 102 of these rows by the time this
+     * test ran. Same "freeze a narrow DB slice right before the
+     * screenshot" fix as truncateHistory() above; `performed_by = 2`
+     * matches Piwigo\Config\CurrentConfig::$guestId's default (2), and
+     * this fixture never overrides `guest_id` in `config`. The
+     * fixture-seeded rows (`performed_by = 1`, the real
+     * groups/users/tags/photos/albums content this baseline actually
+     * shows) are left untouched.
+     */
+    public static function truncateGuestActivity(): void
+    {
+        $db = self::connect();
+        self::dbQuery($db, "DELETE FROM activity WHERE action = 'login' AND performed_by = 2");
+        self::dbClose($db);
+    }
+
+    /**
      * Returns the pwg_token for the current session (must be logged in).
      */
     public static function pwgToken(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string

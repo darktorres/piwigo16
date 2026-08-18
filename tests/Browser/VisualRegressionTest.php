@@ -69,6 +69,16 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     screenshot) shares the same frozen clock as the chart's own window,
  *     keeping the chart's bubble positions deterministic regardless of
  *     which real calendar day the suite runs on.
+ *   - admin-user-activity renders that same `activity` table as a full,
+ *     unpaginated row list (unlike admin-dashboard's chart, which only
+ *     needs deterministic weekly bucketing) -- every needsAuth route's
+ *     H::loginAsAdmin() call above does a real, fresh login, and each one
+ *     legitimately logs its own row (`performed_by` = the pre-login guest
+ *     identity, not noise -- see H::truncateGuestActivity()'s own
+ *     docblock), so this page's row count depends on how many needsAuth
+ *     routes happen to run before it in this file. H::truncateGuestActivity()
+ *     wipes those accumulated rows right before this one screenshot,
+ *     same freeze-a-narrow-DB-slice approach as H::truncateHistory().
  */
 // notification.php mints a new per-request feed subscription ID (see
 // NotificationController::findAvailableFeedId()) -- but the rendered
@@ -91,6 +101,20 @@ $routes = require __DIR__ . '/Helpers/VisualRegressionRoutes.php';
 foreach ($routes as $name => [$path, $needsAuth]) {
     it("{$name} matches its visual baseline", function () use ($name, $path, $needsAuth): void {
         if ($needsAuth) {
+            if ($name === 'admin-user-activity') {
+                // See H::truncateGuestActivity()'s own docblock: every
+                // needsAuth route's H::loginAsAdmin() call does a real,
+                // fresh login, and each one logs a real `activity` row --
+                // so this page's row count (and rendered height) depends
+                // on how many other needsAuth routes ran earlier in this
+                // same suite invocation, not on this test's own baseline,
+                // without this. Deliberately BEFORE H::loginAsAdmin()
+                // below, not after (unlike admin-history's truncateHistory()
+                // call): the baseline includes this test's own login row,
+                // so only the *other* routes' accumulated rows get wiped.
+                H::truncateGuestActivity();
+            }
+
             $page = H::loginAsAdmin($this);
 
             if ($name === 'admin-history') {

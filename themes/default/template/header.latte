@@ -807,10 +807,6 @@
     {=getCombinedScripts('header')}
     <!-- END get_combined -->
 
-    <!--[if lt IE 7]>
-<script type="text/javascript" src="{$ROOT_URL}themes/default/js/pngfix.js"></script>
-<![endif]-->
-
     {if !empty($head_elements)}
       {foreach $head_elements as $elt}
         {$elt|noescape}

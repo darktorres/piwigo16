@@ -1,0 +1,7 @@
+# Floor: evergreen browsers with full ES2022 support (matches
+# tsconfig.json's compilerOptions.target/lib) -- see docs/PLAN.md P35.
+# No IE, no legacy Edge (EdgeHTML) -- both predate ES2022 entirely.
+Chrome >= 94
+Edge >= 94
+Firefox >= 93
+Safari >= 15

@@ -2034,10 +2034,10 @@ it('renders the legend/author/creation-date info block for a photo with a real c
 
     $commentMarker = 'Legend Comment ' . uniqid();
     $authorName = 'Legend Author ' . uniqid();
-    // single_value_mode defaults 'fill_if_empty' (WsDefaultMethods's own
-    // pwg.images.setInfo registration) -- a fresh upload's author/comment/
-    // date_creation columns are all NULL, so the default mode alone is
-    // enough here, no need to pass single_value_mode explicitly.
+    // singleValueMode defaults 'fillIfEmpty' (ImageUpdateInput's own
+    // default) -- a fresh upload's author/comment/date_creation columns
+    // are all NULL, so the default mode alone is enough here, no need to
+    // pass single_value_mode explicitly.
     $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
         'image_id' => (string) $imageId,
         'comment' => $commentMarker,

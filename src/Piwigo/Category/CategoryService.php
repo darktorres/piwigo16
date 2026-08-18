@@ -1942,7 +1942,7 @@ final readonly class CategoryService
 
     /**
      * @param int|string|null $parentId ws_categories_add() passes null by
-     *   default (WsParamType::INT param, unset by the caller), admin/cat_list.php
+     *   default (unset by the caller), admin/cat_list.php
      *   passes a raw, unvalidated $_GET['parent_id'] string
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
      *   `Controller\Api\Categories\CategoryCreateController` (the real

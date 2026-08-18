@@ -1,0 +1,302 @@
+/history/log:
+  post:
+    operationId: historyLog
+    tags:
+      - History
+    summary: Log a visit or download event
+    description: >-
+      Public endpoint -- no auth gate and no CSRF check. Fired on every
+      gallery page view or download, anonymous visitors included.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - imageId
+            properties:
+              imageId:
+                type: integer
+              catId:
+                type: [integer, 'null']
+                description: >-
+                  0 and omitted are both treated as "no category" --
+                  only a positive id attaches the visit to a category.
+              section:
+                type: [string, 'null']
+                description: >-
+                  One of the gallery's own recognized section names
+                  (plugin-widenable); an unrecognized value is silently
+                  ignored, treated as no section.
+              tagsString:
+                type: [string, 'null']
+                pattern: '^\d+(,\d+)*$'
+                description: Comma-separated tag ids.
+              isDownload:
+                type: boolean
+                default: false
+                description: True logs a "high" (download) visit, false a "picture" view.
+    responses:
+      '201':
+        description: Visit logged.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - logged
+              properties:
+                logged:
+                  type: boolean
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+/history/search:
+  get:
+    operationId: historySearch
+    tags:
+      - History
+    summary: Search the history log
+    description: >-
+      Filtered, paginated (300 rows/page) history log lines for the
+      admin history page. Never writes a `search` row itself --
+      `searchId`/`searchDetails` on a line refer to a pre-existing saved
+      search that the underlying row's own `history.search_id` column
+      may reference.
+    parameters:
+      - name: start
+        in: query
+        description: Inclusive start date filter.
+        schema:
+          type: string
+          format: date
+      - name: end
+        in: query
+        description: Inclusive end date filter.
+        schema:
+          type: string
+          format: date
+      - name: types[]
+        in: query
+        style: form
+        explode: true
+        description: >-
+          Restricts to these visit types; omitted or empty means every
+          type.
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - none
+              - picture
+              - high
+              - other
+      - name: userId
+        in: query
+        description: '`-1` (the default) means no user filter.'
+        schema:
+          type: integer
+          default: -1
+      - name: imageId
+        in: query
+        schema:
+          type: integer
+      - name: filename
+        in: query
+        description: '`*` is a wildcard, translated to a SQL `LIKE` `%`.'
+        schema:
+          type: string
+      - name: ip
+        in: query
+        description: '`*` is a wildcard, translated to a SQL `LIKE` `%`.'
+        schema:
+          type: string
+      - name: pageNumber
+        in: query
+        description: Zero-based page index, 300 rows/page.
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+    responses:
+      '200':
+        description: Matching history lines, newest first, one page.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - lines
+                - pageNumber
+                - maxPage
+                - summary
+              properties:
+                lines:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/HistoryLine'
+                pageNumber:
+                  type: integer
+                maxPage:
+                  type: integer
+                summary:
+                  type: object
+                  required:
+                    - nbLines
+                    - nbLinesText
+                    - filesizeMb
+                    - nbUsers
+                    - nbGuests
+                    - usersText
+                    - guestsText
+                    - members
+                  properties:
+                    nbLines:
+                      type: integer
+                    nbLinesText:
+                      type: string
+                      description: Pre-translated "N lines filtered" summary text.
+                    filesizeMb:
+                      type: integer
+                      description: Combined size, in MiB, of every "high" (download) line's image.
+                    nbUsers:
+                      type: integer
+                    nbGuests:
+                      type: integer
+                    usersText:
+                      type: string
+                      description: Pre-translated "N users" summary text.
+                    guestsText:
+                      type: string
+                      description: Pre-translated "N guests" summary text.
+                    members:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - userId
+                          - username
+                        properties:
+                          userId:
+                            type: integer
+                          username:
+                            type: [string, 'null']
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+components:
+  schemas:
+    HistorySearchDetails:
+      type: object
+      description: >-
+        The pre-existing saved search that this line's own `searchId`
+        refers to, reshaped for display -- not the raw stored rule set.
+      properties:
+        allwords:
+          type: [array, 'null']
+          items:
+            type: string
+        tags:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Tag names, not ids.
+        datePosted:
+          type: [string, 'null']
+        cat:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Category names, not ids.
+        author:
+          type: [array, 'null']
+          items:
+            type: string
+        addedBy:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Usernames, not ids.
+        filetypes:
+          description: >-
+            Stored verbatim from the saved search's own rule set; not
+            constrained to a specific shape here.
+    HistoryLine:
+      type: object
+      required:
+        - date
+        - dateFormatted
+        - time
+        - userId
+        - username
+        - ip
+        - section
+        - categoryId
+        - categoryName
+        - categoryPath
+        - searchId
+        - searchDetails
+        - tagIds
+        - tagNames
+        - imageId
+        - imageType
+        - imageLabel
+        - imageEditUrl
+        - imageThumbnailUrl
+      properties:
+        date:
+          type: [string, 'null']
+        dateFormatted:
+          type: [string, 'null']
+        time:
+          type: string
+        userId:
+          type: integer
+        username:
+          type: [string, 'null']
+        ip:
+          type: string
+        section:
+          type: [string, 'null']
+        categoryId:
+          type: [integer, 'null']
+        categoryName:
+          type: [string, 'null']
+        categoryPath:
+          type: [string, 'null']
+        searchId:
+          type: [integer, 'null']
+        searchDetails:
+          oneOf:
+            - $ref: '#/components/schemas/HistorySearchDetails'
+            - type: 'null'
+        tagIds:
+          type: array
+          items:
+            type: integer
+        tagNames:
+          type: array
+          items:
+            type: string
+        imageId:
+          type: [integer, 'null']
+        imageType:
+          type: [string, 'null']
+          enum:
+            - picture
+            - high
+            - other
+            - null
+        imageLabel:
+          type: [string, 'null']
+        imageEditUrl:
+          type: [string, 'null']
+          format: uri-reference
+        imageThumbnailUrl:
+          type: [string, 'null']
+          format: uri-reference

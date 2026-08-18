@@ -1,0 +1,94 @@
+openapi: 3.2.0
+info:
+  title: Piwigo REST API
+  version: '1.0'
+  description: >-
+    Piwigo's REST API, served under `/api/v1`. Every operation returns a
+    JSON body on success; every error path returns an RFC 9457
+    `application/problem+json` body ($ref'd throughout as `Problem`).
+
+    Authentication is a session cookie, obtained by `POST
+    /session/login` with either a real username/password or a
+    previously-issued API key (`pkid-<date>-<id>:<secret>` submitted as
+    `username`/`password`). There is no per-request `Authorization`
+    header mechanism -- once logged in, the session cookie is sent on
+    every subsequent request, browser-style.
+  license:
+    name: GPL-2.0-or-later
+    identifier: GPL-2.0-or-later
+servers:
+  - url: /api/v1
+    description: Same-origin Piwigo instance.
+security:
+  - sessionCookie: []
+tags:
+  - name: History
+    description: >-
+      Visit/download logging (`POST /history/log`, fired on every
+      gallery page view, anonymous visitors included) and the admin
+      history-log search page's own filtered query.
+paths:
+  /history/log:
+    $ref: 'paths/history.yaml#/~1history~1log'
+  /history/search:
+    $ref: 'paths/history.yaml#/~1history~1search'
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: pwg_id
+      description: >-
+        Set by a successful `POST /session/login`. The cookie name is
+        deployment-configurable (the `session_name` config key);
+        `pwg_id` is Piwigo's own default and is what a fresh install
+        uses.
+  schemas:
+    Problem:
+      type: object
+      description: RFC 9457 `application/problem+json` error body.
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: about:blank
+        title:
+          type: string
+          description: Short, human-readable summary of the problem.
+        status:
+          type: integer
+          description: The HTTP status code, repeated here for convenience.
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence.
+  responses:
+    BadRequest:
+      description: The request body is not valid JSON.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableEntity:
+      description: Well-formed request, semantically invalid input.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: No signed-in session (or an invalid/expired one).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: >-
+        Signed in, but lacking the required admin privilege, or (on a
+        mutating request) a missing/invalid `X-CSRF-Token` header.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

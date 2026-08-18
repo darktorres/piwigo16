@@ -1,0 +1,315 @@
+/groups:
+  get:
+    operationId: groupList
+    tags:
+      - Groups
+    summary: List every group
+    description: >-
+      No filter/pagination params yet, same current-scope deferral as
+      `GET /tags`.
+    responses:
+      '200':
+        description: Every group.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groups]
+              properties:
+                groups:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Group'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+  post:
+    operationId: groupCreate
+    tags:
+      - Groups
+    summary: Create a group
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, isDefault]
+            properties:
+              name:
+                type: string
+              isDefault:
+                type: boolean
+                description: New users are added to every default group automatically.
+    responses:
+      '201':
+        description: Group created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/groups/{id}:
+  patch:
+    operationId: groupUpdate
+    tags:
+      - Groups
+    summary: Update a group
+    description: >-
+      `name`/`isDefault` are both optional -- an omitted field means
+      "don't touch this field", not "clear it". `{id}` is
+      route-constrained to digits, 404s at the routing layer otherwise.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              isDefault:
+                type: boolean
+    responses:
+      '200':
+        description: Group updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+  delete:
+    operationId: groupDelete
+    tags:
+      - Groups
+    summary: Delete a group
+    description: >-
+      One group per call. Users and photos are not deleted. `{id}` is
+      route-constrained to digits, 404s at the routing layer otherwise.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Group deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/groups/{id}/actions/duplicate:
+  post:
+    operationId: groupDuplicate
+    tags:
+      - Groups
+    summary: Duplicate a group onto a new name, copying its members
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                description: The new group's name.
+    responses:
+      '201':
+        description: Group duplicated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/groups/{id}/actions/add-user:
+  post:
+    operationId: groupAddUser
+    tags:
+      - Groups
+    summary: Add members to a group
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserIdsBody'
+    responses:
+      '200':
+        description: Members added; the group's current state.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/groups/{id}/actions/remove-user:
+  post:
+    operationId: groupRemoveUser
+    tags:
+      - Groups
+    summary: Remove members from a group
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserIdsBody'
+    responses:
+      '200':
+        description: Members removed; the group's current state.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/groups/actions/merge:
+  post:
+    operationId: groupMerge
+    tags:
+      - Groups
+    summary: Merge one or more groups into a destination group
+    description: >-
+      Keeps the destination group; deletes every source group. Source
+      group rows are captured before deletion, so `deletedGroups`
+      reflects their state right before the merge.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [destinationGroupId, mergeGroupIds]
+            properties:
+              destinationGroupId:
+                type: integer
+              mergeGroupIds:
+                type: array
+                items:
+                  type: integer
+    responses:
+      '200':
+        description: Groups merged.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destinationGroup, deletedGroups]
+              properties:
+                destinationGroup:
+                  $ref: '#/components/schemas/Group'
+                deletedGroups:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Group'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: One or more of the given group ids doesn't exist.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+components:
+  schemas:
+    Group:
+      type: object
+      required: [id, name, isDefault, lastmodified, nbUsers]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isDefault:
+          type: boolean
+        lastmodified:
+          type: string
+        nbUsers:
+          type: integer
+    UserIdsBody:
+      type: object
+      required: [userIds]
+      properties:
+        userIds:
+          type: array
+          items:
+            type: integer

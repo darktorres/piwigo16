@@ -35,6 +35,8 @@ tags:
       activity (audit) log.
   - name: Tags
     description: Tag CRUD, merge/duplicate, and tag-filtered image listing.
+  - name: Groups
+    description: User-group CRUD, merge/duplicate, and membership management.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -77,6 +79,18 @@ paths:
     $ref: 'paths/tags.yaml#/~1tags~1{id}~1actions~1duplicate'
   /tags/actions/merge:
     $ref: 'paths/tags.yaml#/~1tags~1actions~1merge'
+  /groups:
+    $ref: 'paths/groups.yaml#/~1groups'
+  '/groups/{id}':
+    $ref: 'paths/groups.yaml#/~1groups~1{id}'
+  '/groups/{id}/actions/duplicate':
+    $ref: 'paths/groups.yaml#/~1groups~1{id}~1actions~1duplicate'
+  '/groups/{id}/actions/add-user':
+    $ref: 'paths/groups.yaml#/~1groups~1{id}~1actions~1add-user'
+  '/groups/{id}/actions/remove-user':
+    $ref: 'paths/groups.yaml#/~1groups~1{id}~1actions~1remove-user'
+  /groups/actions/merge:
+    $ref: 'paths/groups.yaml#/~1groups~1actions~1merge'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

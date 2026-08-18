@@ -38,6 +38,7 @@ use Piwigo\Users\Event\GetWebmasterMailAddress;
 use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\BasicUserRow;
 use Piwigo\Users\Projection\NotificationRecipient;
+use Piwigo\Users\Projection\UserAdminListingRow;
 use Piwigo\Users\Projection\UserInfo;
 use Piwigo\Users\Projection\UserInfoWithThemeName;
 use Piwigo\Users\Projection\UserListing;
@@ -2026,6 +2027,55 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             }
 
             $users[] = new UserListing($id, $username->value, $status);
+        }
+
+        return $users;
+    }
+
+    /**
+     * Every user's id/username/email/status/registration date, ordered by
+     * id -- `Command\UserListCommand`'s own real source. A user present in
+     * `users` but missing its `user_infos` row (the LEFT JOIN's own "no
+     * such row" case) still appears, with a null status/registrationDate,
+     * matching findStatusByIds()'s own established precedent for the same
+     * join shape (unlike findAllBasicInfo() above, which skips it).
+     *
+     * @return list<UserAdminListingRow>
+     */
+    public function findAllForAdminListing(): array
+    {
+        $rows = $this->em
+            ->createQueryBuilder()
+            ->select('u.id AS id', 'u.username AS username', 'u.mailAddress AS mailAddress', 'ui.status AS status', 'ui.registrationDate AS registrationDate')
+            ->from(UserEntity::class, 'u')
+            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.user')
+            ->orderBy('u.id', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $users = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $username = $row['username'] ?? null;
+            if (! $id instanceof UserId || ! $username instanceof Username) {
+                continue;
+            }
+
+            $mailAddress = $row['mailAddress'] ?? null;
+            $status = $row['status'] ?? null;
+            $registrationDate = $row['registrationDate'] ?? null;
+
+            $users[] = new UserAdminListingRow(
+                $id,
+                $username,
+                $mailAddress instanceof Email ? $mailAddress : null,
+                $status instanceof UserStatus ? $status : null,
+                $registrationDate instanceof SqlDateTime ? $registrationDate : null,
+            );
         }
 
         return $users;

@@ -5,94 +5,29 @@ declare(strict_types=1);
 namespace Piwigo\Command;
 
 use Override;
-use Piwigo\Db\DbCredentials;
+use Piwigo\Users\Projection\UserAdminListingRow;
+use Piwigo\Users\UserRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Process\Process;
 
-/**
- * New CLI-only capability (no web equivalent). Reads via a raw `mysql`/
- * `psql` client shell-out (env-var credentials, Piwigo\Db\DbCredentials)
- * rather than a Users domain service. Doctrine DBAL and a
- * real Users domain service (Piwigo\Users\UserRepository/UserService) are
- * usable from CLI commands (see sibling commands
- * in this directory); this command has not yet been migrated to use them.
- *
- * Without branching per platform, this would always shell out to
- * `mysql` regardless of `PIWIGO_DB_DRIVER`, so `bin/piwigo user:list`
- * against a real Postgres install wouldn't just produce wrong output, it
- * would hang for the full 60s Process timeout (the `mysql` binary has no
- * idea how to speak the Postgres wire protocol on a Postgres port) and
- * then fail outright. Branches per platform, matching every other real
- * CLI-shelling call site in this codebase (IntegrationTestCase, RegenerateFixtureTest).
- */
 #[AsCommand(name: 'user:list', description: 'List registered users (id, username, email, status, registered)')]
 final class UserListCommand extends Command
 {
+    public function __construct(
+        private readonly UserRepository $repo,
+    ) {
+        parent::__construct();
+    }
+
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $credentials = DbCredentials::fromEnv();
+        $users = $this->repo->findAllForAdminListing();
 
-        $query = <<<SQL
-            SELECT u.id, u.username, u.mail_address, i.status, i.registration_date
-            FROM users u LEFT JOIN user_infos i ON i.user_id = u.id
-            ORDER BY u.id
-            SQL;
-
-        if ($credentials->driver === 'pgsql') {
-            $process = new Process(
-                [
-                    'psql',
-                    ...$credentials->toPsqlArgs(),
-                    '-d',
-                    $credentials->database,
-                    '-t',
-                    '-A',
-                    '-F',
-                    "\t",
-                    '-c',
-                    $query,
-                ],
-                null,
-                $credentials->password !== '' ? array_merge(getenv(), [
-                    'PGPASSWORD' => $credentials->password,
-                ]) : null,
-            );
-        } else {
-            $process = new Process([
-                'mysql',
-                ...$credentials->toMysqlArgs(),
-                '--batch',
-                '--raw',
-                '-N',
-                $credentials->database,
-                '-e',
-                $query,
-            ]);
-        }
-
-        $process->setTimeout(60);
-        $process->run();
-
-        if (! $process->isSuccessful()) {
-            $output->writeln('<error>Query failed: ' . $process->getErrorOutput() . '</error>');
-
-            return Command::FAILURE;
-        }
-
-        $rows = [];
-        foreach (explode("\n", trim($process->getOutput())) as $line) {
-            if ($line === '') {
-                continue;
-            }
-            $rows[] = explode("\t", $line);
-        }
-
-        if ($rows === []) {
+        if ($users === []) {
             $output->writeln('No users found.');
 
             return Command::SUCCESS;
@@ -100,7 +35,16 @@ final class UserListCommand extends Command
 
         $table = new Table($output);
         $table->setHeaders(['ID', 'Username', 'Email', 'Status', 'Registered']);
-        $table->setRows($rows);
+        $table->setRows(array_map(
+            static fn (UserAdminListingRow $row): array => [
+                $row->id->value,
+                $row->username->value,
+                $row->mailAddress->value ?? '',
+                $row->status->value ?? '',
+                (string) ($row->registrationDate ?? ''),
+            ],
+            $users,
+        ));
         $table->render();
 
         return Command::SUCCESS;

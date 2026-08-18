@@ -7,14 +7,13 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Command\UserListCommand;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Users\UserRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-/**
- * New CLI-only capability (no web equivalent). Reads via a raw
- * `mysql`/`psql` client shell-out, so
- * this needs a real DB, hence Integration tier rather than Unit.
- */
 final class UserListCommandTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
@@ -32,38 +31,25 @@ final class UserListCommandTest extends IntegrationTestCase
         }
     }
 
+    private function makeCommand(): UserListCommand
+    {
+        return new UserListCommand(new UserRepository(
+            EntityManagerFactory::build(DbConnection::build()),
+            EventDispatcherTestFactory::get(),
+            CurrentConfigTestFactory::get(),
+        ));
+    }
+
     public function testListsUsersFromTheFixture(): void
     {
-        $command = new UserListCommand();
-        $tester = new CommandTester($command);
+        $tester = new CommandTester($this->makeCommand());
 
         $exitCode = $tester->execute([]);
 
         self::assertSame(Command::SUCCESS, $exitCode);
         self::assertStringContainsString('ID', $tester->getDisplay());
         self::assertStringContainsString('Username', $tester->getDisplay());
-    }
-
-    public function testReportsAFormattedErrorAndFailsWhenTheMysqlQueryItselfFails(): void
-    {
-        // Same "point PIWIGO_DB_PORT at a closed local port for a fast,
-        // real connection-refused failure" trick already established this
-        // session for BackupCreateCommandTest -- DbCredentials::fromEnv()
-        // (not the memoized current()) picks up the change immediately.
-        $originalPort = getenv('PIWIGO_DB_PORT');
-        putenv('PIWIGO_DB_PORT=1');
-
-        try {
-            $command = new UserListCommand();
-            $tester = new CommandTester($command);
-
-            $exitCode = $tester->execute([]);
-
-            self::assertSame(Command::FAILURE, $exitCode);
-            self::assertStringContainsString('Query failed:', $tester->getDisplay());
-        } finally {
-            putenv($originalPort === false ? 'PIWIGO_DB_PORT' : 'PIWIGO_DB_PORT=' . $originalPort);
-        }
+        self::assertStringContainsString('Status', $tester->getDisplay());
     }
 
     public function testReportsNoUsersFoundAgainstAnEmptyDatabase(): void
@@ -91,8 +77,7 @@ final class UserListCommandTest extends IntegrationTestCase
         $this->enableForeignKeyChecks($conn);
 
         try {
-            $command = new UserListCommand();
-            $tester = new CommandTester($command);
+            $tester = new CommandTester($this->makeCommand());
 
             $exitCode = $tester->execute([]);
 

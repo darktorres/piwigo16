@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Migrations;
 
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use LogicException;
 use Override;
 
 /**
@@ -111,6 +113,16 @@ final class Version20260804122303 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $isPostgres = $this->platform instanceof PostgreSQLPlatform;
+
+        // Explicit, not a silent "anything non-Postgres gets MySQL syntax"
+        // fallthrough -- see Version20260804122300's own up() for why. This
+        // migration's own ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY
+        // approach doesn't work on SQLite at all regardless (no ALTER-based
+        // constraint addition there), so an unrecognized platform must fail
+        // loudly here too, not silently emit backtick-quoted MySQL DDL.
+        if (! $isPostgres && ! $this->platform instanceof AbstractMySQLPlatform) {
+            throw new LogicException(self::class . ' has no migration path for platform ' . $this->platform::class);
+        }
 
         foreach (self::foreignKeys() as [$table, $constraintName, $column, $refTable, $refColumn, $onDelete, $needsPostgresIndex]) {
             if ($isPostgres) {

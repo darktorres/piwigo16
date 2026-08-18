@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Migrations;
 
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use LogicException;
 use Override;
 
 /**
@@ -100,7 +102,17 @@ final class Version20260804122300 extends AbstractMigration
             return;
         }
 
-        $this->upMysql();
+        if ($this->platform instanceof AbstractMySQLPlatform) {
+            $this->upMysql();
+
+            return;
+        }
+
+        // Explicit, not a silent `else { upMysql() }` fallthrough --
+        // an unrecognized platform (e.g. a real SQLite connection,
+        // before this migration set gains its own upSqlite()) must fail
+        // loudly here, not silently run MySQL-flavored DDL against it.
+        throw new LogicException(self::class . ' has no migration path for platform ' . $this->platform::class);
     }
 
     #[Override]

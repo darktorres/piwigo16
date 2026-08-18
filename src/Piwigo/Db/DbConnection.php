@@ -7,6 +7,7 @@ namespace Piwigo\Db;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Piwigo\Core\Kernel;
+use SQLite3;
 
 /**
  * Factory for the shared Doctrine DBAL connection.
@@ -93,7 +94,50 @@ final class DbConnection
 
     public static function build(): Connection
     {
-        return self::$testOverride ?? DriverManager::getConnection(self::params());
+        if (self::$testOverride instanceof Connection) {
+            return self::$testOverride;
+        }
+
+        $params = self::params();
+        $conn = DriverManager::getConnection($params);
+
+        if ($params['driver'] === 'sqlite3') {
+            self::initSqliteConnection($conn);
+        }
+
+        return $conn;
+    }
+
+    /**
+     * SQLite-specific per-connection setup, run once right after a real
+     * connection opens (this class opens a fresh connection per request,
+     * see its own docblock, so this runs on every request, matching
+     * MYSQLI_INIT_COMMAND's own "every (re)connect" role for MySQL's
+     * pinned sql_mode).
+     *
+     * `PRAGMA foreign_keys = ON`: SQLite disables FK enforcement by
+     * default per-connection, unlike MySQL/PostgreSQL where it's always
+     * on -- a real, easy-to-miss gotcha, not a stylistic default.
+     *
+     * REGEXP UDF: DBAL's `SQLitePlatform::getRegexpExpression()` emits
+     * the literal SQL text `REGEXP`, assuming SQLite has REGEXP support
+     * built in -- it doesn't; an unregistered `REGEXP` query fails at
+     * runtime with "no such function: REGEXP". `SQLite3::createFunction()`
+     * (verified live against a real connection before writing this)
+     * registers a PHP-callback-backed `regexp` function SQLite then
+     * calls for every `REGEXP` comparison, closing that gap without
+     * needing an external SQLite extension.
+     */
+    private static function initSqliteConnection(Connection $conn): void
+    {
+        $native = $conn->getNativeConnection();
+        if ($native instanceof SQLite3) {
+            $native->createFunction('regexp', static function (string $pattern, ?string $subject): bool {
+                return $subject !== null && preg_match('/' . str_replace('/', '\/', $pattern) . '/ui', $subject) === 1;
+            });
+        }
+
+        $conn->executeStatement('PRAGMA foreign_keys = ON');
     }
 
     /**
@@ -112,22 +156,38 @@ final class DbConnection
      * against DriverManager::getConnection()'s own sealed parameter shape
      * at the build() call site.
      *
-     * Native drivers only (mysqli, pgsql) -- not pdo_mysql/pdo_pgsql,
-     * matching docs/REFERENCE.md's native-platform-first library policy
-     * and the precedent already set by mysqli. MariaDB speaks the same
-     * wire protocol as MySQL, so it shares the mysqli branch; there is no
-     * separate 'mariadb' driver value.
+     * Native drivers only (mysqli, pgsql, sqlite3) -- not pdo_mysql/
+     * pdo_pgsql/pdo_sqlite, matching docs/REFERENCE.md's
+     * native-platform-first library policy and the precedent already set
+     * by mysqli. MariaDB speaks the same wire protocol as MySQL, so it
+     * shares the mysqli branch; there is no separate 'mariadb' driver
+     * value. `sqlite3` (DBAL's `Driver\SQLite3\Driver`, wrapping PHP's
+     * native `SQLite3` class) was chosen over `pdo_sqlite` for the same
+     * native-first reason, verified directly against a real connection
+     * before committing to it: `SQLite3::createFunction()` (used in
+     * {@see initSqliteConnection()}) registers a REGEXP UDF exactly like
+     * PDO's own `sqliteCreateFunction()` would.
      *
      * `driverOptions` carries a bool (MYSQLI_OPT_INT_AND_FLOAT_NATIVE) and a
      * string (MYSQLI_INIT_COMMAND), hence the `bool|string` value type.
      *
-     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool|string>, host?: string, unix_socket?: string, port?: int}|array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
+     * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool|string>, host?: string, unix_socket?: string, port?: int}|array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}|array{driver: 'sqlite3', path: string}
      */
     public static function params(): array
     {
         $credentials = self::dbCredentials();
         $host = $credentials->host;
         $port = $credentials->port;
+
+        if ($credentials->driver === 'sqlite3') {
+            // $database doubles as the SQLite file path for this driver
+            // -- see DbCredentials's own docblock. host/user/password/port
+            // are meaningless for a file-based target and stay unused.
+            return [
+                'driver' => 'sqlite3',
+                'path' => $credentials->database,
+            ];
+        }
 
         if ($credentials->driver === 'pgsql') {
             // pg_connect() accepts a Unix socket directory directly via

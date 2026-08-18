@@ -39,6 +39,13 @@ use SensitiveParameter;
  * construction exactly, so backup/restore commands shell out to the
  * mysql/mysqldump client the same proven way the existing dev tooling
  * already does.
+ *
+ * `driver: 'sqlite3'` (DBAL's own native SQLite3 driver, matching this
+ * codebase's established native-platform-first policy -- mysqli/pgsql,
+ * not pdo_mysql/pdo_pgsql, see `DbConnection`'s own docblock) is a real,
+ * third supported value -- `$database` doubles as the SQLite file path
+ * for it, not a schema/database name; `host`/`user`/`password`/`port`
+ * stay unused.
  */
 final class DbCredentials
 {

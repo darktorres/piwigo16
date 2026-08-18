@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Migrations;
 
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use LogicException;
 use Override;
 
 /**
@@ -52,7 +54,15 @@ final class Version20260804122302 extends AbstractMigration
             return;
         }
 
-        $this->upMysql();
+        if ($this->platform instanceof AbstractMySQLPlatform) {
+            $this->upMysql();
+
+            return;
+        }
+
+        // Explicit, not a silent `else { upMysql() }` fallthrough -- see
+        // Version20260804122300's own up() for why.
+        throw new LogicException(self::class . ' has no migration path for platform ' . $this->platform::class);
     }
 
     #[Override]

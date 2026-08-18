@@ -1,0 +1,69 @@
+# Fixes a real bug in pestphp/pest 5.1.1's own forked copy of
+# paratest's coordinator, Plugins\Parallel\Paratest\WrapperRunner::run():
+# it calls TestResultFacade::init(); EventFacade::instance()->seal();
+# itself, immediately before constructing SuiteLoader -- whose own
+# constructor is precisely where PHPUnit's ExtensionBootstrapper runs
+# every registered extension's bootstrap() method. By the time that
+# loop runs, PHPUnit\Event\Facade is already sealed by this premature
+# call, so ANY extension that calls $facade->registerSubscriber() during
+# its own bootstrap (the standard, documented way for a PHPUnit
+# extension to register an event subscriber) throws
+# PHPUnit\Event\Exception\EventFacadeIsSealedException.
+#
+# Confirmed live on this codebase: studio-design/gesso's
+# OpenApiCoverageExtension (the extension behind the "OpenAPI Contract
+# Test Coverage" report every test run prints) throws exactly this
+# under `composer test`/`--parallel`, in every worker process, every
+# run. PHPUnit converts the uncaught exception into a non-fatal
+# testRunnerTriggeredWarningEvents() entry rather than crashing --
+# but phpunit.xml's own failOnPhpunitWarning setting silently defaults
+# to true in PHPUnit's own XML config loader when not explicitly set
+# (confirmed directly against
+# vendor/phpunit/phpunit/src/TextUI/Configuration/Xml/Loader.php --
+# unlike its failOnPhpunitDeprecation sibling, which defaults false),
+# so this one warning event fails the exit code of the *entire* test
+# run, even though every individual test passes and nothing else is
+# wrong. `composer test`'s own "N passed" summary with a silent exit
+# code 1 was the exact symptom this patch fixes.
+#
+# Confirmed via 3 real, side-by-side references that this is squarely
+# Pest's own bug, not paratest's, not PHPUnit's, and not Gesso's:
+# vendor/phpunit/phpunit/src/TextUI/Application.php (the real,
+# single-process bootstrap) bootstraps every extension first and seals
+# EventFacade several real steps later; brianium/paratest's own
+# (unmodified, reused directly by this same Pest fork for every other
+# file in this directory) SuiteLoader.php runs the identical
+# ExtensionBootstrapper loop first, and only calls
+# TestResultFacade::init(); EventFacade::instance()->seal(); itself at
+# the very end of its own constructor -- matching Application.php's
+# ordering exactly. Pest's own WrapperRunner::run() duplicates that
+# exact same init+seal pair one step too early, before SuiteLoader ever
+# gets constructed. Facade::seal() is idempotent (confirmed by reading
+# it directly -- just sets a bool and re-emits one event), so
+# SuiteLoader's own later, correctly-ordered seal() call becomes a
+# harmless no-op once this patch removes Pest's own premature one;
+# nothing between the removed lines and SuiteLoader's construction two
+# lines later reads sealed-facade-dependent state.
+#
+# No known upstream fix found, and a search turned up no existing
+# report matching this exact symptom (EventFacade/seal/SuiteLoader/
+# registerSubscriber) -- likely unreported. pestphp/pest v5.1.1 is the
+# latest release (confirmed via `composer show pestphp/pest --all`), so
+# this isn't something a version bump on our end would resolve.
+#
+# The fix: delete Pest's own premature TestResultFacade::init();
+# EventFacade::instance()->seal(); pair from run(), letting
+# SuiteLoader's own already-correct internal call (after its own
+# extension-bootstrap loop finishes) be the only one that runs.
+
+--- a/src/Plugins/Parallel/Paratest/WrapperRunner.php
++++ b/src/Plugins/Parallel/Paratest/WrapperRunner.php
+@@ -151,8 +151,6 @@
+     {
+         $directory = dirname(__DIR__);
+         ExcludeList::addDirectory($directory);
+-        TestResultFacade::init();
+-        EventFacade::instance()->seal();
+         $suiteLoader = new SuiteLoader(
+             $this->options,
+             $this->output,

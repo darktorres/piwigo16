@@ -33,6 +33,8 @@ tags:
     description: >-
       Version, aggregate gallery stats, disk cache size, and the admin
       activity (audit) log.
+  - name: Tags
+    description: Tag CRUD, merge/duplicate, and tag-filtered image listing.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -63,11 +65,84 @@ paths:
     $ref: 'paths/info-system.yaml#/~1cache-size'
   /activity:
     $ref: 'paths/info-system.yaml#/~1activity'
+  /tags:
+    $ref: 'paths/tags.yaml#/~1tags'
+  /tags/available:
+    $ref: 'paths/tags.yaml#/~1tags~1available'
+  /tags/images:
+    $ref: 'paths/tags.yaml#/~1tags~1images'
+  '/tags/{id}':
+    $ref: 'paths/tags.yaml#/~1tags~1{id}'
+  '/tags/{id}/actions/duplicate':
+    $ref: 'paths/tags.yaml#/~1tags~1{id}~1actions~1duplicate'
+  /tags/actions/merge:
+    $ref: 'paths/tags.yaml#/~1tags~1actions~1merge'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:
     $ref: 'paths/history.yaml#/~1history~1search'
 components:
+  parameters:
+    fMinRate:
+      name: fMinRate
+      in: query
+      description: Shared images-table range filter (11 `f*` params total).
+      schema:
+        type: number
+    fMaxRate:
+      name: fMaxRate
+      in: query
+      schema:
+        type: number
+    fMinHit:
+      name: fMinHit
+      in: query
+      schema:
+        type: integer
+    fMaxHit:
+      name: fMaxHit
+      in: query
+      schema:
+        type: integer
+    fMinRatio:
+      name: fMinRatio
+      in: query
+      schema:
+        type: number
+    fMaxRatio:
+      name: fMaxRatio
+      in: query
+      schema:
+        type: number
+    fMaxLevel:
+      name: fMaxLevel
+      in: query
+      schema:
+        type: integer
+    fMinDateAvailable:
+      name: fMinDateAvailable
+      in: query
+      schema:
+        type: string
+        format: date
+    fMaxDateAvailable:
+      name: fMaxDateAvailable
+      in: query
+      schema:
+        type: string
+        format: date
+    fMinDateCreated:
+      name: fMinDateCreated
+      in: query
+      schema:
+        type: string
+        format: date
+    fMaxDateCreated:
+      name: fMaxDateCreated
+      in: query
+      schema:
+        type: string
+        format: date
   securitySchemes:
     sessionCookie:
       type: apiKey

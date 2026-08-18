@@ -1,0 +1,504 @@
+/tags:
+  get:
+    operationId: tagList
+    tags:
+      - Tags
+    summary: List every tag (admin)
+    description: >-
+      Admin only, permissions not taken into account -- `GET
+      /tags/available` is the separate, permission-filtered,
+      public-browsing equivalent.
+    responses:
+      '200':
+        description: Every tag.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tags]
+              properties:
+                tags:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TagAdmin'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+  post:
+    operationId: tagCreate
+    tags:
+      - Tags
+    summary: Create a tag
+    description: One tag per call -- batch creation isn't supported.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+    responses:
+      '201':
+        description: Tag created.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, urlName, message]
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                urlName:
+                  type: string
+                message:
+                  type: string
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/tags/available:
+  get:
+    operationId: tagAvailableList
+    tags:
+      - Tags
+    summary: List tags visible to the current user
+    description: >-
+      Public, permission-filtered: tags with no visible image are
+      excluded; each tag carries a `counter` (visible image count) and
+      a browsing `url`.
+    security: []
+    parameters:
+      - name: sortByCounter
+        in: query
+        description: '`true` sorts by image count descending; otherwise alphabetical.'
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'false'
+    responses:
+      '200':
+        description: Every visible tag.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tags]
+              properties:
+                tags:
+                  type: array
+                  items:
+                    allOf:
+                      - $ref: '#/components/schemas/TagAdmin'
+                      - type: object
+                        required: [counter, url]
+                        properties:
+                          counter:
+                            type: integer
+                          url:
+                            type: string
+                            format: uri-reference
+/tags/images:
+  get:
+    operationId: tagImages
+    tags:
+      - Tags
+    summary: List images matching one or more tags
+    description: >-
+      Public, permission-filtered. A collection-level query (matching
+      via `tagIds`/`tagUrlNames`/`tagNames`), not a single-tag
+      sub-resource.
+    security: []
+    parameters:
+      - name: tagIds[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: integer
+      - name: tagUrlNames[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: tagNames[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: tagModeAnd
+        in: query
+        description: '`true` requires every given tag; otherwise any one matches.'
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'false'
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          default: 100
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: order
+        in: query
+        description: >-
+          Comma-separated `field [asc|desc]` tokens against a fixed
+          server-side vocabulary (e.g. `id`, `file`, `name`, `hit`,
+          `rating_score`, `date_creation`, `date_available`, `random`,
+          `rank`); unrecognized tokens are silently dropped.
+        schema:
+          type: string
+      - $ref: '../openapi.yaml#/components/parameters/fMinRate'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxRate'
+      - $ref: '../openapi.yaml#/components/parameters/fMinHit'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxHit'
+      - $ref: '../openapi.yaml#/components/parameters/fMinRatio'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxRatio'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxLevel'
+      - $ref: '../openapi.yaml#/components/parameters/fMinDateAvailable'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxDateAvailable'
+      - $ref: '../openapi.yaml#/components/parameters/fMinDateCreated'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxDateCreated'
+    responses:
+      '200':
+        description: One page of matching images.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images, page, perPage, totalCount]
+              properties:
+                images:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TagImage'
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                totalCount:
+                  type: integer
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/tags/{id}:
+  patch:
+    operationId: tagRename
+    tags:
+      - Tags
+    summary: Rename a tag
+    description: '`{id}` is route-constrained to digits, 404s at the routing layer otherwise.'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+    responses:
+      '200':
+        description: Tag renamed.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, urlName, nameRaw, altNames]
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                  description: Post render-filter display name.
+                urlName:
+                  type: string
+                nameRaw:
+                  type: string
+                altNames:
+                  type: array
+                  description: >-
+                    Plugin-populated alternate names; no in-tree handler
+                    populates this today, so it's always empty in
+                    practice.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: The new name is already taken by another tag.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    operationId: tagDelete
+    tags:
+      - Tags
+    summary: Delete a tag
+    description: >-
+      One tag per call. `{id}` is route-constrained to digits, 404s at
+      the routing layer otherwise.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Tag deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/tags/{id}/actions/duplicate:
+  post:
+    operationId: tagDuplicate
+    tags:
+      - Tags
+    summary: Duplicate a tag onto a new name, copying its image associations
+    description: '`{id}` is route-constrained to digits, 404s at the routing layer otherwise.'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                description: The new tag's name.
+    responses:
+      '201':
+        description: Tag duplicated.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, urlName, count]
+              properties:
+                id:
+                  type: integer
+                  description: The new tag's id.
+                name:
+                  type: string
+                urlName:
+                  type: string
+                count:
+                  type: integer
+                  description: Number of image associations copied.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: The new name is already taken by another tag.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/tags/actions/merge:
+  post:
+    operationId: tagMerge
+    tags:
+      - Tags
+    summary: Merge one or more tags into a destination tag
+    description: Keeps the destination tag; deletes every source tag.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [destinationTagId, mergeTagIds]
+            properties:
+              destinationTagId:
+                type: integer
+              mergeTagIds:
+                type: array
+                items:
+                  type: integer
+    responses:
+      '200':
+        description: Tags merged.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destinationTagId, deletedTagIds, imagesInMergedTag]
+              properties:
+                destinationTagId:
+                  type: integer
+                deletedTagIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: Echoes the requested `mergeTagIds` verbatim.
+                imagesInMergedTag:
+                  type: array
+                  items:
+                    type: integer
+                  description: Every image id now associated with the destination tag.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: One or more of the given tag ids doesn't exist.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+components:
+  schemas:
+    TagAdmin:
+      type: object
+      required: [id, name, urlName, nameRaw, lastmodified]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          description: Post render-filter display name.
+        urlName:
+          type: string
+        nameRaw:
+          type: string
+        lastmodified:
+          type: string
+    TagImage:
+      type: object
+      required:
+        - rank
+        - isFavorite
+        - id
+        - width
+        - height
+        - hit
+        - file
+        - name
+        - comment
+        - dateCreation
+        - dateAvailable
+        - page_url
+        - download_url
+        - derivatives
+        - tags
+      properties:
+        rank:
+          type: integer
+        isFavorite:
+          type: boolean
+        id:
+          type: integer
+        width:
+          type: [integer, 'null']
+        height:
+          type: [integer, 'null']
+        hit:
+          type: integer
+        file:
+          type: string
+        name:
+          type: string
+          description: Post render-filter display name, HTML-stripped.
+        comment:
+          type: string
+          description: Post render-filter description.
+        dateCreation:
+          type: [string, 'null']
+        dateAvailable:
+          type: [string, 'null']
+        page_url:
+          type: string
+          format: uri-reference
+        element_url:
+          type: string
+          format: uri-reference
+          description: Present only when the current user can view the full-size element.
+        download_url:
+          type: [string, 'null']
+        derivatives:
+          type: object
+          additionalProperties:
+            type: object
+            required: [url, width, height]
+            properties:
+              url:
+                type: string
+                format: uri-reference
+              width:
+                type: integer
+              height:
+                type: integer
+        tags:
+          type: array
+          items:
+            type: object
+            required: [id, url, pageUrl]
+            properties:
+              id:
+                type: integer
+              url:
+                type: string
+                format: uri-reference
+              pageUrl:
+                type: string
+                format: uri-reference

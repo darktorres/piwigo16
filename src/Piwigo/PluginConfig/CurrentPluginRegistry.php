@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\PluginConfig;
 
 use LogicException;
+use Override;
+use Piwigo\Routing\ApiRouteRegistrarInterface;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Container-shared instance holding the current request's `PluginRegistry`
@@ -21,8 +24,14 @@ use LogicException;
  * real, already-booted instance reachable from that reader instead
  * (`Admin\LoadedPluginsMiddleware`, immediately after `PluginBootstrap
  * Middleware` in the real pipeline, is the other real reader).
+ *
+ * Implements `Routing\ApiRouteRegistrarInterface` (P29.6) as a thin
+ * passthrough to `PluginRegistry::registerApiRoutes()` -- bound to that
+ * interface in `config/container.php` so `Http\Middleware\
+ * RoutingMiddleware` can depend on the narrow capability instead of this
+ * whole class.
  */
-final class CurrentPluginRegistry
+final class CurrentPluginRegistry implements ApiRouteRegistrarInterface
 {
     private ?PluginRegistry $registry = null;
 
@@ -38,5 +47,11 @@ final class CurrentPluginRegistry
     public function set(PluginRegistry $registry): void
     {
         $this->registry = $registry;
+    }
+
+    #[Override]
+    public function registerApiRoutes(RouteCollection $routes): void
+    {
+        $this->get()->registerApiRoutes($routes);
     }
 }

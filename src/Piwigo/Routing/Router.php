@@ -49,6 +49,23 @@ final readonly class Router
         private RouteCollection $routes,
     ) {}
 
+    /**
+     * The live `RouteCollection` this router dispatches against --
+     * `RouteCollection` is itself a mutable Symfony type (exactly what
+     * `RouteDefinitions::all()` builds via repeated `->add()` calls), so
+     * a caller can append to it after construction. The one real caller,
+     * `Http\Middleware\RoutingMiddleware::process()`, uses this to let
+     * already-active plugins register their own routes
+     * (`PluginConfig\ApiRouteProviderInterface`) at the one point in the
+     * request lifecycle that's both late enough (after
+     * `PluginBootstrapMiddleware::process()` has genuinely run) and early
+     * enough (before `dispatch()` below reads the collection).
+     */
+    public function routes(): RouteCollection
+    {
+        return $this->routes;
+    }
+
     public function dispatch(ServerRequestInterface $request): RouteResult
     {
         $uri = $request->getUri();

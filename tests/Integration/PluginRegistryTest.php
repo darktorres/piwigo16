@@ -40,6 +40,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Test-only typed notification -- see `writeFixturePlugin()`'s own
@@ -672,5 +673,150 @@ final class PluginRegistryTest extends IntegrationTestCase
             self::assertSame($id, $e->pluginId);
             self::assertStringContainsString('SettingsPageInterface', $e->getMessage());
         }
+    }
+
+    /**
+     * install() -- a manifest declaring `hasApiRoutes: true` whose main
+     * class implements plain `ExtensionInterface` only (never
+     * `ApiRouteProviderInterface`) is a real authoring mistake, caught
+     * here rather than surfacing confusingly deep inside routing/
+     * controller resolution. Same shape as
+     * testInstallThrowsWhenHasSettingsIsDeclaredButSettingsPageInterfaceIsNotImplemented()
+     * above.
+     */
+    public function testInstallThrowsWhenHasApiRoutesIsDeclaredButApiRouteProviderInterfaceIsNotImplemented(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-missing-api-routes-contract-' . $suffix;
+        $namespace = 'PiwigoTest\\FixtureMissingApiRoutes' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin declaring hasApiRoutes without implementing ApiRouteProviderInterface',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasApiRoutes' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class {$className} implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->install($id);
+            self::fail('install() must throw when hasApiRoutes is declared but ApiRouteProviderInterface is not implemented');
+        } catch (PluginValidationException $e) {
+            self::assertSame($id, $e->pluginId);
+            self::assertStringContainsString('ApiRouteProviderInterface', $e->getMessage());
+        }
+    }
+
+    /**
+     * registerApiRoutes() -- a booted plugin implementing
+     * `ApiRouteProviderInterface` gets its own `registerApiRoutes()`
+     * called and its route lands in the real, live `RouteCollection`
+     * passed in.
+     */
+    public function testRegisterApiRoutesAddsABootedPluginsRouteToTheCollection(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-api-routes-' . $suffix;
+        $namespace = 'PiwigoTest\\FixtureApiRoutes' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin registering its own API route',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasApiRoutes' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ApiRouteProviderInterface;
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+            use Symfony\\Component\\Routing\\Route;
+            use Symfony\\Component\\Routing\\RouteCollection;
+
+            final class {$className} implements ExtensionInterface, ApiRouteProviderInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+
+                public function registerApiRoutes(RouteCollection \$routes): void
+                {
+                    \$routes->add('api_v1_plugin_routes_{$id}_ping', new Route(
+                        '/api/v1/plugin-routes/{$id}/ping',
+                        defaults: ['_controller' => 'PingController'],
+                        methods: ['GET'],
+                    ));
+                }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->install($id);
+        $registry->activate($id);
+        $registry->bootActive();
+
+        $routes = new RouteCollection();
+        $registry->registerApiRoutes($routes);
+
+        $route = $routes->get('api_v1_plugin_routes_' . $id . '_ping');
+        self::assertNotNull($route, 'the booted plugin\'s route must land in the collection');
+        self::assertSame('/api/v1/plugin-routes/' . $id . '/ping', $route->getPath());
     }
 }

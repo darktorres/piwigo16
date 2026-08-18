@@ -25,9 +25,11 @@ use Symfony\Component\Routing\RouteCollection;
  * ...)` method-name shape has no exact URL-path equivalent, so a porter
  * must pick a real REST verb + path.
  *
- * `registerApiRoutes()` is called once per request, before routing, by
- * `PluginRegistry::registerApiRoutes()` (itself called from
- * `config/container.php`'s `Router::class` factory) -- add real
+ * `registerApiRoutes()` is called once per request, from `Http\Middleware\
+ * RoutingMiddleware::process()` (via `PluginRegistry::registerApiRoutes()`),
+ * at the one point in the request lifecycle both late enough (every
+ * active plugin has genuinely booted by then) and early enough (routing
+ * hasn't dispatched yet) -- add real
  * `Symfony\Component\Routing\Route` entries to the given, live
  * `$routes` collection directly (mutate in place; the return value,
  * if any, is never read). Every route this method registers MUST live

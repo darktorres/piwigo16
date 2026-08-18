@@ -90,6 +90,7 @@ use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Routing\ApiRouteRegistrarInterface;
 use Piwigo\Routing\Router;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
@@ -247,18 +248,29 @@ return [
     MailRecipientRepositoryInterface::class => get(MailRecipientRepository::class),
 
     // RouteCollection has no container entry of its own -- a real
-    // constructor param autowire can't provide.
-    Router::class => factory(static function (ContainerInterface $c): Router {
-        $pluginRegistry = $c->get(CurrentPluginRegistry::class);
-        if (! $pluginRegistry instanceof CurrentPluginRegistry) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentPluginRegistry::class);
-        }
+    // constructor param autowire can't provide. Deliberately just core
+    // routes here, not plugin-augmented: Router::class is resolved
+    // eagerly (Bootstrap\RequestPipeline::handle()'s own array_map()
+    // resolves every DEFAULT_MIDDLEWARE entry up front, including
+    // Http\Middleware\RoutingMiddleware, which constructor-injects this),
+    // long before Http\Middleware\PluginBootstrapMiddleware::process()
+    // has actually run for the request -- so a plugin-aware factory here
+    // would read PluginConfig\CurrentPluginRegistry before it's ever
+    // `set()`. RoutingMiddleware::process() itself calls
+    // Router::routes()'s own mutable RouteCollection at the correct,
+    // later point in the real per-request dispatch order instead -- see
+    // that class's own docblock.
+    Router::class => factory(static fn (): Router => new Router(RouteDefinitions::all())),
 
-        $routes = RouteDefinitions::all();
-        $pluginRegistry->get()->registerApiRoutes($routes);
-
-        return new Router($routes);
-    }),
+    // Interface binding -- Piwigo\PluginConfig\CurrentPluginRegistry
+    // implements Routing\ApiRouteRegistrarInterface as a thin passthrough
+    // to PluginRegistry::registerApiRoutes(); Http\Middleware\
+    // RoutingMiddleware constructor-injects the interface instead of
+    // depending on the concrete, heavier CurrentPluginRegistry/
+    // PluginRegistry chain directly, so a Unit test can substitute a
+    // trivial fake. See src/Piwigo/Routing/ApiRouteRegistrarInterface.php's
+    // own docblock.
+    ApiRouteRegistrarInterface::class => get(CurrentPluginRegistry::class),
 
     // Factory binding -- the value never actually varies per request
     // (always built from the same config/storage.php), so there's nothing

@@ -493,11 +493,14 @@ final class PluginRegistry
     }
 
     /**
-     * Called once per request, before routing (see `config/container.php`'s
-     * `Router::class` factory), so every active plugin implementing
-     * `ApiRouteProviderInterface` gets a chance to add its own routes to
-     * the live collection `RouteDefinitions::all()` just built, before
-     * `Router` is constructed from it.
+     * Called once per request, from `Http\Middleware\RoutingMiddleware::
+     * process()` via `CurrentPluginRegistry::registerApiRoutes()` (a
+     * `Routing\ApiRouteRegistrarInterface` passthrough) -- not from
+     * `Router::class`'s own container factory, which resolves too early
+     * (see `RoutingMiddleware`'s own docblock for why). Every active
+     * plugin implementing `ApiRouteProviderInterface` gets a chance to
+     * add its own routes to the live `RouteCollection` `Router` already
+     * holds, before `dispatch()` reads it.
      */
     public function registerApiRoutes(RouteCollection $routes): void
     {

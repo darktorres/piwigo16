@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
 use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use Override;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
+use Piwigo\Http\Middleware\PluginBootstrapMiddleware;
+use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Psr\Http\Message\ResponseInterface;
+use ReflectionMethod;
 
 /**
  * Confirms RequestPipeline::handle() runs the real pipeline end-to-end.
@@ -125,5 +130,173 @@ final class RequestPipelineTest extends IntegrationTestCase
             ExceptionHandlerMiddleware::class,
             static fn (): ResponseInterface => RequestPipeline::handle(new ServerRequest('GET', '/anything'))
         );
+    }
+
+    /**
+     * End-to-end proof for P29.6's `ApiRouteProviderInterface`: a real
+     * plugin, installed and activated for real against the test DB and
+     * present in the real `plugins/` directory (this class's own
+     * `Kernel::boot()` call in `IntegrationTestCase::setUp()` uses the
+     * real repo root, so `PluginRegistry` scans the real `plugins/`
+     * dir -- not a swappable temp one like `PluginRegistryTest::
+     * buildRegistry()` uses), gets its own `registerApiRoutes()` called
+     * during a real `RequestPipeline::handle()` call, and its route's
+     * controller actually runs -- not just that routing matched.
+     */
+    public function testAnActivatedPluginsApiRouteControllerActuallyRuns(): void
+    {
+        $id = 'zz-request-pipeline-api-route-' . uniqid('', false);
+        $this->writeApiRouteFixturePlugin($id);
+
+        $conn = DbConnection::build();
+        $registry = $this->pluginRegistryFromRealContainer($conn);
+
+        try {
+            $registry->install($id);
+            $registry->activate($id);
+
+            $response = RequestPipeline::handle(new ServerRequest('GET', '/api/v1/plugin-routes/' . $id . '/ping'));
+
+            self::assertSame(200, $response->getStatusCode());
+            self::assertSame('pong from ' . $id, (string) $response->getBody());
+        } finally {
+            $registry->deactivate($id);
+            $registry->uninstall($id);
+            $this->removeFixturePlugin($id);
+        }
+    }
+
+    private function writeApiRouteFixturePlugin(string $id): void
+    {
+        $dir = dirname(__DIR__, 2) . '/plugins/' . $id;
+        mkdir($dir . '/src', 0o777, true);
+
+        $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+        file_put_contents($dir . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Test-only fixture plugin (tests/Integration/RequestPipelineTest.php).',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\Plugin',
+            'hasApiRoutes' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/src/Plugin.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ApiRouteProviderInterface;
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+            use Symfony\\Component\\Routing\\Route;
+            use Symfony\\Component\\Routing\\RouteCollection;
+
+            final class Plugin implements ExtensionInterface, ApiRouteProviderInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+
+                public function registerApiRoutes(RouteCollection \$routes): void
+                {
+                    \$routes->add('api_v1_plugin_routes_{$id}_ping', new Route(
+                        '/api/v1/plugin-routes/{$id}/ping',
+                        defaults: ['_controller' => PingController::class],
+                        methods: ['GET'],
+                    ));
+                }
+            }
+
+            PHP);
+
+        file_put_contents($dir . '/src/PingController.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\Http\\ControllerInterface;
+            use Piwigo\\Http\\ResponseFactory;
+            use Psr\\Http\\Message\\ResponseInterface;
+            use Psr\\Http\\Message\\ServerRequestInterface;
+
+            final class PingController implements ControllerInterface
+            {
+                public function __invoke(ServerRequestInterface \$request): ResponseInterface
+                {
+                    return ResponseFactory::text('pong from {$id}');
+                }
+            }
+
+            PHP);
+    }
+
+    private function removeFixturePlugin(string $id): void
+    {
+        $this->removeDirRecursively(dirname(__DIR__, 2) . '/plugins/' . $id);
+    }
+
+    private function removeDirRecursively(string $dir): void
+    {
+        if (! is_dir($dir)) {
+            return;
+        }
+        $items = scandir($dir);
+        if ($items === false) {
+            return;
+        }
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir . '/' . $item;
+            if (is_dir($path)) {
+                $this->removeDirRecursively($path);
+            } else {
+                unlink($path);
+            }
+        }
+        rmdir($dir);
+    }
+
+    /**
+     * Builds a real `PluginRegistry` via `PluginBootstrapMiddleware`'s
+     * own private `pluginRegistry()` construction (reflection, not
+     * duplicated by hand) -- `ExtensionContextFactory`/the plugin-scoped
+     * read facades have no container binding of their own (only ever
+     * built inside that middleware, `$conn`-scoped), so this is the one
+     * way to get a real, correctly-wired `PluginRegistry` outside a real
+     * request without re-deriving that construction from scratch and
+     * risking a connection mismatch against the container's own.
+     */
+    private function pluginRegistryFromRealContainer(Connection $conn): PluginRegistry
+    {
+        $middleware = Kernel::container()->get(PluginBootstrapMiddleware::class);
+        if (! $middleware instanceof PluginBootstrapMiddleware) {
+            throw new LogicException('Container returned an unexpected type for ' . PluginBootstrapMiddleware::class);
+        }
+
+        $registry = new ReflectionMethod($middleware, 'pluginRegistry')->invoke($middleware, $conn);
+        if (! $registry instanceof PluginRegistry) {
+            throw new LogicException('PluginBootstrapMiddleware::pluginRegistry() returned an unexpected type.');
+        }
+
+        return $registry;
     }
 }

@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
+use LogicException;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Feed\FeedEntity;
@@ -164,6 +167,19 @@ final readonly class DbMaintenanceRepository
      * transaction block, which this method's own all-bare-
      * executeStatement()-calls shape (no beginTransaction()/
      * transactional() wraps any of these statements) already satisfies.
+     *
+     * SQLite's own `VACUUM` operates on the *whole database file*, not
+     * per-table the way MySQL/Postgres's own branches above do -- no
+     * per-table loop at all, structurally simpler than either. `PRAGMA
+     * optimize` is SQLite's own modern, recommended `ANALYZE`-equivalent
+     * (refreshes the query planner's stored statistics); neither
+     * `REPAIR TABLE` nor `ALTER TABLE ... ORDER BY` has any SQLite
+     * equivalent worth porting, for the same reasons as the Postgres
+     * branch's own reasoning above -- SQLite has no storage-engine
+     * corruption class `REPAIR TABLE` addresses, and no user-controlled
+     * physical row ordering to re-sort in the first place (its `rowid`
+     * ordering is already the primary key order for `INTEGER PRIMARY
+     * KEY` tables, this schema's own convention throughout).
      */
     public function repairOptimizeAllTables(): void
     {
@@ -189,6 +205,14 @@ final readonly class DbMaintenanceRepository
         // there once the table stopped being always-prefixed and could
         // collide with a keyword.
         $platform = $conn->getDatabasePlatform();
+
+        if ($platform instanceof SQLitePlatform) {
+            $conn->executeStatement('VACUUM');
+            $conn->executeStatement('PRAGMA optimize');
+
+            return;
+        }
+
         $allTableNames = $schemaManager->introspectTableNames();
         $allTables = array_map(
             static fn (OptionallyQualifiedName $name): string => $platform->quoteSingleIdentifier(
@@ -209,6 +233,10 @@ final readonly class DbMaintenanceRepository
             }
 
             return;
+        }
+
+        if (! $platform instanceof AbstractMySQLPlatform) {
+            throw new LogicException(self::class . '::repairOptimizeAllTables() has no implementation for platform ' . $platform::class);
         }
 
         $allTablesCsv = implode(', ', $allTables);

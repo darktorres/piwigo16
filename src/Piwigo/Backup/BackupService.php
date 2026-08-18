@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Backup;
 
+use Doctrine\DBAL\DriverManager;
 use InvalidArgumentException;
 use Piwigo\Backup\Projection\BackupManifest;
 use Piwigo\Core\ShutdownHandler;
@@ -13,13 +14,16 @@ use Symfony\Component\Process\Process;
 
 /**
  * Real DB + `galleries/` backup/restore, shelling out to
- * mysqldump/mysql/tar via env-var credentials (Piwigo\Db\DbCredentials) --
- * the same CLI-safe mechanism tools/restore-drill.sh and
- * tools/reimport-fixture.sh already use, deliberately not the legacy
- * include/common.inc.php bootstrap chain (untested under CLI SAPI --
- * that chain no longer exists at all today, see docs/REFERENCE.md's
- * Architecture section for the real CliBootstrap-based path this class
- * uses instead).
+ * mysqldump/mysql/pg_dump/psql/tar via env-var credentials
+ * (Piwigo\Db\DbCredentials) -- the same CLI-safe mechanism
+ * tools/restore-drill.sh and tools/reimport-fixture.sh already use,
+ * deliberately not the legacy include/common.inc.php bootstrap chain
+ * (untested under CLI SAPI -- that chain no longer exists at all today,
+ * see docs/REFERENCE.md's Architecture section for the real
+ * CliBootstrap-based path this class uses instead). SQLite's own dump/
+ * restore ({@see dumpDatabase()}/{@see restoreDatabase()}) needs no
+ * subprocess at all -- `VACUUM INTO` and a plain file copy, both real
+ * DBAL/PHP calls.
  *
  * `local/config/config.inc.php` is included when present (production
  * deployments) but this dev checkout has none. No PHPWG_VERSION in the manifest: include/constants.php
@@ -151,8 +155,31 @@ final readonly class BackupService
         return new BackupManifest($decoded['created_at'], $included);
     }
 
+    /**
+     * SQLite's real backup story is fundamentally different from
+     * mysqldump/pg_dump -- not a third dump-client invocation, since
+     * there's no server process to shell out to at all. `VACUUM INTO`
+     * (verified live before writing this: a safe hot-copy, doesn't risk
+     * corruption from copying the file mid-write the way a plain `cp`
+     * would) produces a clean, complete copy of the live database
+     * directly, with no external process needed either -- a real DBAL
+     * connection, built straight from $credentials (not
+     * DbConnection::build(), which may resolve different credentials via
+     * the container -- this method's own contract is "dump exactly what
+     * $credentials names").
+     */
     private function dumpDatabase(DbCredentials $credentials, string $outputPath): void
     {
+        if ($credentials->driver === 'sqlite3') {
+            $conn = DriverManager::getConnection([
+                'driver' => 'sqlite3',
+                'path' => $credentials->database,
+            ]);
+            $conn->executeStatement('VACUUM INTO ?', [$outputPath]);
+
+            return;
+        }
+
         if ($credentials->driver === 'pgsql') {
             $this->runProcess([
                 'pg_dump',
@@ -185,6 +212,20 @@ final readonly class BackupService
         // a connection error that has nothing to do with the real cause).
         if (! is_readable($dumpPath)) {
             throw new RuntimeException("Unable to open dump file for reading: {$dumpPath}");
+        }
+
+        if ($credentials->driver === 'sqlite3') {
+            // The dump produced by dumpDatabase()'s own VACUUM INTO
+            // branch is already a complete, self-contained database file
+            // -- restoring it is a plain file copy to $targetDatabase
+            // (a real file path for this driver, DbCredentials's own
+            // `database` field doubling as one, see Wave 0), no SQL
+            // client/parser involved at all.
+            if (! copy($dumpPath, $targetDatabase)) {
+                throw new RuntimeException("Unable to restore SQLite database to: {$targetDatabase}");
+            }
+
+            return;
         }
 
         if ($credentials->driver === 'pgsql') {

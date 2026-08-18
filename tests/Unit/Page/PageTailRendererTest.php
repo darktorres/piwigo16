@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Page;
 
+use Piwigo\Asset\ViteManifest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -102,6 +103,7 @@ test('renderToString() returns the parsed footer output and always sends telemet
             $currentConfig,
             new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
             EntityManagerFactory::build($conn),
+            new ViteManifest(Paths::fromRoot($root)),
         );
 
         $output = $renderer->renderToString(microtime(true));

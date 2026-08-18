@@ -33,19 +33,20 @@ export default defineConfig({
     target: ["chrome94", "edge94", "firefox93", "safari15"],
     rollupOptions: {
       input: {
-        // Placeholder only — 68 real entries land in P43.
+        // Placeholder only — 68 real entries land in P45.
         noop: r("build/noop.ts"),
         // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.
         vitals: r("build/vitals.ts"),
       },
       output: {
-        // P34's asset-manifest resolution (reading manifest.json for hashed
-        // filenames) doesn't exist yet — everything else here still uses
-        // Piwigo's legacy ScriptLoader/CssLoader combiner. `vitals` is
-        // referenced directly from footer.tpl by a fixed path, so it needs a
-        // stable, non-hashed filename rather than the default `[name]-
-        // [hash].js`; every other entry keeps the default.
+        // P36's Piwigo\Asset\ViteManifest (reading manifest.json for
+        // hashed filenames) exists now, but no template has migrated onto
+        // it yet — everything except `vitals` still uses Piwigo's legacy
+        // ScriptLoader/CssLoader combiner (docs/PLAN.md's P36 section).
+        // `vitals` is resolved through ViteManifest from a fixed,
+        // non-hashed filename rather than the default `[name]-[hash].js`;
+        // every other entry keeps the default.
         entryFileNames: (chunk) =>
           chunk.name === "vitals" ? "vitals.js" : "assets/[name]-[hash].js",
       },

@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
+use Piwigo\Asset\ViteManifest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Config\CurrentConfigService;
@@ -55,7 +56,7 @@ final class PageTail
         // one place the concrete L4 implementation gets constructed.
         // UrlServiceInterface is wired the same way; see
         // PageTailRenderer's own docblock.
-        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager())
+        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest())
             ->render(self::pageState()->requestStart);
     }
 
@@ -69,7 +70,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager())
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -100,6 +101,20 @@ final class PageTail
         }
 
         return $paths;
+    }
+
+    /**
+     * Same reasoning as paths() above -- PageTailRenderer is constructed
+     * manually below, outside `Bootstrap/`.
+     */
+    private static function viteManifest(): ViteManifest
+    {
+        $viteManifest = Kernel::container()->get(ViteManifest::class);
+        if (! $viteManifest instanceof ViteManifest) {
+            throw new LogicException('Container returned an unexpected type for ' . ViteManifest::class);
+        }
+
+        return $viteManifest;
     }
 
     /**

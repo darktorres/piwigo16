@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Asset\ViteManifest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -54,6 +55,7 @@ final readonly class PageTailRenderer
         private CurrentConfig $currentConfig,
         private SessionService $sessionService,
         private EntityManagerInterface $entityManager,
+        private ViteManifest $viteManifest,
     ) {}
 
     public function render(float $startTime): void
@@ -127,13 +129,20 @@ final readonly class PageTailRenderer
             );
         }
 
+        $vitalsEntry = $this->viteManifest->resolve('build/vitals.ts');
+
         $template->assignContext(new PageTailPageContext(
             version: $this->currentConfig->showVersion ? AppInfo::VERSION : '',
             phpwgUrl: AppInfo::URL,
-            // web-vitals RUM beacon -- fixed,
-            // non-hashed filename (vite.config.ts), so no manifest.json
-            // lookup is needed to reference it.
-            vitalsScriptUrl: $this->urlService->getRootUrl() . 'dist/vitals.js',
+            // web-vitals RUM beacon. `vitals.js` is a fixed, non-hashed
+            // filename (vite.config.ts), so this doesn't strictly need a
+            // manifest.json lookup -- resolved through ViteManifest
+            // anyway (docs/PLAN.md's P36 section), proving the
+            // manifest-reading half end to end against the one real
+            // entry that exists today. Falls back to the same literal
+            // path a missing/malformed manifest already degraded to
+            // before this.
+            vitalsScriptUrl: $this->urlService->getRootUrl() . 'dist/' . ($vitalsEntry !== null ? $vitalsEntry->file : 'vitals.js'),
             contactMail: $contactMail,
             debug: $debug_vars,
             toggleMobileThemeUrl: $toggleMobileThemeUrl,

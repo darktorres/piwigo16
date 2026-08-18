@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use LogicException;
 use Override;
+use Piwigo\Asset\ViteManifest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -99,6 +100,7 @@ final class PageTailRendererTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             EntityManagerFactory::build(DbConnection::build()),
+            new ViteManifest(CurrentPathsTestFactory::get()),
         );
     }
 

@@ -126,7 +126,7 @@ Three structural changes produced that drift:
 | P33 | Latte idiomatic modernization | Done — all 8 sub-items | 8 |
 | P34 | Event system rewrite | Done — all 5 items complete and verified, including all 6 named core hooks (see Epoch J) | 13 |
 | P35 | Browserslist decision + IE back-compat removal | Done | 1 |
-| P36 | Asset-pipeline foundation (ViteManifest) | Not started | 0 |
+| P36 | Asset-pipeline foundation (ViteManifest) | Done | 1 |
 | P37 | Typed page-data exposure (PHP half) | Not started | 0 |
 | P38 | Inline JS extraction | Not started | 0 |
 | P39 | Inline CSS extraction | Not started | 0 |
@@ -674,7 +674,7 @@ batches. 157 event classes at the time; P34 (below) later pruned dead
 ones to 127, then added 2 more closing its own catalogue gap.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="129" -->
+<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="130" -->
 
 `triggerChange()`/`triggerNotify()` were originally kept as "permanent"
 for `'trigger'`, their own internal meta-notification channel, then
@@ -1526,36 +1526,91 @@ never previously exercised by a full unfiltered run. Fixed the same way
 `H::loginAsAdmin()` in both `VisualRegressionTest.php` and
 `GoldenHtmlSnapshotTest.php`.
 
-**P36 — Asset-pipeline foundation.** Retires `ScriptLoader`, `CssLoader`,
-`FileCombiner`, `Combinable`, `Script` and `Css` (~1,038 lines — the
-legacy PHP combiner that `vite.config.ts`'s own comment flags as still
-driving everything except the `vitals` entry) for real `ViteManifest`
-resolution against `dist/manifest.json`. No template content moves; this
-only builds the delivery mechanism P38 and P39 need.
+**P36 — Asset-pipeline foundation.** Done. The template-declared vs.
+view-declared fork is **decided: view-declared**, resolved now rather
+than left for P40/P41 to re-litigate.
 
-**P36 owns one decision that determines P41's shape.** Do templates keep
-declaring their own assets mid-body (`{do combineScript(…)}` — 178 sites,
-plus 87 `combineCss` and 80 `footerScript`, across 76 of 135 templates),
-or do assets become view-declared per-page Vite entries?
-
-- *Template-declared (status quo).* Runtime collection is unavoidable,
-  because a `<head>` rendered before the body cannot see what the body
-  registered. P41 must then render **shell-last** (content → layout).
-- *View-declared.* No runtime collection at all, so `<head>` can render
-  first and Latte's own `{layout}`/`{block}` inheritance becomes usable
-  immediately.
-
-Verified against Latte itself rather than assumed:
+Reasoning: only 10 of 158 registered scripts are `load: 'header'` (119
+footer, 29 async) — template-declared's "must collect before `<head>`
+renders" cost is almost entirely a CSS problem, not a JS one. CSS
+layering already relies on fragile, tribal-knowledge magic numbers (a
+real comment in `picture_formats.latte`: `{* order 10 is required, see
+issue 1080 *}`); view-declared replaces that with one explicit ordered
+list per page. Verified against Latte itself rather than assumed:
 `Latte\Runtime\Template::render()` delegates to
 `createTemplate($this->parentName, …)->render()` when `{layout}` is
-present, so the layout's `<head>` genuinely precedes the child block.
-Only 10 of 158 registered scripts are `load: 'header'` (119 footer, 29
-async), which bounds the problem. Counter-consideration: 76 templates
-register assets today and themes must keep that ability, so moving all of
-it into PHP removes a real capability from theme authors.
+present, so the layout's `<head>` genuinely precedes the child block —
+unavailable under today's shell-last rendering. Natural fit with P40's
+typed per-page view objects.
 
-P40 and P41 must therefore treat any `Assets` abstraction as a **thin
-seam P36 deletes**, not a design worth polishing.
+Adversarial pass against the real 76-template corpus found every real
+`combineScript`/`combineCss` (file-based) call site fits one of three
+sources, each with a different natural home once declaration is
+per-page: (1) a theme's own unconditional base assets (`theme.css`,
+`local/css/*-rules.css`, `print.css`) — resolved from theme config at
+layout-render time, no event needed; (2) core's own per-page
+conditional assets (e.g. `rating.js` only where ratings are enabled) —
+conditional today on state the controller already decided before the
+template ran, becomes a property on the page's typed view once P40
+lands; (3) plugin-contributed assets — the one genuine extension
+point, since plugins can't add properties to core's View classes, via
+a new `Get*`-prefixed PSR-14 event (`GetPageAssets`, matching the
+established filter-event convention). This preserves the *capability*
+("a plugin/theme can still get an asset onto the page") without
+preserving the old *mechanism* (arbitrary inline template calls) —
+deliberately not a 1:1 port.
+
+**Scope correction from the original plan text**: this phase does
+**not** retire `ScriptLoader`/`CssLoader`/`FileCombiner`/`Combinable`/
+`Script`/`Css` (~1,038 lines). Doing that now and bridging all 76
+templates through an interim collector would be exactly the kind of
+throwaway scaffolding P41 would immediately replace. Instead: the old
+system stays completely untouched, serving all 76 templates exactly as
+today, while this phase builds the new `Piwigo\Asset` infrastructure
+(`ViteManifest`, `AssetContribution`, `PageAssets` collector,
+`GetPageAssets` event) alongside it with **zero template edits**.
+Migration onto the new mechanism happens incrementally starting in
+P40, which already documents converting "one page-family at a time,
+after proving the pattern end to end on a thin slice" — that vertical
+slice is where a template's JS/CSS extraction (P38/P39), typed view
+(P40), asset declaration, and shell-first rendering (P41) land
+together, once, instead of four separate passes. The old classes are
+deleted only once the last page-family migrates, at the end of P41.
+
+Two real behaviors the new ordering pass must preserve, found via
+direct template audit, not assumed: real multi-level `require:` chains
+(e.g. `jquery.ui.timepicker-addon` → `jquery.ui.datepicker` → its own
+transitive deps) need genuine topological resolution, not a
+single-level check; and `rating_user.latte`'s `jquery.ui.tooltip`
+registration (zero `path:`/`require:` params) plus
+`jquery.ui.datepicker` (never explicitly registered anywhere) both
+depend entirely on `ScriptLoader`'s naming-convention auto-resolution
+— dropping that ~30-line resolver would silently break
+`admin-rating-user` and every page including the datepicker.
+`footerScript`'s 80 real call sites are inline JS with real
+PHP-interpolated per-request data (not file references), so they stay
+on the untouched old mechanism until P37 (typed JSON island) + P38
+(extraction) can turn them into real static files.
+
+**Shipped**: `Piwigo\Asset\{ViteManifest, ViteManifestEntry,
+AssetContribution, AssetKind, LoadMode, PageAssets, ResolvedAsset,
+Event\GetPageAssets}` — real, fully unit-tested infrastructure (24 new
+tests, including the two jQuery-UI-resolver edge cases and the real
+multi-level `require:` chain above), zero template edits, zero
+behavior change to any of the 76 templates. `vitals.js`'s
+`VITALS_SCRIPT_URL` (`PageTailRenderer`) now resolves through
+`ViteManifest` instead of a hardcoded string, proving the
+manifest-reading half end to end against the one real entry that
+exists today — confirmed byte-identical output via the full VR suite
+(66/66, zero baseline regeneration needed). Also fixed two stale
+phase-number references in `vite.config.ts`'s own comments found while
+touching this file ("P34's asset-manifest resolution" → P36, "68 real
+entries land in P43" → P45, matching P45's own text below). Verified:
+`composer analyse`/deptrac (0 violations, `Piwigo\Asset` lands in the
+already-reserved L3Presentation slot)/ECS all clean; full
+`composer test`/`test:integration`/`test:visual` green (one unrelated
+pre-existing flaky failure in `ImageServiceTest.php`, a random-ID
+collision under `--parallel`, confirmed passes in isolation).
 
 **P37 — Typed page-data exposure (PHP half).** One typed payload per
 page, emitted as a JSON island, replacing the ad-hoc PHP → JS smuggling:
@@ -1646,9 +1701,9 @@ Splits `PageState` (25+ public mutable properties, 225 mutation sites) by
 concern: a `PageMessages` collector, page chrome into `LayoutView`, debug
 counters into `RequestMetrics`, loose domain facts back to their owners.
 
-**Shape depends on P36's fork** — if assets become view-declared,
-`{layout}`/`{block}` inheritance replaces shell-last composition
-entirely.
+**P36's fork is decided: view-declared** — `{layout}`/`{block}`
+inheritance replaces shell-last composition entirely, once the
+per-page-family migration P40 starts reaches this template.
 
 **P42 — Typed contributions + plugin-owned routes.**
 
@@ -1850,8 +1905,8 @@ phase only if T1/T2 alone is still oversized.
   plugin-owned routes.
 - **P42's built-in filter swaps have real semantic differences.** Check
   each; golden-HTML catches the rest.
-- **P36's fork can flip P41 entirely.** If assets become view-declared,
-  shell-last composition may be unnecessary.
+- **P36's fork is decided (view-declared) — shell-last composition is
+  unnecessary once P41's migration completes.**
 - **P51's Tailwind decision is due before P40 starts.**
 - **P29 breaks external extensions by design** — an accepted product
   decision, not an oversight. In-tree callers migrate in the same phase.

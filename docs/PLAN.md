@@ -124,7 +124,7 @@ Three structural changes produced that drift:
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P44 | 11 |
 | P33 | Latte idiomatic modernization | Done — all 8 sub-items | 8 |
-| P34 | Event system rewrite | Done — items 1-4 complete and verified; item 5's catalogue is missing 4 of 6 named core hooks (see Epoch J) | 12 |
+| P34 | Event system rewrite | Done — all 5 items complete and verified, including all 6 named core hooks (see Epoch J) | 13 |
 | P35 | Browserslist decision + IE back-compat removal | Not started | 0 |
 | P36 | Asset-pipeline foundation (ViteManifest) | Not started | 0 |
 | P37 | Typed page-data exposure (PHP half) | Not started | 0 |
@@ -671,10 +671,10 @@ Free-function elimination landed first: `add_event_handler()`,
 retargeted onto the dispatcher directly. Then the actual point — typed
 event objects replacing bare-string-keyed dispatch — across 12 domain
 batches. 157 event classes at the time; P34 (below) later pruned dead
-ones to 127.
+ones to 127, then added 2 more closing its own catalogue gap.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="127" -->
+<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="129" -->
 
 `triggerChange()`/`triggerNotify()` were originally kept as "permanent"
 for `'trigger'`, their own internal meta-notification channel, then
@@ -1453,15 +1453,29 @@ file.
 4. **Delete the dead API — done (A4).** `EventHandler`,
    `addEventHandler()`, `removeEventHandler()`, `includePath`,
    `callablesEqual()`, and the legacy test file are all gone.
-5. **Catalogue — partly done (A5/A6).** Every `Loc*` marker renamed to a
+5. **Catalogue — done.** Every `Loc*` marker renamed to a
    tense-consistent, module-co-located name and event classes pruned to
    evidence (127 classes today, down from 157); `docs/
-   events-legacy-map.md` shipped as the name-lookup reference. Only 2 of
-   the 6 named core hooks with no class got one
-   (`Cache\Event\InvalidateUserCache`, `Category\Event\
-   GetCategoriesMenuRows`) — `user_list_columns`, `after_render_user_list`,
-   `get_high_url` and `add_elements` still have none. Real remaining
-   work, not a doc gap.
+   events-legacy-map.md` shipped as the name-lookup reference. All 6
+   named core hooks are covered: `invalidate_user_cache` →
+   `Cache\Event\InvalidateUserCache` and `get_categories_menu_sql_where`
+   → `Category\Event\GetCategoriesMenuRows` (both A5); `get_high_url` →
+   the new `Image\Event\GetHighUrl` (dispatched from `ImageUrlBuilder::
+   stdGetUrls()`'s `download_url` computation, distinct from
+   `GetDerivativeUrl`, which fires for every resized derivative, not just
+   the original-file download link); `user_list_columns` and
+   `after_render_user_list` → one new `Users\Event\GetUserListRows`
+   (dispatched once from `UserListController`, over the final row list --
+   both legacy hooks wanted the same real capability, customize/augment
+   each admin-user-list row, through a DataTables server-side-columns
+   shape `GET /api/v1/users`'s plain JSON rows don't have, so they
+   collapse into one filter here, the same move `GetCategoriesMenuRows`
+   already made for its own now-nonexistent SQL-string mechanism);
+   `add_elements` → already covered by the pre-existing `Admin\Upload\
+   Event\UploadedFileAdded` (a different legacy hook,
+   `loc_end_add_uploaded_file`, already dispatched at the real
+   per-upload insert site for the same "react to a newly-added element"
+   capability -- no new class needed).
 
 **P35 — Browserslist decision + IE back-compat removal.** One phase, not
 two — the removal is the decision's mechanical consequence. Commit a

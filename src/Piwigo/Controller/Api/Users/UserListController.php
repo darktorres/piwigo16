@@ -12,7 +12,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Sort\UserSortField;
+use Piwigo\Users\Event\GetUserListRows;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserStatus;
 use Psr\Http\Message\ResponseInterface;
@@ -33,6 +35,7 @@ final readonly class UserListController implements ControllerInterface
         private AdminGuard $adminGuard,
         private UserRowFetcher $userRowFetcher,
         private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]
@@ -103,9 +106,10 @@ final readonly class UserListController implements ControllerInterface
         // perPage=0 means "no limit" -- user_list.js's select-all-filtered
         // action depends on this to fetch every matching id in one request.
         $result = $this->userRowFetcher->page($criteria, $orderClauses, $perPage === 0 ? null : $perPage, $perPage * $page);
+        $rows = $this->eventDispatcher->dispatch(new GetUserListRows($result['rows']))->rows;
 
         return ResponseFactory::json([
-            'users' => $result['rows'],
+            'users' => $rows,
             'page' => $page,
             'perPage' => $perPage,
             'totalCount' => $result['total'],

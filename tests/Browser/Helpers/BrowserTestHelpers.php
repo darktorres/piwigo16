@@ -1188,12 +1188,10 @@ final class BrowserTestHelpers
     /**
      * Raw `/api/v1` call through the SAME authenticated browser session, via
      * a same-origin fetch() executed in the page (script() awaits the
-     * returned promise) -- this suite's own former ws.php mechanism, now that
-     * the WS layer itself is deleted (P27). $body is base64-embedded into
-     * the script and decoded via atob() in-page: a JSON body can contain
-     * quotes/backslashes a naive string interpolation would corrupt, unlike
-     * adminPost()'s own http_build_query() (URL-encoded, always
-     * JS-string-safe).
+     * returned promise). $body is base64-embedded into the script and
+     * decoded via atob() in-page: a JSON body can contain quotes/backslashes
+     * a naive string interpolation would corrupt, unlike adminPost()'s own
+     * http_build_query() (URL-encoded, always JS-string-safe).
      *
      * @param  array<string, mixed>  $body
      * @return array{status: int, body: string}

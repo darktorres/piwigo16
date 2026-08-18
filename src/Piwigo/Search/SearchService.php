@@ -832,10 +832,24 @@ final readonly class SearchService
      * callers thread it straight through to whichever of
      * SearchRepository's positional-`?` executors they already use.
      *
+     * $ftsTable names the SQLite FTS5 virtual table to `MATCH` against
+     * (`categories_fts`/`images_fts`/`images_fts_author`/`tags_fts`, see
+     * Version20260804122300::addSqliteFts()) -- unlike Postgres's
+     * `tsv_search`/`tsv_author` generated columns (which live ON the same
+     * base table already in the caller's own `FROM` clause, so no extra
+     * name is needed) or MySQL's `MATCH(cols)` (same reasoning), SQLite's
+     * FTS index is a genuinely separate table this method has no other way
+     * to know: two different callers pass the identical $fields shape
+     * (`['name', 'comment']` for both `images` and `categories`), so
+     * $fields alone can't disambiguate it. Required (not defaulted) so
+     * every caller states explicitly which table it means, even on
+     * platforms that ignore it -- a silently-wrong default here would only
+     * surface as a real search returning zero rows on SQLite specifically.
+     *
      * @param  string[]  $fields
      * @return array{0: list<non-falsy-string>, 1: list<string>}
      */
-    public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
+    public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields, string $ftsTable): array
     {
         // Neither REGEXP nor MATCH()/AGAINST() has a Postgres equivalent --
         // ~* (POSIX case-INSENSITIVE regex match, needs \y not \b for a
@@ -859,6 +873,7 @@ final readonly class SearchService
         // migration paired that generated column with exactly the same
         // field combination.
         $isPostgres = $this->repo->isPostgres();
+        $isSqlite = $this->repo->isSqlite();
 
         $clauses = [];
         $values = [];
@@ -899,6 +914,21 @@ final readonly class SearchService
                     continue;
                 }
 
+                if ($isSqlite) {
+                    // DbConnection::initSqliteConnection() registers this
+                    // REGEXP UDF as a thin preg_match() wrapper -- real PHP
+                    // PCRE, so \b is always a real word boundary here, no
+                    // MySQL-style engine-version detection needed at all.
+                    $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : '\\b';
+                    $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : '\\b';
+                    foreach ($fields as $field) {
+                        $clauses[] = $field . ' REGEXP ?';
+                        $values[] = $pre . preg_quote($variant) . $post;
+                    }
+
+                    continue;
+                }
+
                 // getDbVersion() is a property read on the already-connected
                 // driver handle, not a query -- no memoization needed.
                 $dbVersion = $this->repo->getDbVersion();
@@ -919,6 +949,22 @@ final readonly class SearchService
                 if ($ftPostgres !== null) {
                     $fts[] = $ftPostgres;
                 }
+            } elseif ($isSqlite) {
+                // Always a quoted FTS5 phrase, not gated on QST_QUOTED the
+                // way the MySQL branch below is -- verified live (see
+                // Version20260804122300::addSqliteFts()'s own docblock)
+                // that quoting a single-word variant is a no-op (identical
+                // result to unquoted) while quoting a real multi-word
+                // phrase is what forces the contiguous, substring-adjacent
+                // match this method's callers actually want, so there is
+                // no case where leaving it unquoted would be correct.
+                $ft = '"' . str_replace('"', '""', $variant) . '"';
+                if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) {
+                    $ft .= '*';
+                }
+
+                $fts[] = $ft;
+                $ftVariants[] = $variant;
             } else {
                 $ft = $variant;
                 if ((bool) ($token->modifier & QSingleToken::QST_QUOTED)) {
@@ -949,6 +995,33 @@ final readonly class SearchService
                 // operator precedence, so no extra parentheses are needed
                 // to keep a phrase's words grouped together.
                 $values[] = implode(' | ', $fts);
+            } elseif ($isSqlite) {
+                // id IN (SELECT rowid FROM $ftsTable WHERE ... MATCH ...)
+                // rather than a bare "$ftsTable MATCH ?" clause -- $ftsTable
+                // is a genuinely separate virtual table (see $ftsTable's own
+                // docblock above), not a column on the row this clause's
+                // sibling REGEXP/LIKE fragments already scan, so it needs an
+                // explicit correlation back to that row via id/rowid, unlike
+                // MySQL's MATCH(cols) or Postgres's tsv_search column
+                // (both already columns of the same row). The LIKE
+                // confirmation mirrors the MySQL branch's own reasoning
+                // below for defense in depth, even though the trigram
+                // tokenizer's own phrase-adjacency semantics (verified live,
+                // see addSqliteFts()'s docblock) don't reproduce that same
+                // false-positive class in the first place.
+                $wildcardEnd = (bool) ($token->modifier & QSingleToken::QST_WILDCARD_END);
+                $likeClauses = [];
+                foreach ($fields as $field) {
+                    foreach ($ftVariants as $ftVariant) {
+                        $likeClauses[] = $field . ' LIKE ?';
+                        $values[] = $wildcardEnd
+                            ? LikePattern::startingWith($ftVariant)
+                            : LikePattern::containing($ftVariant);
+                    }
+                }
+
+                $clauses[] = 'id IN (SELECT rowid FROM ' . $ftsTable . ' WHERE ' . $ftsTable . ' MATCH ?) AND (' . implode(' OR ', $likeClauses) . ')';
+                array_splice($values, count($values) - count($likeClauses), 0, [implode(' OR ', $fts)]);
             } else {
                 // WITH PARSER ngram (see Version20260804122300.php, chosen
                 // for CJK support -- no word boundaries to split on)
@@ -1061,6 +1134,7 @@ final readonly class SearchService
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
         $isPostgres = $this->repo->isPostgres();
+        $isSqlite = $this->repo->isSqlite();
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token = $expr->stokens[$i];
@@ -1069,14 +1143,29 @@ final readonly class SearchService
             $clauses = [];
             $params = [];
 
-            $fileLike = $isPostgres ? 'file LIKE ?' : 'CONVERT(file, CHAR) LIKE ?';
+            // CONVERT(file, CHAR) is a MySQL-only function -- would throw
+            // "no such function: CONVERT" on SQLite, found while widening
+            // this method's own $isPostgres check for Wave 2 (SQLite has
+            // no equivalent need for it either: same "already a plain
+            // string column, defensive no-op" reasoning as the Postgres
+            // branch's own docblock above). Real, documented SQLite
+            // divergence, not fixed here: `file`/`path`/`permalink` are
+            // COLLATE BINARY for case-sensitive matching on MySQL/Postgres,
+            // but SQLite's LIKE case-sensitivity is a single
+            // connection-wide `case_sensitive_like` pragma, not a
+            // per-column collation concern -- verified live, no per-column
+            // fix is possible; flipping that pragma globally would instead
+            // break every OTHER LIKE search in this app that currently
+            // relies on SQLite's default case-insensitive matching to
+            // parallel this schema's own `utf8mb4_unicode_ci` columns.
+            $fileLike = ($isPostgres || $isSqlite) ? 'file LIKE ?' : 'CONVERT(file, CHAR) LIKE ?';
             $fileLikeValue = LikePattern::containing($token->term);
 
             switch ($scopeId) {
                 case 'photo':
                     $clauses[] = $fileLike;
                     $params[] = $fileLikeValue;
-                    [$textClauses, $textValues] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+                    [$textClauses, $textValues] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
                     $clauses = array_merge($clauses, $textClauses);
                     $params = array_merge($params, $textValues);
 
@@ -1089,7 +1178,7 @@ final readonly class SearchService
                     break;
                 case 'author':
                     if ((bool) strlen($token->term)) {
-                        [$textClauses, $textValues] = $this->qsearchGetTextTokenSearchSql($token, ['author']);
+                        [$textClauses, $textValues] = $this->qsearchGetTextTokenSearchSql($token, ['author'], 'images_fts_author');
                         $clauses = array_merge($clauses, $textClauses);
                         $params = array_merge($params, $textValues);
                     } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
@@ -1186,7 +1275,7 @@ final readonly class SearchService
                 continue;
             }
 
-            [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name']);
+            [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name'], 'tags_fts');
             $rows = $this->repo->findTagRowsByRawWhere('(' . implode("\n OR ", $clauses) . ')', $params);
             foreach ($rows as $tag) {
                 if (! is_numeric($tag['id'])) {
@@ -1271,7 +1360,7 @@ final readonly class SearchService
                 continue;
             }
 
-            [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+            [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'categories_fts');
             $rows = $this->repo->findCategoryRowsByRawWhere(
                 '(' . implode("\n OR ", $clauses) . ') AND id NOT IN (' . $forbiddenPlaceholders . ')',
                 [...$params, ...$forbiddenIds]

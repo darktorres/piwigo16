@@ -637,6 +637,7 @@ final class Version20260804122300 extends AbstractMigration
         foreach (Version20260804122303::sqliteExtraIndexes('categories') as $sql) {
             $this->addSql($sql);
         }
+        $this->addSqliteFts('categories', 'categories_fts', ['name', 'comment']);
 
         $this->addSql(
             'CREATE TABLE comments (' .
@@ -743,6 +744,8 @@ final class Version20260804122300 extends AbstractMigration
         foreach (Version20260804122303::sqliteExtraIndexes('images') as $sql) {
             $this->addSql($sql);
         }
+        $this->addSqliteFts('images', 'images_fts', ['name', 'comment']);
+        $this->addSqliteFts('images', 'images_fts_author', ['author']);
 
         $this->addSql(
             'CREATE TABLE lounge (' .
@@ -792,5 +795,65 @@ final class Version20260804122300 extends AbstractMigration
         foreach (Version20260804122303::sqliteExtraIndexes('tags') as $sql) {
             $this->addSql($sql);
         }
+        $this->addSqliteFts('tags', 'tags_fts', ['name']);
+    }
+
+    /**
+     * SQLite's FTS5 has no auto-syncing generated column (unlike Postgres's
+     * `tsvector`) -- $ftsTable is a genuinely separate virtual table, kept
+     * in sync with $table via the 3 triggers below, FTS5's own documented
+     * "external content table" idiom (verified live: a real INSERT/UPDATE/
+     * DELETE round trip keeps the index correct, and `INSERT INTO
+     * $ftsTable($ftsTable) VALUES('integrity-check')` confirms it). The
+     * `trigram` tokenizer (not `unicode61`, SQLite's word-boundary-
+     * splitting default) is the real replacement for `WITH PARSER ngram`
+     * -- verified live against the exact documented ngram false-positive
+     * ("families" scoring against "Nested Sub Album" on a shared 2-char
+     * fragment, see SearchService::qsearchGetTextTokenSearchSql()'s own
+     * docblock): trigram's phrase-query semantics (a quoted or bare single
+     * term is matched as a contiguous character sequence, not a bag of
+     * n-grams) never reproduces that class of false positive in the first
+     * place, unlike MySQL's 2-char ngram parser -- narrower than strictly
+     * necessary is fine here, `qsearchGetTextTokenSearchSql()` still ANDs
+     * a LIKE confirmation onto every platform's FULLTEXT clause as
+     * defense in depth, not relied upon to correct a real gap here.
+     *
+     * @param  list<string>  $columns
+     */
+    private function addSqliteFts(string $table, string $ftsTable, array $columns): void
+    {
+        $columnList = implode(', ', $columns);
+        $this->addSql(sprintf(
+            "CREATE VIRTUAL TABLE %s USING fts5(%s, content='%s', content_rowid='id', tokenize='trigram')",
+            $ftsTable,
+            $columnList,
+            $table
+        ));
+
+        $newCols = implode(', ', array_map(static fn (string $c): string => 'new.' . $c, $columns));
+        $oldCols = implode(', ', array_map(static fn (string $c): string => 'old.' . $c, $columns));
+
+        $this->addSql(sprintf(
+            'CREATE TRIGGER %1$s_ai AFTER INSERT ON %2$s BEGIN INSERT INTO %1$s(rowid, %3$s) VALUES (new.id, %4$s); END',
+            $ftsTable,
+            $table,
+            $columnList,
+            $newCols
+        ));
+        $this->addSql(sprintf(
+            "CREATE TRIGGER %1\$s_ad AFTER DELETE ON %2\$s BEGIN INSERT INTO %1\$s(%1\$s, rowid, %3\$s) VALUES('delete', old.id, %4\$s); END",
+            $ftsTable,
+            $table,
+            $columnList,
+            $oldCols
+        ));
+        $this->addSql(sprintf(
+            "CREATE TRIGGER %1\$s_au AFTER UPDATE ON %2\$s BEGIN INSERT INTO %1\$s(%1\$s, rowid, %3\$s) VALUES('delete', old.id, %4\$s); INSERT INTO %1\$s(rowid, %3\$s) VALUES (new.id, %5\$s); END",
+            $ftsTable,
+            $table,
+            $columnList,
+            $oldCols,
+            $newCols
+        ));
     }
 }

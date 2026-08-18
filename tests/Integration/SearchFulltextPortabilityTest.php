@@ -181,7 +181,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
      */
     private function runSearch(QSingleToken $token): array
     {
-        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'categories_fts');
         self::assertNotSame([], $clauses);
 
         $rows = $this->conn->fetchAllAssociative(

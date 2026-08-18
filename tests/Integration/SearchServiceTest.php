@@ -640,7 +640,7 @@ namespace Piwigo\Tests\Integration {
             // ['name', 'comment'] matches the images_ft_name_comment FULLTEXT
             // index's exact column list (MySQL requires an exact match to use
             // MATCH() against it) -- the same pair every real call site passes.
-            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
             self::assertNotSame([], $clauses);
 
@@ -1097,7 +1097,7 @@ namespace Piwigo\Tests\Integration {
             // MySQL FULLTEXT can't do a leading-wildcard prefix match.
             $token = new QSingleToken('hoto', QSingleToken::QST_WILDCARD_BEGIN, null);
 
-            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
+            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name'], 'images_fts');
 
             self::assertNotSame([], $clauses);
             $count = $this->conn->executeQuery(
@@ -1114,7 +1114,7 @@ namespace Piwigo\Tests\Integration {
             $modifier = QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD_END;
             $token = new QSingleToken('Phot', $modifier, null);
 
-            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
+            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name'], 'images_fts');
 
             self::assertNotSame([], $clauses);
             $count = $this->conn->executeQuery(
@@ -1131,7 +1131,7 @@ namespace Piwigo\Tests\Integration {
             // term itself is longer than 3 chars.
             $token = new QSingleToken('ab-cd', 0, null);
 
-            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
+            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name'], 'images_fts');
 
             self::assertNotSame([], $clauses);
             $count = $this->conn->executeQuery(
@@ -1145,7 +1145,7 @@ namespace Piwigo\Tests\Integration {
         {
             $token = new QSingleToken('nature', QSingleToken::QST_QUOTED, null);
 
-            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
             if ($this->dbDriver === 'pgsql') {
                 self::assertSame(["tsv_search @@ to_tsquery('simple', ?)"], $clauses);
@@ -1160,7 +1160,7 @@ namespace Piwigo\Tests\Integration {
         {
             $token = new QSingleToken('travel', QSingleToken::QST_WILDCARD_END, null);
 
-            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+            [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
             if ($this->dbDriver === 'pgsql') {
                 self::assertSame(["tsv_search @@ to_tsquery('simple', ?)"], $clauses);
@@ -1190,7 +1190,7 @@ namespace Piwigo\Tests\Integration {
                 $this->expectException(Exception::class);
                 $this->expectExceptionMessageIsOrContains('qsearchGetTextTokenSearchSql(): preg_split() failed');
 
-                $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']);
+                $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name'], 'images_fts');
             } finally {
                 ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
             }

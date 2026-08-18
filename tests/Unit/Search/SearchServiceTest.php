@@ -666,7 +666,7 @@ test('qsearchGetTextTokenSearchSql() is injection-safe', function (): void {
     // eyeballing the SQL.
     $token = new QSingleToken("nature's", 0, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
     expect($clauses)
         ->not->toBe([]);
@@ -1474,7 +1474,7 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a leading wildcard
     // MySQL FULLTEXT can't do a leading-wildcard prefix match.
     $token = new QSingleToken('hoto', QSingleToken::QST_WILDCARD_BEGIN, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name'], 'images_fts');
 
     expect($clauses)
         ->not->toBe([]);
@@ -1493,7 +1493,7 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a quoted trailing 
     $modifier = QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD_END;
     $token = new QSingleToken('Phot', $modifier, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name'], 'images_fts');
 
     expect($clauses)
         ->not->toBe([]);
@@ -1512,7 +1512,7 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP when every split part 
     // term itself is longer than 3 chars.
     $token = new QSingleToken('ab-cd', 0, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name'], 'images_fts');
 
     expect($clauses)
         ->not->toBe([]);
@@ -1533,7 +1533,7 @@ test('qsearchGetTextTokenSearchSql() stays on FULLTEXT when the longest split pa
     // never gets near this exact boundary.
     $token = new QSingleToken('abc-defg', 0, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
     if (DbCredentials::fromEnv()->driver === 'pgsql') {
         expect($clauses)->toBe(["tsv_search @@ to_tsquery('simple', ?)"]);
@@ -1555,7 +1555,7 @@ test('qsearchGetTextTokenSearchSql() stays on FULLTEXT when the longest split pa
 test('qsearchGetTextTokenSearchSql() wraps a quoted term in double quotes for FULLTEXT', function (): void {
     $token = new QSingleToken('nature', QSingleToken::QST_QUOTED, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
     if (DbCredentials::fromEnv()->driver === 'pgsql') {
         expect($clauses)->toBe(["tsv_search @@ to_tsquery('simple', ?)"])
@@ -1571,7 +1571,7 @@ test('qsearchGetTextTokenSearchSql() wraps a quoted term in double quotes for FU
 test('qsearchGetTextTokenSearchSql() appends a star for a trailing wildcard FULLTEXT term', function (): void {
     $token = new QSingleToken('travel', QSingleToken::QST_WILDCARD_END, null);
 
-    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment'], 'images_fts');
 
     if (DbCredentials::fromEnv()->driver === 'pgsql') {
         expect($clauses)->toBe(["tsv_search @@ to_tsquery('simple', ?)"])
@@ -1597,7 +1597,7 @@ test('qsearchGetTextTokenSearchSql() throws when preg_split() hits the backtrack
     ini_set('pcre.backtrack_limit', '0');
 
     try {
-        expect(fn (): array => searchServiceTestService()->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']))
+        expect(fn (): array => searchServiceTestService()->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name'], 'images_fts'))
             ->toThrow(Exception::class, 'qsearchGetTextTokenSearchSql(): preg_split() failed');
     } finally {
         ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);

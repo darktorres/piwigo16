@@ -6,6 +6,7 @@ namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryEntity;
@@ -536,5 +537,15 @@ final readonly class SearchRepository
     {
         return $this->em->getConnection()
             ->getDatabasePlatform() instanceof PostgreSQLPlatform;
+    }
+
+    /**
+     * Same reasoning as {@see self::isPostgres()} -- whether the real, live
+     * connection is SQLite, read from the connected platform.
+     */
+    public function isSqlite(): bool
+    {
+        return $this->em->getConnection()
+            ->getDatabasePlatform() instanceof SQLitePlatform;
     }
 }

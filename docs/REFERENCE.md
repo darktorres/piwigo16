@@ -68,7 +68,7 @@ Three structural notes worth surfacing here:
   free function) is what originally surfaced the two-layer split — a
   free-function call creates no deptrac dependency edge, a direct class
   reference does; the third layer was added later by the plugin/theme
-  contract itself (P27).
+  contract itself (P29).
 - **`MailService` implements `Core\MailerInterface`** (L1Infrastructure)
   specifically so `Users`/`Comment`/`Search`/`Section` (L2a/L2b) can
   constructor-inject it without an illegal upward dependency on
@@ -196,7 +196,7 @@ rather than sharing MySQL's: the two schemas differ at the engine level
 `longtext ... CHECK (json_valid(...))`, since MariaDB has no native JSON
 type), so one shared file made the CI drift guard unsatisfiable there.
 
-### Plugin/theme contract (P27)
+### Plugin/theme contract (P29)
 
 Every typed event a plugin/theme can subscribe to, mapped back to the
 legacy `trigger_change()`/`trigger_notify()` hook name it derives from
@@ -224,7 +224,7 @@ checking `ExtensionContext::isAdminContext()`.
 legacy `main.inc.php`/`themeconf.inc.php` header-comment format
 entirely — `Admin\Extensions\ExtensionScanner`/`ExtensionType::
 markerFilenames()` recognize only the new manifest files, no legacy
-fallback (P27.10; this fork breaks all pre-17.x extensions by design,
+fallback (P29.10; this fork breaks all pre-17.x extensions by design,
 see "Key design decisions" in `docs/PLAN.md`). `PluginConfig\
 PluginManifest`/`ThemeManifest` are the readonly DTOs; `require` (a
 Composer-style version-constraint map keyed `'piwigo'` or
@@ -246,7 +246,7 @@ furthest-ancestor-first for both registration and boot — the reverse of
 the child-first order asset/CSS lookup uses, because `dispatchChange()`
 is a pipeline where the *last* handler registered has final say. Both
 registries retarget `Admin\Extensions\ExtensionLifecycle`'s admin
-install/activate/deactivate/uninstall/update actions (P27.5) — the
+install/activate/deactivate/uninstall/update actions (P29.5) — the
 business-rule layer (last-theme guard, default-theme reassignment on
 deactivate) stays in `ExtensionLifecycle` itself, wrapping a call into
 the registry rather than being replaced by it.
@@ -277,7 +277,7 @@ initialize()` resolves the real logged-in user and long before
 user-dependent logic belongs in a `subscribedEvents()` handler for a
 later lifecycle event instead.
 
-**Settings pages (P27.15).** A plugin/theme whose manifest declares
+**Settings pages (P29.15).** A plugin/theme whose manifest declares
 `hasSettings` (`true` or `'webmaster'`) implements `PluginConfig\
 SettingsPageInterface` (`handleSettingsRequest(ServerRequestInterface
 $request): void`) alongside `ExtensionInterface` on the same `main`
@@ -326,7 +326,7 @@ repo's own git history (`.gitignore` already excludes `plugins/*`/
 `themes/*` except `index.php`/core's own `themes/default`); they ship
 via the PEM mirror above and get auto-installed at install time. Porting
 each one onto the new contract (source lives in the sibling
-`../piwigo16-plugins`/`../piwigo16-themes` repos) is tracked as P27.6 —
+`../piwigo16-plugins`/`../piwigo16-themes` repos) is tracked as P29.6 —
 in progress as of this writing, not yet complete for all 7.
 
 ### What's genuinely not built yet

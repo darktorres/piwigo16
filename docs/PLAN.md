@@ -115,8 +115,8 @@ Three structural changes produced that drift:
 | P23 | Legacy deletion & cleanup | Done — later-audit gaps all closed | 123 |
 | P24 | Post-P23 remediation & hardening | In progress — see Epoch F | 646 |
 | P25 | WS layer modernization — typed internals + PSR-7 lifecycle | Mostly done — Stage 1/2 landed, Stage 3 tests/docs partial; see Epoch G | ~50 |
-| P26 | Admin fragment surface — UI-facing WS methods off the envelope | Not started | 0 |
-| P27 | Public API v1 (REST + OpenAPI 3.1 + tus) — WS deleted here | Not started | 0 |
+| P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
+| P27 | Public API v1 (REST + OpenAPI 3.1 + tus) — WS deleted here | Mostly done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors; OpenAPI 3.1 spec + generated TS client not started; see Epoch G | ~130 |
 | P28 | Security hardening | Not started | 0 |
 | P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 unstarted | 22 |
 | P30 | Layer decoupling + repository restructure | Not started — web-root half done | 1 |
@@ -1105,6 +1105,44 @@ file: the `Pwg` prefix was dropped repo-wide on 2026-08-11
 (`PwgTags.php` → `Tags.php`, `PwgError` → `WsErrorResponse`, `PwgServer`
 → `Server`).
 
+**P26/P27 — real status, audited 2026-08-18** (the table above previously
+read "Not started | 0" for both, contradicted by the P25 "Superseded"
+note two paragraphs up and by this whole codebase's own Browser suite,
+which drives `/api/v1` throughout). Verified directly against the tree,
+not inferred:
+
+- **P26 is done.** Its stated goal — moving the ~15 UI-facing WS methods
+  off the JSON/XML envelope onto server-rendered fragments — is
+  satisfied by construction: the WS layer is gone entirely, and every
+  admin UI surface already renders through a `*PageRenderer`/
+  `*SubController` onto a Latte template, never a WS envelope.
+- **P27 is mostly done.** `find src/Piwigo/Controller/Api -name "*.php"`
+  → 134 files; `RouteDefinitions.php` registers 88 real `/api/v1`
+  routes, covering categories, comments, extensions, groups, history,
+  images (including a filtered-search endpoint), session/preferences/
+  API keys/favorites/caddie, tags, uploads, and users. Uploads get a
+  full tus 1.0.0 chunked-upload protocol (`Uploads/TusUpload*`, 6
+  dedicated controllers), replacing the old 9-method WS chunk-upload
+  protocol as originally planned. Every response is RFC 9457
+  `application/problem+json` on error (`Http\Middleware\
+  ApiErrorMiddleware` for routing-level 404/405,
+  `Http\Middleware\ExceptionHandlerMiddleware` app-wide for uncaught
+  exceptions — confirmed SEC-36/SEC-37, see below). `Http\AdminGuard`
+  (401 vs 403) is explicitly injected into 69 of the 134 controllers
+  (SEC-38, confirmed).
+- **Confirmed still missing from P27**: no OpenAPI 3.1 spec file or
+  generated TypeScript client exist anywhere in the tree (`find . -iname
+  "openapi*"` and a search for a real API-client `.ts` output both came
+  back empty — the `.ts` files that do exist are build tooling config,
+  not a generated client). `Content-Type: application/json` validation
+  on incoming REST bodies is real but narrow: the only
+  `getHeaderLine('Content-Type')`/`getHeader('Content-Type')` check
+  anywhere under `src/Piwigo` is `TusUploadPatchController`'s own
+  tus-protocol check, not a general REST-body guard (SEC-39, confirmed
+  not started). No `Idempotency-Key` replay store exists (SEC-65,
+  confirmed not started — zero hits for `Idempotency` anywhere under
+  `src/Piwigo`).
+
 ### Epoch H — Security (P28)
 
 **P28 — Security hardening.** Not started: WebAuthn/passkeys, OIDC SSO,
@@ -1870,14 +1908,14 @@ not a guarantee.
 | SEC-33 | P19 | Derivative serving leaks file existence | Partial — permission check is real, but runs through the full pipeline, not the designed fast path, so the item's scope shifted |
 | SEC-34 | P22 | Install sentinel DB-flag secondary check | Done |
 | SEC-35 | P19 | Remove non-standard headers from derivative pipeline | Done |
-| SEC-36 | P27 | REST error responses never leak internals | Not started |
-| SEC-37 | P27 | No object dumps in the REST error path | Not started |
-| SEC-38 | P27 | REST route authorization middleware | Not started |
-| SEC-39 | P27 | Validate `Content-Type: application/json` on REST bodies | Not started |
+| SEC-36 | P27 | REST error responses never leak internals | Done (confirmed) — `Http\Middleware\ExceptionHandlerMiddleware` catches every uncaught `Throwable` app-wide (including `/api/v1`), logs it + reports to Sentry, and returns a bare `Internal Server Error` 500 with no message/trace |
+| SEC-37 | P27 | No object dumps in the REST error path | Done (confirmed) — same middleware; nothing beyond the class name and message is logged, never returned to the client |
+| SEC-38 | P27 | REST route authorization middleware | Done (confirmed) — `Http\AdminGuard` (401 vs 403, RFC 9457 problem+json), explicitly injected into 69 of the 134 `Controller\Api\*` classes |
+| SEC-39 | P27 | Validate `Content-Type: application/json` on REST bodies | Not started (confirmed) — grepped every `getHeaderLine('Content-Type')`/`getHeader('Content-Type')` call under `src/Piwigo`; the only hit is `TusUploadPatchController`'s own tus-protocol check, not a general REST-body guard |
 | SEC-40 | P24 | Request DTOs as a hard input-validation gate | Real progress — arch test live; no "0 remaining" verified |
 | SEC-41 | P28 | Password hashing → Argon2id | Not started |
 | SEC-42 | P28 | CSRF middleware: remove `/admin*` exemption | Not started |
-| SEC-43 | P28 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | Not started (depends on P27) |
+| SEC-43 | P28 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | Not started — moot until the OpenAPI spec endpoint itself exists (P27, not started) |
 | SEC-44 | P28 | API rate limiting + rate-limit headers | Not started — `rate_limiter` pool deliberately unbuilt pending this |
 | SEC-45 | P28 | CSP violation reporting | Not started |
 | SEC-46 | P28 | Cross-Origin Isolation (COOP/COEP) | Not started |
@@ -1899,7 +1937,7 @@ not a guarantee.
 | SEC-62 | P28 | Trusted Types | Not started |
 | SEC-63 | P28 | Fetch Metadata isolation | Not started |
 | SEC-64 | P3 | OpenSSF Scorecard | Done |
-| SEC-65 | P27 | API `Idempotency-Key` replay store | Not started |
+| SEC-65 | P27 | API `Idempotency-Key` replay store | Not started (confirmed) — zero hits for `Idempotency` anywhere under `src/Piwigo` |
 
 ### Notes on the partial items
 

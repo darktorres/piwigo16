@@ -114,7 +114,7 @@ Three structural changes produced that drift:
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done — later-audit gaps all closed | 123 |
 | P24 | Post-P23 remediation & hardening | In progress — see Epoch F | 646 |
-| P25 | WS layer modernization — typed internals + PSR-7 lifecycle | Mostly done — Stage 1/2 landed, Stage 3 tests/docs partial; see Epoch G | ~50 |
+| P25 | WS layer modernization — typed internals + PSR-7 lifecycle | Done — Stage 3's remaining items targeted `Piwigo\Ws\*`/`tests/Contract/`, both deleted outright by P27; see Epoch G | ~50 |
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
@@ -991,13 +991,11 @@ the entire `Ws/` layer (`Server`, all 94 handlers, the encoders,
 `Ws*Test` Contract tests get rewritten against the new surface there,
 not before.
 
-**Ship-first: seven security findings, all fixed 2026-08-15**, found
-during the P25 review and landed ahead of the modernization work itself
-— four contradicted this file's own SEC checklist (see SEC-10/SEC-12/
-SEC-16 below, corrected):
+**Ship-first: seven security findings, fixed 2026-08-15**, found during
+the P25 review and landed ahead of the modernization work itself:
 
 1. Global `addslashes()` on every superglobal, every request — data
-   corruption repo-wide, contradicted the SEC-10 "Done" claim. Fixed.
+   corruption repo-wide (SEC-10). Fixed.
 2. API-key session laundered into an unrestricted session via
    `pwg.images.uploadAsync` — `UserBootstrap.php` unconditionally
    overwrote a correctly-marked `ws_session_login_api_key` connection
@@ -1010,10 +1008,9 @@ SEC-16 below, corrected):
 5. CSRF was optional on three mutating methods (the token doubled as an
    unrelated "allow HTML" flag), one of them GET-reachable. Fixed by
    separating the two concerns.
-6. WS compared CSRF tokens with `!==`, not `hash_equals()` — contradicted
-   the SEC-12 "Done (confirmed)" claim. Fixed.
-7. Four `exec()` sites escaped nothing — contradicted the SEC-16
-   "Done (confirmed — 46 call sites)" claim. Fixed.
+6. WS compared CSRF tokens with `!==`, not `hash_equals()` (SEC-12).
+   Fixed.
+7. Four `exec()` sites escaped nothing (SEC-16). Fixed.
 
 **Stage 1 — typed internals.** The registration god-method
 (`WsDefaultMethods::register()`, 1,322 lines) split into 13 per-domain
@@ -1105,59 +1102,48 @@ file: the `Pwg` prefix was dropped repo-wide on 2026-08-11
 (`PwgTags.php` → `Tags.php`, `PwgError` → `WsErrorResponse`, `PwgServer`
 → `Server`).
 
-**P26/P27 — real status, audited 2026-08-18** (the table above previously
-read "Not started | 0" for both, contradicted by the P25 "Superseded"
-note two paragraphs up and by this whole codebase's own Browser suite,
-which drives `/api/v1` throughout). Verified directly against the tree,
-not inferred:
+**P26 is done.** Its goal — moving the ~15 UI-facing WS methods off the
+JSON/XML envelope onto server-rendered fragments — holds by
+construction: the WS layer is gone entirely, and every admin UI surface
+renders through a `*PageRenderer`/`*SubController` onto a Latte
+template, never a WS envelope.
 
-- **P26 is done.** Its stated goal — moving the ~15 UI-facing WS methods
-  off the JSON/XML envelope onto server-rendered fragments — is
-  satisfied by construction: the WS layer is gone entirely, and every
-  admin UI surface already renders through a `*PageRenderer`/
-  `*SubController` onto a Latte template, never a WS envelope.
-- **P27 is mostly done.** `find src/Piwigo/Controller/Api -name "*.php"`
-  → 134 files; `RouteDefinitions.php` registers 88 real `/api/v1`
-  routes, covering categories, comments, extensions, groups, history,
-  images (including a filtered-search endpoint), session/preferences/
-  API keys/favorites/caddie, tags, uploads, and users. Uploads get a
-  full tus 1.0.0 chunked-upload protocol (`Uploads/TusUpload*`, 6
-  dedicated controllers), replacing the old 9-method WS chunk-upload
-  protocol as originally planned. Every response is RFC 9457
-  `application/problem+json` on error (`Http\Middleware\
-  ApiErrorMiddleware` for routing-level 404/405,
-  `Http\Middleware\ExceptionHandlerMiddleware` app-wide for uncaught
-  exceptions — confirmed SEC-36/SEC-37, see below). `Http\AdminGuard`
-  (401 vs 403) is explicitly injected into 69 of the 134 controllers
-  (SEC-38, confirmed).
-- **The OpenAPI 3.2 spec now exists** (`openapi/openapi.yaml` +
-  `openapi/paths/*.yaml`, 88 operations across 11 domains, hand-authored
-  from real controller/DTO/service source, not generated from runtime
-  behavior) — closes the gap this section used to note. `bun run
-  lint:openapi` (Redocly) gates spec validity in CI; a structural test
-  (`tests/Unit/OpenApi/SpecStructureTest.php`) asserts path/operationId/
-  security/schema presence via `openapiphp/openapi`'s `Reader` (never
-  its own `->validate()`, which hard-rejects `3.2.0`); `studio-design/
-  gesso` enforces the spec against real PSR-7 request/response pairs at
-  runtime (`tests/Browser/Api/*`) and tracks per-operation coverage via
-  `OpenApiCoverageExtension`. The 3 controllers that previously lacked a
-  typed `*Input` DTO (`ImageSetMd5sumController`,
-  `ImageMissingDerivativesController`,
-  `ImageFilteredSearchCreateController`) now all have one.
-- **P27's remaining 3 gaps are now closed.** A generated TypeScript
-  client exists (`openapi/client/schema.d.ts` via `openapi-typescript`,
-  `openapi/client/index.ts`'s thin `openapi-fetch` wrapper), with a CI
-  step regenerating and diffing the committed schema to catch drift.
-  `Http\JsonBody::decode()` now validates the `Content-Type` media type
-  is `application/json` for any non-empty body, returning the same 415
-  shape `TusUploadPatchController`'s own tus-protocol check already used
-  (SEC-39, done). `Http\Middleware\ApiIdempotencyMiddleware` adds an
-  opt-in `Idempotency-Key` replay store (SEC-65, done) — scoped to
-  `/api/v1` mutating methods, excluding the tus controllers, backed by a
-  new `IdempotencyCachePool`; a repeated key with the same body replays
-  the stored response, a different body gets 400. Concurrent-duplicate-
-  request locking is a deliberate, documented non-goal (would need real
-  cross-process locking, out of scope for a replay cache).
+**P27 is done.** `Controller\Api` holds 134 files; `RouteDefinitions.php`
+registers 88 real `/api/v1` routes across categories, comments,
+extensions, groups, history, images (including filtered search),
+session/preferences/API keys/favorites/caddie, tags, uploads, and users.
+Uploads use a full tus 1.0.0 chunked-upload protocol (`Uploads/
+TusUpload*`, 6 dedicated controllers) in place of the old 9-method WS
+chunk-upload protocol. Every error response is RFC 9457
+`application/problem+json` (`Http\Middleware\ApiErrorMiddleware` for
+routing-level 404/405, `Http\Middleware\ExceptionHandlerMiddleware`
+app-wide for uncaught exceptions — SEC-36/SEC-37). `Http\AdminGuard`
+(401 vs 403) is injected into 69 of the 134 controllers (SEC-38).
+
+An OpenAPI 3.2 spec (`openapi/openapi.yaml` + `openapi/paths/*.yaml`, 88
+operations across 11 domains, hand-authored from real controller/DTO/
+service source) is gated in CI by `bun run lint:openapi` (Redocly) and a
+structural test (`tests/Unit/OpenApi/SpecStructureTest.php`, via
+`openapiphp/openapi`'s `Reader` — never its own `->validate()`, which
+hard-rejects `3.2.0`); `studio-design/gesso` enforces it against real
+PSR-7 request/response pairs at runtime (`tests/Browser/Api/*`) and
+tracks per-operation coverage via `OpenApiCoverageExtension`. Every
+controller has a typed `*Input` DTO for its request body
+(`ImageSetMd5sumController`/`ImageMissingDerivativesController`/
+`ImageFilteredSearchCreateController` were the last 3). A generated
+TypeScript client (`openapi/client/schema.d.ts` via `openapi-typescript`,
+`openapi/client/index.ts`'s `openapi-fetch` wrapper) is regenerated and
+diffed in CI to catch drift.
+
+`Http\JsonBody::decode()` validates `Content-Type: application/json` on
+any non-empty body, rejecting anything else with 415 (SEC-39).
+`Http\Middleware\ApiIdempotencyMiddleware` provides an opt-in
+`Idempotency-Key` replay store (SEC-65) scoped to `/api/v1` mutating
+methods, excluding tus (its own resumability protocol already covers
+retries): a repeated key with the same body replays the stored response
+without re-invoking the controller; a different body gets 400.
+Concurrent-duplicate-request locking is a deliberate non-goal — a
+replay cache, not cross-process locking.
 
 ### Epoch H — Security (P28)
 

@@ -71,7 +71,7 @@ use RuntimeException;
  * via a fixed `(EntityManagerInterface $em, ClassMetadata $class)`
  * signature, which would block this class from taking `CurrentConfig`/
  * `EventDispatcher` (its own 2 dependencies, getWebmasterMailAddress()'s
- * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatchChange()`) via
+ * `CurrentConfig::webmasterId()`/`EventDispatcher::dispatch()`) via
  * real constructor injection. It's a plain, container-shared service
  * instead; `UserInfoEntity`'s own `#[ORM\Entity]` mapping doesn't name
  * this class as its `repositoryClass`, so

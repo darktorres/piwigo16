@@ -39,12 +39,8 @@ deptrac:
     # Storage/Audit above, so L1Infrastructure is both the lowest layer
     # that covers every real caller and the architecturally correct fit.
     # Its namespace-mate PluginRepository stays in L2bExtendedDomain (see
-    # its own comment there). EventHandler (EventDispatcher's own
-    # handler-registration DTO, constructed only by EventDispatcher
-    # itself) rides along in the same collector -- without it, this
-    # class would have no layer at all and every dependency touching it
-    # would go unchecked. Any future class added to this namespace needs
-    # the same deliberate placement, not a silent gap.
+    # its own comment there). Any future class added to this namespace
+    # needs the same deliberate placement, not a silent gap.
     # The photo sort order used to live in a Piwigo\Sort namespace collected
     # here, because it fused two jobs: naming sort fields (vocabulary) and
     # emitting SQL columns, dialect functions and DQL paths (rendering). The

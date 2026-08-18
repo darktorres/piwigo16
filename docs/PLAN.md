@@ -56,6 +56,7 @@ phase from a tag — use the table below.
 | `(p32)` in `style(templates)` | Latte reformat across the tree | P32 |
 | `(p33a)`–`(p33h)` | Latte idiomatic sub-items A–H | P33A–H |
 | `chore(p32): delete doc/` | A one-off cleanup that borrowed the tag | — |
+| `feat(events): A1`–`A6`, "P32 Stage A" in commit bodies/`docs/events-legacy-map.md` | Event system rewrite | P34 |
 | `(P25/G19)`, `(P19.n)` | WS layer decomposition into typed handlers | Epoch G / P25 |
 | Original plan's "P24 Vite + TypeScript" | Frontend track | P36 / P45 |
 | Original plan's "P27 Type correctness" | Merged into remediation | P24 |
@@ -123,7 +124,7 @@ Three structural changes produced that drift:
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P44 | 11 |
 | P33 | Latte idiomatic modernization | Done — all 8 sub-items | 8 |
-| P34 | Event system rewrite | Not started | 0 |
+| P34 | Event system rewrite | Done — items 1-4 complete and verified; item 5's catalogue is missing 4 of 6 named core hooks (see Epoch J) | 12 |
 | P35 | Browserslist decision + IE back-compat removal | Not started | 0 |
 | P36 | Asset-pipeline foundation (ViteManifest) | Not started | 0 |
 | P37 | Typed page-data exposure (PHP half) | Not started | 0 |
@@ -669,10 +670,11 @@ Free-function elimination landed first: `add_event_handler()`,
 `trigger_change()` and `trigger_notify()` deleted, all 240 call sites
 retargeted onto the dispatcher directly. Then the actual point — typed
 event objects replacing bare-string-keyed dispatch — across 12 domain
-batches. 157 event classes today.
+batches. 157 event classes at the time; P34 (below) later pruned dead
+ones to 127.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="157" -->
+<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="127" -->
 
 `triggerChange()`/`triggerNotify()` were originally kept as "permanent"
 for `'trigger'`, their own internal meta-notification channel, then
@@ -1422,43 +1424,44 @@ the same rendered output.
 
 #### Refactor/modernization track — lands first
 
-**P34 — Event system rewrite.** Independent of the rest of Epoch J: it
-touches no template, asset or JS file, and can run immediately.
+**P34 — Event system rewrite. Done**, landed under the `feat(events):
+A1`-`A6` tags (historically "P32 Stage A" — the numbering shift predates
+the current scheme; see the commit-tags table above) plus one follow-up
+`fix(events)` commit closing gaps a full Integration/Contract/Browser
+run surfaced (7 test-fixture plugins with a heredoc-escaping byte
+mismatch that made the co-location rename's `grep -F` search miss them,
+2 further fixture handlers still using the pre-A2 `return $newValue`
+idiom, a stale `{@see}` reference, a stale `deptrac.yaml` comment).
+Independent of the rest of Epoch J: touches no template, asset or JS
+file.
 
-Today there are 157 event classes but only 21 with a production listener,
-and the three features the bespoke dispatcher cites to justify its
-existence have zero production callers. The rewrite:
-
-1. **Mutable payloads.** Of the 138 `final readonly` event classes, drop
-   `readonly` on the *filterable* fields only; context fields keep it.
-   The 149 `dispatchChange` call sites read the value back off the event
-   instead of relying on the returned instance. Behavior is identical
-   under the existing dispatcher, so this verifies standalone.
-2. **One verb.** `dispatchChange()`/`dispatchNotify()` collapse into
-   PSR-14 `dispatch(object $event): object` across all 250 sites, and the
-   runtime "handler must return an instance" guard goes.
-3. **Symfony.** `symfony/event-dispatcher` replaces the 282-line bespoke
-   dispatcher; `addTypedHandler()` maps onto
-   `addListener($event::class, $callable, $priority)`. Keep the
-   closure-based `subscribedEvents()` shape — Symfony's
-   `EventSubscriberInterface` uses static method-name strings, which
-   collide with this repo's PHPStan ban on variable method calls.
-4. **Delete the dead API.** `EventHandler`, `addEventHandler()`,
-   `removeEventHandler()`, `includePath`, `callablesEqual()`, and the
-   ~700-line test file that is largely testing deleted features.
-5. **Catalogue.** Rename `Loc*` to tense-consistent module names
-   (`LocEndIndex` → `Gallery\Event\IndexRendered`), co-locate every event
-   with its module, prune to evidence, add the **6 real core hooks that
-   have no class** (`invalidate_user_cache` 7 wild uses,
-   `get_categories_menu_sql_where` 6, `user_list_columns` 3,
-   `after_render_user_list` 2, `get_high_url` 2, `add_elements` 2), and
-   ship `docs/events-legacy-map.md` so the plugin-porting campaign stays
-   greppable.
-
-**The prune is per-event judgement, not a script**, and its derived list
-goes up for review before anything is deleted: 27% of `loc_*` handlers do
-non-contribution work, so a payload-less marker can still be
-load-bearing.
+1. **Mutable payloads — done (A1).** Filterable fields on event classes
+   dropped `readonly`; context fields kept it. Call sites read the value
+   back off the event instead of relying on a returned instance.
+2. **One verb — done (A2).** `dispatchChange()`/`dispatchNotify()`
+   collapsed into PSR-14 `dispatch(object $event): object`
+   (`PluginConfig\EventDispatcher::dispatch()`); the runtime "handler
+   must return an instance" guard is gone. A handler that still
+   `return`s a replacement value instead of mutating the event in place
+   now fails silently — documented in `docs/events-legacy-map.md`.
+3. **Symfony — done (A3).** `PluginConfig\EventDispatcher` wraps a real
+   `Symfony\Component\EventDispatcher\EventDispatcher` directly;
+   `addTypedHandler()` maps onto `addListener()`. Kept the closure-based
+   `subscribedEvents()` shape rather than Symfony's own
+   `EventSubscriberInterface`, whose static method-name strings collide
+   with this repo's PHPStan ban on variable method calls.
+4. **Delete the dead API — done (A4).** `EventHandler`,
+   `addEventHandler()`, `removeEventHandler()`, `includePath`,
+   `callablesEqual()`, and the legacy test file are all gone.
+5. **Catalogue — partly done (A5/A6).** Every `Loc*` marker renamed to a
+   tense-consistent, module-co-located name and event classes pruned to
+   evidence (127 classes today, down from 157); `docs/
+   events-legacy-map.md` shipped as the name-lookup reference. Only 2 of
+   the 6 named core hooks with no class got one
+   (`Cache\Event\InvalidateUserCache`, `Category\Event\
+   GetCategoriesMenuRows`) — `user_list_columns`, `after_render_user_list`,
+   `get_high_url` and `add_elements` still have none. Real remaining
+   work, not a doc gap.
 
 **P35 — Browserslist decision + IE back-compat removal.** One phase, not
 two — the removal is the decision's mechanical consequence. Commit a
@@ -1797,8 +1800,6 @@ phase only if T1/T2 alone is still oversized.
   each; golden-HTML catches the rest.
 - **P36's fork can flip P41 entirely.** If assets become view-declared,
   shell-last composition may be unnecessary.
-- **P34's catalogue prune is judgement, not a script.** Review the derived
-  list before deleting anything.
 - **P51's Tailwind decision is due before P40 starts.**
 - **P29 breaks external extensions by design** — an accepted product
   decision, not an oversight. In-tree callers migrate in the same phase.

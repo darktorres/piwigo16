@@ -296,9 +296,34 @@ return [
     // fresh EntityManagerFactory::build(DbConnection::build()) internally,
     // so no Paths/Connection param is needed here; see that method's own
     // docblock for why it doesn't route through the container-shared EM.
+    //
+    // tablesExist(['derivative_settings']) guards against a real, found-
+    // live bug: Piwigo\Bootstrap\CliBootstrap::buildApplication() resolves
+    // every registered command up front (deliberate, see its own
+    // docblock), including Command\MaintenanceCacheSizeCommand, whose own
+    // constructor chain (-> Admin\Maintenance\CacheSizeCalculator) needs a
+    // real ImageStdParams -- so this factory runs on EVERY bin/piwigo CLI
+    // invocation, not just ones that use derivative params, including
+    // `migrations:migrate` itself against a genuinely pre-migration
+    // database (confirmed live: `no such table: derivative_settings` on
+    // sqlite3, the equivalent "doesn't exist"/"relation ... does not
+    // exist" on mysqli/pgsql). CliBootstrap's own docblock already
+    // documents the identical constraint for ConfigService ("CLI commands
+    // can run before the `config` table exists... Doctrine repositories
+    // are lazy, so that part is safe even pre-migration") -- this factory
+    // was the one real place that constraint didn't hold, since it calls
+    // loadFromDb() eagerly rather than leaving the read lazy.
+    // `derivative_size` is checked for nothing extra: both tables are
+    // created together, in the same migration (Version20260804122302).
+    // Skipping loadFromDb() pre-migration leaves every property at
+    // ImageStdParams' own already-documented "not yet loaded" baseline
+    // (see getWatermark()'s own docblock) -- exactly the state a real
+    // pre-migration bin/piwigo invocation needs, not a new fallback path.
     ImageStdParams::class => factory(static function (): ImageStdParams {
         $imageStdParams = new ImageStdParams();
-        $imageStdParams->loadFromDb();
+        if (DbConnection::build()->createSchemaManager()->tablesExist(['derivative_settings'])) {
+            $imageStdParams->loadFromDb();
+        }
         return $imageStdParams;
     }),
 

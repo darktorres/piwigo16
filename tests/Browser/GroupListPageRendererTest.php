@@ -8,7 +8,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Admin\GroupListPageRenderer (admin.php?page=group_list) -- a
  * read-only listing page. `?delete=`/`?toggle_is_default=` are documented,
  * confirmed-dead params (GroupListSubController's own docblock: group
- * create/delete/rename all go through the WS API, nothing in this page
+ * create/delete/rename all go through `/api/v1/groups`, nothing in this page
  * ever acts on them) that STILL gate a real CSRF check
  * (GroupListActionRequest::requiresCsrfCheck), so this suite exercises
  * that CSRF gate directly rather than any actual mutation.

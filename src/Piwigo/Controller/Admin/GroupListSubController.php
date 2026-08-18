@@ -12,7 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces admin/group_list.php (page slug "group_list") -- a flat page,
  * pure delegate. Already uses GroupRepository directly for its own
  * reads; no write logic of its own to extract (group
- * create/delete/rename go through the WS API, not this page -- confirmed
+ * create/delete/rename go through `/api/v1/groups`, not this page -- confirmed
  * via direct read, its own check_pwg_token() gate for $_GET['delete']/
  * ['toggle_is_default'] is unused dead validation, nothing in the file
  * ever acts on those params -- preserved exactly, not "fixed").

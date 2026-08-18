@@ -252,9 +252,6 @@ final class ImageExtImagick implements ImageInterface
 
         if (count($returnarray) > 0) {
             $logger->error('', 'i.php', $returnarray);
-            foreach ($returnarray as $line) {
-                trigger_error($line, E_USER_WARNING);
-            }
         }
         return true;
     }

@@ -721,7 +721,7 @@ test('write throws when the destination path has no directory component at all',
         ->toThrow(Exception::class, 'write(): unable to determine directory for ');
 });
 
-test('write triggers E_USER_WARNING for each line of real CLI failure output', function (): void {
+test('write returns true and creates no destination file even when the underlying CLI call fails', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
     $path = imageExtImagickTestMarker() . '/cli-fail-src.jpg';
@@ -735,33 +735,15 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
 
     $dest = imageExtImagickTestMarker() . '/cli-fail-out.jpg';
 
-    /** @var array<int, array{0: int, 1: string}> $captured */
-    $captured = [];
-    set_error_handler(static function (int $errno, string $errstr) use (&$captured): bool {
-        $captured[] = [$errno, $errstr];
-
-        return true;
-    });
-    try {
-        $result = $image->write($dest);
-    } finally {
-        restore_error_handler();
-    }
+    $result = $image->write($dest);
 
     expect($result)
         ->toBeTrue('write() always reports success, even when the underlying CLI call fails')
-        ->and($captured)
-        ->not->toBeEmpty();
-    foreach ($captured as [$errno, $errstr]) {
-        expect($errno)->toBe(E_USER_WARNING);
-        expect($errstr)
-            ->not->toBe('');
-    }
-    expect(file_exists($dest))
+        ->and(file_exists($dest))
         ->toBeFalse();
 });
 
-// [Mutation] Line 258's ConcatSwitchSides mutant (moving
+// [Mutation] Line 249's ConcatSwitchSides mutant (moving
 // ' < /dev/null 2>&1' to appear BEFORE the destination-path argument
 // instead of after it) is genuinely inert at the shell level: POSIX shell
 // redirections are positionally independent from the surrounding words in
@@ -775,17 +757,11 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
 test('write logs a real ERROR line via the logger when the CLI call fails, with an empty message (the CLI output is the payload, in context)', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
-    // The sibling "triggers
-    // E_USER_WARNING" test above only asserts on trigger_error() output,
-    // never on the $logger->error('', 'i.php', $returnarray) call right
-    // before it -- so neither removing that call (RemoveMethodCall) nor
-    // changing its message argument from '' to anything else
-    // (EmptyStringToNotEmpty) was ever observable. Logger::error()'s own
-    // formatMessage() appends the $returnarray context as an indented
-    // block right after the message -- with an empty message, the log
-    // line's own "[i.php]\t" category marker is followed IMMEDIATELY by a
-    // newline (per Logger::formatMessage() itself): a non-empty message
-    // would put real text there instead.
+    // Logger::error()'s own formatMessage() appends the $returnarray
+    // context as an indented block right after the message -- with an
+    // empty message, the log line's own "[i.php]\t" category marker is
+    // followed IMMEDIATELY by a newline (per Logger::formatMessage()
+    // itself): a non-empty message would put real text there instead.
     $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
     imageExtImagickTestCurrentLogger()
@@ -802,12 +778,7 @@ test('write logs a real ERROR line via the logger when the CLI call fails, with 
         file_put_contents($path, 'not a real jpeg anymore, just garbage bytes');
         $dest = imageExtImagickTestMarker() . '/error-line-out.jpg';
 
-        set_error_handler(static fn (): bool => true);
-        try {
-            $image->write($dest);
-        } finally {
-            restore_error_handler();
-        }
+        $image->write($dest);
 
         $logContent = file_get_contents($logDir . '/error-line.log');
         if ($logContent === false) {
@@ -917,18 +888,7 @@ test('write casts a since-deleted source file\'s realpath() failure to an empty 
 
     $dest = imageExtImagickTestMarker() . '/write-vanish-out.jpg';
 
-    /** @var array<int, array{0: int, 1: string}> $captured */
-    $captured = [];
-    set_error_handler(static function (int $errno, string $errstr) use (&$captured): bool {
-        $captured[] = [$errno, $errstr];
-
-        return true;
-    });
-    try {
-        $result = $image->write($dest);
-    } finally {
-        restore_error_handler();
-    }
+    $result = $image->write($dest);
 
     expect($result)
         ->toBeTrue()
@@ -1001,17 +961,11 @@ test('write omits the parameter value for every "no value" sentinel (null/0/0.0/
         $image->addCommand('optreal', 5);
 
         // Fake, non-real ImageMagick flag names -- write()'s own exec()
-        // call is expected to genuinely fail against these (real CLI
-        // failure, real E_USER_WARNING via trigger_error(), swallowed
-        // below same as this file's own "triggers E_USER_WARNING" test
-        // above). This test only cares about the *logged* $exec string
+        // call is expected to genuinely fail against these (a real CLI
+        // failure, logged and swallowed by write()'s own always-succeeds
+        // contract). This test only cares about the *logged* $exec string
         // built before that call, not whether the call itself succeeds.
-        set_error_handler(static fn (): bool => true);
-        try {
-            $image->write($dest);
-        } finally {
-            restore_error_handler();
-        }
+        $image->write($dest);
 
         $logContent = file_get_contents($logDir . '/sentinel.log');
         if ($logContent === false) {
@@ -1056,7 +1010,7 @@ test('write does not log an error when the CLI call succeeds with no output at a
 
         // A real, successful convert/magick call genuinely produces zero
         // lines of CLI output -- count($returnarray)
-        // stays 0, so $logger->error()/trigger_error() must never fire.
+        // stays 0, so $logger->error() must never fire.
         $logContent = file_get_contents($logDir . '/success.log');
         if ($logContent === false) {
             throw new RuntimeException('Failed to read the real log file written by write().');

@@ -146,6 +146,18 @@ parameters:
             identifier: dba.syntaxError
             path: src/Piwigo/Db/AdvisorySessionLock.php
         -
+            # fetchTomorrow()/fetchFutureDatesFor() each branch across 3
+            # real platforms (MySQL/Postgres/SQLite) -- validated against
+            # whichever one connection phpstan-dba has, only the branch
+            # matching the configured driver ever actually executes (own
+            # class docblock documents the per-platform split). A 3-way
+            # branch on one query line can surface more than one distinct
+            # dba.syntaxError instance, which is why this lives here
+            # (path-level, unlimited occurrences) rather than as an inline
+            # per-line ignore comment (matches a single reported error).
+            identifier: dba.syntaxError
+            path: src/Piwigo/Db/SqlDialectExecutor.php
+        -
             # setval()/pg_get_serial_sequence() are Postgres-only, validated
             # against whichever one connection phpstan-dba has -- only the
             # branch matching the configured driver ever actually executes

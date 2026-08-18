@@ -52,12 +52,17 @@ final class SqlDialect
      * confirmed live via 3 different orderings across 3 consecutive runs
      * before this fix.
      *
-     * Postgres has no equivalent inline-seed syntax -- `RANDOM()` only
-     * becomes deterministic after a *separate*, preceding
-     * `SELECT setseed(...)` statement, which this bare string builder (no
-     * `Connection` of its own, see this class's own docblock) can't issue.
-     * `.env.test`'s only configured driver is `mysqli`; Postgres staying
-     * unseeded here is a known, undone gap, not a silent one.
+     * Neither Postgres nor SQLite has an equivalent inline-seed syntax --
+     * `RANDOM()` (the same bare function name on both, verified live
+     * against a real sqlite3 connection, matching
+     * {@see \Piwigo\Db\DqlFunction\RandFunction}'s own already-established
+     * "PostgreSQL/SQLite" grouping) only becomes deterministic after a
+     * *separate*, preceding seeding step (Postgres's own `SELECT
+     * setseed(...)`; SQLite has no SQL-level seeding mechanism at all),
+     * which this bare string builder (no `Connection` of its own, see this
+     * class's own docblock) can't issue. `.env.test`'s only configured
+     * driver is `mysqli`; both staying unseeded here is a known, undone
+     * gap, not a silent one.
      *
      * Was a bare `const string` (no way to branch at all); converted to a
      * method, matching this class's own established
@@ -66,7 +71,7 @@ final class SqlDialect
      */
     public static function randomFunction(): string
     {
-        return self::randomFunctionFor(self::isPostgres());
+        return self::randomFunctionFor(self::isPostgres() || self::isSqlite());
     }
 
     /**
@@ -75,12 +80,18 @@ final class SqlDialect
      * `Connection` can use its platform instead
      * ({@see SortRenderer::randomExpression()}).
      *
+     * $usesAnsiRandom (not $isPostgres -- renamed once a 3rd platform
+     * needed this same branch): true for Postgres *and* SQLite, both of
+     * which use the bare `RANDOM()` keyword with no inline-seed form;
+     * false for MySQL/MariaDB's own `RAND()`, which does have one (see
+     * this method's own seeding-policy paragraph above).
+     *
      * The seeding policy lives here, in one place, rather than being
      * duplicated by each caller that knows its own platform.
      */
-    public static function randomFunctionFor(bool $isPostgres): string
+    public static function randomFunctionFor(bool $usesAnsiRandom): string
     {
-        if ($isPostgres) {
+        if ($usesAnsiRandom) {
             return 'RANDOM()';
         }
 
@@ -210,6 +221,18 @@ final class SqlDialect
             return '(' . $date . ')::timestamp - make_interval(days => ' . $period . ')';
         }
 
+        // SQLite's own datetime() modifier syntax -- verified live: no
+        // explicit cast needed the way Postgres's own branch above
+        // requires (SQLite has no real DATE/TIMESTAMP column type to
+        // disambiguate against in the first place, matching this whole
+        // SQLite campaign's own established "no native date type"
+        // finding), and the bare `CURRENT_DATE` keyword this method's own
+        // default resolves to is already a valid datetime() argument on
+        // this platform too.
+        if (self::isSqlite()) {
+            return 'datetime(' . $date . ", '-" . $period . " days')";
+        }
+
         return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';
     }
 
@@ -240,6 +263,14 @@ final class SqlDialect
             return 'EXTRACT(HOUR FROM ' . $date . ')';
         }
 
+        // strftime('%H', ...) -- verified live -- returns a zero-padded
+        // text hour ('00'-'23'); CAST ... AS INTEGER matches HOUR()'s/
+        // EXTRACT(HOUR FROM ...)'s own real numeric return type on the
+        // other 2 platforms.
+        if (self::isSqlite()) {
+            return "CAST(strftime('%H', " . $date . ') AS INTEGER)';
+        }
+
         return 'HOUR(' . $date . ')';
     }
 
@@ -247,6 +278,15 @@ final class SqlDialect
     {
         if (self::isPostgres()) {
             return 'EXTRACT(EPOCH FROM ' . $date . ')';
+        }
+
+        // strftime('%s', ...) -- verified live against a real known epoch
+        // -- returns a text unix-timestamp string; CAST ... AS INTEGER
+        // matches UNIX_TIMESTAMP()'s/EXTRACT(EPOCH FROM ...)'s own real
+        // numeric return type on the other 2 platforms, same reasoning as
+        // getHour()'s own cast above.
+        if (self::isSqlite()) {
+            return "CAST(strftime('%s', " . $date . ') AS INTEGER)';
         }
 
         return 'UNIX_TIMESTAMP(' . $date . ')';
@@ -261,5 +301,10 @@ final class SqlDialect
     private static function isPostgres(): bool
     {
         return DbCredentials::fromEnv()->driver === 'pgsql';
+    }
+
+    private static function isSqlite(): bool
+    {
+        return DbCredentials::fromEnv()->driver === 'sqlite3';
     }
 }

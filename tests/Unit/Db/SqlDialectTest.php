@@ -58,6 +58,12 @@ test('getHour wraps a date expression in EXTRACT(HOUR FROM ...) on pgsql', funct
     expect(SqlDialect::getHour('images.date_available'))->toBe('EXTRACT(HOUR FROM images.date_available)');
 });
 
+test('getHour wraps a date expression in a strftime(%H, ...) cast to INTEGER on sqlite3', function (): void {
+    putenv('PIWIGO_DB_DRIVER=sqlite3');
+
+    expect(SqlDialect::getHour('images.date_available'))->toBe("CAST(strftime('%H', images.date_available) AS INTEGER)");
+});
+
 test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
     putenv('PIWIGO_DB_DRIVER=mysqli');
 
@@ -68,6 +74,12 @@ test('dateToTs wraps a date expression in EXTRACT(EPOCH FROM ...) on pgsql', fun
     putenv('PIWIGO_DB_DRIVER=pgsql');
 
     expect(SqlDialect::dateToTs('d'))->toBe('EXTRACT(EPOCH FROM d)');
+});
+
+test('dateToTs wraps a date expression in a strftime(%s, ...) cast to INTEGER on sqlite3', function (): void {
+    putenv('PIWIGO_DB_DRIVER=sqlite3');
+
+    expect(SqlDialect::dateToTs('d'))->toBe("CAST(strftime('%s', d) AS INTEGER)");
 });
 
 /**
@@ -94,4 +106,21 @@ test('getRecentPeriodExpression builds a make_interval(...) fragment on pgsql', 
     putenv('PIWIGO_DB_DRIVER=pgsql');
 
     expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('(:lastDate)::timestamp - make_interval(days => 7)');
+});
+
+/**
+ * SQLite has no SUBDATE()/make_interval() -- datetime(...)'s own
+ * modifier syntax is the real equivalent, verified live. No cast is
+ * needed on $date the way Postgres's own branch requires: SQLite has no
+ * real DATE/TIMESTAMP column type to disambiguate against in the first
+ * place (this whole SQLite campaign's own established finding).
+ */
+test('getRecentPeriodExpression builds a datetime(..., \'-N days\') fragment on sqlite3', function (): void {
+    putenv('PIWIGO_DB_DRIVER=sqlite3');
+
+    expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe("datetime(:lastDate, '-7 days')");
+});
+
+test('randomFunctionFor(true) returns the bare RANDOM() keyword, matching both Postgres and SQLite', function (): void {
+    expect(SqlDialect::randomFunctionFor(true))->toBe('RANDOM()');
 });

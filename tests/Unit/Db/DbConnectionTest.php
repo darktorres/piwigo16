@@ -271,4 +271,19 @@ test('build() registers a working REGEXP UDF and enables foreign_keys for the sq
         ->toBe('hello world')
         ->and($conn->fetchOne('PRAGMA foreign_keys'))
         ->toBe(1);
+
+    // The UDF's own return type must be a real INTEGER (0/1), not a PHP
+    // bool -- a real, previously-live bug (Wave 5 of the SQLite
+    // campaign): SQLite3::createFunction() stores a returned `bool` as
+    // TEXT ('1'/''), not INTEGER, confirmed live via typeof(). Every real
+    // production Db\DqlFunction\RegexpFunction caller (e.g.
+    // CategoryRepository's own uppercats ancestor-matching queries)
+    // compiles to `col REGEXP pattern = 1` -- this exact shape, not the
+    // bare form above, is what actually caught the bug: comparing
+    // SQLite's own TEXT '1' against the INTEGER literal 1 is false, so
+    // every one of those real queries silently matched zero rows before
+    // the fix.
+    // @phpstan-ignore dba.syntaxError
+    expect($conn->fetchOne('SELECT name FROM t WHERE name REGEXP ? = 1', ['^hello']))
+        ->toBe('hello world');
 });

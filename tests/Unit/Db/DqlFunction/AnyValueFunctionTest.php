@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
@@ -31,4 +32,15 @@ test('compiles to a real ANY_VALUE() call on PostgreSQL', function (): void {
 test('composes with a nested IDENTITY() call to extract a bare FK column', function (): void {
     expect(DqlPlatformQueryTestFactory::generatedSql(new MySQLPlatform(), anyValueNestedIdentityDql()))
         ->toContain('ANY_VALUE(i0_.category_id)');
+});
+
+test('degrades to a bare passthrough with no ANY_VALUE() wrapper on SQLite', function (): void {
+    // SQLite has no ANY_VALUE() function at all -- its own GROUP BY is
+    // already lenient about an unaggregated, non-grouped column (verified
+    // live: picks an arbitrary row's value with no error), the identical
+    // real behavior ANY_VALUE() gives on MySQL/Postgres, so no wrapper is
+    // needed or correct here.
+    expect(DqlPlatformQueryTestFactory::generatedSql(new SQLitePlatform(), anyValueDql()))
+        ->toContain('t0_.name')
+        ->not->toContain('ANY_VALUE(');
 });

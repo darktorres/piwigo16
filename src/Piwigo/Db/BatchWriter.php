@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
+use LogicException;
 
 /**
  * Batched parameterized INSERT/UPDATE helpers, shared rather than
@@ -51,14 +54,19 @@ final readonly class BatchWriter
     }
 
     /**
-     * `INSERT IGNORE` has no Postgres equivalent -- `ON CONFLICT DO
-     * NOTHING` is the real per-platform match, appended after `VALUES
-     * (...)` rather than as a keyword before `INTO` like MySQL's `IGNORE`.
-     * No conflict target needed: a bare `ON CONFLICT DO NOTHING`
-     * downgrades any collision to a no-op, matching `INSERT IGNORE`'s own
-     * "duplicate key becomes a silent skip" semantic exactly for every
-     * real caller here (all about duplicate-key avoidance on a genuine
-     * unique/primary key, never a broader error-suppression need).
+     * `INSERT IGNORE` has no Postgres or SQLite equivalent -- Postgres's
+     * `ON CONFLICT DO NOTHING` is appended after `VALUES (...)` rather
+     * than as a keyword before `INTO` like MySQL's `IGNORE`. No conflict
+     * target needed: a bare `ON CONFLICT DO NOTHING` downgrades any
+     * collision to a no-op, matching `INSERT IGNORE`'s own "duplicate key
+     * becomes a silent skip" semantic exactly for every real caller here
+     * (all about duplicate-key avoidance on a genuine unique/primary key,
+     * never a broader error-suppression need). SQLite's own real
+     * equivalent is a genuinely different keyword placement again --
+     * `INSERT OR IGNORE INTO ...`, its own "conflict clause" extension
+     * (`OR ROLLBACK`/`ABORT`/`FAIL`/`REPLACE`/`IGNORE`), verified live: a
+     * bare `INSERT IGNORE INTO ...` (MySQL's own syntax) is a real
+     * SQLite syntax error, not a silent no-op.
      */
     private function buildInsertSql(string $protectedTable, string $columnsSql, string $placeholdersSql, bool $ignore): string
     {
@@ -68,10 +76,22 @@ final readonly class BatchWriter
                 SQL;
         }
 
-        if ($this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+        $platform = $this->conn->getDatabasePlatform();
+
+        if ($platform instanceof PostgreSQLPlatform) {
             return <<<SQL
                 INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql}) ON CONFLICT DO NOTHING
                 SQL;
+        }
+
+        if ($platform instanceof SQLitePlatform) {
+            return <<<SQL
+                INSERT OR IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+                SQL;
+        }
+
+        if (! $platform instanceof AbstractMySQLPlatform) {
+            throw new LogicException(self::class . '::buildInsertSql() has no implementation for platform ' . $platform::class);
         }
 
         return <<<SQL

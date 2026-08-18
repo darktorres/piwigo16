@@ -26,15 +26,24 @@ use Symfony\Component\Console\Output\BufferedOutput;
  * DbTransactionTestOverride::rollback() as beforeEach()'s first line,
  * same reason as every other sqlite3 test this campaign has added.
  */
-beforeEach(function (): void {
+$originalDbDriver = null;
+$originalDbBase = null;
+
+beforeEach(function () use (&$originalDbDriver, &$originalDbBase): void {
     DbTransactionTestOverride::rollback();
+    // Save+restore, not a blind unset -- this process's real env
+    // already carries .env.test's own PIWIGO_DB_DRIVER/PIWIGO_DB_BASE
+    // (mysqli/piwigo17_2_test), and every other test in this same
+    // worker process needs those back exactly as they were.
+    $originalDbDriver = getenv('PIWIGO_DB_DRIVER');
+    $originalDbBase = getenv('PIWIGO_DB_BASE');
     putenv('PIWIGO_DB_DRIVER=sqlite3');
     putenv('PIWIGO_DB_BASE=:memory:');
 });
 
-afterEach(function (): void {
-    putenv('PIWIGO_DB_DRIVER');
-    putenv('PIWIGO_DB_BASE');
+afterEach(function () use (&$originalDbDriver, &$originalDbBase): void {
+    putenv($originalDbDriver === false ? 'PIWIGO_DB_DRIVER' : 'PIWIGO_DB_DRIVER=' . $originalDbDriver);
+    putenv($originalDbBase === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $originalDbBase);
 });
 
 test('dump() detects sqlite and writes a deterministic schema file from sqlite_master', function (): void {

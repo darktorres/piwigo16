@@ -34,14 +34,19 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     ShutdownHandler::reset();
-    putenv('PIWIGO_DB_DRIVER');
-    putenv('PIWIGO_DB_BASE');
 });
 
 test('create() dumps via VACUUM INTO and restore() copies the file back with the real data intact', function (): void {
     $srcPath = sys_get_temp_dir() . '/piwigo-backup-sqlite-test-src-' . bin2hex(random_bytes(4)) . '.sqlite';
     $restorePath = sys_get_temp_dir() . '/piwigo-backup-sqlite-test-restored-' . bin2hex(random_bytes(4)) . '.sqlite';
     $archivePath = '';
+
+    // Save+restore, not a blind unset -- this process's real env already
+    // carries .env.test's own PIWIGO_DB_DRIVER/PIWIGO_DB_BASE (mysqli/
+    // piwigo17_2_test), and every other test in this same worker process
+    // needs those back exactly as they were.
+    $originalDbDriver = getenv('PIWIGO_DB_DRIVER');
+    $originalDbBase = getenv('PIWIGO_DB_BASE');
 
     try {
         putenv('PIWIGO_DB_DRIVER=sqlite3');
@@ -78,6 +83,9 @@ test('create() dumps via VACUUM INTO and restore() copies the file back with the
             ->toBe('Backup Sqlite Test');
         $restoredConn->close();
     } finally {
+        putenv($originalDbDriver === false ? 'PIWIGO_DB_DRIVER' : 'PIWIGO_DB_DRIVER=' . $originalDbDriver);
+        putenv($originalDbBase === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $originalDbBase);
+
         if ($archivePath !== '' && is_file($archivePath)) {
             unlink($archivePath);
         }

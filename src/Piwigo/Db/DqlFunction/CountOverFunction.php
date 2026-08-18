@@ -18,9 +18,10 @@ use Override;
  * would override the real built-in aggregate every other `COUNT(...)`/
  * `COUNT(DISTINCT ...)` call site in this codebase relies on.
  *
- * No per-platform branching: MySQL 8.0.2+ and PostgreSQL both support
- * `COUNT(*) OVER()` identically, matching every existing raw-SQL call
- * site that already uses it unconditionally.
+ * No per-platform branching: MySQL 8.0.2+, PostgreSQL, and SQLite
+ * 3.25.0+ (2018) all support `COUNT(*) OVER()` identically -- verified
+ * live against a real sqlite3 connection -- matching every existing
+ * raw-SQL call site that already uses it unconditionally.
  */
 final class CountOverFunction extends FunctionNode
 {

@@ -6,7 +6,10 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
+use LogicException;
 
 /**
  * Real DB round-trips for a `SqlDialect`-built date expression --
@@ -21,9 +24,18 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
  * `fetchTomorrow()`/`fetchFutureDatesFor()` branch on
  * `$this->conn->getDatabasePlatform()` directly (a real Connection is
  * already available here, unlike `SqlDialect`'s own static methods) --
- * `ADDDATE(NOW(), INTERVAL n DAY)` has no Postgres equivalent, `NOW() +
- * make_interval(days => n)` is the real one (`NOW()` itself is already
- * portable, needs no branch of its own).
+ * `ADDDATE(NOW(), INTERVAL n DAY)` has no Postgres or SQLite equivalent;
+ * `NOW() + make_interval(days => n)` is the real Postgres one (`NOW()`
+ * itself is already portable, needs no branch of its own). SQLite has
+ * neither `NOW()` nor `ADDDATE()` -- `datetime('now', '+n days')` is its
+ * own real equivalent, verified live, matching {@see SqlDialect::
+ * getRecentPeriodExpression()}'s own `datetime(...)` modifier-syntax
+ * branch. The day count still binds as a real parameter, not spliced --
+ * `'+' || :day || ' days'` (verified live through a real bound
+ * `INTEGER` parameter, not just raw SQL text) builds the modifier string
+ * via SQLite's own `||` concatenation operator, since a modifier's "N
+ * days" count has no bindable numeric-argument position to splice into
+ * directly the way Postgres's `make_interval(days => :day)` has.
  */
 final readonly class SqlDialectExecutor
 {
@@ -63,14 +75,23 @@ final readonly class SqlDialectExecutor
      */
     public function fetchTomorrow(): string
     {
-        $expr = $this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform
-            ? 'NOW() + make_interval(days => 1)'
-            : 'ADDDATE(NOW(), INTERVAL 1 DAY)';
+        $platform = $this->conn->getDatabasePlatform();
+        if ($platform instanceof PostgreSQLPlatform) {
+            $expr = 'NOW() + make_interval(days => 1)';
+        } elseif ($platform instanceof SQLitePlatform) {
+            $expr = "datetime('now', '+1 day')";
+        } elseif ($platform instanceof AbstractMySQLPlatform) {
+            $expr = 'ADDDATE(NOW(), INTERVAL 1 DAY)';
+        } else {
+            throw new LogicException(self::class . '::fetchTomorrow() has no implementation for platform ' . $platform::class);
+        }
 
         // staabm/phpstan-dba only validates against one live connection,
-        // so the branch for the other engine always fails here -- both are
-        // correct for their own platform.
-        // @phpstan-ignore dba.syntaxError
+        // so the branch(es) for the other engine(s) always fail here --
+        // all 3 are correct for their own platform. Suppressed at the
+        // phpstan.neon config level (path-based, not an inline per-line
+        // ignore comment) since a 3-way platform branch can surface more
+        // than one distinct dba.syntaxError instance on this one line.
         $value = $this->conn->fetchOne(<<<SQL
             SELECT {$expr}
             SQL);
@@ -104,9 +125,21 @@ final readonly class SqlDialectExecutor
         // here specifically since a bare numeric alias is otherwise invalid
         // identifier syntax on either platform.
         $platform = $this->conn->getDatabasePlatform();
-        $expr = $platform instanceof PostgreSQLPlatform
-            ? 'NOW() + make_interval(days => :%s)'
-            : 'ADDDATE(NOW(), INTERVAL :%s DAY)';
+        if ($platform instanceof PostgreSQLPlatform) {
+            $expr = 'NOW() + make_interval(days => :%s)';
+        } elseif ($platform instanceof SQLitePlatform) {
+            // '+' || :dayN || ' days' -- the day count still binds as a
+            // real INTEGER parameter below, concatenated into the
+            // modifier string via SQLite's own `||` operator (verified
+            // live), since datetime()'s modifier has no bindable numeric-
+            // argument position of its own to splice into directly the
+            // way Postgres's make_interval(days => :dayN) has.
+            $expr = "datetime('now', '+' || :%s || ' days')";
+        } elseif ($platform instanceof AbstractMySQLPlatform) {
+            $expr = 'ADDDATE(NOW(), INTERVAL :%s DAY)';
+        } else {
+            throw new LogicException(self::class . '::fetchFutureDatesFor() has no implementation for platform ' . $platform::class);
+        }
 
         $qb = $this->conn->createQueryBuilder();
         foreach ($days as $i => $day) {

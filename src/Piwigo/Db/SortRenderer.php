@@ -7,6 +7,7 @@ namespace Piwigo\Db;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Piwigo\Common\ValueObject\PhotoSortField;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 
@@ -18,7 +19,7 @@ use Piwigo\Common\ValueObject\PhotoSortOrder;
  * character is not (backticks are MySQL-only, and MySQL's default
  * non-ANSI_QUOTES mode reads a double-quoted `"rank"` as a *string
  * literal*, not an identifier), and the random function is `RAND()` on
- * MySQL/MariaDB and `RANDOM()` on PostgreSQL.
+ * MySQL/MariaDB and `RANDOM()` on PostgreSQL/SQLite.
  *
  * Both now come from the real connection's platform --
  * `quoteSingleIdentifier()` and an `instanceof` on the platform -- rather
@@ -172,11 +173,13 @@ final readonly class SortRenderer
      *
      * Delegates the seeding policy to {@see SqlDialect::randomFunctionFor()}
      * so there is one definition of it, but supplies the platform from the
-     * real connection instead of the environment.
+     * real connection instead of the environment. Postgres and SQLite
+     * both use the bare `RANDOM()` keyword (see that method's own
+     * `$usesAnsiRandom` docblock), unlike MySQL/MariaDB's own `RAND()`.
      */
     public function randomExpression(): string
     {
-        return SqlDialect::randomFunctionFor($this->platform() instanceof PostgreSQLPlatform);
+        return SqlDialect::randomFunctionFor($this->platform() instanceof PostgreSQLPlatform || $this->platform() instanceof SQLitePlatform);
     }
 
     /**

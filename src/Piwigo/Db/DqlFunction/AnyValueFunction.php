@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Db\DqlFunction;
 
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\Parser;
@@ -22,9 +23,15 @@ use Override;
  * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}/
  * {@see \Piwigo\Users\UserRepository::findList()}'s own docblocks.
  *
- * No per-platform branching, matching this codebase's own existing raw-SQL
- * `ANY_VALUE()` usage, which already assumes MySQL 8.0.13+/PostgreSQL 16+
- * unconditionally with no fallback for an older server.
+ * No branching between MySQL/Postgres, matching this codebase's own
+ * existing raw-SQL `ANY_VALUE()` usage, which already assumes MySQL
+ * 8.0.13+/PostgreSQL 16+ unconditionally with no fallback for an older
+ * server. SQLite has no `ANY_VALUE()` function at all, but needs no
+ * wrapper of any kind to get the identical real behavior: its own
+ * `GROUP BY` is already lenient about an unaggregated, non-grouped
+ * column in `SELECT` (verified live: picks an arbitrary row's value with
+ * no error), exactly `ANY_VALUE()`'s own semantics -- a bare passthrough
+ * of the argument is the real, not approximate, SQLite equivalent.
  *
  * `parse()` accepts `ArithmeticPrimary()`, not just a bare state field --
  * `ArithmeticPrimary()` also dispatches a nested function call (e.g.
@@ -40,7 +47,13 @@ final class AnyValueFunction extends FunctionNode
     #[Override]
     public function getSql(SqlWalker $sqlWalker): string
     {
-        return 'ANY_VALUE(' . $this->expr->dispatch($sqlWalker) . ')';
+        $sql = $this->expr->dispatch($sqlWalker);
+
+        if ($sqlWalker->getConnection()->getDatabasePlatform() instanceof SQLitePlatform) {
+            return $sql;
+        }
+
+        return 'ANY_VALUE(' . $sql . ')';
     }
 
     #[Override]

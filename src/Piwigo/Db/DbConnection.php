@@ -127,13 +127,29 @@ final class DbConnection
      * registers a PHP-callback-backed `regexp` function SQLite then
      * calls for every `REGEXP` comparison, closing that gap without
      * needing an external SQLite extension.
+     *
+     * Returns a real `int` (0/1), not `bool` -- a real, previously-live
+     * bug found and fixed while verifying `Db\DqlFunction\RegexpFunction`
+     * end to end (Wave 5 of the SQLite campaign): `SQLite3::
+     * createFunction()` stores a PHP `bool` return value as SQLite `TEXT`
+     * (`'1'`/`''`, confirmed live via `typeof()`), not `INTEGER`. Every
+     * real production `REGEXP(...)` caller in this codebase (e.g.
+     * `CategoryRepository`'s own `uppercats` ancestor-matching queries)
+     * compiles to `col REGEXP pattern = 1` (an `INTEGER` literal, DQL's
+     * own boolean-comparison convention here) -- comparing SQLite's own
+     * `TEXT` `'1'` against the `INTEGER` `1` is false under SQLite's
+     * comparison rules (no implicit numeric coercion for a bare,
+     * affinity-less function result), so every one of those real queries
+     * silently matched zero rows before this fix, confirmed live both
+     * ways: `bool` return -> `WHERE name REGEXP ? = 1` finds nothing even
+     * against a real matching row; `int` return -> finds it correctly.
      */
     private static function initSqliteConnection(Connection $conn): void
     {
         $native = $conn->getNativeConnection();
         if ($native instanceof SQLite3) {
-            $native->createFunction('regexp', static function (string $pattern, ?string $subject): bool {
-                return $subject !== null && preg_match('/' . str_replace('/', '\/', $pattern) . '/ui', $subject) === 1;
+            $native->createFunction('regexp', static function (string $pattern, ?string $subject): int {
+                return $subject !== null && preg_match('/' . str_replace('/', '\/', $pattern) . '/ui', $subject) === 1 ? 1 : 0;
             });
         }
 

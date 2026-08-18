@@ -1050,12 +1050,21 @@ test('parse assigns ROOT_URL and ROOT_PATH before rendering', function (): void 
 
 // --- concat --------------------------------------------------------------
 
-test('concat appends to an existing string template variable', function (): void {
+test('concat appends to an existing string template variable and re-wraps as Html', function (): void {
+    // Real regression, found live: a plain-string result rendered as
+    // literal escaped HTML source text through any template declaring
+    // its var `varType \Latte\Runtime\Html` with no explicit
+    // `|noescape` filter (e.g. admin.latte's own $ADMIN_CONTENT) --
+    // Latte only skips auto-escaping for an actual Html instance, never
+    // for a `varType` annotation alone.
     $t = TemplateTestFactory::build();
     $t->concat('greeting', 'Hello ');
     $t->concat('greeting', 'World');
 
-    expect($t->getTemplateVars('greeting'))
+    $result = $t->getTemplateVars('greeting');
+    expect($result)->toBeInstanceOf(Html::class);
+    assert($result instanceof Html);
+    expect((string) $result)
         ->toBe('Hello World');
 });
 
@@ -1066,7 +1075,10 @@ test('concat treats a non-string existing value as an empty prefix', function ()
     ]));
     $t->concat('counter', 'suffix');
 
-    expect($t->getTemplateVars('counter'))
+    $result = $t->getTemplateVars('counter');
+    expect($result)->toBeInstanceOf(Html::class);
+    assert($result instanceof Html);
+    expect((string) $result)
         ->toBe('suffix');
 });
 
@@ -1083,7 +1095,10 @@ test('concat casts an existing Latte\Runtime\Html value to string instead of dro
     ]));
     $t->concat('greeting', 'World');
 
-    expect($t->getTemplateVars('greeting'))
+    $result = $t->getTemplateVars('greeting');
+    expect($result)->toBeInstanceOf(Html::class);
+    assert($result instanceof Html);
+    expect((string) $result)
         ->toBe('Hello World');
 });
 

@@ -764,13 +764,28 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * conversion made this a real code path, CheckIntegrity.php's
      * `concat('ADMIN_CONTENT', ...)` call would have dropped the whole
      * dashboard, keeping only the check_integrity widget.
+     *
+     * Result is re-wrapped in `Html`, not left a plain string, matching
+     * `assignVarFromTemplate()`'s own convention -- found live via
+     * AdminTools' settings page: `admin.latte` declares
+     * `{varType \Latte\Runtime\Html $ADMIN_CONTENT}` and renders it as
+     * bare `{$ADMIN_CONTENT}`, with no `|noescape` filter (unlike
+     * `EXTRA_BODY_CONTENT`'s own template, which applies `|noescape`
+     * explicitly). Latte only skips auto-escaping when the actual
+     * runtime value is a recognized safe type -- a `varType` annotation
+     * is a static-analysis hint only, not a runtime escaping switch --
+     * so assigning a plain string here rendered as literal HTML-escaped
+     * source text, not a usable form. Confirmed this was never
+     * previously exercised end-to-end: `PluginSettingsPageDispatchTest`
+     * only asserted the assigned value's type/content, never rendered
+     * it through the real Latte template.
      */
     public function concat(string $tpl_var, string $value): void
     {
         $current = $this->getTemplateVars($tpl_var);
         $this->assign(
             $tpl_var,
-            (is_string($current) || $current instanceof Html ? (string) $current : '') . $value
+            new Html((is_string($current) || $current instanceof Html ? (string) $current : '') . $value)
         );
     }
 

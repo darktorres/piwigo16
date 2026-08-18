@@ -21,10 +21,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * advanced-search page calls this, not just admin.
  *
  * Every field here is genuinely optional and independently validated
- * (~20 of them) -- this reads the decoded JSON body straight off the raw
- * request array, camelCased, rather than through a dedicated input DTO.
- * `expert` (a raw search-string escape hatch, deliberately undocumented)
- * is dropped -- not carried over to this surface.
+ * (~20 of them, see ImageFilteredSearchCreateInput's own docblock for
+ * why most of them stay `mixed`/loosely-typed there rather than fully
+ * narrowed). `expert` (a raw search-string escape hatch, deliberately
+ * undocumented) is dropped -- not carried over to this surface.
  */
 final readonly class ImageFilteredSearchCreateController implements ControllerInterface
 {
@@ -37,11 +37,11 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $body = JsonBody::decode($request);
+        $input = ImageFilteredSearchCreateInput::fromArray(JsonBody::decode($request));
 
         $searchInfo = null;
-        if (isset($body['searchId'])) {
-            $searchId = $body['searchId'];
+        if ($input->searchId !== null) {
+            $searchId = $input->searchId;
             if (! is_int($searchId) && ! is_string($searchId)) {
                 return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid searchId input parameter.');
             }
@@ -63,14 +63,14 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             ],
         ];
 
-        if (isset($body['allwords']) && is_string($body['allwords'])) {
-            $allwordsMode = is_string($body['allwordsMode'] ?? null) ? $body['allwordsMode'] : 'AND';
+        if ($input->allwords !== null) {
+            $allwordsMode = $input->allwordsMode ?? 'AND';
             if (! in_array($allwordsMode, ['OR', 'AND'], true)) {
                 return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter allwordsMode.');
             }
 
             $allwordsFieldsAvailable = ['name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc'];
-            $allwordsFields = is_array($body['allwordsFields'] ?? null) ? array_values(array_filter($body['allwordsFields'], is_string(...))) : $allwordsFieldsAvailable;
+            $allwordsFields = $input->allwordsFields !== null ? array_values(array_filter($input->allwordsFields, is_string(...))) : $allwordsFieldsAvailable;
             foreach ($allwordsFields as $field) {
                 if (! in_array($field, $allwordsFieldsAvailable, true)) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter allwordsFields.');
@@ -80,44 +80,44 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             $search['fields']['allwords'] = [
                 'mode' => $allwordsMode,
                 'fields' => $allwordsFields,
-                'words' => SearchService::splitAllwords($body['allwords']),
+                'words' => SearchService::splitAllwords($input->allwords),
             ];
         }
 
-        if (isset($body['tags']) && is_array($body['tags'])) {
-            foreach ($body['tags'] as $tagId) {
+        if ($input->tags !== null) {
+            foreach ($input->tags as $tagId) {
                 if (! is_scalar($tagId) || preg_match('/^\d+$/', (string) $tagId) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter tags.');
                 }
             }
 
-            $tagsMode = is_string($body['tagsMode'] ?? null) ? $body['tagsMode'] : 'AND';
+            $tagsMode = $input->tagsMode ?? 'AND';
             if (! in_array($tagsMode, ['OR', 'AND'], true)) {
                 return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter tagsMode.');
             }
 
             $search['fields']['tags'] = [
-                'words' => $body['tags'],
+                'words' => $input->tags,
                 'mode' => $tagsMode,
             ];
         }
 
-        if (isset($body['categories']) && is_array($body['categories'])) {
-            foreach ($body['categories'] as $catId) {
+        if ($input->categories !== null) {
+            foreach ($input->categories as $catId) {
                 if (! is_scalar($catId) || preg_match('/^\d+$/', (string) $catId) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter categories.');
                 }
             }
 
             $search['fields']['cat'] = [
-                'words' => $body['categories'],
-                'sub_inc' => $body['categoriesWithsubs'] ?? false,
+                'words' => $input->categories,
+                'sub_inc' => $input->categoriesWithsubs,
             ];
         }
 
-        if (isset($body['authors']) && is_array($body['authors'])) {
+        if ($input->authors !== null) {
             $authors = [];
-            foreach ($body['authors'] as $author) {
+            foreach ($input->authors as $author) {
                 $authors[] = strip_tags(is_string($author) ? $author : '');
             }
 
@@ -127,50 +127,52 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             ];
         }
 
-        if (isset($body['filetypes']) && is_array($body['filetypes'])) {
-            foreach ($body['filetypes'] as $ext) {
+        if ($input->filetypes !== null) {
+            foreach ($input->filetypes as $ext) {
                 if (! is_string($ext) || preg_match('/^[a-z0-9]+$/i', $ext) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter filetypes.');
                 }
             }
 
-            $search['fields']['filetypes'] = $body['filetypes'];
+            $search['fields']['filetypes'] = $input->filetypes;
         }
 
-        if (isset($body['addedBy']) && is_array($body['addedBy'])) {
-            foreach ($body['addedBy'] as $userId) {
+        if ($input->addedBy !== null) {
+            foreach ($input->addedBy as $userId) {
                 if (! is_scalar($userId) || preg_match('/^\d+$/', (string) $userId) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter addedBy.');
                 }
             }
 
-            $search['fields']['added_by'] = $body['addedBy'];
+            $search['fields']['added_by'] = $input->addedBy;
         }
 
         foreach ([['datePostedPreset', 'datePostedCustom', 'date_posted', '24h|7d|30d|3m|6m|custom'], ['dateCreatedPreset', 'dateCreatedCustom', 'date_created', '7d|30d|3m|6m|12m|custom']] as [$presetKey, $customKey, $fieldsKey, $presetPattern]) {
-            if (isset($body[$presetKey])) {
-                $preset = $body[$presetKey];
+            $preset = $presetKey === 'datePostedPreset' ? $input->datePostedPreset : $input->dateCreatedPreset;
+            $custom = $customKey === 'datePostedCustom' ? $input->datePostedCustom : $input->dateCreatedCustom;
+
+            if ($preset !== null) {
                 if (! is_string($preset) || preg_match('/^(' . $presetPattern . '|)$/', $preset) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ' . $presetKey . '.');
                 }
 
                 $search['fields'][$fieldsKey]['preset'] = $preset;
 
-                if ($preset === 'custom' && (! isset($body[$customKey]) || $body[$customKey] === [])) {
+                if ($preset === 'custom' && ($custom === null || $custom === [])) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ' is missing.');
                 }
             }
 
-            if (isset($body[$customKey])) {
+            if ($custom !== null) {
                 if (($search['fields'][$fieldsKey]['preset'] ?? null) !== 'custom') {
                     return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ' provided but ' . $presetKey . ' is not custom.');
                 }
 
-                if (! is_array($body[$customKey])) {
+                if (! is_array($custom)) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ' . $customKey . '.');
                 }
 
-                foreach ($body[$customKey] as $date) {
+                foreach ($custom as $date) {
                     if (! is_string($date) || ! self::isValidCustomDate($date)) {
                         return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ', invalid option ' . (is_string($date) ? $date : '') . '.');
                     }
@@ -180,17 +182,17 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             }
         }
 
-        if (isset($body['ratios']) && is_array($body['ratios'])) {
-            foreach ($body['ratios'] as $ratio) {
+        if ($input->ratios !== null) {
+            foreach ($input->ratios as $ratio) {
                 if (! is_string($ratio) || preg_match('/^[a-z0-9]+$/i', $ratio) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ratios.');
                 }
             }
 
-            $search['fields']['ratios'] = $body['ratios'];
+            $search['fields']['ratios'] = $input->ratios;
         }
 
-        if ($this->currentConfig->rateEnabled && isset($body['ratings'])) {
+        if ($this->currentConfig->rateEnabled && $input->ratings !== null) {
             // Same array-of-strings contract SearchController.php's own
             // legacy `ratings` field defaults to ([] when the filter is
             // active) and SearchService::applyFilters() itself requires
@@ -201,29 +203,29 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             // page's own filter-panel JS, which unconditionally calls
             // .forEach()/.length/.includes() on this same field. Same
             // validation shape as `ratios` just above.
-            if (! is_array($body['ratings'])) {
+            if (! is_array($input->ratings)) {
                 return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ratings.');
             }
 
-            foreach ($body['ratings'] as $rating) {
+            foreach ($input->ratings as $rating) {
                 if (! is_string($rating)) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ratings.');
                 }
             }
 
-            $search['fields']['ratings'] = $body['ratings'];
+            $search['fields']['ratings'] = $input->ratings;
         }
 
         foreach ([
-            'filesizeMin' => 'filesize_min',
-            'filesizeMax' => 'filesize_max',
-            'widthMin' => 'width_min',
-            'widthMax' => 'width_max',
-            'heightMin' => 'height_min',
-            'heightMax' => 'height_max',
-        ] as $inputKey => $fieldKey) {
-            if (isset($body[$inputKey]) && is_int($body[$inputKey])) {
-                $search['fields'][$fieldKey] = $body[$inputKey];
+            'filesize_min' => $input->filesizeMin,
+            'filesize_max' => $input->filesizeMax,
+            'width_min' => $input->widthMin,
+            'width_max' => $input->widthMax,
+            'height_min' => $input->heightMin,
+            'height_max' => $input->heightMax,
+        ] as $fieldKey => $value) {
+            if ($value !== null) {
+                $search['fields'][$fieldKey] = $value;
             }
         }
 

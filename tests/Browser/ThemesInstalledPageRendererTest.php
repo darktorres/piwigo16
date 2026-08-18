@@ -131,13 +131,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         'password_confirm' => $password,
         'pwg_token' => H::pwgToken($page),
     ]);
-    $addUserResult = $addResult['result'] ?? null;
-    $users = is_array($addUserResult) ? ($addUserResult['users'] ?? null) : null;
-    $firstUser = is_array($users) ? ($users[0] ?? null) : null;
-    if (! is_array($firstUser) || ! is_numeric($firstUser['id'] ?? null)) {
-        throw new RuntimeException('pwg.users.add did not return a numeric id: ' . var_export($addResult, true));
-    }
-    $userId = (int) $firstUser['id'];
+    $userId = wsAddedUserId($addResult);
 
     $db = H::connect();
     H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));

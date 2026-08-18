@@ -27,13 +27,13 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     $page = H::loginAsAdmin($this);
     $username = 'std_pages_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
-    $addResult = H::wsCall($page, 'pwg.users.add', [
+    $addResult = H::createUser($page, [
         'username' => $username,
         'password' => $password,
         'password_confirm' => $password,
         'pwg_token' => H::pwgToken($page),
     ]);
-    $userId = wsAddedUserId($addResult);
+    $userId = addedUserId($addResult);
 
     $db = H::connect();
     H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));

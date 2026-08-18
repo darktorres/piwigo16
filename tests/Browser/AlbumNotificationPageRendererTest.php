@@ -24,14 +24,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 it('sends an album notification email to selected users and reports how many were sent', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Notification Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // user 1 (fixture_admin) -- see this suite's own fixture-shape memory
     // notes. The 'save_success' message is assigned unconditionally after
@@ -56,14 +55,13 @@ it('sends an album notification email to selected users and reports how many wer
 
 it('resolves the representative-photo image query and injects an auth_key URL param for a normal-status recipient', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Notification Repr Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $imagePath = H::makeTestImage('Repr');
     $imageId = H::uploadPhotoViaApi($imagePath, $albumId, 'Notification Repr Photo ' . uniqid());
@@ -75,13 +73,13 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
     // are all excluded by its own in_array() gate.
     $username = 'album_notif_normal_' . uniqid();
     $password = 'a-strong-test-password-1';
-    $addUserResult = H::wsCall($page, 'pwg.users.add', [
+    $addUserResult = H::createUser($page, [
         'username' => $username,
         'password' => $password,
         'password_confirm' => $password,
         'pwg_token' => H::pwgToken($page),
     ]);
-    $userId = wsAddedUserId($addUserResult);
+    $userId = addedUserId($addUserResult);
 
     $db = H::connect();
     // Directly assigns the uploaded photo as this album's representative --
@@ -110,34 +108,32 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
 
 it('populates the private-album permission_url and direct/indirect notified-user queries when at least one group exists', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Notification Private Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $groupName = 'Notification Private Group ' . uniqid();
-    $group = H::wsCall($page, 'pwg.groups.add', [
+    $group = H::createGroup($page, [
         'name' => $groupName,
     ]);
-    $groupResult = $group['result'] ?? null;
-    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
+    if (! is_numeric($group['id'] ?? null)) {
+        throw new RuntimeException('createGroup did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $groupResult['id'];
+    $groupId = (int) $group['id'];
 
     $usernameIndirect = 'album_notif_indirect_' . uniqid();
     $password = 'a-strong-test-password-1';
-    $addUserResult = H::wsCall($page, 'pwg.users.add', [
+    $addUserResult = H::createUser($page, [
         'username' => $usernameIndirect,
         'password' => $password,
         'password_confirm' => $password,
         'pwg_token' => H::pwgToken($page),
     ]);
-    $indirectUserId = wsAddedUserId($addUserResult);
+    $indirectUserId = addedUserId($addUserResult);
 
     $db = H::connect();
 
@@ -187,27 +183,25 @@ it('populates the private-album permission_url and direct/indirect notified-user
 
 it('sends an album notification email to a group and reports the group name', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Notification Group Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
-    // pwg.groups.add returns the created group directly under result.id,
-    // the same flat shape as pwg.categories.add above -- GroupCreateController
+    // createGroup() returns the created group directly under id, the same
+    // flat shape as createCategory() above -- GroupCreateController
     // (POST /api/v1/groups) returns the created resource directly, not
     // wrapped in a "groups" collection key.
-    $group = H::wsCall($page, 'pwg.groups.add', [
+    $group = H::createGroup($page, [
         'name' => 'Notification Test Group ' . uniqid(),
     ]);
-    $groupResult = $group['result'] ?? null;
-    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
+    if (! is_numeric($group['id'] ?? null)) {
+        throw new RuntimeException('createGroup did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $groupResult['id'];
+    $groupId = (int) $group['id'];
 
     $result = H::adminPost($page, '/admin.php?page=album-' . $albumId . '-notification', [
         'pwg_token' => H::pwgToken($page),

@@ -23,13 +23,13 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     $username = 'maint_actions_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
 
-    $addResult = H::wsCall($page, 'pwg.users.add', [
+    $addResult = H::createUser($page, [
         'username' => $username,
         'password' => $password,
         'password_confirm' => $password,
         'pwg_token' => H::pwgToken($page),
     ]);
-    $userId = wsAddedUserId($addResult);
+    $userId = addedUserId($addResult);
 
     $db = H::connect();
     H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
@@ -136,14 +136,13 @@ it('shows the time-since-last-calculation-derived cache size info when a real ca
 
 it('shows the empty-lounge link and counter when the upload lounge has real items', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Maintenance Actions Lounge Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Maintenance Actions Lounge Photo');
     @unlink($image);

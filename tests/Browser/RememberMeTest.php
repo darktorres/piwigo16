@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\ExpectationFailedException;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -37,13 +36,7 @@ it('logout clears the session and returns to an anonymous view', function (): vo
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/identification.php?act=logout');
 
-    $status = H::wsCall($page, 'pwg.session.getStatus');
-    $result = $status['result'] ?? null;
-    if (! is_array($result)) {
-        throw new ExpectationFailedException(
-            'pwg.session.getStatus did not return a result array: ' . var_export($status, true)
-        );
-    }
+    $status = H::sessionStatus($page);
 
-    expect($result['status'])->toBe('guest');
+    expect($status['status'])->toBe('guest');
 });

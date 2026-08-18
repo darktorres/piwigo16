@@ -195,14 +195,13 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
     // 1. Guarantee at least one real, visible image exists, regardless of
     // ambient DB state.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Feed Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Feed Test Photo');
     H::uploadPhotoViaApi($image, $albumId, 'Feed Test Photo');
     @unlink($image);

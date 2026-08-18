@@ -5,52 +5,34 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Narrows the `result.users[0].id` of a pwg.users.add WS-shaped response
- * (`H::wsCall()`'s own dispatcher onto the real `POST /api/v1/users`,
- * {@see \Piwigo\Controller\Api\Users\UserCreateController}) to an int. A
- * flatter {id: ...} shape is also tolerated defensively in case that
- * dispatcher's own reshaping ever changes.
+ * Narrows a `POST /api/v1/users` response
+ * ({@see \Piwigo\Controller\Api\Users\UserCreateController}) to its `id`.
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  */
-function wsAddedUserId(array $response): int
+function addedUserId(array $response): int
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.users.add response missing result: ' . var_export($response, true));
-    }
-
-    $users = $result['users'] ?? null;
-    if (is_array($users) && is_array($users[0] ?? null) && is_numeric($users[0]['id'] ?? null)) {
-        return (int) $users[0]['id'];
-    }
-
-    $id = $result['id'] ?? null;
+    $id = $response['id'] ?? null;
     if (is_numeric($id)) {
         return (int) $id;
     }
 
-    throw new RuntimeException('pwg.users.add did not return a numeric user id: ' . var_export($response, true));
+    throw new RuntimeException('createUser() did not return a numeric user id: ' . var_export($response, true));
 }
 
 /**
- * Narrows the `result.users` of a pwg.users.getList WS response to a list
- * of row arrays, skipping any entry that isn't itself an array
- * (array_column needs array-shaped rows, not scalars).
+ * Narrows a `GET /api/v1/users` response to a list of row arrays, skipping
+ * any entry that isn't itself an array (array_column needs array-shaped
+ * rows, not scalars).
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  * @return list<array<string, mixed>>
  */
-function wsListedUsers(array $response): array
+function listedUsers(array $response): array
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.users.getList response missing result: ' . var_export($response, true));
-    }
-
-    $users = $result['users'] ?? null;
+    $users = $response['users'] ?? null;
     if (! is_array($users)) {
-        throw new RuntimeException('pwg.users.getList response missing users: ' . var_export($response, true));
+        throw new RuntimeException('listUsers() response missing users: ' . var_export($response, true));
     }
 
     $out = [];
@@ -59,9 +41,8 @@ function wsListedUsers(array $response): array
             continue;
         }
 
-        // pwg.users.getList rows are JSON objects keyed by field name
-        // (id, username, email, status, ...), so decoding always yields
-        // string keys here.
+        // Rows are JSON objects keyed by field name (id, username, email,
+        // status, ...), so decoding always yields string keys here.
         /** @var array<string, mixed> $user */
         $out[] = $user;
     }
@@ -74,31 +55,28 @@ it('creates and deletes a user', function (): void {
     $pwgToken = H::pwgToken($page);
 
     $username = 'browser_test_user_' . uniqid();
-    $create = H::wsCall($page, 'pwg.users.add', [
+    $create = H::createUser($page, [
         'username' => $username,
         'password' => 'SecurePass123!',
         'email' => $username . '@example.test',
         'pwg_token' => $pwgToken,
     ]);
-    expect($create['stat'])->toBe('ok');
-    $userId = wsAddedUserId($create);
+    $userId = addedUserId($create);
     expect($userId)
         ->toBeGreaterThan(0);
 
-    $list = H::wsCall($page, 'pwg.users.getList');
-    expect($list['stat'])->toBe('ok');
-    $usernames = array_column(wsListedUsers($list), 'username');
+    $list = H::listUsers($page);
+    $usernames = array_column(listedUsers($list), 'username');
     expect($usernames)
         ->toContain($username);
 
-    $delete = H::wsCall($page, 'pwg.users.delete', [
+    H::deleteUser($page, [
         'user_id' => $userId,
         'pwg_token' => $pwgToken,
     ]);
-    expect($delete['stat'])->toBe('ok');
 
-    $afterDelete = H::wsCall($page, 'pwg.users.getList');
-    $afterUsernames = array_column(wsListedUsers($afterDelete), 'username');
+    $afterDelete = H::listUsers($page);
+    $afterUsernames = array_column(listedUsers($afterDelete), 'username');
     expect($afterUsernames)
         ->not->toContain($username);
 });

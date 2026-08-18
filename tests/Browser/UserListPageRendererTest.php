@@ -24,13 +24,13 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
     $page = H::loginAsAdmin($this);
     $username = 'user_list_plain_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
-    $addResult = H::wsCall($page, 'pwg.users.add', [
+    $addResult = H::createUser($page, [
         'username' => $username,
         'password' => $password,
         'password_confirm' => $password,
         'pwg_token' => H::pwgToken($page),
     ]);
-    $userId = wsAddedUserId($addResult);
+    $userId = addedUserId($addResult);
 
     $db = H::connect();
     H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
@@ -63,10 +63,11 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         // in the server-rendered HTML at all -- clicking
         // pagination-per-page-50 before that call resolves races against
         // the page's own layout still settling. $username (this session's
-        // own login, just registered by the wsCall() above) is guaranteed
-        // newest-registered of anyone, so it reliably appears in the
-        // still-default 5-per-page view the instant the grid actually
-        // renders, making it a real readiness signal to wait on here.
+        // own login, just registered by the createUser() call above) is
+        // guaranteed newest-registered of anyone, so it reliably appears
+        // in the still-default 5-per-page view the instant the grid
+        // actually renders, making it a real readiness signal to wait on
+        // here.
         $adminPage->assertSee($username);
         // The user grid defaults to 5 per page (sorted newest-registered
         // first) -- the users table is shared, ever-growing state across
@@ -87,14 +88,13 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
 
 it('echoes a group filter, a user_id search, and show_add_user into the form', function (): void {
     $page = H::loginAsAdmin($this);
-    $group = H::wsCall($page, 'pwg.groups.add', [
+    $group = H::createGroup($page, [
         'name' => 'User List Filter Group ' . uniqid(),
     ]);
-    $groupResult = $group['result'] ?? null;
-    if (! is_array($groupResult) || ! is_numeric($groupResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.groups.add did not return a numeric id: ' . var_export($group, true));
+    if (! is_numeric($group['id'] ?? null)) {
+        throw new RuntimeException('createGroup did not return a numeric id: ' . var_export($group, true));
     }
-    $groupId = (int) $groupResult['id'];
+    $groupId = (int) $group['id'];
 
     $page = H::navigateOk($page, '/admin.php?page=user_list&group=' . $groupId . '&user_id=1&show_add_user=1');
 

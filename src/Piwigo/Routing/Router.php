@@ -93,12 +93,12 @@ final readonly class Router
 
         $args = [];
         foreach ($match as $key => $value) {
-            if (is_string($key) && $key !== '_route' && $key !== '_controller') {
+            if (is_string($key) && $key !== '_route' && $key !== '_controller' && $key !== '_bypass_idempotency') {
                 $args[$key] = $value;
             }
         }
 
-        return RouteResult::found($controller, $args);
+        return RouteResult::found($controller, $args, (bool) ($match['_bypass_idempotency'] ?? false));
     }
 
     /**

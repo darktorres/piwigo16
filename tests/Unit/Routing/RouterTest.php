@@ -34,6 +34,45 @@ test('dispatch returns Found with the controller and path args', function (): vo
         ]);
 });
 
+test('dispatch surfaces a route\'s _bypass_idempotency default as RouteResult::bypassIdempotency, not as an arg', function (): void {
+    $routes = new RouteCollection();
+    $routes->add('tus_patch', new Route(
+        '/api/v1/uploads/{id}',
+        defaults: [
+            '_controller' => 'Piwigo\\Handler\\TusUploadPatchHandler',
+            '_bypass_idempotency' => true,
+        ],
+        methods: ['PATCH'],
+    ));
+
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('PATCH', '/api/v1/uploads/abc'));
+
+    expect($result->bypassIdempotency)
+        ->toBeTrue();
+    expect($result->args)
+        ->toBe([
+            'id' => 'abc',
+        ]);
+});
+
+test('dispatch defaults bypassIdempotency to false when a route has no _bypass_idempotency default', function (): void {
+    $routes = new RouteCollection();
+    $routes->add('picture', new Route(
+        '/picture/{id}',
+        defaults: [
+            '_controller' => 'Piwigo\\Handler\\PictureHandler',
+        ],
+        methods: ['GET'],
+    ));
+
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', '/picture/42'));
+
+    expect($result->bypassIdempotency)
+        ->toBeFalse();
+});
+
 test('dispatch returns NotFound for an unmatched path', function (): void {
     $result = new Router(new RouteCollection())
         ->dispatch(new ServerRequest('GET', '/nope'));

@@ -18,6 +18,15 @@ test('found carries the handler and args', function (): void {
         ->toBe([
             'id' => '5',
         ]);
+    expect($result->bypassIdempotency)
+        ->toBeFalse();
+});
+
+test('found carries bypassIdempotency when the route was marked _bypass_idempotency', function (): void {
+    $result = RouteResult::found('Some\\Handler', [], bypassIdempotency: true);
+
+    expect($result->bypassIdempotency)
+        ->toBeTrue();
 });
 
 test('notFound carries no handler or args', function (): void {

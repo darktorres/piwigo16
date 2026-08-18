@@ -7,11 +7,6 @@ namespace Piwigo\Http\Middleware;
 use Nyholm\Psr7\Response;
 use Override;
 use Piwigo\Cache\IdempotencyCachePool;
-use Piwigo\Controller\Api\Uploads\TusUploadCreateController;
-use Piwigo\Controller\Api\Uploads\TusUploadDeleteController;
-use Piwigo\Controller\Api\Uploads\TusUploadHeadController;
-use Piwigo\Controller\Api\Uploads\TusUploadOptionsController;
-use Piwigo\Controller\Api\Uploads\TusUploadPatchController;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\Router;
@@ -33,11 +28,12 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Does nothing unless the client sends a real `Idempotency-Key` header --
  * zero behavior change for every caller that doesn't use the feature.
  * Scoped to `POST`/`PUT`/`PATCH`/`DELETE` under `/api/v1/*`, excluding
- * the tus 1.0.0 controllers by class-string: tus already has its own
- * offset/resumability protocol, and replaying a cached `PATCH` response
- * would corrupt that instead of helping it (only `TusUploadPatchController`
- * takes a real body among the 5; the other 4 are excluded for the same
- * reason even though they're bodyless).
+ * routes marked `_bypass_idempotency` in `Bootstrap\RouteDefinitions`
+ * (the 5 tus 1.0.0 upload routes -- tus already has its own offset/
+ * resumability protocol, and replaying a cached response would corrupt
+ * that instead of helping it). Route metadata, not a controller-class
+ * check: this class (L3Presentation) may not depend on concrete
+ * controllers (L4Integration) per `deptrac.yaml`'s ruleset.
  *
  * Cache key includes the resolved user id (guest requests share one id,
  * an accepted simplification for the one public mutating endpoint in
@@ -65,17 +61,6 @@ final readonly class ApiIdempotencyMiddleware implements MiddlewareInterface
      */
     private const array GUARDED_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
-    /**
-     * @var list<class-string>
-     */
-    private const array EXCLUDED_CONTROLLERS = [
-        TusUploadCreateController::class,
-        TusUploadHeadController::class,
-        TusUploadOptionsController::class,
-        TusUploadPatchController::class,
-        TusUploadDeleteController::class,
-    ];
-
     public function __construct(
         private IdempotencyCachePool $idempotencyCachePool,
         private CurrentUser $currentUser,
@@ -95,7 +80,7 @@ final readonly class ApiIdempotencyMiddleware implements MiddlewareInterface
             || $result->handler === null
             || ! in_array($request->getMethod(), self::GUARDED_METHODS, true)
             || ! str_starts_with($path, self::API_PREFIX)
-            || in_array($result->handler, self::EXCLUDED_CONTROLLERS, true)
+            || $result->bypassIdempotency
         ) {
             return $handler->handle($request);
         }

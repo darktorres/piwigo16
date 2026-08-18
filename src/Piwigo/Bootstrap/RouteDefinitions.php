@@ -720,26 +720,31 @@ final class RouteDefinitions
         // this family -- see TusUploadOptionsController's own docblock.
         $routes->add('api_v1_uploads_options', new Route('/api/v1/uploads', defaults: [
             '_controller' => TusUploadOptionsController::class,
+            '_bypass_idempotency' => true,
         ], methods: ['OPTIONS']));
 
         $routes->add('api_v1_uploads_create', new Route('/api/v1/uploads', defaults: [
             '_controller' => TusUploadCreateController::class,
+            '_bypass_idempotency' => true,
         ], methods: ['POST']));
 
         $routes->add('api_v1_uploads_head', new Route('/api/v1/uploads/{id}', defaults: [
             '_controller' => TusUploadHeadController::class,
+            '_bypass_idempotency' => true,
         ], requirements: [
             'id' => '[a-f0-9]{32}',
         ], methods: ['HEAD']));
 
         $routes->add('api_v1_uploads_patch', new Route('/api/v1/uploads/{id}', defaults: [
             '_controller' => TusUploadPatchController::class,
+            '_bypass_idempotency' => true,
         ], requirements: [
             'id' => '[a-f0-9]{32}',
         ], methods: ['PATCH']));
 
         $routes->add('api_v1_uploads_delete', new Route('/api/v1/uploads/{id}', defaults: [
             '_controller' => TusUploadDeleteController::class,
+            '_bypass_idempotency' => true,
         ], requirements: [
             'id' => '[a-f0-9]{32}',
         ], methods: ['DELETE']));

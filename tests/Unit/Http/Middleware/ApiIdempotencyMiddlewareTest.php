@@ -8,7 +8,6 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\IdempotencyCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Api\Tags\TagCreateController;
-use Piwigo\Controller\Api\Uploads\TusUploadPatchController;
 use Piwigo\Http\Middleware\ApiIdempotencyMiddleware;
 use Piwigo\Routing\RouteResult;
 use Piwigo\Users\CurrentUser;
@@ -109,14 +108,14 @@ test('rejects a repeated key with a different body with 400, without calling the
         ->toBe(400);
 });
 
-test('calls the real handler every time for an excluded tus controller even when Idempotency-Key is present', function (): void {
+test('calls the real handler every time for a route marked _bypass_idempotency even when the header is present', function (): void {
     $middleware = apiIdempotencyTestMiddleware();
     [$handler, $callCount] = apiIdempotencyCountingHandler();
     $key = 'unit-test-tus-' . uniqid();
     $request = new ServerRequest('PATCH', '/api/v1/uploads/some-id', [
         'Idempotency-Key' => $key,
     ])
-        ->withAttribute(RouteResult::class, RouteResult::found(TusUploadPatchController::class, []));
+        ->withAttribute(RouteResult::class, RouteResult::found('SomeTusController', [], bypassIdempotency: true));
 
     $middleware->process($request, $handler);
     $middleware->process($request, $handler);

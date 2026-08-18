@@ -116,7 +116,7 @@ Three structural changes produced that drift:
 | P24 | Post-P23 remediation & hardening | In progress — see Epoch F | 646 |
 | P25 | WS layer modernization — typed internals + PSR-7 lifecycle | Mostly done — Stage 1/2 landed, Stage 3 tests/docs partial; see Epoch G | ~50 |
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
-| P27 | Public API v1 (REST + OpenAPI 3.1 + tus) — WS deleted here | Mostly done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors; OpenAPI 3.1 spec + generated TS client not started; see Epoch G | ~130 |
+| P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Mostly done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement; generated TS client not started; see Epoch G | ~148 |
 | P28 | Security hardening | Not started | 0 |
 | P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 unstarted | 22 |
 | P30 | Layer decoupling + repository restructure | Not started — web-root half done | 1 |
@@ -1130,12 +1130,24 @@ not inferred:
   exceptions — confirmed SEC-36/SEC-37, see below). `Http\AdminGuard`
   (401 vs 403) is explicitly injected into 69 of the 134 controllers
   (SEC-38, confirmed).
-- **Confirmed still missing from P27**: no OpenAPI 3.1 spec file or
-  generated TypeScript client exist anywhere in the tree (`find . -iname
-  "openapi*"` and a search for a real API-client `.ts` output both came
-  back empty — the `.ts` files that do exist are build tooling config,
-  not a generated client). `Content-Type: application/json` validation
-  on incoming REST bodies is real but narrow: the only
+- **The OpenAPI 3.2 spec now exists** (`openapi/openapi.yaml` +
+  `openapi/paths/*.yaml`, 88 operations across 11 domains, hand-authored
+  from real controller/DTO/service source, not generated from runtime
+  behavior) — closes the gap this section used to note. `bun run
+  lint:openapi` (Redocly) gates spec validity in CI; a structural test
+  (`tests/Unit/OpenApi/SpecStructureTest.php`) asserts path/operationId/
+  security/schema presence via `openapiphp/openapi`'s `Reader` (never
+  its own `->validate()`, which hard-rejects `3.2.0`); `studio-design/
+  gesso` enforces the spec against real PSR-7 request/response pairs at
+  runtime (`tests/Browser/Api/*`) and tracks per-operation coverage via
+  `OpenApiCoverageExtension`. The 3 controllers that previously lacked a
+  typed `*Input` DTO (`ImageSetMd5sumController`,
+  `ImageMissingDerivativesController`,
+  `ImageFilteredSearchCreateController`) now all have one.
+- **Confirmed still missing from P27**: no generated TypeScript client
+  exists anywhere in the tree (the `.ts` files that do exist are build
+  tooling config, not a generated client). `Content-Type: application/
+  json` validation on incoming REST bodies is real but narrow: the only
   `getHeaderLine('Content-Type')`/`getHeader('Content-Type')` check
   anywhere under `src/Piwigo` is `TusUploadPatchController`'s own
   tus-protocol check, not a general REST-body guard (SEC-39, confirmed
@@ -1924,7 +1936,7 @@ not a guarantee.
 | SEC-40 | P24 | Request DTOs as a hard input-validation gate | Real progress — arch test live; no "0 remaining" verified |
 | SEC-41 | P28 | Password hashing → Argon2id | Not started |
 | SEC-42 | P28 | CSRF middleware: remove `/admin*` exemption | Not started |
-| SEC-43 | P28 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | Not started — moot until the OpenAPI spec endpoint itself exists (P27, not started) |
+| SEC-43 | P28 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | Not started — still moot: the OpenAPI 3.2 spec now exists (`openapi/openapi.yaml`, P27) but only as a lint-gated repo artifact, never served over HTTP — no route exposes it, so there's no endpoint for a CORS header to apply to |
 | SEC-44 | P28 | API rate limiting + rate-limit headers | Not started — `rate_limiter` pool deliberately unbuilt pending this |
 | SEC-45 | P28 | CSP violation reporting | Not started |
 | SEC-46 | P28 | Cross-Origin Isolation (COOP/COEP) | Not started |

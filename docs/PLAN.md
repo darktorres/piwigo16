@@ -1187,15 +1187,19 @@ extensions) and every real theme in `../piwigo16-themes` (113 files) was
 read, to ground the design in actual usage rather than guessing. 162
 distinct legacy plugin events exist in the wild; 11 of the top 12 by
 frequency already have a shipped 1:1 typed event class — the sole
-exception, `ws_add_methods` (#7 by frequency), turned out to be a dead
+exception, `ws_add_methods` (#7 by frequency), briefly became a dead
 end: at the time this was written it was believed to be just another
 typed event (`Ws/Event/WsAddMethods.php`), but the entire legacy
 `Piwigo\Ws\*` namespace that class lived in was later deleted outright by
-P27, replaced with typed `/api/v1` REST routes a plugin has no way to
-register into at request time. **Stale as of P27 — re-verify against
-`../piwigo16-plugins/CLAUDE.md`'s own corrected "WS" entry before citing
-this paragraph.** Every other mapped event did not need inventing — only
-a real registration surface wired onto dispatch machinery that already
+P27, replaced with typed `/api/v1` REST routes with nothing replacing
+the plugin-extensibility half. Closed by P29.6:
+`PluginConfig\ApiRouteProviderInterface`, a manifest-declared
+(`hasApiRoutes: true`) capability mirroring `SettingsPageInterface`'s
+own shape, lets an active plugin register real routes under a reserved
+`/api/v1/plugin-routes/{id}/...` prefix from `Http\Middleware\
+RoutingMiddleware::process()` — see that interface's own docblock.
+Every other mapped event did not need inventing — only a real
+registration surface wired onto dispatch machinery that already
 existed.
 
 *Reference-implementation verdict.* `../piwigo16-rewrite` actually built

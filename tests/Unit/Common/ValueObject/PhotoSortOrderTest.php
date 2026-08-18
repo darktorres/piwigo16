@@ -119,24 +119,24 @@ test('tryFromConfigFragment() treats empty text as no ordering, not as a failure
         ->toBeTrue();
 });
 
-test('fromWsOrderParam() accepts the WS vocabulary, including its aliases', function (): void {
+test('fromApiOrderParam() accepts the API vocabulary, including its aliases', function (): void {
     // Distinct from the config vocabulary: `rand` and the legacy
     // date_created/date_posted names are only valid here.
-    expect(PhotoSortOrder::fromWsOrderParam('date_created desc, file')->toSortFieldTokens())
+    expect(PhotoSortOrder::fromApiOrderParam('date_created desc, file')->toSortFieldTokens())
         ->toBe(['date_creation DESC', 'file ASC'])
-        ->and(PhotoSortOrder::fromWsOrderParam('rand')->entries())
+        ->and(PhotoSortOrder::fromApiOrderParam('rand')->entries())
         ->toBe([
             [
                 'field' => PhotoSortField::Random,
                 'dir' => SortOrder::Asc,
             ],
         ])
-        ->and(PhotoSortOrder::fromWsOrderParam('')->isEmpty())
+        ->and(PhotoSortOrder::fromApiOrderParam('')->isEmpty())
         ->toBeTrue();
 });
 
-test('fromWsOrderParam() drops tokens outside the allow-list', function (): void {
-    expect(PhotoSortOrder::fromWsOrderParam('not_a_column ASC')->isEmpty())
+test('fromApiOrderParam() drops tokens outside the allow-list', function (): void {
+    expect(PhotoSortOrder::fromApiOrderParam('not_a_column ASC')->isEmpty())
         ->toBeTrue();
 });
 

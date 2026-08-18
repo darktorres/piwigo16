@@ -11,8 +11,8 @@ use Piwigo\Common\ValueObject\PhotoSortField;
  * platform-dependent half (column names, `rank` quoting, RAND()/RANDOM())
  * lives in Piwigo\Db\SortRenderer and is covered by its own test.
  */
-test('fromWsToken recognizes every real sortable field', function (string $token, PhotoSortField $expected): void {
-    expect(PhotoSortField::fromWsToken($token))->toBe($expected);
+test('fromApiToken recognizes every real sortable field', function (string $token, PhotoSortField $expected): void {
+    expect(PhotoSortField::fromApiToken($token))->toBe($expected);
 })->with([
     ['id', PhotoSortField::Id],
     ['file', PhotoSortField::File],
@@ -24,27 +24,27 @@ test('fromWsToken recognizes every real sortable field', function (string $token
     ['rand', PhotoSortField::Random],
 ]);
 
-test('fromWsToken maps date_created to DateCreation and date_posted to DateAvailable', function (): void {
-    expect(PhotoSortField::fromWsToken('date_created'))->toBe(PhotoSortField::DateCreation)
-        ->and(PhotoSortField::fromWsToken('date_posted'))->toBe(PhotoSortField::DateAvailable);
+test('fromApiToken maps date_created to DateCreation and date_posted to DateAvailable', function (): void {
+    expect(PhotoSortField::fromApiToken('date_created'))->toBe(PhotoSortField::DateCreation)
+        ->and(PhotoSortField::fromApiToken('date_posted'))->toBe(PhotoSortField::DateAvailable);
 });
 
-test('fromWsToken maps random to the same field as rand', function (): void {
-    expect(PhotoSortField::fromWsToken('random'))->toBe(PhotoSortField::Random);
+test('fromApiToken maps random to the same field as rand', function (): void {
+    expect(PhotoSortField::fromApiToken('random'))->toBe(PhotoSortField::Random);
 });
 
-test('fromWsToken returns null for an unrecognized token', function (): void {
-    expect(PhotoSortField::fromWsToken('not_a_real_column'))->toBeNull();
+test('fromApiToken returns null for an unrecognized token', function (): void {
+    expect(PhotoSortField::fromApiToken('not_a_real_column'))->toBeNull();
 });
 
-test('fromWsToken has no rank entry -- rank is config-only vocabulary', function (): void {
-    expect(PhotoSortField::fromWsToken('rank'))->toBeNull();
+test('fromApiToken has no rank entry -- rank is config-only vocabulary', function (): void {
+    expect(PhotoSortField::fromApiToken('rank'))->toBeNull();
 });
 
 /**
  * fromConfigToken() matches ConfigurationSubController's own `$sort_fields`
  * vocabulary -- 7 plain fields plus `rank`, deliberately not the same alias
- * set as fromWsToken(), since `$sort_fields` never produces those tokens.
+ * set as fromApiToken(), since `$sort_fields` never produces those tokens.
  */
 test('fromConfigToken recognizes every real $sort_fields entry', function (string $token, PhotoSortField $expected): void {
     expect(PhotoSortField::fromConfigToken($token))->toBe($expected);
@@ -59,7 +59,7 @@ test('fromConfigToken recognizes every real $sort_fields entry', function (strin
     ['rank', PhotoSortField::Rank],
 ]);
 
-test('fromConfigToken rejects the WS-only aliases', function (string $token): void {
+test('fromConfigToken rejects the API-only aliases', function (string $token): void {
     expect(PhotoSortField::fromConfigToken($token))->toBeNull();
 })->with(['date_created', 'date_posted', 'rand', 'random']);
 

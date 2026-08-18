@@ -53,7 +53,7 @@ final readonly class ImageSearchController implements ControllerInterface
         }
         $filterCondition = $filterCriteria->toSqlCondition('i.');
 
-        $orderBy = PhotoSortOrder::fromWsOrderParam($order);
+        $orderBy = PhotoSortOrder::fromApiOrderParam($order);
         $superOrderBy = false;
         $orderByOverride = null;
         if (! $orderBy->isEmpty()) {

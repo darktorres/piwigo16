@@ -102,7 +102,7 @@ final readonly class CategoryImagesController implements ControllerInterface
                 ),
             );
 
-            $orderBy = PhotoSortOrder::fromWsOrderParam($order);
+            $orderBy = PhotoSortOrder::fromApiOrderParam($order);
             if ($orderBy->isEmpty() && count($catIds) === 1 && ($cats[$catIds[0]]->imageOrder ?? null) !== null) {
                 $orderBy = PhotoSortOrder::fromConfigFragment($cats[$catIds[0]]->imageOrder);
             }

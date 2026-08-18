@@ -66,7 +66,7 @@ final readonly class TagImagesController implements ControllerInterface
             return ResponseFactory::problem('Unprocessable Entity', 422, $filterCriteria->message());
         }
 
-        $orderBy = PhotoSortOrder::fromWsOrderParam($order);
+        $orderBy = PhotoSortOrder::fromApiOrderParam($order);
         $imageIds = $this->tagService->getImageIdsForTags(
             array_map(TagId::from(...), $resolvedTagIds),
             $tagModeAnd ? 'AND' : 'OR',

@@ -46,7 +46,7 @@ final readonly class FavoriteListController implements ControllerInterface
 
         $this->userService->checkUserFavorites();
 
-        $orderBy = PhotoSortOrder::fromWsOrderParam($order);
+        $orderBy = PhotoSortOrder::fromApiOrderParam($order);
 
         $images = [];
         foreach ($this->userService->getVisibleFavoriteImages(

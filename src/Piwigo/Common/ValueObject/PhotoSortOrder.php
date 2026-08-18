@@ -97,10 +97,10 @@ final readonly class PhotoSortOrder
     }
 
     /**
-     * The web-service `order` parameter vocabulary. Unknown tokens are
+     * `/api/v1`'s `order` query param vocabulary. Unknown tokens are
      * dropped, matching the original `stdImageSqlOrder()` allow-list.
      */
-    public static function fromWsOrderParam(string $order): self
+    public static function fromApiOrderParam(string $order): self
     {
         if (trim($order) === '') {
             return self::none();
@@ -111,7 +111,7 @@ final readonly class PhotoSortOrder
 
         $entries = [];
         for ($i = 0; $i < count($matches[1]); $i++) {
-            $field = PhotoSortField::fromWsToken(strtolower($matches[1][$i]));
+            $field = PhotoSortField::fromApiToken(strtolower($matches[1][$i]));
             if (! $field instanceof PhotoSortField) {
                 continue;
             }

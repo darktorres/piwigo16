@@ -16,13 +16,13 @@ namespace Piwigo\Common\ValueObject;
  *
  * Two vocabularies reach this enum, and they overlap without being equal:
  *
- * - {@see fromWsToken()} -- the web-service `order` parameter, which also
+ * - {@see fromApiToken()} -- `/api/v1`'s `order` query param, which also
  *   accepts `rand`/`random` and the legacy `date_created`/`date_posted`
  *   spellings, and has no `rank`.
  * - {@see fromConfigToken()} -- the stored `order_by`/
  *   `order_by_inside_category` fragments, whose tokens are exactly the
  *   `$sort_fields` allow-list in `Controller\Admin\
- *   ConfigurationSubController`. It has `rank` and none of the WS aliases.
+ *   ConfigurationSubController`. It has `rank` and none of the API aliases.
  *
  * Conflating them would silently accept tokens neither real caller can
  * produce, so they stay separate.
@@ -40,13 +40,13 @@ enum PhotoSortField
     case Rank;
 
     /**
-     * The web-service `order` parameter's vocabulary, including the aliases
+     * `/api/v1`'s `order` query param's vocabulary, including the aliases
      * the legacy `stdImageSqlOrder()` allow-list carried:
      * `date_created`/`date_posted` for `date_creation`/`date_available`, and
      * `rand`/`random` for the database's random function. Returns null for
      * anything else, which callers drop.
      */
-    public static function fromWsToken(string $token): ?self
+    public static function fromApiToken(string $token): ?self
     {
         return match ($token) {
             'id' => self::Id,
@@ -64,7 +64,7 @@ enum PhotoSortField
     /**
      * The stored-config vocabulary -- the exact field slugs the admin form
      * validates `order_by`/`order_by_inside_category` entries against.
-     * `rank` is valid here and nowhere else; the WS aliases are not.
+     * `rank` is valid here and nowhere else; the API aliases are not.
      */
     public static function fromConfigToken(string $token): ?self
     {

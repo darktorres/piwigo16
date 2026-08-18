@@ -6,6 +6,7 @@ namespace Piwigo\Migrations;
 
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use LogicException;
@@ -46,9 +47,17 @@ use Override;
 final class Version20260804122303 extends AbstractMigration
 {
     /**
+     * The single source of truth for every FK this baseline schema declares
+     * -- also called by Version20260804122300-2's own upSqlite() methods
+     * (public for exactly that reason), since SQLite cannot `ALTER TABLE
+     * ADD CONSTRAINT ... FOREIGN KEY` at all: unlike MySQL/Postgres, its FKs
+     * must be declared inline in each owning table's own `CREATE TABLE`, via
+     * {@see self::sqliteReferences()}/{@see self::sqliteExtraIndexes()}
+     * below, rather than added here afterward.
+     *
      * @return list<array{0: string, 1: string, 2: string, 3: string, 4: string, 5: string, 6: bool}>
      */
-    private static function foreignKeys(): array
+    public static function foreignKeys(): array
     {
         return [
             ['image_category', 'fk_image_category_image_id', 'image_id', 'images', 'id', 'CASCADE', false],
@@ -103,6 +112,45 @@ final class Version20260804122303 extends AbstractMigration
         ];
     }
 
+    /**
+     * The `REFERENCES ...` fragment to splice into a SQLite `CREATE TABLE`
+     * column definition, or '' if that column carries no FK -- looked up
+     * from the same {@see self::foreignKeys()} rows every other platform's
+     * FK set is drawn from, so the two can never drift apart.
+     */
+    public static function sqliteReferences(string $table, string $column): string
+    {
+        foreach (self::foreignKeys() as [$fkTable, , $fkColumn, $refTable, $refColumn, $onDelete]) {
+            if ($fkTable === $table && $fkColumn === $column) {
+                return sprintf(' REFERENCES %s(%s) ON DELETE %s', $refTable, $refColumn, $onDelete);
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * `CREATE INDEX` statements for the columns of $table that need one on
+     * a platform with no automatic FK-column indexing -- the same real
+     * columns Postgres's own upPostgres() already indexes explicitly (the
+     * 7th `foreignKeys()` element), reused here since SQLite has the exact
+     * same "no auto-index on FK columns" gap InnoDB doesn't have.
+     *
+     * @return list<string>
+     */
+    public static function sqliteExtraIndexes(string $table): array
+    {
+        $statements = [];
+
+        foreach (self::foreignKeys() as [$fkTable, , $fkColumn, , , , $needsIndex]) {
+            if ($fkTable === $table && $needsIndex) {
+                $statements[] = sprintf('CREATE INDEX %s_%s_idx ON %s (%s)', $table, $fkColumn, $table, $fkColumn);
+            }
+        }
+
+        return $statements;
+    }
+
     #[Override]
     public function getDescription(): string
     {
@@ -112,14 +160,20 @@ final class Version20260804122303 extends AbstractMigration
     #[Override]
     public function up(Schema $schema): void
     {
+        if ($this->platform instanceof SQLitePlatform) {
+            // Every FK this method would otherwise add here is already
+            // declared inline in its owning table's own CREATE TABLE, in
+            // Version20260804122300-2's own upSqlite() methods (via
+            // self::sqliteReferences() above) -- SQLite has no ALTER-based
+            // constraint addition at all, so there is nothing left to run
+            // on this platform.
+            return;
+        }
+
         $isPostgres = $this->platform instanceof PostgreSQLPlatform;
 
         // Explicit, not a silent "anything non-Postgres gets MySQL syntax"
-        // fallthrough -- see Version20260804122300's own up() for why. This
-        // migration's own ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY
-        // approach doesn't work on SQLite at all regardless (no ALTER-based
-        // constraint addition there), so an unrecognized platform must fail
-        // loudly here too, not silently emit backtick-quoted MySQL DDL.
+        // fallthrough -- see Version20260804122300's own up() for why.
         if (! $isPostgres && ! $this->platform instanceof AbstractMySQLPlatform) {
             throw new LogicException(self::class . ' has no migration path for platform ' . $this->platform::class);
         }

@@ -14,6 +14,7 @@ namespace Piwigo\Migrations;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use LogicException;
@@ -108,10 +109,15 @@ final class Version20260804122300 extends AbstractMigration
             return;
         }
 
+        if ($this->platform instanceof SQLitePlatform) {
+            $this->upSqlite();
+
+            return;
+        }
+
         // Explicit, not a silent `else { upMysql() }` fallthrough --
-        // an unrecognized platform (e.g. a real SQLite connection,
-        // before this migration set gains its own upSqlite()) must fail
-        // loudly here, not silently run MySQL-flavored DDL against it.
+        // an unrecognized platform must fail loudly here, not silently
+        // run MySQL-flavored DDL against it.
         throw new LogicException(self::class . ' has no migration path for platform ' . $this->platform::class);
     }
 
@@ -581,5 +587,210 @@ final class Version20260804122300 extends AbstractMigration
         $this->addSql("COMMENT ON COLUMN tags.name IS 'tag display name'");
         $this->addSql("COMMENT ON COLUMN tags.url_name IS 'URL-friendly slug derived from name'");
         $this->addSql("COMMENT ON COLUMN tags.lastmodified IS 'row last-update timestamp'");
+    }
+
+    /**
+     * SQLite has no `ALTER TABLE ADD CONSTRAINT` at all, so every FK below
+     * is inlined via {@see Version20260804122303::sqliteReferences()} --
+     * the same 49-row data set Version20260804122303's own Postgres/MySQL
+     * branches add via ALTER TABLE, single source of truth either way.
+     * `tinyint(1)` boolean flags -> plain `INTEGER` (0/1), SQLite has no
+     * real boolean type. `enum` -> `TEXT CHECK`, `JSON` -> `TEXT` (both per
+     * this migration set's own established translation rules). FULLTEXT
+     * indexes are omitted entirely here -- SQLite's FTS5 is a genuinely
+     * separate virtual-table mechanism with its own sync triggers, not a
+     * `CREATE TABLE`-time index, see Wave 2.
+     */
+    private function upSqlite(): void
+    {
+        $this->addSql(
+            'CREATE TABLE caddie (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('caddie', 'user_id') . ', ' .
+            'element_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('caddie', 'element_id') . ', ' .
+            'PRIMARY KEY (user_id, element_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('caddie') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE categories (' .
+            'id INTEGER PRIMARY KEY, ' .
+            "name VARCHAR(255) NOT NULL DEFAULT '', " .
+            'id_uppercat INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('categories', 'id_uppercat') . ', ' .
+            'comment TEXT DEFAULT NULL, ' .
+            'dir VARCHAR(255) DEFAULT NULL, ' .
+            'rank INTEGER DEFAULT NULL, ' .
+            "status TEXT NOT NULL DEFAULT 'public' CHECK (status IN ('public', 'private')), " .
+            'site_id SMALLINT DEFAULT NULL' . Version20260804122303::sqliteReferences('categories', 'site_id') . ', ' .
+            'visible INTEGER NOT NULL DEFAULT 1, ' .
+            'representative_picture_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('categories', 'representative_picture_id') . ', ' .
+            "uppercats VARCHAR(255) NOT NULL DEFAULT '', " .
+            'commentable INTEGER NOT NULL DEFAULT 1, ' .
+            'global_rank VARCHAR(255) DEFAULT NULL, ' .
+            'image_order VARCHAR(128) DEFAULT NULL, ' .
+            'permalink VARCHAR(64) UNIQUE DEFAULT NULL, ' .
+            'lastmodified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)'
+        );
+        $this->addSql('CREATE INDEX categories_i2 ON categories (id_uppercat)');
+        $this->addSql('CREATE INDEX categories_lastmodified_idx ON categories (lastmodified)');
+        foreach (Version20260804122303::sqliteExtraIndexes('categories') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE comments (' .
+            'id INTEGER PRIMARY KEY, ' .
+            'image_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('comments', 'image_id') . ', ' .
+            'date DATETIME DEFAULT NULL, ' .
+            'author VARCHAR(255) DEFAULT NULL, ' .
+            'email VARCHAR(255) DEFAULT NULL, ' .
+            'author_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('comments', 'author_id') . ', ' .
+            'anonymous_id VARCHAR(45) NOT NULL, ' .
+            'website_url VARCHAR(255) DEFAULT NULL, ' .
+            'content TEXT DEFAULT NULL, ' .
+            'validated INTEGER NOT NULL DEFAULT 0, ' .
+            'validation_date DATETIME DEFAULT NULL)'
+        );
+        $this->addSql('CREATE INDEX comments_i2 ON comments (validation_date)');
+        $this->addSql('CREATE INDEX comments_i1 ON comments (image_id)');
+        foreach (Version20260804122303::sqliteExtraIndexes('comments') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE favorites (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('favorites', 'user_id') . ', ' .
+            'image_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('favorites', 'image_id') . ', ' .
+            'PRIMARY KEY (user_id, image_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('favorites') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE image_category (' .
+            'image_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('image_category', 'image_id') . ', ' .
+            'category_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('image_category', 'category_id') . ', ' .
+            'rank INTEGER DEFAULT NULL, ' .
+            'PRIMARY KEY (image_id, category_id))'
+        );
+        $this->addSql('CREATE INDEX image_category_i1 ON image_category (category_id)');
+        foreach (Version20260804122303::sqliteExtraIndexes('image_category') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE image_format (' .
+            'format_id INTEGER PRIMARY KEY, ' .
+            'image_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('image_format', 'image_id') . ', ' .
+            'ext VARCHAR(255) NOT NULL, ' .
+            'filesize INTEGER DEFAULT NULL)'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('image_format') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE image_tag (' .
+            'image_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('image_tag', 'image_id') . ', ' .
+            'tag_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('image_tag', 'tag_id') . ', ' .
+            'PRIMARY KEY (image_id, tag_id))'
+        );
+        $this->addSql('CREATE INDEX image_tag_i1 ON image_tag (tag_id)');
+        foreach (Version20260804122303::sqliteExtraIndexes('image_tag') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE images (' .
+            'id INTEGER PRIMARY KEY, ' .
+            "file VARCHAR(255) NOT NULL DEFAULT '', " .
+            'date_available DATETIME DEFAULT NULL, ' .
+            'date_creation DATETIME DEFAULT NULL, ' .
+            'name VARCHAR(255) DEFAULT NULL, ' .
+            'comment TEXT DEFAULT NULL, ' .
+            'author VARCHAR(255) DEFAULT NULL, ' .
+            'hit INTEGER NOT NULL DEFAULT 0, ' .
+            'filesize INTEGER DEFAULT NULL, ' .
+            'width INTEGER DEFAULT NULL, ' .
+            'height INTEGER DEFAULT NULL, ' .
+            'coi CHAR(4) DEFAULT NULL, ' .
+            'representative_ext VARCHAR(4) DEFAULT NULL, ' .
+            'date_metadata_update DATE DEFAULT NULL, ' .
+            'rating_score REAL DEFAULT NULL, ' .
+            "path VARCHAR(255) NOT NULL DEFAULT '', " .
+            'storage_category_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('images', 'storage_category_id') . ', ' .
+            'level SMALLINT NOT NULL DEFAULT 0, ' .
+            'md5sum CHAR(32) DEFAULT NULL, ' .
+            'added_by INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('images', 'added_by') . ', ' .
+            'rotation SMALLINT DEFAULT NULL, ' .
+            'latitude REAL DEFAULT NULL, ' .
+            'longitude REAL DEFAULT NULL, ' .
+            'lastmodified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)'
+        );
+        $this->addSql('CREATE INDEX images_i2 ON images (date_available)');
+        $this->addSql('CREATE INDEX images_i3 ON images (rating_score)');
+        $this->addSql('CREATE INDEX images_i4 ON images (hit)');
+        $this->addSql('CREATE INDEX images_i5 ON images (date_creation)');
+        $this->addSql('CREATE INDEX images_i1 ON images (storage_category_id)');
+        $this->addSql('CREATE INDEX images_i6 ON images (latitude)');
+        $this->addSql('CREATE INDEX images_i7 ON images (path)');
+        $this->addSql('CREATE INDEX images_i8 ON images (md5sum)');
+        $this->addSql('CREATE INDEX images_i9 ON images (file)');
+        $this->addSql('CREATE INDEX images_lastmodified_idx ON images (lastmodified)');
+        $this->addSql('CREATE INDEX idx_images_date_desc ON images (date_available DESC, id DESC)');
+        foreach (Version20260804122303::sqliteExtraIndexes('images') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE lounge (' .
+            'image_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('lounge', 'image_id') . ', ' .
+            'category_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('lounge', 'category_id') . ', ' .
+            'PRIMARY KEY (image_id, category_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('lounge') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE old_permalinks (' .
+            'cat_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('old_permalinks', 'cat_id') . ', ' .
+            "permalink VARCHAR(64) NOT NULL DEFAULT '', " .
+            'date_deleted DATETIME DEFAULT NULL, ' .
+            'last_hit DATETIME DEFAULT NULL, ' .
+            'hit INTEGER NOT NULL DEFAULT 0, ' .
+            'PRIMARY KEY (permalink))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('old_permalinks') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE rate (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('rate', 'user_id') . ', ' .
+            'element_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('rate', 'element_id') . ', ' .
+            "anonymous_id VARCHAR(45) NOT NULL DEFAULT '', " .
+            'rate SMALLINT NOT NULL DEFAULT 0, ' .
+            'date DATE DEFAULT NULL, ' .
+            'PRIMARY KEY (element_id, user_id, anonymous_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('rate') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE tags (' .
+            'id INTEGER PRIMARY KEY, ' .
+            "name VARCHAR(255) NOT NULL DEFAULT '', " .
+            "url_name VARCHAR(255) NOT NULL DEFAULT '', " .
+            'lastmodified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)'
+        );
+        $this->addSql('CREATE INDEX tags_i1 ON tags (url_name)');
+        $this->addSql('CREATE INDEX tags_lastmodified_idx ON tags (lastmodified)');
+        foreach (Version20260804122303::sqliteExtraIndexes('tags') as $sql) {
+            $this->addSql($sql);
+        }
     }
 }

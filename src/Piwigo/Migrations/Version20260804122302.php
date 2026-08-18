@@ -6,6 +6,7 @@ namespace Piwigo\Migrations;
 
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use LogicException;
@@ -56,6 +57,12 @@ final class Version20260804122302 extends AbstractMigration
 
         if ($this->platform instanceof AbstractMySQLPlatform) {
             $this->upMysql();
+
+            return;
+        }
+
+        if ($this->platform instanceof SQLitePlatform) {
+            $this->upSqlite();
 
             return;
         }
@@ -549,5 +556,200 @@ final class Version20260804122302 extends AbstractMigration
         $this->addSql("COMMENT ON COLUMN audit_log.prev_hash IS 'row_hash of the previous row, null for the first row, forms the hash chain'");
         $this->addSql("COMMENT ON COLUMN audit_log.row_hash IS 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash'");
         $this->addSql("COMMENT ON COLUMN audit_log.group_id IS 'typed reference for entity_type = group, ON DELETE SET NULL'");
+    }
+
+    /**
+     * See Version20260804122300's own upSqlite() docblock for the shared
+     * translation rules (FK inlining, boolean/enum/JSON mapping, no
+     * FULLTEXT here). `history.section` gets no CHECK, matching
+     * upPostgres()'s own reasoning right above (plugin-extensible values).
+     */
+    private function upSqlite(): void
+    {
+        $this->addSql(
+            'CREATE TABLE activity (' .
+            'activity_id INTEGER PRIMARY KEY, ' .
+            'object VARCHAR(255) NOT NULL, ' .
+            'object_id INTEGER NOT NULL, ' .
+            'action VARCHAR(255) NOT NULL, ' .
+            'performed_by INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('activity', 'performed_by') . ', ' .
+            'session_idx VARCHAR(255) NOT NULL, ' .
+            'ip_address VARCHAR(50) DEFAULT NULL, ' .
+            'occured_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, ' .
+            'details TEXT DEFAULT NULL, ' .
+            'user_agent VARCHAR(255) DEFAULT NULL, ' .
+            'user_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('activity', 'user_id') . ', ' .
+            'category_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('activity', 'category_id') . ', ' .
+            'image_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('activity', 'image_id') . ', ' .
+            'tag_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('activity', 'tag_id') . ', ' .
+            'group_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('activity', 'group_id') . ', ' .
+            'system_scope SMALLINT DEFAULT NULL)'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('activity') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE config (' .
+            "param VARCHAR(40) NOT NULL DEFAULT '', " .
+            'value TEXT DEFAULT NULL, ' .
+            'comment VARCHAR(255) DEFAULT NULL, ' .
+            'PRIMARY KEY (param))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE history (' .
+            'id INTEGER PRIMARY KEY, ' .
+            'date DATE DEFAULT NULL, ' .
+            "time TEXT NOT NULL DEFAULT '00:00:00', " .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('history', 'user_id') . ', ' .
+            "ip CHAR(39) NOT NULL DEFAULT '', " .
+            'section VARCHAR(20) DEFAULT NULL, ' .
+            'category_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('history', 'category_id') . ', ' .
+            'search_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('history', 'search_id') . ', ' .
+            'tag_ids VARCHAR(50) DEFAULT NULL, ' .
+            'image_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('history', 'image_id') . ', ' .
+            "image_type TEXT DEFAULT NULL CHECK (image_type IS NULL OR image_type IN ('picture', 'high', 'other')), " .
+            'format_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('history', 'format_id') . ', ' .
+            'auth_key_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('history', 'auth_key_id') . ')'
+        );
+        $this->addSql('CREATE INDEX idx_history_date_desc ON history (date DESC, id DESC)');
+        foreach (Version20260804122303::sqliteExtraIndexes('history') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE history_summary (' .
+            'summary_id INTEGER PRIMARY KEY, ' .
+            'year SMALLINT NOT NULL DEFAULT 0, ' .
+            'month SMALLINT DEFAULT NULL, ' .
+            'day SMALLINT DEFAULT NULL, ' .
+            'hour SMALLINT DEFAULT NULL, ' .
+            'nb_pages INTEGER DEFAULT NULL, ' .
+            'history_id_from INTEGER DEFAULT NULL, ' .
+            'history_id_to INTEGER DEFAULT NULL)'
+        );
+        $this->addSql('CREATE UNIQUE INDEX history_summary_ymdh ON history_summary (year, month, day, hour)');
+        foreach (Version20260804122303::sqliteExtraIndexes('history_summary') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE languages (' .
+            "id VARCHAR(64) NOT NULL DEFAULT '', " .
+            "version VARCHAR(64) NOT NULL DEFAULT '0', " .
+            'name VARCHAR(64) DEFAULT NULL, ' .
+            'PRIMARY KEY (id))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE plugins (' .
+            "id VARCHAR(64) NOT NULL DEFAULT '', " .
+            "state TEXT NOT NULL DEFAULT 'inactive' CHECK (state IN ('inactive', 'active')), " .
+            "version VARCHAR(64) NOT NULL DEFAULT '0', " .
+            'PRIMARY KEY (id))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE search (' .
+            'id INTEGER PRIMARY KEY, ' .
+            'search_uuid CHAR(23) DEFAULT NULL, ' .
+            'created_on DATETIME DEFAULT NULL, ' .
+            'created_by INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('search', 'created_by') . ', ' .
+            'forked_from INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('search', 'forked_from') . ', ' .
+            'rules TEXT DEFAULT NULL)'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('search') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE sites (' .
+            'id INTEGER PRIMARY KEY, ' .
+            "galleries_url VARCHAR(255) NOT NULL DEFAULT '' UNIQUE)"
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('sites') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE themes (' .
+            "id VARCHAR(64) NOT NULL DEFAULT '', " .
+            "version VARCHAR(64) NOT NULL DEFAULT '0', " .
+            'name VARCHAR(64) DEFAULT NULL, ' .
+            'PRIMARY KEY (id))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE derivative_settings (' .
+            'id SMALLINT NOT NULL, ' .
+            'default_quality INTEGER NOT NULL DEFAULT 95, ' .
+            'watermark_json TEXT NOT NULL, ' .
+            'custom_json TEXT NOT NULL, ' .
+            'PRIMARY KEY (id))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE derivative_size (' .
+            'name VARCHAR(32) NOT NULL, ' .
+            'enabled SMALLINT NOT NULL DEFAULT 1, ' .
+            'max_width INTEGER NOT NULL DEFAULT 0, ' .
+            'max_height INTEGER NOT NULL DEFAULT 0, ' .
+            'max_crop NUMERIC(5,4) NOT NULL DEFAULT 0, ' .
+            'min_width INTEGER DEFAULT NULL, ' .
+            'min_height INTEGER DEFAULT NULL, ' .
+            'sharpen NUMERIC(5,4) NOT NULL DEFAULT 0, ' .
+            'last_mod_time INTEGER NOT NULL DEFAULT 0, ' .
+            'PRIMARY KEY (name))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE extension_ignored_updates (' .
+            'extension_type VARCHAR(16) NOT NULL, ' .
+            'extension_id VARCHAR(64) NOT NULL, ' .
+            'ignored_at DATETIME NOT NULL, ' .
+            'PRIMARY KEY (extension_type, extension_id))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE integrity_ignored_anomalies (' .
+            'anomaly_id VARCHAR(64) NOT NULL, ' .
+            'piwigo_version VARCHAR(16) NOT NULL, ' .
+            'ignored_at DATETIME NOT NULL, ' .
+            'PRIMARY KEY (anomaly_id, piwigo_version))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE plugin_migrations (' .
+            'plugin_id VARCHAR(64) NOT NULL' . Version20260804122303::sqliteReferences('plugin_migrations', 'plugin_id') . ', ' .
+            'version VARCHAR(191) NOT NULL, ' .
+            'executed_at DATETIME NOT NULL, ' .
+            'PRIMARY KEY (plugin_id, version))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('plugin_migrations') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE audit_log (' .
+            'id INTEGER PRIMARY KEY, ' .
+            'actor_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('audit_log', 'actor_id') . ', ' .
+            'action VARCHAR(64) NOT NULL, ' .
+            'entity_type VARCHAR(64) NOT NULL, ' .
+            'entity_id INTEGER DEFAULT NULL, ' .
+            'before_json TEXT DEFAULT NULL, ' .
+            'after_json TEXT DEFAULT NULL, ' .
+            'ip_address VARCHAR(45) DEFAULT NULL, ' .
+            'created_at DATETIME NOT NULL, ' .
+            'prev_hash VARCHAR(64) DEFAULT NULL, ' .
+            'row_hash VARCHAR(64) NOT NULL, ' .
+            'group_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('audit_log', 'group_id') . ')'
+        );
+        $this->addSql('CREATE INDEX idx_audit_log_entity ON audit_log (entity_type, entity_id)');
+        $this->addSql('CREATE INDEX idx_audit_log_actor ON audit_log (actor_id)');
+        $this->addSql('CREATE INDEX idx_audit_log_created_at ON audit_log (created_at)');
+        foreach (Version20260804122303::sqliteExtraIndexes('audit_log') as $sql) {
+            $this->addSql($sql);
+        }
     }
 }

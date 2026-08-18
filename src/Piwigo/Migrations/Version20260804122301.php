@@ -6,6 +6,7 @@ namespace Piwigo\Migrations;
 
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use LogicException;
@@ -38,6 +39,12 @@ final class Version20260804122301 extends AbstractMigration
 
         if ($this->platform instanceof AbstractMySQLPlatform) {
             $this->upMysql();
+
+            return;
+        }
+
+        if ($this->platform instanceof SQLitePlatform) {
+            $this->upSqlite();
 
             return;
         }
@@ -364,5 +371,153 @@ final class Version20260804122301 extends AbstractMigration
         $this->addSql("COMMENT ON COLUMN user_failed_logins.user_id IS 'targeted user id, if the attempted username resolved to a real account'");
         $this->addSql("COMMENT ON COLUMN user_failed_logins.ip IS 'REMOTE_ADDR the failed login attempt came from'");
         $this->addSql("COMMENT ON COLUMN user_failed_logins.attempted_at IS 'when the failed attempt occurred'");
+    }
+
+    /**
+     * See Version20260804122300's own upSqlite() docblock for the shared
+     * translation rules (FK inlining, boolean/enum/JSON mapping, no
+     * FULLTEXT here).
+     */
+    private function upSqlite(): void
+    {
+        $this->addSql(
+            'CREATE TABLE group_access (' .
+            'group_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('group_access', 'group_id') . ', ' .
+            'cat_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('group_access', 'cat_id') . ', ' .
+            'PRIMARY KEY (group_id, cat_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('group_access') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE groups (' .
+            'id INTEGER PRIMARY KEY, ' .
+            "name VARCHAR(255) NOT NULL DEFAULT '' UNIQUE, " .
+            'is_default INTEGER NOT NULL DEFAULT 0, ' .
+            'lastmodified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)'
+        );
+        $this->addSql('CREATE INDEX groups_lastmodified_idx ON groups (lastmodified)');
+        foreach (Version20260804122303::sqliteExtraIndexes('groups') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE sessions (' .
+            "id VARCHAR(50) NOT NULL DEFAULT '', " .
+            'data TEXT NOT NULL, ' .
+            'expiration DATETIME DEFAULT NULL, ' .
+            'PRIMARY KEY (id))'
+        );
+
+        $this->addSql(
+            'CREATE TABLE user_access (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_access', 'user_id') . ', ' .
+            'cat_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_access', 'cat_id') . ', ' .
+            'PRIMARY KEY (user_id, cat_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('user_access') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE user_auth_keys (' .
+            'auth_key_id INTEGER PRIMARY KEY, ' .
+            'auth_key VARCHAR(255) NOT NULL, ' .
+            'apikey_secret VARCHAR(255) DEFAULT NULL, ' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_auth_keys', 'user_id') . ', ' .
+            'created_on DATETIME NOT NULL, ' .
+            'duration INTEGER DEFAULT NULL, ' .
+            'expired_on DATETIME NOT NULL, ' .
+            'apikey_name VARCHAR(100) DEFAULT NULL, ' .
+            'key_type VARCHAR(40) DEFAULT NULL, ' .
+            'revoked_on DATETIME DEFAULT NULL, ' .
+            'last_used_on DATETIME DEFAULT NULL, ' .
+            'last_notified_on DATETIME DEFAULT NULL)'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('user_auth_keys') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE user_feed (' .
+            "id VARCHAR(50) NOT NULL DEFAULT '', " .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_feed', 'user_id') . ', ' .
+            'last_check DATETIME DEFAULT NULL, ' .
+            'PRIMARY KEY (id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('user_feed') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE user_group (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_group', 'user_id') . ', ' .
+            'group_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_group', 'group_id') . ', ' .
+            'PRIMARY KEY (group_id, user_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('user_group') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE user_infos (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_infos', 'user_id') . ', ' .
+            'nb_image_page INTEGER NOT NULL DEFAULT 15, ' .
+            "status TEXT NOT NULL DEFAULT 'guest' CHECK (status IN ('webmaster', 'admin', 'normal', 'generic', 'guest')), " .
+            "language VARCHAR(50) NOT NULL DEFAULT 'en_UK', " .
+            'expand INTEGER NOT NULL DEFAULT 0, ' .
+            'show_nb_comments INTEGER NOT NULL DEFAULT 0, ' .
+            'show_nb_hits INTEGER NOT NULL DEFAULT 0, ' .
+            'recent_period INTEGER NOT NULL DEFAULT 7, ' .
+            "theme VARCHAR(255) NOT NULL DEFAULT 'modus', " .
+            'registration_date DATETIME DEFAULT NULL, ' .
+            'enabled_high INTEGER NOT NULL DEFAULT 1, ' .
+            'level SMALLINT NOT NULL DEFAULT 0, ' .
+            'activation_key VARCHAR(255) DEFAULT NULL, ' .
+            'activation_key_expire DATETIME DEFAULT NULL, ' .
+            'last_visit DATETIME DEFAULT NULL, ' .
+            'last_visit_from_history INTEGER NOT NULL DEFAULT 0, ' .
+            'lastmodified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, ' .
+            'preferences TEXT DEFAULT NULL, ' .
+            'PRIMARY KEY (user_id))'
+        );
+        $this->addSql('CREATE INDEX user_infos_lastmodified_idx ON user_infos (lastmodified)');
+        foreach (Version20260804122303::sqliteExtraIndexes('user_infos') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE user_mail_notification (' .
+            'user_id INTEGER NOT NULL' . Version20260804122303::sqliteReferences('user_mail_notification', 'user_id') . ', ' .
+            "check_key VARCHAR(16) NOT NULL DEFAULT '' UNIQUE, " .
+            'enabled INTEGER NOT NULL DEFAULT 0, ' .
+            'last_send DATETIME DEFAULT NULL, ' .
+            'PRIMARY KEY (user_id))'
+        );
+        foreach (Version20260804122303::sqliteExtraIndexes('user_mail_notification') as $sql) {
+            $this->addSql($sql);
+        }
+
+        $this->addSql(
+            'CREATE TABLE users (' .
+            'id INTEGER PRIMARY KEY, ' .
+            "username VARCHAR(100) NOT NULL DEFAULT '' UNIQUE, " .
+            'password VARCHAR(255) DEFAULT NULL, ' .
+            'mail_address VARCHAR(255) DEFAULT NULL)'
+        );
+
+        $this->addSql(
+            'CREATE TABLE user_failed_logins (' .
+            'id INTEGER PRIMARY KEY, ' .
+            'user_id INTEGER DEFAULT NULL' . Version20260804122303::sqliteReferences('user_failed_logins', 'user_id') . ', ' .
+            'ip VARCHAR(45) NOT NULL, ' .
+            'attempted_at DATETIME NOT NULL)'
+        );
+        $this->addSql('CREATE INDEX idx_user_failed_logins_user_time ON user_failed_logins (user_id, attempted_at)');
+        $this->addSql('CREATE INDEX idx_user_failed_logins_ip_time ON user_failed_logins (ip, attempted_at)');
+        foreach (Version20260804122303::sqliteExtraIndexes('user_failed_logins') as $sql) {
+            $this->addSql($sql);
+        }
     }
 }

@@ -12,6 +12,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Cache\CachePools;
+use Piwigo\Db\DqlFunction\AnyValueFunction;
+use Piwigo\Db\DqlFunction\CountOverFunction;
 use Piwigo\Db\DqlFunction\DateFormatMonthDayFunction;
 use Piwigo\Db\DqlFunction\DateFormatYearMonthFunction;
 use Piwigo\Db\DqlFunction\DateSubFunction;
@@ -138,6 +140,10 @@ final class EntityManagerFactory
         $config->addCustomNumericFunction('WEEK', WeekFunction::class);
         $config->addCustomNumericFunction('YEAR', YearFunction::class);
         $config->addCustomNumericFunction('MONTH', MonthFunction::class);
+        $config->addCustomNumericFunction('ANY_VALUE', AnyValueFunction::class);
+        // Registered under a synthetic name, not 'COUNT' -- see
+        // CountOverFunction's own docblock.
+        $config->addCustomNumericFunction('COUNT_OVER', CountOverFunction::class);
 
         // Explicit, not the default `$conn->getEventManager()` -- DbConnection::build()
         // returns a fresh, listener-less Connection on every call (not memoized), so

@@ -190,7 +190,8 @@
     "sbom": "@composer CycloneDX:make-sbom --output-format=JSON --output-file=sbom-composer.cdx.json --spec-version=1.6 --output-reproducible",
     "test": [
       "bash tools/reimport-fixture.sh",
-      "@php vendor/bin/pest --testsuite Unit,Arch --parallel"
+      "@php vendor/bin/pest --testsuite Unit,Arch --parallel",
+      "@php vendor/bin/gesso coverage:merge --spec-base-path=openapi --specs=openapi --strip-prefixes=/api/v1"
     ],
     "test:browser": [
       "bash tools/reimport-fixture.sh",

@@ -180,6 +180,7 @@ mechanisms this rewrite introduced, not ports:
 | --- | --- |
 | `Piwigo\Category\Event\DeleteSite` | Legacy `delete_site()` never dispatched anything — it deleted the `sites` row inline. This rewrite's `CategoryService::deleteSite()` dispatches instead, purely to avoid `Category` (`L2aCoreDomain`) depending directly on `Site` (`L2bExtendedDomain`) — see the class's own docblock. |
 | `Piwigo\Menu\Event\CheckMenuLinkVisibility` | SEC-49 — a new, deliberate extension point, not a legacy port. |
+| `Piwigo\Picture\Event\FilterPictureDisplayInfo` | P29.6, ported for `AdminTools_16.3.0`'s own `set_prefilter('picture', 'admintools_remove_privacy')` — Smarty compile-time prefilters have no equivalent at all in this Latte-compiling fork, so this is a genuinely new, narrower mechanism (a real filter event on the underlying `$display_info` array) achieving the same functional outcome by a different means, not a port of `set_prefilter` itself. |
 
 ## Investigated, not ported
 

@@ -62,6 +62,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Picture\Event\FilterPictureDisplayInfo;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
@@ -1080,6 +1081,7 @@ final readonly class PictureController implements ControllerInterface
         $info_file = $picture['current']['file'];
 
         $display_info = $this->currentConfig->pictureInformations;
+        $display_info = $this->eventDispatcher->dispatch(new FilterPictureDisplayInfo($display_info, $image_id))->displayInfo;
 
         // related tags
         $tags = $this->tagService

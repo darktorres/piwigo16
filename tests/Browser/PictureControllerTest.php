@@ -2262,3 +2262,71 @@ it('short-circuits the default element-content renderer when an earlier render_e
         pictureRemoveFixturePlugin($pluginDir);
     }
 });
+
+it('lets a plugin hide a display-info field via FilterPictureDisplayInfo', function (): void {
+    // AdminTools_16.3.0's own set_prefilter('picture', 'admintools_remove_privacy')
+    // hides the privacy_level control from picture.php's info panel when
+    // its own quick-edit panel already shows an equivalent control --
+    // ported here as a real filter-event dispatch (Picture\Event\
+    // FilterPictureDisplayInfo, PictureController.php right after reading
+    // CurrentConfig::$pictureInformations). 'visits' is the field targeted
+    // here rather than 'privacy_level' itself: picture.latte's own
+    // `{if $display_info['visits']}` block (unlike author/created_on) has
+    // no companion `isset($INFO_...)` guard, so it renders unconditionally
+    // whenever the flag is true -- a reliable, content-independent marker
+    // for "did the filtered array actually reach the template," without
+    // needing to fabricate a specific permission-level fixture.
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Display Info Filter Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Display Info Filter Photo');
+    @unlink($image);
+
+    $baselinePage = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+    $baselineBody = H::rawWebpage($baselinePage)->content();
+    expect($baselineBody)
+        ->toContain('id="Visits"');
+
+    $pluginId = 'pwgtest-picture-filter-display-info';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+
+    pictureWriteFixturePlugin($pluginDir, <<<PHP
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+            \\Piwigo\\Picture\\Event\\FilterPictureDisplayInfo::class,
+            static function (\\Piwigo\\Picture\\Event\\FilterPictureDisplayInfo \$event): \\Piwigo\\Picture\\Event\\FilterPictureDisplayInfo {
+                if (\$event->imageId === {$imageId}) {
+                    \$event->displayInfo['visits'] = false;
+                }
+
+                return \$event;
+            }
+        );
+        PHP);
+
+    $pluginDb = pictureDbConnect();
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
+    H::dbClose($pluginDb);
+    // No cache-clear needed: PluginConfig\PluginRegistry::bootActive()
+    // always re-queries active plugins fresh on every request, same as
+    // this file's other fixture-plugin tests above.
+
+    try {
+        $filteredPage = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+        $filteredBody = H::rawWebpage($filteredPage)->content();
+
+        expect($filteredBody)
+            ->not->toContain('id="Visits"');
+        $filteredPage->assertNoJavaScriptErrors();
+    } finally {
+        $cleanupDb = pictureDbConnect();
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
+        H::dbClose($cleanupDb);
+        pictureRemoveFixturePlugin($pluginDir);
+    }
+});

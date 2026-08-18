@@ -239,6 +239,40 @@ final class InstallWizardTest extends IntegrationTestCase
         $_GET = $this->originalGet;
         $_POST = $this->originalPost;
         $_SERVER = $this->originalServer;
+        // render()'s own step-2 flow (InstallWizard.php ~line 701) calls
+        // session_set_save_handler() directly against this test's
+        // disposable $conn, then logs the new webmaster in -- a real PHP
+        // session, closed only via register_shutdown_function(), which
+        // doesn't fire until this whole CLI test *process* exits
+        // (composer test:integration runs sequentially, one process, not
+        // one per test). Close it here instead, before createdDatabases
+        // cleanup below drops that connection's database out from under
+        // it.
+        //
+        // Closing the ACTIVE session isn't enough on its own, though:
+        // session_set_save_handler()'s own registration is separate,
+        // process-global PHP state that outlives close() -- it stays
+        // "the current handler" until something calls
+        // session_set_save_handler() again, which doesn't happen for
+        // every later request. Confirmed live: RequestPipelineTest calls
+        // RequestPipeline::handle() directly, bypassing
+        // RequestBootstrap::bootEntryPoint() (the only place that calls
+        // InstallationFlag::mark()) entirely, so
+        // Http\SessionBootstrap::register()'s own
+        // `$installationFlag->isActive()` gate is false for every one of
+        // its requests -- normally harmless (PHP's own default
+        // file-based handler is already in effect), but it means
+        // session_set_save_handler() is never called again to replace
+        // this test's leftover handler, so RequestPipelineTest's own
+        // session_start() silently reuses it -- still bound to the
+        // now-dropped database. Explicitly re-registering PHP's own
+        // built-in \SessionHandler (files-based, no DB dependency) is
+        // what actually undoes the registration itself, not just the
+        // active session it was serving.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        session_set_save_handler(new \SessionHandler());
         DbCredentialsTestFactory::get()->seed($this->originalDbEnv);
         if ($this->installBootstrapBooted) {
             restore_error_handler();

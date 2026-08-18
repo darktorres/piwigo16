@@ -29,6 +29,10 @@ tags:
       Plugin/theme/language install, activation, update, and
       update-check state -- most operations require webmaster status,
       not just admin.
+  - name: Info/System
+    description: >-
+      Version, aggregate gallery stats, disk cache size, and the admin
+      activity (audit) log.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -51,6 +55,14 @@ paths:
     $ref: 'paths/extensions.yaml#/~1extensions~1updates~1ignore'
   '/extensions/{type}/{id}/actions/update':
     $ref: 'paths/extensions.yaml#/~1extensions~1{type}~1{id}~1actions~1update'
+  /version:
+    $ref: 'paths/info-system.yaml#/~1version'
+  /info:
+    $ref: 'paths/info-system.yaml#/~1info'
+  /cache-size:
+    $ref: 'paths/info-system.yaml#/~1cache-size'
+  /activity:
+    $ref: 'paths/info-system.yaml#/~1activity'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

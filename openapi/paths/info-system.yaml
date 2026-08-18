@@ -1,0 +1,241 @@
+/version:
+  get:
+    operationId: version
+    tags:
+      - Info/System
+    summary: Get the running Piwigo version
+    description: >-
+      Unauthenticated, no DB access -- the thin slice this whole
+      surface's routing/response conventions were first proven against.
+    security: []
+    responses:
+      '200':
+        description: The running version.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version:
+                  type: string
+                  example: 17.0.0
+/info:
+  get:
+    operationId: info
+    tags:
+      - Info/System
+    summary: Get aggregate gallery statistics
+    description: Real typed JSON fields, not a name/value list.
+    responses:
+      '200':
+        description: Aggregate counts.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+                - nbElements
+                - nbCategories
+                - nbVirtual
+                - nbPhysical
+                - nbImageCategory
+                - nbTags
+                - nbImageTag
+                - nbUsers
+                - nbGroups
+                - nbComments
+                - firstDate
+                - nbUnvalidatedComments
+                - cacheSize
+              properties:
+                version:
+                  type: string
+                nbElements:
+                  type: integer
+                nbCategories:
+                  type: integer
+                nbVirtual:
+                  type: integer
+                  description: Categories with no filesystem directory backing them.
+                nbPhysical:
+                  type: integer
+                nbImageCategory:
+                  type: integer
+                  description: Image-category link rows (an image can be in more than one).
+                nbTags:
+                  type: integer
+                nbImageTag:
+                  type: integer
+                nbUsers:
+                  type: integer
+                nbGroups:
+                  type: integer
+                nbComments:
+                  type: integer
+                firstDate:
+                  type: [string, 'null']
+                  description: Null when there are no images at all.
+                nbUnvalidatedComments:
+                  type: [integer, 'null']
+                  description: Null when there are no comments at all.
+                cacheSize:
+                  type: [integer, 'null']
+                  description: >-
+                    Always null from this endpoint -- computing the real
+                    size needs a filesystem walk too expensive to pay on
+                    every call. Use `GET /cache-size` instead.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/cache-size:
+  get:
+    operationId: cacheSize
+    tags:
+      - Info/System
+    summary: Compute the on-disk cache size
+    description: The Maintenance page's own "calculate cache size" button.
+    responses:
+      '200':
+        description: Computed cache sizes.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cacheSize, msizes, templatesSize, lastDateCalc]
+              properties:
+                cacheSize:
+                  type: [integer, 'null']
+                  description: Bytes.
+                msizes:
+                  type: object
+                  description: Per-derivative-size cache bytes, keyed by size type name.
+                  additionalProperties:
+                    type: integer
+                templatesSize:
+                  type: [integer, 'null']
+                  description: Bytes.
+                lastDateCalc:
+                  type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/activity:
+  get:
+    operationId: activityList
+    tags:
+      - Info/System
+    summary: List admin activity (audit) log entries
+    description: >-
+      One row per real activity entry -- deliberately not merged into
+      consecutive-same-session display lines with a counter (`user_
+      activity.js`, the real admin log page, does that client-side
+      using `sessionIdx`/`object`/`action`).
+    parameters:
+      - name: dateMin
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: dateMax
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: userId
+        in: query
+        schema:
+          type: integer
+      - name: objectId
+        in: query
+        schema:
+          type: integer
+      - name: object
+        in: query
+        schema:
+          type: string
+      - name: action
+        in: query
+        schema:
+          type: string
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+    responses:
+      '200':
+        description: One page of activity rows (100/page, fixed).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activities, offset, limit, hasMore]
+              properties:
+                activities:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ActivityRow'
+                offset:
+                  type: integer
+                limit:
+                  type: integer
+                  description: Always 100, the fixed page size.
+                hasMore:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+components:
+  schemas:
+    ActivityRow:
+      type: object
+      required:
+        - position
+        - performedBy
+        - performedByUsername
+        - object
+        - objectId
+        - action
+        - sessionIdx
+        - ipAddress
+        - occuredOn
+        - dateFormatted
+        - userAgent
+        - details
+      properties:
+        position:
+          type: integer
+          description: '`offset + index` in this response -- not a real row id.'
+        performedBy:
+          type: [integer, 'null']
+        performedByUsername:
+          type: [string, 'null']
+        object:
+          type: string
+        objectId:
+          type: integer
+        action:
+          type: string
+        sessionIdx:
+          type: string
+        ipAddress:
+          type: [string, 'null']
+        occuredOn:
+          type: string
+          description: Raw, unformatted timestamp.
+        dateFormatted:
+          type: string
+          description: Locale-aware pre-formatted date, day-precision.
+        userAgent:
+          type: [string, 'null']
+        details:
+          type: [object, 'null']
+          additionalProperties: true

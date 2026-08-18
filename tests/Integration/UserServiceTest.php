@@ -27,9 +27,13 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Feed\FeedEntity;
+    use Piwigo\Feed\FeedRepository;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Image\ImageEntity;
     use Piwigo\Mail\MailService;
+    use Piwigo\Notification\NotificationByMailRepository;
+    use Piwigo\Notification\UserMailNotificationEntity;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
     use Piwigo\PluginConfig\EventDispatcher;
@@ -910,7 +914,10 @@ namespace Piwigo\Tests\Integration {
                     [$newUserId]
                 ));
 
-                $this->service->syncUsers();
+                $this->service->syncUsers(
+                    $this->mailNotificationRepo(),
+                    $this->feedRepo(),
+                );
 
                 self::assertSame(1, $this->fetchOneInt(
                     'SELECT COUNT(*) FROM user_infos WHERE user_id = ?',
@@ -919,6 +926,16 @@ namespace Piwigo\Tests\Integration {
             } finally {
                 $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$newUserId]);
             }
+        }
+
+        private function mailNotificationRepo(): NotificationByMailRepository
+        {
+            return EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class);
+        }
+
+        private function feedRepo(): FeedRepository
+        {
+            return EntityManagerFactory::build($this->conn)->getRepository(FeedEntity::class);
         }
 
         public function testSyncUsersDeletesOrphanedChildRowsNotPresentInTheBaseTable(): void
@@ -930,19 +947,36 @@ namespace Piwigo\Tests\Integration {
             // is rejected by the FK. Disabling FK checks just for this
             // insert reproduces the only real way this state has ever
             // existed in practice: a bulk import/migration that ran with
-            // checks off.
+            // checks off. Covers all 5 of syncUsers()'s own tables, not
+            // just the 2 DQL-mapped ones this test used to cover --
+            // user_access (the 3rd DQL-mapped table) and
+            // user_mail_notification/user_feed (both go through
+            // UserRelatedTableSyncInterface, a real deptrac boundary) had
+            // no coverage here at all before.
             $this->disableForeignKeyChecks($this->conn);
             $this->conn->executeStatement('INSERT INTO user_group (user_id, group_id) VALUES (777777, 1)');
             $this->conn->executeStatement('INSERT INTO user_infos (user_id) VALUES (777777)');
+            $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (777777, 1)');
+            $this->conn->executeStatement("INSERT INTO user_mail_notification (user_id, check_key, enabled) VALUES (777777, 'sync-orphan-nbm', 0)");
+            $this->conn->executeStatement("INSERT INTO user_feed (id, user_id) VALUES ('sync-orphan-feed', 777777)");
             $this->enableForeignKeyChecks($this->conn);
 
             self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_group WHERE user_id = 777777'));
             self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_infos WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_access WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_mail_notification WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_feed WHERE user_id = 777777'));
 
-            $this->service->syncUsers();
+            $this->service->syncUsers(
+                $this->mailNotificationRepo(),
+                $this->feedRepo(),
+            );
 
             self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_group WHERE user_id = 777777'));
             self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_infos WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_access WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_mail_notification WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_feed WHERE user_id = 777777'));
         }
 
         public function testRegisterUserNotifiesAdminsOfANewRegistration(): void

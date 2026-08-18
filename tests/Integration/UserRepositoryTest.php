@@ -255,25 +255,6 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame('0', is_scalar($count) ? (string) $count : '');
     }
 
-    public function testDeleteUsersFromTableWithNoIdsIsANoop(): void
-    {
-        $countBefore = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from('user_infos')
-            ->executeQuery()
-            ->fetchOne();
-
-        $this->repo->deleteUsersFromTable('user_infos', []);
-
-        $countAfter = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from('user_infos')
-            ->executeQuery()
-            ->fetchOne();
-
-        self::assertSame($countBefore, $countAfter);
-    }
-
     public function testDeleteFavoritesForImagesWithNoImageIdsIsANoop(): void
     {
         // A marker row distinct from the fixture's own (1,1)/(1,3)/(1,5)

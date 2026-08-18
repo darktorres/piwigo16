@@ -7,6 +7,7 @@ namespace Piwigo\Notification;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Override;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -14,6 +15,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
+use Piwigo\Users\UserRelatedTableSyncInterface;
 
 /**
  * Persistence layer for the 2 genuinely data-touching functions in
@@ -30,7 +32,7 @@ use Piwigo\Users\UserInfoEntity;
  *
  * @extends EntityRepository<UserMailNotificationEntity>
  */
-final class NotificationByMailRepository extends EntityRepository
+final class NotificationByMailRepository extends EntityRepository implements UserRelatedTableSyncInterface
 {
     public function countByCheckKey(string $checkKey): int
     {
@@ -247,5 +249,56 @@ final class NotificationByMailRepository extends EntityRepository
 
         new BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert('user_mail_notification', ['user_id', 'check_key', 'enabled'], $inserts);
+    }
+
+    /**
+     * {@see UserRelatedTableSyncInterface} implementation --
+     * {@see \Piwigo\Users\UserService::syncUsers()}'s own permalink-domain
+     * counterpart is {@see \Piwigo\Category\OldPermalinkLookupInterface}.
+     * `getSingleColumnResult()` never applies custom Doctrine Type
+     * conversion, so `n.userId` comes back as a plain scalar despite being
+     * `UserId`-typed.
+     *
+     * @return list<UserId>
+     */
+    #[Override]
+    public function findDistinctUserIds(): array
+    {
+        $rows = $this->createQueryBuilder('n')
+            ->select('DISTINCT n.userId')
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = $row instanceof UserId ? $row : UserId::tryFrom($row);
+            if ($id instanceof UserId) {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * {@see UserRelatedTableSyncInterface} implementation.
+     *
+     * @param list<UserId> $userIds
+     */
+    #[Override]
+    public function deleteForUserIds(array $userIds): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(UserMailNotificationEntity::class, 'n')
+            ->where('n.userId IN (:userIds)')
+            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 }

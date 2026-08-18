@@ -630,56 +630,6 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * `user_mail_notification`/`user_feed` are the only 2 of
-     * {@see \Piwigo\Users\UserService::syncUsers()}'s own 5-table list
-     * this method still serves -- both a real `deleteSiteRow`-class
-     * deptrac boundary (`Users` is `L2aCoreDomain`, those 2 tables'
-     * domains are `L2bExtendedDomain`), so `$table` stays a raw runtime
-     * string here permanently. The other 3 tables go through
-     * {@see findDistinctUserIdsInMappedTable()}'s bounded enum instead.
-     *
-     * @return list<UserId>
-     */
-    public function findDistinctUserIdsInTable(string $table): array
-    {
-        return array_values(array_filter(array_map(UserId::tryFrom(...), $this->em
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('DISTINCT user_id')
-            ->from($table)
-            ->executeQuery()
-            ->fetchFirstColumn())));
-    }
-
-    /**
-     * Same permanent DBAL/deptrac reasoning as
-     * {@see findDistinctUserIdsInTable()} above -- only
-     * `user_mail_notification`/`user_feed` still reach this method.
-     *
-     * @param list<UserId> $userIds
-     */
-    public function deleteUsersFromTable(string $table, array $userIds): void
-    {
-        if ($userIds === []) {
-            return;
-        }
-
-        $em = $this->em;
-        $em->getConnection()
-            ->createQueryBuilder()
-            ->delete($table)
-            ->where('user_id IN (:userIds)')
-            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
-            ->executeStatement();
-
-        // $table may be user_infos -- bypasses the ORM, so any
-        // UserInfoEntity already in this EntityManager's identity map for
-        // one of these ids would otherwise stay stale (same reasoning as
-        // deleteUser()'s own comment).
-        $em->clear();
-    }
-
-    /**
      * Real DQL replacement for
      * {@see findDistinctUserIdsInTable()}, for the 3 of
      * {@see \Piwigo\Users\UserService::syncUsers()}'s own tables this

@@ -38,11 +38,13 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
+use Piwigo\Feed\FeedEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageService;
+use Piwigo\Notification\UserMailNotificationEntity;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -182,7 +184,10 @@ final readonly class AdminShell
 
         // sync_user() is only useful when external authentication is activated
         if ($this->deploymentPolicy->externalAuthentification) {
-            $this->userService->syncUsers();
+            $this->userService->syncUsers(
+                $this->entityManager->getRepository(UserMailNotificationEntity::class),
+                $this->entityManager->getRepository(FeedEntity::class),
+            );
         }
 
         $change_theme_url = $this->urlService->getRootUrl() . 'admin.php?';

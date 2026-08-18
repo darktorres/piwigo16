@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Feed\FeedEntity;
@@ -102,6 +103,74 @@ test('updateLastCheck() sets the timestamp on an existing feed', function (): vo
 
         expect($info->lastCheck)
             ->toEqual($now);
+    } finally {
+        feedTestDelete($conn, $id);
+    }
+});
+
+test('findDistinctUserIds() returns every distinct user_id in the table', function (): void {
+    $conn = DbConnection::build();
+    $repo = feedTestRepo();
+    $id1 = feedTestId();
+    $id2 = feedTestId();
+
+    try {
+        $repo->insert($id1, 1);
+        $repo->insert($id2, 3);
+
+        $ids = array_map(static fn (UserId $id): int => $id->value, $repo->findDistinctUserIds());
+        sort($ids);
+
+        expect($ids)
+            ->toBe([1, 3]);
+    } finally {
+        feedTestDelete($conn, $id1);
+        feedTestDelete($conn, $id2);
+    }
+});
+
+test('findDistinctUserIds() and deleteForUserIds() agree on a real orphaned row', function (): void {
+    // fk_user_feed_user_id makes this orphan impossible to create through
+    // normal writes (insert() itself would fail against a real
+    // nonexistent user_id) -- same "bulk import with checks off"
+    // scenario as NotificationByMailRepositoryTest's own sibling test.
+    $conn = DbConnection::build();
+    $isPostgres = getenv('PIWIGO_DB_DRIVER') === 'pgsql';
+    $id = feedTestId();
+    $conn->executeStatement($isPostgres ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+    $conn->executeStatement('INSERT INTO user_feed (id, user_id) VALUES (:id, 60000)', [
+        'id' => $id,
+    ]);
+    $conn->executeStatement($isPostgres ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+
+    try {
+        $repo = feedTestRepo();
+        $ids = array_map(static fn (UserId $id): int => $id->value, $repo->findDistinctUserIds());
+
+        expect($ids)
+            ->toContain(60000);
+
+        $repo->deleteForUserIds([UserId::from(60000)]);
+
+        expect($repo->existsById($id))
+            ->toBeFalse();
+    } finally {
+        feedTestDelete($conn, $id);
+    }
+});
+
+test('deleteForUserIds() is a no-op for an empty list', function (): void {
+    $conn = DbConnection::build();
+    $id = feedTestId();
+    $repo = feedTestRepo();
+
+    try {
+        $repo->insert($id, 1);
+
+        $repo->deleteForUserIds([]);
+
+        expect($repo->existsById($id))
+            ->toBeTrue();
     } finally {
         feedTestDelete($conn, $id);
     }

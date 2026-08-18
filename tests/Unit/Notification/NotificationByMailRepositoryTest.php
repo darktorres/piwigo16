@@ -190,6 +190,52 @@ test('nullifyBlankEmails() leaves a real email untouched', function (): void {
         ->toBe('fixture_admin@example.test');
 });
 
+test('findDistinctUserIds() returns every distinct user_id in the table', function (): void {
+    $ids = array_map(static fn (UserId $id): int => $id->value, nbmTestRepo()->findDistinctUserIds());
+    sort($ids);
+
+    expect($ids)
+        ->toBe([1, 3]);
+});
+
+test('findDistinctUserIds() and deleteForUserIds() agree on a real orphaned row', function (): void {
+    // fk_user_mail_notification_user_id makes this orphan impossible to
+    // create through normal writes -- same "bulk import with checks off"
+    // scenario as CategoryServiceTest's own checkCategoriesIntegrity()
+    // orphan tests.
+    $conn = DbConnection::build();
+    $isPostgres = getenv('PIWIGO_DB_DRIVER') === 'pgsql';
+    $conn->executeStatement($isPostgres ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+    $conn->executeStatement("INSERT INTO user_mail_notification (user_id, check_key, enabled) VALUES (60000, 'orphan-nbm-test', 0)");
+    $conn->executeStatement($isPostgres ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+
+    try {
+        $repo = nbmTestRepo();
+        $ids = array_map(static fn (UserId $id): int => $id->value, $repo->findDistinctUserIds());
+
+        expect($ids)
+            ->toContain(60000);
+
+        $repo->deleteForUserIds([UserId::from(60000)]);
+
+        expect(nbmTestCountRows($conn))
+            ->toBe(2);
+    } finally {
+        $conn->executeStatement('DELETE FROM user_mail_notification WHERE user_id = 60000');
+    }
+});
+
+test('deleteForUserIds() is a no-op for an empty list', function (): void {
+    $conn = DbConnection::build();
+    $before = nbmTestCountRows($conn);
+
+    nbmTestRepo()
+        ->deleteForUserIds([]);
+
+    expect(nbmTestCountRows($conn))
+        ->toBe($before);
+});
+
 test('findUsersWithoutNotificationRow() returns only users with a real email and no notification row yet', function (): void {
     $conn = DbConnection::build();
 

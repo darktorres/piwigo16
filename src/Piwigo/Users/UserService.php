@@ -1475,7 +1475,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * {@see createUserInfos()} -- belongs here, not
      * `Piwigo\Category\CategoryService`.
      */
-    public function syncUsers(): void
+    /**
+     * $mailNotificationRepo/$feedRepo are explicit parameters, not
+     * constructor-injected -- same reasoning as
+     * {@see \Piwigo\Category\CategoryService::checkCategoriesIntegrity()}'s
+     * own docblock: `Users` is `L2aCoreDomain`, both real implementations
+     * ({@see \Piwigo\Notification\NotificationByMailRepository}/
+     * {@see \Piwigo\Feed\FeedRepository}) are `L2bExtendedDomain`, and
+     * constructor-injecting either would just relocate the deptrac
+     * violation to whichever caller constructs `UserService`.
+     */
+    public function syncUsers(UserRelatedTableSyncInterface $mailNotificationRepo, UserRelatedTableSyncInterface $feedRepo): void
     {
         $baseUsers = $this->repo->findAllUserIds();
         $infosUsers = $this->repo->findDistinctUserIdsInMappedTable(UserRelatedTable::UserInfos);
@@ -1487,21 +1497,18 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->createUserInfos($toCreate);
         }
 
-        // users present in user related tables must be present in the base user
-        // table. user_mail_notification/user_feed stay on the raw-table-name
-        // method permanently -- see UserRelatedTable's own docblock.
-        $rawTables = [
-            'user_mail_notification',
-            'user_feed',
-        ];
-        foreach ($rawTables as $table) {
+        // users present in user related tables must be present in the base
+        // user table. user_mail_notification/user_feed go through
+        // UserRelatedTableSyncInterface -- see UserRelatedTable's own
+        // docblock for why they can't join the DQL-mapped tables below.
+        foreach ([$mailNotificationRepo, $feedRepo] as $syncRepo) {
             $toDelete = array_values(array_diff(
-                $this->repo->findDistinctUserIdsInTable($table),
+                $syncRepo->findDistinctUserIds(),
                 $baseUsers
             ));
 
             if (count($toDelete) > 0) {
-                $this->repo->deleteUsersFromTable($table, $toDelete);
+                $syncRepo->deleteForUserIds($toDelete);
             }
         }
 

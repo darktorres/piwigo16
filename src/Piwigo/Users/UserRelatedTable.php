@@ -13,10 +13,13 @@ namespace Piwigo\Users;
  * all `L2aCoreDomain`-or-same-layer). The other 2
  * (`user_mail_notification`/`user_feed`, both `L2bExtendedDomain`) are a
  * real `deleteSiteRow`-class deptrac boundary `Users` (`L2aCoreDomain`)
- * cannot cross via DQL regardless of whether those tables get their own
- * entities elsewhere -- {@see UserRepository::findDistinctUserIdsInTable()}/
- * {@see UserRepository::deleteUsersFromTable()} stay on raw-table-name
- * DBAL permanently for those 2.
+ * cannot cross via DQL -- handled instead through
+ * {@see UserRelatedTableSyncInterface}, implemented by each owning
+ * domain's own repository
+ * ({@see \Piwigo\Notification\NotificationByMailRepository}/
+ * {@see \Piwigo\Feed\FeedRepository}), same "seam interface owned by the
+ * lower layer, implementation owned by the higher one" shape as
+ * {@see \Piwigo\Category\OldPermalinkLookupInterface}.
  */
 enum UserRelatedTable
 {

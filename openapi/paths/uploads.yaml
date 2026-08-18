@@ -1,0 +1,395 @@
+/uploads/readiness:
+  get:
+    operationId: uploadReadiness
+    tags:
+      - Uploads
+    summary: Check whether the server is ready to accept an upload
+    responses:
+      '200':
+        description: Readiness check result.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message, readyForUpload]
+              properties:
+                message:
+                  type: [string, 'null']
+                  description: Human-readable reason when not ready; empty/null when ready.
+                readyForUpload:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/uploads/duplicates:
+  get:
+    operationId: uploadDuplicates
+    tags:
+      - Uploads
+    summary: Check candidate filenames/md5sums for existing duplicates
+    description: >-
+      Only the query param matching the gallery's `uniquenessMode`
+      config is actually consulted; the other is accepted but ignored.
+    parameters:
+      - name: md5sums
+        in: query
+        description: Whitespace/comma/semicolon/pipe-delimited md5sum list.
+        schema:
+          type: string
+      - name: filenames
+        in: query
+        description: Whitespace/comma/semicolon/pipe-delimited filename list.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: >-
+          Maps each candidate (md5sum or filename, whichever mode is
+          active) to the matching existing image id, or null if none.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: [integer, 'null']
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+/uploads:
+  options:
+    operationId: uploadsOptions
+    tags:
+      - Uploads
+    summary: tus 1.0.0 protocol discovery
+    description: >-
+      Deliberately ungated, unlike every other endpoint in this family
+      -- a tus client probes this before it has any admin session to
+      send, and the response reveals nothing beyond this server's
+      supported protocol version/extensions/size limit.
+    security: []
+    responses:
+      '204':
+        description: Protocol capabilities.
+        headers:
+          Tus-Resumable:
+            $ref: '../openapi.yaml#/components/headers/TusResumable'
+          Tus-Version:
+            schema:
+              type: string
+              example: 1.0.0
+          Tus-Extension:
+            schema:
+              type: string
+              example: creation,termination
+          Tus-Max-Size:
+            description: Bytes, present only when PHP's own upload_max_filesize resolves.
+            schema:
+              type: string
+  post:
+    operationId: uploadCreate
+    tags:
+      - Uploads
+    summary: Start a new resumable upload (tus Creation extension)
+    description: >-
+      Replaces the legacy base64/multipart chunk protocols
+      (`pwg.images.{addChunk,add,addFile,addSimple,upload,uploadAsync}`)
+      with a single binary offset-based one. `imageId`/`formatOf`
+      existence is checked here, before any byte is uploaded.
+    parameters:
+      - name: Tus-Resumable
+        in: header
+        required: true
+        schema:
+          type: string
+          enum: ['1.0.0']
+      - name: Upload-Length
+        in: header
+        required: true
+        description: A positive byte count. Deferred length is not supported.
+        schema:
+          type: string
+          pattern: '^[0-9]+$'
+      - name: Upload-Metadata
+        in: header
+        description: >-
+          tus Creation extension metadata: comma-separated
+          `key base64Value` pairs. Recognized keys: `filename`
+          (required, non-empty), `imageId`, `formatOf` (mutually
+          exclusive, each must match an existing image), `updateMode`,
+          `category`.
+        schema:
+          type: string
+    responses:
+      '201':
+        description: Upload session created.
+        headers:
+          Tus-Resumable:
+            $ref: '../openapi.yaml#/components/headers/TusResumable'
+          Location:
+            description: The new upload's own resource URL, for follow-up HEAD/PATCH/DELETE calls.
+            schema:
+              type: string
+              format: uri-reference
+          Upload-Offset:
+            description: Always `0` for a freshly created session.
+            schema:
+              type: string
+      '400':
+        description: >-
+          Missing/invalid `Upload-Length`, missing/empty `filename`
+          metadata, or both `imageId` and `formatOf` given.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: '`imageId`/`formatOf` metadata was given but matches no image.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '412':
+        description: Missing or mismatched `Tus-Resumable` header.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: '`Upload-Length` exceeds the `upload_max_filesize` limit.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '500':
+        description: The server-side upload buffer could not be created.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/uploads/{id}:
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-f0-9]{32}$'
+  head:
+    operationId: uploadHead
+    tags:
+      - Uploads
+    summary: Query a resumable upload's current byte offset (tus Core)
+    description: >-
+      Scoped to the session's own creator -- an upload id is an opaque,
+      unguessable token, but this closes the gap anyway.
+    responses:
+      '200':
+        description: Current offset.
+        headers:
+          Tus-Resumable:
+            $ref: '../openapi.yaml#/components/headers/TusResumable'
+          Upload-Offset:
+            schema:
+              type: string
+          Upload-Length:
+            schema:
+              type: string
+          Cache-Control:
+            schema:
+              type: string
+              example: no-store
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: Unknown upload, or not owned by the current user.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  patch:
+    operationId: uploadPatch
+    tags:
+      - Uploads
+    summary: Append a chunk to a resumable upload (tus Core)
+    description: >-
+      On the chunk that completes the upload, deliberately deviates
+      from a bare tus server: instead of a bodyless 204, runs the
+      completion pipeline and returns 200 with `{imageId, addStatus}` --
+      a private extension a generic tus client simply ignores.
+    parameters:
+      - name: Tus-Resumable
+        in: header
+        required: true
+        schema:
+          type: string
+          enum: ['1.0.0']
+      - name: Content-Type
+        in: header
+        required: true
+        schema:
+          type: string
+          enum: [application/offset+octet-stream]
+      - name: Upload-Offset
+        in: header
+        required: true
+        description: Must match the upload's real current offset.
+        schema:
+          type: string
+          pattern: '^[0-9]+$'
+    requestBody:
+      required: true
+      content:
+        application/offset+octet-stream:
+          schema:
+            type: string
+            format: binary
+    responses:
+      '200':
+        description: This chunk completed the upload; the resulting photo.
+        headers:
+          Tus-Resumable:
+            $ref: '../openapi.yaml#/components/headers/TusResumable'
+          Upload-Offset:
+            schema:
+              type: string
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageId, addStatus]
+              properties:
+                imageId:
+                  type: integer
+                addStatus:
+                  type: string
+      '204':
+        description: Chunk accepted; more bytes still expected.
+        headers:
+          Tus-Resumable:
+            $ref: '../openapi.yaml#/components/headers/TusResumable'
+          Upload-Offset:
+            schema:
+              type: string
+      '400':
+        description: Missing/non-numeric `Upload-Offset`, or (on completion) an unrecognized format extension.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Not an admin/CSRF-valid, or (a `formatOf` completion) formats
+          are disabled gallery-wide.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: Unknown upload not owned by the current user, or (a `formatOf` completion) the target image no longer exists.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`Upload-Offset` doesn''t match the upload''s real current offset.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '412':
+        description: Missing or mismatched `Tus-Resumable` header.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '415':
+        description: '`Content-Type` isn''t `application/offset+octet-stream`, or (on completion) the uploaded file itself isn''t a valid image.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    operationId: uploadDelete
+    tags:
+      - Uploads
+    summary: Abandon an in-progress upload (tus Termination extension)
+    description: Frees the server-side buffer early rather than waiting for it to go stale.
+    responses:
+      '204':
+        description: Upload deleted.
+        headers:
+          Tus-Resumable:
+            $ref: '../openapi.yaml#/components/headers/TusResumable'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: Unknown upload, or not owned by the current user.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/uploads/actions/complete-batch:
+  post:
+    operationId: uploadCompleteBatch
+    tags:
+      - Uploads
+    summary: Signal that a batch of tus uploads has finished
+    description: Empties the lounge, if any, moving buffered images into their target categories.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [categoryId]
+            properties:
+              categoryId:
+                type: integer
+    responses:
+      '200':
+        description: Batch completed.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [movedFromLounge, category]
+              properties:
+                movedFromLounge:
+                  type: [array, 'null']
+                  description: Null when another call was already emptying the lounge concurrently.
+                  items:
+                    type: object
+                    required: [image_id, category_id]
+                    properties:
+                      image_id:
+                        type: integer
+                      category_id:
+                        type: integer
+                category:
+                  type: object
+                  required: [id, nbPhotos, label]
+                  properties:
+                    id:
+                      type: integer
+                    nbPhotos:
+                      type: integer
+                    label:
+                      type: string
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'

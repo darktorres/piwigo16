@@ -61,6 +61,10 @@ tags:
   - name: 'Session > Preferences'
     parent: Session
     description: Arbitrary per-session-user preference key/value storage.
+  - name: Categories
+    description: >-
+      Album (category) CRUD, move/reorder, representative-image
+      management, and category-filtered image listing.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -151,6 +155,24 @@ paths:
     $ref: 'paths/session.yaml#/~1session~1favorites~1{imageId}'
   /session/caddie:
     $ref: 'paths/session.yaml#/~1session~1caddie'
+  /categories:
+    $ref: 'paths/categories.yaml#/~1categories'
+  /categories/available:
+    $ref: 'paths/categories.yaml#/~1categories~1available'
+  /categories/images:
+    $ref: 'paths/categories.yaml#/~1categories~1images'
+  '/categories/{id}':
+    $ref: 'paths/categories.yaml#/~1categories~1{id}'
+  /categories/actions/move:
+    $ref: 'paths/categories.yaml#/~1categories~1actions~1move'
+  /categories/actions/reorder:
+    $ref: 'paths/categories.yaml#/~1categories~1actions~1reorder'
+  '/categories/{id}/representative':
+    $ref: 'paths/categories.yaml#/~1categories~1{id}~1representative'
+  '/categories/{id}/actions/refresh-representative':
+    $ref: 'paths/categories.yaml#/~1categories~1{id}~1actions~1refresh-representative'
+  '/categories/{id}/orphan-impact':
+    $ref: 'paths/categories.yaml#/~1categories~1{id}~1orphan-impact'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

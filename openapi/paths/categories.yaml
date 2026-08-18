@@ -1,0 +1,846 @@
+/categories:
+  get:
+    operationId: categoryList
+    tags:
+      - Categories
+    summary: List albums (admin)
+    description: >-
+      Admin only, permissions not taken into account -- `GET
+      /categories/available` is the separate, permission-filtered,
+      public-browsing equivalent.
+    parameters:
+      - name: parentId
+        in: query
+        schema:
+          type: integer
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: recursive
+        in: query
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'true'
+    responses:
+      '200':
+        description: Matching albums (up to the linked-album search limit).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [categories, limit]
+              properties:
+                categories:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CategoryAdmin'
+                limit:
+                  $ref: '#/components/schemas/LimitInfo'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+  post:
+    operationId: categoryCreate
+    tags:
+      - Categories
+    summary: Create an album
+    description: HTML in name/comment is allowed only when the gallery's `allowHtmlDescriptions` config is on.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, visible, commentable]
+            properties:
+              name:
+                type: string
+              parentId:
+                type: [integer, 'null']
+                description: Omitted/null creates a root-level album.
+              comment:
+                type: [string, 'null']
+              visible:
+                type: boolean
+              status:
+                type: [string, 'null']
+                enum: [private, public, null]
+              commentable:
+                type: boolean
+              position:
+                type: [string, 'null']
+                enum: [first, last, null]
+    responses:
+      '201':
+        description: Album created.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, message]
+              properties:
+                id:
+                  type: [integer, string]
+                message:
+                  type: string
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/categories/available:
+  get:
+    operationId: categoryAvailableList
+    tags:
+      - Categories
+    summary: List albums visible to the current user
+    description: >-
+      Public, permission-filtered. One of 3 forbidden-categories
+      computations applies depending on the caller: an explicit
+      `public=true` browse-as-guest mode, an admin session (sees
+      locked/private-but-not-permitted albums too), or a normal user
+      session. Always a flat list -- every row carries `uppercats` (the
+      full ancestor-id chain), so a client can reconstruct a tree
+      itself.
+    security: []
+    parameters:
+      - name: catId
+        in: query
+        schema:
+          type: integer
+      - name: recursive
+        in: query
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'false'
+      - name: public
+        in: query
+        description: Browse as a guest would, regardless of the caller's real session.
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'false'
+      - name: fullname
+        in: query
+        description: Return each album's full breadcrumb-style display name in `name`.
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'false'
+      - name: thumbnailSize
+        in: query
+        description: Must be one of the gallery's defined derivative size types.
+        schema:
+          type: string
+          default: thumb
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Mutually exclusive with `recursive`.
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Every visible album (or, with `limit`, up to that many).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [categories]
+              properties:
+                categories:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CategoryAvailable'
+                limit:
+                  allOf:
+                    - $ref: '#/components/schemas/LimitInfo'
+                  description: Present only when the `limit` query param was given.
+      '422':
+        description: Invalid `thumbnailSize`, or both `recursive` and `limit` given together.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/categories/images:
+  get:
+    operationId: categoryImages
+    tags:
+      - Categories
+    summary: List images in one or more albums
+    description: >-
+      Public, permission-filtered. A collection-level query (matching
+      via `catIds`), not a single-album sub-resource.
+    security: []
+    parameters:
+      - name: catIds[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: integer
+      - name: recursive
+        in: query
+        description: Include sub-albums' images too.
+        schema:
+          type: string
+          enum: ['true', 'false']
+          default: 'false'
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          default: 100
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: order
+        in: query
+        description: >-
+          Comma-separated `field [asc|desc]` tokens against a fixed
+          server-side vocabulary; unrecognized tokens are silently
+          dropped. Defaults to the single album's own configured order
+          when exactly one `catIds[]` was given and no `order` param
+          was supplied.
+        schema:
+          type: string
+      - $ref: '../openapi.yaml#/components/parameters/fMinRate'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxRate'
+      - $ref: '../openapi.yaml#/components/parameters/fMinHit'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxHit'
+      - $ref: '../openapi.yaml#/components/parameters/fMinRatio'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxRatio'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxLevel'
+      - $ref: '../openapi.yaml#/components/parameters/fMinDateAvailable'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxDateAvailable'
+      - $ref: '../openapi.yaml#/components/parameters/fMinDateCreated'
+      - $ref: '../openapi.yaml#/components/parameters/fMaxDateCreated'
+    responses:
+      '200':
+        description: One page of matching images.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images, page, perPage, totalCount]
+              properties:
+                images:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CategoryImage'
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                totalCount:
+                  type: integer
+      '404':
+        description: One or more `catIds[]` doesn't match an existing album.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/categories/{id}:
+  patch:
+    operationId: categoryUpdate
+    tags:
+      - Categories
+    summary: Update an album
+    description: >-
+      Every field is optional (leave blank to keep the current value).
+      `{id}` is route-constrained to digits, 404s at the routing layer
+      otherwise.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              comment:
+                type: string
+              status:
+                type: string
+                enum: [private, public]
+              visible:
+                type: boolean
+              commentable:
+                type: boolean
+              applyCommentableToSubalbums:
+                type: boolean
+                default: false
+    responses:
+      '200':
+        description: Album updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: Invalid `status` (must be public/private).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    operationId: categoryDelete
+    tags:
+      - Categories
+    summary: Delete an album
+    description: >-
+      One album per call. A request body on `DELETE` is unusual but
+      deliberate: it's the only way to carry `photoDeletionMode`.
+      `{id}` is route-constrained to digits, 404s at the routing layer
+      otherwise.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              photoDeletionMode:
+                type: string
+                enum: [no_delete, delete_orphans, force_delete]
+                default: delete_orphans
+    responses:
+      '200':
+        description: Album deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: Invalid `photoDeletionMode`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/categories/actions/move:
+  post:
+    operationId: categoryMove
+    tags:
+      - Categories
+    summary: Move one or more albums under a new parent
+    description: >-
+      Bulk by design: moving a set of albums under a new parent is one
+      atomic action. Set `parentId` to `0` to move to the gallery root.
+      Only virtual albums can be moved.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [categoryIds, parentId]
+            properties:
+              categoryIds:
+                type: array
+                items:
+                  type: integer
+              parentId:
+                type: integer
+    responses:
+      '200':
+        description: Albums moved.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newArianeString, updatedCategories]
+              properties:
+                newArianeString:
+                  type: string
+                  description: Pre-rendered breadcrumb HTML for the new location.
+                updatedCategories:
+                  type: array
+                  description: Every ancestor album whose sub-photo count changed as a result.
+                  items:
+                    type: object
+                    required: [categoryId, nbSubPhotos]
+                    properties:
+                      categoryId:
+                        type: string
+                      nbSubPhotos:
+                        type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: An album id doesn't exist, or `parentId` doesn't match an existing album.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: No albums given, a non-virtual album was included, or the move itself failed.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/categories/actions/reorder:
+  post:
+    operationId: categoryReorder
+    tags:
+      - Categories
+    summary: Reorder albums among their siblings
+    description: >-
+      More than one `categoryIds` entry means "here is the full,
+      already-ordered sibling list" (`rank` is then meaningless);
+      exactly one id plus `rank` means "insert this one album at this
+      position among its siblings".
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [categoryIds]
+            properties:
+              categoryIds:
+                type: array
+                items:
+                  type: integer
+              rank:
+                type: [integer, 'null']
+    responses:
+      '204':
+        description: Order saved.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: No matching album for the given id(s).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`categoryIds`, when more than one entry, must be every sibling under the same parent -- no more, no fewer.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/categories/{id}/representative:
+  put:
+    operationId: categorySetRepresentative
+    tags:
+      - Categories
+    summary: Set an album's representative (thumbnail) image
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [imageId]
+            properties:
+              imageId:
+                type: integer
+    responses:
+      '204':
+        description: Representative set.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: Unknown album or image id.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    operationId: categoryDeleteRepresentative
+    tags:
+      - Categories
+    summary: Clear an album's representative image
+    description: >-
+      Only possible when the gallery allows a random representative, or
+      the album has no direct photos.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: Representative cleared.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Not an admin, or the gallery doesn't allow a random
+          representative and this album still has direct photos.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/categories/{id}/actions/refresh-representative:
+  post:
+    operationId: categoryRefreshRepresentative
+    tags:
+      - Categories
+    summary: Pick a new random representative image for an album
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: New representative picked.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [src, url]
+              properties:
+                src:
+                  description: A URL string, or an unconstrained array shape -- both real, depending on the source image.
+                url:
+                  type: string
+                  format: uri-reference
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Not an admin, or this album has no photos to pick from.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '500':
+        description: Could not determine a new representative image for this album.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/categories/{id}/orphan-impact:
+  get:
+    operationId: categoryOrphanImpact
+    tags:
+      - Categories
+    summary: Calculate how many photos would become orphaned if this album were deleted
+    description: The "delete album" confirmation dialog's own data source.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Orphan-impact counts.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nbImagesAssociatedOutside, nbImagesBecomingOrphan, nbImagesRecursive]
+              properties:
+                nbImagesAssociatedOutside:
+                  type: integer
+                  description: Images in this album (or sub-albums) also linked elsewhere -- safe either way.
+                nbImagesBecomingOrphan:
+                  type: integer
+                  description: Images that would end up linked to no album at all.
+                nbImagesRecursive:
+                  type: integer
+                  description: Total images under this album and its sub-albums.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+components:
+  schemas:
+    LimitInfo:
+      type: object
+      required: [limitedTo, totalCats, remainingCats]
+      properties:
+        limitedTo:
+          type: integer
+        totalCats:
+          type: integer
+        remainingCats:
+          type: integer
+    Category:
+      type: object
+      required: [id, name, parentId, comment, status, visible, commentable, uppercats, globalRank, imageOrder, lastmodified]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parentId:
+          type: [integer, 'null']
+        comment:
+          type: [string, 'null']
+        status:
+          type: string
+          enum: [private, public]
+        visible:
+          type: boolean
+        commentable:
+          type: boolean
+        uppercats:
+          type: string
+          description: Comma-separated ancestor-id chain, this album's own id last.
+        globalRank:
+          type: [string, 'null']
+        imageOrder:
+          type: [string, 'null']
+        lastmodified:
+          type: string
+    CategoryAdmin:
+      type: object
+      required:
+        - id
+        - name
+        - nameRaw
+        - comment
+        - commentRaw
+        - fullname
+        - uppercats
+        - globalRank
+        - status
+        - imageOrder
+        - nbImages
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          description: Post render-filter display name, HTML-stripped.
+        nameRaw:
+          type: string
+        comment:
+          type: string
+          description: Post render-filter description.
+        commentRaw:
+          type: [string, 'null']
+        fullname:
+          type: string
+          description: Full breadcrumb-style display name, HTML-stripped.
+        uppercats:
+          type: string
+        globalRank:
+          type: [string, 'null']
+        status:
+          type: string
+          enum: [private, public]
+        imageOrder:
+          type: string
+        nbImages:
+          type: integer
+        nbCategories:
+          type: integer
+          description: Present only when `recursive=false` was requested.
+    CategoryAvailable:
+      type: object
+      required:
+        - id
+        - parentId
+        - name
+        - nameRaw
+        - comment
+        - commentRaw
+        - status
+        - permalink
+        - uppercats
+        - globalRank
+        - url
+        - tnUrl
+        - nbImages
+        - totalNbImages
+        - nbCategories
+        - dateLast
+        - maxDateLast
+        - imageOrder
+      properties:
+        id:
+          type: integer
+        parentId:
+          type: [integer, 'null']
+        name:
+          type: string
+          description: '`fullname`-style breadcrumb text when `fullname=true`; post render-filter display name otherwise.'
+        nameRaw:
+          type: [string, 'null']
+          description: Absent from the underlying data when `fullname=true` was used, hence nullable.
+        comment:
+          type: string
+        commentRaw:
+          type: [string, 'null']
+        status:
+          type: [string, 'null']
+          enum: [private, public, null]
+        permalink:
+          type: [string, 'null']
+        uppercats:
+          type: string
+        globalRank:
+          type: [string, 'null']
+        url:
+          type: string
+          format: uri-reference
+        tnUrl:
+          type: [string, 'null']
+          description: Album thumbnail URL, resolved through the multi-tier representative-picture logic.
+        nbImages:
+          type: integer
+        totalNbImages:
+          type: integer
+        nbCategories:
+          type: integer
+        dateLast:
+          type: [string, 'null']
+        maxDateLast:
+          type: [string, 'null']
+        imageOrder:
+          type: string
+    CategoryImage:
+      type: object
+      required:
+        - isFavorite
+        - id
+        - width
+        - height
+        - hit
+        - file
+        - name
+        - comment
+        - dateCreation
+        - dateAvailable
+        - page_url
+        - download_url
+        - derivatives
+        - categories
+      properties:
+        isFavorite:
+          type: boolean
+        id:
+          type: integer
+        width:
+          type: [integer, 'null']
+        height:
+          type: [integer, 'null']
+        hit:
+          type: [integer, 'null']
+        file:
+          type: [string, 'null']
+        name:
+          type: string
+          description: Post render-filter display name, HTML-stripped.
+        comment:
+          type: string
+          description: Post render-filter description.
+        dateCreation:
+          type: [string, 'null']
+        dateAvailable:
+          type: [string, 'null']
+        page_url:
+          type: string
+          format: uri-reference
+        element_url:
+          type: string
+          format: uri-reference
+          description: Present only when the current user can view the full-size element.
+        download_url:
+          type: [string, 'null']
+        derivatives:
+          type: object
+          additionalProperties:
+            type: object
+            required: [url, width, height]
+            properties:
+              url:
+                type: string
+                format: uri-reference
+              width:
+                type: integer
+              height:
+                type: integer
+        categories:
+          type: array
+          items:
+            type: object
+            required: [id, url, pageUrl]
+            properties:
+              id:
+                type: integer
+              url:
+                type: string
+                format: uri-reference
+              pageUrl:
+                type: string
+                format: uri-reference

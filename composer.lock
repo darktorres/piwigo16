@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "93b629ec4bea5fa665b0d745396ef9a7",
+    "content-hash": "5b22ee115015d86ac8f547bdb64aeb7c",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -11132,6 +11132,73 @@
             "time": "2022-02-21T01:04:05+00:00"
         },
         {
+            "name": "php-openapi/openapi",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/openapi-php/php-openapi.git",
+                "reference": "8f1b7a3fdc38f5dc28e87153cb76b09711d38b88"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/openapi-php/php-openapi/zipball/8f1b7a3fdc38f5dc28e87153cb76b09711d38b88",
+                "reference": "8f1b7a3fdc38f5dc28e87153cb76b09711d38b88",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "justinrainbow/json-schema": "^5.2 || ^6.0",
+                "php": "^8.1 || ^8.2 || ^8.3 || ^8.4 || ^8.5",
+                "symfony/yaml": "^6.1 || ^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "apis-guru/openapi-directory": "1.0.0",
+                "cebe/indent": "*",
+                "doctrine/coding-standard": "^12.0",
+                "mermade/openapi3-examples": "1.0.0",
+                "oai/openapi-specification-3.0": "3.0.3",
+                "oai/openapi-specification-3.1": "3.1.1",
+                "phpstan/phpstan": "^1.10.0",
+                "phpunit/phpunit": "^10.0",
+                "rector/rector": "^1.0"
+            },
+            "bin": [
+                "bin/php-openapi"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "openapiphp\\openapi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Carsten Brandt",
+                    "email": "mail@cebe.cc",
+                    "homepage": "https://cebe.cc/",
+                    "role": "Creator"
+                },
+                {
+                    "name": "Vicent Valls",
+                    "email": "vizzent@gmail.com"
+                }
+            ],
+            "description": "Read and write OpenAPI yaml/json files and make the content accessible in PHP objects.",
+            "homepage": "https://github.com/openapi-php/php-openapi",
+            "keywords": [
+                "openapi"
+            ],
+            "support": {
+                "issues": "https://github.com/openapi-php/php-openapi/issues",
+                "source": "https://github.com/openapi-php/php-openapi"
+            },
+            "time": "2026-02-15T19:09:39+00:00"
+        },
+        {
             "name": "php-standard-library/php-standard-library",
             "version": "6.2.1",
             "source": {
@@ -15549,6 +15616,104 @@
                 }
             ],
             "time": "2024-10-20T05:08:20+00:00"
+        },
+        {
+            "name": "studio-design/gesso",
+            "version": "v2.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/studio-design/gesso.git",
+                "reference": "2c2447c4a062350d3dd2bd316c4a99db7dd256c8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/studio-design/gesso/zipball/2c2447c4a062350d3dd2bd316c4a99db7dd256c8",
+                "reference": "2c2447c4a062350d3dd2bd316c4a99db7dd256c8",
+                "shasum": ""
+            },
+            "require": {
+                "opis/json-schema": "^2.6",
+                "php": "^8.3",
+                "phpunit/phpunit": "^12.0 || ^13.0",
+                "psr/http-client": "^1.0",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.0 || ^2.0"
+            },
+            "conflict": {
+                "studio-design/openapi-contract-testing": "*"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.94",
+                "guzzlehttp/guzzle": "^7.12.1",
+                "guzzlehttp/psr7": "^2.12.1",
+                "json-schema-org/json-schema-test-suite": "2026.08.04",
+                "nyholm/psr7": "^1.8",
+                "oai/learn.openapis.org": "2026.05.07",
+                "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+                "phpstan/phpstan": "^2.1.13",
+                "symfony/browser-kit": "^6.4 || ^7.0 || ^8.0",
+                "symfony/http-foundation": "^6.4 || ^7.0 || ^8.0",
+                "symfony/http-kernel": "^6.4 || ^7.0 || ^8.0",
+                "symfony/yaml": "^6.4 || ^7.0 || ^8.0"
+            },
+            "suggest": {
+                "fakerphp/faker": "Improves the realism of inputs generated by ExploresOpenApiEndpoint (email, uuid, urls). The fuzzer falls back to deterministic primitives when not installed.",
+                "guzzlehttp/guzzle": "A PSR-18 HTTP client implementation for resolving external HTTP(S) $refs",
+                "illuminate/testing": "Required for the Laravel adapter (ValidatesOpenApiSchema trait)",
+                "pestphp/pest": "Activates the Pest expectation API (toMatchOpenApiResponseSchema / toMatchOpenApiRequestSchema). Library runtime stays Pest-free; the plugin auto-loads only when Pest is installed.",
+                "symfony/http-client": "A PSR-18 HTTP client implementation for resolving external HTTP(S) $refs",
+                "symfony/http-foundation": "Required for the Symfony adapter (OpenApiAssertions trait), which validates HttpFoundation Request / Response objects directly",
+                "symfony/http-kernel": "Required for the Symfony adapter's assertClientMatchesOpenApiSchema(), which reads a KernelBrowser / HttpKernelBrowser test client",
+                "symfony/yaml": "Required to load OpenAPI specs directly from .yaml / .yml files"
+            },
+            "bin": [
+                "bin/gesso"
+            ],
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Studio\\Gesso\\Laravel\\GessoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Pest/Autoload.php"
+                ],
+                "psr-4": {
+                    "Studio\\Gesso\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Gesso — OpenAPI 3.0/3.1/3.2 contract testing for PHP. Framework-independent core with Laravel, Symfony, Pest, and PSR-7 adapters. PHPUnit coverage, request/response validation, fuzzing, and drift detection.",
+            "homepage": "https://studio-design.github.io/gesso/",
+            "keywords": [
+                "api-testing",
+                "contract-testing",
+                "coverage",
+                "fuzzing",
+                "gesso",
+                "laravel",
+                "openapi",
+                "openapi-validator",
+                "openapi3",
+                "openapi31",
+                "pest",
+                "phpunit",
+                "psr7",
+                "symfony",
+                "validation"
+            ],
+            "support": {
+                "docs": "https://studio-design.github.io/gesso/",
+                "issues": "https://github.com/studio-design/gesso/issues",
+                "source": "https://github.com/studio-design/gesso"
+            },
+            "time": "2026-08-12T04:17:34+00:00"
         },
         {
             "name": "symfony/config",

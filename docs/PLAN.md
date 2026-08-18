@@ -1893,13 +1893,13 @@ not a guarantee.
 | SEC-07 | P5 | Replace `mt_rand()` with `random_int()` | Done for security-sensitive uses — see below |
 | SEC-08 | P5/P17–P23 | Replace loose `==` with `===` | Done |
 | SEC-09 | P5 | `#[\SensitiveParameter]` on secret-carrying params | Done (confirmed) — see below |
-| SEC-10 | P9→P17–P23 | Remove `addslashes()` superglobal sanitization | Done (confirmed) — this row was wrong: global `addslashes()` on every superglobal was still live in `RequestBootstrap::bootEntryPoint()` as of 2026-08-15, corrupting data (`O'Brien` stored as `O\'Brien`), with 71 compensating `stripslashes()` calls masking it; fixed `aba74c9129` |
+| SEC-10 | P9→P17–P23 | Remove `addslashes()` superglobal sanitization | Done (confirmed) — `addslashes()` on every superglobal in `RequestBootstrap::bootEntryPoint()` was corrupting data (`O'Brien` stored as `O\'Brien`), masked by 71 compensating `stripslashes()` calls; fixed `aba74c9129` |
 | SEC-11 | P9 | CSRF token md5→sha256 HMAC | Done (confirmed) |
-| SEC-12 | P9 | CSRF verification via `hash_equals()` | Done (confirmed) — this row was wrong for the WS layer: `Ws\WsHelper`/`WsCsrfGuard::checkSecurityToken()` used `!==`, not `hash_equals()`, across all 41 real call sites; fixed `b38c5f0877` |
+| SEC-12 | P9 | CSRF verification via `hash_equals()` | Done (confirmed) — holds for `CsrfService`; the WS layer's own copy, `Ws\WsHelper`/`WsCsrfGuard::checkSecurityToken()`, used `!==` not `hash_equals()` across all 41 real call sites; fixed `b38c5f0877` |
 | SEC-13 | P9 | `CookieService` HttpOnly + Secure flags | Done |
 | SEC-14 | P9 | Cookie deletion calls include all flags | Done |
 | SEC-15 | P20 | Eliminate 2 of 3 `eval()` calls (3rd = SEC-49) | Done |
-| SEC-16 | P19 | Wrap `exec()` calls with `escapeshellarg()` | Done (confirmed) — this row was wrong: 4 of 16 real `exec()` sites escaped nothing (`Admin/Image/ImageBackend.php`, `Admin/MaintenanceActionsPageRenderer.php`, `Ws/Core/GetCacheSizeHandler.php` ×2), admin-to-shell via DB-settable config; fixed `c6a63c8143` |
+| SEC-16 | P19 | Wrap `exec()` calls with `escapeshellarg()` | Done (confirmed) — 4 of 16 real `exec()` sites escaped nothing (`Admin/Image/ImageBackend.php`, `Admin/MaintenanceActionsPageRenderer.php`, `Ws/Core/GetCacheSizeHandler.php` ×2), admin-to-shell via DB-settable config; fixed `c6a63c8143` |
 | SEC-17 | P17 | URL validation in redirect responder | Done |
 | SEC-18 | P19 | Replace `addslashes()` in `SearchService` with prepared statements | Done |
 | SEC-19 | P21–P22 | Controllers use PSR-7 request, not superglobals | Done |

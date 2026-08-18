@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Admin\LoadedPluginsMiddleware;
 use Piwigo\Core\Kernel;
 use Piwigo\Http\Middleware\ApiErrorMiddleware;
+use Piwigo\Http\Middleware\ApiIdempotencyMiddleware;
 use Piwigo\Http\Middleware\ConfigBootstrapMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
@@ -28,7 +29,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Runs the real middleware pipeline -- 14 middleware now (workstream C3
+ * Runs the real middleware pipeline -- 15 middleware now (workstream C3
  * Phase 1), every root file's own call shape:
  * `RequestPipeline::handle($request)`.
  *
@@ -55,7 +56,12 @@ use Psr\Http\Server\RequestHandlerInterface;
  * `RoutingMiddleware` and `ControllerInvokerMiddleware` -- it needs the
  * real `RouteResult`, and it must win before `ControllerInvokerMiddleware`'s
  * own generic 404 fallback for any `/api/v1/...` path whose route didn't
- * resolve to `Found`.
+ * resolve to `Found`. `Http\Middleware\ApiIdempotencyMiddleware` (SEC-65)
+ * runs right after it, still before `ControllerInvokerMiddleware` -- it
+ * also needs the real, `Found` `RouteResult` (to know the real controller
+ * class and scope by `/api/v1`), and it must wrap
+ * `ControllerInvokerMiddleware`'s own `$handler->handle()` call to
+ * capture whatever response the real controller produces.
  *
  * Lives in Bootstrap/ (L4Integration), not Kernel (L1Infrastructure) --
  * orchestrating Http/Routing/Container together is genuinely an
@@ -111,6 +117,7 @@ final class RequestPipeline
         ...self::BOOTSTRAP_MIDDLEWARE,
         RoutingMiddleware::class,
         ApiErrorMiddleware::class,
+        ApiIdempotencyMiddleware::class,
         ControllerInvokerMiddleware::class,
     ];
 

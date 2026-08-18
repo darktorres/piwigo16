@@ -1416,12 +1416,14 @@ final class BrowserTestHelpers
      * Same in-browser fetch() technique as adminPost(), but JSON-bodied --
      * every real `/api/v1/*` endpoint (unlike the legacy admin.php form
      * POSTs adminPost() targets) decodes its body via Http\JsonBody, not
-     * $_POST.
+     * $_POST. `$extraHeaders` merges on top of the always-sent
+     * `Content-Type: application/json` (e.g. `Idempotency-Key`).
      *
      * @param array<string, mixed> $body
+     * @param array<string, string> $extraHeaders
      * @return array{status: int, body: string}
      */
-    public static function rawPostJson(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path, array $body): array
+    public static function rawPostJson(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path, array $body, array $extraHeaders = []): array
     {
         $url = self::baseUrl() . '/' . ltrim($path, '/');
         // $jsonBody is embedded as a JS object-literal *expression* (valid
@@ -1430,11 +1432,15 @@ final class BrowserTestHelpers
         // string -- a field value containing a literal `'` would otherwise
         // break out of a single-quoted JS string embedding.
         $jsonBody = json_encode($body, \JSON_THROW_ON_ERROR);
+        $headers = array_merge([
+            'Content-Type' => 'application/json',
+        ], $extraHeaders);
+        $headersJson = json_encode($headers, \JSON_THROW_ON_ERROR);
         $js = <<<JS
         fetch('{$url}', {
             method: 'POST',
             redirect: 'manual',
-            headers: {'Content-Type': 'application/json'},
+            headers: {$headersJson},
             body: JSON.stringify({$jsonBody})
         }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
         JS;

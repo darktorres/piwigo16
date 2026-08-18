@@ -852,6 +852,60 @@ it('rejects a non-empty body with the wrong (or missing) Content-Type with 415',
     expect($result['status'])->toBe(415);
 });
 
+it('creates a distinct search on every call with no Idempotency-Key header', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $first = H::rawPostJson($page, '/api/v1/images/searches', [
+        'tags' => [1],
+    ]);
+    $second = H::rawPostJson($page, '/api/v1/images/searches', [
+        'tags' => [1],
+    ]);
+
+    $firstId = json_decode($first['body'], true);
+    $secondId = json_decode($second['body'], true);
+    expect(is_array($firstId) ? $firstId['searchId'] ?? null : null)
+        ->not->toBe(is_array($secondId) ? $secondId['searchId'] ?? null : null);
+});
+
+it('replays the stored response for a repeated Idempotency-Key with the same body', function (): void {
+    $page = H::loginAsAdmin($this);
+    $key = 'test-idempotency-' . uniqid();
+
+    $first = H::rawPostJson($page, '/api/v1/images/searches', [
+        'tags' => [1],
+    ], [
+        'Idempotency-Key' => $key,
+    ]);
+    $second = H::rawPostJson($page, '/api/v1/images/searches', [
+        'tags' => [1],
+    ], [
+        'Idempotency-Key' => $key,
+    ]);
+
+    expect($second['status'])->toBe($first['status']);
+    expect($second['body'])->toBe($first['body']);
+});
+
+it('rejects a repeated Idempotency-Key with a different body with 400', function (): void {
+    $page = H::loginAsAdmin($this);
+    $key = 'test-idempotency-conflict-' . uniqid();
+
+    $first = H::rawPostJson($page, '/api/v1/images/searches', [
+        'tags' => [1],
+    ], [
+        'Idempotency-Key' => $key,
+    ]);
+    expect($first['status'])->toBe(201);
+
+    $second = H::rawPostJson($page, '/api/v1/images/searches', [
+        'tags' => [2],
+    ], [
+        'Idempotency-Key' => $key,
+    ]);
+    expect($second['status'])->toBe(400);
+});
+
 /**
  * Closes the `filetypes`-is-the-only-active-filter branch (line ~585):
  * with no OTHER active filter, getClauseForFilter('filetypes', ...)

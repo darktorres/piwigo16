@@ -164,6 +164,7 @@ test('install/ contains only data files and the anti-listing stub', function ():
         'piwigo_structure-mariadb.sql',
         'piwigo_structure-mysql.sql',
         'piwigo_structure-pgsql.sql',
+        'piwigo_structure-sqlite.sql',
     ]);
 });
 

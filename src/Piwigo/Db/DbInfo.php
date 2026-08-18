@@ -6,6 +6,7 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 
 /**
  * Constructor-injected, not the reference's Kernel::service(Connection::class)
@@ -19,8 +20,13 @@ final readonly class DbInfo
 
     public function version(): string
     {
+        // sqlite3 has no VERSION() -- sqlite_version() is its own real
+        // equivalent, returning the linked libsqlite3 version (e.g.
+        // '3.46.1'), verified live.
+        $versionExpr = $this->conn->getDatabasePlatform() instanceof SQLitePlatform ? 'sqlite_version()' : 'VERSION()';
+
         $v = $this->conn->executeQuery(<<<SQL
-            SELECT VERSION()
+            SELECT {$versionExpr}
             SQL)
             ->fetchOne();
         return is_string($v) ? $v : '';
@@ -36,8 +42,13 @@ final readonly class DbInfo
      */
     public function currentDateTime(): ?string
     {
+        // sqlite3 has no NOW() -- datetime('now') is its own real
+        // equivalent, matching SqlDialectExecutor's own established
+        // SQLite branch for the identical "no NOW()" gap.
+        $nowExpr = $this->conn->getDatabasePlatform() instanceof SQLitePlatform ? "datetime('now')" : 'NOW()';
+
         $v = $this->conn->fetchOne(<<<SQL
-            SELECT NOW()
+            SELECT {$nowExpr}
             SQL);
 
         return is_string($v) ? $v : null;
@@ -79,9 +90,21 @@ final readonly class DbInfo
         // so a fresh install fingerprinted as '' rather than as a
         // fingerprint, and every empty table shared that one value. `0_0`
         // is well-formed and still changes the moment a first row lands.
-        $epochExpr = $this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform
-            ? 'COALESCE(EXTRACT(EPOCH FROM MAX(lastmodified))::bigint, 0)'
-            : 'COALESCE(UNIX_TIMESTAMP(MAX(lastmodified)), 0)';
+        // CONCAT() itself also covers sqlite3 -- a real, built-in scalar
+        // function there since SQLite 3.44.0 (2023), verified live, no
+        // branch needed for it specifically.
+        $platform = $this->conn->getDatabasePlatform();
+        if ($platform instanceof PostgreSQLPlatform) {
+            $epochExpr = 'COALESCE(EXTRACT(EPOCH FROM MAX(lastmodified))::bigint, 0)';
+        } elseif ($platform instanceof SQLitePlatform) {
+            // sqlite3 has no UNIX_TIMESTAMP() -- CAST(strftime('%s', ...)
+            // AS INTEGER) is its own real equivalent, matching
+            // SqlDialect::dateToTs()'s own established SQLite branch for
+            // the identical gap.
+            $epochExpr = "COALESCE(CAST(strftime('%s', MAX(lastmodified)) AS INTEGER), 0)";
+        } else {
+            $epochExpr = 'COALESCE(UNIX_TIMESTAMP(MAX(lastmodified)), 0)';
+        }
 
         $value = $this->conn->fetchOne(<<<SQL
             SELECT CONCAT(

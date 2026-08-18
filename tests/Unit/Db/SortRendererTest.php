@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Piwigo\Common\ValueObject\PhotoSortField;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Db\DbConnection;
@@ -25,9 +26,18 @@ function sortRendererTestRenderer(): SortRenderer
     return new SortRenderer(DbConnection::build());
 }
 
-function sortRendererTestIsPostgres(): bool
+/**
+ * Postgres and SQLite both use ANSI double-quote identifier quoting;
+ * MySQL/MariaDB use backticks -- same "not just Postgres" broadening
+ * SqlDialect::randomFunctionFor()'s own `$usesAnsiRandom` rename already
+ * needed for the identical 2-vs-1 platform split, confirmed live via
+ * SQLitePlatform::quoteSingleIdentifier('rank') === '"rank"'.
+ */
+function sortRendererTestUsesAnsiQuoting(): bool
 {
-    return DbConnection::build()->getDatabasePlatform() instanceof PostgreSQLPlatform;
+    $platform = DbConnection::build()->getDatabasePlatform();
+
+    return $platform instanceof PostgreSQLPlatform || $platform instanceof SQLitePlatform;
 }
 
 test('toSql() renders a complete clause and toSqlBody() the same without the keyword', function (): void {
@@ -75,7 +85,7 @@ test('randomExpression() agrees with SqlDialect but derives the platform from th
 test('rank is quoted by the connected platform', function (): void {
     // `rank` is nullable (image_category.rank), so its own discriminant is
     // quoted the same way as the real column.
-    $quoted = sortRendererTestIsPostgres() ? '"rank"' : '`rank`';
+    $quoted = sortRendererTestUsesAnsiQuoting() ? '"rank"' : '`rank`';
 
     expect(sortRendererTestRenderer()->rankColumn())
         ->toBe($quoted)
@@ -85,7 +95,7 @@ test('rank is quoted by the connected platform', function (): void {
 
 test('column() returns the real column or expression for every field', function (): void {
     $renderer = sortRendererTestRenderer();
-    $quoted = sortRendererTestIsPostgres() ? '"rank"' : '`rank`';
+    $quoted = sortRendererTestUsesAnsiQuoting() ? '"rank"' : '`rank`';
 
     expect($renderer->column(PhotoSortField::Id))->toBe('id')
         ->and($renderer->column(PhotoSortField::File))->toBe('file')

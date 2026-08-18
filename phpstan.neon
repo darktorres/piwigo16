@@ -158,6 +158,15 @@ parameters:
             identifier: dba.syntaxError
             path: src/Piwigo/Db/SqlDialectExecutor.php
         -
+            # version()/currentDateTime()/getTableFingerprint() each branch
+            # across the same 3 real platforms -- sqlite_version()/
+            # datetime('now')/strftime() are SQLite-only, validated against
+            # whichever one connection phpstan-dba has (own docblock
+            # documents the per-platform split), matching
+            # SqlDialectExecutor.php's own identical reasoning above.
+            identifier: dba.syntaxError
+            path: src/Piwigo/Db/DbInfo.php
+        -
             # setval()/pg_get_serial_sequence() are Postgres-only, validated
             # against whichever one connection phpstan-dba has -- only the
             # branch matching the configured driver ever actually executes

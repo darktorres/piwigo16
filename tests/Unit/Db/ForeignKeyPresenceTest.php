@@ -2,17 +2,83 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
+use Doctrine\DBAL\Schema\Table;
 use Piwigo\Db\DbConnection;
+
+/**
+ * introspectSchema() (both tests below) can't be used directly against a
+ * real, FTS5-bearing sqlite3 connection -- confirmed live: FTS5 virtual
+ * tables, and each of their 4 shadow tables, report an empty `type` in
+ * `PRAGMA table_info` (no real SQL type -- not a Piwigo schema choice,
+ * FTS5's own storage model), which DBAL's SQLiteSchemaManager column
+ * introspection unconditionally assumes is a real type string for and
+ * throws a TypeError on. Every real Piwigo SQLite database has these
+ * tables (Wave 2 of the SQLite campaign), so this isn't a hypothetical.
+ * Same shadow-table exclusion SchemaDumpService::runSqliteDump() already
+ * established for the identical reason -- these tables are FTS5's own
+ * synthetic storage, not part of the relational schema this audit's own
+ * FK/index-naming assumptions apply to.
+ *
+ * @return list<Table>
+ */
+function foreignKeyPresenceTestTables(Connection $conn): array
+{
+    $schemaManager = $conn->createSchemaManager();
+
+    if (! $conn->getDatabasePlatform() instanceof SQLitePlatform) {
+        return $schemaManager->introspectSchema()
+            ->getTables();
+    }
+
+    $excluded = [];
+    // sqlite_master is a SQLite-only catalog table, validated against
+    // whichever one connection phpstan-dba has -- matches
+    // SchemaDumpService's own identical sqlite_master query.
+    // @phpstan-ignore dba.syntaxError
+    foreach ($conn->fetchFirstColumn("SELECT name FROM sqlite_master WHERE type = 'table' AND sql LIKE 'CREATE VIRTUAL TABLE%'") as $ftsTable) {
+        if (! is_string($ftsTable)) {
+            continue;
+        }
+        $excluded[$ftsTable] = true;
+        foreach (['_data', '_idx', '_docsize', '_config'] as $suffix) {
+            $excluded[$ftsTable . $suffix] = true;
+        }
+    }
+
+    $tables = [];
+    foreach ($schemaManager->introspectTableNames() as $tableName) {
+        // getValue(), not toString() -- toString() returns the quoted
+        // spelling DBAL's own SQLite introspection gives these names
+        // (confirmed live: passing that straight into
+        // introspectTableByUnquotedName() double-quotes it, a real
+        // "There is no table with name \"\"migration_versions\"\""
+        // failure), so the identifier needs re-dispatching through
+        // whichever of the 2 introspectTableBy*Name() methods actually
+        // matches how DBAL itself quoted it.
+        $identifier = $tableName->getUnqualifiedName();
+        $name = $identifier->getValue();
+        if (isset($excluded[$name])) {
+            continue;
+        }
+        $tables[] = $identifier->isQuoted()
+            ? $schemaManager->introspectTableByQuotedName($name)
+            : $schemaManager->introspectTableByUnquotedName($name);
+    }
+
+    return $tables;
+}
 
 /**
  * Asserts that every reference-shaped column (`*_id`, plus
  * `*_id_from`/`*_id_to`, the shape a bare `%_id` pattern misses -- see
  * `history_summary`'s watermarks below) either carries a real foreign
  * key or is named on this file's own $EXCEPTIONS list. `db-multi-provider`
- * runs `tests/Unit/Db` unconditionally on all three providers, which is
- * what makes this the right home: `tests/Arch` has no live DB connection
- * to introspect, and `tests/Integration` only runs on that job's pgsql
- * leg.
+ * runs `tests/Unit/Db` unconditionally on all four providers (mysql/
+ * mariadb/pgsql/sqlite), which is what makes this the right home:
+ * `tests/Arch` has no live DB connection to introspect, and
+ * `tests/Integration` only runs on that job's pgsql leg.
  *
  * Closes a real gap, not a hypothetical one: the CI drift guard
  * (`schema:dump` + `git diff --exit-code`) proves the migrations are
@@ -68,12 +134,8 @@ test('every reference-shaped column is either foreign-keyed or on the exception 
         'user_auth_keys.auth_key_id',
     ];
 
-    $schema = DbConnection::build()
-        ->createSchemaManager()
-        ->introspectSchema();
-
     $unconstrained = [];
-    foreach ($schema->getTables() as $table) {
+    foreach (foreignKeyPresenceTestTables(DbConnection::build()) as $table) {
         $tableName = $table->getObjectName()
             ->toString();
 
@@ -108,10 +170,13 @@ test('every reference-shaped column is either foreign-keyed or on the exception 
 /**
  * Closes the other half of the same gap: a foreign key can exist and
  * still leave its referencing column unindexed. InnoDB indexes every
- * foreign key automatically; PostgreSQL does not, so this only ever
- * catches something real on that provider -- `db-multi-provider` runs
- * this file on all three, which is what makes it worth asserting
- * unconditionally rather than gating it on the connected platform.
+ * foreign key automatically; PostgreSQL and SQLite do not (Wave 1 of the
+ * SQLite campaign added the same explicit `sqliteExtraIndexes()` data
+ * Postgres's own `upPostgres()` already needed for the identical gap),
+ * so this only ever catches something real on those 2 providers --
+ * `db-multi-provider` runs this file on all four, which is what makes it
+ * worth asserting unconditionally rather than gating it on the connected
+ * platform.
  *
  * An FK is covered when some index's own column list, truncated to the
  * FK's column count, equals the FK's columns in order -- this handles a
@@ -125,12 +190,8 @@ test('every reference-shaped column is either foreign-keyed or on the exception 
  * single-column comparison, but the general form costs nothing extra.
  */
 test('every foreign key\'s referencing column is indexed', function (): void {
-    $schema = DbConnection::build()
-        ->createSchemaManager()
-        ->introspectSchema();
-
     $uncovered = [];
-    foreach ($schema->getTables() as $table) {
+    foreach (foreignKeyPresenceTestTables(DbConnection::build()) as $table) {
         $tableName = $table->getObjectName()
             ->toString();
 

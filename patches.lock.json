@@ -1,6 +1,18 @@
 {
-    "_hash": "5e7b374efeb0c726b42cbf0e75f47ae96a55c8ce4a5e8ee7070f3e1fcc89ff01",
+    "_hash": "229d8ef0558053da1b0506e0f59b0fa4d0f0541fb0772e1dba7d4b2309f647fd",
     "patches": {
+        "doctrine/dbal": [
+            {
+                "package": "doctrine/dbal",
+                "description": "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix",
+                "url": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch",
+                "sha256": "2764074b3f5ed5bce33b9e2590d1903ea3bb8a1fdbac4c4b7c743805bbfa604f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
         "pestphp/pest-plugin-browser": [
             {
                 "package": "pestphp/pest-plugin-browser",
@@ -49,28 +61,6 @@
                 "description": "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving",
                 "url": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
                 "sha256": "de97dde126381265b371d6a66c9bfe32b6edd25f5bf8ff3fe8e15b46903a2f22",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            },
-            {
-                "package": "pestphp/pest-plugin-mutate",
-                "description": "Fix MutationTestRunner::run() building $coveredLines directly from lineCoverage()'s raw per-line array, which since phpunit/php-code-coverage 14 is keyed by an interned test index (int) with the hit count as the value, not a list of test id strings -- MutationTest::start() then fed a hit-count int straight into preg_match(), fatalling with 'Argument #2 ($subject) must be of type string, int given' on the very first covered mutation. Resolves each surviving index back to its real test id via testIds() before handing $coveredLines off",
-                "url": "patches/pest-plugin-mutate-5.0.1-resolve-interned-test-index.patch",
-                "sha256": "f76880213ec1b603c0887dc354cdcbf810370ee2b4966c31addf6a7eb09414b5",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            }
-        ],
-        "doctrine/dbal": [
-            {
-                "package": "doctrine/dbal",
-                "description": "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix",
-                "url": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch",
-                "sha256": "2764074b3f5ed5bce33b9e2590d1903ea3bb8a1fdbac4c4b7c743805bbfa604f",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

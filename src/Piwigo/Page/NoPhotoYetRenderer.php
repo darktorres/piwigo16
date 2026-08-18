@@ -9,6 +9,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
@@ -52,6 +53,7 @@ final readonly class NoPhotoYetRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
         private readonly AdminContext $adminContext,
+        private readonly ApiContext $apiContext,
         private readonly SessionService $sessionService,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentUser $currentUser,
@@ -66,6 +68,7 @@ final readonly class NoPhotoYetRenderer
     {
         if (
             ! $this->adminContext->isActive()   // no message inside administration
+            and ! $this->apiContext->isActive() // a JSON API response is never replaced by an HTML page -- also keeps /api/v1/session reachable to log in
             and PageFilterHelper::scriptBasename($this->currentConfig) !== 'identification' // keep the ability to login
             and PageFilterHelper::scriptBasename($this->currentConfig) !== 'password'       // keep the ability to reset password
             and PageFilterHelper::scriptBasename($this->currentConfig) !== 'popuphelp'      // keep the ability to display help popups

@@ -27,6 +27,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CoverageCollector;
 use Piwigo\Core\CurrentLogger;
@@ -375,7 +376,7 @@ final class RequestBootstrap
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
-            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::paths(), self::adminContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService())
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService())
                 ->render();
         }
 
@@ -907,6 +908,16 @@ final class RequestBootstrap
         }
 
         return $adminContext;
+    }
+
+    private static function apiContext(): ApiContext
+    {
+        $apiContext = Kernel::container()->get(ApiContext::class);
+        if (! $apiContext instanceof ApiContext) {
+            throw new LogicException('Container returned an unexpected type for ' . ApiContext::class);
+        }
+
+        return $apiContext;
     }
 
     /**

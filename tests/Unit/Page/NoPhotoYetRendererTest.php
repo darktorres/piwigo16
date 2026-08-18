@@ -11,6 +11,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -73,7 +74,7 @@ function noPhotoYetTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
+function noPhotoYetTestRenderer(AdminContext $adminContext, ApiContext $apiContext = new ApiContext()): NoPhotoYetRenderer
 {
     $conn = DbConnection::build();
 
@@ -86,6 +87,7 @@ function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
         UrlServiceTestFactory::build(),
         Paths::fromRoot(sys_get_temp_dir()),
         $adminContext,
+        $apiContext,
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         CurrentUserTestFactory::get(),
@@ -121,6 +123,42 @@ test('render() does nothing when the admin context is active', function (): void
         // set above, not replaced by render()'s own real-theme Template
         // construction inside the guarded block.
         noPhotoYetTestRenderer(new AdminContext(active: true))
+            ->render();
+
+        expect(CurrentTemplateTestFactory::get()->get())->toBe($template);
+    } finally {
+        CurrentTemplateTestFactory::get()->reset();
+        CurrentConfigTestFactory::get()->reset();
+        CurrentUserTestFactory::get()->reset();
+        Kernel::reset();
+        noPhotoYetTestRrmdir($root);
+    }
+});
+
+test('render() does nothing when the API context is active', function (): void {
+    $root = noPhotoYetTestRoot();
+    unset($_SESSION['no_photo_yet']);
+    CurrentUserTestFactory::get()->set(new User(
+        id: UserId::from(2),
+        username: null,
+        email: null,
+        language: LangCode::from('en_UK'),
+        theme: ThemeId::from('default'),
+        status: UserStatus::Guest,
+        enabledHigh: false,
+    ));
+
+    try {
+        $template = TemplateTestFactory::build();
+        CurrentTemplateTestFactory::get()->set($template);
+
+        // A JSON API response must never be replaced by this HTML page --
+        // in particular, /api/v1/session itself has to stay reachable on a
+        // zero-photo gallery, or an admin can never log in through the
+        // modern frontend to deactivate no_photo_yet in the first place.
+        // Same "no observable side effect" proof as the admin-context test
+        // above.
+        noPhotoYetTestRenderer(new AdminContext(active: false), new ApiContext(active: true))
             ->render();
 
         expect(CurrentTemplateTestFactory::get()->get())->toBe($template);

@@ -14,10 +14,13 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\Event\Init;
 use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -52,6 +55,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseFactory;
@@ -65,14 +69,20 @@ use Piwigo\Listener\SiteCleanupListener;
 use Piwigo\Listener\UploadFormatListener;
 use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
@@ -499,11 +509,81 @@ final class RequestBootstrap
     }
 
     /**
+     * P29.6 -- verbatim-mirrors `Http\Middleware\
+     * PluginBootstrapMiddleware`'s own identically-named private helper
+     * (that class's own docblock explains why these aren't shared via
+     * DI); this file had no `categoryService()`/`permissionService()`/
+     * `activityService()`/`tagService()` of its own before, since
+     * nothing here needed them until `ExtensionContext` gained the write
+     * facades below. `buildImageService()` is the one exception --
+     * `PluginBootstrapMiddleware`'s own equivalent is named
+     * `imageService()`, but this file already has a *different*,
+     * pre-existing `public static function imageService(): ImageService`
+     * (no `$conn` param, resolves the container's own shared singleton
+     * instance for `public/admin.php`'s own legacy construction) that a
+     * same-named `$conn`-scoped private method would collide with.
+     */
+    private static function activityService(Connection $conn): ActivityService
+    {
+        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+    }
+
+    private static function permissionService(Connection $conn): PermissionService
+    {
+        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker());
+    }
+
+    private static function categoryService(Connection $conn): CategoryService
+    {
+        return new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::permissionService($conn), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()));
+    }
+
+    private static function buildImageService(Connection $conn): ImageService
+    {
+        return new ImageService(
+            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            self::activityService($conn),
+            self::sessionService(),
+            self::eventDispatcher(),
+            self::currentConfig(),
+            self::paths(),
+            self::categoryService($conn),
+        );
+    }
+
+    private static function tagService(Connection $conn): TagService
+    {
+        return new TagService(
+            self::lang(),
+            EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+            self::permissionService($conn),
+            self::activityService($conn),
+            self::eventDispatcher(),
+            self::currentUser(),
+            self::currentConfig(),
+            self::currentLogger(),
+            self::buildImageService($conn),
+        );
+    }
+
+    private static function imageWriteFacade(Connection $conn): ImageWriteFacade
+    {
+        return new ImageWriteFacade(self::buildImageService($conn), self::tagService($conn), self::urlService());
+    }
+
+    private static function categoryWriteFacade(Connection $conn): CategoryWriteFacade
+    {
+        return new CategoryWriteFacade(self::categoryService($conn));
+    }
+
+    /**
      * Builds a fresh ExtensionContextFactory -- cheap, pure
      * composition of already-resolved accessors, no I/O of its own, so
-     * building one per registry-construction call site (pluginRegistry()/
-     * themeRegistry() below) rather than caching a single shared instance
-     * across connect()/finalize() isn't worth the extra state to avoid.
+     * building one per registry-construction call site (`themeRegistry()`
+     * below -- `pluginRegistry()` was already migrated to `Http\
+     * Middleware\PluginBootstrapMiddleware`, see this file's own P29.6
+     * history) rather than caching a single shared instance across
+     * `finalize()` isn't worth the extra state to avoid.
      */
     private static function extensionContextFactory(Connection $conn): ExtensionContextFactory
     {
@@ -543,6 +623,8 @@ final class RequestBootstrap
             $csrfService,
             self::htmlService(),
             self::accessControl(),
+            self::imageWriteFacade($conn),
+            self::categoryWriteFacade($conn),
         );
     }
 

@@ -18,7 +18,9 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
@@ -58,6 +60,8 @@ final readonly class ExtensionContextFactory
         private CsrfService $csrfService,
         private HtmlRenderingInterface $htmlRenderer,
         private AccessControl $accessControl,
+        private ImageWriteFacade $imageWriteFacade,
+        private CategoryWriteFacade $categoryWriteFacade,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -84,6 +88,8 @@ final readonly class ExtensionContextFactory
             $this->csrfService,
             $this->htmlRenderer,
             $this->accessControl,
+            $this->imageWriteFacade,
+            $this->categoryWriteFacade,
         );
     }
 }

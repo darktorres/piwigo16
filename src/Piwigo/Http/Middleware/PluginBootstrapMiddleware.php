@@ -19,6 +19,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
@@ -41,13 +42,17 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -90,7 +95,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  * request-Connection-scoped value construction (`activityService()`'s own
  * docblock: "same inline-construct a one-off dependency behind a named
  * method precedent as Tag\TagService::newImageService()/Image\
- * ImageService::categoryService()"). These are pure "assemble a value from
+ * ImageService::categoryService()"). `imageService()`/`tagService()`/
+ * `imageWriteFacade()`/`categoryWriteFacade()` (P29.6) are new, not
+ * `RequestBootstrap` duplicates -- `imageService()` replaces what used
+ * to be an inline `new ImageService(...)` right here for `emptyLounge()`
+ * (identical construction, now named and reused); `tagService()`
+ * mirrors the identical real construction already used independently in
+ * `Menu\MenubarRenderer`/`Metadata\MetadataService`/`Url\UrlService`.
+ * These are pure "assemble a value from
  * already-available inputs" constructors, not stateful/security-relevant
  * like `Http\SessionBootstrap` was (which genuinely needed relocating
  * rather than duplicating, since duplicating session cookie/save-handler
@@ -120,6 +132,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         private Translator $translator,
         private EntityManagerInterface $entityManager,
         private CurrentPluginRegistry $currentPluginRegistry,
+        private CurrentLogger $currentLogger,
     ) {}
 
     #[Override]
@@ -150,8 +163,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         }
 
         if (LoungeMaintenance::needsEmptying($this->currentConfig, $this->entityManager)) {
-            new ImageService(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService($conn), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService($conn))
-                ->emptyLounge();
+            $this->imageService($conn)->emptyLounge();
         }
 
         return $handler->handle($request);
@@ -196,6 +208,44 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         return new ThemeReadFacade(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class));
     }
 
+    private function imageService(Connection $conn): ImageService
+    {
+        return new ImageService(
+            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            $this->activityService($conn),
+            $this->sessionService,
+            $this->eventDispatcher,
+            $this->currentConfig,
+            $this->paths,
+            $this->categoryService($conn),
+        );
+    }
+
+    private function tagService(Connection $conn): TagService
+    {
+        return new TagService(
+            $this->lang,
+            EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+            $this->permissionService($conn),
+            $this->activityService($conn),
+            $this->eventDispatcher,
+            $this->currentUser,
+            $this->currentConfig,
+            $this->currentLogger,
+            $this->imageService($conn),
+        );
+    }
+
+    private function imageWriteFacade(Connection $conn): ImageWriteFacade
+    {
+        return new ImageWriteFacade($this->imageService($conn), $this->tagService($conn), $this->urlService);
+    }
+
+    private function categoryWriteFacade(Connection $conn): CategoryWriteFacade
+    {
+        return new CategoryWriteFacade($this->categoryService($conn));
+    }
+
     private function extensionContextFactory(Connection $conn): ExtensionContextFactory
     {
         return new ExtensionContextFactory(
@@ -219,6 +269,8 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->csrfService,
             $this->htmlService,
             $this->accessControl,
+            $this->imageWriteFacade($conn),
+            $this->categoryWriteFacade($conn),
         );
     }
 

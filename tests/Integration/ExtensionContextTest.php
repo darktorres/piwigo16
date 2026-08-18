@@ -11,6 +11,7 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
@@ -29,16 +30,20 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContext;
 use Piwigo\PluginConfig\ExtensionInterface;
 use Piwigo\PluginConfig\Facade\BasicThemeInfo;
 use Piwigo\PluginConfig\Facade\BasicUserInfo;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -113,6 +118,10 @@ final class ExtensionContextTest extends IntegrationTestCase
 
     private ImageReadFacade $imageReadFacade;
 
+    private ImageWriteFacade $imageWriteFacade;
+
+    private CategoryWriteFacade $categoryWriteFacade;
+
     private ExtensionContext $context;
 
     #[Override]
@@ -152,6 +161,12 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(ImageRepository::class),
             $this->containerGet(CategoryRepository::class),
         );
+        $this->imageWriteFacade = new ImageWriteFacade(
+            $this->containerGet(ImageService::class),
+            $this->containerGet(TagService::class),
+            $this->containerGet(UrlServiceInterface::class),
+        );
+        $this->categoryWriteFacade = new CategoryWriteFacade($this->containerGet(CategoryService::class));
 
         $this->context = $this->buildContext(PluginId::from('test-plugin'));
     }
@@ -190,6 +205,8 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(CsrfService::class),
             $this->containerGet(HtmlRenderingInterface::class),
             $this->containerGet(AccessControl::class),
+            $this->imageWriteFacade,
+            $this->categoryWriteFacade,
         );
     }
 
@@ -539,6 +556,156 @@ final class ExtensionContextTest extends IntegrationTestCase
         self::assertNull($this->context->images()->getRepresentativePictureId(999999));
     }
 
+    /**
+     * ImageWriteFacade::updateDescriptiveFields() -- real caller:
+     * AdminTools' quick-edit `single_update()` on name/author/comment/
+     * date_creation. Restores fixture image 3 back to its original row
+     * afterward, same convention as testSetLanguagePersistsToUserInfosAndSyncsCurrentUser()'s
+     * own revert-after-mutate pattern -- other tests in this suite reuse
+     * the same shared fixture image ids.
+     */
+    public function testImagesWriteUpdateDescriptiveFieldsPersistsToImagesTable(): void
+    {
+        $this->context->imagesWrite()->updateDescriptiveFields(3, name: 'Updated Name', author: 'Updated Author', comment: 'Updated Comment');
+
+        $row = $this->conn->createQueryBuilder()
+            ->select('name', 'author', 'comment')
+            ->from('images')
+            ->where('id = :id')
+            ->setParameter('id', 3)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        self::assertIsArray($row);
+        self::assertSame('Updated Name', $row['name']);
+        self::assertSame('Updated Author', $row['author']);
+        self::assertSame('Updated Comment', $row['comment']);
+
+        $this->conn->update('images', [
+            'name' => 'Photo 3',
+            'author' => null,
+            'comment' => null,
+        ], [
+            'id' => 3,
+        ]);
+    }
+
+    /**
+     * ImageWriteFacade::updateLevel() -- real caller: AdminTools'
+     * quick-edit `level` field, admin-only in the legacy code.
+     */
+    public function testImagesWriteUpdateLevelPersistsToImagesTable(): void
+    {
+        $this->context->imagesWrite()->updateLevel(4, 4);
+
+        $rawLevel = $this->conn->createQueryBuilder()
+            ->select('level')
+            ->from('images')
+            ->where('id = :id')
+            ->setParameter('id', 4)
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame(4, is_numeric($rawLevel) ? (int) $rawLevel : null);
+
+        $this->conn->update('images', [
+            'level' => 0,
+        ], [
+            'id' => 4,
+        ]);
+    }
+
+    /**
+     * ImageWriteFacade::setTags() -- matches legacy
+     * `get_tag_ids($_POST['tags'])`'s real semantics: a raw comma-separated
+     * string, new tags created on the fly when not already `~~id~~`-wrapped.
+     */
+    public function testImagesWriteSetTagsPersistsRealTagRelations(): void
+    {
+        $this->context->imagesWrite()->setTags(3, 'ExtensionContextTest Tag A, ExtensionContextTest Tag B');
+
+        $names = $this->conn->createQueryBuilder()
+            ->select('t.name')
+            ->from('image_tag', 'it')
+            ->innerJoin('it', 'tags', 't', 'it.tag_id = t.id')
+            ->where('it.image_id = :id')
+            ->setParameter('id', 3)
+            ->orderBy('t.name')
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        self::assertSame(['ExtensionContextTest Tag A', 'ExtensionContextTest Tag B'], $names);
+
+        $this->conn->delete('image_tag', [
+            'image_id' => 3,
+        ]);
+        $this->conn->executeStatement(
+            "DELETE FROM tags WHERE name IN ('ExtensionContextTest Tag A', 'ExtensionContextTest Tag B')",
+        );
+    }
+
+    /**
+     * ImageWriteFacade::delete() -- real caller: `admintools_save_picture()`'s
+     * delete path. A disposable scratch row, not a shared fixture image --
+     * unlike the other write-facade tests above, a deleted row can't be
+     * un-deleted, so this must never touch fixture ids 1-5 other tests in
+     * this file (and other Integration test classes reloading the same
+     * fixture) rely on. `physicalDeletion: false` -- same reasoning
+     * ImageServiceTest.php's own "deleteElements() fires ... deletes the
+     * image row" case uses: with `true`, ImageService::deleteElements()
+     * returns 0 without touching the DB when the (nonexistent, in this
+     * test environment) physical file can't be removed, which would make
+     * this test assert nothing real.
+     */
+    public function testImagesWriteDeleteRemovesTheImageRow(): void
+    {
+        $this->conn->insert('images', [
+            'file' => 'extension-context-test-scratch-image.jpg',
+        ]);
+        $newId = (int) $this->conn->lastInsertId();
+
+        $this->context->imagesWrite()->delete($newId, false);
+
+        $stillExists = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from('images')
+            ->where('id = :id')
+            ->setParameter('id', $newId)
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertFalse($stillExists);
+    }
+
+    /**
+     * CategoryWriteFacade::updateNameAndComment() -- real caller:
+     * AdminTools' quick-edit `single_update()` on CATEGORIES_TABLE, a
+     * genuine partial update (CategoryRepository::updateFields()).
+     */
+    public function testCategoriesWriteUpdateNameAndCommentPersistsToCategoriesTable(): void
+    {
+        $this->context->categoriesWrite()->updateNameAndComment(2, 'Updated Sub Album', 'Updated comment');
+
+        $row = $this->conn->createQueryBuilder()
+            ->select('name', 'comment')
+            ->from('categories')
+            ->where('id = :id')
+            ->setParameter('id', 2)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        self::assertIsArray($row);
+        self::assertSame('Updated Sub Album', $row['name']);
+        self::assertSame('Updated comment', $row['comment']);
+
+        $this->conn->update('categories', [
+            'name' => 'Nested Sub Album',
+            'comment' => null,
+        ], [
+            'id' => 2,
+        ]);
+    }
+
     public function testTemplateThrowsBeforeFinalizeConstructsIt(): void
     {
         $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
@@ -578,6 +745,27 @@ final class ExtensionContextTest extends IntegrationTestCase
         $this->impersonate(1);
 
         self::assertSame(1, $this->context->currentUser()->id->value);
+    }
+
+    /**
+     * switchUser() -- real caller: AdminTools' `view_as` impersonation,
+     * ported from MultiView::user_init()'s own `build_user()`
+     * reassignment. Starts from a lightweight impersonate(3) (only sets
+     * `id`) to prove switchUser() replaces the *whole* user record
+     * (username/status included), not just the id -- a bare-id-only
+     * fake would pass even if switchUser() only updated
+     * CurrentUser::id, so this asserts against fixture user 1's real,
+     * distinct username/status (fixture_admin/webmaster) instead.
+     */
+    public function testSwitchUserReplacesCurrentUserWithTheGivenUsersFullRecord(): void
+    {
+        $this->impersonate(3);
+
+        $this->context->switchUser(1);
+
+        self::assertSame(1, $this->context->currentUser()->id->value);
+        self::assertSame('fixture_admin', $this->context->currentUser()->username?->value);
+        self::assertSame(UserStatus::Webmaster, $this->context->currentUser()->status);
     }
 
     public function testLangReturnsTheSharedLangInstance(): void

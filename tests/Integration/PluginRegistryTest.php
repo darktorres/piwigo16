@@ -11,6 +11,7 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
@@ -24,10 +25,13 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginDependencyException;
@@ -36,6 +40,7 @@ use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\PluginConfig\PluginValidationException;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -104,6 +109,12 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(ImageRepository::class),
             $this->containerGet(CategoryRepository::class),
         );
+        $imageWriteFacade = new ImageWriteFacade(
+            $this->containerGet(ImageService::class),
+            $this->containerGet(TagService::class),
+            $this->containerGet(UrlServiceInterface::class),
+        );
+        $categoryWriteFacade = new CategoryWriteFacade($this->containerGet(CategoryService::class));
         $this->contextFactory = new ExtensionContextFactory(
             $this->containerGet(CurrentTemplate::class),
             $this->containerGet(CurrentConfig::class),
@@ -125,6 +136,8 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(CsrfService::class),
             $this->containerGet(HtmlRenderingInterface::class),
             $this->containerGet(AccessControl::class),
+            $imageWriteFacade,
+            $categoryWriteFacade,
         );
     }
 

@@ -14,6 +14,7 @@ use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -32,17 +33,21 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -125,6 +130,12 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->containerGet(ImageRepository::class),
             $this->containerGet(CategoryRepository::class),
         );
+        $imageWriteFacade = new ImageWriteFacade(
+            $this->containerGet(ImageService::class),
+            $this->containerGet(TagService::class),
+            $this->containerGet(UrlServiceInterface::class),
+        );
+        $categoryWriteFacade = new CategoryWriteFacade($this->containerGet(CategoryService::class));
         $this->contextFactory = new ExtensionContextFactory(
             $this->containerGet(CurrentTemplate::class),
             $this->containerGet(CurrentConfig::class),
@@ -146,6 +157,8 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->containerGet(CsrfService::class),
             $this->containerGet(HtmlRenderingInterface::class),
             $this->containerGet(AccessControl::class),
+            $imageWriteFacade,
+            $categoryWriteFacade,
         );
 
         $this->containerGet(CurrentTemplate::class)->set(TemplateTestFactory::build());

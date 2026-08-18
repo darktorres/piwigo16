@@ -11,6 +11,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\NotificationConfig;
@@ -23,7 +24,9 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
+use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
@@ -87,6 +90,8 @@ final readonly class ExtensionContext
         private CsrfService $csrfService,
         private HtmlRenderingInterface $htmlRenderer,
         private AccessControl $accessControl,
+        private ImageWriteFacade $imageWriteFacade,
+        private CategoryWriteFacade $categoryWriteFacade,
     ) {}
 
     /**
@@ -171,6 +176,41 @@ final readonly class ExtensionContext
     public function syncLanguageForRequest(string $lang): void
     {
         $this->currentUser->updateLanguage(LangCode::from($lang));
+    }
+
+    /**
+     * Switches the effective current user for the rest of this request --
+     * ported for `AdminTools_16.3.0`'s own "view as" (`MultiView`)
+     * feature: the legacy plugin reassigns `$user` mid-request via
+     * `build_user()`, which this fork has no direct equivalent for, so
+     * this method reuses the exact same real read path
+     * `Bootstrap\UserBootstrap::initialize()` itself already uses to
+     * resolve the real per-request user (`UserService::buildUser()` +
+     * `User::fromUserArray()`), then re-`set()`s the already-existing
+     * `CurrentUser` singleton the same way that real resolution already
+     * does. A plugin calls this from a `Bootstrap\Event\UserInit`
+     * handler -- the real dispatch point `UserBootstrap::initialize()`
+     * fires right after its own real `set()` call, so this genuinely
+     * overrides the resolved user rather than racing it.
+     *
+     * `theme`/`language` come along for free: `Bootstrap\
+     * FinalizeBridgeMiddleware` (which resolves the render theme from
+     * `CurrentUser::get()->theme`) and any later `Lang`/`Template`
+     * read run strictly after `UserResolutionMiddleware` (which
+     * dispatches `UserInit`) in `RequestPipeline::BOOTSTRAP_MIDDLEWARE`'s
+     * real order -- no separate theme-switching method needed.
+     *
+     * Deliberately does not call `CurrentUser::markRealUserResolved()`
+     * -- that flag is already `true` by the time any `UserInit` handler
+     * could possibly run (it's set immediately before that same
+     * dispatch in `UserBootstrap::initialize()`), and impersonating a
+     * different user doesn't change "was a real user resolved this
+     * request" (still yes).
+     */
+    public function switchUser(int $userId): void
+    {
+        $id = UserId::from($userId);
+        $this->currentUser->set(User::fromUserArray($this->userService->buildUser($id)));
     }
 
     /**
@@ -323,6 +363,28 @@ final readonly class ExtensionContext
     public function themes(): ThemeReadFacade
     {
         return $this->themeReadFacade;
+    }
+
+    /**
+     * Narrow, purpose-built write facade -- never `ImageService`/
+     * `TagService`/raw SQL directly, and deliberately kept separate
+     * from `images()`'s own read facade (interface segregation). See
+     * that class's own docblock for the real callers this is grounded
+     * in, and why it's deliberately not manifest-gated.
+     */
+    public function imagesWrite(): ImageWriteFacade
+    {
+        return $this->imageWriteFacade;
+    }
+
+    /**
+     * Narrow, purpose-built write facade -- never `CategoryService`/raw
+     * SQL directly. See that class's own docblock for the real caller
+     * this is grounded in.
+     */
+    public function categoriesWrite(): CategoryWriteFacade
+    {
+        return $this->categoryWriteFacade;
     }
 
     /**

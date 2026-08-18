@@ -863,6 +863,21 @@ test('findImageIdsForTags() binds named parameters', function (): void {
         ->toBe([1, 2, 3]);
 });
 
+test('findImageIdsForTags() falls back to the raw-SQL path for an unparseable order fragment', function (): void {
+    // `comment` is a real images column but not one of the bounded
+    // PhotoSortField tokens, so resolveDqlOrderBy() returns null -- every
+    // other findImageIdsForTags() test here passes no $orderBySqlBody at
+    // all, which resolves successfully (PhotoSortOrder::none()) and so
+    // exercises the DQL path instead; this is the only real coverage of
+    // the raw-DBAL fallback still needed.
+    $ids = tagTestRepo()
+        ->findImageIdsForTags([1], 'AND', false, tagTestNoPermissionRestriction(), null, 'comment ASC');
+    sort($ids);
+
+    expect($ids)
+        ->toBe([1, 2, 3]);
+});
+
 test('findImageIdsForTags() in AND mode with multiple tag ids requires every tag, not just one', function (): void {
     // A single-tag search (the sibling test above) can never reach the
     // `count($tagIds) > 1` HAVING clause at all -- only image 1 has BOTH

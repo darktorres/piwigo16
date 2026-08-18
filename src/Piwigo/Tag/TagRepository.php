@@ -13,7 +13,10 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\OrderByClause;
+use Piwigo\Db\SortRenderer;
 use Piwigo\Image\ImageCategoryEntity;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
@@ -30,6 +33,11 @@ use Piwigo\Tag\Projection\TagIdName;
  */
 final class TagRepository extends EntityRepository
 {
+    private function sortRenderer(): SortRenderer
+    {
+        return new SortRenderer($this->getEntityManager()->getConnection());
+    }
+
     /**
      * Named findAllTags(), not findAll() -- EntityRepository::findAll()
      * returns list<TagEntity>, an incompatible override this class's own
@@ -243,24 +251,27 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Stays on DBAL rather than DQL: conditionally joins the
-     * never-entity-mapped `image_category`, and $orderBySqlBody is a raw,
-     * caller-supplied SQL ORDER BY body (no `ORDER BY` keyword -- this
-     * builder's own `orderBy()` prepends that itself), not a typed sort
-     * object -- the one real caller ({@see \Piwigo\Tag\TagService::
+     * $orderBySqlBody is a raw, caller-supplied SQL ORDER BY body (no
+     * `ORDER BY` keyword -- resolveDqlOrderBy()/this builder's own raw
+     * `orderBy()` both prepend that themselves), not a typed sort object
+     * -- the one real caller ({@see \Piwigo\Tag\TagService::
      * getImageIdsForTags()}) falls back to `CurrentConfig::orderBy()`
      * (free-form admin-configurable text) whenever the caller-supplied
      * `$orderBy` is null/empty, the same "caller composes trusted ORDER
      * BY text" architecture as {@see \Piwigo\Common\ValueObject\PhotoSortField},
      * {@see \Piwigo\Group\GroupRepository::findWithMemberCounts()}, and
      * {@see \Piwigo\Image\ImageRepository::findBatchManagerThumbnails()}.
-     * `ImageFilterCriteria::toSqlCondition()` also hardcodes raw
-     * snake_case column names internally (not parameterized per DQL
-     * property path the way {@see PermissionCriteria} is).
+     * Tries DQL first (resolveDqlOrderBy()), same as
+     * CategoryRepository::findImageIdsForCategories() -- `Rank` never
+     * resolves here regardless of tag count: `image_category.rank` is
+     * per-category, not per-tag, and even a single matching tag can span
+     * any number of categories, so there is no query-independent alias to
+     * offer it the way CategoryRepository's own single-category case can.
      *
      * When $usePermissions is true, $criteria is applied against
-     * `ic.category_id` (forbidden/visible categories), `i.id` (visible
-     * images), and `i.level` (max level).
+     * `ic.category_id`/`ic.category` (forbidden/visible categories),
+     * `i.id` (visible images), and `i.level` (max level) -- raw or DQL
+     * respectively.
      *
      * @param list<int> $tagIds already-unwrapped TagId values
      * @return list<int>
@@ -273,6 +284,12 @@ final class TagRepository extends EntityRepository
         ?ImageFilterCriteria $filterCriteria = null,
         string $orderBySqlBody = ''
     ): array {
+        $dqlOrderBy = $this->sortRenderer()
+            ->resolveDqlOrderBy($orderBySqlBody, 'i');
+        if ($dqlOrderBy !== null) {
+            return $this->findImageIdsForTagsViaDql($tagIds, $mode, $usePermissions, $criteria, $filterCriteria, $dqlOrderBy);
+        }
+
         $qb = $this->getEntityManager()
             ->getConnection()
             ->createQueryBuilder()
@@ -327,6 +344,60 @@ final class TagRepository extends EntityRepository
             ->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
+    }
+
+    /**
+     * @param list<int> $tagIds
+     * @param list<OrderByClause> $dqlOrderBy
+     * @return list<int>
+     */
+    private function findImageIdsForTagsViaDql(
+        array $tagIds,
+        string $mode,
+        bool $usePermissions,
+        PermissionCriteria $criteria,
+        ?ImageFilterCriteria $filterCriteria,
+        array $dqlOrderBy,
+    ): array {
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('i.id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 'i.id = it.imageId')
+            ->where('it.tagId IN (:tagIds)')
+            ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
+            ->groupBy('i.id');
+
+        if ($usePermissions) {
+            $qb->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.image');
+            SqlCondition::combine(
+                'AND',
+                $criteria->forbiddenCategoriesCondition('ic.category'),
+                $criteria->visibleCategoriesCondition('ic.category'),
+                $criteria->visibleImagesCondition('i.id'),
+                $criteria->maxLevelCondition('i.level'),
+            )->applyTo($qb);
+        }
+
+        if ($filterCriteria instanceof ImageFilterCriteria && ! $filterCriteria->isEmpty()) {
+            $filterCriteria->toDqlCondition('i.')
+                ->applyTo($qb);
+        }
+
+        if ($mode === 'AND' && count($tagIds) > 1) {
+            $qb->having('COUNT(DISTINCT it.tagId) = :tagCount')
+                ->setParameter('tagCount', count($tagIds));
+        }
+
+        foreach ($dqlOrderBy as $entry) {
+            $qb->addOrderBy($entry->property, $entry->dir);
+        }
+
+        return array_values(array_map(
+            static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**

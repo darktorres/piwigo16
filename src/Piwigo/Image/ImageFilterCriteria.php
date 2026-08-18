@@ -55,15 +55,16 @@ final readonly class ImageFilterCriteria
      * Raw-SQL fragment form, for the consumers that stay on plain DBAL for
      * their own unrelated reasons (`SQL_CALC_FOUND_ROWS`, a DBAL
      * `QueryBuilder`-based repository) rather than DQL --
-     * {@see \Piwigo\Image\ImageRepository::findWithConditionsPaginated()},
-     * {@see \Piwigo\Tag\TagRepository::findImageIdsForTags()}. Every bound
-     * placeholder is prefixed `imgFilter` so this fragment can always be
-     * combined with a caller's other bound fragments (permission
-     * conditions, an `id IN (...)` restriction, ...) in the same query
-     * with no name collision -- the same guarantee the old runtime
-     * monotonic-suffix counter gave, now just a fixed, readable prefix
-     * since each call site only ever applies one `ImageFilterCriteria` to
-     * one query.
+     * {@see \Piwigo\Image\ImageRepository::findWithConditionsPaginated()}.
+     * {@see \Piwigo\Tag\TagRepository::findImageIdsForTags()} uses this
+     * one only on its own raw-DBAL fallback path now; its DQL-first path
+     * uses {@see toDqlCondition()} instead. Every bound placeholder is
+     * prefixed `imgFilter` so this fragment can always be combined with a
+     * caller's other bound fragments (permission conditions, an
+     * `id IN (...)` restriction, ...) in the same query with no name
+     * collision -- the same guarantee the old runtime monotonic-suffix
+     * counter gave, now just a fixed, readable prefix since each call
+     * site only ever applies one `ImageFilterCriteria` to one query.
      */
     public function toSqlCondition(string $tblPrefix = ''): SqlCondition
     {
@@ -127,6 +128,72 @@ final readonly class ImageFilterCriteria
         }
         if ($this->maxLevel !== null) {
             $clauses[] = $tblPrefix . 'level <= :imgFilterMaxLevel';
+            $parameters['imgFilterMaxLevel'] = $this->maxLevel;
+            $types['imgFilterMaxLevel'] = ParameterType::INTEGER;
+        }
+
+        return SqlCondition::fromRawSql($clauses === [] ? '' : '(' . implode(' AND ', $clauses) . ')', $parameters, $types);
+    }
+
+    /**
+     * {@see toSqlCondition()}'s DQL equivalent -- $propPrefix is an
+     * entity-aliased property path (`'i.'`), not a raw column-name prefix.
+     * Every clause here is either a simple comparison or `NULLIF()`, a
+     * real built-in DQL function (`Doctrine\ORM\Query\AST\NullIfExpression`),
+     * so nothing here needs a custom-registered DQL function the way
+     * {@see \Piwigo\Users\UserService::getRecentPhotosDqlCondition()}'s own
+     * date-arithmetic rewrite did.
+     */
+    public function toDqlCondition(string $propPrefix = ''): SqlCondition
+    {
+        $clauses = [];
+        $parameters = [];
+        $types = [];
+
+        if ($this->minRate !== null) {
+            $clauses[] = $propPrefix . 'ratingScore >= :imgFilterMinRate';
+            $parameters['imgFilterMinRate'] = $this->minRate;
+        }
+        if ($this->maxRate !== null) {
+            $clauses[] = $propPrefix . 'ratingScore <= :imgFilterMaxRate';
+            $parameters['imgFilterMaxRate'] = $this->maxRate;
+        }
+        if ($this->minHit !== null) {
+            $clauses[] = $propPrefix . 'hit >= :imgFilterMinHit';
+            $parameters['imgFilterMinHit'] = $this->minHit;
+            $types['imgFilterMinHit'] = ParameterType::INTEGER;
+        }
+        if ($this->maxHit !== null) {
+            $clauses[] = $propPrefix . 'hit <= :imgFilterMaxHit';
+            $parameters['imgFilterMaxHit'] = $this->maxHit;
+            $types['imgFilterMaxHit'] = ParameterType::INTEGER;
+        }
+        if ($this->minDateAvailable !== null) {
+            $clauses[] = $propPrefix . 'dateAvailable >= :imgFilterMinDateAvailable';
+            $parameters['imgFilterMinDateAvailable'] = $this->minDateAvailable;
+        }
+        if ($this->maxDateAvailable !== null) {
+            $clauses[] = $propPrefix . 'dateAvailable < :imgFilterMaxDateAvailable';
+            $parameters['imgFilterMaxDateAvailable'] = $this->maxDateAvailable;
+        }
+        if ($this->minDateCreated !== null) {
+            $clauses[] = $propPrefix . 'dateCreation >= :imgFilterMinDateCreated';
+            $parameters['imgFilterMinDateCreated'] = $this->minDateCreated;
+        }
+        if ($this->maxDateCreated !== null) {
+            $clauses[] = $propPrefix . 'dateCreation < :imgFilterMaxDateCreated';
+            $parameters['imgFilterMaxDateCreated'] = $this->maxDateCreated;
+        }
+        if ($this->minRatio !== null) {
+            $clauses[] = $propPrefix . 'width*1.0/NULLIF(' . $propPrefix . 'height, 0) >= :imgFilterMinRatio';
+            $parameters['imgFilterMinRatio'] = $this->minRatio;
+        }
+        if ($this->maxRatio !== null) {
+            $clauses[] = $propPrefix . 'width*1.0/NULLIF(' . $propPrefix . 'height, 0) <= :imgFilterMaxRatio';
+            $parameters['imgFilterMaxRatio'] = $this->maxRatio;
+        }
+        if ($this->maxLevel !== null) {
+            $clauses[] = $propPrefix . 'level <= :imgFilterMaxLevel';
             $parameters['imgFilterMaxLevel'] = $this->maxLevel;
             $types['imgFilterMaxLevel'] = ParameterType::INTEGER;
         }

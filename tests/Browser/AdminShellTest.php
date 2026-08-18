@@ -61,14 +61,13 @@ it('rewrites the piwigo_videojs plugin section name to its hyphenated form', fun
 
 it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notification', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'AdminShell Alias Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $page = H::navigateOk($page, '/admin.php?page=album-' . $albumId . '-notification');
 
@@ -78,14 +77,13 @@ it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notifica
 
 it('resolves the photo-N-tab page-slug alias to page=photo&image_id=N&tab=properties', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'AdminShell Photo Alias Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'AdminShell Alias Photo');
     @unlink($image);
@@ -109,14 +107,13 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     H::setConfigValue('activate_comments', 'true');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'AdminShell Comment Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'AdminShell Comment Photo');
     @unlink($image);

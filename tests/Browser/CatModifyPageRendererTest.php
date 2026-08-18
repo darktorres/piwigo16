@@ -62,14 +62,13 @@ it('shows the real photo count and zero sub-albums for a leaf album', function (
 it('shows the empty-album placeholder and no manage-photos link for a freshly created album', function (): void {
     $page = H::loginAsAdmin($this);
     $albumName = 'Empty Modify Test Album ' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => $albumName,
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! isset($albumResult['id']) || ! is_numeric($albumResult['id'])) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $pwgToken = H::pwgToken($page);
 
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
@@ -87,7 +86,7 @@ it('shows the empty-album placeholder and no manage-photos link for a freshly cr
         'No photos in the current album, no thumbnail available'
     );
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => $pwgToken,
@@ -96,14 +95,13 @@ it('shows the empty-album placeholder and no manage-photos link for a freshly cr
 
 it('formats a multi-date info-title ("added between") when its photos span more than one date', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Multi Date Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $imagePathA = H::makeTestImage('DateA');
     $imageIdA = H::uploadPhotoViaApi($imagePathA, $albumId, 'Multi Date Photo A ' . uniqid());

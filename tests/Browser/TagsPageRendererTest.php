@@ -24,13 +24,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): int
 {
-    $result = H::wsCall($page, 'pwg.tags.add', [
+    $result = H::createTag($page, [
         'name' => $name,
     ]);
-    $tagResult = $result['result'] ?? null;
-    $tagId = is_array($tagResult) ? ($tagResult['id'] ?? null) : null;
+    $tagId = $result['id'] ?? null;
     if (! is_numeric($tagId)) {
-        throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($result, true));
+        throw new RuntimeException('createTag did not return a numeric id: ' . var_export($result, true));
     }
 
     return (int) $tagId;
@@ -79,14 +78,13 @@ function tagsPageDeleteTag(int $tagId): void
 
 it('renders the tag list including a real tagged photo\'s counter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Tags Page Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Tags Page Photo');
     @unlink($image);
@@ -94,11 +92,10 @@ it('renders the tag list including a real tagged photo\'s counter', function ():
     $tagName = 'Counted Tag ' . uniqid();
     $tagId = tagsPageAddTag($page, $tagName);
 
-    $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
+    H::updateImageInfo($page, [
         'image_id' => (string) $imageId,
         'tag_ids' => (string) $tagId,
     ]);
-    expect($updateResult['stat'] ?? null)->toBe('ok');
 
     $page = H::navigateOk($page, '/admin.php?page=tags');
 

@@ -649,17 +649,17 @@ curl-driven, validated against JSON Schema files) was deleted along with
 the WS layer itself (P27) — its 38 `Ws*Test` classes locked wire-protocol
 response shapes that no longer exist. A REST-focused contract suite
 against `/api/v1` is real, separate follow-up work, not yet started; the
-Browser suite's own `BrowserTestHelpers::wsCall()`/`curlApi()` (below)
-cover `/api/v1` fixture-setup needs in the meantime, not response-schema
-locking.
+Browser suite's own `BrowserTestHelpers::createCategory()`/`createUser()`/
+etc. helpers and `curlApi()` (below) cover `/api/v1` fixture-setup needs
+in the meantime, not response-schema locking.
 
 **Browser tests**: 95 files in `tests/Browser/` (93 E2E flows, plus the
 two special-purpose files below) via `pestphp/pest-plugin-browser`.
 <!-- markdownlint-disable-next-line MD013 -->
 <!-- doc-drift-check: cmd='find tests/Browser -maxdepth 1 -iname "*.php" | wc -l' expect="95" -->
 `tests/Browser/Helpers/BrowserTestHelpers.php` centralizes the shared
-patterns (`visitPwg()`/`loginAsAdmin()`, `navigateOk()`, `wsCall()`,
-`uploadPhotoViaApi()`).
+patterns (`visitPwg()`/`loginAsAdmin()`, `navigateOk()`, `createCategory()`
+and its sibling `/api/v1` helpers, `uploadPhotoViaApi()`).
 
 **Visual regression**: `tests/Browser/VisualRegressionTest.php` — 34
 screenshot baselines (32 routes iterated in a data-driven loop + 2

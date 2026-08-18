@@ -11,7 +11,7 @@ use Piwigo\Metadata\MetadataService;
 
 /**
  * Typed accessors to container-resolved L2bExtendedDomain services, for
- * L4Integration callers (Admin/Command/Controller/Ws) that can't call
+ * L4Integration callers (Admin/Command/Controller) that can't call
  * `Kernel::container()` directly -- see `Bootstrap\CoreDomainAccessor`'s
  * own docblock for the full rationale (same shape, different deptrac
  * layer).

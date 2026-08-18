@@ -33,7 +33,7 @@ final class PermissionCacheInvalidator
     /**
      * Same "container resolve, not a constructor param" reasoning as
      * Core/Logger.php's own pageState() -- ~30 real call sites across
-     * Admin/Ws/Group/Users rule out threading CurrentConfigService as an
+     * Admin/Group/Users rule out threading CurrentConfigService as an
      * explicit param through every one. When `Kernel::isBooted()` is
      * false, the plain `new CurrentConfigService()` fallback's own get()
      * throws unconditionally (its `configService` is never `set()`),

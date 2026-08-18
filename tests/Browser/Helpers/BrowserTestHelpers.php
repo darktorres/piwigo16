@@ -1041,11 +1041,11 @@ final class BrowserTestHelpers
         }
 
         // REST requires a real JSON array here; a Browser test's own
-        // WS-style scalar param (WS's FORCE_ARRAY coerces a lone value
-        // automatically) needs the same one-element wrap. 'expert' has no
-        // /api/v1 equivalent -- ImageFilteredSearchCreateController's own
-        // docblock documents dropping it (a raw, undocumented search-string
-        // escape hatch, not a registered WS param even in the original).
+        // single scalar value needs an explicit one-element wrap (no
+        // automatic scalar-to-array coercion on this endpoint). 'expert'
+        // has no /api/v1 equivalent -- ImageFilteredSearchCreateController's
+        // own docblock documents dropping it (a raw, undocumented
+        // search-string escape hatch).
         foreach ([
             'tags' => 'tags',
             'categories' => 'categories',
@@ -2216,10 +2216,10 @@ final class BrowserTestHelpers
             throw new ExpectationFailedException('tus upload PATCH response missing imageId: ' . var_export($patchBody, true));
         }
 
-        // Same defensive lounge-flush the original WS-based upload always
-        // did after a successful upload -- a harmless no-op when
-        // lounge_active is off (the common case in this fixture), real when
-        // a test run has crossed CurrentConfig::loungeActivateThreshold.
+        // Defensive lounge-flush after a successful upload -- a harmless
+        // no-op when lounge_active is off (the common case in this
+        // fixture), real when a test run has crossed
+        // CurrentConfig::loungeActivateThreshold.
         self::curlApi($cookieJar, 'POST', '/api/v1/uploads/actions/complete-batch', [
             'categoryId' => $albumId,
         ], $csrfToken);

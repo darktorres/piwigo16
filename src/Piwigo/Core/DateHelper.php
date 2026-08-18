@@ -21,7 +21,7 @@ final class DateHelper
      * Resolves via the container rather than being carried as a
      * constructor property: DateHelper is fully static (never `new`'d, no
      * `$this` to hang a resolver off of), and ~30 real call sites across
-     * Admin/Ws/Controller/Auth rule out threading Lang/Translator through
+     * Admin/Controller/Auth rule out threading Lang/Translator through
      * every one as explicit params. Lang has no safe pre-boot fallback
      * (its constructor needs real collaborators), so this always resolves
      * through the container.

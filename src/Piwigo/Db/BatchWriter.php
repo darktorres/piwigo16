@@ -25,7 +25,7 @@ final readonly class BatchWriter
 {
     // Every $data/$where/$datas value below is genuinely arbitrary by
     // design -- a generic column-name => value bag spanning ~20 call sites
-    // across Category/Image/Ws/Admin/Controller/Mail, one column can be an
+    // across Category/Image/Admin/Controller/Mail, one column can be an
     // int, string, float, bool, or null depending on the target table.
     // Matches Doctrine\DBAL\Connection::executeStatement()'s own `array
     // $params` parameter (not typed any narrower by DBAL itself); every

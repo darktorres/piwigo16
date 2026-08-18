@@ -25,6 +25,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Sort\CommentSortField;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
@@ -66,12 +67,12 @@ final readonly class CommentService
      */
     public function getAllCommentsWithConditions(
         array $whereClauses,
-        string $sortByColumn,
+        CommentSortField $sortByField,
         string $sortOrder,
         int|string $limit,
         int $offset
     ): PaginatedResult {
-        return $this->repo->findAllWithConditions($whereClauses, $sortByColumn, $sortOrder, $limit, $offset);
+        return $this->repo->findAllWithConditions($whereClauses, $sortByField, $sortOrder, $limit, $offset);
     }
 
     public function getSummaryCounts(CommentApiCriteria $criteria): ?CommentSummaryCounts

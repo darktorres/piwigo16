@@ -9,14 +9,18 @@ namespace Piwigo\Comment\Projection;
  * row shape -- `Controller\CommentsController`'s admin/public comment
  * listing.
  *
- * `commentId`/`imageId`/`categoryId`/`authorId` stay `int|string`, not a VO,
- * and `validated` stays `bool|int` -- this is a raw-DBAL query (not DQL),
- * so every numeric column comes back as whichever native PHP type the
- * active driver hands back (a real int under mysqli's own
- * MYSQLI_OPT_INT_AND_FLOAT_NATIVE, a numeric string under some pgsql
- * paths), never a VO -- same driver-dependent-typing rationale
- * {@see \Piwigo\Db\SqlDialect::getBoolean()}'s own docblock documents for
- * `$validated`. Narrowing happens in
+ * `commentId`/`imageId`/`categoryId`/`authorId` stay `int|string`, not a
+ * VO, and `validated` stays `bool|int`. `findAllWithConditions()` is
+ * DQL-backed: `commentId`/`imageId` are unwrapped from their real
+ * `CommentId`/`ImageId` VO instances back to plain scalars before this
+ * class ever sees them (see that method's own
+ * `unwrapCommentListRowVoFields()`); `categoryId`/`authorId` are
+ * extracted via `IDENTITY()`, which never hydrates a VO in the first
+ * place; `validated` stays `bool|int` because
+ * {@see \Piwigo\Db\SqlDialect::getBoolean()} (the one real consumer) is
+ * this codebase's established "genuinely arbitrary boolean-ish input"
+ * boundary, not because the column's own driver-dependent typing
+ * requires it. Narrowing happens in
  * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()} itself
  * (a row with a comment_id/image_id/category_id/validated outside these
  * types is skipped there, not defaulted here), so this constructor takes

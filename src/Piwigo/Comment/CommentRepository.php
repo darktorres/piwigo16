@@ -26,6 +26,7 @@ use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Sort\CommentSortField;
 use Piwigo\Users\UserEntity;
 use UnexpectedValueException;
 
@@ -699,102 +700,99 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Cross-category "all comments" listing (comments.php's own front-end
-     * page) -- $whereClauses are already-built SqlCondition fragments
-     * (permission/status/search/author/keyword filters, same "caller
-     * composes fragments" contract as {@see countAvailableWithConditions()}),
-     * combined via {@see applyConditions()}. $sortByColumn/$sortOrder
-     * concatenate directly into ORDER BY with no further validation --
-     * caller must restrict these to a known-safe set first
-     * (Controller\CommentsController's own real caller validates both
-     * against small fixed allowlists before this point), same contract as
-     * {@see findForImage()}'s own $order.
+     * page) -- $whereClauses are already-built, DQL-flavored SqlCondition
+     * fragments (permission/status/search/author/keyword filters, built
+     * by `Controller\CommentsController` against this method's own DQL
+     * aliases), combined via {@see applyConditions()}. $sortByField
+     * concatenates its {@see \Piwigo\Sort\CommentSortField::dqlColumn()}
+     * into ORDER BY -- a small, closed, pre-validated vocabulary
+     * (`CommentsController`'s own real caller validates the raw form
+     * value against a fixed 2-key allowlist before this point).
      *
      * Deliberately returns raw rows, not a {@see Comment} Projection: the
      * `category_id`/`comment_id`-aliased shape here differs from
      * {@see findForImage()}'s own column list, and that Projection's own
      * docblock documents it as scoped to exactly that one caller.
      *
-     * ANY_VALUE(ic.category_id): category_id comes from the JOINed
-     * image_category table, not functionally dependent on the GROUP BY
-     * column (comment_id) -- this connection doesn't strip
-     * ONLY_FULL_GROUP_BY the way the legacy mysqli connection did, so this
-     * needs the explicit opt-out to keep selecting exactly one arbitrary
-     * category per comment, matching the original's own grouping/row
-     * count exactly.
+     * `image_category`/`comments` have no real object association between
+     * them (they share a plain scalar `image_id` column, not a mapped
+     * FK) -- rooted at `CommentEntity`, `ImageCategoryEntity` joined via
+     * an explicit `Join::WITH` comparing the scalar FK column directly
+     * against the bare association path, the same shape already used in
+     * production by `UserRepository.php`'s own favorites-family joins.
+     * `CommentEntity::$authorUser` IS a real association, so the `users`
+     * join needs no such `Join::WITH`.
      *
-     * `users` is mapped ({@see \Piwigo\Users\UserEntity}), always
-     * `id`/`mail_address`. This query stays on DBAL rather than DQL -- it
-     * joins the never-entity-mapped `image_category`, uses `ANY_VALUE()`
-     * (has no DQL equivalent), and accepts dynamic caller-supplied
-     * SqlCondition fragments -- several independent, genuine DQL blockers
-     * remain.
+     * `ANY_VALUE(IDENTITY(ic.category))`: `category_id` comes from the
+     * joined `image_category` table, not functionally dependent on the
+     * `GROUP BY com.id` column -- `ANY_VALUE()` keeps selecting exactly
+     * one arbitrary category per comment, matching the original's own
+     * grouping/row count exactly. `ANY_VALUE(u.mailAddress)` needs the
+     * same wrap for the same reason -- PostgreSQL's functional-dependency
+     * check only recognizes a table's own primary key appearing in
+     * `GROUP BY`, never transitively through a join. `com.authorId`
+     * (extracted via a plain `IDENTITY(com.authorUser)`, no `ANY_VALUE()`)
+     * does NOT need this wrap: it's a column on `com` itself, the exact
+     * table being grouped by `com.id`, trivially functionally dependent
+     * on it.
      *
-     * `u.mail_address` needs `ANY_VALUE()` too, not just
-     * `ic.category_id`. MySQL's ONLY_FULL_GROUP_BY functional-dependency
-     * check reasons transitively through the `u.id = com.author_id` join
-     * (grouping by `com.id` determines `com.author_id`, which -- joined
-     * against `users`' own primary key -- determines `u.mail_address`),
-     * so MySQL tolerates the bare column unwrapped. PostgreSQL's
-     * functional-dependency check only recognizes a table's own primary
-     * key appearing in GROUP BY, never transitively through a join --
-     * rejects it outright ("column u.mail_address must appear in the
-     * GROUP BY clause or be used in an aggregate function"). `ANY_VALUE()`
-     * is a real aggregate on both platforms (PostgreSQL 16+ and MySQL),
-     * applied consistently to every non-grouped, non-`com.*` column.
+     * `COUNT_OVER() AS total_count` (the {@see \Piwigo\Db\DqlFunction\
+     * CountOverFunction}-backed DQL name for `COUNT(*) OVER()`) is
+     * computed in the same query as the row data instead of a second
+     * round-trip. `GROUP BY com.id` here (not `DISTINCT`), so the window
+     * function (evaluated after `GROUP BY`, before `LIMIT`/`OFFSET`)
+     * reports the correct post-grouping row count -- unlike its incorrect
+     * behavior on `SELECT DISTINCT` queries, see
+     * {@see \Piwigo\Users\UserRepository::findList()}'s own docblock.
      *
-     * `COUNT(*) OVER() AS total_count` is computed in the same query as
-     * the row data instead of a second round-trip. `GROUP BY comment_id`
-     * here (not `DISTINCT`), so the window function (evaluated after
-     * GROUP BY, before LIMIT/OFFSET) reports the correct post-grouping
-     * row count -- unlike its incorrect behavior on `SELECT
-     * DISTINCT` queries, see
-     * {@see \Piwigo\Users\UserRepository::findList()}'s own
-     * docblock.
-     *
-     * Raw DBAL (not DQL) -- every numeric column below comes back as
-     * whichever native PHP type the active driver hands back (a real int
-     * under mysqli's own MYSQLI_OPT_INT_AND_FLOAT_NATIVE, a numeric
-     * string under some pgsql paths), never a VO. `author`/`author_id`/
-     * `email`/`date`/`website_url`/`content` are CommentEntity's own
-     * nullable columns; `validated` is a non-nullable `bool` column, but
-     * SqlDialect::getBoolean() (the one real caller's own consumer) is
-     * this codebase's established "genuinely arbitrary boolean-ish input"
-     * boundary, so it stays a driver-dependent bool|int here rather than
-     * a plain bool.
+     * `getArrayResult()` applies real Doctrine Type conversion to every
+     * selected state-field path -- `comment_id`/`image_id`/`date` come
+     * back as real `CommentId`/`ImageId`/`SqlDateTime` instances,
+     * unwrapped via {@see unwrapCommentListRowVoFields()} right after
+     * fetch, before the same `is_int()`/`is_string()` narrowing this
+     * method already did against the raw-DBAL path's own driver-dependent
+     * scalars runs. `IDENTITY(com.authorUser)`/`ANY_VALUE(IDENTITY(
+     * ic.category))` need no such unwrap -- the hydrator only converts
+     * expressions it recognizes as a direct state-field path, not an
+     * arbitrary function-call result. `validated` stays `bool|int`: a
+     * real `boolean`-typed column comes back a native PHP `bool` from
+     * `getArrayResult()`, but {@see \Piwigo\Db\SqlDialect::getBoolean()}
+     * (the one real caller's own consumer) is this codebase's established
+     * "genuinely arbitrary boolean-ish input" boundary, so the narrowing
+     * below still accepts either.
      *
      * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<CommentListRow>
      */
     public function findAllWithConditions(
         array $whereClauses,
-        string $sortByColumn,
+        CommentSortField $sortByField,
         string $sortOrder,
         int|string $limit,
         int $offset
     ): PaginatedResult {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select(
                 'com.id AS comment_id',
-                'com.image_id',
-                'ANY_VALUE(ic.category_id) AS category_id',
+                'com.imageId AS image_id',
+                'ANY_VALUE(IDENTITY(ic.category)) AS category_id',
                 'com.author',
-                'com.author_id',
-                'ANY_VALUE(u.mail_address) AS user_email',
+                'IDENTITY(com.authorUser) AS author_id',
+                'ANY_VALUE(u.mailAddress) AS user_email',
                 'com.email',
                 'com.date',
-                'com.website_url',
+                'com.websiteUrl AS website_url',
                 'com.content',
                 'com.validated',
-                'COUNT(*) OVER() AS total_count',
+                'COUNT_OVER() AS total_count',
             )
-            ->from('image_category', 'ic')
-            ->innerJoin('ic', 'comments', 'com', 'ic.image_id = com.image_id')
-            ->leftJoin('com', 'users', 'u', 'u.id = com.author_id')
-            ->groupBy('comment_id')
-            ->orderBy($sortByColumn, $sortOrder)
-            ->addOrderBy('comment_id', $sortOrder);
+            ->from(CommentEntity::class, 'com')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'com.imageId = ic.image')
+            ->leftJoin('com.authorUser', 'u')
+            ->groupBy('com.id')
+            ->orderBy($sortByField->dqlColumn(), $sortOrder)
+            ->addOrderBy('com.id', $sortOrder);
 
         self::applyConditions($qb, $whereClauses);
 
@@ -803,13 +801,16 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 ->setFirstResult($offset);
         }
 
-        $rawRows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        /** @var list<array<string, mixed>> $rawRows */
+        $rawRows = $qb->getQuery()
+            ->getArrayResult();
 
         $total = $rawRows !== [] && is_numeric($rawRows[0]['total_count'] ?? null) ? (int) $rawRows[0]['total_count'] : 0;
 
         $rows = [];
         foreach ($rawRows as $row) {
+            $row = self::unwrapCommentListRowVoFields($row);
+
             $commentId = $row['comment_id'] ?? null;
             $imageId = $row['image_id'] ?? null;
             $categoryId = $row['category_id'] ?? null;
@@ -838,6 +839,34 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         }
 
         return new PaginatedResult($rows, $total);
+    }
+
+    /**
+     * {@see findAllWithConditions()}'s `getArrayResult()` VO-unwrap step
+     * -- `comment_id`/`image_id`/`date` come back as real
+     * `CommentId`/`ImageId`/`SqlDateTime` instances from a direct
+     * state-field-path DQL select. Unwrapped here, once, so the rest of
+     * that method's own row-narrowing logic keeps its existing
+     * `is_int()`/`is_string()` contract unchanged.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private static function unwrapCommentListRowVoFields(array $row): array
+    {
+        if (($row['comment_id'] ?? null) instanceof CommentId) {
+            $row['comment_id'] = $row['comment_id']->value;
+        }
+
+        if (($row['image_id'] ?? null) instanceof ImageId) {
+            $row['image_id'] = $row['image_id']->value;
+        }
+
+        if (($row['date'] ?? null) instanceof SqlDateTime) {
+            $row['date'] = $row['date']->value;
+        }
+
+        return $row;
     }
 
     /**

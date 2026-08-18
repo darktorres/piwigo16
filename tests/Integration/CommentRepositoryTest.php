@@ -21,6 +21,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Sort\CommentSortField;
 
 final class CommentRepositoryTest extends IntegrationTestCase
 {
@@ -559,9 +560,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'ids' => ArrayParameterType::INTEGER,
         ]);
 
-        $firstPage = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 1, 0);
-        $secondPage = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 1, 1);
-        $allAtOnce = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 'all', 0);
+        $firstPage = $this->repo->findAllWithConditions([$condition], CommentSortField::ImageId, 'ASC', 1, 0);
+        $secondPage = $this->repo->findAllWithConditions([$condition], CommentSortField::ImageId, 'ASC', 1, 1);
+        $allAtOnce = $this->repo->findAllWithConditions([$condition], CommentSortField::ImageId, 'ASC', 'all', 0);
 
         self::assertCount(1, $firstPage->rows);
         self::assertSame(2, $firstPage->total);
@@ -595,7 +596,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $payload = "nonexistent' OR '1'='1";
         $maliciousCondition = SqlCondition::fromRawSql(
-            '(u.username = :authorA OR author = :authorB)',
+            '(u.username = :authorA OR com.author = :authorB)',
             [
                 'authorA' => $payload,
                 'authorB' => $payload,
@@ -606,7 +607,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             ],
         );
 
-        $result = $this->repo->findAllWithConditions([$maliciousCondition], 'com.id', 'ASC', 'all', 0);
+        $result = $this->repo->findAllWithConditions([$maliciousCondition], CommentSortField::ImageId, 'ASC', 'all', 0);
 
         // If the payload broke out of its string literal, `OR '1'='1'`
         // would make the WHERE clause match every comment in the fixture,

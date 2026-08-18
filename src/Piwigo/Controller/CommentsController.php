@@ -24,6 +24,7 @@ use Piwigo\Controller\Request\CommentsRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
@@ -52,6 +53,7 @@ use Piwigo\Picture\Event\RenderCommentAuthor;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Sort\CommentSortField;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
@@ -160,26 +162,41 @@ final readonly class CommentsController implements ControllerInterface
             $items_number = $items_number_new;
         }
 
-        // since when display comments ?
-        //
+        // since when display comments ? -- findAllWithConditions() is
+        // DQL-backed, so 'clause' is a real SqlCondition (DQL property
+        // path `com.date`, SqlDialect::getRecentPeriodDqlExpression()),
+        // not a raw-SQL string fragment. DQL's own CURRENT_DATE()
+        // function, or -- in test mode -- a frozen PIWIGO_TEST_NOW-anchored
+        // bound parameter: the same Env::testModeIsActive() substitution
+        // SqlDialect::getRecentPeriodExpression()'s own default-$date
+        // branch already establishes for its raw-SQL counterpart.
+        $sinceCurrentDate = 'CURRENT_DATE()';
+        $sinceParameters = [];
+        $sinceTypes = [];
+        if (Env::testModeIsActive()) {
+            $sinceCurrentDate = ':sinceCurrentDate';
+            $sinceParameters['sinceCurrentDate'] = Env::now()->format('Y-m-d');
+            $sinceTypes['sinceCurrentDate'] = ParameterType::STRING;
+        }
+
         $since_options = [
             1 => [
                 'label' => $this->lang->t('today'),
-                'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(1),
+                'clause' => SqlCondition::fromRawSql('com.date > ' . SqlDialect::getRecentPeriodDqlExpression(1, $sinceCurrentDate), $sinceParameters, $sinceTypes),
             ],
             2 => [
                 'label' => $this->lang->t('last %d days', 7),
-                'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(7),
+                'clause' => SqlCondition::fromRawSql('com.date > ' . SqlDialect::getRecentPeriodDqlExpression(7, $sinceCurrentDate), $sinceParameters, $sinceTypes),
             ],
             3 => [
                 'label' => $this->lang->t('last %d days', 30),
-                'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(30),
+                'clause' => SqlCondition::fromRawSql('com.date > ' . SqlDialect::getRecentPeriodDqlExpression(30, $sinceCurrentDate), $sinceParameters, $sinceTypes),
             ],
             4 => [
                 'label' => $this->lang->t('the beginning'),
                 // "since the beginning" is no date restriction at all; the
                 // empty fragment is dropped when the clauses are combined.
-                'clause' => '',
+                'clause' => SqlCondition::fromRawSql(''),
             ],
         ];
 
@@ -187,8 +204,16 @@ final readonly class CommentsController implements ControllerInterface
 
         $since = $commentsRequest->since !== null ? intval($commentsRequest->since) : 4;
 
-        // on which field sorting
+        // on which field sorting -- $sort_by_value stays the raw token for
+        // the template's own selected-option rendering; $sortByField is
+        // the typed vocabulary getAllCommentsWithConditions() takes.
+        // CommentsRequest::fromArrays() already allowlist-validates
+        // $sort_by_value against this exact 2-token vocabulary, so
+        // fromToken() never actually falls back to Date here in
+        // practice -- the fallback exists for the type checker, not a
+        // real runtime path.
         $sort_by_value = $commentsRequest->sortBy;
+        $sortByField = CommentSortField::fromToken($sort_by_value) ?? CommentSortField::Date;
 
         // order to sort
         $sort_order_value = $commentsRequest->sortOrder;
@@ -216,7 +241,7 @@ final readonly class CommentsController implements ControllerInterface
             }
 
             $whereClauses[] = SqlCondition::fromRawSql(
-                'category_id IN (:categoryIds)',
+                'ic.category IN (:categoryIds)',
                 [
                     'categoryIds' => $category_ids,
                 ],
@@ -231,7 +256,7 @@ final readonly class CommentsController implements ControllerInterface
         if ($author_filter !== null) {
             $author_search = $author_filter;
             $whereClauses[] = SqlCondition::fromRawSql(
-                '(u.username = :authorSearchUsername OR author = :authorSearchAuthor)',
+                '(u.username = :authorSearchUsername OR com.author = :authorSearchAuthor)',
                 [
                     'authorSearchUsername' => $author_search,
                     'authorSearchAuthor' => $author_search,
@@ -283,7 +308,7 @@ final readonly class CommentsController implements ControllerInterface
             $keywordTypes = [];
             foreach ($keywords as $i => $keyword) {
                 $placeholder = 'keyword' . $i;
-                $keywordParts[] = 'content LIKE :' . $placeholder;
+                $keywordParts[] = 'com.content LIKE :' . $placeholder;
                 // The %...% wildcard wrap is part of the bound VALUE, not
                 // the SQL text -- matches the original's own unescaped
                 // wildcard behavior for a literal %/_ inside the search
@@ -297,7 +322,7 @@ final readonly class CommentsController implements ControllerInterface
             $whereClauses[] = SqlCondition::fromRawSql('(' . implode(' AND ', $keywordParts) . ')', $keywordParams, $keywordTypes);
         }
 
-        $whereClauses[] = SqlCondition::fromRawSql($since_options[$since]['clause']);
+        $whereClauses[] = $since_options[$since]['clause'];
 
         // which status to filter on ?
         if (! $this->accessControl->isAdmin()) {
@@ -310,7 +335,7 @@ final readonly class CommentsController implements ControllerInterface
             // real BOOLEAN parameter, matching every other real validated
             // comparison in CommentRepository.php (all `->setParameter(...,
             // true)`), rather than another raw literal.
-            $whereClauses[] = SqlCondition::fromRawSql('validated = :validated', [
+            $whereClauses[] = SqlCondition::fromRawSql('com.validated = :validated', [
                 'validated' => true,
             ], [
                 'validated' => ParameterType::BOOLEAN,
@@ -318,10 +343,10 @@ final readonly class CommentsController implements ControllerInterface
         }
 
         $commentsPermissionCriteria = $this->permissionService->getPermissionCriteria();
-        $whereClauses[] = $commentsPermissionCriteria->forbiddenCategoriesCondition('category_id');
-        $whereClauses[] = $commentsPermissionCriteria->visibleCategoriesCondition('category_id');
-        $whereClauses[] = $commentsPermissionCriteria->visibleImagesCondition('ic.image_id');
-        $whereClauses[] = $commentsPermissionCriteria->imageAccessCondition('ic.image_id');
+        $whereClauses[] = $commentsPermissionCriteria->forbiddenCategoriesCondition('ic.category');
+        $whereClauses[] = $commentsPermissionCriteria->visibleCategoriesCondition('ic.category');
+        $whereClauses[] = $commentsPermissionCriteria->visibleImagesCondition('ic.image');
+        $whereClauses[] = $commentsPermissionCriteria->imageAccessCondition('ic.image');
 
         $action = $commentsRequest->action;
         $comment_id = $commentsRequest->actionCommentId;
@@ -440,7 +465,7 @@ final readonly class CommentsController implements ControllerInterface
 
         $paginated_comments = $commentService->getAllCommentsWithConditions(
             $where_clauses,
-            $sort_by_value,
+            $sortByField,
             $sort_order_value,
             $selected_items_number,
             $start

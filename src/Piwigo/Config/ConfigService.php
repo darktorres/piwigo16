@@ -331,8 +331,6 @@ final readonly class ConfigService
         'user_can_edit_comment' => 'userCanEditComment',
         'webmaster_id' => 'webmasterId',
         'week_starts_on' => 'weekStartsOn',
-        'ws_max_images_per_page' => 'wsMaxImagesPerPage',
-        'ws_max_users_per_page' => 'wsMaxUsersPerPage',
     ];
 
     /**

@@ -59,7 +59,7 @@ const SCHEMA_INTEGRITY_PRIVATE_SET_LIST = [
     'showPiwigoLatestNews', 'showTemplateInSideMenu', 'showThumbnailCaption', 'slideshowPeriodStep', 'standardPagesSelectedLogo',
     'standardPagesSelectedLogoPath', 'standardPagesSelectedSkin', 'statCompareYearDisplayed', 'tagLettersColumnNumber', 'tagsDefaultDisplayMode',
     'templateForceCompile', 'topNumber', 'trustedProxies', 'uniquenessMode', 'updateNotifyReminderPeriod',
-    'uploadFormAutomaticRotation', 'uploadFormChunkSize', 'uploadFormMaxFileSize', 'wsMaxImagesPerPage', 'wsMaxUsersPerPage',
+    'uploadFormAutomaticRotation', 'uploadFormChunkSize', 'uploadFormMaxFileSize',
 ];
 
 // The only properties whose get/set carries real logic (sanitization, a

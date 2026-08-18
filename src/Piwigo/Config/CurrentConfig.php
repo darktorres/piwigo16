@@ -1589,18 +1589,6 @@ final class CurrentConfig
      */
     public string $weekStartsOn = 'monday';
 
-    // === ws_max_images_per_page ===
-    /**
-     * Maximum number of photos returned per page by the web-service API.
-     */
-    public private(set) int $wsMaxImagesPerPage = 500;
-
-    // === ws_max_users_per_page ===
-    /**
-     * Maximum number of users returned per page by the web-service API.
-     */
-    public private(set) int $wsMaxUsersPerPage = 1000;
-
     // === api_key_duration ===
     /**
      * Selectable API-key expiration presets, in days (plus the literal 'custom' entry).

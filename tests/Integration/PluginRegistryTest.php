@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -124,6 +125,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(UrlServiceInterface::class),
             $this->containerGet(RedirectServiceInterface::class),
             $this->containerGet(AdminContext::class),
+            $this->containerGet(ApiContext::class),
             $this->eventDispatcher,
             $this->containerGet(SessionService::class),
             $imageReadFacade,

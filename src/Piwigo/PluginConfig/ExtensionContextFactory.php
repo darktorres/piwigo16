@@ -11,6 +11,7 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -48,6 +49,7 @@ final readonly class ExtensionContextFactory
         private UrlServiceInterface $urlService,
         private RedirectServiceInterface $redirectService,
         private AdminContext $adminContext,
+        private ApiContext $apiContext,
         private EventDispatcher $eventDispatcher,
         private SessionService $sessionService,
         private ImageReadFacade $imageReadFacade,
@@ -76,6 +78,7 @@ final readonly class ExtensionContextFactory
             $this->urlService,
             $this->redirectService,
             $this->adminContext,
+            $this->apiContext,
             $this->eventDispatcher,
             $this->sessionService,
             $this->imageReadFacade,

@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -78,6 +79,7 @@ final readonly class ExtensionContext
         private UrlServiceInterface $urlService,
         private RedirectServiceInterface $redirectService,
         private AdminContext $adminContext,
+        private ApiContext $apiContext,
         private EventDispatcher $eventDispatcher,
         private SessionService $sessionService,
         private ImageReadFacade $imageReadFacade,
@@ -313,6 +315,30 @@ final readonly class ExtensionContext
     public function isAdminContext(): bool
     {
         return $this->adminContext->isActive();
+    }
+
+    /**
+     * Wraps `Core\ApiContext::isActive()` -- same "fixed once at
+     * container-build time" safety as `isAdminContext()` above. Real
+     * caller: an extension applying request-wide state (e.g. a
+     * "view as another user" switch) needs to know not just "is this an
+     * admin *page*" but also "is this a machine-facing `/api/v1`
+     * request" -- legacy's own `MultiView::user_init()` has an
+     * equivalent second exemption alongside its `IN_ADMIN` one:
+     * `if ($this->is_admin && script_basename() != 'ws')`
+     * (`MultiView.class.php:146-147`), deliberately disabling itself on
+     * `ws.php`, its own AJAX/API entry point, "to allow AJAX admin
+     * tasks" -- a switch that silently re-evaluates every subsequent
+     * request (including the API route meant to undo it) as the
+     * impersonated user would otherwise let an admin permanently lock
+     * themselves out with no way back, confirmed live: switching to a
+     * non-admin and then immediately trying to revert via the same API
+     * route 403'd, because that request itself got re-evaluated as the
+     * now-impersonated non-admin before the guard ran.
+     */
+    public function isApiContext(): bool
+    {
+        return $this->apiContext->isActive();
     }
 
     /**

@@ -18,6 +18,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -171,7 +172,7 @@ final class ExtensionContextTest extends IntegrationTestCase
         $this->context = $this->buildContext(PluginId::from('test-plugin'));
     }
 
-    private function buildContext(PluginId $extensionId, ?AdminContext $adminContext = null, ?MailService $mailService = null): ExtensionContext
+    private function buildContext(PluginId $extensionId, ?AdminContext $adminContext = null, ?MailService $mailService = null, ?ApiContext $apiContext = null): ExtensionContext
     {
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
@@ -193,6 +194,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(UrlServiceInterface::class),
             $this->containerGet(RedirectServiceInterface::class),
             $adminContext ?? $this->containerGet(AdminContext::class),
+            $apiContext ?? $this->containerGet(ApiContext::class),
             $this->containerGet(EventDispatcher::class),
             $this->containerGet(SessionService::class),
             $this->imageReadFacade,
@@ -797,6 +799,22 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         self::assertTrue($adminContext->isAdminContext());
         self::assertFalse($publicContext->isAdminContext());
+    }
+
+    /**
+     * isApiContext() is a real passthrough to Core\ApiContext::
+     * isActive(), same shape as isAdminContext() above -- added for
+     * AdminTools' view-as switch, which must never apply on an API
+     * request (the real equivalent of legacy MultiView's own
+     * `script_basename() != 'ws'` exemption).
+     */
+    public function testIsApiContextReflectsTheUnderlyingApiContext(): void
+    {
+        $apiContext = $this->buildContext(PluginId::from('api-plugin'), null, null, new ApiContext(true));
+        $publicContext = $this->buildContext(PluginId::from('public-plugin'), null, null, new ApiContext(false));
+
+        self::assertTrue($apiContext->isApiContext());
+        self::assertFalse($publicContext->isApiContext());
     }
 
     /**

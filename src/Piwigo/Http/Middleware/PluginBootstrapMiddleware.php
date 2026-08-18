@@ -18,6 +18,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\ApiContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
@@ -122,6 +123,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         private UrlServiceInterface $urlService,
         private RedirectServiceInterface $redirectService,
         private AdminContext $adminContext,
+        private ApiContext $apiContext,
         private SessionService $sessionService,
         private ConfigService $configService,
         private MailService $mailService,
@@ -258,6 +260,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->urlService,
             $this->redirectService,
             $this->adminContext,
+            $this->apiContext,
             $this->eventDispatcher,
             $this->sessionService,
             $this->imageReadFacade($conn),

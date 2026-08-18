@@ -611,6 +611,7 @@ final class RequestBootstrap
             self::urlService(),
             self::redirectService(),
             self::adminContext(),
+            self::apiContext(),
             self::eventDispatcher(),
             self::sessionService(),
             self::imageReadFacade($conn),

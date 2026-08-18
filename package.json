@@ -14,6 +14,7 @@
     "lint:md": "markdownlint-cli2",
     "lint:md:fix": "markdownlint-cli2 --fix",
     "lint:openapi": "redocly lint openapi/openapi.yaml",
+    "generate:api-client": "openapi-typescript openapi/openapi.yaml -o openapi/client/schema.d.ts",
     "format": "prettier --check \"**/*.{ts,cjs,json,md,css}\"",
     "format:fix": "prettier --write \"**/*.{ts,cjs,json,md,css}\"",
     "format:latte": "prettier --check --plugin=./tools/latte-prettier/plugin.cjs \"{themes,template-extension}/**/*.latte\"",
@@ -38,6 +39,7 @@
     "knip": "^6.32.0",
     "lefthook": "^2.1.10",
     "markdownlint-cli2": "^0.23.2",
+    "openapi-typescript": "^7.13",
     "playwright": "1.61.1",
     "prettier": "^3.9.6",
     "size-limit": "^13.0.3",
@@ -49,6 +51,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "openapi-fetch": "^0.17",
     "web-vitals": "^6.1.0"
   },
   "overrides": {

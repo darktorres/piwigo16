@@ -9,7 +9,8 @@
     "!themes/default/js/jquery.min.js",
     "!themes/default/js/jquery.cookie.js",
     "!themes/default/js/pngfix.js",
-    "themes/standard_pages/js/*.js"
+    "themes/standard_pages/js/*.js",
+    "openapi/client/index.ts"
   ],
   "project": [
     "themes/admin/default/js/*.js",
@@ -20,7 +21,8 @@
     "!themes/default/js/pngfix.js",
     "themes/standard_pages/js/*.js",
     "tests/Unit/*.test.ts",
-    "*.config.ts"
+    "*.config.ts",
+    "openapi/client/*.ts"
   ],
   "ignoreDependencies": ["@cyclonedx/cyclonedx-npm", "lefthook"]
 }

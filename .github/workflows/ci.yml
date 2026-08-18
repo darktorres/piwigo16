@@ -309,7 +309,7 @@ jobs:
       - run: bun run lint:md
 
   openapi:
-    name: OpenAPI spec (redocly lint)
+    name: OpenAPI spec + generated client
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -322,6 +322,11 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run lint:openapi
+      - run: bun run generate:api-client
+      # Fails the instant the committed generated client drifts from the
+      # spec -- generate:api-client is deterministic given the same spec,
+      # so a clean diff here means schema.d.ts still matches openapi.yaml.
+      - run: git diff --exit-code openapi/client/schema.d.ts
 
   prettier:
     name: Prettier

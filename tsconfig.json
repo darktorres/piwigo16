@@ -23,7 +23,8 @@
     "vitest.config.ts",
     "eslint.config.ts",
     "commitlint.config.ts",
-    "tests/Unit/**/*.ts"
+    "tests/Unit/**/*.ts",
+    "openapi/client/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

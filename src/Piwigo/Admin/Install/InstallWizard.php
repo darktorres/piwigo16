@@ -575,23 +575,8 @@ final class InstallWizard
             $this->paths->root . 'install/config.sql',
         );
 
-        // config.value is JSON -- json_encode() the value (not the bare
-        // hex string) so
-        // ConfigService::hydrate()'s json_decode() read side gets back a
-        // real string instead of failing to parse it.
-        $secretKeyJson = json_encode(sha1(random_bytes(1000)));
-        assert($secretKeyJson !== false);
-
-        $query = <<<SQL
-            INSERT INTO config (param,value,comment)
-               VALUES ('secret_key', :secretKey,
-               'a secret key specific to the gallery for internal use');
-            SQL;
-        $conn->executeStatement($query, [
-            'secretKey' => $secretKeyJson,
-        ]);
-
         $configService = $this->currentConfigService->get();
+        $configService->confUpdateParam('secret_key', sha1(random_bytes(1000)));
         $configService->confUpdateParam('gallery_title', $this->lang->t('Just another Piwigo gallery'));
 
         $configService->confUpdateParam(

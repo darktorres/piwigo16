@@ -215,7 +215,14 @@ deptrac:
     # Config\CurrentConfigService-shaped bridge letting
     # Controller\Admin\PluginSubController (L4) reach the one real,
     # already-`bootActive()`d PluginRegistry instance -- same layer as
-    # PluginRegistry itself, which it wraps.
+    # PluginRegistry itself, which it wraps. ApiRouteProviderInterface
+    # (P29.6) rides the same collector for the identical reason
+    # SettingsPageInterface does: its own registerApiRoutes() has no
+    # ExtensionContext dependency of its own (a route's real controller
+    # gets its own dependencies via plain container autowiring later,
+    # not via this interface), but it has nowhere else to go and
+    # PluginRegistry::registerApiRoutes() references it directly (the
+    # manifest-time `hasApiRoutes` validation).
     - name: L3Presentation
       collectors:
         - type: classLike
@@ -223,7 +230,7 @@ deptrac:
         - type: classLike
           value: ^Piwigo\\Listener\\(?!UploadFormatListener$).+
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException|SettingsPageInterface|CurrentPluginRegistry)$
+          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException|SettingsPageInterface|CurrentPluginRegistry|ApiRouteProviderInterface)$
         - type: classLike
           value: ^Piwigo\\PluginConfig\\Facade\\.*
     # L4 Integration — Piwigo\Command (bin/piwigo's Symfony Console

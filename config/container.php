@@ -83,6 +83,7 @@ use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
+use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginMigrationRepository;
@@ -247,7 +248,17 @@ return [
 
     // RouteCollection has no container entry of its own -- a real
     // constructor param autowire can't provide.
-    Router::class => factory(static fn (): Router => new Router(RouteDefinitions::all())),
+    Router::class => factory(static function (ContainerInterface $c): Router {
+        $pluginRegistry = $c->get(CurrentPluginRegistry::class);
+        if (! $pluginRegistry instanceof CurrentPluginRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentPluginRegistry::class);
+        }
+
+        $routes = RouteDefinitions::all();
+        $pluginRegistry->get()->registerApiRoutes($routes);
+
+        return new Router($routes);
+    }),
 
     // Factory binding -- the value never actually varies per request
     // (always built from the same config/storage.php), so there's nothing

@@ -75,6 +75,10 @@
       ],
       "description": "Whether the plugin exposes a settings page: true (admin), false (none), or 'webmaster' (webmaster-only). Default: false."
     },
+    "hasApiRoutes": {
+      "type": "boolean",
+      "description": "Whether the plugin registers its own /api/v1/plugin-routes/{id}/... REST routes via ApiRouteProviderInterface. Default: false."
+    },
     "require": {
       "type": "object",
       "additionalProperties": {

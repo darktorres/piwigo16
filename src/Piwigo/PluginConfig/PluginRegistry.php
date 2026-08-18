@@ -17,6 +17,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\PluginConfig\Event\PluginsLoaded;
 use RuntimeException;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Registry for Piwigo 17+ plugins -- replaces `Admin\PluginLoader`'s
@@ -193,6 +194,7 @@ final class PluginRegistry
 
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
+        $this->assertApiRoutesContractSatisfied($manifest, $instance);
         $instance->install();
 
         $id = PluginId::from($pluginId);
@@ -223,6 +225,7 @@ final class PluginRegistry
 
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
+        $this->assertApiRoutesContractSatisfied($manifest, $instance);
         $instance->activate();
 
         $this->repository->updateState(PluginId::from($pluginId), PluginState::Active);
@@ -470,6 +473,38 @@ final class PluginRegistry
                 rtrim($this->paths->plugins, '/') . "/{$manifest->id}/plugin.json",
                 "Plugin '{$manifest->id}' declares hasSettings but its main class does not implement SettingsPageInterface.",
             );
+        }
+    }
+
+    /**
+     * `install()`/`activate()`'s own manifest-authoring check for
+     * `ApiRouteProviderInterface` -- same shape and same rationale as
+     * `assertSettingsContractSatisfied()` above.
+     */
+    private function assertApiRoutesContractSatisfied(PluginManifest $manifest, ExtensionInterface $instance): void
+    {
+        if ($manifest->hasApiRoutes && ! $instance instanceof ApiRouteProviderInterface) {
+            throw new PluginValidationException(
+                $manifest->id,
+                rtrim($this->paths->plugins, '/') . "/{$manifest->id}/plugin.json",
+                "Plugin '{$manifest->id}' declares hasApiRoutes but its main class does not implement ApiRouteProviderInterface.",
+            );
+        }
+    }
+
+    /**
+     * Called once per request, before routing (see `config/container.php`'s
+     * `Router::class` factory), so every active plugin implementing
+     * `ApiRouteProviderInterface` gets a chance to add its own routes to
+     * the live collection `RouteDefinitions::all()` just built, before
+     * `Router` is constructed from it.
+     */
+    public function registerApiRoutes(RouteCollection $routes): void
+    {
+        foreach ($this->bootedInstances as $instance) {
+            if ($instance instanceof ApiRouteProviderInterface) {
+                $instance->registerApiRoutes($routes);
+            }
         }
     }
 

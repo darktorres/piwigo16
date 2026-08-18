@@ -38,6 +38,7 @@ final readonly class PluginManifest
         public ?string $author = null,
         public ?string $authorUri = null,
         public bool|string $hasSettings = false,
+        public bool $hasApiRoutes = false,
         public array $require = [],
         public array $autoloadPsr4 = [],
     ) {}
@@ -77,6 +78,11 @@ final readonly class PluginManifest
             $hasSettings = false;
         }
 
+        $hasApiRoutes = $data['hasApiRoutes'] ?? false;
+        if (! is_bool($hasApiRoutes)) {
+            $hasApiRoutes = false;
+        }
+
         return new self(
             id: self::requireString($data, 'id'),
             name: self::requireString($data, 'name'),
@@ -89,6 +95,7 @@ final readonly class PluginManifest
             author: self::optionalString($data, 'author'),
             authorUri: self::optionalString($data, 'authorUri'),
             hasSettings: $hasSettings,
+            hasApiRoutes: $hasApiRoutes,
             require: $require,
             autoloadPsr4: $psr4,
         );

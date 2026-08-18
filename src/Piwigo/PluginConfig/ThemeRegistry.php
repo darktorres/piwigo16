@@ -150,6 +150,7 @@ final class ThemeRegistry
         $manifest = $this->requireManifest($themeId);
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
+        $instance->boot($this->contextFactory->build(ThemeId::from($themeId)));
         $instance->install();
     }
 
@@ -170,6 +171,7 @@ final class ThemeRegistry
 
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
+        $instance->boot($this->contextFactory->build(ThemeId::from($themeId)));
         $instance->activate();
 
         if (! $this->isInstalled($themeId)) {
@@ -190,8 +192,9 @@ final class ThemeRegistry
             return;
         }
 
-        $this->bootInstance($manifest)
-            ->deactivate();
+        $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build(ThemeId::from($themeId)));
+        $instance->deactivate();
         $this->repository->delete(ThemeId::from($themeId));
     }
 
@@ -202,8 +205,9 @@ final class ThemeRegistry
     public function uninstall(string $themeId): void
     {
         $manifest = $this->requireManifest($themeId);
-        $this->bootInstance($manifest)
-            ->uninstall();
+        $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build(ThemeId::from($themeId)));
+        $instance->uninstall();
     }
 
     /**
@@ -228,8 +232,9 @@ final class ThemeRegistry
             return;
         }
 
-        $this->bootInstance($manifest)
-            ->update($oldVersion, $newVersion);
+        $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build($id));
+        $instance->update($oldVersion, $newVersion);
         $this->repository->updateVersion($id, $newVersion);
     }
 

@@ -383,13 +383,24 @@ final class ThemeRegistryTest extends IntegrationTestCase
 
         self::assertFalse($registry->isInstalled($id));
 
+        // Real regression test for a genuine bug this exact fix closed --
+        // see PluginRegistryTest::testInstallActivateDeactivateUninstallRoundTrip()'s
+        // own identical note for the full story (ThemeRegistry had the
+        // exact same gap as PluginRegistry: every lifecycle-invoking
+        // method called bootInstance() -- bare `new $class()` -- without
+        // ever calling boot() first). No reset-to-null before this first
+        // activate() call: $className isn't autoloadable yet -- see
+        // PluginRegistryTest's own identical note.
         $registry->activate($id);
         self::assertTrue($className::$activated);
         self::assertTrue($registry->isInstalled($id));
+        self::assertNotNull($className::$receivedContext, 'boot() must run before activate()');
 
+        $className::$receivedContext = null;
         $registry->deactivate($id);
         self::assertTrue($className::$deactivated);
         self::assertFalse($registry->isInstalled($id));
+        self::assertNotNull($className::$receivedContext, 'boot() must run before deactivate()');
     }
 
     /**
@@ -451,12 +462,17 @@ final class ThemeRegistryTest extends IntegrationTestCase
 
         // install()/uninstall() carry no DB write of their own for themes
         // (see ThemeRegistry's own class docblock) -- just real, callable
-        // hooks on the theme's own class.
+        // hooks on the theme's own class. No reset-to-null before this
+        // first install() call: $className isn't autoloadable yet -- see
+        // PluginRegistryTest's own identical note.
         $registry->install($id);
         self::assertTrue($className::$installed);
+        self::assertNotNull($className::$receivedContext, 'boot() must run before install()');
 
+        $className::$receivedContext = null;
         $registry->uninstall($id);
         self::assertTrue($className::$uninstalled);
+        self::assertNotNull($className::$receivedContext, 'boot() must run before uninstall()');
 
         self::assertArrayHasKey($id, $registry->getAllManifests());
 
@@ -468,9 +484,11 @@ final class ThemeRegistryTest extends IntegrationTestCase
         $this->writeFixtureTheme($dir, $id, 'Lifecycle' . $suffix, version: '2.0.0');
         $registry->activate($id);
         $registry->reload();
+        $className::$receivedContext = null;
         $registry->update($id);
 
         self::assertSame(['1.0.0', '2.0.0'], $className::$updatedFromTo);
+        self::assertNotNull($className::$receivedContext, 'boot() must run before update()');
     }
 
     public function testThemeValidationExceptionCarriesTheFailingIdAndManifestPath(): void

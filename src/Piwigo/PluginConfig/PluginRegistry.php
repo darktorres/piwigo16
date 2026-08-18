@@ -195,6 +195,7 @@ final class PluginRegistry
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
         $this->assertApiRoutesContractSatisfied($manifest, $instance);
+        $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         $instance->install();
 
         $id = PluginId::from($pluginId);
@@ -226,6 +227,7 @@ final class PluginRegistry
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
         $this->assertApiRoutesContractSatisfied($manifest, $instance);
+        $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         $instance->activate();
 
         $this->repository->updateState(PluginId::from($pluginId), PluginState::Active);
@@ -248,6 +250,7 @@ final class PluginRegistry
         }
 
         $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         $instance->deactivate();
 
         $this->repository->updateState(PluginId::from($pluginId), PluginState::Inactive);
@@ -268,8 +271,9 @@ final class PluginRegistry
             return;
         }
 
-        $this->bootInstance($manifest)
-            ->uninstall();
+        $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
+        $instance->uninstall();
 
         // fk_plugin_migrations_plugin_id is ON DELETE RESTRICT, so the
         // ledger has to go first and the constraint will refuse the delete
@@ -308,6 +312,7 @@ final class PluginRegistry
         }
 
         $instance = $this->bootInstance($manifest);
+        $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         $instance->update($oldVersion, $newVersion);
 
         $id = PluginId::from($pluginId);

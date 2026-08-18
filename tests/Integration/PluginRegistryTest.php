@@ -523,19 +523,46 @@ final class PluginRegistryTest extends IntegrationTestCase
 
         self::assertFalse($registry->isActive($id));
 
+        // Each lifecycle call below resets $receivedContext to null first
+        // and re-asserts it's non-null immediately after -- a real
+        // regression test for a genuine bug this exact fix closed:
+        // PluginRegistry::install()/activate()/deactivate()/uninstall()/
+        // update() all called bootInstance() (bare `new $class()`, never
+        // `boot()`) and invoked the lifecycle method directly, so
+        // `$this->context` was never initialized -- any real plugin's
+        // install()/uninstall() (etc.) touching ExtensionContext (e.g.
+        // AdminTools_17.0.0's own default-settings install()/uninstall())
+        // fatals with "must not be accessed before initialization". Found
+        // live installing that real plugin against a running instance --
+        // none of the 26 prior ported plugins' own empty lifecycle bodies
+        // ever exercised this path.
+        //
+        // No reset-to-null before this first install() call: $className
+        // isn't autoloadable yet (PluginRegistry only registers the
+        // fixture's own PSR-4 mapping once a real registry call resolves
+        // its manifest), so referencing the class here would itself fatal
+        // with "class not found" -- the static property already starts
+        // null anyway, nothing to reset.
         $registry->install($id);
         self::assertTrue($className::$installed);
+        self::assertNotNull($className::$receivedContext, 'boot() must run before install()');
 
+        $className::$receivedContext = null;
         $registry->activate($id);
         self::assertTrue($className::$activated);
         self::assertTrue($registry->isActive($id));
+        self::assertNotNull($className::$receivedContext, 'boot() must run before activate()');
 
+        $className::$receivedContext = null;
         $registry->deactivate($id);
         self::assertTrue($className::$deactivated);
         self::assertFalse($registry->isActive($id));
+        self::assertNotNull($className::$receivedContext, 'boot() must run before deactivate()');
 
+        $className::$receivedContext = null;
         $registry->uninstall($id);
         self::assertTrue($className::$uninstalled);
+        self::assertNotNull($className::$receivedContext, 'boot() must run before uninstall()');
     }
 
     public function testUpdateInvokesTheHookAndBumpsTheVersionOnlyWhenVersionsDiffer(): void
@@ -556,9 +583,11 @@ final class PluginRegistryTest extends IntegrationTestCase
         // Bump the on-disk manifest version and reload.
         $this->writeFixturePlugin($dir, $id, 'Update' . $suffix, [], '2.0.0');
         $registry->reload();
+        $className::$receivedContext = null;
         $registry->update($id);
 
         self::assertSame(['1.0.0', '2.0.0'], $className::$updatedFromTo);
+        self::assertNotNull($className::$receivedContext, 'boot() must run before update()');
     }
 
     public function testGetManifestGetAllManifestsAndGetActiveIdsReflectARealScan(): void

@@ -1174,8 +1174,7 @@ final class BrowserTestHelpers
 
     /**
      * `GET /api/v1/session`'s own `pwgToken` field -- the `X-CSRF-Token`
-     * every mutating `/api/v1` call needs, replacing WS's `pwg_token`
-     * body/query param convention.
+     * every mutating `/api/v1` call needs.
      */
     private static function apiCsrfToken(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string
     {
@@ -1240,8 +1239,8 @@ final class BrowserTestHelpers
      * POSTs to an arbitrary admin.php-style path through the SAME
      * authenticated browser session, via a same-origin fetch() executed in
      * the page — same rationale as apiFetch(), but for admin form-submission
-     * controllers whose response is a rendered HTML page, not a WS JSON
-     * envelope, and where driving real DOM form fields one at a time would
+     * controllers whose response is a rendered HTML page, not a JSON body,
+     * and where driving real DOM form fields one at a time would
      * be slow/brittle for a form with dozens of fields. `redirect: manual`
      * so a controller's own post-save redirect is reported as a 30x status
      * with an empty body instead of being silently followed and losing the
@@ -2092,12 +2091,10 @@ final class BrowserTestHelpers
     /**
      * Uploads a photo via the real tus 1.0.0 API using a fresh admin login
      * over curl (single-chunk: Upload-Length == the whole file, so the one
-     * PATCH both transfers every byte and completes the upload). Replaces
-     * this helper's former WS-based (`pwg.images.addSimple`) mechanism, now
-     * that the WS layer itself is deleted (P27) -- same underlying reason
-     * this stays on raw curl rather than the browser session: pest-plugin-
-     * browser has no cookie-jar access to reuse the browser session for a
-     * binary-body PATCH, and Piwigo's admin upload UI is a JS (plupload)
+     * PATCH both transfers every byte and completes the upload). Stays on
+     * raw curl rather than the browser session: pest-plugin-browser has no
+     * cookie-jar access to reuse the browser session for a binary-body
+     * PATCH, and Piwigo's admin upload UI is a JS (plupload)
      * widget with no plain <input type="file"> fallback to automate
      * reliably.
      */

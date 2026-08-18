@@ -37,8 +37,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
  * common.inc.php), which this lightweight DBAL-only Integration harness
  * deliberately doesn't load. The full create/update/duplicate/merge/
  * delete/addMembers/removeMembers success paths are live-verified via
- * /api/v1/groups against the running Apache instance instead (the WS
- * layer this docblock originally verified through is deleted, P27).
+ * /api/v1/groups against the running Apache instance instead.
  *
  * The specific gaps below (duplicate()'s and merge()'s own per-member
  * activity-logging loop, addAccess()) are the one real exception: they

@@ -34,7 +34,7 @@ it('creates a tag, assigns it to a photo, then deletes the tag', function (): vo
 
     $setInfo = H::wsCall($page, 'pwg.images.setInfo', [
         'image_id' => $imageId,
-        'tag_ids' => $tagId,
+        'tag_ids' => (string) $tagId,
     ]);
     expect($setInfo['stat'])->toBe('ok');
 

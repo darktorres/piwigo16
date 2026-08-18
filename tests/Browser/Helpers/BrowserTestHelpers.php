@@ -1033,7 +1033,6 @@ final class BrowserTestHelpers
         foreach ([
             'allwords' => 'allwords',
             'date_created_preset' => 'dateCreatedPreset',
-            'ratings' => 'ratings',
         ] as $wsKey => $restKey) {
             if (array_key_exists($wsKey, $params)) {
                 $body[$restKey] = $params[$wsKey];
@@ -1045,13 +1044,20 @@ final class BrowserTestHelpers
         // automatic scalar-to-array coercion on this endpoint). 'expert'
         // has no /api/v1 equivalent -- ImageFilteredSearchCreateController's
         // own docblock documents dropping it (a raw, undocumented
-        // search-string escape hatch).
+        // search-string escape hatch). 'ratings' belongs in this group,
+        // not the plain pass-through one above -- same array-of-strings
+        // contract as 'ratios' (SearchService::applyFilters() requires
+        // is_array() downstream too), confirmed live: a bare scalar here
+        // used to reach ImageFilteredSearchCreateController un-normalized,
+        // silently dropping the ratings filter from the search and
+        // crashing the results page's own filter-panel JS.
         foreach ([
             'tags' => 'tags',
             'categories' => 'categories',
             'authors' => 'authors',
             'filetypes' => 'filetypes',
             'ratios' => 'ratios',
+            'ratings' => 'ratings',
             'added_by' => 'addedBy',
         ] as $wsKey => $restKey) {
             if (! array_key_exists($wsKey, $params)) {

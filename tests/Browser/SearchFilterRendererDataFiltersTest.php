@@ -805,6 +805,53 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
 });
 
 /**
+ * ImageFilteredSearchCreateController used to accept `ratings` in any
+ * shape at all -- a bare scalar (the real client's own submission shape,
+ * per mcs.js's ".ratings-option input:checked" checkbox collection into
+ * an array -- but nothing enforced it server-side) silently reached
+ * search.fields.ratings un-normalized, which SearchService::
+ * applyFilters() then treated as an empty filter (is_array() ?
+ * array_filter(...) : []) -- the ratings filter silently did nothing --
+ * and which the results page's own filter-panel JS (mcs.js's
+ * global_params.fields.ratings.forEach(...)) crashed on outright, since
+ * it assumes array shape unconditionally. Same array-of-strings
+ * validation `ratios` already has, now mirrored for `ratings`.
+ */
+it('rejects a non-array ratings value with 422', function (): void {
+    $snapshot = H::snapshotConfig(['rate']);
+    H::setConfigValue('rate', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        $result = H::rawPostJson($page, '/api/v1/images/searches', [
+            'ratings' => '3',
+        ]);
+
+        expect($result['status'])->toBe(422);
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('rejects a ratings array containing a non-string element with 422', function (): void {
+    $snapshot = H::snapshotConfig(['rate']);
+    H::setConfigValue('rate', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        $result = H::rawPostJson($page, '/api/v1/images/searches', [
+            'ratings' => [3],
+        ]);
+
+        expect($result['status'])->toBe(422);
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
  * Closes the `filetypes`-is-the-only-active-filter branch (line ~585):
  * with no OTHER active filter, getClauseForFilter('filetypes', ...)
  * returns the plain permissions-only clause (not 'image_id IN (...)'), so

@@ -191,6 +191,26 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
         }
 
         if ($this->currentConfig->rateEnabled && isset($body['ratings'])) {
+            // Same array-of-strings contract SearchController.php's own
+            // legacy `ratings` field defaults to ([] when the filter is
+            // active) and SearchService::applyFilters() itself requires
+            // downstream (is_array($ratingsField) ? array_filter(...,
+            // is_string(...)) : []) -- an unvalidated scalar here silently
+            // dropped the ratings filter from the search entirely (no
+            // error, just wrong results) and crashed the search-results
+            // page's own filter-panel JS, which unconditionally calls
+            // .forEach()/.length/.includes() on this same field. Same
+            // validation shape as `ratios` just above.
+            if (! is_array($body['ratings'])) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ratings.');
+            }
+
+            foreach ($body['ratings'] as $rating) {
+                if (! is_string($rating)) {
+                    return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ratings.');
+                }
+            }
+
             $search['fields']['ratings'] = $body['ratings'];
         }
 
@@ -208,7 +228,18 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
         }
 
         $forkedFrom = $searchInfo?->id;
+        // saveSearch()'s own makeIndexUrl() call builds an HTML-embeddable
+        // URL (relative to whatever page it's rendered on) by default --
+        // correct for its other real caller, Controller\SearchController's
+        // own redirect after a search-form submission, but wrong here: a
+        // REST API JSON response has no "current page" to resolve a
+        // relative URL against. Same setMakeFullUrl()/unsetMakeFullUrl()
+        // pairing AuthService::generatePasswordLink()/MailService's own
+        // email-body links already use for the same "no current page"
+        // reason.
+        $this->urlService->setMakeFullUrl();
         [$searchUuid, $searchUrl] = $this->searchService->saveSearch($search, $this->urlService, $forkedFrom);
+        $this->urlService->unsetMakeFullUrl();
 
         return ResponseFactory::json([
             'searchId' => $searchUuid,

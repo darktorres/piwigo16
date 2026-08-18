@@ -28,6 +28,13 @@ final class JsonBody
             return [];
         }
 
+        $mediaType = strtolower(trim(explode(';', $request->getHeaderLine('Content-Type'), 2)[0]));
+        if ($mediaType !== 'application/json') {
+            throw new ResponseReadyException(
+                ResponseFactory::problem('Unsupported Media Type', 415, 'Content-Type must be application/json.')
+            );
+        }
+
         try {
             $decoded = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException) {

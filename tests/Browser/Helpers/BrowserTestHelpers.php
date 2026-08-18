@@ -1460,6 +1460,49 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same technique as `rawPostJson()`, but for asserting the
+     * `Content-Type` contract itself (Http\JsonBody::decode()'s own
+     * 415) -- `rawPostJson()` always sends `application/json`, so it
+     * can't exercise a wrong/missing one. `$contentType === null` omits
+     * the header entirely instead of sending an empty string.
+     *
+     * @return array{status: int, body: string}
+     */
+    public static function rawPostRawBody(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path, string $rawBody, ?string $contentType): array
+    {
+        $url = self::baseUrl() . '/' . ltrim($path, '/');
+        $headersJs = $contentType === null ? '{}' : '{\'Content-Type\': ' . json_encode($contentType, \JSON_THROW_ON_ERROR) . '}';
+        $bodyJs = json_encode($rawBody, \JSON_THROW_ON_ERROR);
+        $js = <<<JS
+        fetch('{$url}', {
+            method: 'POST',
+            redirect: 'manual',
+            headers: {$headersJs},
+            body: {$bodyJs}
+        }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
+        JS;
+
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new ExpectationFailedException(
+                "rawPostRawBody to {$path} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded) || ! is_int($decoded['status'] ?? null) || ! is_string($decoded['body'] ?? null)) {
+            throw new ExpectationFailedException(
+                "rawPostRawBody to {$path} did not return the expected {status, body} shape: " . var_export($result, true)
+            );
+        }
+
+        return [
+            'status' => $decoded['status'],
+            'body' => $decoded['body'],
+        ];
+    }
+
+    /**
      * Same in-browser fetch() technique as adminPost(), but for a plain
      * authenticated GET whose real HTTP status code needs asserting (e.g. a
      * CSRF-gated GET action) -- navigateOk()/gotoOk() only assert success,

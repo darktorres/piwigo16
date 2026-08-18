@@ -834,6 +834,25 @@ it('rejects a ratings array containing a non-string element with 422', function 
 });
 
 /**
+ * `null` here means the JS `fetch()` call passes no `Content-Type`
+ * header at all -- but per the Fetch spec, a plain string body with no
+ * explicit header still gets browsers' own default
+ * (`text/plain;charset=UTF-8`), so this and the "wrong type" case both
+ * exercise the same `JsonBody::decode()` branch (any media type other
+ * than `application/json`) rather than a separate "header absent" one;
+ * there isn't a distinct one to test.
+ */
+it('rejects a non-empty body with the wrong (or missing) Content-Type with 415', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $result = H::rawPostRawBody($page, '/api/v1/images/searches', '{"tags":[1]}', 'text/plain');
+    expect($result['status'])->toBe(415);
+
+    $result = H::rawPostRawBody($page, '/api/v1/images/searches', '{"tags":[1]}', null);
+    expect($result['status'])->toBe(415);
+});
+
+/**
  * Closes the `filetypes`-is-the-only-active-filter branch (line ~585):
  * with no OTHER active filter, getClauseForFilter('filetypes', ...)
  * returns the plain permissions-only clause (not 'image_id IN (...)'), so

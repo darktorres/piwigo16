@@ -1098,6 +1098,58 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
+     * {@see getRecentPhotosCondition()}'s DQL equivalent -- $dqlField is an
+     * entity-aliased property path (`i.dateAvailable`) rather than a bare
+     * column name. `LEAST(a, b)` has no DQL equivalent registered, so
+     * `$dqlField >= LEAST(a, b)` is rewritten as the mathematically
+     * identical `$dqlField >= a OR $dqlField >= b` (x is at least the
+     * smaller of a/b iff x is at least one of them individually) --
+     * explicitly parenthesized, since SqlCondition::fromRawSql() treats
+     * this whole string as one opaque Andx leaf: nothing else auto-wraps
+     * an OR inside it the way combine()'s own compound-fragment nesting
+     * does for real SqlCondition objects.
+     */
+    public function getRecentPhotosDqlCondition(string $dqlField): SqlCondition
+    {
+        $user = $this->currentUser->get();
+        if (! isset($user->rawAttributes['last_photo_date'])) {
+            return SqlCondition::fromRawSql('0=1');
+        }
+
+        $recent_period = $user->rawAttributes['recent_period'] ?? null;
+        $recent_period = is_numeric($recent_period) ? (int) $recent_period : 0;
+
+        $last_photo_date = $user->rawAttributes['last_photo_date'];
+        $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
+
+        // Same Env::testModeIsActive() substitution as
+        // SqlDialect::getRecentPeriodExpression()'s own default-$date
+        // branch: a frozen PIWIGO_TEST_NOW anchor in test mode (fixture
+        // photos are dated relative to it, not the real wall clock),
+        // DQL's own CURRENT_DATE() function otherwise.
+        $parameters = [
+            'recentLastPhotoDate' => $last_photo_date,
+        ];
+        $types = [
+            'recentLastPhotoDate' => ParameterType::STRING,
+        ];
+        if (Env::testModeIsActive()) {
+            $currentDate = ':recentCurrentDate';
+            $parameters['recentCurrentDate'] = Env::now()->format('Y-m-d');
+            $types['recentCurrentDate'] = ParameterType::STRING;
+        } else {
+            $currentDate = 'CURRENT_DATE()';
+        }
+
+        return SqlCondition::fromRawSql(
+            '(' . $dqlField . ' >= ' . SqlDialect::getRecentPeriodDqlExpression($recent_period, $currentDate)
+              . ' OR ' . $dqlField . ' >= ' . SqlDialect::getRecentPeriodDqlExpression(1, ':recentLastPhotoDate') . ')',
+            $parameters,
+            $types,
+        );
+    }
+
+    /**
      * Register in the user session, the "context" of the last 10 viewed
      * images. The one real caller (PictureController) gets $sectionUrl/
      * $imageId from SectionContextRegistry::current() right after

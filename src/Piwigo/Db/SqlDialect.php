@@ -213,6 +213,27 @@ final class SqlDialect
         return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';
     }
 
+    /**
+     * {@see getRecentPeriodExpression()}'s DQL equivalent -- unlike that
+     * one, needs no per-platform branch of its own: DQL's registered
+     * `DATE_SUB()` ({@see \Piwigo\Db\DqlFunction\DateSubFunction}) already
+     * compiles to the identical per-platform SQL
+     * (`(date)::timestamp - make_interval(days => n)` on Postgres,
+     * `SUBDATE()`'s own native equivalent on MySQL/MariaDB) that method's
+     * two raw-SQL branches hand-roll.
+     *
+     * $date's contract matches getRecentPeriodExpression()'s own: a bound
+     * parameter placeholder the caller has already declared (e.g.
+     * `:lastDate`), or the DQL `CURRENT_DATE()` function call -- callers
+     * choose between the two the same way getRecentPeriodExpression()'s
+     * own `Env::testModeIsActive()` check does, since this method has no
+     * default of its own to make that call implicitly.
+     */
+    public static function getRecentPeriodDqlExpression(int $period, string $date): string
+    {
+        return "DATE_SUB({$date}, {$period}, 'day')";
+    }
+
     public static function getHour(string $date): string
     {
         if (self::isPostgres()) {

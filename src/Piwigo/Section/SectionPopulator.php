@@ -229,14 +229,14 @@ final readonly class SectionPopulator
             $permissionCriteria->visibleImagesCondition('id'),
             $permissionCriteria->maxLevelCondition('level'),
         );
-
-        // most_visited/best_rated's own findTopByHitsImageIds()/
-        // findTopRatedImageIds() run as real DQL (their own $order_by is a
-        // hardcoded literal below, not CurrentConfig::orderBy()'s genuinely
-        // open-ended admin-typed text like every other section here) --
-        // this needs the same condition expressed with DQL property paths
-        // instead of raw column names. Computed unconditionally alongside
-        // $forbidden, same convention this file's own $forbidden already
+        // Same condition, DQL-aliased -- shared by most_visited/best_rated's
+        // own real-DQL findTopByHitsImageIds()/findTopRatedImageIds() below
+        // and SectionRepository's own DQL-first path for
+        // findSectionImageIds()/findRecentImageIds()/findImageIdsAmongList()
+        // (the raw fallback binds against bare columns -- category_id/id/
+        // level -- and DQL needs entity-aliased property paths --
+        // ic.category/i.id/i.level -- instead). Computed unconditionally
+        // alongside $forbiddenCondition, same convention that one already
         // follows.
         $forbiddenConditionDql = SqlCondition::combine(
             'AND',
@@ -322,6 +322,16 @@ final readonly class SectionPopulator
 
                 $where_params = [];
                 $where_types = [];
+                // DQL-aliased counterpart of $where_sql/$where_params --
+                // null $dqlImageCategoryAlias means the scope spans more
+                // than one category (or all of them), so
+                // image_category.rank has no single value and
+                // resolveDqlOrderBy() must not be offered an `ic` alias to
+                // resolve Rank against, same reasoning as
+                // CategoryRepository::findImageIdsForCategories()'s own
+                // multi-category fallback.
+                $dqlWhere = SqlCondition::fromRawSql('');
+                $dqlImageCategoryAlias = null;
                 // flat categories mode
                 if (isset($page['flat'])) {
                     // get all allowed sub-categories
@@ -339,6 +349,11 @@ final readonly class SectionPopulator
                         $where_sql = 'category_id IN (:subcatIds)';
                         $where_params['subcatIds'] = array_map(intval(...), $subcat_ids);
                         $where_types['subcatIds'] = ArrayParameterType::INTEGER;
+                        $dqlWhere = SqlCondition::fromRawSql('ic.category IN (:subcatIds)', [
+                            'subcatIds' => array_map(intval(...), $subcat_ids),
+                        ], [
+                            'subcatIds' => ArrayParameterType::INTEGER,
+                        ]);
                         // remove categories from forbidden because just checked above
                         //
                         // visible_images's own old fallthrough into
@@ -350,6 +365,11 @@ final readonly class SectionPopulator
                             'AND',
                             $flatCriteria->visibleImagesCondition('id'),
                             $flatCriteria->maxLevelCondition('level'),
+                        );
+                        $forbiddenConditionDql = SqlCondition::combine(
+                            'AND',
+                            $flatCriteria->visibleImagesCondition('i.id'),
+                            $flatCriteria->maxLevelCondition('i.level'),
                         );
                     } else {
                         $user = $this->currentUser->get();
@@ -372,6 +392,10 @@ final readonly class SectionPopulator
                     assert($page_category !== null);
                     $where_sql = 'category_id = :categoryId';
                     $where_params['categoryId'] = $page_category['id'];
+                    $dqlWhere = SqlCondition::fromRawSql('ic.category = :categoryId', [
+                        'categoryId' => $page_category['id'],
+                    ]);
+                    $dqlImageCategoryAlias = 'ic';
                 }
 
                 // $cache_item is only ever assigned in the flat-mode/no-
@@ -394,7 +418,14 @@ final readonly class SectionPopulator
                     // here, same fix as CalendarRepository::findImageIds()/
                     // SearchService::getQuickSearchResultsNoCache() -- `id`
                     // and `image_id` are equal per the JOIN condition.
-                    $page['items'] = $this->repo->findSectionImageIds(SqlCondition::fromRawSql($where_sql, $where_params, $where_types), $forbiddenCondition, $order_by);
+                    $page['items'] = $this->repo->findSectionImageIds(
+                        SqlCondition::fromRawSql($where_sql, $where_params, $where_types),
+                        $forbiddenCondition,
+                        $order_by,
+                        $dqlWhere,
+                        $forbiddenConditionDql,
+                        $dqlImageCategoryAlias,
+                    );
 
                     if ($cache_item instanceof CacheItemInterface) {
                         $cache_item->set($page['items']);
@@ -536,6 +567,7 @@ final readonly class SectionPopulator
                 // own column, so `id` is a full functional-dependency key
                 // for it.
                 $recentCondition = $this->userService->getRecentPhotosCondition('date_available');
+                $dqlRecentCondition = $this->userService->getRecentPhotosDqlCondition('i.dateAvailable');
                 $page = array_merge(
                     $page,
                     [
@@ -543,7 +575,13 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $this->lang->t('Recent photos') . '</a>',
-                        'items' => $this->repo->findRecentImageIds($recentCondition, $forbiddenCondition, $order_by),
+                        'items' => $this->repo->findRecentImageIds(
+                            $recentCondition,
+                            $forbiddenCondition,
+                            $order_by,
+                            $dqlRecentCondition,
+                            $forbiddenConditionDql,
+                        ),
                     ]
                 );
             } elseif ($section === Section::RecentCats) {
@@ -602,7 +640,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $this->lang->t('Random photos') . '</a>',
-                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbiddenCondition, $order_by),
+                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbiddenCondition, $order_by, $forbiddenConditionDql),
                     ]
                 );
             }

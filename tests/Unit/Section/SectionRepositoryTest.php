@@ -11,8 +11,9 @@ use Piwigo\Section\SectionRepository;
  * Piwigo\Section\SectionRepository -- has its own dedicated
  * tests/Integration/SectionRepositoryTest.php; this ports its 6 tests
  * down to the Unit suite via the real-DB-no-HTTP ImageRepositoryTest.php
- * pattern, plus a test of its own for findSectionImageIds() (the
- * raw-SQL, queryColumn()-backed path), which had no dedicated test in
+ * pattern, plus tests of its own for findSectionImageIds()/
+ * findRecentImageIds()/findImageIdsAmongList()'s DQL-first path (with a
+ * raw-DBAL-fallback counterpart for each), which had no dedicated test in
  * either suite.
  *
  * Same fixture shape as that Integration test / SearchRepositoryTest:
@@ -64,7 +65,7 @@ test('findTopByHitsImageIds() returns empty when no image has a hit', function (
         ->toBe([]);
 });
 
-test('findSectionImageIds() returns image ids for a category, as real numeric strings via the raw-SQL/queryColumn() path', function (): void {
+test('findSectionImageIds() runs the DQL path for a resolvable order and a single category (rank-eligible)', function (): void {
     $ids = sectionTestRepo()
         ->findSectionImageIds(
             scope: SqlCondition::fromRawSql('category_id = :catId', [
@@ -72,7 +73,36 @@ test('findSectionImageIds() returns image ids for a category, as real numeric st
             ]),
             forbidden: SqlCondition::fromRawSql(''),
             orderBySql: 'ORDER BY id ASC',
+            dqlScope: SqlCondition::fromRawSql('ic.category = :catId', [
+                'catId' => 1,
+            ]),
+            dqlForbidden: SqlCondition::fromRawSql(''),
+            dqlImageCategoryAlias: 'ic',
         );
+
+    expect($ids)
+        ->toBe(['1', '2', '3']);
+});
+
+test('findSectionImageIds() falls back to the raw-SQL/queryColumn() path for an unparseable order fragment', function (): void {
+    // `comment` is a real images column but not one of the bounded
+    // PhotoSortField tokens, so resolveDqlOrderBy() returns null -- same
+    // trick already established for UserRepositoryTest's own
+    // findVisibleFavoriteImageIds() sibling test.
+    $ids = sectionTestRepo()
+        ->findSectionImageIds(
+            scope: SqlCondition::fromRawSql('category_id = :catId', [
+                'catId' => 1,
+            ]),
+            forbidden: SqlCondition::fromRawSql(''),
+            orderBySql: 'ORDER BY comment ASC',
+            dqlScope: SqlCondition::fromRawSql('ic.category = :catId', [
+                'catId' => 1,
+            ]),
+            dqlForbidden: SqlCondition::fromRawSql(''),
+            dqlImageCategoryAlias: 'ic',
+        );
+    sort($ids);
 
     expect($ids)
         ->toBe(['1', '2', '3']);
@@ -86,7 +116,62 @@ test('findSectionImageIds() returns empty for a category with no images', functi
             ]),
             forbidden: SqlCondition::fromRawSql(''),
             orderBySql: 'ORDER BY id ASC',
+            dqlScope: SqlCondition::fromRawSql('ic.category = :catId', [
+                'catId' => 999999,
+            ]),
+            dqlForbidden: SqlCondition::fromRawSql(''),
+            dqlImageCategoryAlias: 'ic',
         );
+
+    expect($ids)
+        ->toBe([]);
+});
+
+test('findRecentImageIds() runs the DQL path and matches on a caller-composed condition', function (): void {
+    // No image-category alias -- recent_pics always spans every category,
+    // same reasoning as CalendarRepository::findImageIds()'s own
+    // permanent null alias.
+    $noRestriction = SqlCondition::fromRawSql('');
+    $ids = sectionTestRepo()
+        ->findRecentImageIds($noRestriction, $noRestriction, 'ORDER BY id ASC', $noRestriction, $noRestriction);
+
+    expect($ids)
+        ->toBe(['1', '2', '3', '4', '5']);
+});
+
+test('findRecentImageIds() falls back to the raw-SQL path for an unparseable order fragment', function (): void {
+    $noRestriction = SqlCondition::fromRawSql('');
+    $ids = sectionTestRepo()
+        ->findRecentImageIds($noRestriction, $noRestriction, 'ORDER BY comment ASC', $noRestriction, $noRestriction);
+    sort($ids);
+
+    expect($ids)
+        ->toBe(['1', '2', '3', '4', '5']);
+});
+
+test('findImageIdsAmongList() runs the DQL path, restricted to the given id list', function (): void {
+    $noRestriction = SqlCondition::fromRawSql('');
+    $ids = sectionTestRepo()
+        ->findImageIdsAmongList(['1', '3'], $noRestriction, 'ORDER BY id ASC', $noRestriction);
+
+    expect($ids)
+        ->toBe(['1', '3']);
+});
+
+test('findImageIdsAmongList() falls back to the raw-SQL path for an unparseable order fragment', function (): void {
+    $noRestriction = SqlCondition::fromRawSql('');
+    $ids = sectionTestRepo()
+        ->findImageIdsAmongList(['1', '3'], $noRestriction, 'ORDER BY comment ASC', $noRestriction);
+    sort($ids);
+
+    expect($ids)
+        ->toBe(['1', '3']);
+});
+
+test('findImageIdsAmongList() returns empty for an empty id list', function (): void {
+    $noRestriction = SqlCondition::fromRawSql('');
+    $ids = sectionTestRepo()
+        ->findImageIdsAmongList([], $noRestriction, 'ORDER BY id ASC', $noRestriction);
 
     expect($ids)
         ->toBe([]);

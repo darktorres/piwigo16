@@ -28,6 +28,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Image\ImageEntity;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
@@ -823,6 +824,77 @@ namespace Piwigo\Tests\Integration {
                 (string) $condition->expr
             );
             self::assertSame('2024-01-01', $condition->parameters['recentLastPhotoDate']);
+        }
+
+        public function testGetRecentPhotosDqlConditionReturnsAFalseConditionWhenLastPhotoDateIsNotSet(): void
+        {
+            self::assertEquals(SqlCondition::fromRawSql('0=1'), $this->service->getRecentPhotosDqlCondition('i.dateAvailable'));
+        }
+
+        public function testGetRecentPhotosDqlConditionBuildsAnOrExpressionWhenLastPhotoDateIsSet(): void
+        {
+            $user = $this->service->buildUser(UserId::from(1));
+            CurrentUserTestFactory::get()->set(User::fromUserArray($user));
+
+            try {
+                $condition = $this->service->getRecentPhotosDqlCondition('i.dateAvailable');
+            } finally {
+                CurrentUserTestFactory::get()->reset();
+            }
+
+            // The mathematically-equivalent OR rewrite of the raw path's
+            // LEAST(...) -- see getRecentPhotosDqlCondition()'s own
+            // docblock for why -- each side using DATE_SUB(), the real
+            // registered DQL function, not LEAST() (no DQL equivalent
+            // exists).
+            $expr = (string) $condition->expr;
+            self::assertStringStartsWith('(i.dateAvailable >= DATE_SUB(', $expr);
+            self::assertStringContainsString(' OR i.dateAvailable >= DATE_SUB(', $expr);
+            self::assertStringEndsWith(')', $expr);
+            self::assertArrayHasKey('recentLastPhotoDate', $condition->parameters);
+        }
+
+        public function testGetRecentPhotosDqlConditionAgreesWithTheRawConditionOnRealData(): void
+        {
+            // Real end-to-end proof the DQL rewrite selects the exact same
+            // rows as the raw LEAST()-based fragment it replaces: both
+            // conditions applied to the same real query, same bind values,
+            // just DQL vs DBAL query builders.
+            $user = $this->service->buildUser(UserId::from(1));
+            CurrentUserTestFactory::get()->set(User::fromUserArray($user));
+
+            try {
+                $rawCondition = $this->service->getRecentPhotosCondition('date_available');
+                $dqlCondition = $this->service->getRecentPhotosDqlCondition('i.dateAvailable');
+
+                $rawQb = $this->conn->createQueryBuilder()
+                    ->select('id')
+                    ->from('images', 'i')
+                    ->orderBy('id');
+                $rawCondition->applyTo($rawQb);
+                $rawIds = $rawQb->executeQuery()
+                    ->fetchFirstColumn();
+
+                $dqlQb = EntityManagerFactory::build($this->conn)
+                    ->createQueryBuilder()
+                    ->select('i.id')
+                    ->from(ImageEntity::class, 'i')
+                    ->orderBy('i.id');
+                $dqlCondition->applyTo($dqlQb);
+                $dqlIds = array_map(
+                    static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
+                    $dqlQb->getQuery()
+                        ->getSingleColumnResult()
+                );
+            } finally {
+                CurrentUserTestFactory::get()->reset();
+            }
+
+            self::assertNotSame([], $rawIds, 'fixture must have at least one image within the recent window for this test to be meaningful');
+            self::assertSame(
+                array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $rawIds),
+                $dqlIds
+            );
         }
 
         public function testSyncUsersCreatesMissingUserInfosForABaseUser(): void

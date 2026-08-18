@@ -838,70 +838,18 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Translates a legacy WS method call onto its real `/api/v1` replacement
-     * and reshapes the JSON response back into the `{stat, result}`/
-     * `{stat, err, message}` WS envelope this suite's ~50 call sites are
-     * already written against -- rewriting every one of them (most only
-     * need an `id`/`username`/... field back out) would be pure churn
-     * against a mechanically equivalent read. Only the WS methods this
-     * suite's own fixture-setup code actually calls are covered -- add a
-     * new match() arm if a future test needs one that
-     * isn't listed here.
-     *
-     * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    public static function wsCall(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $method, array $params = []): array
+    public static function sessionStatus(Webpage|PendingAwaitablePage|AwaitableWebpage $page): array
     {
-        return match ($method) {
-            'pwg.session.getStatus' => self::wsGetStatus($page),
-            'pwg.categories.add' => self::wsCategoriesAdd($page, $params),
-            'pwg.categories.delete' => self::wsCategoriesDelete($page, $params),
-            'pwg.categories.getAdminList' => self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/categories')),
-            'pwg.categories.getImages' => self::wsCategoriesGetImages($page, $params),
-            'pwg.groups.add' => self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/groups', [
-                'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
-            ], self::apiCsrfToken($page))),
-            'pwg.groups.addUser' => self::wsGroupsAddUser($page, $params),
-            'pwg.images.delete' => self::wsImagesDelete($page, $params),
-            'pwg.images.filteredSearch.create' => self::wsImagesFilteredSearchCreate($page, $params),
-            'pwg.images.getInfo' => self::wsImagesGetInfo($page, $params),
-            'pwg.images.search' => self::wsImagesSearch($page, $params),
-            'pwg.images.setInfo' => self::wsImagesSetInfo($page, $params),
-            'pwg.tags.add' => self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/tags', [
-                'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
-            ], self::apiCsrfToken($page))),
-            'pwg.tags.delete' => self::wsTagsDelete($page, $params),
-            'pwg.tags.getImages' => self::wsTagsGetImages($page, $params),
-            'pwg.tags.getList' => self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/tags')),
-            'pwg.users.add' => self::wsUsersAdd($page, $params),
-            'pwg.users.delete' => self::wsUsersDelete($page, $params),
-            'pwg.users.getList' => self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/users')),
-            'pwg.users.preferences.set' => self::wsPreferencesSet($page, $params),
-            default => throw new ExpectationFailedException(
-                "wsCall(): no /api/v1 translation registered for WS method '{$method}' -- add one in BrowserTestHelpers::wsCall()'s own match() arms."
-            ),
-        };
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function wsGetStatus(Webpage|PendingAwaitablePage|AwaitableWebpage $page): array
-    {
-        $wrapped = self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/session'));
-        if ($wrapped['stat'] === 'ok' && is_array($wrapped['result']) && array_key_exists('pwgToken', $wrapped['result'])) {
-            $wrapped['result']['pwg_token'] = $wrapped['result']['pwgToken'];
-        }
-
-        return $wrapped;
+        return self::apiJson($page, 'GET', '/api/v1/session');
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsCategoriesAdd(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function createCategory(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $body = [
             'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
@@ -913,93 +861,112 @@ final class BrowserTestHelpers
             $body['status'] = $params['status'];
         }
 
-        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/categories', $body, self::apiCsrfToken($page)));
+        return self::apiJson($page, 'POST', '/api/v1/categories', $body, true);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsCategoriesDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function deleteCategory(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $categoryId = is_numeric($params['category_id'] ?? null) ? (int) $params['category_id'] : 0;
         $mode = is_string($params['photo_deletion_mode'] ?? null) ? $params['photo_deletion_mode'] : 'no_delete';
 
-        return self::wrapApiResponse(self::apiFetch($page, 'DELETE', '/api/v1/categories/' . $categoryId, [
+        return self::apiJson($page, 'DELETE', '/api/v1/categories/' . $categoryId, [
             'photoDeletionMode' => $mode,
-        ], self::apiCsrfToken($page)));
+        ], true);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public static function listCategoriesAdmin(Webpage|PendingAwaitablePage|AwaitableWebpage $page): array
+    {
+        return self::apiJson($page, 'GET', '/api/v1/categories');
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsCategoriesGetImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function categoryImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $catId = is_numeric($params['cat_id'] ?? null) ? (int) $params['cat_id'] : 0;
         $query = http_build_query([
             'catIds' => [$catId],
         ]);
 
-        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/categories/images?' . $query));
+        return self::apiJson($page, 'GET', '/api/v1/categories/images?' . $query);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsGroupsAddUser(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function createGroup(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        return self::apiJson($page, 'POST', '/api/v1/groups', [
+            'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
+        ], true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<array-key, mixed>
+     */
+    public static function addGroupUser(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $groupId = is_numeric($params['group_id'] ?? null) ? (int) $params['group_id'] : 0;
         $userId = is_numeric($params['user_id'] ?? null) ? (int) $params['user_id'] : 0;
 
-        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/groups/' . $groupId . '/actions/add-user', [
+        return self::apiJson($page, 'POST', '/api/v1/groups/' . $groupId . '/actions/add-user', [
             'userIds' => [$userId],
-        ], self::apiCsrfToken($page)));
+        ], true);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsImagesDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function deleteImage(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $imageId = is_numeric($params['image_id'] ?? null) ? (int) $params['image_id'] : 0;
 
-        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/images/actions/delete', [
+        return self::apiJson($page, 'POST', '/api/v1/images/actions/delete', [
             'imageIds' => [$imageId],
-        ], self::apiCsrfToken($page)));
+        ], true);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsImagesGetInfo(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function imageInfo(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $imageId = is_numeric($params['image_id'] ?? null) ? (int) $params['image_id'] : 0;
 
-        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/images/' . $imageId));
+        return self::apiJson($page, 'GET', '/api/v1/images/' . $imageId);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsImagesSearch(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function searchImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $query = http_build_query([
             'query' => is_string($params['query'] ?? null) ? $params['query'] : '',
         ]);
 
-        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/images/search?' . $query));
+        return self::apiJson($page, 'GET', '/api/v1/images/search?' . $query);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsImagesSetInfo(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function updateImageInfo(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $imageId = is_numeric($params['image_id'] ?? null) ? (int) $params['image_id'] : 0;
 
@@ -1013,29 +980,29 @@ final class BrowserTestHelpers
             'multiple_value_mode' => 'multipleValueMode',
         ];
         $body = [];
-        foreach ($rename as $wsKey => $restKey) {
-            if (array_key_exists($wsKey, $params)) {
-                $body[$restKey] = $params[$wsKey];
+        foreach ($rename as $legacyKey => $restKey) {
+            if (array_key_exists($legacyKey, $params)) {
+                $body[$restKey] = $params[$legacyKey];
             }
         }
 
-        return self::wrapApiResponse(self::apiFetch($page, 'PATCH', '/api/v1/images/' . $imageId, $body, self::apiCsrfToken($page)));
+        return self::apiJson($page, 'PATCH', '/api/v1/images/' . $imageId, $body, true);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsImagesFilteredSearchCreate(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function createFilteredSearch(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $body = [];
 
         foreach ([
             'allwords' => 'allwords',
             'date_created_preset' => 'dateCreatedPreset',
-        ] as $wsKey => $restKey) {
-            if (array_key_exists($wsKey, $params)) {
-                $body[$restKey] = $params[$wsKey];
+        ] as $legacyKey => $restKey) {
+            if (array_key_exists($legacyKey, $params)) {
+                $body[$restKey] = $params[$legacyKey];
             }
         }
 
@@ -1059,11 +1026,11 @@ final class BrowserTestHelpers
             'ratios' => 'ratios',
             'ratings' => 'ratings',
             'added_by' => 'addedBy',
-        ] as $wsKey => $restKey) {
-            if (! array_key_exists($wsKey, $params)) {
+        ] as $legacyKey => $restKey) {
+            if (! array_key_exists($legacyKey, $params)) {
                 continue;
             }
-            $value = $params[$wsKey];
+            $value = $params[$legacyKey];
             $body[$restKey] = is_array($value) ? array_values($value) : [$value];
         }
 
@@ -1074,50 +1041,64 @@ final class BrowserTestHelpers
             'height_max' => 'heightMax',
             'width_min' => 'widthMin',
             'width_max' => 'widthMax',
-        ] as $wsKey => $restKey) {
-            if (array_key_exists($wsKey, $params) && is_numeric($params[$wsKey])) {
-                $body[$restKey] = (int) $params[$wsKey];
+        ] as $legacyKey => $restKey) {
+            if (array_key_exists($legacyKey, $params) && is_numeric($params[$legacyKey])) {
+                $body[$restKey] = (int) $params[$legacyKey];
             }
         }
 
-        $wrapped = self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/images/searches', $body));
-        if ($wrapped['stat'] === 'ok' && is_array($wrapped['result']) && array_key_exists('searchUrl', $wrapped['result'])) {
-            $wrapped['result']['search_url'] = $wrapped['result']['searchUrl'];
-        }
-
-        return $wrapped;
+        return self::apiJson($page, 'POST', '/api/v1/images/searches', $body);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsTagsDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function createTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    {
+        return self::apiJson($page, 'POST', '/api/v1/tags', [
+            'name' => is_string($params['name'] ?? null) ? $params['name'] : '',
+        ], true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<array-key, mixed>
+     */
+    public static function deleteTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $tagId = is_numeric($params['tag_id'] ?? null) ? (int) $params['tag_id'] : 0;
 
-        return self::wrapApiResponse(self::apiFetch($page, 'DELETE', '/api/v1/tags/' . $tagId, [], self::apiCsrfToken($page)));
+        return self::apiJson($page, 'DELETE', '/api/v1/tags/' . $tagId, [], true);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsTagsGetImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function tagImages(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $tagId = is_numeric($params['tag_id'] ?? null) ? (int) $params['tag_id'] : 0;
         $query = http_build_query([
             'tagIds' => [$tagId],
         ]);
 
-        return self::wrapApiResponse(self::apiFetch($page, 'GET', '/api/v1/tags/images?' . $query));
+        return self::apiJson($page, 'GET', '/api/v1/tags/images?' . $query);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public static function listTags(Webpage|PendingAwaitablePage|AwaitableWebpage $page): array
+    {
+        return self::apiJson($page, 'GET', '/api/v1/tags');
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsUsersAdd(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function createUser(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $body = [
             'username' => is_string($params['username'] ?? null) ? $params['username'] : '',
@@ -1126,67 +1107,70 @@ final class BrowserTestHelpers
             'password' => 'password',
             'password_confirm' => 'passwordConfirm',
             'email' => 'email',
-        ] as $wsKey => $restKey) {
-            if (is_string($params[$wsKey] ?? null)) {
-                $body[$restKey] = $params[$wsKey];
+        ] as $legacyKey => $restKey) {
+            if (is_string($params[$legacyKey] ?? null)) {
+                $body[$restKey] = $params[$legacyKey];
             }
         }
 
-        return self::wrapApiResponse(self::apiFetch($page, 'POST', '/api/v1/users', $body, self::apiCsrfToken($page)));
+        return self::apiJson($page, 'POST', '/api/v1/users', $body, true);
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsUsersDelete(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function deleteUser(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $userId = is_numeric($params['user_id'] ?? null) ? (int) $params['user_id'] : 0;
 
-        return self::wrapApiResponse(self::apiFetch($page, 'DELETE', '/api/v1/users/' . $userId, [], self::apiCsrfToken($page)));
+        return self::apiJson($page, 'DELETE', '/api/v1/users/' . $userId, [], true);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public static function listUsers(Webpage|PendingAwaitablePage|AwaitableWebpage $page): array
+    {
+        return self::apiJson($page, 'GET', '/api/v1/users');
     }
 
     /**
      * @param  array<string, mixed>  $params
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    private static function wsPreferencesSet(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
+    public static function setSessionPreference(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $params): array
     {
         $param = is_string($params['param'] ?? null) ? $params['param'] : '';
         $value = is_string($params['value'] ?? null) ? $params['value'] : '';
 
-        return self::wrapApiResponse(self::apiFetch($page, 'PUT', '/api/v1/session/preferences/' . rawurlencode($param), [
+        return self::apiJson($page, 'PUT', '/api/v1/session/preferences/' . rawurlencode($param), [
             'value' => $value,
-        ]));
+        ]);
     }
 
     /**
-     * Reshapes a raw `/api/v1` `{status, body}` pair into the
-     * `{stat, result}`/`{stat, err, message}` WS envelope wsCall()'s own
-     * callers still expect.
+     * Calls `apiFetch()` and decodes its JSON body, throwing if the
+     * response wasn't a 2xx -- callers get a real decoded array back or an
+     * immediate failure, never a `{stat, err, message}`-style envelope to
+     * check by hand.
      *
-     * @param  array{status: int, body: string}  $response
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $body
+     * @return array<array-key, mixed>
      */
-    private static function wrapApiResponse(array $response): array
+    private static function apiJson(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $httpMethod, string $path, array $body = [], bool $needsCsrf = false): array
     {
-        $decoded = json_decode($response['body'], true);
-        $status = $response['status'];
+        $response = self::apiFetch($page, $httpMethod, $path, $body, $needsCsrf ? self::apiCsrfToken($page) : null);
+        if ($response['status'] < 200 || $response['status'] >= 300) {
+            $decoded = json_decode($response['body'], true);
+            $detail = is_array($decoded) && is_string($decoded['detail'] ?? null) ? $decoded['detail'] : $response['body'];
 
-        if ($status >= 200 && $status < 300) {
-            return [
-                'stat' => 'ok',
-                'result' => is_array($decoded) ? $decoded : [],
-            ];
+            throw new ExpectationFailedException("{$httpMethod} {$path} failed with status {$response['status']}: {$detail}");
         }
 
-        $detail = is_array($decoded) && is_string($decoded['detail'] ?? null) ? $decoded['detail'] : $response['body'];
+        $decoded = json_decode($response['body'], true);
 
-        return [
-            'stat' => 'fail',
-            'err' => $status,
-            'message' => $detail,
-        ];
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -1525,14 +1509,9 @@ final class BrowserTestHelpers
      */
     public static function pwgToken(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string
     {
-        $status = self::wsCall($page, 'pwg.session.getStatus');
+        $status = self::sessionStatus($page);
 
-        $result = $status['result'] ?? null;
-        if (! is_array($result)) {
-            return '';
-        }
-
-        $token = $result['pwg_token'] ?? '';
+        $token = $status['pwgToken'] ?? '';
 
         return is_string($token) ? $token : '';
     }

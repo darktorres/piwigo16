@@ -22,12 +22,20 @@ servers:
 security:
   - sessionCookie: []
 tags:
+  - name: Comments
+    description: Admin moderation of user-submitted image comments.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
       gallery page view, anonymous visitors included) and the admin
       history-log search page's own filtered query.
 paths:
+  /comments:
+    $ref: 'paths/comments.yaml#/~1comments'
+  /comments/actions/delete:
+    $ref: 'paths/comments.yaml#/~1comments~1actions~1delete'
+  /comments/actions/validate:
+    $ref: 'paths/comments.yaml#/~1comments~1actions~1validate'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:
@@ -88,6 +96,21 @@ components:
       description: >-
         Signed in, but lacking the required admin privilege, or (on a
         mutating request) a missing/invalid `X-CSRF-Token` header.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: No resource matches the given id(s).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    InternalServerError:
+      description: >-
+        A deliberate, application-level failure with a defined
+        problem+json shape -- distinct from the generic middleware
+        catch-all, which returns plain text instead.
       content:
         application/problem+json:
           schema:

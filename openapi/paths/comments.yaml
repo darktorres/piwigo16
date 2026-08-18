@@ -1,0 +1,257 @@
+/comments:
+  get:
+    operationId: commentList
+    tags:
+      - Comments
+    summary: List/moderate comments
+    description: >-
+      A composite, multi-query response: summary counts, one page of
+      comments, author-count filters, and computed paging.
+    parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [all, pending, validated]
+          default: all
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          enum: [5, 10, 25, 50]
+          default: 10
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: authorId
+        in: query
+        schema:
+          type: integer
+      - name: imageId
+        in: query
+        schema:
+          type: integer
+      - name: minDate
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: maxDate
+        in: query
+        schema:
+          type: string
+          format: date
+    responses:
+      '200':
+        description: A page of comments plus summary/filter/paging metadata.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [summary, comments, filters, paging]
+              properties:
+                summary:
+                  type: object
+                  required: [allComments, validated, pending]
+                  properties:
+                    allComments:
+                      type: integer
+                    validated:
+                      type: integer
+                    pending:
+                      type: integer
+                comments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Comment'
+                filters:
+                  type: object
+                  required: [nbAuthors, startedAt, endedAt]
+                  properties:
+                    nbAuthors:
+                      type: array
+                      description: Author comment counts for the current filter set.
+                      items:
+                        type: object
+                        required: [author, author_id, nb_authors]
+                        properties:
+                          author:
+                            type: [string, 'null']
+                          author_id:
+                            type: [integer, 'null']
+                          nb_authors:
+                            type: integer
+                    startedAt:
+                      type: [string, 'null']
+                    endedAt:
+                      type: [string, 'null']
+                paging:
+                  type: object
+                  required: [page, perPage, totalPages]
+                  properties:
+                    page:
+                      type: integer
+                    perPage:
+                      type: integer
+                    totalPages:
+                      type: number
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Not an admin, or the gallery has comments disabled entirely
+          (`activateComments` config).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+      '500':
+        $ref: '../openapi.yaml#/components/responses/InternalServerError'
+/comments/actions/delete:
+  post:
+    operationId: commentDelete
+    tags:
+      - Comments
+    summary: Bulk-delete comments
+    description: >-
+      Bulk by design -- matches the admin moderation UI's own
+      batch-select workflow.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CommentIdsBody'
+    responses:
+      '200':
+        description: Comments deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deleted, ids]
+              properties:
+                deleted:
+                  type: boolean
+                ids:
+                  type: array
+                  items:
+                    type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: No comment id given.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/comments/actions/validate:
+  post:
+    operationId: commentValidate
+    tags:
+      - Comments
+    summary: Bulk-validate (approve) comments
+    description: Bulk by design.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CommentIdsBody'
+    responses:
+      '200':
+        description: Comments validated.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [validated, ids]
+              properties:
+                validated:
+                  type: boolean
+                ids:
+                  type: array
+                  items:
+                    type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: No comment id given.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+components:
+  schemas:
+    CommentIdsBody:
+      type: object
+      required: [commentIds]
+      properties:
+        commentIds:
+          type: array
+          items:
+            type: integer
+    Comment:
+      type: object
+      required:
+        - id
+        - adminLink
+        - mediumUrl
+        - file
+        - imageDateAvailable
+        - author
+        - authorStatus
+        - date
+        - content
+        - contentRaw
+        - isPending
+      properties:
+        id:
+          type: [integer, string]
+          description: Driver-dependent id typing under raw DBAL hydration.
+        adminLink:
+          type: string
+          format: uri-reference
+        mediumUrl:
+          type: string
+          format: uri-reference
+        file:
+          type: string
+        imageDateAvailable:
+          type: string
+          description: Pre-formatted display date.
+        author:
+          type: string
+        authorStatus:
+          type: [string, 'null']
+          description: '`main_user`, the comment row''s own moderation status, or null.'
+        date:
+          type: string
+          description: Pre-formatted display date.
+        content:
+          type: string
+          description: Rendered (event-filtered) comment content.
+        contentRaw:
+          type: [string, 'null']
+        isPending:
+          type: boolean

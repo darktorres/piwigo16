@@ -1185,13 +1185,18 @@ mechanism.
 *Survey grounding.* Every real plugin in `../piwigo16-plugins` (~400
 extensions) and every real theme in `../piwigo16-themes` (113 files) was
 read, to ground the design in actual usage rather than guessing. 162
-distinct legacy plugin events exist in the wild; every one of the top ~12
-by frequency already has a shipped 1:1 typed event class. The events did
-not need inventing — only a real registration surface wired onto dispatch
-machinery that already existed. `ws_add_methods`, the WS extensibility
-hook, turns out to be just another typed event
-(`Ws/Event/WsAddMethods.php`), so no separate WS plugin API needs
-designing.
+distinct legacy plugin events exist in the wild; 11 of the top 12 by
+frequency already have a shipped 1:1 typed event class — the sole
+exception, `ws_add_methods` (#7 by frequency), turned out to be a dead
+end: at the time this was written it was believed to be just another
+typed event (`Ws/Event/WsAddMethods.php`), but the entire legacy
+`Piwigo\Ws\*` namespace that class lived in was later deleted outright by
+P27, replaced with typed `/api/v1` REST routes a plugin has no way to
+register into at request time. **Stale as of P27 — re-verify against
+`../piwigo16-plugins/CLAUDE.md`'s own corrected "WS" entry before citing
+this paragraph.** Every other mapped event did not need inventing — only
+a real registration surface wired onto dispatch machinery that already
+existed.
 
 *Reference-implementation verdict.* `../piwigo16-rewrite` actually built
 `PluginInterface`/`ThemeInterface`/`PluginRegistry`/`ThemeRegistry` —

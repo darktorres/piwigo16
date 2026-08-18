@@ -229,3 +229,10 @@ with no REST equivalent concept, not events that migrated elsewhere.
 
 `get_history` · `sendResponse` · `ws_add_methods` · `ws_invoke_allowed` ·
 `ws_users_getList`
+
+`ws_add_methods` specifically has a real replacement, just not an
+event: `PluginConfig\ApiRouteProviderInterface` (P29.6), a manifest-declared
+(`hasApiRoutes: true`) capability a plugin implements to register its own
+`/api/v1/plugin-routes/{id}/...` routes -- see that interface's own
+docblock for the full mechanism. The other 4 hooks above genuinely have
+no replacement of any kind.

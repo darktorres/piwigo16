@@ -1,0 +1,611 @@
+/session:
+  get:
+    operationId: sessionStatus
+    tags:
+      - Session
+    summary: Get the current session's status
+    description: >-
+      Works the same for a guest or a signed-in user -- not gated. No
+      User-Agent sniffing: `saveVisits`/`connectedWith`/
+      `availableSizes` are always present.
+    security: []
+    responses:
+      '200':
+        description: Current session status.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStatus'
+  post:
+    operationId: sessionLogin
+    tags:
+      - Session
+    summary: Log in
+    description: >-
+      No CSRF check -- there's no session-scoped token to present
+      before a session exists. `username` matching
+      `pkid-YYYYMMDD-{20 alnum}` is treated as an api-key login
+      (`password` is then the key's secret); everything else is a
+      normal username/password login. Returns the resulting session
+      status on success, matching REST's "return the resource after
+      mutating it" convention.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [username]
+            properties:
+              username:
+                type: string
+              password:
+                type: [string, 'null']
+    responses:
+      '200':
+        description: Logged in.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStatus'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        description: Invalid username/password, or the request itself was api-key-authenticated (not supported for this endpoint).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    operationId: sessionLogout
+    tags:
+      - Session
+    summary: Log out
+    security: []
+    responses:
+      '204':
+        description: Logged out (a no-op for an already-guest session).
+      '401':
+        description: The request itself was api-key-authenticated (not supported for this endpoint).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  patch:
+    operationId: sessionUpdateMyInfo
+    tags:
+      - Session
+    summary: Update the signed-in user's own account
+    description: >-
+      Every field is optional. Some fields are silently ignored
+      depending on gallery config (`showNbComments` when comments are
+      disabled; the customization fields when user customization is
+      disabled) or account type (password/theme/language for the
+      guest/default system accounts). Returns the resulting session
+      status on success.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              nbImagePage:
+                type: integer
+              theme:
+                type: string
+              language:
+                type: string
+              recentPeriod:
+                type: integer
+              expand:
+                type: boolean
+              showNbComments:
+                type: boolean
+              showNbHits:
+                type: boolean
+              password:
+                type: string
+                description: The user's current password, required to set `newPassword`.
+              newPassword:
+                type: string
+              confNewPassword:
+                type: string
+                description: Must match `newPassword`.
+    responses:
+      '200':
+        description: Account updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStatus'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        description: Guest session -- must be signed in.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '403':
+        description: Missing/invalid CSRF token, mismatched new-password confirmation, or wrong current password.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/session/preferences/{param}:
+  put:
+    operationId: sessionPreferenceSet
+    tags:
+      - 'Session > Preferences'
+    summary: Set a per-session-user preference
+    description: >-
+      No auth gate at all -- preferences are stored per session-user,
+      even a guest pseudo-user's own. `{param}` is route-constrained,
+      so an invalid name 404s at the routing layer instead of a
+      generic error response.
+    security: []
+    parameters:
+      - name: param
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]+$'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              value:
+                type: [string, 'null']
+              isJson:
+                type: boolean
+                default: false
+                description: '`value` is JSON-decoded before storing when true.'
+    responses:
+      '200':
+        description: Preference set; every preference the session-user now has.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [preferences]
+              properties:
+                preferences:
+                  type: object
+                  additionalProperties: true
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+/session/api-keys:
+  get:
+    operationId: sessionApiKeyList
+    tags:
+      - 'Session > API Keys'
+    summary: List the signed-in user's own API keys
+    description: >-
+      Requires a real login session (`identification.php`), not an
+      api-key-authenticated one -- you can't manage keys using a key.
+    responses:
+      '200':
+        description: Every API key.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [apiKeys]
+              properties:
+                apiKeys:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ApiKey'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  post:
+    operationId: sessionApiKeyCreate
+    tags:
+      - 'Session > API Keys'
+    summary: Create a new API key
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [keyName, duration]
+            properties:
+              keyName:
+                type: string
+                maxLength: 100
+              duration:
+                type: integer
+                description: Days until expiry.
+                minimum: 1
+                maximum: 999999
+    responses:
+      '201':
+        description: >-
+          Key created -- the only time `apikeySecret` is the real
+          plaintext secret; every later read redacts it.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyCreated'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: Invalid `duration` (must be 1-999999) or `keyName` (max 100 chars).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/session/api-keys/{pkid}:
+  patch:
+    operationId: sessionApiKeyUpdate
+    tags:
+      - 'Session > API Keys'
+    summary: Rename an API key
+    description: '`{pkid}` is route-constrained to the exact `pkid-YYYYMMDD-{20 alnum}` shape, 404s at the routing layer otherwise.'
+    parameters:
+      - name: pkid
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^pkid-\d{8}-[a-zA-Z0-9]{20}$'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [keyName]
+            properties:
+              keyName:
+                type: string
+    responses:
+      '204':
+        description: Key renamed.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: Unknown key, or not owned by the current user.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    operationId: sessionApiKeyRevoke
+    tags:
+      - 'Session > API Keys'
+    summary: Revoke an API key
+    description: '`{pkid}` is route-constrained to the exact `pkid-YYYYMMDD-{20 alnum}` shape, 404s at the routing layer otherwise.'
+    parameters:
+      - name: pkid
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^pkid-\d{8}-[a-zA-Z0-9]{20}$'
+    responses:
+      '204':
+        description: Key revoked.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '404':
+        description: Unknown key, or not owned by the current user.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/session/favorites:
+  get:
+    operationId: sessionFavoriteList
+    tags:
+      - 'Session > Favorites'
+    summary: List the signed-in user's own favorited images
+    parameters:
+      - name: perPage
+        in: query
+        schema:
+          type: integer
+          default: 100
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: order
+        in: query
+        description: >-
+          Comma-separated `field [asc|desc]` tokens against a fixed
+          server-side vocabulary; unrecognized tokens are silently
+          dropped.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: One page of favorited images.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images, page, perPage, totalCount]
+              properties:
+                images:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FavoriteImage'
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                totalCount:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+/session/favorites/{imageId}:
+  put:
+    operationId: sessionFavoriteAdd
+    tags:
+      - 'Session > Favorites'
+    summary: Add an image to the signed-in user's own favorites
+    description: >-
+      `PUT`, not `POST`: an idempotent "this photo is a favorite"
+      state -- adding an already-favorited image is not an error.
+    parameters:
+      - name: imageId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: Favorited.
+      '403':
+        description: Guest session -- must be logged in.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+  delete:
+    operationId: sessionFavoriteRemove
+    tags:
+      - 'Session > Favorites'
+    summary: Remove an image from the signed-in user's own favorites
+    parameters:
+      - name: imageId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: Unfavorited.
+      '403':
+        description: Guest session -- must be logged in.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/session/caddie:
+  post:
+    operationId: sessionCaddieAdd
+    tags:
+      - 'Session > Caddie'
+    summary: Add images to the calling admin's own batch-manager caddie
+    description: The caddie/lightbox is a Batch Manager feature, not a general visitor one.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [imageIds]
+            properties:
+              imageIds:
+                type: array
+                items:
+                  type: integer
+    responses:
+      '201':
+        description: Images added.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [addedCount]
+              properties:
+                addedCount:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+components:
+  schemas:
+    SessionStatus:
+      type: object
+      required:
+        - username
+        - status
+        - theme
+        - language
+        - pwgToken
+        - charset
+        - currentDatetime
+        - version
+        - saveVisits
+        - connectedWith
+        - availableSizes
+      properties:
+        username:
+          type: string
+          description: '`"guest"` for an unauthenticated session.'
+        status:
+          type: string
+          enum: [webmaster, admin, normal, generic, guest]
+        theme:
+          type: string
+        language:
+          type: string
+        pwgToken:
+          type: string
+          description: CSRF token for this session -- send back as `X-CSRF-Token`.
+        charset:
+          type: string
+          example: utf-8
+        currentDatetime:
+          type: string
+        version:
+          type: string
+        saveVisits:
+          type: boolean
+        connectedWith:
+          type: [string, 'null']
+          enum: [pwg_ui, api_session_login, api_session_login_api_key, 'pwg.images.uploadAsync', auth_key, api_key, null]
+        availableSizes:
+          type: array
+          items:
+            type: string
+        uploadFileTypes:
+          type: array
+          items:
+            type: string
+          description: Admin sessions only.
+        uploadFormChunkSize:
+          type: integer
+          description: Admin sessions only.
+    ApiKey:
+      type: object
+      required:
+        - authKey
+        - apikeySecret
+        - apikeyName
+        - createdOn
+        - duration
+        - expiredOn
+        - revokedOn
+        - lastUsedOn
+        - isExpired
+        - expiration
+      properties:
+        authKey:
+          type: string
+        apikeySecret:
+          type: string
+          description: Redacted -- not the real plaintext secret (only the create response carries that).
+        apikeyName:
+          type: string
+        createdOn:
+          type: string
+        duration:
+          type: [integer, 'null']
+        expiredOn:
+          type: string
+        revokedOn:
+          type: [string, 'null']
+        lastUsedOn:
+          type: [string, 'null']
+        isExpired:
+          type: boolean
+        expiration:
+          type: string
+          description: Pre-formatted display text.
+    ApiKeyCreated:
+      type: object
+      required: [authKey, apikeySecret, apikeyName, createdOn, duration, expiredOn]
+      properties:
+        authKey:
+          type: string
+        apikeySecret:
+          type: string
+          description: The real plaintext secret, shown here only.
+        apikeyName:
+          type: string
+        createdOn:
+          type: string
+        duration:
+          type: integer
+        expiredOn:
+          type: string
+    FavoriteImage:
+      type: object
+      required:
+        - id
+        - width
+        - height
+        - hit
+        - file
+        - name
+        - comment
+        - dateCreation
+        - dateAvailable
+        - page_url
+        - download_url
+        - derivatives
+      properties:
+        id:
+          type: integer
+        width:
+          type: [integer, 'null']
+        height:
+          type: [integer, 'null']
+        hit:
+          type: [integer, 'null']
+        file:
+          type: [string, 'null']
+        name:
+          type: [string, 'null']
+        comment:
+          type: [string, 'null']
+        dateCreation:
+          type: [string, 'null']
+        dateAvailable:
+          type: [string, 'null']
+        page_url:
+          type: string
+          format: uri-reference
+        element_url:
+          type: string
+          format: uri-reference
+          description: Present only when the current user can view the full-size element.
+        download_url:
+          type: [string, 'null']
+        derivatives:
+          type: object
+          additionalProperties:
+            type: object
+            required: [url, width, height]
+            properties:
+              url:
+                type: string
+                format: uri-reference
+              width:
+                type: integer
+              height:
+                type: integer

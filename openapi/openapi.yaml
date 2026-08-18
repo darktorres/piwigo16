@@ -44,6 +44,23 @@ tags:
       Pre-upload readiness/duplicate checks, the tus 1.0.0 resumable
       upload protocol (`/uploads`, `/uploads/{id}`), and post-batch
       lounge completion.
+  - name: Session
+    description: >-
+      Login/logout/status, the signed-in user's own account, and its
+      real sub-resources -- API keys, favorites, the batch-manager
+      caddie, and per-user preferences.
+  - name: 'Session > API Keys'
+    parent: Session
+    description: A signed-in user's own API keys, for the auth-key login flow.
+  - name: 'Session > Favorites'
+    parent: Session
+    description: A signed-in user's own favorited images.
+  - name: 'Session > Caddie'
+    parent: Session
+    description: The admin batch-manager lightbox/caddie.
+  - name: 'Session > Preferences'
+    parent: Session
+    description: Arbitrary per-session-user preference key/value storage.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -120,6 +137,20 @@ paths:
     $ref: 'paths/uploads.yaml#/~1uploads~1{id}'
   /uploads/actions/complete-batch:
     $ref: 'paths/uploads.yaml#/~1uploads~1actions~1complete-batch'
+  /session:
+    $ref: 'paths/session.yaml#/~1session'
+  /session/preferences/{param}:
+    $ref: 'paths/session.yaml#/~1session~1preferences~1{param}'
+  /session/api-keys:
+    $ref: 'paths/session.yaml#/~1session~1api-keys'
+  '/session/api-keys/{pkid}':
+    $ref: 'paths/session.yaml#/~1session~1api-keys~1{pkid}'
+  /session/favorites:
+    $ref: 'paths/session.yaml#/~1session~1favorites'
+  '/session/favorites/{imageId}':
+    $ref: 'paths/session.yaml#/~1session~1favorites~1{imageId}'
+  /session/caddie:
+    $ref: 'paths/session.yaml#/~1session~1caddie'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

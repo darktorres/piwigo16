@@ -8,8 +8,8 @@ namespace Piwigo\Category\Projection;
  * {@see \Piwigo\Category\CategoryRepository::findAdminList()}'s own
  * row shape -- {@see \Piwigo\Controller\Api\Categories\CategoryListController}'s
  * real (and only) consumer, its paginated admin category rollup (via
- * {@see \Piwigo\Category\CategoryService::getAdminList()}). Same raw
- * `Connection::fetchAllAssociative()` DBAL row reasoning as
+ * {@see \Piwigo\Category\CategoryService::getAdminList()}). Same
+ * DQL-backed, VO-unwrapped-before-`fromRow()` reasoning as
  * {@see CategoryAvailableListRow} -- narrowed to each real `categories`-table
  * column type once here, not scattered through the response builder.
  *

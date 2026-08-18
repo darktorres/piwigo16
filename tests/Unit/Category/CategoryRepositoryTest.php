@@ -1145,6 +1145,23 @@ test('findAvailableList() applies the search term', function (): void {
         ->toBe([2]);
 });
 
+test('findAvailableList() unwraps status/id to plain scalars, not Doctrine VO/enum instances', function (): void {
+    $criteria = new CategoryListCriteria(catId: CategoryId::from(1), recursive: false, forbiddenCategoryIds: [], publicOnly: false);
+
+    $result = categoryTestRepo()
+        ->findAvailableList($criteria, null, 10, null, false);
+
+    $rowsById = [];
+    foreach ($result->rows as $row) {
+        $rowsById[$row->id] = $row;
+    }
+
+    expect($rowsById[1]->id)
+        ->toBe(1)
+        ->and($rowsById[1]->status)
+        ->toBe('public');
+});
+
 test('findAvailableList() applies the limit and reports the total', function (): void {
     $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
 
@@ -1181,6 +1198,23 @@ test('findAdminList() scopes to root categories when recursive is false and catI
     // known-real ids the way a row list can.
     expect($result->total)
         ->toBeGreaterThanOrEqual(1);
+});
+
+test('findAdminList() unwraps status/id to plain scalars, not Doctrine VO/enum instances', function (): void {
+    $criteria = new CategoryAdminListCriteria(catId: CategoryId::from(1), recursive: true);
+
+    $result = categoryTestRepo()
+        ->findAdminList($criteria, null, 10);
+
+    $rowsById = [];
+    foreach ($result->rows as $row) {
+        $rowsById[$row->id] = $row;
+    }
+
+    expect($rowsById[1]->id)
+        ->toBe(1)
+        ->and($rowsById[1]->status)
+        ->toBe('public');
 });
 
 test('findAdminList() matches the full subtree when recursive', function (): void {

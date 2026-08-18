@@ -8,13 +8,14 @@ namespace Piwigo\Category\Projection;
  * {@see \Piwigo\Category\CategoryRepository::findAvailableList()}'s own row
  * shape -- {@see \Piwigo\Controller\Api\Categories\CategoryAvailableListController}'s
  * real consumer (via {@see \Piwigo\Category\CategoryService::getAvailableList()}),
- * its paginated category rollup. This is a raw
- * `Connection::fetchAllAssociative()` DBAL row (no Doctrine Type
- * conversion applies, unlike this domain's DQL-backed methods), so each
- * field is narrowed to its real `categories`-table column type at
- * construction time here, once, instead of scattering the same
- * `is_numeric()`/`is_string()` guards through the response-building
- * consumer.
+ * its paginated category rollup. `findAvailableList()` is DQL-backed;
+ * its own VO-typed fields (`id`/`status`/`permalink`) are unwrapped back
+ * to plain scalars before `fromRow()` ever sees them (see
+ * `CategoryRepository::unwrapCategoryListRowVoFields()`), so this stays
+ * a flat `array<string, mixed>` row shape either way -- each field is
+ * narrowed to its real `categories`-table column type at construction
+ * time here, once, instead of scattering the same `is_numeric()`/
+ * `is_string()` guards through the response-building consumer.
  *
  * `toArray()` exists for that consumer: it splices a large number of
  * derived keys (`nb_images`, `url`, `user_representative_picture_id`,

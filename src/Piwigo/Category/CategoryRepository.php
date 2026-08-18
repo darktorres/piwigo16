@@ -6,7 +6,6 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -3370,37 +3369,29 @@ final readonly class CategoryRepository
      * with a real $catId / non-recursive without / recursive with a real
      * $catId), or none at all (recursive with no $catId -- matches the
      * original, which added nothing to $where in that case).
+     *
+     * `RegexpFunction` (registered as a DQL function, called via
+     * `REGEXP(column, pattern)`) resolves the recursive-with-`$catId`
+     * branch's per-platform operator (MySQL/MariaDB: `RLIKE`,
+     * PostgreSQL: `~`, not `AbstractPlatform::getRegexpExpression()`'s
+     * `SIMILAR TO` -- a genuinely different, whole-string-anchored
+     * pattern-matching dialect) internally, so no platform lookup is
+     * needed here the way a raw-SQL sibling of this method would need.
      */
-    private function categoryScopeCondition(?CategoryId $catId, bool $recursive): SqlCondition
+    private function categoryScopeConditionDql(?CategoryId $catId, bool $recursive, string $propPrefix = 'c.'): SqlCondition
     {
         if (! $recursive) {
             if ($catId instanceof CategoryId) {
-                return SqlCondition::fromRawSql('(id_uppercat = :catId OR id = :catId)', [
+                return SqlCondition::fromRawSql('(' . $propPrefix . 'idUppercat = :catId OR ' . $propPrefix . 'id = :catId)', [
                     'catId' => $catId->value,
                 ]);
             }
 
-            return SqlCondition::fromRawSql('id_uppercat IS NULL');
+            return SqlCondition::fromRawSql($propPrefix . 'idUppercat IS NULL');
         }
 
         if ($catId instanceof CategoryId) {
-            // The real per-platform operator (MySQL/MariaDB: RLIKE), not a
-            // hardcoded 'REGEXP' dialect constant -- needs a real
-            // Connection to ask for it.
-            //
-            // AbstractPlatform::getRegexpExpression() resolves to
-            // `SIMILAR TO` on Postgres, a genuinely different
-            // pattern-matching dialect than POSIX REGEXP (implicit
-            // whole-string anchoring, so the substring-search pattern
-            // below never matches -- same root cause as
-            // {@see \Piwigo\Db\DqlFunction\RegexpFunction}'s own fix).
-            // Postgres's own POSIX-regex operator is `~`.
-            $platform = $this->em
-                ->getConnection()
-                ->getDatabasePlatform();
-            $regexOperator = $platform instanceof PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
-
-            return SqlCondition::fromRawSql('uppercats ' . $regexOperator . ' :catUppercatsLike', [
+            return SqlCondition::fromRawSql('REGEXP(' . $propPrefix . 'uppercats, :catUppercatsLike) = TRUE', [
                 'catUppercatsLike' => '(^|,)' . $catId->value . '(,|$)',
             ]);
         }
@@ -3412,8 +3403,8 @@ final readonly class CategoryRepository
      * `Controller\Api\Categories\CategoryAvailableListController`'s own
      * paginated category rollup. Builds
      * its own scope/forbidden-categories/public-only conditions internally
-     * via {@see categoryScopeCondition()} and SqlCondition::combine(), from
-     * a typed CategoryListCriteria. $searchTerm/$searchLimit/$limit/
+     * via {@see categoryScopeConditionDql()} and SqlCondition::combine(),
+     * from a typed CategoryListCriteria. $searchTerm/$searchLimit/$limit/
      * $limitPlusOne: a search term gets its own LIMIT only when no explicit
      * $limit is requested; $limit itself gets +1 when $limitPlusOne
      * (single-category scope), to detect "more remain" without a second
@@ -3421,12 +3412,20 @@ final readonly class CategoryRepository
      *
      * @return PaginatedResult<CategoryAvailableListRow>
      *
-     * Computes the total via `COUNT(*) OVER() AS total_count` in the same
-     * query as the row data (no `DISTINCT`/`GROUP BY` here, so the window
-     * function's count is exact) rather than a second round-trip.
-     * `total_count` is stripped back out of each row before returning --
-     * it's not part of this method's own row shape, only
-     * `PaginatedResult::$total`.
+     * Computes the total via `COUNT_OVER() AS total_count` (the
+     * {@see \Piwigo\Db\DqlFunction\CountOverFunction}-backed DQL name for
+     * `COUNT(*) OVER()`) in the same query as the row data (no
+     * `DISTINCT`/`GROUP BY` here, so the window function's count is
+     * exact) rather than a second round-trip. `total_count` is stripped
+     * back out of each row before returning -- it's not part of this
+     * method's own row shape, only `PaginatedResult::$total`.
+     *
+     * `getArrayResult()` applies real Doctrine Type conversion to every
+     * selected state-field path -- `id`/`status`/`permalink` come back as
+     * real `CategoryId`/`CategoryStatus`/`Permalink` instances, unwrapped
+     * via {@see unwrapCategoryListRowVoFields()} before being handed to
+     * {@see CategoryAvailableListRow::fromRow()}, which is otherwise
+     * unchanged.
      */
     public function findAvailableList(
         CategoryListCriteria $criteria,
@@ -3435,13 +3434,10 @@ final readonly class CategoryRepository
         ?int $limit,
         bool $limitPlusOne
     ): PaginatedResult {
-        $conn = $this->em
-            ->getConnection();
-
-        $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
+        $conditions = [$this->categoryScopeConditionDql($criteria->catId, $criteria->recursive)];
 
         if ($criteria->forbiddenCategoryIds !== []) {
-            $conditions[] = SqlCondition::fromRawSql('id NOT IN (:forbiddenCategoryIds)', [
+            $conditions[] = SqlCondition::fromRawSql('c.id NOT IN (:forbiddenCategoryIds)', [
                 'forbiddenCategoryIds' => $criteria->forbiddenCategoryIds,
             ], [
                 'forbiddenCategoryIds' => ArrayParameterType::INTEGER,
@@ -3449,76 +3445,66 @@ final readonly class CategoryRepository
         }
 
         if ($criteria->publicOnly) {
-            // Double-quoted "public" is a STRING LITERAL under MySQL's own
-            // lenient default (non-ANSI_QUOTES) SQL mode, but Postgres always
-            // treats double-quotes as an IDENTIFIER reference (never a
-            // string literal), so this failed outright there; switched to
-            // the single-quoted form both platforms treat identically.
             // `visible` is a genuine boolean column -- a bare `1` literal
             // is valid MySQL tinyint(1) input but Postgres rejects it
             // outright against a real boolean column, so it's bound as a
             // real BOOLEAN parameter instead of a per-platform literal.
-            $conditions[] = SqlCondition::fromRawSql("status = 'public' AND visible = :visible", [
+            $conditions[] = SqlCondition::fromRawSql("c.status = 'public' AND c.visible = :visible", [
                 'visible' => true,
             ], [
                 'visible' => ParameterType::BOOLEAN,
             ]);
         }
 
-        // The search term is another condition rather than a clause appended
-        // after the fact -- that keeps every filter in one fragment, so the
-        // WHERE can be rendered (or omitted entirely) in one place.
         if ($searchTerm !== null) {
-            $conditions[] = SqlCondition::fromRawSql('name LIKE :searchTerm', [
+            $conditions[] = SqlCondition::fromRawSql('c.name LIKE :searchTerm', [
                 'searchTerm' => LikePattern::containing($searchTerm),
             ]);
         }
 
-        $combined = SqlCondition::combine('AND', ...$conditions);
-        $params = $combined->parameters;
-        $types = $combined->types;
+        $qb = $this->em
+            ->createQueryBuilder()
+            ->select(
+                'c.id',
+                'c.name',
+                'c.comment',
+                'c.permalink',
+                'c.status',
+                'c.uppercats',
+                'c.globalRank AS global_rank',
+                'c.idUppercat AS id_uppercat',
+                'IDENTITY(c.representativePicture) AS representative_picture_id',
+                'c.imageOrder AS image_order',
+            )
+            ->from(CategoryEntity::class, 'c');
+        SqlCondition::combine('AND', ...$conditions)->applyTo($qb);
 
-        $totalColumn = $limit !== null ? 'COUNT(*) OVER() AS total_count,' : '';
-
-        $sql = <<<SQL
-            SELECT {$totalColumn}
-                id, name, comment, permalink, status,
-                uppercats, global_rank, id_uppercat,
-                representative_picture_id,
-                image_order
-            FROM categories
-            {$combined->toWhereClause()}
-            SQL;
+        if ($limit !== null) {
+            $qb->addSelect('COUNT_OVER() AS total_count');
+        }
 
         if ($searchTerm !== null && $limit === null) {
-            $sql .= <<<SQL
-
-                LIMIT :searchLimit
-                SQL;
-            $params['searchLimit'] = $searchLimit;
-            $types['searchLimit'] = ParameterType::INTEGER;
+            $qb->setMaxResults($searchLimit);
         }
 
         if ($limit !== null) {
-            $rankColumn = $conn->getDatabasePlatform()
-                ->quoteSingleIdentifier('rank');
-            $sql .= <<<SQL
-
-                ORDER BY {$rankColumn} ASC
-                LIMIT :effectiveLimit
-                SQL;
-            $params['effectiveLimit'] = $limit + ($limitPlusOne ? 1 : 0);
-            $types['effectiveLimit'] = ParameterType::INTEGER;
+            $qb->orderBy('c.rank', 'ASC')
+                ->setMaxResults($limit + ($limitPlusOne ? 1 : 0));
         }
 
-        $rows = $conn->fetchAllAssociative($sql, $params, $types);
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
         $total = null;
         if ($limit !== null) {
             $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
         }
 
-        return new PaginatedResult(array_map(CategoryAvailableListRow::fromRow(...), $rows), $total);
+        return new PaginatedResult(
+            array_map(static fn (array $row): CategoryAvailableListRow => CategoryAvailableListRow::fromRow(self::unwrapCategoryListRowVoFields($row)), $rows),
+            $total
+        );
     }
 
     /**
@@ -3531,44 +3517,78 @@ final readonly class CategoryRepository
      * @return PaginatedResult<CategoryAdminListRow>
      *
      * Computes the total the same way as {@see findAvailableList()} above
-     * (`COUNT(*) OVER() AS total_count`) -- no `DISTINCT`/`GROUP BY` here
-     * either.
+     * (`COUNT_OVER() AS total_count`) -- no `DISTINCT`/`GROUP BY` here
+     * either. Same `getArrayResult()`/VO-unwrap reasoning as
+     * {@see findAvailableList()} above.
      */
     public function findAdminList(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
-        $conn = $this->em
-            ->getConnection();
-
-        $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
+        $conditions = [$this->categoryScopeConditionDql($criteria->catId, $criteria->recursive)];
         if ($searchTerm !== null) {
-            $conditions[] = SqlCondition::fromRawSql('name LIKE :searchTerm', [
+            $conditions[] = SqlCondition::fromRawSql('c.name LIKE :searchTerm', [
                 'searchTerm' => LikePattern::containing($searchTerm),
             ]);
         }
 
-        $combined = SqlCondition::combine('AND', ...$conditions);
-        $params = $combined->parameters;
-        $types = $combined->types;
-
-        $sql = <<<SQL
-            SELECT COUNT(*) OVER() AS total_count, id, name, comment, uppercats, global_rank, dir, status, image_order
-            FROM categories
-            {$combined->toWhereClause()}
-            SQL;
+        $qb = $this->em
+            ->createQueryBuilder()
+            ->select(
+                'COUNT_OVER() AS total_count',
+                'c.id',
+                'c.name',
+                'c.comment',
+                'c.uppercats',
+                'c.globalRank AS global_rank',
+                'c.dir',
+                'c.status',
+                'c.imageOrder AS image_order',
+            )
+            ->from(CategoryEntity::class, 'c');
+        SqlCondition::combine('AND', ...$conditions)->applyTo($qb);
 
         if ($searchTerm !== null) {
-            $sql .= <<<SQL
-
-                LIMIT :searchLimit
-                SQL;
-            $params['searchLimit'] = $searchLimit;
-            $types['searchLimit'] = ParameterType::INTEGER;
+            $qb->setMaxResults($searchLimit);
         }
 
-        $rows = $conn->fetchAllAssociative($sql, $params, $types);
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $qb->getQuery()
+            ->getArrayResult();
         $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
 
-        return new PaginatedResult(array_map(CategoryAdminListRow::fromRow(...), $rows), $total);
+        return new PaginatedResult(
+            array_map(static fn (array $row): CategoryAdminListRow => CategoryAdminListRow::fromRow(self::unwrapCategoryListRowVoFields($row)), $rows),
+            $total
+        );
+    }
+
+    /**
+     * {@see findAvailableList()}/{@see findAdminList()}'s shared
+     * `getArrayResult()` VO-unwrap step -- `id`/`status`/`permalink`
+     * come back as real `CategoryId`/`CategoryStatus`/`Permalink`
+     * instances from a direct state-field-path DQL select, unlike
+     * `getSingleColumnResult()`'s well-established no-conversion
+     * behavior. Unwrapped here, once, so both `fromRow()` methods keep
+     * their own existing flat-array/`is_string`/`is_numeric` contract
+     * unchanged.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private static function unwrapCategoryListRowVoFields(array $row): array
+    {
+        if (($row['id'] ?? null) instanceof CategoryId) {
+            $row['id'] = $row['id']->value;
+        }
+
+        if (($row['status'] ?? null) instanceof CategoryStatus) {
+            $row['status'] = $row['status']->value;
+        }
+
+        if (($row['permalink'] ?? null) instanceof Permalink) {
+            $row['permalink'] = $row['permalink']->value;
+        }
+
+        return $row;
     }
 
     /**

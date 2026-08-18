@@ -148,15 +148,7 @@ test('every foreign key\'s referencing column is indexed', function (): void {
                 static fn ($columnName): string => $columnName->toString(),
                 $foreignKey->getReferencingColumnNames(),
             );
-
-            $covered = false;
-            foreach ($indexColumnLists as $indexColumns) {
-                if (array_slice($indexColumns, 0, count($fkColumns)) === $fkColumns) {
-                    $covered = true;
-
-                    break;
-                }
-            }
+            $covered = array_any($indexColumnLists, fn ($indexColumns): bool => array_slice($indexColumns, 0, count($fkColumns)) === $fkColumns);
 
             if (! $covered) {
                 $uncovered[] = $tableName . '.' . implode(',', $fkColumns);

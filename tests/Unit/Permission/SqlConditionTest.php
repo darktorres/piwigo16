@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\ORM\Query\Expr;
+use Doctrine\ORM\Query\Expr\Andx;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
@@ -112,7 +112,7 @@ test('fromRawSql wraps sql in a single-part Expr\Andx that stringifies back to t
     $condition = SqlCondition::fromRawSql('a = 1');
 
     expect($condition->expr)
-        ->toBeInstanceOf(Expr\Andx::class)
+        ->toBeInstanceOf(Andx::class)
         ->and($condition->expr->count())
         ->toBe(1)
         ->and((string) $condition->expr)

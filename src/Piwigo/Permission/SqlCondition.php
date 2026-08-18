@@ -7,7 +7,9 @@ namespace Piwigo\Permission;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\ORM\Query\Expr;
+use Doctrine\ORM\Query\Expr\Andx;
+use Doctrine\ORM\Query\Expr\Base;
+use Doctrine\ORM\Query\Expr\Orx;
 
 /**
  * Bound-parameter carrier for a SQL WHERE-clause fragment --
@@ -43,7 +45,7 @@ final readonly class SqlCondition
      * @param array<string, ArrayParameterType|ParameterType> $types
      */
     public function __construct(
-        public Expr\Base $expr,
+        public Base $expr,
         public array $parameters = [],
         public array $types = [],
     ) {}
@@ -60,7 +62,7 @@ final readonly class SqlCondition
      */
     public static function fromRawSql(string $sql, array $parameters = [], array $types = []): self
     {
-        return new self($sql === '' ? new Expr\Andx() : new Expr\Andx([$sql]), $parameters, $types);
+        return new self($sql === '' ? new Andx() : new Andx([$sql]), $parameters, $types);
     }
 
     public function isEmpty(): bool
@@ -138,14 +140,14 @@ final readonly class SqlCondition
         ));
 
         if ($nonEmpty === []) {
-            return new self(new Expr\Andx());
+            return new self(new Andx());
         }
 
         if (count($nonEmpty) === 1) {
             return $nonEmpty[0];
         }
 
-        $expr = $glue === 'OR' ? new Expr\Orx() : new Expr\Andx();
+        $expr = $glue === 'OR' ? new Orx() : new Andx();
         foreach ($nonEmpty as $condition) {
             $expr->add($condition->expr);
         }

@@ -35,6 +35,7 @@ use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Validation\InputValidator;
 use ReflectionProperty;
+use SessionHandler;
 
 /**
  * InstallWizard is install.php's whole orchestration, ported verbatim from
@@ -272,7 +273,7 @@ final class InstallWizardTest extends IntegrationTestCase
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
-        session_set_save_handler(new \SessionHandler());
+        session_set_save_handler(new SessionHandler());
         DbCredentialsTestFactory::get()->seed($this->originalDbEnv);
         if ($this->installBootstrapBooted) {
             restore_error_handler();

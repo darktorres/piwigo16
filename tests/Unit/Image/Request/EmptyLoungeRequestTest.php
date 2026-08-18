@@ -11,7 +11,7 @@ test('fromArray returns null for an empty REQUEST', function (): void {
         ->toBeNull();
 });
 
-test('fromArray reads the ws method', function (): void {
+test('fromArray reads the method', function (): void {
     $request = EmptyLoungeRequest::fromArray([
         'method' => 'pwg.images.emptyLounge',
     ]);

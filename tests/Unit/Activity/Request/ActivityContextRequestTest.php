@@ -19,7 +19,7 @@ test('fromArrays returns defaults for an empty GET/POST/REQUEST', function (): v
         ->toBeNull();
 });
 
-test('fromArrays reads the ws method and action from REQUEST', function (): void {
+test('fromArrays reads the method and action from REQUEST', function (): void {
     $request = ActivityContextRequest::fromArrays([], [], [
         'method' => 'pwg.plugins.performAction',
         'action' => 'restore',

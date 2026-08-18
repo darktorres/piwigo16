@@ -52,6 +52,7 @@ final class CurrentPluginRegistry implements ApiRouteRegistrarInterface
     #[Override]
     public function registerApiRoutes(RouteCollection $routes): void
     {
-        $this->get()->registerApiRoutes($routes);
+        $this->get()
+            ->registerApiRoutes($routes);
     }
 }

@@ -25,7 +25,9 @@ final readonly class CategoryWriteFacade
 
     public function updateNameAndComment(int $categoryId, string $name, ?string $comment = null): void
     {
-        $data = ['name' => $name];
+        $data = [
+            'name' => $name,
+        ];
         if ($comment !== null) {
             $data['comment'] = $comment;
         }

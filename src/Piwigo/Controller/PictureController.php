@@ -1081,7 +1081,8 @@ final readonly class PictureController implements ControllerInterface
         $info_file = $picture['current']['file'];
 
         $display_info = $this->currentConfig->pictureInformations;
-        $display_info = $this->eventDispatcher->dispatch(new FilterPictureDisplayInfo($display_info, $image_id))->displayInfo;
+        $display_info = $this->eventDispatcher->dispatch(new FilterPictureDisplayInfo($display_info, $image_id))
+            ->displayInfo;
 
         // related tags
         $tags = $this->tagService

@@ -292,7 +292,8 @@ final class RequestPipelineTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . PluginBootstrapMiddleware::class);
         }
 
-        $registry = new ReflectionMethod($middleware, 'pluginRegistry')->invoke($middleware, $conn);
+        $registry = new ReflectionMethod($middleware, 'pluginRegistry')
+            ->invoke($middleware, $conn);
         if (! $registry instanceof PluginRegistry) {
             throw new LogicException('PluginBootstrapMiddleware::pluginRegistry() returned an unexpected type.');
         }

@@ -163,7 +163,8 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         }
 
         if (LoungeMaintenance::needsEmptying($this->currentConfig, $this->entityManager)) {
-            $this->imageService($conn)->emptyLounge();
+            $this->imageService($conn)
+                ->emptyLounge();
         }
 
         return $handler->handle($request);

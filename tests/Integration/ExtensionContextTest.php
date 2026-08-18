@@ -566,7 +566,8 @@ final class ExtensionContextTest extends IntegrationTestCase
      */
     public function testImagesWriteUpdateDescriptiveFieldsPersistsToImagesTable(): void
     {
-        $this->context->imagesWrite()->updateDescriptiveFields(3, name: 'Updated Name', author: 'Updated Author', comment: 'Updated Comment');
+        $this->context->imagesWrite()
+            ->updateDescriptiveFields(3, name: 'Updated Name', author: 'Updated Author', comment: 'Updated Comment');
 
         $row = $this->conn->createQueryBuilder()
             ->select('name', 'author', 'comment')
@@ -596,7 +597,8 @@ final class ExtensionContextTest extends IntegrationTestCase
      */
     public function testImagesWriteUpdateLevelPersistsToImagesTable(): void
     {
-        $this->context->imagesWrite()->updateLevel(4, 4);
+        $this->context->imagesWrite()
+            ->updateLevel(4, 4);
 
         $rawLevel = $this->conn->createQueryBuilder()
             ->select('level')
@@ -622,7 +624,8 @@ final class ExtensionContextTest extends IntegrationTestCase
      */
     public function testImagesWriteSetTagsPersistsRealTagRelations(): void
     {
-        $this->context->imagesWrite()->setTags(3, 'ExtensionContextTest Tag A, ExtensionContextTest Tag B');
+        $this->context->imagesWrite()
+            ->setTags(3, 'ExtensionContextTest Tag A, ExtensionContextTest Tag B');
 
         $names = $this->conn->createQueryBuilder()
             ->select('t.name')
@@ -664,7 +667,8 @@ final class ExtensionContextTest extends IntegrationTestCase
         ]);
         $newId = (int) $this->conn->lastInsertId();
 
-        $this->context->imagesWrite()->delete($newId, false);
+        $this->context->imagesWrite()
+            ->delete($newId, false);
 
         $stillExists = $this->conn->createQueryBuilder()
             ->select('id')
@@ -684,7 +688,8 @@ final class ExtensionContextTest extends IntegrationTestCase
      */
     public function testCategoriesWriteUpdateNameAndCommentPersistsToCategoriesTable(): void
     {
-        $this->context->categoriesWrite()->updateNameAndComment(2, 'Updated Sub Album', 'Updated comment');
+        $this->context->categoriesWrite()
+            ->updateNameAndComment(2, 'Updated Sub Album', 'Updated comment');
 
         $row = $this->conn->createQueryBuilder()
             ->select('name', 'comment')

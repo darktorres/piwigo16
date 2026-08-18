@@ -80,9 +80,6 @@ final class PageHeaderRenderer
         $conf_gallery_title = $currentConfig->galleryTitle;
         $page_banner = $pageState->pageBanner ?? $currentConfig->pageBanner;
 
-        $bodyDataJson = json_encode($pageState->bodyData);
-        $bodyDataJson = is_string($bodyDataJson) ? $bodyDataJson : '{}';
-
         // Header notes
         $header_notes = $pageState->headerNotes;
         $headerNotesValue = self::emptyValue($header_notes) ? null : $header_notes;
@@ -127,7 +124,6 @@ final class PageHeaderRenderer
             levelSeparator: $currentConfig->levelSeparator,
             showMobileAppBanner: $show_mobile_app_banner,
             bodyClasses: $pageState->bodyClasses,
-            bodyData: $bodyDataJson,
             headerNotes: $headerNotesValue,
             metaRef: $metaRef,
             pageRefresh: $pageRefresh,

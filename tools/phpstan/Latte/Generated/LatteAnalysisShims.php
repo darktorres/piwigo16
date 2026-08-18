@@ -145,6 +145,9 @@ final class LatteAnalysisShims
         'htmlStyle',
         'footerScript',
         'localCssRules',
+        'exposeData',
+        'exposeString',
+        'getPageDataScript',
         'getExtent',
         'htmlOptions',
         'htmlRadios',
@@ -814,6 +817,24 @@ final class LatteAnalysisShims
      * @param array<int, array<string, mixed>> $themes
      */
     public static function localCssRules(array $themes): void
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param array<mixed> $value
+     */
+    public static function exposeData(string $key, array|string|int|float|bool|null $value): void
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function exposeString(string $translationKey): void
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function getPageDataScript(): \Latte\Runtime\Html
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

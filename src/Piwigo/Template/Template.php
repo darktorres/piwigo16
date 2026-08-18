@@ -28,6 +28,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\TemplateInterface;
@@ -36,6 +37,7 @@ use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Page\PageDataPayload;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedScript;
@@ -106,6 +108,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
 
     public CssLoader $cssLoader;
+
+    /**
+     * docs/PLAN.md's P37 -- backfilled in finalizeOutput() the same way
+     * as COMBINED_SCRIPTS_TAG/COMBINED_CSS_TAG above, but via a plain
+     * `str_replace()` (CSS's own shape, not scripts' `didHead()`-guarded
+     * strpos()): only one real call site exists (footer.latte's
+     * `{=getPageDataScript()}`), so there's nothing to guard against a
+     * second resolution the way head-script placement needs to.
+     */
+    public const string JSON_ISLAND_TAG = '<!-- JSON_ISLAND -->';
 
     /**
      * @var array<int, string[]> - Runtime buttons on picture page
@@ -296,6 +308,23 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         return $lang;
+    }
+
+    /**
+     * Same reasoning as urlService() above -- docs/PLAN.md's P37 needs
+     * `PageState` here (getPageDataScript()'s own PageDataPayload
+     * construction below), and this class's constructor already has 11
+     * real call sites across 6 files; a container resolve here avoids
+     * touching all of them for one new dependency.
+     */
+    private static function pageState(): PageState
+    {
+        $pageState = Kernel::container()->get(PageState::class);
+        if (! $pageState instanceof PageState) {
+            throw new LogicException('Container returned an unexpected type for ' . PageState::class);
+        }
+
+        return $pageState;
     }
 
     /**
@@ -915,6 +944,22 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         );
         $this->cssLoader->clear();
 
+        // docs/PLAN.md's P37 -- same unconditional str_replace() shape as
+        // COMBINED_CSS_TAG above (only one real call site,
+        // footer.latte's own {=getPageDataScript()}, so nothing to
+        // guard against a second resolution). PageState isn't cleared
+        // here, unlike cssLoader above -- see Template::exposeData()'s
+        // own docblock and docs/PLAN.md's P37 section for why it must
+        // not be: admin pages flush twice (pparse('admin.latte') then a
+        // separate PageTail::render()), and this placeholder only ever
+        // lives in the second, footer-only flush.
+        $pageDataPayload = new PageDataPayload(self::pageState(), self::lang());
+        $this->output = str_replace(
+            self::JSON_ISLAND_TAG,
+            '<script type="application/json" id="page-data">' . $pageDataPayload->toJson() . '</script>',
+            $this->output
+        );
+
         if ((bool) count($this->htmlHeadElements) || (bool) strlen($this->htmlStyle)) {
             // `[ \t]*` tolerates the leading indentation a formatted
             // `</head>` line carries (Latte's `Feature::Dedent` isn't
@@ -1187,6 +1232,42 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if (file_exists($this->paths->root . $f)) {
             $this->combineCss($f, order: 10);
         }
+    }
+
+    /**
+     * `{do exposeData(...)}` -- accumulates into `PageState`, like
+     * `combineScript()`/`combineCss()` above accumulate into
+     * `scriptLoader`/`cssLoader`, rather than being implemented directly
+     * on `PiwigoExtension` the way stateless `translate()` is (see
+     * docs/PLAN.md's P37 section for why the two functions below match
+     * this method's own registration shape, not that one's).
+     *
+     * @param array<mixed> $value
+     */
+    public function exposeData(string $key, string|int|float|bool|null|array $value): void
+    {
+        self::pageState()->exposeData($key, $value);
+    }
+
+    /**
+     * `{do exposeString(...)}` -- same reasoning as exposeData() above.
+     */
+    public function exposeString(string $translationKey): void
+    {
+        self::pageState()->exposeString($translationKey);
+    }
+
+    /**
+     * `{=getPageDataScript()}` -- same `Html`-wrapped placeholder shape
+     * as `getCombinedCss()` above (prints real markup at its own call
+     * site, so needs the auto-escaping bypass); the placeholder is
+     * backfilled in `finalizeOutput()` once `PageState`'s full
+     * accumulated `exposeData()`/`exposeString()` calls are known
+     * (docs/PLAN.md's P37).
+     */
+    public function getPageDataScript(): Html
+    {
+        return new Html(self::JSON_ISLAND_TAG);
     }
 
     /**

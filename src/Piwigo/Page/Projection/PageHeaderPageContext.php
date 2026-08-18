@@ -35,7 +35,6 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
         public string $levelSeparator,
         public bool $showMobileAppBanner,
         public array $bodyClasses,
-        public string $bodyData,
         public ?array $headerNotes,
         public ?int $metaRef,
         public ?array $pageRefresh,
@@ -58,7 +57,6 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
             'LEVEL_SEPARATOR' => $this->levelSeparator,
             'SHOW_MOBILE_APP_BANNER' => $this->showMobileAppBanner,
             'BODY_CLASSES' => $this->bodyClasses,
-            'BODY_DATA' => $this->bodyData,
             'head_elements' => $this->headElements,
         ];
 

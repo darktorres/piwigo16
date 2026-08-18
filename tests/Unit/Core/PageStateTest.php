@@ -139,6 +139,122 @@ test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', functio
         ->toBeTrue();
 });
 
+test('exposeData/exposeString accumulate, keyed by their own key and dedup on repeat', function (): void {
+    $state = new PageState();
+    $state->exposeData('csrf_token', 'abc123');
+    $state->exposeData('nb_albums', 12);
+    $state->exposeData('nb_albums', 13);
+    $state->exposeString('Please wait...');
+    $state->exposeString('Please wait...');
+    $state->exposeString('Loading');
+
+    expect($state->exposedData)
+        ->toBe([
+            'csrf_token' => 'abc123',
+            'nb_albums' => 13,
+        ])
+        ->and($state->exposedStringKeys)
+        ->toBe([
+            'Please wait...' => true,
+            'Loading' => true,
+        ]);
+});
+
+test('reset clears every property back to its constructed default', function (): void {
+    $state = new PageState();
+    $state->addError('bad thing');
+    $state->addWarning('careful');
+    $state->addMessage('saved');
+    $state->addInfo('fyi');
+    $state->addHeaderMessage('header msg');
+    $state->addHeaderNote('header note');
+    $state->addBodyClass('section-categories');
+    $state->setBodyData('category_id', 5);
+    $state->exposeData('csrf_token', 'abc123');
+    $state->exposeString('Loading');
+    $state->executionUuid = 'some-uuid';
+    $state->setMetaRobots([
+        'noindex' => 1,
+    ]);
+    $state->setAuthKeyId(42);
+    $state->addQueryTime(0.5);
+    $state->requestStart = 123.456;
+    $state->addDebugOutput('debug line');
+    $state->setBodyId('theBody');
+    $state->setPageBanner('My Gallery');
+    $state->setNbPendingComments(3);
+    $state->setNoMd5sumNumber(2);
+    $state->setNbOrphans(1);
+    $state->setNbPhotosTotal(100);
+    $state->setUpdatedVersion('17.1.0');
+    $state->markAuthKeyInvalid();
+    $state->setNotifyApiKeyExpiration([
+        'days_left' => 3,
+        'dbnow' => '2026-08-18',
+        'auth_key' => 'key',
+    ]);
+    $state->addCommentRejectionReason('spam');
+
+    $state->reset();
+
+    $fresh = new PageState();
+
+    expect($state->errors)
+        ->toBe($fresh->errors)
+        ->and($state->warnings)
+        ->toBe($fresh->warnings)
+        ->and($state->messages)
+        ->toBe($fresh->messages)
+        ->and($state->infos)
+        ->toBe($fresh->infos)
+        ->and($state->headerMessages)
+        ->toBe($fresh->headerMessages)
+        ->and($state->headerNotes)
+        ->toBe($fresh->headerNotes)
+        ->and($state->bodyClasses)
+        ->toBe($fresh->bodyClasses)
+        ->and($state->bodyData)
+        ->toBe($fresh->bodyData)
+        ->and($state->exposedData)
+        ->toBe($fresh->exposedData)
+        ->and($state->exposedStringKeys)
+        ->toBe($fresh->exposedStringKeys)
+        ->and($state->executionUuid)
+        ->toBe($fresh->executionUuid)
+        ->and($state->metaRobots)
+        ->toBe($fresh->metaRobots)
+        ->and($state->authKeyId)
+        ->toBe($fresh->authKeyId)
+        ->and($state->countQueries)
+        ->toBe($fresh->countQueries)
+        ->and($state->queriesTime)
+        ->toBe($fresh->queriesTime)
+        ->and($state->requestStart)
+        ->toBe($fresh->requestStart)
+        ->and($state->debugOutput)
+        ->toBe($fresh->debugOutput)
+        ->and($state->bodyId)
+        ->toBe($fresh->bodyId)
+        ->and($state->pageBanner)
+        ->toBe($fresh->pageBanner)
+        ->and($state->nbPendingComments)
+        ->toBe($fresh->nbPendingComments)
+        ->and($state->noMd5sumNumber)
+        ->toBe($fresh->noMd5sumNumber)
+        ->and($state->nbOrphans)
+        ->toBe($fresh->nbOrphans)
+        ->and($state->nbPhotosTotal)
+        ->toBe($fresh->nbPhotosTotal)
+        ->and($state->updatedVersion)
+        ->toBe($fresh->updatedVersion)
+        ->and($state->authKeyInvalid)
+        ->toBe($fresh->authKeyInvalid)
+        ->and($state->notifyApiKeyExpiration)
+        ->toBe($fresh->notifyApiKeyExpiration)
+        ->and($state->commentRejectionReasons)
+        ->toBe($fresh->commentRejectionReasons);
+});
+
 test('PageStateTestFactory::get falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as CurrentUserTestFactory::get():
     // a caller that writes via current() in one call and reads via current() in a

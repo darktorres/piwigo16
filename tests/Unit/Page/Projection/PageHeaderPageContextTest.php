@@ -15,7 +15,6 @@ test('toArray flattens every fixed property, and omits the 3 optional keys when 
         levelSeparator: ' / ',
         showMobileAppBanner: true,
         bodyClasses: ['theme-dark'],
-        bodyData: '{}',
         headerNotes: null,
         metaRef: null,
         pageRefresh: null,
@@ -33,7 +32,6 @@ test('toArray flattens every fixed property, and omits the 3 optional keys when 
             'LEVEL_SEPARATOR' => ' / ',
             'SHOW_MOBILE_APP_BANNER' => true,
             'BODY_CLASSES' => ['theme-dark'],
-            'BODY_DATA' => '{}',
             'head_elements' => [],
         ]);
 });
@@ -49,7 +47,6 @@ test('toArray includes header_notes/meta_ref/page_refresh when set', function ()
         levelSeparator: ' / ',
         showMobileAppBanner: false,
         bodyClasses: [],
-        bodyData: '{}',
         headerNotes: ['Maintenance scheduled'],
         metaRef: 1,
         pageRefresh: [

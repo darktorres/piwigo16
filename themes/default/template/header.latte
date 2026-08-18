@@ -34,7 +34,6 @@
 {varType bool $BETA_TEST}
 {varType ?string $BETA_URL}
 {varType list<string> $BODY_CLASSES}
-{varType string $BODY_DATA}
 {varType string $BODY_ID}
 {varType array<array-key, string> $CACHE_KEYS}
 {varType \Latte\Runtime\Html $CATEGORIES}
@@ -817,7 +816,6 @@
   <body
     id="{$BODY_ID}"
     class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"
-    data-infos='{$BODY_DATA}'
   >
     <div id="the_page">
       <div n:if="!empty($header_msgs)" class="header_msgs">

@@ -45,10 +45,13 @@ use Piwigo\Template\Template;
  *    wrapped function's first argument and those don't fit that shape.
  *  - **Stateful asset/page functions** -- `combineScript`/`combineCss`/
  *    `getCombinedScripts`/`getCombinedCss`/`defineDerivative`/`htmlHead`/
- *    `htmlStyle`/`footerScript`/`localCssRules`/`getExtent` all delegate to
- *    the owning `Template` instance's own (renamed, same-body) methods --
- *    reusing its already-correct `ScriptLoader`/`CssLoader`/validation
- *    logic directly rather than re-deriving it here. `html_options`/
+ *    `htmlStyle`/`footerScript`/`localCssRules`/`getExtent`/`exposeData`/
+ *    `exposeString`/`getPageDataScript` all delegate to the owning
+ *    `Template` instance's own (renamed, same-body) methods -- reusing
+ *    its already-correct `ScriptLoader`/`CssLoader`/`PageState`/
+ *    validation logic directly rather than re-deriving it here (the
+ *    last three accumulate into `PageState`, docs/PLAN.md's P37).
+ *    `html_options`/
  *    `html_radios`/`math` are generic, stateless ports of Smarty's own
  *    stdlib plugins (no `Template` state involved).
  */
@@ -199,6 +202,9 @@ final class PiwigoExtension extends Extension
             'htmlStyle' => $this->template->htmlStyle(...),
             'footerScript' => $this->template->footerScript(...),
             'localCssRules' => $this->template->localCssRules(...),
+            'exposeData' => $this->template->exposeData(...),
+            'exposeString' => $this->template->exposeString(...),
+            'getPageDataScript' => $this->template->getPageDataScript(...),
             // Template::getExtent(string $filename, string $handle): string
             // already has the exact (path, override-key) shape the
             // converter's `EXPR|get_extent:ARG` -> `getExtent(EXPR, ARG)`

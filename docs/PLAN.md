@@ -127,7 +127,7 @@ Three structural changes produced that drift:
 | P34 | Event system rewrite | Done — all 5 items complete and verified, including all 6 named core hooks (see Epoch J) | 13 |
 | P35 | Browserslist decision + IE back-compat removal | Done | 1 |
 | P36 | Asset-pipeline foundation (ViteManifest) | Done | 1 |
-| P37 | Typed page-data exposure (PHP half) | Not started | 0 |
+| P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Not started | 0 |
 | P39 | Inline CSS extraction | Not started | 0 |
 | P40 | Typed view objects + `Template` split | Not started | 0 |
@@ -1620,6 +1620,43 @@ represent. This has to exist *before* P38, or P38 must invent an interim
 mechanism that P46 then replaces. It is also the PHP counterpart to P40's
 typed view objects — the same typed source feeds the template and the
 JSON island, so design the two together even though P40 lands later.
+
+**Shipped**: `Piwigo\Page\PageDataPayload` — a real, fully unit-tested
+`{data, strings}` JSON-island builder (5 new tests: bodyData/exposedData
+merge with collision precedence, `Lang::t()` string resolution including
+a missing key, dedup on a repeated `exposeString()` call, a non-ASCII
+round-trip, and a `</script>`/`<!--`/`&` neutralization check via the
+real `JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | JSON_HEX_TAG |
+JSON_HEX_AMP` flags). `PageState::exposeData()`/`exposeString()` land as
+the declaration surface (2 new tests: accumulate-and-dedup, and a full
+`reset()` sweep across every property, closing a real pre-existing gap —
+no prior test asserted `reset()` cleared every property exhaustively).
+`Template::getPageDataScript()` backfills a `JSON_ISLAND_TAG` placeholder
+in `finalizeOutput()`, the same pattern `COMBINED_SCRIPTS_TAG`/
+`COMBINED_CSS_TAG` already use. The one real existing writer,
+`PageState::$bodyData` (via `SectionPopulator`), is wired end to end:
+`BODY_DATA`/`data-infos` is removed from `PageHeaderPageContext` and both
+real front-end headers (`default`, `standard_pages` — `admin`'s header
+never had it), replaced by a single `<script type="application/json"
+id="page-data">` tag in all 3 real footers. `composer lint:vartype:fix`
+resynced the global `{varType}` union across all 135 templates (the
+mail/install templates' own `{varType string $BODY_DATA}` boilerplate
+line dropped along with it — confirmed neither path ever read that var).
+The Latte-analysis shim class (`tools/phpstan/Latte/Generated/
+LatteAnalysisShims.php`) was regenerated via `bin/piwigo
+phpstan-latte:generate-shims` to pick up the 3 new
+`exposeData`/`exposeString`/`getPageDataScript` Latte functions.
+Explicitly out of scope, same as P36's own template-corpus boundary:
+converting the 204+42 real `escapeJavascript`/`json_encode(translate(...))`
+template call sites to `exposeString()` — that is P38's job, one template
+at a time. Verified: PHPStan level 10/ECS/deptrac (0 violations) all
+clean on every changed file; full `composer test` (5739 passed) and
+`composer test:integration` (2120 passed) green; `composer test:visual`
+66/66 green with zero baseline regeneration (the removed attribute and
+new JSON `<script>` tag are invisible on-screen); `composer
+test:golden-html` needed baseline regeneration for 72 of 74 routes,
+exactly as predicted (only the `data-infos` removal + `<script
+id="page-data">` addition changed in every diff, confirmed by inspection).
 
 **P38 — Inline JS extraction.** Every `<script>` block in a template
 moves to a plain `.js` file loaded through P36's manifest. Same behavior,

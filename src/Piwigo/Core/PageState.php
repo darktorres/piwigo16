@@ -68,14 +68,44 @@ final class PageState
 
     /**
      * Plain unstructured key/value bag, same by-design shape as
-     * Piwigo\Core\ProcessCache -- no real caller sets one today, kept as
-     * a generic escape hatch for whichever future controller needs to
-     * stash a one-off value under its own key for PageHeaderRenderer/
-     * PageTailRenderer to read back.
+     * Piwigo\Core\ProcessCache. SectionPopulator::computeSectionContext()
+     * is the one real writer (combined_category_ids/tag_ids/search_id/
+     * image_id), bulk-replacing this on every gallery/picture page;
+     * PageHeaderRenderer read it back into the legacy `BODY_DATA` context
+     * var until P37 (docs/PLAN.md), which folds it into
+     * Piwigo\Page\PageDataPayload's typed `data` payload instead --
+     * $exposedData below is a separate, merged-in property rather than a
+     * second writer of this same array, so correctness here never
+     * depends on write ordering between the two.
      *
      * @var array<string, mixed>
      */
     public array $bodyData = [];
+
+    /**
+     * Typed-page-data-exposure `data` half (docs/PLAN.md's P37) --
+     * populated via exposeData() from anywhere in a request (controller
+     * or, during P38's incremental template migration, a template
+     * itself), merged with $bodyData into one flat object by
+     * Piwigo\Page\PageDataPayload. Kept separate from $bodyData itself
+     * deliberately -- see that property's own docblock.
+     *
+     * @var array<string, string|int|float|bool|null|array<mixed>>
+     */
+    public array $exposedData = [];
+
+    /**
+     * Typed-page-data-exposure `strings` half (docs/PLAN.md's P37) --
+     * the set of translation keys (raw source strings, gettext's own
+     * convention) a page's client JS needs, declared via exposeString()
+     * from anywhere in a request. Keyed by the string itself so a key
+     * exposed more than once (e.g. from two different template
+     * partials) naturally dedupes; Piwigo\Page\PageDataPayload resolves
+     * each key through Piwigo\Core\Lang::t() at payload-build time.
+     *
+     * @var array<string, true>
+     */
+    public array $exposedStringKeys = [];
 
     public string $executionUuid = '';
 
@@ -168,6 +198,8 @@ final class PageState
         $this->headerNotes = [];
         $this->bodyClasses = [];
         $this->bodyData = [];
+        $this->exposedData = [];
+        $this->exposedStringKeys = [];
         $this->executionUuid = '';
         $this->metaRobots = [];
         $this->authKeyId = null;
@@ -230,6 +262,32 @@ final class PageState
     public function setBodyData(string $key, mixed $value): void
     {
         $this->bodyData[$key] = $value;
+    }
+
+    /**
+     * Declares a value the page's typed JSON-data-island payload
+     * (docs/PLAN.md's P37) should carry under $key. Deliberately typed
+     * as a plain JSON-primitive shape, not `mixed` -- see this class's
+     * own $exposedData docblock and Piwigo\Page\PageDataPayload's: this
+     * value is read later (at payload-build time, not here), so an
+     * object would be stored by reference and could reflect a *later*
+     * mutation instead of the value true at declaration time.
+     *
+     * @param array<mixed> $value
+     */
+    public function exposeData(string $key, string|int|float|bool|null|array $value): void
+    {
+        $this->exposedData[$key] = $value;
+    }
+
+    /**
+     * Declares a translation key the page's client JS needs -- resolved
+     * later, via Piwigo\Core\Lang::t(), into the JSON-data-island
+     * payload's `strings` map (docs/PLAN.md's P37).
+     */
+    public function exposeString(string $translationKey): void
+    {
+        $this->exposedStringKeys[$translationKey] = true;
     }
 
     /**

@@ -963,11 +963,9 @@ var current_param = {
   image_id: "",
   filename: "",
   ip: "",
-  display_thumbnail: "display_thumbnail_classic",
   pageNumber: 0 
 }
 
-const API_METHOD = "ws.php?format=json&method=pwg.history.search";
 const str_dwld = "Downloaded";
 const str_most_visited = "Most visited";
 const str_best_rated = "Best rated";
@@ -985,11 +983,11 @@ const str_edit_img = 'Edit photo';
 
 const str_search_details = {
     "allwords": "Search for words",
-    "date_posted": "Post date",
+    "datePosted": "Post date",
     "tags": str_tags,
     "cat": "Album",
     "author": "Author",
-    "added_by": "Added by",
+    "addedBy": "Added by",
     "filetypes": "File type",
 };
 const str_and_more = "and %d more"
@@ -1093,13 +1091,14 @@ jQuery('a.externalLink').click(function() {
 
 function hide_user_whats_new() {
   $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
+    url: "api/v1/session/preferences/show_whats_new_17",
+    type: "PUT",
+    contentType: "application/json",
     dataType: "JSON",
-    data: {
-      param: 'show_whats_new_17',
-      value: false,
-    }
+    data: JSON.stringify({
+      value: JSON.stringify(false),
+      isJson: true,
+    }),
   })
   $('#whats_new').hide();
 }

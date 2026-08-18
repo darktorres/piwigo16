@@ -367,21 +367,21 @@ function ignoreAll() {
 
 function resetIgnored() {
   jQuery.ajax({
-    type: 'GET',
-    url: 'ws.php',
+    type: 'POST',
+    url: 'api/v1/extensions/updates/ignore',
+    contentType: 'application/json',
+    headers: {'X-CSRF-Token': pwg_token},
     dataType: 'json',
-    data: { method: 'pwg.extensions.ignoreUpdate', reset: true, type: extType, pwg_token: pwg_token, format: 'json' },
+    data: JSON.stringify({ reset: true, type: extType }),
     success: function(data) {
-      if (data['stat'] == 'ok') {
-        jQuery(".pluginBox, fieldset").show();
-        jQuery(".pluginBox").attr('data-ignored', 'false')
-        jQuery("#update_all").show();
-        jQuery("#ignore_all").show();
-        jQuery("#up_to_date").hide();
-        jQuery("#reset_ignore").hide();
-        jQuery("#ignored").hide();
-        checkFieldsets();
-      }
+      jQuery(".pluginBox, fieldset").show();
+      jQuery(".pluginBox").attr('data-ignored', 'false')
+      jQuery("#update_all").show();
+      jQuery("#ignore_all").show();
+      jQuery("#up_to_date").hide();
+      jQuery("#reset_ignore").hide();
+      jQuery("#ignored").hide();
+      checkFieldsets();
     }
   });
 };
@@ -415,21 +415,20 @@ function checkFieldsets() {
 
 function updateExtension(type, id, revision) {
   queuedManager.add({
-    type: 'GET',
+    type: 'POST',
     dataType: 'json',
-    url: 'ws.php',
-    data: { method: 'pwg.extensions.update', type: type, id: id, revision: revision, pwg_token: pwg_token, format: 'json' },
+    contentType: 'application/json',
+    headers: {'X-CSRF-Token': pwg_token},
+    url: 'api/v1/extensions/' + type + '/' + id + '/actions/update',
+    data: JSON.stringify({ revision: revision }),
     success: function(data) {
-      if (data['stat'] == 'ok') {
-        jQuery.jGrowl( data['result'], { theme: 'success', header: successHead, life: 4000, sticky: false });
-        jQuery("#"+type+"_"+id).remove();
-        checkFieldsets();
-      } else {
-        jQuery.jGrowl( data['result'], { theme: 'error', header: errorHead, sticky: true });
-      }
+      jQuery.jGrowl( data['message'], { theme: 'success', header: successHead, life: 4000, sticky: false });
+      jQuery("#"+type+"_"+id).remove();
+      checkFieldsets();
     },
-    error: function(data) {
-      jQuery.jGrowl( errorMsg, { theme: 'error', header: errorHead, sticky: true });
+    error: function(jqXHR) {
+      const message = jqXHR.responseJSON && jqXHR.responseJSON.detail ? jqXHR.responseJSON.detail : errorMsg;
+      jQuery.jGrowl( message, { theme: 'error', header: errorHead, sticky: true });
     }
   });
 };
@@ -464,17 +463,17 @@ observer.observe(targetNode, config);
 
 function ignoreExtension(type, id) {
   queuedManager.add({
-    type: 'GET',
-    url: 'ws.php',
+    type: 'POST',
+    url: 'api/v1/extensions/updates/ignore',
+    contentType: 'application/json',
+    headers: {'X-CSRF-Token': pwg_token},
     dataType: 'json',
-    data: { method: 'pwg.extensions.ignoreUpdate', type: type, id: id, pwg_token: pwg_token, format: 'json' },
+    data: JSON.stringify({ type: type, id: id }),
     success: function(data) {
-      if (data['stat'] == 'ok') {
-        jQuery("#"+type+"_"+id).hide();
-        jQuery("#"+type+"_"+id).attr('data-ignored', 'true')
-        jQuery("#reset_ignore").show();
-        checkFieldsets();
-      }
+      jQuery("#"+type+"_"+id).hide();
+      jQuery("#"+type+"_"+id).attr('data-ignored', 'true')
+      jQuery("#reset_ignore").show();
+      checkFieldsets();
     }
   });
 };
@@ -565,13 +564,14 @@ jQuery('a.externalLink').click(function() {
 
 function hide_user_whats_new() {
   $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
+    url: "api/v1/session/preferences/show_whats_new_17",
+    type: "PUT",
+    contentType: "application/json",
     dataType: "JSON",
-    data: {
-      param: 'show_whats_new_17',
-      value: false,
-    }
+    data: JSON.stringify({
+      value: JSON.stringify(false),
+      isJson: true,
+    }),
   })
   $('#whats_new').hide();
 }

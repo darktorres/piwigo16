@@ -3957,25 +3957,18 @@ $(document).ready(function() {
   // see #1571 on Github
   jQuery("#applyAction").click(function() {
       let action = jQuery("select[name=selectAction]").prop("value");
-      let method = 'pwg.users.setInfo';
-      let data = {
-          pwg_token: pwg_token,
-          user_id: selection.map(x => x.id)
-      };
+      let data = {};
       switch (action) {
           case 'delete':
               if (!($("#permitActionUserList .user-list-checkbox[name=confirm_deletion]").attr("data-selected") === "1")) {
                   alert(missingConfirm);
                   return false;
               }
-              method = 'pwg.users.delete';
               break;
           case 'group_associate':
-              method = 'pwg.groups.addUser';
               data.group_id = jQuery("#permitActionUserList select[name=associate]").prop("value");
               break;
           case 'group_dissociate':
-              method = 'pwg.groups.deleteUser';
               data.group_id = jQuery("#permitActionUserList select[name=dissociate]").prop("value");
               break;
           case 'status':
@@ -4012,27 +4005,60 @@ $(document).ready(function() {
               alert("Unexpected action");
               return false;
       }
-      jQuery.ajax({
-          url: "ws.php?format=json&method="+method,
-          type:"POST",
-          data: data,
-          beforeSend: function() {
-              jQuery("#applyActionLoading").show();
-              jQuery("#applyActionBlock .infos").fadeOut();
-          },
-          success:function(data) {
-              jQuery("#applyActionLoading").hide();
-              jQuery("#applyActionBlock .infos").fadeIn();
-              jQuery("#applyActionBlock .infos").css("display", "inline-block");
-              update_user_list();
-              if (action == 'delete') {
-                  selection = [];
-                  update_selection_content();
-              }
-          },
-          error:function(XMLHttpRequest, textStatus, errorThrows) {
-              jQuery("#applyActionLoading").hide();
+
+      // Translate the `data` bag above into the real /api/v1 request(s)
+      // -- one bulk group action, or one PATCH/DELETE per selected user
+      // (there is no bulk-multi-id endpoint for Users).
+      const userIds = selection.map(x => x.id);
+      const fieldByAction = {
+          status: 'status', enabled_high: 'enabledHigh', level: 'level',
+          nb_image_page: 'nbImagePage', theme: 'theme', language: 'language',
+          recent_period: 'recentPeriod', expand: 'expand',
+          show_nb_comments: 'showNbComments', show_nb_hits: 'showNbHits',
+      };
+      const numericFields = ['level', 'nbImagePage', 'recentPeriod'];
+
+      let request;
+      jQuery("#applyActionLoading").show();
+      jQuery("#applyActionBlock .infos").fadeOut();
+
+      if (action === 'delete') {
+          request = Promise.all(userIds.map(id => jQuery.ajax({
+              url: "api/v1/users/" + id,
+              method: "DELETE",
+              headers: {'X-CSRF-Token': pwg_token},
+          })));
+      } else if (action === 'group_associate' || action === 'group_dissociate') {
+          request = jQuery.ajax({
+              url: "api/v1/groups/" + data.group_id + "/actions/" + (action === 'group_associate' ? 'add-user' : 'remove-user'),
+              method: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ userIds: userIds }),
+              headers: {'X-CSRF-Token': pwg_token},
+          });
+      } else {
+          const field = fieldByAction[action];
+          const value = numericFields.includes(field) ? Number(data[action]) : data[action];
+          request = Promise.all(userIds.map(id => jQuery.ajax({
+              url: "api/v1/users/" + id,
+              method: "PATCH",
+              contentType: "application/json",
+              data: JSON.stringify({ [field]: value }),
+              headers: {'X-CSRF-Token': pwg_token},
+          })));
+      }
+
+      request.then(function() {
+          jQuery("#applyActionLoading").hide();
+          jQuery("#applyActionBlock .infos").fadeIn();
+          jQuery("#applyActionBlock .infos").css("display", "inline-block");
+          update_user_list();
+          if (action == 'delete') {
+              selection = [];
+              update_selection_content();
           }
+      }).catch(function() {
+          jQuery("#applyActionLoading").hide();
       });
       return false;
   });
@@ -4094,13 +4120,14 @@ jQuery('a.externalLink').click(function() {
 
 function hide_user_whats_new() {
   $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
+    url: "api/v1/session/preferences/show_whats_new_17",
+    type: "PUT",
+    contentType: "application/json",
     dataType: "JSON",
-    data: {
-      param: 'show_whats_new_17',
-      value: false,
-    }
+    data: JSON.stringify({
+      value: JSON.stringify(false),
+      isJson: true,
+    }),
   })
   $('#whats_new').hide();
 }

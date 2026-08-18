@@ -397,6 +397,8 @@ body .ui-tooltip {
 $(document).ready(function() {
   $('h1').append("<span class='badge-number'>5</span>")
 });
+const pwg_token = "";
+
 jQuery('#rateTable').dataTable({
   dom : '<"dtBar"filp>rt<"dtBar"ilp>',
   pageLength: 100,
@@ -467,19 +469,20 @@ $(document).ready( function(){
             while ( tr.nodeName != "TR") tr = tr.parentNode;
             tr = jQuery(tr).fadeTo(1000, 0.4);
             var data=uidFromCell(cell);
-            (new PwgWS('')).callService(
-              'pwg.rates.delete', { user_id:data.uid, anonymous_id:data.aid},
-              {
-                method: 'POST',
-                onFailure: function(num, text) { tr.stop(); tr.fadeTo(0,1); alert(num + " " + text); },
-                onSuccess: function(result){
-                  if (result)
-                    oTable.row(tr[0]).remove().draw();
-                  else
-                    alert(result);
-                }
+            $.ajax({
+              url: "api/v1/users/" + data.uid + "/actions/delete-ratings",
+              method: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ anonymousId: data.aid || null }),
+              headers: {'X-CSRF-Token': pwg_token},
+              error: function(jqXHR) { tr.stop(); tr.fadeTo(0,1); alert(jqXHR.status + " " + jqXHR.statusText); },
+              success: function(result){
+                if (result.deletedCount)
+                  oTable.row(tr[0]).remove().draw();
+                else
+                  alert(result.deletedCount);
               }
-            );
+            });
           }
         },
         cancel: {
@@ -578,13 +581,14 @@ jQuery('a.externalLink').click(function() {
 
 function hide_user_whats_new() {
   $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
+    url: "api/v1/session/preferences/show_whats_new_17",
+    type: "PUT",
+    contentType: "application/json",
     dataType: "JSON",
-    data: {
-      param: 'show_whats_new_17',
-      value: false,
-    }
+    data: JSON.stringify({
+      value: JSON.stringify(false),
+      isJson: true,
+    }),
   })
   $('#whats_new').hide();
 }

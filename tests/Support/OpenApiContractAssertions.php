@@ -4,22 +4,36 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use PHPUnit\Framework\TestCase;
 use Studio\Gesso\Psr7\OpenApiAssertions;
 
 /**
- * Mixes Gesso's PSR-7 assertion trait into a plain-functional Pest test
- * file via `uses(OpenApiContractAssertions::class)->in(...)` and points
- * it at this project's one real spec (`openapi/openapi.yaml`, loaded by
- * `OpenApiCoverageExtension` under the spec name `openapi` --
+ * Real base class (not a bare trait) mixed into a plain-functional Pest
+ * test file via `uses(OpenApiContractAssertions::class)->in(...)` --
+ * PHPStan's own `trait.unused` check flags a trait with no literal
+ * `use TraitName;` statement anywhere in analyzed code as unanalysed
+ * (Pest's own `uses()->in()` composition is a runtime mechanism, it
+ * never produces one), and shipmonk/dead-code-detector has no built-in
+ * awareness of Gesso's own `openApiSpec()`/`openApiSkipResponseCodes()`/
+ * `openApiSkipRequestValidationResponseCodes()` hook methods being
+ * called back into from vendor code excluded from analysis
+ * (`excludePaths.analyseAndScan: vendor/*`) -- a real `use
+ * OpenApiAssertions;` statement inside this real class resolves the
+ * first; PestUsesTraitUsageProvider.php (tools/phpstan/) resolves the
+ * second, recognizing Gesso's own documented hook-method names as
+ * framework-driven virtual dispatch rather than dead code.
+ *
+ * Points at this project's one real spec (`openapi/openapi.yaml`,
+ * loaded by `OpenApiCoverageExtension` under the spec name `openapi` --
  * `OpenApiSpecLoader::resolveSpecFile()` matches a spec name to
- * `{spec_base_path}/{specName}.{json,yaml,yml}` verbatim, so this has to
- * be the real filename, not an arbitrary label). Gesso's own
+ * `{spec_base_path}/{specName}.{json,yaml,yml}` verbatim, so this has
+ * to be the real filename, not an arbitrary label). Gesso's own
  * `#[OpenApiSpec('...')]` attribute needs a real class to attach to,
  * which a Pest `it()`/`test()` closure never has -- overriding the
- * trait's `openApiSpec()` hook instead is the documented alternative for
- * exactly this shape.
+ * trait's `openApiSpec()` hook instead is the documented alternative
+ * for exactly this shape.
  */
-trait OpenApiContractAssertions
+abstract class OpenApiContractAssertions extends TestCase
 {
     use OpenApiAssertions;
 

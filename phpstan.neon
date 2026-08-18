@@ -420,3 +420,14 @@ services:
         arguments:
             inner: @piwigoLatteInnerTableFormatter
             analysisDir: %currentWorkingDirectory%/_analysis/phpstan-latte
+
+    # Gesso's own OpenApiSpecResolver (vendor, excluded from
+    # analyseAndScan above) calls hook methods like openApiSpec() back
+    # via $this->, invisible to shipmonk/dead-code-detector -- Gesso
+    # isn't in that tool's own supported-library list, so this project
+    # supplies the equivalent recognition itself. See the provider's own
+    # docblock.
+    piwigoGessoHookMethodUsageProvider:
+        class: Piwigo\Tools\PhpStan\GessoHookMethodUsageProvider
+        tags:
+            - shipmonk.deadCode.memberUsageProvider

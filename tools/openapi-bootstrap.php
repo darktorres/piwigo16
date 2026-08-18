@@ -2,26 +2,32 @@
 
 declare(strict_types=1);
 
-if (PHP_SAPI !== 'cli') {
-    http_response_code(403);
-    exit('This script can only be run from the command line.');
-}
-
-require __DIR__ . '/../vendor/autoload.php';
-
 use PhpParser\Node;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use Piwigo\Bootstrap\RouteDefinitions;
+use Piwigo\Controller\Api\SessionController;
+use Piwigo\Controller\Api\SessionLoginController;
+use Piwigo\Controller\Api\SessionLogoutController;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\CsrfGuard;
 use Piwigo\Tools\OpenApi\OperationDraft;
 use Piwigo\Tools\OpenApi\ResponseBodyCallSiteVisitor;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Yaml\Yaml;
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('This script can only be run from the command line.');
+}
+
+require __DIR__ . '/../vendor/autoload.php';
 
 /**
  * One-time, throwaway scaffolding for the /api/v1 OpenAPI 3.2 spec's
@@ -99,9 +105,9 @@ function domainFor(string $controllerClass): string
     }
 
     $rootLevelSessionControllers = [
-        'Piwigo\Controller\Api\SessionController',
-        'Piwigo\Controller\Api\SessionLoginController',
-        'Piwigo\Controller\Api\SessionLogoutController',
+        SessionController::class,
+        SessionLoginController::class,
+        SessionLogoutController::class,
     ];
     if (in_array($controllerClass, $rootLevelSessionControllers, true)) {
         return 'Session';
@@ -172,14 +178,12 @@ function reflectInputDto(string $dtoClass): array
  */
 function requestSchemaFor(array $methodStmts, NodeFinder $nodeFinder, ReflectionClass $controllerReflection, array $ast): ?array
 {
-    $inputCall = $nodeFinder->findFirst($methodStmts, static function (Node $node): bool {
-        return $node instanceof StaticCall
-            && $node->name instanceof Node\Identifier
-            && $node->name->name === 'fromArray'
-            && $node->class instanceof Node\Name
-            && str_ends_with($node->class->toString(), 'Input');
-    });
-    if (! $inputCall instanceof StaticCall || ! $inputCall->class instanceof Node\Name) {
+    $inputCall = $nodeFinder->findFirst($methodStmts, static fn (Node $node): bool => $node instanceof StaticCall
+        && $node->name instanceof Identifier
+        && $node->name->name === 'fromArray'
+        && $node->class instanceof Name
+        && str_ends_with($node->class->toString(), 'Input'));
+    if (! $inputCall instanceof StaticCall || ! $inputCall->class instanceof Name) {
         return null;
     }
 
@@ -189,10 +193,8 @@ function requestSchemaFor(array $methodStmts, NodeFinder $nodeFinder, Reflection
     // controller's own namespace (every real *Input DTO sits next to its
     // controller).
     $shortName = $inputCall->class->toString();
-    $useStmt = $nodeFinder->findFirst($ast, static function (Node $node) use ($shortName): bool {
-        return $node instanceof Node\Stmt\UseUse && $node->name->getLast() === $shortName;
-    });
-    $dtoClass = $useStmt instanceof Node\Stmt\UseUse
+    $useStmt = $nodeFinder->findFirst($ast, static fn (Node $node): bool => $node instanceof UseUse && $node->name->getLast() === $shortName);
+    $dtoClass = $useStmt instanceof UseUse
         ? $useStmt->name->toString()
         : $controllerReflection->getNamespaceName() . '\\' . $shortName;
 
@@ -208,7 +210,7 @@ $parser = new ParserFactory()
 $nodeFinder = new NodeFinder();
 $routes = RouteDefinitions::all();
 
-/** @var array<string, list<\Piwigo\Tools\OpenApi\OperationDraft>> */
+/** @var array<string, list<OperationDraft>> */
 $byDomain = [];
 
 foreach ($routes->all() as $routeName => $route) {

@@ -8,6 +8,7 @@ use openapiphp\openapi\spec\OpenApi;
 use openapiphp\openapi\spec\Operation;
 use openapiphp\openapi\spec\Response as OpenApiResponse;
 use openapiphp\openapi\spec\Responses;
+use openapiphp\openapi\spec\Tag;
 use Piwigo\Bootstrap\RouteDefinitions;
 
 /**
@@ -92,7 +93,7 @@ test('every operation has a non-empty summary', function (): void {
 });
 
 test('every operation has at least one tag, and every tag it uses is declared at the document root', function (): void {
-    $declaredTags = array_map(static fn (\openapiphp\openapi\spec\Tag $tag): string => $tag->name, openApiDocument()->tags);
+    $declaredTags = array_map(static fn (Tag $tag): string => $tag->name, openApiDocument()->tags);
 
     foreach (openApiOperations() as $key => $operation) {
         expect($operation->tags)

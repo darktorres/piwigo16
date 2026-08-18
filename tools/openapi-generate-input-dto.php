@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
+use openapiphp\openapi\Reader;
+use openapiphp\openapi\ReferenceContext;
+use openapiphp\openapi\spec\MediaType;
+use openapiphp\openapi\spec\OpenApi;
+use openapiphp\openapi\spec\Operation;
+use openapiphp\openapi\spec\RequestBody;
+use openapiphp\openapi\spec\Schema;
+
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
     exit('This script can only be run from the command line.');
 }
 
 require __DIR__ . '/../vendor/autoload.php';
-
-use openapiphp\openapi\Reader;
-use openapiphp\openapi\ReferenceContext;
-use openapiphp\openapi\spec\MediaType;
-use openapiphp\openapi\spec\OpenApi;
-use openapiphp\openapi\spec\Operation;
-use openapiphp\openapi\spec\Schema;
 
 /**
  * One-time, throwaway scaffolding for P27's Phase 5 (see docs/PLAN.md and
@@ -104,7 +105,7 @@ if (! $operation instanceof Operation) {
 }
 
 $requestBody = $operation->requestBody;
-if (! $requestBody instanceof \openapiphp\openapi\spec\RequestBody) {
+if (! $requestBody instanceof RequestBody) {
     fail("Operation '{$operationId}' has no requestBody.");
 }
 $mediaType = $requestBody->content['application/json'] ?? null;
@@ -118,7 +119,7 @@ if ($rawProperties === []) {
     fail("Operation '{$operationId}'s request body schema has no properties.");
 }
 
-/** @var array<string, \openapiphp\openapi\spec\Schema> $properties */
+/** @var array<string, Schema> $properties */
 $properties = [];
 foreach ($rawProperties as $propertyName => $propertySchema) {
     if (! $propertySchema instanceof Schema) {

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tools\OpenApi;
 
+use Override;
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeVisitorAbstract;
@@ -64,7 +68,7 @@ final class ResponseBodyCallSiteVisitor extends NodeVisitorAbstract
      */
     private array $varAssignments = [];
 
-    #[\Override]
+    #[Override]
     public function enterNode(Node $node): ?Node
     {
         if ($node instanceof ClassMethod) {
@@ -77,9 +81,9 @@ final class ResponseBodyCallSiteVisitor extends NodeVisitorAbstract
 
         if (
             $node instanceof StaticCall
-            && $node->class instanceof Node\Name
+            && $node->class instanceof Name
             && $node->class->toString() === 'ResponseFactory'
-            && $node->name instanceof Node\Identifier
+            && $node->name instanceof Identifier
             && $node->name->name === 'json'
         ) {
             $this->calls[] = [
@@ -98,7 +102,7 @@ final class ResponseBodyCallSiteVisitor extends NodeVisitorAbstract
     {
         $arrayNode = null;
         foreach ($node->args as $arg) {
-            if (! $arg instanceof Node\Arg) {
+            if (! $arg instanceof Arg) {
                 continue;
             }
             if ($arg->value instanceof Array_) {

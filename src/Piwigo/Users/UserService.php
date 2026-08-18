@@ -280,8 +280,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * sets `duplicateUsername: true` and (when the existing account has a
      * usable email on file) emails it a notice. [SEC-31] Callers that must
      * show the real "this login is already used" message to a trusted
-     * operator (e.g. the admin-authenticated ws.users.add) can still
-     * synthesize it themselves from `duplicateUsername`; the public
+     * operator (e.g. {@see \Piwigo\Controller\Api\Users\UserCreateController})
+     * can still synthesize it themselves from `duplicateUsername`; the public
      * self-registration form (register.php) must not, and must also skip
      * auto-login when `duplicateUsername` is true (do not look the user
      * back up by username and log them into what may be someone else's

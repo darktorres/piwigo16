@@ -502,10 +502,10 @@ final readonly class AuthService
     /**
      * Performs auto-connection if authentication key is valid.
      *
-     * @param mixed $authKey raw, unvalidated request input ($_GET['auth'], an
-     *   Authorization header value, or a ws param) -- normalized to '' when
-     *   not already a string (a malicious/malformed request can hand this an
-     *   array), which safely fails every format check below
+     * @param mixed $authKey raw, unvalidated request input ($_GET['auth'] or
+     *   an Authorization header value) -- normalized to '' when not already
+     *   a string (a malicious/malformed request can hand this an array),
+     *   which safely fails every format check below
      */
     public function authKeyLogin(mixed $authKey, bool $connectionByHeader = false): bool
     {

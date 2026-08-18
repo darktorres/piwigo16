@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
@@ -13,8 +14,12 @@ use Piwigo\Db\DbCredentials;
 /**
  * "Only one execution at a time" lock built on the database's own
  * session-scoped advisory lock primitive: MySQL's
- * `GET_LOCK()`/`RELEASE_LOCK()`/`IS_USED_LOCK()`, or PostgreSQL's
- * `pg_try_advisory_lock()`/`pg_advisory_unlock()` plus a `pg_locks` lookup.
+ * `GET_LOCK()`/`RELEASE_LOCK()`/`IS_USED_LOCK()`, PostgreSQL's
+ * `pg_try_advisory_lock()`/`pg_advisory_unlock()` plus a `pg_locks`
+ * lookup, or -- SQLite has no server-side session-lock primitive at all
+ * (an embedded, file-based engine with no persistent server process to
+ * hold session state) -- PHP's own `flock()` against a real lock file,
+ * see {@see \Piwigo\Db\AdvisorySessionLock}'s own docblock.
  *
  * Advisory locks are scoped to the connection that acquired them and are
  * released automatically when that connection closes -- including an
@@ -63,6 +68,13 @@ use Piwigo\Db\DbCredentials;
  *    both unsigned, and `objsubid = 1` marking the single-bigint-argument
  *    form; `((classid::bigint << 32) | objid::bigint) = ?` reconstructs
  *    the original signed bigint key in SQL.
+ *  - SQLite's `flock()`-based lock has no single-call `IS_USED_LOCK()`
+ *    equivalent either, and no reentrancy problem to work around the way
+ *    Postgres's own try-then-unlock probe would have -- a fresh `fopen()`
+ *    always gets its own independent open file description, so
+ *    {@see isRunningSqlite()}'s own try-then-unlock probe correctly
+ *    contends even against a lock this same connection already holds via
+ *    a different handle.
  */
 final class UniqueExecLock
 {
@@ -91,6 +103,10 @@ final class UniqueExecLock
 
         if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
             return self::isRunningPostgres($conn, $tokenName);
+        }
+
+        if ($conn->getDatabasePlatform() instanceof SQLitePlatform) {
+            return self::isRunningSqlite($tokenName);
         }
 
         return $conn->fetchOne(<<<SQL
@@ -135,6 +151,34 @@ final class UniqueExecLock
         );
 
         return $held !== false;
+    }
+
+    /**
+     * SQLite has no `IS_USED_LOCK()`/`pg_locks` equivalent -- a second,
+     * independent, throwaway `flock()` attempt on a fresh handle to the
+     * same lock file (via {@see AdvisorySessionLock::sqliteLockFilePath()},
+     * the identical path acquire()/release() use) is the real probe:
+     * succeeding means nobody (not even this same connection, a fresh
+     * `fopen()` gets its own independent open file description, see
+     * AdvisorySessionLock's own docblock) currently holds it, so it's
+     * immediately released and reported not-running; failing means
+     * something else does.
+     */
+    private static function isRunningSqlite(string $tokenName): bool
+    {
+        $handle = fopen(AdvisorySessionLock::sqliteLockFilePath(self::lockName($tokenName)), 'c');
+        if ($handle === false) {
+            return false;
+        }
+
+        $acquired = flock($handle, LOCK_EX | LOCK_NB);
+        if ($acquired) {
+            flock($handle, LOCK_UN);
+        }
+
+        fclose($handle);
+
+        return ! $acquired;
     }
 
     /**

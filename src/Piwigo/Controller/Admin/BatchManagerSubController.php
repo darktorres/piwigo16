@@ -71,8 +71,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * the same as a POST one). The other 2 GET actions (`delete_orphans`,
  * `sync_md5sum`) only render a `$_SESSION` message from an
  * already-validated count -- the real deletion/checksum work happens via
- * already-token-protected `ws.php` calls (`pwg.images.deleteOrphans`/
- * `pwg.images.setMd5sum`), so they need no token of their own.
+ * already-CSRF-protected `POST /api/v1/images/actions/{delete-orphans,
+ * sync-metadata}` calls, so they need no token of their own.
  *
  * `array<string, mixed> $bulkFilter`/`$bulk_filter`/`$url_filter`
  * throughout this class are all `$_SESSION['bulk_manager_filter']` (or a

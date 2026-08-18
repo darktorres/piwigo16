@@ -190,12 +190,10 @@ final class GroupRepository extends EntityRepository
             ->fetchAllAssociative();
 
         // is_default is a real tinyint(1) column now (Group domain Stage
-        // 1a) -- ws.groups.getList's own JSON response returns this row
-        // straight through (Groups::getList()), and its schema
-        // (tests/Contract/schemas/pwg.groups.getList.json) only allows
-        // string|boolean, not the raw int a tinyint fetch would otherwise
-        // produce. Normalized to real bool here, once, matching every
-        // other domain's own retype convention.
+        // 1a) -- GroupPresenter's own real `isDefault: bool` field
+        // requires a genuine bool, not the raw int a tinyint fetch would
+        // otherwise produce. Normalized to real bool here, once, matching
+        // every other domain's own retype convention.
         return array_map(GroupListing::fromRow(...), $rows);
     }
 

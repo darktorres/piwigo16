@@ -1,0 +1,540 @@
+/users:
+  get:
+    operationId: userList
+    tags:
+      - Users
+    summary: List/search users
+    description: >-
+      The fuzzy `filter` (username/email/group-name) search from the
+      legacy `pwg.users.getList` is dropped for this pass -- a real but
+      secondary filter, addable later without a breaking change.
+    parameters:
+      - name: order
+        in: query
+        description: A single sort-field token; unrecognized values are rejected.
+        schema:
+          type: string
+          default: id
+      - name: userIds[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: integer
+      - name: status[]
+        in: query
+        style: form
+        explode: true
+        description: Unrecognized values are silently dropped.
+        schema:
+          type: array
+          items:
+            type: string
+            enum: [webmaster, admin, normal, generic, guest]
+      - name: minLevel
+        in: query
+        description: Must be one of the gallery's configured permission levels.
+        schema:
+          type: integer
+      - name: maxLevel
+        in: query
+        description: Must be one of the gallery's configured permission levels.
+        schema:
+          type: integer
+      - name: minRegister
+        in: query
+        description: '`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`.'
+        schema:
+          type: string
+      - name: maxRegister
+        in: query
+        description: '`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`.'
+        schema:
+          type: string
+      - name: groupIds[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: integer
+      - name: exclude[]
+        in: query
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: integer
+      - name: username
+        in: query
+        schema:
+          type: string
+      - name: perPage
+        in: query
+        description: '`0` means no limit -- fetches every matching id in one request.'
+        schema:
+          type: integer
+          default: 100
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+    responses:
+      '200':
+        description: One page of matching users.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [users, page, perPage, totalCount]
+              properties:
+                users:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User'
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                totalCount:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: Invalid `order`, `minLevel`, `maxLevel`, `minRegister`, or `maxRegister`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  post:
+    operationId: userCreate
+    tags:
+      - Users
+    summary: Create a user
+    description: >-
+      Surfaces the real "this login is already used" message to an
+      admin caller -- unlike public self-registration, which never
+      reveals that.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [username, autoPassword]
+            properties:
+              username:
+                type: string
+              autoPassword:
+                type: boolean
+                description: Generates a random password server-side, ignoring `password`.
+              password:
+                type: [string, 'null']
+              passwordConfirm:
+                type: [string, 'null']
+                description: >-
+                  Must match `password` when the gallery's
+                  double-password-entry setting is on.
+              email:
+                type: [string, 'null']
+    responses:
+      '201':
+        description: User created.
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/User'
+                - type: object
+                  required: [id]
+                  properties:
+                    id:
+                      type: integer
+                  description: >-
+                    Defensive fallback -- the full row couldn't be
+                    re-fetched right after insert.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/users/{id}:
+  patch:
+    operationId: userUpdate
+    tags:
+      - Users
+    summary: Update a user
+    description: >-
+      One user per call. Every field is optional (leave blank to keep
+      the current value). Set `groupIds` to `[-1]` to dissociate the
+      user from every group.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+              email:
+                type: string
+              status:
+                type: string
+                enum: [webmaster, admin, normal, generic, guest]
+              level:
+                type: integer
+              language:
+                type: string
+              theme:
+                type: string
+              groupIds:
+                type: array
+                items:
+                  type: integer
+              nbImagePage:
+                type: integer
+              recentPeriod:
+                type: integer
+              expand:
+                type: boolean
+              showNbComments:
+                type: boolean
+              showNbHits:
+                type: boolean
+              enabledHigh:
+                type: boolean
+    responses:
+      '200':
+        description: User updated.
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/User'
+                - type: object
+                  required: [id]
+                  properties:
+                    id:
+                      type: integer
+                  description: >-
+                    Defensive fallback -- the full row couldn't be
+                    re-fetched right after update.
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Not an admin, or the update itself was rejected as forbidden.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+  delete:
+    operationId: userDelete
+    tags:
+      - Users
+    summary: Delete a user
+    description: >-
+      One user per call. Photos owned by this user are not deleted.
+      Protects the caller's own account, the guest/default/webmaster
+      system accounts, and (for a plain admin) every other admin
+      account.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: User deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: This account is protected from deletion.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/users/{id}/actions/generate-password-link:
+  post:
+    operationId: userGeneratePasswordLink
+    tags:
+      - Users
+    summary: Generate a one-time password-reset link for a user
+    description: Only a webmaster can perform this action for another webmaster.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [sendByMail]
+            properties:
+              sendByMail:
+                type: boolean
+    responses:
+      '200':
+        description: Link generated.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [generatedLink, sendByMail, timeValidation]
+              properties:
+                generatedLink:
+                  type: string
+                  format: uri-reference
+                sendByMail:
+                  type: [string, boolean, 'null']
+                  description: >-
+                    A confirmation string when actually sent, `false`
+                    on a suppressed mail-send failure (never a 5xx), or
+                    null when `sendByMail` was false or the user has no
+                    email.
+                timeValidation:
+                  type: string
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Not an admin, the target is a guest/generic account, or a
+          plain admin targeting a webmaster account.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/users/{id}/actions/set-main-user:
+  post:
+    operationId: userSetMainUser
+    tags:
+      - Users
+    summary: Promote a webmaster-status user to be the gallery's main user
+    description: >-
+      Webmaster status is required to call this at all; the target
+      must already have webmaster status.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: Main user updated.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: >-
+          Caller isn't a webmaster, or the target doesn't have
+          webmaster status.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+/users/{id}/actions/get-auth-key:
+  post:
+    operationId: userGetAuthKey
+    tags:
+      - Users
+    summary: Generate a magic-login auth key for a user
+    description: >-
+      Only works for normal/generic-status accounts, never
+      admins/webmasters -- an account-recovery/support tool, not a
+      general impersonation capability.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Auth key generated.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authKey, authKeyId, userId, createdOn, duration, expiredOn, keyType]
+              properties:
+                authKey:
+                  type: string
+                authKeyId:
+                  type: string
+                userId:
+                  type: integer
+                createdOn:
+                  type: string
+                duration:
+                  type: integer
+                expiredOn:
+                  type: string
+                keyType:
+                  type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        description: The target's status makes it ineligible for an auth key.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+/users/{id}/actions/delete-ratings:
+  post:
+    operationId: userDeleteRatings
+    tags:
+      - Users
+    summary: Delete a user's image ratings
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              anonymousId:
+                type: [string, 'null']
+              imageId:
+                type: [integer, 'null']
+                description: Restricts deletion to ratings on this one image.
+    responses:
+      '200':
+        description: Ratings deleted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deletedCount]
+              properties:
+                deletedCount:
+                  type: integer
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - username
+        - email
+        - status
+        - level
+        - groups
+        - language
+        - theme
+        - registrationDate
+        - registrationDateString
+        - registrationDateSince
+        - lastVisit
+        - lastVisitString
+        - lastVisitSince
+        - nbImagePage
+        - recentPeriod
+        - expand
+        - showNbComments
+        - showNbHits
+        - enabledHigh
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: [string, 'null']
+        status:
+          type: [string, 'null']
+          enum: [webmaster, admin, normal, generic, guest, null]
+        level:
+          type: [integer, 'null']
+        groups:
+          type: array
+          items:
+            type: integer
+        language:
+          type: [string, 'null']
+        theme:
+          type: [string, 'null']
+        registrationDate:
+          type: [string, 'null']
+        registrationDateString:
+          type: string
+          description: Pre-formatted display date, day-precision.
+        registrationDateSince:
+          type: string
+          description: Pre-formatted relative time ("3 months ago"-style), month-precision.
+        lastVisit:
+          type: [string, 'null']
+        lastVisitString:
+          type: string
+        lastVisitSince:
+          type: string
+          description: Day-precision.
+        nbImagePage:
+          type: [integer, 'null']
+        recentPeriod:
+          type: [integer, 'null']
+        expand:
+          type: boolean
+        showNbComments:
+          type: boolean
+        showNbHits:
+          type: boolean
+        enabledHigh:
+          type: boolean

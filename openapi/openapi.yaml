@@ -37,6 +37,8 @@ tags:
     description: Tag CRUD, merge/duplicate, and tag-filtered image listing.
   - name: Groups
     description: User-group CRUD, merge/duplicate, and membership management.
+  - name: Users
+    description: User CRUD, password/auth-key admin actions, and rating cleanup.
   - name: History
     description: >-
       Visit/download logging (`POST /history/log`, fired on every
@@ -91,6 +93,18 @@ paths:
     $ref: 'paths/groups.yaml#/~1groups~1{id}~1actions~1remove-user'
   /groups/actions/merge:
     $ref: 'paths/groups.yaml#/~1groups~1actions~1merge'
+  /users:
+    $ref: 'paths/users.yaml#/~1users'
+  '/users/{id}':
+    $ref: 'paths/users.yaml#/~1users~1{id}'
+  '/users/{id}/actions/generate-password-link':
+    $ref: 'paths/users.yaml#/~1users~1{id}~1actions~1generate-password-link'
+  '/users/{id}/actions/set-main-user':
+    $ref: 'paths/users.yaml#/~1users~1{id}~1actions~1set-main-user'
+  '/users/{id}/actions/get-auth-key':
+    $ref: 'paths/users.yaml#/~1users~1{id}~1actions~1get-auth-key'
+  '/users/{id}/actions/delete-ratings':
+    $ref: 'paths/users.yaml#/~1users~1{id}~1actions~1delete-ratings'
   /history/log:
     $ref: 'paths/history.yaml#/~1history~1log'
   /history/search:

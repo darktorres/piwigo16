@@ -41,14 +41,13 @@ final readonly class ImageSetMd5sumController implements ControllerInterface
             return $csrfDenied;
         }
 
-        $body = JsonBody::decode($request);
-        $blockSize = isset($body['blockSize']) && is_int($body['blockSize']) ? $body['blockSize'] : 0;
+        $input = ImageSetMd5sumInput::fromArray(JsonBody::decode($request));
 
         $noMd5sumIds = $this->imageService->getPhotosNoMd5sum();
         $addedCount = 0;
 
         if ($noMd5sumIds !== []) {
-            $idsToAdd = array_slice($noMd5sumIds, 0, $blockSize);
+            $idsToAdd = array_slice($noMd5sumIds, 0, $input->blockSize);
             $addedCount = $this->imageService->addMd5sum($idsToAdd);
         }
 

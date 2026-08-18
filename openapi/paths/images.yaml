@@ -872,7 +872,7 @@
                 type: integer
                 default: 200
               prevPage:
-                type: integer
+                type: [integer, 'null']
                 description: '`nextPage` from a previous call, to continue.'
               fMinRate:
                 type: number

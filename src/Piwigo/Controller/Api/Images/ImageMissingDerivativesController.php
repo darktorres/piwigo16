@@ -49,8 +49,9 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
         }
 
         $body = JsonBody::decode($request);
+        $input = ImageMissingDerivativesInput::fromArray($body);
 
-        $requestedTypes = self::stringList($body['types'] ?? null);
+        $requestedTypes = $input->types;
         if ($requestedTypes === []) {
             $types = array_keys($this->imageStdParams->getDefinedTypeMap());
         } else {
@@ -60,9 +61,9 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
             }
         }
 
-        $ids = self::intList($body['ids'] ?? null);
-        $maxUrls = isset($body['maxUrls']) && is_int($body['maxUrls']) ? $body['maxUrls'] : 200;
-        $prevPage = isset($body['prevPage']) && is_int($body['prevPage']) ? $body['prevPage'] : null;
+        $ids = $input->ids;
+        $maxUrls = $input->maxUrls;
+        $prevPage = $input->prevPage;
 
         $nextIdAndCount = $this->imageService->getNextIdAndCount();
         $maxId = $nextIdAndCount->nextId;
@@ -138,45 +139,5 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
         }
 
         return ResponseFactory::json($response);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function stringList(mixed $raw): array
-    {
-        if (! is_array($raw)) {
-            return [];
-        }
-
-        $values = [];
-        foreach ($raw as $v) {
-            if (is_string($v)) {
-                $values[] = $v;
-            }
-        }
-
-        return $values;
-    }
-
-    /**
-     * @return list<int>
-     */
-    private static function intList(mixed $raw): array
-    {
-        if (! is_array($raw)) {
-            return [];
-        }
-
-        $ids = [];
-        foreach ($raw as $v) {
-            if (is_int($v)) {
-                $ids[] = $v;
-            } elseif (is_numeric($v)) {
-                $ids[] = (int) $v;
-            }
-        }
-
-        return $ids;
     }
 }

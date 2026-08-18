@@ -838,5 +838,7 @@ function show_user_whats_new() {
   src="{$VITALS_SCRIPT_URL}"
 ></script>
 
+<div n:if="isset($EXTRA_BODY_CONTENT)">{$EXTRA_BODY_CONTENT|noescape}</div>
+
 </body>
 </html>

@@ -35,6 +35,7 @@ use Piwigo\Image\Projection\Image;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Sort\UserSortField;
 use Piwigo\Users\Event\GetWebmasterMailAddress;
 use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\BasicUserRow;
@@ -1498,9 +1499,10 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     /**
      * The condition list shared by findList() below -- a `1=1` base
      * plus one condition per non-null UserListCriteria field, appended
-     * only when its corresponding field is non-null.
+     * only when its corresponding field is non-null. DQL property
+     * paths -- findList() is DQL-backed end to end.
      */
-    private static function buildListCondition(UserListCriteria $criteria): SqlCondition
+    private static function buildListConditionDql(UserListCriteria $criteria): SqlCondition
     {
         $conditions = [];
 
@@ -1519,14 +1521,14 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->filter !== null) {
-            $filterClause = '(u.username LIKE :filterLike OR u.mail_address LIKE :filterLike';
+            $filterClause = '(u.username LIKE :filterLike OR u.mailAddress LIKE :filterLike';
             $filterParams = [
                 'filterLike' => '%' . $criteria->filter . '%',
             ];
             $filterTypes = [];
 
             if ($criteria->filteredGroupIds !== null && $criteria->filteredGroupIds !== []) {
-                $filterClause .= ' OR ug.group_id IN (:filteredGroups)';
+                $filterClause .= ' OR ug.groupId IN (:filteredGroups)';
                 $filterParams['filteredGroups'] = $criteria->filteredGroupIds;
                 $filterTypes['filteredGroups'] = ArrayParameterType::INTEGER;
             }
@@ -1535,13 +1537,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->minRegister instanceof SqlDateTime) {
-            $conditions[] = SqlCondition::fromRawSql('ui.registration_date >= :minRegister', [
+            $conditions[] = SqlCondition::fromRawSql('ui.registrationDate >= :minRegister', [
                 'minRegister' => $criteria->minRegister->value,
             ]);
         }
 
         if ($criteria->maxRegister instanceof SqlDateTime) {
-            $conditions[] = SqlCondition::fromRawSql('ui.registration_date <= :maxRegister', [
+            $conditions[] = SqlCondition::fromRawSql('ui.registrationDate <= :maxRegister', [
                 'maxRegister' => $criteria->maxRegister->value,
             ]);
         }
@@ -1571,7 +1573,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         }
 
         if ($criteria->groupId !== null) {
-            $conditions[] = SqlCondition::fromRawSql('ug.group_id IN (:groupId)', [
+            $conditions[] = SqlCondition::fromRawSql('ug.groupId IN (:groupId)', [
                 'groupId' => $criteria->groupId,
             ], [
                 'groupId' => ArrayParameterType::INTEGER,
@@ -1590,35 +1592,61 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * `Controller\Api\Users\UserRowFetcher`'s own paginated,
-     * dynamically-columned user
-     * listing; see buildListCondition() above for how each criteria
-     * field maps to its own WHERE condition. $displayColumns is the
-     * already-built `field expr => alias` map (always includes at least
-     * `u.<idColumn> => id`), caller-composed since it shapes SELECT
-     * columns, not a WHERE condition. $orderBy concatenates directly into
-     * ORDER BY -- caller must resolve this to real column names first
-     * (via {@see \Piwigo\Sort\UserSortField::
-     * parseOrderClause()}), same contract as
-     * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
-     * $order. The total count is only fetched when $includeTotalCount.
-     * LIMIT/OFFSET are only applied when $limit !== null.
+     * Translates {@see \Piwigo\Controller\Api\Users\UserRowFetcher}'s own
+     * fixed `DISPLAY_COLUMNS` raw-column keys (its one real caller,
+     * always the same 15-entry constant) into {@see findList()}'s DQL
+     * property paths. An unresolvable key throws rather than silently
+     * producing a wrong SELECT expression -- `findList()` has exactly
+     * one real caller today with a fixed, known key set, so there's no
+     * genuine "caller passes something new" case to design a silent
+     * fallback around.
      *
-     * Stays on raw DBAL, not DQL -- `$displayColumns` is a dynamic
-     * field-expression => alias map, `$orderBy` concatenates a
-     * caller-validated raw fragment, and the WHERE clause comes from
-     * buildListCondition() above's SqlCondition-building machinery.
+     * @var array<string, string>
+     */
+    private const array DISPLAY_COLUMN_DQL_MAP = [
+        'u.id' => 'u.id',
+        'u.username' => 'u.username',
+        'u.mail_address' => 'u.mailAddress',
+        'ui.status' => 'ui.status',
+        'ui.level' => 'ui.level',
+        'ui.language' => 'ui.language',
+        'ui.theme' => 'ui.theme',
+        'ui.registration_date' => 'ui.registrationDate',
+        'ui.last_visit' => 'ui.lastVisit',
+        'ui.nb_image_page' => 'ui.nbImagePage',
+        'ui.recent_period' => 'ui.recentPeriod',
+        'ui.expand' => 'ui.expand',
+        'ui.show_nb_comments' => 'ui.showNbComments',
+        'ui.show_nb_hits' => 'ui.showNbHits',
+        'ui.enabled_high' => 'ui.enabledHigh',
+    ];
+
+    /**
+     * `Controller\Api\Users\UserRowFetcher`'s own paginated,
+     * dynamically-columned user listing; see buildListConditionDql()
+     * above for how each criteria field maps to its own WHERE condition.
+     * $displayColumns is the already-built `field expr => alias` map
+     * (always includes at least `u.<idColumn> => id`), caller-composed
+     * since it shapes SELECT columns, not a WHERE condition, translated
+     * via {@see DISPLAY_COLUMN_DQL_MAP}. $orderClauses is
+     * {@see \Piwigo\Sort\UserSortField::parseOrderClause()}'s own
+     * structured `{field, dir}` list -- one `addOrderBy()` call per
+     * entry, not a single flattened string (`Expr\OrderBy::add()`
+     * treats its `$sort` argument as one opaque unit, so a pre-flattened
+     * multi-field string would append a spurious trailing direction).
+     * The total count is only fetched when $includeTotalCount.
+     * LIMIT/OFFSET are only applied when $limit !== null.
      *
      * Groups by `u.id` rather than using `SELECT DISTINCT`: `u.id` (the
      * `users` table's own primary key) is exactly the dedup key this
      * query needs -- every column it projects is functionally dependent
-     * on it (`u.*`/`ui.*`, joined 1:1 via `ui.user_id = u.id`), and the
+     * on it (`u.*`/`ui.*`, joined 1:1 via `ui.user = u.id`), and the
      * only real source of row multiplication is the `LEFT JOIN
-     * user_group` (one row per group membership), never itself part of
-     * the SELECT list. `GROUP BY`'s functional-dependency exception,
+     * UserGroupEntity` (one row per group membership), never itself part
+     * of the SELECT list. `GROUP BY`'s functional-dependency exception,
      * unlike `DISTINCT`'s strict same-row-literal requirement, also
-     * permits the `ORDER BY LOWER(username)`-style expressions
-     * a caller-supplied order can build, which aren't literally present in
+     * permits the `ORDER BY LOWER(u.username)`-style expressions a
+     * caller-supplied order can build, which aren't literally present in
      * the SELECT list. The total count uses a separate `COUNT(DISTINCT
      * u.id)` query rather than a window function or
      * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` (MySQL-only, no Postgres
@@ -1630,91 +1658,109 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * a join the way MySQL's optimizer does -- so every `ui.*` column
      * $displayColumns can carry is wrapped in `ANY_VALUE()` below. This is
      * genuinely correct, not just error-quieting: `ui` is a real
-     * one-row-per-user INNER JOIN (`ui.user_id` is user_infos' own
+     * one-row-per-user INNER JOIN (`UserInfoEntity::$user` is its own
      * primary key), so `ANY_VALUE()` only ever has exactly one real
      * candidate value to return, same reasoning as
      * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}'s
-     * own `ANY_VALUE(u.mail_address)`.
+     * own `ANY_VALUE(u.mailAddress)`.
+     *
+     * `getArrayResult()` applies real Doctrine Type conversion to every
+     * selected state-field path -- every VO/enum-typed column
+     * $displayColumns can select (`u.id`/`u.username`/`u.mailAddress`/
+     * `ui.status`/`ui.language`/`ui.theme`/`ui.registrationDate`/
+     * `ui.lastVisit`) comes back as a real object, unwrapped via
+     * {@see unwrapUserListRowVoFields()} right after fetch -- confirmed
+     * against a real, already-shipped call site in this exact class
+     * doing the same select and already handling it this way, see
+     * {@see findAllForAdminListing()}'s own `u.id AS id`/`instanceof
+     * UserId` handling. Without this, `UserRowFetcher::fetch()`'s own
+     * `is_numeric($row['id'])` check would fail against a real `UserId`
+     * object and every row would silently resolve to id 0.
      *
      * @param  array<string, string>  $displayColumns
+     * @param  list<array{field: UserSortField, dir: string}>  $orderClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findList(
         array $displayColumns,
         bool $includeLastVisitFromHistory,
         UserListCriteria $criteria,
-        string $orderBy,
+        array $orderClauses,
         bool $includeTotalCount,
         ?int $limit,
         int $offset
     ): PaginatedResult {
-        $conn = $this->em
-            ->getConnection();
-
-        $columnPairs = [];
+        $selectExpressions = [];
         foreach ($displayColumns as $field => $alias) {
-            $columnPairs[] = (str_starts_with($field, 'u.') ? $field : 'ANY_VALUE(' . $field . ')') . ' AS ' . $alias;
+            $dqlField = self::DISPLAY_COLUMN_DQL_MAP[$field] ?? throw new InvalidArgumentException('Unknown display column: ' . $field);
+            $selectExpressions[] = (str_starts_with($field, 'u.') ? $dqlField : 'ANY_VALUE(' . $dqlField . ')') . ' AS ' . $alias;
         }
         if ($includeLastVisitFromHistory) {
-            $columnPairs[] = 'ANY_VALUE(ui.last_visit_from_history) AS last_visit_from_history';
+            $selectExpressions[] = 'ANY_VALUE(ui.lastVisitFromHistory) AS last_visit_from_history';
         }
-        $columnsSql = implode(', ', $columnPairs);
 
-        $combined = self::buildListCondition($criteria);
-        $params = $combined->parameters;
-        $types = $combined->types;
+        $qb = $this->em
+            ->createQueryBuilder()
+            ->select(...$selectExpressions)
+            ->from(UserInfoEntity::class, 'ui')
+            ->innerJoin('ui.user', 'u')
+            ->leftJoin(UserGroupEntity::class, 'ug', Join::WITH, 'ug.userId = u.id')
+            ->groupBy('u.id');
+        self::buildListConditionDql($criteria)->applyTo($qb);
 
-        $joinSql = <<<SQL
-            FROM users AS u
-                INNER JOIN user_infos AS ui
-                    ON u.id = ui.user_id
-                LEFT JOIN user_group AS ug
-                    ON u.id = ug.user_id
-            {$combined->toWhereClause()}
-            SQL;
+        foreach ($orderClauses as $clause) {
+            $qb->addOrderBy($clause['field']->column(), $clause['dir']);
+        }
 
         $total = null;
         if ($includeTotalCount) {
-            $totalRaw = $conn->fetchOne(
-                <<<SQL
-                SELECT COUNT(DISTINCT u.id)
-                {$joinSql}
-                SQL
-                ,
-                $params,
-                $types
-            );
+            $totalQb = $this->em
+                ->createQueryBuilder()
+                ->select('COUNT(DISTINCT u.id)')
+                ->from(UserInfoEntity::class, 'ui')
+                ->innerJoin('ui.user', 'u')
+                ->leftJoin(UserGroupEntity::class, 'ug', Join::WITH, 'ug.userId = u.id');
+            self::buildListConditionDql($criteria)->applyTo($totalQb);
+
+            $totalRaw = $totalQb->getQuery()
+                ->getSingleScalarResult();
             $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
         }
 
-        $sql = <<<SQL
-            SELECT {$columnsSql}
-            {$joinSql}
-            GROUP BY u.id
-            ORDER BY {$orderBy}
-            SQL;
-
         if ($limit !== null) {
-            $sql .= <<<SQL
-
-                    LIMIT :limit
-                    OFFSET :offset;
-
-                SQL;
-            $params['limit'] = $limit;
-            $params['offset'] = $offset;
-            $types['limit'] = ParameterType::INTEGER;
-            $types['offset'] = ParameterType::INTEGER;
+            $qb->setMaxResults($limit)
+                ->setFirstResult($offset);
         }
 
-        $sql .= <<<SQL
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
-            ;
-            SQL;
+        return new PaginatedResult(array_map(self::unwrapUserListRowVoFields(...), $rows), $total);
+    }
 
-        $rows = $conn->fetchAllAssociative($sql, $params, $types);
+    /**
+     * {@see findList()}'s `getArrayResult()` VO-unwrap step -- every
+     * VO/enum-typed field `Controller\Api\Users\UserRowFetcher::
+     * DISPLAY_COLUMNS` can select comes back as a real object from a
+     * direct state-field-path DQL select, not the raw scalar its own
+     * row-processing expects.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private static function unwrapUserListRowVoFields(array $row): array
+    {
+        foreach ($row as $key => $value) {
+            if ($value instanceof UserId || $value instanceof Username || $value instanceof Email
+                || $value instanceof ThemeId || $value instanceof LangCode || $value instanceof SqlDateTime) {
+                $row[$key] = $value->value;
+            } elseif ($value instanceof UserStatus) {
+                $row[$key] = $value->value;
+            }
+        }
 
-        return new PaginatedResult($rows, $total);
+        return $row;
     }
 
     /**

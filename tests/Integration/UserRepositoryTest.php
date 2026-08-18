@@ -18,6 +18,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionCriteria;
+use Piwigo\Sort\UserSortField;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\Projection\UserListing;
 use Piwigo\Users\UserListCriteria;
@@ -638,7 +639,10 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $result = $this->repo->findList([
             'u.id' => 'id',
-        ], false, $criteria, 'u.id ASC', false, null, 0);
+        ], false, $criteria, [[
+            'field' => UserSortField::Id,
+            'dir' => 'ASC',
+        ]], false, null, 0);
 
         return array_map(
             static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0,
@@ -720,10 +724,50 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $result = $this->repo->findList([
             'u.id' => 'id',
-        ], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
+        ], false, new UserListCriteria(), [[
+            'field' => UserSortField::Id,
+            'dir' => 'ASC',
+        ]], true, 2, 0);
 
         self::assertCount(2, $result->rows);
         self::assertSame(4, $result->total);
+    }
+
+    /**
+     * getArrayResult() applies real Doctrine Type conversion to every
+     * VO/enum-typed selected field -- unwrapped back to plain scalars
+     * before this method returns, matching
+     * Controller\Api\Users\UserRowFetcher::fetch()'s own row-processing
+     * contract (which reads every one of these as a plain string/int via
+     * is_string()/is_numeric(), not instanceof). Asserts real values, not
+     * just presence -- a naive "not null" check wouldn't catch a value
+     * left as an unwrapped VO instance.
+     */
+    public function testFindListUnwrapsVoAndEnumTypedColumnsToPlainScalars(): void
+    {
+        $result = $this->repo->findList([
+            'u.id' => 'id',
+            'u.username' => 'username',
+            'u.mail_address' => 'email',
+            'ui.status' => 'status',
+            'ui.language' => 'language',
+            'ui.theme' => 'theme',
+            'ui.registration_date' => 'registration_date',
+        ], false, new UserListCriteria(userId: [UserId::from(1)]), [[
+            'field' => UserSortField::Id,
+            'dir' => 'ASC',
+        ]], false, null, 0);
+
+        self::assertCount(1, $result->rows);
+        $row = $result->rows[0];
+
+        self::assertSame(1, $row['id']);
+        self::assertSame('fixture_admin', $row['username']);
+        self::assertSame('fixture_admin@example.test', $row['email']);
+        self::assertSame('webmaster', $row['status']);
+        self::assertSame('en_UK', $row['language']);
+        self::assertSame('default', $row['theme']);
+        self::assertSame('2026-08-01 00:00:00', $row['registration_date']);
     }
 
     public function testCountUserInfosRowsIsOneForARealUser(): void

@@ -37,9 +37,12 @@ enum UserSortField
     }
 
     /**
-     * `UserRepository::findList()`'s own query joins `user_infos AS
-     * ui` unconditionally, so `Level`'s `ui.` prefix carries no
-     * conditional-join risk.
+     * `UserRepository::findList()`'s own DQL-backed query joins
+     * `UserInfoEntity AS ui` unconditionally, so `Level`'s `ui.` prefix
+     * carries no conditional-join risk. These are DQL property paths,
+     * not raw column names -- `findList()` is DQL-backed end to end, so
+     * `Email`'s own `u.mailAddress` (not the raw `mail_address` column
+     * name) is what its one real caller needs.
      */
     public function column(): string
     {
@@ -47,26 +50,33 @@ enum UserSortField
             self::Id => 'u.id',
             self::Username => 'LOWER(u.username)',
             self::Level => 'ui.level',
-            self::Email => 'u.mail_address',
+            self::Email => 'u.mailAddress',
         };
     }
 
     /**
      * Parses `GET /api/v1/users`'s `order` query param (`"field dir, field
      * dir"`, direction optional per entry, defaulting to `ASC`) into a
-     * real `ORDER BY` body string built from {@see column()}'s own trusted
-     * column names -- never the caller's raw text. Returns null on
+     * structured list of `{field, dir}` clauses, one per comma-separated
+     * entry -- never the caller's raw text. `findList()` applies one
+     * `addOrderBy()` call per clause rather than handing DQL's
+     * `Expr\OrderBy` a single flattened, already-comma-joined string
+     * (verified against `Expr\OrderBy::add()`: it treats its `$sort`
+     * argument as one opaque unit, so a pre-flattened multi-field string
+     * would append a spurious trailing direction). Returns null on
      * anything that doesn't cleanly match the fixed 4-field vocabulary,
      * `UserListController`'s own signal to return a 422 `problem+json`
      * error rather than fall back to any default.
+     *
+     * @return ?list<array{field: self, dir: string}>
      */
-    public static function parseOrderClause(string $order): ?string
+    public static function parseOrderClause(string $order): ?array
     {
         if (trim($order) === '') {
             return null;
         }
 
-        $columns = [];
+        $clauses = [];
         foreach (explode(',', $order) as $rawEntry) {
             if (preg_match('/^\s*([a-z_]+)(?:\s+(asc|desc))?\s*$/i', $rawEntry, $matches) !== 1) {
                 return null;
@@ -78,9 +88,12 @@ enum UserSortField
             }
 
             $dir = isset($matches[2]) && strtoupper($matches[2]) === 'DESC' ? 'DESC' : 'ASC';
-            $columns[] = $field->column() . ' ' . $dir;
+            $clauses[] = [
+                'field' => $field,
+                'dir' => $dir,
+            ];
         }
 
-        return implode(', ', $columns);
+        return $clauses;
     }
 }

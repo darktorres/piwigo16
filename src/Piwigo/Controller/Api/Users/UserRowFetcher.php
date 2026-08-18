@@ -11,6 +11,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryEntity;
+use Piwigo\Sort\UserSortField;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
 
@@ -68,27 +69,32 @@ final readonly class UserRowFetcher
             return [];
         }
 
-        return $this->fetch(new UserListCriteria(userId: $userIds), 'u.id ASC', null, 0, false)['rows'];
+        return $this->fetch(new UserListCriteria(userId: $userIds), [[
+            'field' => UserSortField::Id,
+            'dir' => 'ASC',
+        ]], null, 0, false)['rows'];
     }
 
     /**
+     * @param list<array{field: UserSortField, dir: string}> $orderClauses
      * @return array{rows: list<array<string, mixed>>, total: int}
      */
-    public function page(UserListCriteria $criteria, string $orderBy, ?int $limit, int $offset): array
+    public function page(UserListCriteria $criteria, array $orderClauses, ?int $limit, int $offset): array
     {
-        return $this->fetch($criteria, $orderBy, $limit, $offset, true);
+        return $this->fetch($criteria, $orderClauses, $limit, $offset, true);
     }
 
     /**
+     * @param list<array{field: UserSortField, dir: string}> $orderClauses
      * @return array{rows: list<array<string, mixed>>, total: int}
      */
-    private function fetch(UserListCriteria $criteria, string $orderBy, ?int $limit, int $offset, bool $includeTotalCount): array
+    private function fetch(UserListCriteria $criteria, array $orderClauses, ?int $limit, int $offset, bool $includeTotalCount): array
     {
         $paginated = $this->userService->getList(
             self::DISPLAY_COLUMNS,
             true,
             $criteria,
-            $orderBy,
+            $orderClauses,
             $includeTotalCount,
             $limit,
             $offset

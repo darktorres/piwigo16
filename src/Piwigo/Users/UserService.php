@@ -54,6 +54,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Sort\UserSortField;
 use Piwigo\Users\Event\DeleteUser;
 use Piwigo\Users\Event\RegisterUser;
 use Piwigo\Users\Event\RegisterUserCheck;
@@ -1617,17 +1618,18 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * @param  array<string, string>  $displayColumns
+     * @param  list<array{field: UserSortField, dir: string}>  $orderClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getList(
         array $displayColumns,
         bool $includeLastVisitFromHistory,
         UserListCriteria $criteria,
-        string $orderBy,
+        array $orderClauses,
         bool $includeTotalCount,
         ?int $limit,
         int $offset
     ): PaginatedResult {
-        return $this->repo->findList($displayColumns, $includeLastVisitFromHistory, $criteria, $orderBy, $includeTotalCount, $limit, $offset);
+        return $this->repo->findList($displayColumns, $includeLastVisitFromHistory, $criteria, $orderClauses, $includeTotalCount, $limit, $offset);
     }
 }

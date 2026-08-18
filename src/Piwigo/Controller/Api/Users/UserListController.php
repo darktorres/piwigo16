@@ -45,8 +45,8 @@ final readonly class UserListController implements ControllerInterface
 
         $query = $request->getQueryParams();
 
-        $orderBy = UserSortField::parseOrderClause(is_string($query['order'] ?? null) ? $query['order'] : 'id');
-        if ($orderBy === null) {
+        $orderClauses = UserSortField::parseOrderClause(is_string($query['order'] ?? null) ? $query['order'] : 'id');
+        if ($orderClauses === null) {
             return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid order parameter.');
         }
 
@@ -102,7 +102,7 @@ final readonly class UserListController implements ControllerInterface
 
         // perPage=0 means "no limit" -- user_list.js's select-all-filtered
         // action depends on this to fetch every matching id in one request.
-        $result = $this->userRowFetcher->page($criteria, $orderBy, $perPage === 0 ? null : $perPage, $perPage * $page);
+        $result = $this->userRowFetcher->page($criteria, $orderClauses, $perPage === 0 ? null : $perPage, $perPage * $page);
 
         return ResponseFactory::json([
             'users' => $result['rows'],

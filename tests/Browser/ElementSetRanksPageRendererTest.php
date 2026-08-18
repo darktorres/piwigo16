@@ -317,15 +317,25 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     $albumId = (int) $albumResult['id'];
 
     $image = H::makeTestImage('Ranks NoName Photo');
-    // An empty name -- pwg.images.addSimple leaves images.name NULL/empty
-    // rather than inventing one (same precedent already established by
-    // CommentsControllerTest.php's own "falls back to the filename-derived
-    // name" test), exercising this renderer's own
+    $imageId = H::uploadPhotoViaApi($image, $albumId, '');
+    @unlink($image);
+
+    // An empty `name` metadata value on upload isn't the same as an
+    // empty images.name row -- TusUploadSession::nonEmpty() normalizes
+    // "" to null, so UploadService::addUploadedFile()'s own INSERT-time
+    // default (StringHelper::getNameFromFile($file)) sticks instead.
+    // The only currently-reachable way to leave images.name genuinely
+    // empty is an explicit clear via PATCH /api/v1/images/{id} (same
+    // fix as CommentsControllerTest.php's own "falls back to the
+    // filename-derived name" test), exercising this renderer's own
     // StringHelper::getFilenameWoExtension() + str_replace('_', ' ', ...)
     // fallback (~line 196-197) instead of the happy-path images.name
     // column read a few lines above it.
-    $imageId = H::uploadPhotoViaApi($image, $albumId, '');
-    @unlink($image);
+    H::wsCall($page, 'pwg.images.setInfo', [
+        'image_id' => $imageId,
+        'name' => '',
+        'single_value_mode' => 'replace',
+    ]);
 
     $db = H::connect();
     $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM images WHERE id = %d', $imageId));

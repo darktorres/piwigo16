@@ -5,6 +5,13 @@
 # Composer dependencies
 /vendor
 
+# tools/openapi-bootstrap.php's own draft output -- throwaway scaffolding
+# for Phase 2 of the OpenAPI spec work to hand-review from, never trusted
+# verbatim and never the committed artifact itself (that's openapi/openapi.yaml
+# + openapi/paths/*.yaml, written by hand). Regenerate with `php
+# tools/openapi-bootstrap.php`.
+/openapi/.draft
+
 # JS dependencies + build output
 /node_modules
 /dist

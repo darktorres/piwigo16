@@ -544,7 +544,7 @@ it("captures no-photo-yet-guest's and no-photo-yet-admin's golden HTML", functio
     // per-request bootstrap, not a route of its own) shows this on *any*
     // real page once ImageRepository::countAllImages() -- a bare,
     // unconditional COUNT(*) -- is 0, except inside admin context or on
-    // identification/password/ws/popuphelp (which stay reachable on
+    // identification/password/popuphelp (which stay reachable on
     // purpose). It renders two different content variants depending on
     // the viewer: NoPhotoYetAdminPageContext (step 2, deactivate options)
     // for a logged-in admin browsing the *gallery* (not admin.php --

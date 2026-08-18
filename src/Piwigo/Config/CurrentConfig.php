@@ -1972,9 +1972,6 @@ final class CurrentConfig
         'profile' => [
             'used' => false,
         ],
-        'ws' => [
-            'used' => false,
-        ],
         'identification' => [
             'cancel' => true,
         ],

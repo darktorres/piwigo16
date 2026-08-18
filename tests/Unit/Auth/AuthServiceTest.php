@@ -380,9 +380,6 @@ test('autoLogin() succeeds for a valid remember-me cookie and marks the session 
 
         expect($result)
             ->toBeTrue();
-        // PageFilterHelper::scriptBasename() resolves to this test
-        // binary's own invoking script name under CLI (never literally
-        // "ws"), so the pwg_ui branch always applies here.
         expect($_SESSION['connected_with'] ?? null)->toBe(ConnectedWith::PwgUi->value);
     } finally {
         unset($_COOKIE[$remember_me_name]);

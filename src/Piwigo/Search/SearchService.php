@@ -17,7 +17,6 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\LikePattern;
@@ -142,7 +141,7 @@ final readonly class SearchService
         $search = $this->getSearchInfo($candidate);
 
         if ($search instanceof Search) {
-            if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
+            if ($clausePattern === 'id = ?' and $search->searchUuid !== null) {
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 

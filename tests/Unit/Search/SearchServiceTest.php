@@ -2327,12 +2327,12 @@ test('getValidatedSearchInfo() calls fatalError() when a uuid search is looked u
 });
 
 test('getValidatedSearchInfo() looking up by uuid never triggers the id-vs-uuid mismatch gate, even when the row has a real uuid', function (): void {
-    // The mismatch gate's own 3-term `and` chain
-    // (`scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and
-    // $search->searchUuid !== null`) needs its own 2nd term false here
-    // -- a uuid-pattern candidate can never make $clausePattern equal
-    // 'id = ?' -- to prove it's a real AND, not an accidentally widened
-    // OR that would fire on any single true term.
+    // The mismatch gate's own 2-term `and` chain
+    // (`$clausePattern === 'id = ?' and $search->searchUuid !== null`)
+    // needs its own 1st term false here -- a uuid-pattern candidate can
+    // never make $clausePattern equal 'id = ?' -- to prove it's a real
+    // AND, not an accidentally widened OR that would fire on any single
+    // true term.
     searchServiceTestRepo()
         ->insertSavedSearch([
             'q' => 'nature',

@@ -68,7 +68,6 @@ final readonly class NoPhotoYetRenderer
             ! $this->adminContext->isActive()   // no message inside administration
             and PageFilterHelper::scriptBasename($this->currentConfig) !== 'identification' // keep the ability to login
             and PageFilterHelper::scriptBasename($this->currentConfig) !== 'password'       // keep the ability to reset password
-            and PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws'             // keep the ability to discuss with web API
             and PageFilterHelper::scriptBasename($this->currentConfig) !== 'popuphelp'      // keep the ability to display help popups
             and ($this->accessLevelChecker->isAGuest() or $this->accessLevelChecker->isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide

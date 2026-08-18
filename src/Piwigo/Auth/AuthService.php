@@ -25,7 +25,6 @@ use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -249,11 +248,8 @@ final readonly class AuthService
                     if ($calculated['key'] !== false && hash_equals($calculated['key'], $cookie[2])) {
                         // 'connected_with' in the session defines the
                         // authentication context (UI, API, etc). Auto-login
-                        // via remember-me may miss this, so we set it to
-                        // 'pwg_ui' for UI logins (not API).
-                        if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws') {
-                            $this->connectedWithSession->set(ConnectedWith::PwgUi);
-                        }
+                        // via remember-me always means a UI login here.
+                        $this->connectedWithSession->set(ConnectedWith::PwgUi);
                         $this->logUser($cookie[0], true);
                         $this->eventDispatcher->dispatch(new LoginSuccess(Username::tryFrom($calculated['username'])));
 

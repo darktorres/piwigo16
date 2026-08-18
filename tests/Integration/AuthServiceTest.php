@@ -433,9 +433,6 @@ namespace Piwigo\Tests\Integration {
                 }
 
                 self::assertTrue($result);
-                // PageFilterHelper::scriptBasename() resolves to this test
-                // binary's own invoking script name under CLI (never
-                // literally "ws"), so the pwg_ui branch always applies here.
                 self::assertSame(ConnectedWith::PwgUi->value, $_SESSION['connected_with'] ?? null);
             } finally {
                 unset($_COOKIE[$remember_me_name]);

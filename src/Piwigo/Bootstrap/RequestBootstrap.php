@@ -340,7 +340,7 @@ final class RequestBootstrap
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
-            if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'ws' and DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
+            if (DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
                 $theme = ThemeId::from(self::currentConfig()->mobileTheme);
             }
             // PluginConfig\ThemeRegistry::bootCurrent() -- only the

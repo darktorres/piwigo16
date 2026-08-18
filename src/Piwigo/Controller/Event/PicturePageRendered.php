@@ -5,7 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Event;
 
 /**
- * Typed marker event for the legacy `loc_end_picture` notification. No
- * payload, no handler registered anywhere today.
+ * Typed event for the legacy `loc_end_picture` notification -- no
+ * handler registered anywhere today, but no longer bare: `$imageId`
+ * lets a handler scope itself to a specific picture instead of every
+ * render site-wide, mirroring `Picture\Event\FilterPictureDisplayInfo`'s
+ * own `$imageId` addition in this exact controller. Real caller this
+ * was added for: a plugin injecting a picture-page-specific toolbar via
+ * `Page\Event\PageHeaderRendered`/`Template::concat('EXTRA_BODY_CONTENT',
+ * ...)` needs to know which picture is being viewed -- `PageHeaderRendered`
+ * itself fires too early (from the shared header, before this
+ * controller builds any picture-specific data) to carry it.
  */
-final readonly class PicturePageRendered {}
+final readonly class PicturePageRendered
+{
+    public function __construct(
+        public int $imageId,
+    ) {}
+}

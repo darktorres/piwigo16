@@ -2330,3 +2330,51 @@ it('lets a plugin hide a display-info field via FilterPictureDisplayInfo', funct
         pictureRemoveFixturePlugin($pluginDir);
     }
 });
+
+it('dispatches PicturePageRendered with the real requested image id', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Picture Page Rendered Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Page Rendered Photo');
+    @unlink($image);
+
+    $pluginId = 'pwgtest-picture-page-rendered';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+    $marker = 'PWGTEST_PICTURE_PAGE_RENDERED_MARKER_' . uniqid();
+
+    pictureWriteFixturePlugin($pluginDir, <<<PHP
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+            \\Piwigo\\Controller\\Event\\PicturePageRendered::class,
+            static function (\\Piwigo\\Controller\\Event\\PicturePageRendered \$event) use (\$context): void {
+                \$context->template()->concat(
+                    'EXTRA_BODY_CONTENT',
+                    '<div id="picture-page-rendered-marker">{$marker}|' . \$event->imageId . '</div>'
+                );
+            }
+        );
+        PHP);
+
+    $pluginDb = pictureDbConnect();
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
+    H::dbClose($pluginDb);
+
+    try {
+        $renderedPage = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+        $body = H::rawWebpage($renderedPage)->content();
+
+        expect($body)
+            ->toContain($marker . '|' . $imageId);
+        $renderedPage->assertNoJavaScriptErrors();
+    } finally {
+        $cleanupDb = pictureDbConnect();
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
+        H::dbClose($cleanupDb);
+        pictureRemoveFixturePlugin($pluginDir);
+    }
+});

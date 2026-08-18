@@ -66,6 +66,76 @@ function galDeleteSearch(int $searchId): void
     H::dbClose($db);
 }
 
+/**
+ * Same real fixture-plugin technique
+ * `tests/Browser/PictureControllerTest.php`'s own `pictureWriteFixturePlugin()`
+ * uses -- writes a real `plugin.json` + PSR-4-autoloadable
+ * `ExtensionInterface` class, loaded via `PluginConfig\PluginRegistry::
+ * bootActive()`.
+ */
+function galWriteFixturePlugin(string $pluginDir, string $bootBodySource): void
+{
+    if (! is_dir($pluginDir . '/src')) {
+        mkdir($pluginDir . '/src', 0o777, true);
+    }
+
+    $namespace = 'PiwigoTestFixture\\Ext' . bin2hex(random_bytes(6));
+
+    file_put_contents($pluginDir . '/plugin.json', json_encode([
+        'id' => basename($pluginDir),
+        'name' => basename($pluginDir),
+        'version' => '1.0.0',
+        'description' => 'Test-only fixture plugin (tests/Browser/GalleryControllerTest.php).',
+        'license' => 'MIT',
+        'minPiwigo' => '16.3.0',
+        'main' => $namespace . '\\Plugin',
+        'autoload' => [
+            'psr-4' => [
+                $namespace . '\\' => 'src/',
+            ],
+        ],
+    ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+    file_put_contents($pluginDir . '/src/Plugin.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\PluginConfig\\ExtensionContext;
+        use Piwigo\\PluginConfig\\ExtensionInterface;
+
+        final class Plugin implements ExtensionInterface
+        {
+            public function boot(ExtensionContext \$context): void
+            {
+                {$bootBodySource}
+            }
+
+            public function install(): void {}
+            public function activate(): void {}
+            public function deactivate(): void {}
+            public function uninstall(): void {}
+            public function update(string \$oldVersion, string \$newVersion): void {}
+
+            public function subscribedEvents(): array
+            {
+                return [];
+            }
+        }
+
+        PHP);
+}
+
+function galRemoveFixturePlugin(string $pluginDir): void
+{
+    @unlink($pluginDir . '/src/Plugin.php');
+    @rmdir($pluginDir . '/src');
+    @unlink($pluginDir . '/plugin.json');
+    @rmdir($pluginDir);
+}
+
 it('renders a category page with subcategories, exercising the main thumbnail/sort/edit-icon paths', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1');
@@ -292,5 +362,85 @@ it('renders the empty quick-search state when no term matches anything', functio
         $page->assertSee('zzzqfrobnomatch77');
     } finally {
         galDeleteSearch($searchId);
+    }
+});
+
+it('dispatches IndexRendered with the real category id/name/comment when viewing a single category', function (): void {
+    $comment = 'CT IndexRendered comment ' . uniqid();
+    $pluginId = 'pwgtest-gallery-index-rendered-category';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+    $marker = 'PWGTEST_INDEX_RENDERED_MARKER_' . uniqid();
+
+    galWriteFixturePlugin($pluginDir, <<<PHP
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+            \\Piwigo\\Controller\\Event\\IndexRendered::class,
+            static function (\\Piwigo\\Controller\\Event\\IndexRendered \$event) use (\$context): void {
+                if (\$event->categoryId === 1) {
+                    \$context->template()->concat(
+                        'EXTRA_BODY_CONTENT',
+                        '<div id="index-rendered-marker">{$marker}|' . \$event->categoryId . '|' . \$event->categoryName . '|' . \$event->categoryComment . '</div>'
+                    );
+                }
+            }
+        );
+        PHP);
+
+    $db = galDbConnect();
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
+    H::dbClose($db);
+
+    try {
+        galSetCategoryComment(1, $comment);
+
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/index.php?/category/1');
+        $body = H::rawWebpage($page)->content();
+
+        expect($body)
+            ->toContain($marker . '|1|Sample Album|' . $comment);
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        galSetCategoryComment(1, null);
+        $cleanupDb = galDbConnect();
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
+        H::dbClose($cleanupDb);
+        galRemoveFixturePlugin($pluginDir);
+    }
+});
+
+it('dispatches IndexRendered with null category fields on a tag page (not a single-category view)', function (): void {
+    $pluginId = 'pwgtest-gallery-index-rendered-tag';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+    $marker = 'PWGTEST_INDEX_RENDERED_TAG_MARKER_' . uniqid();
+
+    galWriteFixturePlugin($pluginDir, <<<PHP
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+            \\Piwigo\\Controller\\Event\\IndexRendered::class,
+            static function (\\Piwigo\\Controller\\Event\\IndexRendered \$event) use (\$context): void {
+                \$context->template()->concat(
+                    'EXTRA_BODY_CONTENT',
+                    '<div id="index-rendered-tag-marker">{$marker}|' . var_export(\$event->categoryId, true) . '|' . var_export(\$event->categoryName, true) . '|' . var_export(\$event->categoryComment, true) . '</div>'
+                );
+            }
+        );
+        PHP);
+
+    $db = galDbConnect();
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
+    H::dbClose($db);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/index.php?/tags/1');
+        $body = H::rawWebpage($page)->content();
+
+        expect($body)
+            ->toContain($marker . '|NULL|NULL|NULL');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        $cleanupDb = galDbConnect();
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
+        H::dbClose($cleanupDb);
+        galRemoveFixturePlugin($pluginDir);
     }
 });

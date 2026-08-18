@@ -182,6 +182,19 @@ mechanisms this rewrite introduced, not ports:
 | `Piwigo\Menu\Event\CheckMenuLinkVisibility` | SEC-49 — a new, deliberate extension point, not a legacy port. |
 | `Piwigo\Picture\Event\FilterPictureDisplayInfo` | P29.6, ported for `AdminTools_16.3.0`'s own `set_prefilter('picture', 'admintools_remove_privacy')` — Smarty compile-time prefilters have no equivalent at all in this Latte-compiling fork, so this is a genuinely new, narrower mechanism (a real filter event on the underlying `$display_info` array) achieving the same functional outcome by a different means, not a port of `set_prefilter` itself. |
 
+Two more classes map to a real legacy hook (see the table above), but
+gained a field the legacy hook's own bare `trigger_notify()` call never
+carried — added for P29.6's `AdminTools_16.3.0` port, whose picture/
+album-page toolbar needs to know which picture/category is being viewed
+(`Page\Event\PageHeaderRendered`, the mechanism that injects the
+toolbar itself, fires from the shared header before either controller
+builds this data, so neither event could carry it before now):
+
+| Class | Field(s) added | Why |
+| --- | --- | --- |
+| `Piwigo\Controller\Event\PicturePageRendered` (`loc_end_picture`) | `int $imageId` | Mirrors `FilterPictureDisplayInfo`'s own `$imageId` addition in the same controller. |
+| `Piwigo\Controller\Event\IndexRendered` (`loc_end_index`) | `?int $categoryId`, `?string $categoryName`, `?string $categoryComment` | Null unless viewing a single real category. Name/comment are included directly (not just the id) because no single-category `GET /api/v1/categories/{id}` REST endpoint exists to fetch them client-side instead. |
+
 ## Investigated, not ported
 
 Four hooks turned up in the wild plugin corpus (`../piwigo16-plugins`,

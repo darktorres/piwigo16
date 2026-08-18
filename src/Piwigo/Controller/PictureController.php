@@ -1261,7 +1261,7 @@ final readonly class PictureController implements ControllerInterface
         /** @var string|null $url_link */
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
-        $this->eventDispatcher->dispatch(new PicturePageRendered());
+        $this->eventDispatcher->dispatch(new PicturePageRendered($image_id));
         $this->htmlService
             ->flushPageMessages();
         if ($slideshow and $this->currentConfig->lightSlideshow) {

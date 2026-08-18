@@ -615,7 +615,15 @@ final readonly class GalleryController implements ControllerInterface
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
-        $this->eventDispatcher->dispatch(new IndexRendered());
+        $single_category = $section_context->section === Section::Categories ? $section_context->category : null;
+        $single_category_id = is_numeric($single_category['id'] ?? null) ? (int) $single_category['id'] : null;
+        $single_category_name = is_string($single_category['name'] ?? null) ? $single_category['name'] : null;
+        $single_category_comment = is_string($single_category['comment'] ?? null) ? $single_category['comment'] : null;
+        $this->eventDispatcher->dispatch(new IndexRendered(
+            categoryId: $single_category_id,
+            categoryName: $single_category_name,
+            categoryComment: $single_category_comment,
+        ));
         $this->htmlService
             ->flushPageMessages();
         $template->parseIndexButtons();

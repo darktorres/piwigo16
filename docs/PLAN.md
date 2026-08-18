@@ -116,7 +116,7 @@ Three structural changes produced that drift:
 | P24 | Post-P23 remediation & hardening | In progress — see Epoch F | 646 |
 | P25 | WS layer modernization — typed internals + PSR-7 lifecycle | Mostly done — Stage 1/2 landed, Stage 3 tests/docs partial; see Epoch G | ~50 |
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
-| P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Mostly done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement; generated TS client not started; see Epoch G | ~148 |
+| P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
 | P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 unstarted | 22 |
 | P30 | Layer decoupling + repository restructure | Not started — web-root half done | 1 |
@@ -1144,16 +1144,20 @@ not inferred:
   typed `*Input` DTO (`ImageSetMd5sumController`,
   `ImageMissingDerivativesController`,
   `ImageFilteredSearchCreateController`) now all have one.
-- **Confirmed still missing from P27**: no generated TypeScript client
-  exists anywhere in the tree (the `.ts` files that do exist are build
-  tooling config, not a generated client). `Content-Type: application/
-  json` validation on incoming REST bodies is real but narrow: the only
-  `getHeaderLine('Content-Type')`/`getHeader('Content-Type')` check
-  anywhere under `src/Piwigo` is `TusUploadPatchController`'s own
-  tus-protocol check, not a general REST-body guard (SEC-39, confirmed
-  not started). No `Idempotency-Key` replay store exists (SEC-65,
-  confirmed not started — zero hits for `Idempotency` anywhere under
-  `src/Piwigo`).
+- **P27's remaining 3 gaps are now closed.** A generated TypeScript
+  client exists (`openapi/client/schema.d.ts` via `openapi-typescript`,
+  `openapi/client/index.ts`'s thin `openapi-fetch` wrapper), with a CI
+  step regenerating and diffing the committed schema to catch drift.
+  `Http\JsonBody::decode()` now validates the `Content-Type` media type
+  is `application/json` for any non-empty body, returning the same 415
+  shape `TusUploadPatchController`'s own tus-protocol check already used
+  (SEC-39, done). `Http\Middleware\ApiIdempotencyMiddleware` adds an
+  opt-in `Idempotency-Key` replay store (SEC-65, done) — scoped to
+  `/api/v1` mutating methods, excluding the tus controllers, backed by a
+  new `IdempotencyCachePool`; a repeated key with the same body replays
+  the stored response, a different body gets 400. Concurrent-duplicate-
+  request locking is a deliberate, documented non-goal (would need real
+  cross-process locking, out of scope for a replay cache).
 
 ### Epoch H — Security (P28)
 
@@ -1932,7 +1936,7 @@ not a guarantee.
 | SEC-36 | P27 | REST error responses never leak internals | Done (confirmed) — `Http\Middleware\ExceptionHandlerMiddleware` catches every uncaught `Throwable` app-wide (including `/api/v1`), logs it + reports to Sentry, and returns a bare `Internal Server Error` 500 with no message/trace |
 | SEC-37 | P27 | No object dumps in the REST error path | Done (confirmed) — same middleware; nothing beyond the class name and message is logged, never returned to the client |
 | SEC-38 | P27 | REST route authorization middleware | Done (confirmed) — `Http\AdminGuard` (401 vs 403, RFC 9457 problem+json), explicitly injected into 69 of the 134 `Controller\Api\*` classes |
-| SEC-39 | P27 | Validate `Content-Type: application/json` on REST bodies | Not started (confirmed) — grepped every `getHeaderLine('Content-Type')`/`getHeader('Content-Type')` call under `src/Piwigo`; the only hit is `TusUploadPatchController`'s own tus-protocol check, not a general REST-body guard |
+| SEC-39 | P27 | Validate `Content-Type: application/json` on REST bodies | Done — `Http\JsonBody::decode()` (the single choke point every JSON-body-consuming controller already goes through) rejects a non-empty body whose media type isn't `application/json` with a 415, mirroring `TusUploadPatchController`'s own tus-protocol check |
 | SEC-40 | P24 | Request DTOs as a hard input-validation gate | Real progress — arch test live; no "0 remaining" verified |
 | SEC-41 | P28 | Password hashing → Argon2id | Not started |
 | SEC-42 | P28 | CSRF middleware: remove `/admin*` exemption | Not started |
@@ -1958,7 +1962,7 @@ not a guarantee.
 | SEC-62 | P28 | Trusted Types | Not started |
 | SEC-63 | P28 | Fetch Metadata isolation | Not started |
 | SEC-64 | P3 | OpenSSF Scorecard | Done |
-| SEC-65 | P27 | API `Idempotency-Key` replay store | Not started (confirmed) — zero hits for `Idempotency` anywhere under `src/Piwigo` |
+| SEC-65 | P27 | API `Idempotency-Key` replay store | Done — `Http\Middleware\ApiIdempotencyMiddleware`, opt-in via the `Idempotency-Key` header, scoped to `/api/v1` mutating methods excluding tus; true concurrent-duplicate-request locking is a deliberate non-goal (a replay cache, not cross-process locking) |
 
 ### Notes on the partial items
 

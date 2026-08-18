@@ -29,15 +29,14 @@ function albumsPageChildrenOrderedByRank(int $parentId): array
 
 it('renders the album tree with real nested albums', function (): void {
     $page = H::loginAsAdmin($this);
-    $parent = H::wsCall($page, 'pwg.categories.add', [
+    $parent = H::createCategory($page, [
         'name' => 'Albums Page Parent ' . uniqid(),
     ]);
-    $parentResult = $parent['result'] ?? null;
-    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($parent, true));
+    if (! is_numeric($parent['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($parent, true));
     }
-    $parentId = (int) $parentResult['id'];
-    $parentName = is_string($parentResult['name'] ?? null) ? $parentResult['name'] : '';
+    $parentId = (int) $parent['id'];
+    $parentName = is_string($parent['name'] ?? null) ? $parent['name'] : '';
 
     $page = H::navigateOk($page, '/admin.php?page=albums');
 
@@ -48,19 +47,17 @@ it('renders the album tree with real nested albums', function (): void {
 it('reorders root-level albums alphabetically ascending via simpleAutoOrder', function (): void {
     $page = H::loginAsAdmin($this);
     $suffix = uniqid();
-    $zebra = H::wsCall($page, 'pwg.categories.add', [
+    $zebra = H::createCategory($page, [
         'name' => 'Zebra Auto Order ' . $suffix,
     ]);
-    $apple = H::wsCall($page, 'pwg.categories.add', [
+    $apple = H::createCategory($page, [
         'name' => 'Apple Auto Order ' . $suffix,
     ]);
-    $zebraResult = $zebra['result'] ?? null;
-    $appleResult = $apple['result'] ?? null;
-    if (! is_array($zebraResult) || ! is_numeric($zebraResult['id'] ?? null) || ! is_array($appleResult) || ! is_numeric($appleResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return numeric ids');
+    if (! is_numeric($zebra['id'] ?? null) || ! is_numeric($apple['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return numeric ids');
     }
-    $zebraId = (int) $zebraResult['id'];
-    $appleId = (int) $appleResult['id'];
+    $zebraId = (int) $zebra['id'];
+    $appleId = (int) $apple['id'];
 
     $result = H::adminPost($page, '/admin.php?page=albums', [
         'pwg_token' => H::pwgToken($page),
@@ -84,30 +81,27 @@ it('reorders root-level albums alphabetically ascending via simpleAutoOrder', fu
 it('reorders a specific parent\'s direct children via simpleAutoOrder scoped by id', function (): void {
     $page = H::loginAsAdmin($this);
     $suffix = uniqid();
-    $parent = H::wsCall($page, 'pwg.categories.add', [
+    $parent = H::createCategory($page, [
         'name' => 'Scoped Auto Order Parent ' . $suffix,
     ]);
-    $parentResult = $parent['result'] ?? null;
-    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id');
+    if (! is_numeric($parent['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id');
     }
-    $parentId = (int) $parentResult['id'];
+    $parentId = (int) $parent['id'];
 
-    $childB = H::wsCall($page, 'pwg.categories.add', [
+    $childB = H::createCategory($page, [
         'name' => 'B Child',
         'parent' => (string) $parentId,
     ]);
-    $childA = H::wsCall($page, 'pwg.categories.add', [
+    $childA = H::createCategory($page, [
         'name' => 'A Child',
         'parent' => (string) $parentId,
     ]);
-    $childBResult = $childB['result'] ?? null;
-    $childAResult = $childA['result'] ?? null;
-    if (! is_array($childBResult) || ! is_numeric($childBResult['id'] ?? null) || ! is_array($childAResult) || ! is_numeric($childAResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return numeric ids for children');
+    if (! is_numeric($childB['id'] ?? null) || ! is_numeric($childA['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return numeric ids for children');
     }
-    $childBId = (int) $childBResult['id'];
-    $childAId = (int) $childAResult['id'];
+    $childBId = (int) $childB['id'];
+    $childAId = (int) $childA['id'];
 
     $result = H::adminPost($page, '/admin.php?page=albums', [
         'pwg_token' => H::pwgToken($page),
@@ -125,29 +119,26 @@ it('reorders a specific parent\'s direct children via simpleAutoOrder scoped by 
 it('reorders recursively (recursiveAutoOrder) including grandchildren', function (): void {
     $page = H::loginAsAdmin($this);
     $suffix = uniqid();
-    $parent = H::wsCall($page, 'pwg.categories.add', [
+    $parent = H::createCategory($page, [
         'name' => 'Recursive Auto Order Parent ' . $suffix,
     ]);
-    $parentResult = $parent['result'] ?? null;
-    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id');
+    if (! is_numeric($parent['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id');
     }
-    $parentId = (int) $parentResult['id'];
+    $parentId = (int) $parent['id'];
 
-    $childB = H::wsCall($page, 'pwg.categories.add', [
+    $childB = H::createCategory($page, [
         'name' => 'B Recursive Child',
         'parent' => (string) $parentId,
     ]);
-    $childA = H::wsCall($page, 'pwg.categories.add', [
+    $childA = H::createCategory($page, [
         'name' => 'A Recursive Child',
         'parent' => (string) $parentId,
     ]);
-    $childBResult = $childB['result'] ?? null;
-    $childAResult = $childA['result'] ?? null;
-    if (! is_array($childBResult) || ! is_numeric($childBResult['id'] ?? null) || ! is_array($childAResult) || ! is_numeric($childAResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return numeric ids for children');
+    if (! is_numeric($childB['id'] ?? null) || ! is_numeric($childA['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return numeric ids for children');
     }
-    $childAId = (int) $childAResult['id'];
+    $childAId = (int) $childA['id'];
 
     // recursiveAutoOrder runs CategoryService::getSubcatIds() over the
     // whole tree under $post_id first (rather than simpleAutoOrder's own
@@ -168,21 +159,19 @@ it('reorders recursively (recursiveAutoOrder) including grandchildren', function
 it('sorts by date_creation via the date-based auto-order branch', function (): void {
     $page = H::loginAsAdmin($this);
     $suffix = uniqid();
-    $parent = H::wsCall($page, 'pwg.categories.add', [
+    $parent = H::createCategory($page, [
         'name' => 'Date Auto Order Parent ' . $suffix,
     ]);
-    $parentResult = $parent['result'] ?? null;
-    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id');
+    if (! is_numeric($parent['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id');
     }
-    $parentId = (int) $parentResult['id'];
-    $child = H::wsCall($page, 'pwg.categories.add', [
+    $parentId = (int) $parent['id'];
+    $child = H::createCategory($page, [
         'name' => 'Date Auto Order Child',
         'parent' => (string) $parentId,
     ]);
-    $childResult = $child['result'] ?? null;
-    if (! is_array($childResult) || ! is_numeric($childResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id for the child');
+    if (! is_numeric($child['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id for the child');
     }
 
     // A date_* order routes through CategoryAdminService::getCategoriesRefDate()

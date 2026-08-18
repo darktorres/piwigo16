@@ -289,14 +289,13 @@ function pictureModifyCurlLoginSession(string $username, string $password): arra
 
 it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports success', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photo Modify Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Original Name');
     @unlink($image);
@@ -342,14 +341,13 @@ it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports 
 
 it('rejects a photo-modify submission with a missing CSRF token', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photo Modify CSRF Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'CSRF Test Photo');
     @unlink($image);
@@ -366,14 +364,13 @@ it('rejects a photo-modify submission with a missing CSRF token', function (): v
 
 it('sets a plain (non-array) tag name and assigns the photo as its new album representative', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photo Modify Represent Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Represent Photo');
     @unlink($image);
@@ -401,14 +398,13 @@ it('sets a plain (non-array) tag name and assigns the photo as its new album rep
 
 it('synchronizes metadata from file via the sync_metadata CSRF-gated action', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photo Modify Sync Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Sync Photo');
     @unlink($image);
@@ -423,14 +419,13 @@ it('synchronizes metadata from file via the sync_metadata CSRF-gated action', fu
 
 it('deletes the photo via the CSRF-gated delete action and redirects to the gallery root', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Photo Modify Delete Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Modify Delete Photo');
     @unlink($image);
@@ -517,14 +512,13 @@ it('honors the session edit context as the delete redirect target instead of the
 
 it('renders U_JUMPTO from the session edit context, ahead of the authorized-category fallback', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'PM Jumpto Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'PM Jumpto Photo');
     @unlink($image);
@@ -584,14 +578,13 @@ it('proceeds with the original submission when a picture_modify_before_update pl
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'PM Bogus Hook Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'PM Bogus Hook Photo');
         @unlink($image);
@@ -637,28 +630,26 @@ it('sets a newly-represented album as representative even when it already has a 
     // own explicit call can change either one.
     $page = H::loginAsAdmin($this);
 
-    $albumB = H::wsCall($page, 'pwg.categories.add', [
+    $albumB = H::createCategory($page, [
         'name' => 'PM New Thumb Album B ' . uniqid(),
     ]);
-    $albumBResult = $albumB['result'] ?? null;
-    if (! is_array($albumBResult) || ! is_numeric($albumBResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumB, true));
+    if (! is_numeric($albumB['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($albumB, true));
     }
-    $albumBId = (int) $albumBResult['id'];
+    $albumBId = (int) $albumB['id'];
     $imageX = H::makeTestImage(uniqid());
     $imageXId = H::uploadPhotoViaApi($imageX, $albumBId, 'PM New Thumb Photo X');
     @unlink($imageX);
     expect(pictureModifyCategoryRepresentativeId($albumBId))
         ->toBe($imageXId);
 
-    $albumC = H::wsCall($page, 'pwg.categories.add', [
+    $albumC = H::createCategory($page, [
         'name' => 'PM New Thumb Album C ' . uniqid(),
     ]);
-    $albumCResult = $albumC['result'] ?? null;
-    if (! is_array($albumCResult) || ! is_numeric($albumCResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumC, true));
+    if (! is_numeric($albumC['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($albumC, true));
     }
-    $albumCId = (int) $albumCResult['id'];
+    $albumCId = (int) $albumC['id'];
     $imageY = H::makeTestImage(uniqid());
     $imageYId = H::uploadPhotoViaApi($imageY, $albumCId, 'PM New Thumb Photo Y (edit target)');
     @unlink($imageY);
@@ -685,14 +676,13 @@ it('sets a newly-represented album as representative even when it already has a 
 
 it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/270-degree rotation', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'PM Rotation Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     // H::makeTestImage() draws a fixed 200x150 (landscape) canvas, with no
     // EXIF orientation tag -- images.rotation stays 0 (no auto-rotation)
     // through a normal API upload. Written directly instead of via a real

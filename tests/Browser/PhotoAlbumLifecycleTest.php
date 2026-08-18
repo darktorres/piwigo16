@@ -5,36 +5,9 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Narrows a WS response's `result` field to a string-keyed array.
- * H::wsCall() only guarantees array<string, mixed> for the top-level
- * response — the nested `result` value comes straight out of
- * json_decode() and isn't typed any further, so this asserts the shape
- * this file's own WS calls always produce (a JSON object), normalizing
- * keys to string the same way H::wsCall() itself does, rather than
- * trusting the decoded shape blindly.
+ * Narrows a decoded `/api/v1` response's `id` field to an int.
  *
- * @param  array<string, mixed>  $response
- * @return array<string, mixed>
- */
-function lifecycleWsResult(array $response, string $context): array
-{
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException("{$context} response missing result: " . var_export($response, true));
-    }
-
-    $normalized = [];
-    foreach ($result as $key => $value) {
-        $normalized[(string) $key] = $value;
-    }
-
-    return $normalized;
-}
-
-/**
- * Narrows `result.id` (as produced by pwg.categories.add) to an int.
- *
- * @param  array<string, mixed>  $result
+ * @param  array<array-key, mixed>  $result
  */
 function lifecycleResultId(array $result, string $context): int
 {
@@ -47,14 +20,13 @@ function lifecycleResultId(array $result, string $context): int
 }
 
 /**
- * Narrows `result.<listKey>` to a list of string-keyed arrays, e.g. the
- * `images` list from pwg.categories.getImages or the `categories` list
- * from pwg.categories.getAdminList — skipping any entry that isn't
- * itself an array (array_column needs array-shaped rows, not scalars),
- * and normalizing each row's keys to string the same way
- * H::wsCall() / lifecycleWsResult() do.
+ * Narrows a decoded `/api/v1` response's `<listKey>` field to a list of
+ * string-keyed arrays, e.g. the `images` list from categoryImages() or
+ * the `categories` list from listCategoriesAdmin() — skipping any entry
+ * that isn't itself an array (array_column needs array-shaped rows, not
+ * scalars).
  *
- * @param  array<string, mixed>  $result
+ * @param  array<array-key, mixed>  $result
  * @return list<array<string, mixed>>
  */
 function lifecycleResultList(array $result, string $listKey, string $context): array
@@ -86,11 +58,10 @@ it('photo and album full CRUD lifecycle', function (): void {
     $pwgToken = H::pwgToken($page);
 
     // --- Create album ---
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Lifecycle Album ' . uniqid(),
     ]);
-    expect($album['stat'])->toBe('ok');
-    $albumId = lifecycleResultId(lifecycleWsResult($album, 'pwg.categories.add'), 'pwg.categories.add');
+    $albumId = lifecycleResultId($album, 'createCategory');
     expect($albumId)
         ->toBeGreaterThan(0);
 
@@ -100,52 +71,45 @@ it('photo and album full CRUD lifecycle', function (): void {
     @unlink($image);
 
     // --- Photo appears in album ---
-    $list = H::wsCall($page, 'pwg.categories.getImages', [
+    $list = H::categoryImages($page, [
         'cat_id' => $albumId,
     ]);
-    expect($list['stat'])->toBe('ok');
     $imageIds = array_column(
-        lifecycleResultList(lifecycleWsResult($list, 'pwg.categories.getImages'), 'images', 'pwg.categories.getImages'),
+        lifecycleResultList($list, 'images', 'categoryImages'),
         'id'
     );
     expect($imageIds)
         ->toContain($imageId);
 
     // --- Update photo name ---
-    $update = H::wsCall($page, 'pwg.images.setInfo', [
+    H::updateImageInfo($page, [
         'image_id' => $imageId,
         'name' => 'Updated Name',
         'single_value_mode' => 'replace',
     ]);
-    expect($update['stat'])->toBe('ok');
 
-    $info = H::wsCall($page, 'pwg.images.getInfo', [
+    $info = H::imageInfo($page, [
         'image_id' => $imageId,
     ]);
-    expect($info['stat'])->toBe('ok');
-    $infoResult = lifecycleWsResult($info, 'pwg.images.getInfo');
-    expect($infoResult['name'])->toBe('Updated Name');
+    expect($info['name'])->toBe('Updated Name');
 
     // --- Delete photo ---
-    $deletePhoto = H::wsCall($page, 'pwg.images.delete', [
+    H::deleteImage($page, [
         'image_id' => $imageId,
         'pwg_token' => $pwgToken,
     ]);
-    expect($deletePhoto['stat'])->toBe('ok');
 
     // --- Delete album ---
-    $deleteAlbum = H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'delete_orphans',
         'pwg_token' => $pwgToken,
     ]);
-    expect($deleteAlbum['stat'])->toBe('ok');
 
     // Verify album is gone from the admin list.
-    $catList = H::wsCall($page, 'pwg.categories.getAdminList');
-    expect($catList['stat'])->toBe('ok');
+    $catList = H::listCategoriesAdmin($page);
     $catIds = array_column(
-        lifecycleResultList(lifecycleWsResult($catList, 'pwg.categories.getAdminList'), 'categories', 'pwg.categories.getAdminList'),
+        lifecycleResultList($catList, 'categories', 'listCategoriesAdmin'),
         'id'
     );
     expect($catIds)

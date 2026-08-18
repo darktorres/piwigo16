@@ -39,47 +39,33 @@ function gotoAlbumsTree(Webpage|PendingAwaitablePage|AwaitableWebpage $page): We
 }
 
 /**
- * Narrows the `result.id` of a pwg.categories.add WS response to an int.
- * H::wsCall() only guarantees array<string, mixed> — the decoded JSON body
- * isn't typed any further — so this asserts the shape this file's own
- * pwg.categories.add calls always produce, rather than trusting it blindly.
+ * Narrows a `POST /api/v1/categories` response to its `id`.
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  */
-function wsAddedCategoryId(array $response): int
+function addedCategoryId(array $response): int
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.categories.add response missing result: ' . var_export($response, true));
-    }
-
-    $id = $result['id'] ?? null;
+    $id = $response['id'] ?? null;
     if (! is_numeric($id)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric result.id: ' . var_export($response, true));
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($response, true));
     }
 
     return (int) $id;
 }
 
 /**
- * Narrows the `result.categories` of a pwg.categories.getAdminList WS
- * response to a list of {id, name} pairs — the only fields this file needs
- * for its cleanup-by-name lookup — skipping any entry that doesn't carry
- * both in the expected shape.
+ * Narrows a `GET /api/v1/categories` response to a list of {id, name}
+ * pairs — the only fields this file needs for its cleanup-by-name lookup —
+ * skipping any entry that doesn't carry both in the expected shape.
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  * @return list<array{id: int, name: string}>
  */
-function wsAdminListCategories(array $response): array
+function adminListCategories(array $response): array
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.categories.getAdminList response missing result: ' . var_export($response, true));
-    }
-
-    $categories = $result['categories'] ?? null;
+    $categories = $response['categories'] ?? null;
     if (! is_array($categories)) {
-        throw new RuntimeException('pwg.categories.getAdminList response missing categories: ' . var_export($response, true));
+        throw new RuntimeException('listCategoriesAdmin response missing categories: ' . var_export($response, true));
     }
 
     $out = [];
@@ -105,15 +91,15 @@ function wsAdminListCategories(array $response): array
 
 it('tree renders and shows a created album as a node', function (): void {
     [$page, $token] = albumTreePwgToken($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'treetest_render_' . uniqid(),
     ]);
-    $id = wsAddedCategoryId($album);
+    $id = addedCategoryId($album);
 
     $page = gotoAlbumsTree($page);
     $page->assertPresent('#cat-' . $id);
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $id,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => $token,
@@ -123,15 +109,15 @@ it('tree renders and shows a created album as a node', function (): void {
 it('clicking the toggler expands and collapses a parent node', function (): void {
     [$page, $token] = albumTreePwgToken($this);
     $ts = uniqid();
-    $parent = H::wsCall($page, 'pwg.categories.add', [
+    $parent = H::createCategory($page, [
         'name' => "treetest_parent_{$ts}",
     ]);
-    $parentId = wsAddedCategoryId($parent);
-    $child = H::wsCall($page, 'pwg.categories.add', [
+    $parentId = addedCategoryId($parent);
+    $child = H::createCategory($page, [
         'name' => "treetest_child_{$ts}",
         'parent' => $parentId,
     ]);
-    $childId = wsAddedCategoryId($child);
+    $childId = addedCategoryId($child);
 
     $page = gotoAlbumsTree($page);
     $page->assertVisible('#cat-' . $parentId);
@@ -143,7 +129,7 @@ it('clicking the toggler expands and collapses a parent node', function (): void
     $page->click('#cat-' . $parentId . ' .move-cat-toogler');
     $page->assertMissing('#cat-' . $childId);
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $parentId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => $token,
@@ -155,10 +141,10 @@ it('renaming an album updates the visible name in the tree', function (): void {
     $ts = uniqid();
     $originalName = "treetest_rename_{$ts}";
     $newName = "treetest_renamed_{$ts}";
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => $originalName,
     ]);
-    $id = wsAddedCategoryId($album);
+    $id = addedCategoryId($album);
 
     $page = gotoAlbumsTree($page);
     $page->assertSeeIn('#cat-' . $id . ' .move-cat-title', $originalName);
@@ -173,7 +159,7 @@ it('renaming an album updates the visible name in the tree', function (): void {
     $page->assertMissing('#RenameAlbum');
     $page->assertSeeIn('#cat-' . $id . ' .move-cat-title', $newName);
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $id,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => $token,
@@ -182,10 +168,10 @@ it('renaming an album updates the visible name in the tree', function (): void {
 
 it('deleting an album removes its node from the tree', function (): void {
     [$page, $token] = albumTreePwgToken($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'treetest_delete_' . uniqid(),
     ]);
-    $id = wsAddedCategoryId($album);
+    $id = addedCategoryId($album);
 
     $page = gotoAlbumsTree($page);
     $page->assertVisible('#cat-' . $id);
@@ -219,10 +205,10 @@ it('add-album from header creates a new node visible in the tree', function (): 
 
     // Clean up via the admin list rather than scraping the new node's id
     // out of the DOM — simpler and equally reliable.
-    $list = H::wsCall($page, 'pwg.categories.getAdminList');
-    foreach (wsAdminListCategories($list) as $cat) {
+    $list = H::listCategoriesAdmin($page);
+    foreach (adminListCategories($list) as $cat) {
         if ($cat['name'] === $newName) {
-            H::wsCall($page, 'pwg.categories.delete', [
+            H::deleteCategory($page, [
                 'category_id' => $cat['id'],
                 'photo_deletion_mode' => 'no_delete',
                 'pwg_token' => $token,

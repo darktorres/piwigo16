@@ -5,47 +5,34 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Narrows the `result.id` of a pwg.categories.add WS response to an int.
- * H::wsCall() only guarantees array<string, mixed> — the decoded JSON body
- * isn't typed any further — so this asserts the shape this file's own
- * pwg.categories.add calls always produce, rather than trusting it blindly.
+ * Narrows a `POST /api/v1/categories` response to its `id`.
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  */
 function photoUploadAlbumId(array $response): int
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.categories.add response missing result: ' . var_export($response, true));
-    }
-
-    $id = $result['id'] ?? null;
+    $id = $response['id'] ?? null;
     if (! is_numeric($id)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric result.id: ' . var_export($response, true));
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($response, true));
     }
 
     return (int) $id;
 }
 
 /**
- * Narrows the `result` of a pwg.images.getInfo WS response to the {id,
- * width, height} fields this file's assertions need.
+ * Narrows a `GET /api/v1/images/{id}` response to the {id, width, height}
+ * fields this file's assertions need.
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  * @return array{id: int, width: int, height: int}
  */
 function photoUploadImageInfo(array $response): array
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.images.getInfo response missing result: ' . var_export($response, true));
-    }
-
-    $id = $result['id'] ?? null;
-    $width = $result['width'] ?? null;
-    $height = $result['height'] ?? null;
+    $id = $response['id'] ?? null;
+    $width = $response['width'] ?? null;
+    $height = $response['height'] ?? null;
     if (! is_numeric($id) || ! is_numeric($width) || ! is_numeric($height)) {
-        throw new RuntimeException('pwg.images.getInfo did not return numeric id/width/height: ' . var_export($response, true));
+        throw new RuntimeException('imageInfo did not return numeric id/width/height: ' . var_export($response, true));
     }
 
     return [
@@ -56,30 +43,24 @@ function photoUploadImageInfo(array $response): array
 }
 
 /**
- * Narrows the `result.images` of a pwg.categories.getImages WS response to a
- * plain array, for count() at this file's multi-upload assertion.
+ * Narrows a `GET /api/v1/categories/images` response's `images` to a plain
+ * array, for count() at this file's multi-upload assertion.
  *
- * @param  array<string, mixed>  $response
+ * @param  array<array-key, mixed>  $response
  * @return array<mixed>
  */
 function photoUploadImagesList(array $response): array
 {
-    $result = $response['result'] ?? null;
-    if (! is_array($result)) {
-        throw new RuntimeException('pwg.categories.getImages response missing result: ' . var_export($response, true));
-    }
-
-    $images = $result['images'] ?? null;
+    $images = $response['images'] ?? null;
 
     return is_array($images) ? $images : [];
 }
 
 it('uploads a photo via the API and returns a positive image id', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Upload Test Album ' . uniqid(),
     ]);
-    expect($album['stat'])->toBe('ok');
 
     $image = H::makeTestImage('Upload Test');
     $imageId = H::uploadPhotoViaApi($image, photoUploadAlbumId($album), 'Upload Test Photo');
@@ -91,7 +72,7 @@ it('uploads a photo via the API and returns a positive image id', function (): v
 
 it('uploaded photo appears in getInfo with real dimensions', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'GetInfo Test Album ' . uniqid(),
     ]);
     $albumId = photoUploadAlbumId($album);
@@ -100,10 +81,9 @@ it('uploaded photo appears in getInfo with real dimensions', function (): void {
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'My Test Photo');
     @unlink($image);
 
-    $info = H::wsCall($page, 'pwg.images.getInfo', [
+    $info = H::imageInfo($page, [
         'image_id' => $imageId,
     ]);
-    expect($info['stat'])->toBe('ok');
     $infoResult = photoUploadImageInfo($info);
     expect($infoResult['id'])->toBe($imageId);
     expect($infoResult['width'])->toBeGreaterThan(0);
@@ -112,7 +92,7 @@ it('uploaded photo appears in getInfo with real dimensions', function (): void {
 
 it('two uploaded photos both appear in the album', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Multi Upload Album ' . uniqid(),
     ]);
     $albumId = photoUploadAlbumId($album);
@@ -124,10 +104,9 @@ it('two uploaded photos both appear in the album', function (): void {
     @unlink($image1);
     @unlink($image2);
 
-    $list = H::wsCall($page, 'pwg.categories.getImages', [
+    $list = H::categoryImages($page, [
         'cat_id' => $albumId,
     ]);
-    expect($list['stat'])->toBe('ok');
     expect(count(photoUploadImagesList($list)))
         ->toBeGreaterThanOrEqual(2);
 });

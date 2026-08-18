@@ -75,14 +75,13 @@ function commentsValidatedFlag(int $commentId): ?int
 it('lists, paginates and keyword-filters real comments for an admin', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments Test Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Test Photo');
     @unlink($image);
@@ -128,14 +127,13 @@ it('lets an admin validate and delete a comment via comments.php\'s own moderati
     $page = H::loginAsAdmin($this);
     $pwgToken = H::pwgToken($page);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments Moderation Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments Moderation Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Moderation Photo');
     @unlink($image);
@@ -180,14 +178,13 @@ it('lets an admin delete an anonymous (NULL author_id) comment via comments.php\
     $page = H::loginAsAdmin($this);
     $pwgToken = H::pwgToken($page);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments Anon Mod Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments Anon Mod Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Anon Mod Photo');
     @unlink($image);
@@ -231,24 +228,22 @@ it('injects a non-standard comments_page_nb_comments value into the item_number 
 it('filters comments by category (including subcats) and treats an unknown category as zero matches', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $parent = H::wsCall($page, 'pwg.categories.add', [
+    $parent = H::createCategory($page, [
         'name' => 'Comments CatFilter Parent ' . uniqid(),
     ]);
-    $parentResult = $parent['result'] ?? null;
-    if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($parent, true));
+    if (! is_numeric($parent['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($parent, true));
     }
-    $parentId = (int) $parentResult['id'];
+    $parentId = (int) $parent['id'];
 
-    $child = H::wsCall($page, 'pwg.categories.add', [
+    $child = H::createCategory($page, [
         'name' => 'Comments CatFilter Child ' . uniqid(),
         'parent' => (string) $parentId,
     ]);
-    $childResult = $child['result'] ?? null;
-    if (! is_array($childResult) || ! is_numeric($childResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($child, true));
+    if (! is_numeric($child['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($child, true));
     }
-    $childId = (int) $childResult['id'];
+    $childId = (int) $child['id'];
 
     $image = H::makeTestImage('Comments CatFilter Photo');
     $imageId = H::uploadPhotoViaApi($image, $childId, 'Comments CatFilter Photo');
@@ -286,14 +281,13 @@ it('redirects a guest to identification.php when requesting a specific comment_i
 it('narrows the listing to exactly one comment when an admin passes comment_id', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments CommentId Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments CommentId Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments CommentId Photo');
     @unlink($image);
@@ -312,14 +306,13 @@ it('narrows the listing to exactly one comment when an admin passes comment_id',
 it('hides an unvalidated comment from a guest while an admin still sees it', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments GuestVisibility Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments GuestVisibility Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments GuestVisibility Photo');
     @unlink($image);
@@ -342,14 +335,13 @@ it('hides an unvalidated comment from a guest while an admin still sees it', fun
 it('shows the edit form with a real ephemeral key for a comment the admin can manage', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments EditKey Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments EditKey Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments EditKey Photo');
     @unlink($image);
@@ -364,14 +356,13 @@ it('shows the edit form with a real ephemeral key for a comment the admin can ma
 it('auto-validates an admin\'s own comment edit through the real ephemeral-key round trip', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments EditSubmit Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments EditSubmit Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments EditSubmit Photo');
     @unlink($image);
@@ -410,14 +401,13 @@ it('auto-validates an admin\'s own comment edit through the real ephemeral-key r
 it('rejects an edit submission carrying an invalid ephemeral key', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments EditReject Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments EditReject Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments EditReject Photo');
     @unlink($image);
@@ -456,14 +446,13 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
         H::setConfigValue('comments_page_nb_comments', '9999');
 
         $adminPage = H::loginAsAdmin($this);
-        $album = H::wsCall($adminPage, 'pwg.categories.add', [
+        $album = H::createCategory($adminPage, [
             'name' => 'Comments Moderate Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage('Comments Moderate Photo');
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Moderate Photo');
         @unlink($image);
@@ -522,14 +511,13 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
 it('falls back to the filename-derived name when a photo has no explicit name', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments NoName Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments NoName Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, '');
     @unlink($image);
@@ -542,7 +530,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     // empty is an explicit clear via PATCH /api/v1/images/{id} (the
     // fallback this test targets exists for that edit path, not for
     // fresh uploads).
-    H::wsCall($page, 'pwg.images.setInfo', [
+    H::updateImageInfo($page, [
         'image_id' => $imageId,
         'name' => '',
         'single_value_mode' => 'replace',
@@ -572,14 +560,13 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
 it("shows an anonymous comment's own email when no linked user account has one", function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Comments GuestEmail Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comments GuestEmail Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments GuestEmail Photo');
     @unlink($image);
@@ -706,14 +693,13 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Comments Hook Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage('Comments Hook Photo');
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Hook Photo');
         @unlink($image);

@@ -33,14 +33,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 it('downloads a photo\'s original file via part=e', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Photo');
     @unlink($image);
@@ -51,7 +50,7 @@ it('downloads a photo\'s original file via part=e', function (): void {
         expect($result['status'])->toBe(200);
         expect(strlen($result['body']))->toBeGreaterThan(0);
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -87,14 +86,13 @@ it('returns 404 for a nonexistent image id', function (): void {
 
 it('returns 404 for part=r when the photo has no representative file', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller No Rep Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller No Rep Photo');
     @unlink($image);
@@ -105,7 +103,7 @@ it('returns 404 for part=r when the photo has no representative file', function 
         expect($result['status'])->toBe(404);
         expect($result['body'])->toContain('Requested file not found');
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -118,14 +116,13 @@ it('returns 400 for part=f when the extensions-format system is disabled', funct
     H::setConfigValue('enable_formats', 'false');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Format Off Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Format Off Photo');
     @unlink($image);
@@ -138,7 +135,7 @@ it('returns 400 for part=f when the extensions-format system is disabled', funct
 
         expect($result['status'])->toBe(400);
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -165,14 +162,13 @@ it('returns 400 for a nonexistent format id when formats are enabled', function 
 
 it('sends a Content-Disposition attachment header when download is requested', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Download Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Download Photo');
     @unlink($image);
@@ -182,7 +178,7 @@ it('sends a Content-Disposition attachment header when download is requested', f
 
         expect($result['status'])->toBe(200);
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -239,14 +235,13 @@ function actionImagePath(int $imageId): string
  */
 it('serves a remote-storage photo through the guessMimeType() fallback when mime_content_type() is never consulted', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Remote Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Remote Photo');
     @unlink($image);
@@ -272,7 +267,7 @@ it('serves a remote-storage photo through the guessMimeType() fallback when mime
     } finally {
         // No need to restore images.path -- the category delete below
         // (force_delete) removes this image's whole row along with it.
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -285,14 +280,13 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     H::setConfigValue('enable_formats', 'true');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Format Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Format Photo');
     @unlink($image);
@@ -329,7 +323,7 @@ it('serves a photo through a real registered format id, logging a "high" visit',
         $cleanupDb = actionDbConnect();
         H::dbQuery($cleanupDb, sprintf('DELETE FROM image_format WHERE format_id = %d', $formatId));
         H::dbClose($cleanupDb);
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -340,14 +334,13 @@ it('serves a photo through a real registered format id, logging a "high" visit',
 
 it('serves a photo\'s representative file via part=r when one is registered', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Rep Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Rep Photo');
     @unlink($image);
@@ -376,7 +369,7 @@ it('serves a photo\'s representative file via part=r when one is registered', fu
         expect($result['body'])->toBe(str_repeat('P', 2048));
     } finally {
         @unlink($repFile);
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -423,14 +416,13 @@ function actionCurlGet(string $path, array $extraHeaders = []): array
 
 it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s own mtime', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller 304 Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller 304 Photo');
     @unlink($image);
@@ -446,7 +438,7 @@ it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s
         expect($second['status'])->toBe(304);
         expect($second['body'])->toBe('');
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -456,14 +448,13 @@ it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s
 
 it('denies HD download of an oversized original to a guest with no HD access', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Oversized Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // Bigger than the XXLARGE (1656x1242) box in both dimensions -- forces
     // DerivativeImage::sameAsSource() to be false for a non-HD user,
@@ -494,7 +485,7 @@ it('denies HD download of an oversized original to a guest with no HD access', f
         expect($result['body'])->toContain('Access denied e');
     } finally {
         actionSetEnabledHigh(2, true);
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -504,15 +495,14 @@ it('denies HD download of an oversized original to a guest with no HD access', f
 
 it('rejects access to a private album\'s photo for a guest', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Private Album ' . uniqid(),
         'status' => 'private',
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Private Photo');
     @unlink($image);
@@ -526,7 +516,7 @@ it('rejects access to a private album\'s photo for a guest', function (): void {
         expect($result['status'])->toBe(401);
         expect($result['body'])->toContain('Access denied');
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -561,14 +551,13 @@ it('returns 400 for an empty format value when formats are enabled', function ()
 
 it('returns 400 for part=f requested directly on a real photo, without a format id', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Direct Part F Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Direct Part F Photo');
     @unlink($image);
@@ -583,7 +572,7 @@ it('returns 400 for part=f requested directly on a real photo, without a format 
         expect($result['status'])->toBe(400);
         expect($result['body'])->toContain('Invalid request - format');
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -593,14 +582,13 @@ it('returns 400 for part=f requested directly on a real photo, without a format 
 
 it('returns 404 naming the resolved path when the original file is missing from disk', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Missing File Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Missing File Photo');
     @unlink($image);
@@ -625,7 +613,7 @@ it('returns 404 naming the resolved path when the original file is missing from 
         expect($result['body'])->toContain('Requested file not found - ');
         expect($result['body'])->toContain(basename($realPath));
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -635,14 +623,13 @@ it('returns 404 naming the resolved path when the original file is missing from 
 
 it('bypasses the no-HD-access restriction for an admin download carrying a valid pwg_token', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Action Controller Admin Download Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // Same oversized-original setup as the guest 401 test above, but this
     // time it's fixture_admin's own enabled_high (user_id 1) that's turned
@@ -675,7 +662,7 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
         expect(strlen($withToken['body']))->toBeGreaterThan(0);
     } finally {
         actionSetEnabledHigh(1, true);
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),

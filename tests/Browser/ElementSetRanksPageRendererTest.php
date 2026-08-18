@@ -52,14 +52,13 @@ it('renders one ranked thumbnail per photo, in rank order, with the legacy off-b
 // case above.
 it('renders no manual-order thumbnails block for an album with no photos', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Empty Ranks Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! isset($albumResult['id']) || ! is_numeric($albumResult['id'])) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $pwgToken = H::pwgToken($page);
 
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=sort_order');
@@ -74,7 +73,7 @@ it('renders no manual-order thumbnails block for an album with no photos', funct
     $page->assertMissing('.icon-sort-alt-down');
     $page->assertMissing('ul.thumbnails');
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => $pwgToken,
@@ -104,14 +103,13 @@ it('renders no manual-order thumbnails block for an album with no photos', funct
  */
 it('rejects a save-order submission with no CSRF token as a bad request', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Ranks CSRF Missing Token Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // No 'pwg_token' key at all -- CsrfTokenRequest::fromArray() reads it
     // as null, CsrfService::check() returns null (distinct from a
@@ -125,7 +123,7 @@ it('rejects a save-order submission with no CSRF token as a bad request', functi
     expect($result['body'])->toContain('Bad request');
     expect($result['body'])->toContain('missing token');
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => H::pwgToken($page),
@@ -134,14 +132,13 @@ it('rejects a save-order submission with no CSRF token as a bad request', functi
 
 it('rejects a save-order submission with a wrong CSRF token as access denied', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Ranks CSRF Wrong Token Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // A present-but-wrong token -- CsrfService::check() returns false (not
     // null), routing checkOrFail() to accessDenied() instead of
@@ -156,7 +153,7 @@ it('rejects a save-order submission with a wrong CSRF token as access denied', f
     expect($result['status'])->toBe(401);
     expect($result['body'])->toContain('You are not authorized to access the requested page');
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => H::pwgToken($page),
@@ -165,14 +162,13 @@ it('rejects a save-order submission with a wrong CSRF token as access denied', f
 
 it('saves a manual rank_of_image POST as the real image_category rank order', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Ranks Manual Save Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $imagePathA = H::makeTestImage('Rank A');
     $imageIdA = H::uploadPhotoViaApi($imagePathA, $albumId, 'Rank Save Photo A ' . uniqid());
@@ -223,7 +219,7 @@ it('saves a manual rank_of_image POST as the real image_category rank order', fu
     expect(array_column($rows, 'rank'))
         ->toBe([1, 2, 3]);
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => H::pwgToken($page),
@@ -232,14 +228,13 @@ it('saves a manual rank_of_image POST as the real image_category rank order', fu
 
 it('builds a comma-joined user_define image_order string, filtering out an invalid sort field', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Ranks Order Fields Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // image_order[1] is not a real key of $sort_fields -- the renderer's
     // own in_array($order_value, array_keys($sort_fields), true) filter
@@ -261,7 +256,7 @@ it('builds a comma-joined user_define image_order string, filtering out an inval
 
     expect($row['image_order'])->toBe('file ASC,name DESC');
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => H::pwgToken($page),
@@ -270,14 +265,13 @@ it('builds a comma-joined user_define image_order string, filtering out an inval
 
 it('persists the literal `rank` ASC order string for the manual "rank" choice, with its own distinct success message', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Ranks Rank Choice Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $result = H::adminPost($page, '/admin.php?page=album-' . $albumId . '-sort_order', [
         'pwg_token' => H::pwgToken($page),
@@ -298,7 +292,7 @@ it('persists the literal `rank` ASC order string for the manual "rank" choice, w
 
     expect($row['image_order'])->toBe('`rank` ASC');
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => H::pwgToken($page),
@@ -307,14 +301,13 @@ it('persists the literal `rank` ASC order string for the manual "rank" choice, w
 
 it('falls back to the filename-derived name when a photo has no explicit name', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Ranks NoName Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $image = H::makeTestImage('Ranks NoName Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, '');
@@ -331,7 +324,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     // StringHelper::getFilenameWoExtension() + str_replace('_', ' ', ...)
     // fallback (~line 196-197) instead of the happy-path images.name
     // column read a few lines above it.
-    H::wsCall($page, 'pwg.images.setInfo', [
+    H::updateImageInfo($page, [
         'image_id' => $imageId,
         'name' => '',
         'single_value_mode' => 'replace',
@@ -357,7 +350,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     $page->assertNoJavaScriptErrors();
     $page->assertPresent('img[alt="' . $expectedName . '"]');
 
-    H::wsCall($page, 'pwg.categories.delete', [
+    H::deleteCategory($page, [
         'category_id' => $albumId,
         'photo_deletion_mode' => 'no_delete',
         'pwg_token' => H::pwgToken($page),

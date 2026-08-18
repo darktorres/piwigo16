@@ -150,23 +150,21 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Data Filters Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
 
-        $tag = H::wsCall($page, 'pwg.tags.add', [
+        $tag = H::createTag($page, [
             'name' => 'Search Data Filter Tag ' . uniqid(),
         ]);
-        $tagResult = $tag['result'] ?? null;
-        if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
+        if (! is_numeric($tag['id'] ?? null)) {
+            throw new RuntimeException('createTag did not return a numeric id: ' . var_export($tag, true));
         }
-        $tagId = (int) $tagResult['id'];
+        $tagId = (int) $tag['id'];
 
         // Author and tag are set on all 3 photos (rather than just one) so
         // neither criterion narrows the search's own combined result below
@@ -180,11 +178,11 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // ratio 100/300 = 0.333 (< 0.95 -> Portrait); rating 0.5 (< 1 ->
         // bucket r=1); filesize 500 KB.
         searchFilterDataSetImageStats($portraitId, 100, 300, 0.5, 500, '2020-01-01 00:00:00');
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $portraitId,
             'author' => 'Ansel Adams',
         ]);
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $portraitId,
             'tag_ids' => (string) $tagId,
         ]);
@@ -197,11 +195,11 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // date filter's own malformed/NULL-date row gets skipped rather
         // than fatally erroring.
         searchFilterDataSetImageStats($squareId, 300, 300, 2.5, 1500, null);
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $squareId,
             'author' => 'Ansel Adams',
         ]);
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $squareId,
             'tag_ids' => (string) $tagId,
         ]);
@@ -212,11 +210,11 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // ratio 800/200 = 4.0 (>= 2 -> Panorama); rating 4.9 (not < 1/2/3/4
         // -> falls through to the default bucket r=5); filesize 3000 KB.
         searchFilterDataSetImageStats($panoramaId, 800, 200, 4.9, 3000, '2021-06-15 00:00:00');
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $panoramaId,
             'author' => 'Ansel Adams',
         ]);
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $panoramaId,
             'tag_ids' => (string) $tagId,
         ]);
@@ -234,9 +232,9 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // 'expert' is a real quick-search string ('Data', present in every
         // photo's own name) -- SearchService::getRegularSearchResults()'s
         // own 'expert' criterion runs it through the quick-search parser,
-        // not a raw SQL boolean expression. H::wsCall() itself only
-        // accepts scalar (int|string) param values.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        // not a raw SQL boolean expression. createFilteredSearch() itself
+        // only accepts scalar (int|string) param values.
+        $search = H::createFilteredSearch($page, [
             'expert' => 'Data',
             'authors' => 'Ansel Adams',
             'added_by' => searchFilterDataAdminUserId(),
@@ -251,11 +249,10 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
             'height_min' => 50,
             'height_max' => 1000,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         // 1st load: cache miss for every per-filter cache pool key
         // (author_rows/added_by_rows/ratings/ratios/height_rows/
@@ -330,45 +327,42 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
         $page = H::loginAsAdmin($this);
         $uniqueWord = 'zephyrus' . uniqid();
 
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Album ' . $uniqueWord,
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
 
-        $tag = H::wsCall($page, 'pwg.tags.add', [
+        $tag = H::createTag($page, [
             'name' => $uniqueWord,
         ]);
-        $tagResult = $tag['result'] ?? null;
-        if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
+        if (! is_numeric($tag['id'] ?? null)) {
+            throw new RuntimeException('createTag did not return a numeric id: ' . var_export($tag, true));
         }
-        $tagId = (int) $tagResult['id'];
+        $tagId = (int) $tag['id'];
 
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'ALBUMS_FOUND Hint Photo');
         @unlink($image);
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $imageId,
             'tag_ids' => (string) $tagId,
         ]);
 
         // allwords_fields omitted -- filteredSearchCreate() defaults it to
         // every available field (including 'cat-title' and 'tags'), which
-        // is exactly what's needed here; H::wsCall() only accepts scalar
-        // param values, so an explicit multi-value array can't be passed
-        // through it anyway.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        // is exactly what's needed here; createFilteredSearch() only
+        // accepts scalar param values, so an explicit multi-value array
+        // can't be passed through it anyway.
+        $search = H::createFilteredSearch($page, [
             'allwords' => $uniqueWord,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search allwords album/tag hint');
@@ -408,33 +402,31 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Author Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Author Only Photo');
         @unlink($image);
         $authorName = 'Author Only ' . uniqid();
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $imageId,
             'author' => $authorName,
         ]);
 
         // 'authors' alone (no categories/tags/...) is the ONLY active
         // search field.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'authors' => $authorName,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'author-only search (1st load, cache miss)');
@@ -481,14 +473,13 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
     try {
         $page = H::loginAsAdmin($this);
         $adminId = searchFilterDataAdminUserId();
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Added By Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Added By Only Photo');
         @unlink($image);
@@ -500,14 +491,13 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
 
         // 'added_by' alone (no categories/tags/...) is the ONLY active
         // search field.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'added_by' => $adminId,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'added_by-only search (1st load, cache miss)');
@@ -563,29 +553,27 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Height Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Height Only Photo');
         @unlink($image);
 
         // 'height_min'/'height_max' alone (no categories/tags/...) is the
         // ONLY active search field.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'height_min' => 100,
             'height_max' => 200,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'height-only search (1st load, cache miss)');
@@ -629,29 +617,27 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Width Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Width Only Photo');
         @unlink($image);
 
         // 'width_min'/'width_max' alone (no categories/tags/...) is the
         // ONLY active search field.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'width_min' => 100,
             'width_max' => 300,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'width-only search (1st load, cache miss)');
@@ -704,28 +690,26 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Ratios Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Ratios Only Photo');
         @unlink($image);
 
         // 'ratios' alone (no categories/tags/...) is the ONLY active
         // search field.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'ratios' => 'Landscape',
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratios-only search (1st load, cache miss)');
@@ -764,14 +748,13 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Ratings Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Ratings Only Photo');
         @unlink($image);
@@ -781,14 +764,13 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
 
         // 'ratings' alone (no categories/tags/...) is the ONLY active
         // search field.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'ratings' => '3',
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratings-only search (1st load, cache miss)');
@@ -886,14 +868,13 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Filetypes Only Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Filetypes Only Photo');
         @unlink($image);
@@ -901,14 +882,13 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
         // 'filetypes' alone (no categories/tags/...) is the ONLY active
         // search field -- every test photo in this suite is a real .jpg
         // upload (BrowserTestHelpers::makeTestImage()).
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'filetypes' => 'jpg',
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'filetypes-only search');
@@ -949,14 +929,13 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Ratio Landscape Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
 
         // 200/150 ≈ 1.33 -> Landscape (> 1.05 and < 2).
         $landscapeImage = H::makeTestImage(uniqid());
@@ -973,15 +952,14 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
         @unlink($nullDimsImage);
         searchFilterDataSetImageDimsNull($nullDimsId);
 
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'categories' => $albumId,
             'ratios' => 'Landscape',
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratio bucket landscape/zero/null-dims search');
@@ -1039,14 +1017,13 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Filesize Null Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Filesize Null Photo');
         @unlink($image);
@@ -1058,16 +1035,15 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
         // a NULL filesize), so the search's own overall result is empty;
         // that's fine here, this test targets the sidebar bucket
         // computation, not the search's own item list.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'categories' => $albumId,
             'filesize_min' => 100,
             'filesize_max' => 4000,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'filesize bucket fallback search (every row NULL)');

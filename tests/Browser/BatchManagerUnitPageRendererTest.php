@@ -31,14 +31,13 @@ function batchManagerUnitImageRow(int $imageId): array
 
 it('renders the per-image thumbnail grid for a real category filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Unit Grid Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Grid Photo');
     @unlink($image);
@@ -67,14 +66,13 @@ it('renders the per-image thumbnail grid for a real category filter', function (
 
 it('submits the unit-mode edit form for a whole_set selection and mass-updates every field', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Unit Submit Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Submit Photo');
     @unlink($image);
@@ -106,14 +104,13 @@ it('submits the unit-mode edit form for a whole_set selection and mass-updates e
 
 it('accepts a single non-array tag string for the per-image tags field', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Unit Scalar Tag Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Scalar Tag Photo');
     @unlink($image);
@@ -162,14 +159,13 @@ it('accepts nb_photos_deleted/whole_set/selection[] as alternative ways to seed 
 
 it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a physically-owning album filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Unit Storage Cat Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Storage Cat Photo');
     @unlink($image);
@@ -208,14 +204,13 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Batch Unit HTML Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit HTML Photo');
         @unlink($image);
@@ -278,14 +273,13 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
         // setup as "renders the per-image thumbnail grid...” above) is
         // needed so $elements is non-empty and the pagination widget
         // actually renders.
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Batch Unit Per Page Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Per Page Photo');
         @unlink($image);
@@ -318,14 +312,13 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
 
 it('applies the duplicates-prefilter ORDER BY override ("file, id") when the session prefilter is "duplicates"', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Unit Dup Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     // Two photos with distinct pixel content (distinct md5sum, so
     // UploadService's own md5-based duplicate detection -- on by default
@@ -394,14 +387,13 @@ it('applies the duplicates-prefilter ORDER BY override ("file, id") when the ses
 
 it('sets the "see-out" jump-to link when the current admin is authorized for the photo\'s only category', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Unit Jumpto Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Jumpto Photo');
     @unlink($image);
@@ -461,14 +453,13 @@ it('scopes the see-out link to the filtered album for a photo in several albums'
     // never ran while it read a 'cat_id' column the query never produced.
     $albumIds = [];
     foreach (['A', 'B'] as $suffix) {
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Batch Unit Filtered Album ' . $suffix . ' ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumIds[] = (int) $albumResult['id'];
+        $albumIds[] = (int) $album['id'];
     }
 
     [$albumA, $albumB] = $albumIds;

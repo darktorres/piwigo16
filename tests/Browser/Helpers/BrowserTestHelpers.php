@@ -623,9 +623,8 @@ final class BrowserTestHelpers
     /**
      * pg_fetch_assoc()'s own stub types its returned array's keys more
      * loosely than the guaranteed-string-keyed reality of a PGSQL_ASSOC
-     * fetch -- rebuilt via explicit (string) cast the same way wsCall()
-     * above already normalizes a json_decode()'d array's keys, rather
-     * than fighting the stub with a suppression. Generic over TValue so
+     * fetch -- rebuilt via an explicit (string) cast rather than fighting
+     * the stub with a suppression. Generic over TValue so
      * this only reshapes keys, without also widening the real value type
      * (string|null, per pg_fetch_assoc()'s own stub) the way a flat
      * `mixed` return would.
@@ -1190,7 +1189,7 @@ final class BrowserTestHelpers
     /**
      * Raw `/api/v1` call through the SAME authenticated browser session, via
      * a same-origin fetch() executed in the page (script() awaits the
-     * returned promise) -- wsCall()'s own former ws.php mechanism, now that
+     * returned promise) -- this suite's own former ws.php mechanism, now that
      * the WS layer itself is deleted (P27). $body is base64-embedded into
      * the script and decoded via atob() in-page: a JSON body can contain
      * quotes/backslashes a naive string interpolation would corrupt, unlike
@@ -1240,7 +1239,7 @@ final class BrowserTestHelpers
     /**
      * POSTs to an arbitrary admin.php-style path through the SAME
      * authenticated browser session, via a same-origin fetch() executed in
-     * the page — same rationale as wsCall(), but for admin form-submission
+     * the page — same rationale as apiFetch(), but for admin form-submission
      * controllers whose response is a rendered HTML page, not a WS JSON
      * envelope, and where driving real DOM form fields one at a time would
      * be slow/brittle for a form with dozens of fields. `redirect: manual`
@@ -1382,7 +1381,7 @@ final class BrowserTestHelpers
 
     /**
      * Polls in-browser (via script(), which awaits the returned promise —
-     * see wsCall()) until $selector is absent or hidden, instead of racing a
+     * see apiFetch()) until $selector is absent or hidden, instead of racing a
      * single check against an async request. Neither assertSee() nor
      * assertMissing() retry (both are one-shot checks under the hood —
      * confirmed by reading their implementations after both flaked on
@@ -2282,8 +2281,9 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Raw curl `/api/v1` call against a caller-supplied cookie jar --
-     * `wsCall()`'s own in-page `apiFetch()`, for callers that need a
+     * Raw curl `/api/v1` call against a caller-supplied cookie jar -- the
+     * curl-based counterpart to `apiFetch()`'s in-page fetch(), for callers
+     * that need a
      * session independent of any Playwright page: this class's own
      * `adminSessionCookies()`/`uploadPhotoViaApi()` (a fresh curl-only
      * login, or a cookie jar built before any page exists), and several

@@ -229,14 +229,13 @@ function pictureGetWithCookies(string $cookieJar, string $path): string
 
 it('increments the hit counter on first view, then not on an immediate same-picture reload', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Picture Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     // Piwigo\Admin\Upload\UploadService::addUploadedFile() de-duplicates by
     // md5sum whenever CurrentConfig::uploadDetectDuplicate() is enabled
     // (this fixture's own config ships
@@ -283,14 +282,13 @@ it('increments the hit counter on first view, then not on an immediate same-pict
 
 it('adds and removes a photo from favorites via the picture.php action links, verified in favorites', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Picture Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     // Genuinely-unique pixel label, decoupled from the descriptive DB name
     // -- see the hit-counter test above's own comment for why a longer,
     // prefixed label defeats itself (GD clips it before the differentiating
@@ -324,14 +322,13 @@ it('lets an admin delete and validate comments directly from picture.php\'s own 
     $page = H::loginAsAdmin($this);
     $pwgToken = H::pwgToken($page);
 
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Picture Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage('Comment Moderation Photo');
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comment Moderation Photo');
     @unlink($image);
@@ -572,14 +569,13 @@ it("edits a comment's own content via the edit_comment action, validating it as 
 
 it('navigates between previous/next/first/last items across a 3-photo album, ordered by title', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Nav Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $suffix = uniqid();
     $imageA = H::makeTestImage($suffix . 'a');
@@ -635,14 +631,13 @@ it('navigates between previous/next/first/last items across a 3-photo album, ord
 
 it('sets a photo as the album representative via the set_as_representative action', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Representative Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     // A freshly created album auto-assigns its first-ever uploaded photo
     // as representative -- upload a second photo and
     // explicitly re-target it, so this test proves the action itself
@@ -665,14 +660,13 @@ it('sets a photo as the album representative via the set_as_representative actio
 
 it('adds a photo to the caddie via the add_to_caddie action', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Caddie Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Caddie Photo');
     @unlink($image);
@@ -697,14 +691,13 @@ it('rates a photo via the rate action', function (): void {
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Rate Test Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Rate Photo');
         @unlink($image);
@@ -832,14 +825,13 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
 
 it('toggles the show_metadata session flag on repeated ?metadata visits without erroring', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Picture Metadata Toggle Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Metadata Toggle Photo');
     @unlink($image);
@@ -859,33 +851,30 @@ it('toggles the show_metadata session flag on repeated ?metadata visits without 
 
 it('renders a related tag link for a photo with a real assigned tag', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Picture Related Tags Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Related Tags Photo');
     @unlink($image);
 
     $tagName = 'Related Tag ' . uniqid();
-    $tagResult = H::wsCall($page, 'pwg.tags.add', [
+    $tagResult = H::createTag($page, [
         'name' => $tagName,
     ]);
-    $tagData = $tagResult['result'] ?? null;
-    $tagId = is_array($tagData) ? ($tagData['id'] ?? null) : null;
+    $tagId = $tagResult['id'] ?? null;
     if (! is_numeric($tagId)) {
-        throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tagResult, true));
+        throw new RuntimeException('createTag did not return a numeric id: ' . var_export($tagResult, true));
     }
 
-    $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
+    H::updateImageInfo($page, [
         'image_id' => (string) $imageId,
         'tag_ids' => (string) $tagId,
     ]);
-    expect($updateResult['stat'] ?? null)->toBe('ok');
 
     // picture.latte's own {if ($display_info['tags'] and isset($related_tags))}
     // gate needs the fixture's real picture_informations config to have
@@ -1157,14 +1146,13 @@ it('shows "requested image is filtered" for a backdated photo excluded by an act
 
 it('redirects to the section listing (not back to the picture) when removing a favorite from within the favorites section', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Favorites Up Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Favorites Up Photo');
     @unlink($image);
@@ -1206,14 +1194,13 @@ it('redirects to the section listing (not back to the picture) when removing a f
 
 it('does not increment the hit counter for a Firefox prefetch request (X-Moz: prefetch)', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Prefetch Test Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Prefetch Photo');
     @unlink($image);
@@ -1241,14 +1228,13 @@ it('does not increment the hit counter for a Firefox prefetch request (X-Moz: pr
 
 it('remembers a picture_deriv cookie choice in the session across a follow-up request', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Deriv Cookie Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Deriv Cookie Photo');
     @unlink($image);
@@ -1321,14 +1307,13 @@ it('remembers a picture_deriv cookie choice in the session across a follow-up re
 it('renders the related-categories breadcrumb via the single-category fast path when the photo belongs to exactly its own viewed album', function (): void {
     $page = H::loginAsAdmin($this);
     $albumName = 'Related Cats Fast Path Album ' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => $albumName,
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Related Cats Photo');
     @unlink($image);
@@ -1354,24 +1339,22 @@ it('renders the related-categories breadcrumb for every album a multi-category p
     // of reading straight off $page_category['upper_names'].
     $page = H::loginAsAdmin($this);
     $albumAName = 'Multi Cat Album A ' . uniqid();
-    $albumA = H::wsCall($page, 'pwg.categories.add', [
+    $albumA = H::createCategory($page, [
         'name' => $albumAName,
     ]);
-    $albumAResult = $albumA['result'] ?? null;
-    if (! is_array($albumAResult) || ! is_numeric($albumAResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumA, true));
+    if (! is_numeric($albumA['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($albumA, true));
     }
-    $albumAId = (int) $albumAResult['id'];
+    $albumAId = (int) $albumA['id'];
 
     $albumBName = 'Multi Cat Album B ' . uniqid();
-    $albumB = H::wsCall($page, 'pwg.categories.add', [
+    $albumB = H::createCategory($page, [
         'name' => $albumBName,
     ]);
-    $albumBResult = $albumB['result'] ?? null;
-    if (! is_array($albumBResult) || ! is_numeric($albumBResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumB, true));
+    if (! is_numeric($albumB['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($albumB, true));
     }
-    $albumBId = (int) $albumBResult['id'];
+    $albumBId = (int) $albumB['id'];
 
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumAId, 'Multi Cat Photo');
@@ -1391,14 +1374,13 @@ it('renders the related-categories breadcrumb for every album a multi-category p
 
 it('renders slideshow mode with play/repeat/period controls and a real next item', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Picture Slideshow Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $suffix = uniqid();
     $imageA = H::makeTestImage($suffix . 'a');
     $idA = H::uploadPhotoViaApi($imageA, $albumId, 'Slideshow Photo A ' . $suffix);
@@ -1503,14 +1485,13 @@ it('shows access-denied when a viewed image has no category association at all (
     // fallback or the redirect this file's other tests cover for the
     // "found via a different category" case.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Orphaned Image Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Orphaned Image Photo');
     @unlink($image);
@@ -1527,14 +1508,13 @@ it('shows access-denied when a viewed image has no category association at all (
 
 it('appends the current photo into best_rated\'s own item list instead of redirecting, when it is accessible but not actually top-rated', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Best Rated Fallback Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Best Rated Fallback Photo');
     @unlink($image);
@@ -1868,14 +1848,13 @@ it('builds a download-format list with the URL fallback, strtoupper() label fall
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Format List Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Format List Photo');
         @unlink($image);
@@ -1936,14 +1915,13 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
     // reads (extension + path + filesize), independent of how the image
     // got there.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'PDF Viewer Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'PDF Viewer Photo');
     @unlink($image);
@@ -2020,14 +1998,13 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     // "creation date" blocks always fail, leaving COMMENT_IMG/
     // INFO_AUTHOR/INFO_CREATION_DATE entirely unbuilt.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Legend Info Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Legend Info Photo');
     @unlink($image);
@@ -2038,13 +2015,12 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     // default) -- a fresh upload's author/comment/date_creation columns
     // are all NULL, so the default mode alone is enough here, no need to
     // pass single_value_mode explicitly.
-    $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
+    H::updateImageInfo($page, [
         'image_id' => (string) $imageId,
         'comment' => $commentMarker,
         'author' => $authorName,
         'date_creation' => '2020-05-15 10:00:00',
     ]);
-    expect($updateResult['stat'] ?? null)->toBe('ok');
 
     // picture_informations defaults author=true/created_on=true (per the
     // fixture's own config row) -- not overridden here, same as this
@@ -2089,14 +2065,13 @@ it('wraps around to the first photo via meta-refresh when a repeating slideshow 
     // enabled, engineered here the same image_order=1-then-view technique
     // as this file's own nav test uses to get a deterministic rank.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Slideshow Wrap Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $suffix = uniqid();
     $imageA = H::makeTestImage($suffix . 'a');
     $idA = H::uploadPhotoViaApi($imageA, $albumId, 'Wrap Photo A ' . $suffix);
@@ -2227,14 +2202,13 @@ it('short-circuits the default element-content renderer when an earlier render_e
     // photo's own real image_id so it's a no-op for every other concurrent
     // request against this shared dev server while active.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Element Content Hook Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Element Content Hook Photo');
     @unlink($image);

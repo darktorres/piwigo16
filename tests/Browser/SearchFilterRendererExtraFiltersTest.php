@@ -179,18 +179,17 @@ it('renders every configured search filter panel without a fatal error', functio
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Extra Filters Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Extra Filters Photo');
         @unlink($image);
-        H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $imageId,
             'author' => 'Search Filter Author',
         ]);
@@ -228,14 +227,13 @@ it('renders the date-filter panel with a real threshold-based interval', functio
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Date Filter Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Date Filter Photo');
         @unlink($image);
@@ -282,14 +280,13 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Ratings Disabled Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Ratings Disabled Photo');
         @unlink($image);
@@ -325,15 +322,14 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         // the ratings clause is skipped -- same reasoning as
         // SearchFilterRendererExtraFiltersTest.php's own tag-merge test
         // needing 'categories' alongside 'tags' to keep a real match.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'ratings' => '3',
             'allwords' => 'Search Ratings Disabled Photo',
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         // Now disable rating globally, AFTER the search row already has a
         // real 'ratings' field persisted -- render()'s own rateEnabled()
@@ -394,14 +390,13 @@ it('forces a searched tag with no intersection among the other active filters ba
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Tag Merge Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
 
         // Left untagged on purpose: this album's only photo is the "other
         // active filter" (cat) item set render() intersects against below,
@@ -411,14 +406,13 @@ it('forces a searched tag with no intersection among the other active filters ba
         @unlink($image);
 
         $tagName = 'Search Tag Merge Unused Tag ' . uniqid();
-        $tag = H::wsCall($page, 'pwg.tags.add', [
+        $tag = H::createTag($page, [
             'name' => $tagName,
         ]);
-        $tagResult = $tag['result'] ?? null;
-        if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
+        if (! is_numeric($tag['id'] ?? null)) {
+            throw new RuntimeException('createTag did not return a numeric id: ' . var_export($tag, true));
         }
-        $tagId = (int) $tagResult['id'];
+        $tagId = (int) $tag['id'];
 
         // Real bug:
         // TagService::getAvailableTags($ids) -- the call render() uses to
@@ -439,25 +433,21 @@ it('forces a searched tag with no intersection among the other active filters ba
         // that real path rather than the zero-image edge case, which is a
         // separate, pre-existing upstream gap outside this coverage pass's
         // scope.
-        $otherAlbum = H::wsCall($page, 'pwg.categories.add', [
+        $otherAlbum = H::createCategory($page, [
             'name' => 'Search Tag Merge Other Album ' . uniqid(),
         ]);
-        $otherAlbumResult = $otherAlbum['result'] ?? null;
-        if (! is_array($otherAlbumResult) || ! is_numeric($otherAlbumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($otherAlbum, true));
+        if (! is_numeric($otherAlbum['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($otherAlbum, true));
         }
-        $otherAlbumId = (int) $otherAlbumResult['id'];
+        $otherAlbumId = (int) $otherAlbum['id'];
         $otherImage = H::makeTestImage(uniqid());
         $otherImageId = H::uploadPhotoViaApi($otherImage, $otherAlbumId, 'Search Tag Merge Other Photo');
         @unlink($otherImage);
-        $setInfo = H::wsCall($page, 'pwg.images.setInfo', [
+        H::updateImageInfo($page, [
             'image_id' => $otherImageId,
             'tag_ids' => (string) $tagId,
             'multiple_value_mode' => 'append',
         ]);
-        if (($setInfo['stat'] ?? null) !== 'ok') {
-            throw new RuntimeException('pwg.images.setInfo failed to tag the other photo: ' . var_export($setInfo, true));
-        }
 
         // 'cat' + 'tags' both active means getItemsForFilter('tags', ...)'s
         // own $otherFilters is non-empty (['cat']), so render() takes the
@@ -470,15 +460,14 @@ it('forces a searched tag with no intersection among the other active filters ba
         // render()'s own documented fallback ("the user may have started a
         // search on 2 or more tags that have no intersection... We have to
         // 'force' them in the list").
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'tags' => $tagId,
             'categories' => $albumId,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search tag merge with no intersection among other active filters');
@@ -517,14 +506,13 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Date Cache Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Date Cache Photo');
         @unlink($image);
@@ -550,14 +538,13 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
         // `cat_id`, which keeps 'cat' active alongside 'creation_date' and
         // so permanently takes the un-cached path instead -- it never
         // reaches this cache-hit branch.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'date_created_preset' => '30d',
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         // 1st load: cache miss -- computes pre_counters/list_of_dates from
         // a real DB query (this photo's own, just-uploaded date_creation
@@ -629,14 +616,13 @@ it('resets a non-array "tags"/"author" search-field value back to an empty array
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Malformed Fields Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Malformed Fields Photo');
         @unlink($image);
@@ -743,26 +729,24 @@ it('denies access to and unsets every per-filter search field whose own filters_
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Access Denied Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
         $image = H::makeTestImage(uniqid());
         H::uploadPhotoViaApi($image, $albumId, 'Search Access Denied Photo');
         @unlink($image);
 
-        $tag = H::wsCall($page, 'pwg.tags.add', [
+        $tag = H::createTag($page, [
             'name' => 'Search Access Denied Tag ' . uniqid(),
         ]);
-        $tagResult = $tag['result'] ?? null;
-        if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
+        if (! is_numeric($tag['id'] ?? null)) {
+            throw new RuntimeException('createTag did not return a numeric id: ' . var_export($tag, true));
         }
-        $tagId = (int) $tagResult['id'];
+        $tagId = (int) $tag['id'];
 
         $uniqueWord = 'accessdeniedword' . uniqid();
 
@@ -772,7 +756,7 @@ it('denies access to and unsets every per-filter search field whose own filters_
         // not an absent field short-circuiting the check trivially. Only
         // 'album' stays accessible (see filters_views above), so the
         // search still finds a real photo through it.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'allwords' => $uniqueWord,
             'expert' => 'Data',
             'tags' => $tagId,
@@ -789,11 +773,10 @@ it('denies access to and unsets every per-filter search field whose own filters_
             'width_min' => 50,
             'width_max' => 1000,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
-        $searchUrl = $searchResult['search_url'];
+        $searchUrl = $search['searchUrl'];
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search with every per-filter field denied except album');
@@ -851,14 +834,13 @@ it('denies access to and unsets every per-filter search field whose own filters_
 it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched album is forbidden for the current (guest) viewer', function (): void {
     $page = H::loginAsAdmin($this);
     $uniqueWord = 'forbiddenalbumhint' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Album ' . $uniqueWord,
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     try {
         H::setCategoryPrivate($albumId, true);

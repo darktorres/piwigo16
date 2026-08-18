@@ -66,14 +66,13 @@ it('returns 404 for a nonexistent cat_id', function (): void {
 
 it('accepts a real, visible cat_id and redirects to a real search URL', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Search Controller Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     try {
         $page = H::navigateOk($page, '/search.php?cat_id=' . $albumId);
@@ -84,7 +83,7 @@ it('accepts a real, visible cat_id and redirects to a real search URL', function
             ->toContain('index.php?/search/');
         H::assertNoServerErrors($page, 'search.php redirect target with a real cat_id');
     } finally {
-        H::wsCall($page, 'pwg.categories.delete', [
+        H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',
             'pwg_token' => H::pwgToken($page),
@@ -94,21 +93,20 @@ it('accepts a real, visible cat_id and redirects to a real search URL', function
 
 it('fatal-errors on an invalid array tag_id when tags exist', function (): void {
     $page = H::loginAsAdmin($this);
-    $tagResult = H::wsCall($page, 'pwg.tags.add', [
+    $tagResult = H::createTag($page, [
         'name' => 'ct-search-tag-' . uniqid(),
     ]);
-    $tagResultData = $tagResult['result'] ?? null;
-    if (! is_array($tagResultData) || ! is_numeric($tagResultData['id'] ?? null)) {
-        throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tagResult, true));
+    if (! is_numeric($tagResult['id'] ?? null)) {
+        throw new RuntimeException('createTag did not return a numeric id: ' . var_export($tagResult, true));
     }
-    $tagId = (int) $tagResultData['id'];
+    $tagId = (int) $tagResult['id'];
 
     try {
         $result = H::httpStatus('/search.php?tag_id[]=1&tag_id[]=2');
         expect($result)
             ->toBe(500);
     } finally {
-        H::wsCall($page, 'pwg.tags.delete', [
+        H::deleteTag($page, [
             'tag_id' => $tagId,
             'pwg_token' => H::pwgToken($page),
         ]);
@@ -155,25 +153,23 @@ it('reads default active filters from a logged-in user\'s saved preference once 
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Search Prefs Album ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
-        $albumId = (int) $albumResult['id'];
+        $albumId = (int) $album['id'];
 
         // Persists 'gallery_search_filters' = ['filesize_min', 'filesize_max']
         // (plus 'cat') onto the admin user's own preferences row.
-        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+        $search = H::createFilteredSearch($page, [
             'categories' => $albumId,
             'filesize_min' => 100,
             'filesize_max' => 4000,
         ]);
-        $searchResult = $search['result'] ?? null;
-        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
-            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
         }
 
         // Bare search.php reload, same admin session, no cat_id/q/tag_id

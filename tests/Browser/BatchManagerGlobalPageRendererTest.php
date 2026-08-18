@@ -44,15 +44,14 @@ it('reports "select at least one photo" when submitting an action with nothing s
 
 it('reports "select at least one tag" for add_tags with no tags chosen', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Empty AddTags ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Empty AddTags Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Empty AddTags Photo');
     @unlink($image);
 
     $result = bmPost($page, [
@@ -68,15 +67,14 @@ it('reports "select at least one tag" for add_tags with no tags chosen', functio
 
 it('reports "select at least one tag" for del_tags with no tags chosen', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Empty DelTags ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Empty DelTags Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Empty DelTags Photo');
     @unlink($image);
 
     $result = bmPost($page, [
@@ -92,15 +90,14 @@ it('reports "select at least one tag" for del_tags with no tags chosen', functio
 
 it('reports "select at least one album" for associate with no album chosen', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Empty Associate ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Empty Associate Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Empty Associate Photo');
     @unlink($image);
 
     $result = bmPost($page, [
@@ -116,15 +113,14 @@ it('reports "select at least one album" for associate with no album chosen', fun
 
 it('clears the title/date_creation via their own "remove" checkboxes instead of an empty string', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Remove Fields ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Remove Fields Photo Original Name');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Remove Fields Photo Original Name');
     @unlink($image);
 
     $titleResult = bmPost($page, [
@@ -180,15 +176,14 @@ it('reports "no photo can be deleted" when confirm_deletion is sent with an empt
 
 it('deletes cached derivatives of the chosen type for a real selection via delete_derivatives', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Del Derivatives ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Del Derivatives Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Del Derivatives Photo');
     @unlink($image);
 
     $result = bmPost($page, [
@@ -215,15 +210,14 @@ it('honors display=all and a numeric display= to override the per-page thumbnail
 
 it('redirects after add_tags when the active filter is the "no_tag" prefilter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global NoTag Redirect ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global NoTag Redirect Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global NoTag Redirect Photo');
     @unlink($image);
 
     $filterResult = bmPost($page, [
@@ -252,15 +246,14 @@ it('redirects after add_tags when the active filter is the "no_tag" prefilter', 
 
 it("redirects after del_tags when the removed tags overlap the active filter's tags", function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global DelTags Redirect ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global DelTags Redirect Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global DelTags Redirect Photo');
     @unlink($image);
 
     $addResult = bmPost($page, [
@@ -296,22 +289,20 @@ it("redirects after del_tags when the removed tags overlap the active filter's t
 
 it('redirects after associate when the active filter is the "no_album" prefilter', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Associate NoAlbum Source ' . uniqid(),
     ]);
-    $sourceResult = $sourceAlbum['result'] ?? null;
-    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    if (! is_numeric($sourceAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Global Associate NoAlbum Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $sourceResult['id'], 'Batch Global Associate NoAlbum Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $sourceAlbum['id'], 'Batch Global Associate NoAlbum Photo');
     @unlink($image);
 
     $filterResult = bmPost($page, [
@@ -326,33 +317,31 @@ it('redirects after associate when the active filter is the "no_album" prefilter
         'selectAction' => 'associate',
         'setSelected' => '1',
         'whole_set' => (string) $imageId,
-        'associate' => [(string) $targetResult['id']],
+        'associate' => [(string) $targetAlbum['id']],
     ]);
     expect($result['status'])->toBe(0);
 });
 
 it('redirects after associate when the active filter is "no_virtual_album" and the target album is virtual', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Associate NoVirtual Source ' . uniqid(),
     ]);
-    $sourceResult = $sourceAlbum['result'] ?? null;
-    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    if (! is_numeric($sourceAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
     // An album created via pwg.categories.add always has a NULL `dir`
     // column (confirmed live -- only filesystem-synchronized albums get a
     // real directory), so this is a genuine "no_virtual_album" match, not
     // a DB fixture hack.
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Global Associate NoVirtual Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $sourceResult['id'], 'Batch Global Associate NoVirtual Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $sourceAlbum['id'], 'Batch Global Associate NoVirtual Photo');
     @unlink($image);
 
     $filterResult = bmPost($page, [
@@ -367,29 +356,27 @@ it('redirects after associate when the active filter is "no_virtual_album" and t
         'selectAction' => 'associate',
         'setSelected' => '1',
         'whole_set' => (string) $imageId,
-        'associate' => [(string) $targetResult['id']],
+        'associate' => [(string) $targetAlbum['id']],
     ]);
     expect($result['status'])->toBe(0);
 });
 
 it('redirects after move when the active filter is the "no_album" prefilter', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move NoAlbum Source ' . uniqid(),
     ]);
-    $sourceResult = $sourceAlbum['result'] ?? null;
-    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    if (! is_numeric($sourceAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move NoAlbum Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $sourceResult['id'], 'Batch Global Move NoAlbum Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $sourceAlbum['id'], 'Batch Global Move NoAlbum Photo');
     @unlink($image);
 
     $filterResult = bmPost($page, [
@@ -404,29 +391,27 @@ it('redirects after move when the active filter is the "no_album" prefilter', fu
         'selectAction' => 'move',
         'setSelected' => '1',
         'whole_set' => (string) $imageId,
-        'move' => (string) $targetResult['id'],
+        'move' => (string) $targetAlbum['id'],
     ]);
     expect($result['status'])->toBe(0);
 });
 
 it('redirects after move when the active filter is "no_virtual_album" and the move target is virtual', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move NoVirtual Source ' . uniqid(),
     ]);
-    $sourceResult = $sourceAlbum['result'] ?? null;
-    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    if (! is_numeric($sourceAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move NoVirtual Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $sourceResult['id'], 'Batch Global Move NoVirtual Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $sourceAlbum['id'], 'Batch Global Move NoVirtual Photo');
     @unlink($image);
 
     $filterResult = bmPost($page, [
@@ -441,44 +426,41 @@ it('redirects after move when the active filter is "no_virtual_album" and the mo
         'selectAction' => 'move',
         'setSelected' => '1',
         'whole_set' => (string) $imageId,
-        'move' => (string) $targetResult['id'],
+        'move' => (string) $targetAlbum['id'],
     ]);
     expect($result['status'])->toBe(0);
 });
 
 it('redirects after move when the active category filter no longer matches the move target', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move CatMismatch Source ' . uniqid(),
     ]);
-    $sourceResult = $sourceAlbum['result'] ?? null;
-    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    if (! is_numeric($sourceAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $filterAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $filterAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move CatMismatch Filter ' . uniqid(),
     ]);
-    $filterResultAlbum = $filterAlbum['result'] ?? null;
-    if (! is_array($filterResultAlbum) || ! is_numeric($filterResultAlbum['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($filterAlbum, true));
+    if (! is_numeric($filterAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($filterAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move CatMismatch Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $sourceResult['id'], 'Batch Global Move CatMismatch Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $sourceAlbum['id'], 'Batch Global Move CatMismatch Photo');
     @unlink($image);
 
     // filter_category (not filter_prefilter) -- $bulk_manager_filter['category']
-    // set to $filterResultAlbum's id, distinct from the move target below.
+    // set to $filterAlbum's id, distinct from the move target below.
     $filterSubmit = bmPost($page, [
         'submitFilter' => '1',
         'filter_category_use' => '1',
-        'filter_category' => (string) $filterResultAlbum['id'],
+        'filter_category' => (string) $filterAlbum['id'],
     ]);
     expect($filterSubmit['status'])->toBe(200);
 
@@ -489,22 +471,21 @@ it('redirects after move when the active category filter no longer matches the m
         'selectAction' => 'move',
         'setSelected' => '1',
         'whole_set' => (string) $imageId,
-        'move' => (string) $targetResult['id'],
+        'move' => (string) $targetAlbum['id'],
     ]);
     expect($result['status'])->toBe(0);
 });
 
 it('redirects after a level change when the new level is lower than the active level filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Level Redirect ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Level Redirect Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Level Redirect Photo');
     @unlink($image);
 
     // $bulk_manager_filter['level'] = '4' (a real available permission
@@ -532,15 +513,14 @@ it('redirects after a level change when the new level is lower than the active l
 
 it('passes representative_ext through to the derivative-deletion payload when the image has one', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Del Deriv RepExt ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
     $image = H::makeTestImage(uniqid());
-    $imageId = H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global Del Deriv RepExt Photo');
+    $imageId = H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global Del Deriv RepExt Photo');
     @unlink($image);
 
     // representative_ext models a non-image original (pdf/video/psd/...)
@@ -574,15 +554,14 @@ it('falls back to the hardcoded 20-per-page default when the configured page siz
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', [
+        $album = H::createCategory($page, [
             'name' => 'Batch Global BadPageSize ' . uniqid(),
         ]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
         }
         $image = H::makeTestImage(uniqid());
-        H::uploadPhotoViaApi($image, (int) $albumResult['id'], 'Batch Global BadPageSize Photo');
+        H::uploadPhotoViaApi($image, (int) $album['id'], 'Batch Global BadPageSize Photo');
         @unlink($image);
 
         // No `display=` GET param on this request, so displayRequested is
@@ -595,7 +574,7 @@ it('falls back to the hardcoded 20-per-page default when the configured page siz
         $filterResult = bmPost($page, [
             'submitFilter' => '1',
             'filter_category_use' => '1',
-            'filter_category' => (string) $albumResult['id'],
+            'filter_category' => (string) $album['id'],
         ]);
 
         expect($filterResult['status'])->toBe(200);
@@ -643,14 +622,13 @@ function bmMakeNamedTestImage(string $basename): string
 
 it('orders thumbnails by the duplicate-detection fields when the active filter is "duplicates"', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Global Duplicates ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $basename = 'batch-dup-' . uniqid() . '.jpg';
     $imagePathA = bmMakeNamedTestImage($basename);

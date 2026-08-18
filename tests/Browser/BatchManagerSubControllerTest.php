@@ -399,14 +399,13 @@ it('applies a plain (non-duplicates) prefilter via a URL filter token', function
 
 it('applies add_tags then del_tags to a whole_set selection, round-tripping the association in image_tag', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch AddTags Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch AddTags Photo');
     @unlink($image);
@@ -448,22 +447,20 @@ it('applies add_tags then del_tags to a whole_set selection, round-tripping the 
 
 it('associates a whole_set selection with another album via the associate action', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Associate Source ' . uniqid(),
     ]);
-    $sourceResult = $sourceAlbum['result'] ?? null;
-    if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
+    if (! is_numeric($sourceAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $sourceAlbumId = (int) $sourceResult['id'];
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $sourceAlbumId = (int) $sourceAlbum['id'];
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Associate Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
-    $targetAlbumId = (int) $targetResult['id'];
+    $targetAlbumId = (int) $targetAlbum['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $sourceAlbumId, 'Batch Associate Photo');
     @unlink($image);
@@ -504,22 +501,20 @@ function bmImageCategoryLinks(int $imageId, int $storageAlbumId, int $targetAlbu
 
 it('moves a whole_set selection, clearing all prior album links and adding the target', function (): void {
     $page = H::loginAsAdmin($this);
-    $storageAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $storageAlbum = H::createCategory($page, [
         'name' => 'Batch Move Storage ' . uniqid(),
     ]);
-    $storageResult = $storageAlbum['result'] ?? null;
-    if (! is_array($storageResult) || ! is_numeric($storageResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($storageAlbum, true));
+    if (! is_numeric($storageAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($storageAlbum, true));
     }
-    $storageAlbumId = (int) $storageResult['id'];
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $storageAlbumId = (int) $storageAlbum['id'];
+    $targetAlbum = H::createCategory($page, [
         'name' => 'Batch Move Target ' . uniqid(),
     ]);
-    $targetResult = $targetAlbum['result'] ?? null;
-    if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
+    if (! is_numeric($targetAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($targetAlbum, true));
     }
-    $targetAlbumId = (int) $targetResult['id'];
+    $targetAlbumId = (int) $targetAlbum['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $storageAlbumId, 'Batch Move Photo');
     @unlink($image);
@@ -554,22 +549,20 @@ it('moves a whole_set selection, clearing all prior album links and adding the t
 
 it('dissociates a whole_set selection from a non-storage album', function (): void {
     $page = H::loginAsAdmin($this);
-    $storageAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $storageAlbum = H::createCategory($page, [
         'name' => 'Batch Dissociate Storage ' . uniqid(),
     ]);
-    $storageResult = $storageAlbum['result'] ?? null;
-    if (! is_array($storageResult) || ! is_numeric($storageResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($storageAlbum, true));
+    if (! is_numeric($storageAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($storageAlbum, true));
     }
-    $storageAlbumId = (int) $storageResult['id'];
-    $otherAlbum = H::wsCall($page, 'pwg.categories.add', [
+    $storageAlbumId = (int) $storageAlbum['id'];
+    $otherAlbum = H::createCategory($page, [
         'name' => 'Batch Dissociate Other ' . uniqid(),
     ]);
-    $otherResult = $otherAlbum['result'] ?? null;
-    if (! is_array($otherResult) || ! is_numeric($otherResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($otherAlbum, true));
+    if (! is_numeric($otherAlbum['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($otherAlbum, true));
     }
-    $otherAlbumId = (int) $otherResult['id'];
+    $otherAlbumId = (int) $otherAlbum['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $storageAlbumId, 'Batch Dissociate Photo');
     @unlink($image);
@@ -633,14 +626,13 @@ function bmImageRow(int $imageId): array
 
 it('mass-updates author, title, date_creation, and level for a whole_set selection', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Mass Update Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Mass Update Photo');
     @unlink($image);
@@ -700,14 +692,13 @@ it('mass-updates author, title, date_creation, and level for a whole_set selecti
 
 it('adds and removes a whole_set selection from the caddie', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Caddie Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Caddie Photo');
     @unlink($image);
@@ -741,14 +732,13 @@ it('adds and removes a whole_set selection from the caddie', function (): void {
 
 it('rejects a delete action without confirm_deletion, then deletes and records a session message once confirmed', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Delete Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Delete Photo');
     @unlink($image);
@@ -785,14 +775,13 @@ it('rejects a delete action without confirm_deletion, then deletes and records a
 
 it('reports metadata-synchronized and generate_derivatives success/error counts', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Metadata Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Metadata Photo');
     @unlink($image);
@@ -821,14 +810,13 @@ it('reports metadata-synchronized and generate_derivatives success/error counts'
 
 it('renders the global-mode thumbnail grid for a real category filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Thumbnails Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Thumbnails Photo');
     @unlink($image);
@@ -850,14 +838,13 @@ it('renders the global-mode thumbnail grid for a real category filter', function
 
 it('builds the current selection from a selection[] array, an alternative to whole_set', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Selection Array Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Selection Array Photo');
     @unlink($image);
@@ -1267,14 +1254,13 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     // covers the 'landscape' bucket elsewhere in this suite -- only
     // portrait (<0.95), square (0.95..1.05) and panorama (>=2) are new.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', [
+    $album = H::createCategory($page, [
         'name' => 'Batch Ratio Buckets Album ' . uniqid(),
     ]);
-    $albumResult = $album['result'] ?? null;
-    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
     }
-    $albumId = (int) $albumResult['id'];
+    $albumId = (int) $album['id'];
 
     $portraitImage = H::makeTestImage(uniqid());
     $portraitId = H::uploadPhotoViaApi($portraitImage, $albumId, 'Batch Ratio Portrait Photo');

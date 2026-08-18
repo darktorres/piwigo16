@@ -34,7 +34,6 @@ use Piwigo\Category\Projection\CategoryRankUpdateRow;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\ComputedCategoryRollupRow;
-use Piwigo\Category\Projection\DqlPropertyTarget;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -1101,30 +1100,12 @@ final readonly class CategoryRepository
     /**
      * @return list<string>
      *
-     * `$table`/`$column` are {@see CategoryOrphanTarget}'s bounded enum,
-     * not arbitrary runtime strings. 3 of the 4 targets go through real
-     * DQL -- see that enum's own docblock for why `OldPermalinks` alone
-     * keeps the raw DBAL path (a real deptrac boundary, not a VO-typing
-     * question).
+     * `$target` is {@see CategoryOrphanTarget}'s bounded enum, not an
+     * arbitrary runtime entity/property pair.
      */
     public function findOrphanedColumnValues(CategoryOrphanTarget $target): array
     {
         $entityClassAndProperty = $target->entityClassAndProperty();
-
-        if (! $entityClassAndProperty instanceof DqlPropertyTarget) {
-            $tableAndColumn = $target->tableAndColumn();
-            $table = $tableAndColumn->table;
-            $column = $tableAndColumn->column;
-
-            return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getConnection()->executeQuery(<<<SQL
-                SELECT
-                    {$column}
-                FROM {$table}
-                    LEFT JOIN categories ON id = {$column}
-                WHERE id IS NULL
-                SQL)->fetchFirstColumn())));
-        }
-
         $entityClass = $entityClassAndProperty->entityClass;
         $property = $entityClassAndProperty->property;
         // A bare association path in a SELECT clause changes the
@@ -1155,35 +1136,12 @@ final readonly class CategoryRepository
     /**
      * @param  list<int|string>  $values
      *
-     * `$table`/`$column` are {@see CategoryOrphanTarget}'s bounded enum,
-     * not arbitrary runtime strings. Same DQL/DBAL split as
-     * {@see findOrphanedColumnValues()} above, same reasons.
+     * `$target` is {@see CategoryOrphanTarget}'s bounded enum, not an
+     * arbitrary runtime entity/property pair.
      */
     public function deleteRowsWhereColumnIn(CategoryOrphanTarget $target, array $values): void
     {
         $entityClassAndProperty = $target->entityClassAndProperty();
-
-        if (! $entityClassAndProperty instanceof DqlPropertyTarget) {
-            $tableAndColumn = $target->tableAndColumn();
-            $table = $tableAndColumn->table;
-            $column = $tableAndColumn->column;
-
-            $this->em
-                ->getConnection()
-                ->executeStatement(<<<SQL
-                    DELETE
-                    FROM {$table}
-                    WHERE {$column} IN (:values)
-                    SQL
-                    , [
-                        'values' => array_map(intval(...), $values),
-                    ], [
-                        'values' => ArrayParameterType::INTEGER,
-                    ]);
-
-            return;
-        }
-
         $entityClass = $entityClassAndProperty->entityClass;
         $property = $entityClassAndProperty->property;
         $em = $this->em;

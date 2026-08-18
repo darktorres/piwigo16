@@ -363,4 +363,56 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
             ->getQuery()
             ->execute();
     }
+
+    /**
+     * {@see OldPermalinkLookupInterface} implementation, carved out of
+     * {@see \Piwigo\Category\CategoryRepository::findOrphanedColumnValues()}'s
+     * old generic dispatcher -- `old_permalinks` is owned here
+     * (`Permalink`, L2bExtendedDomain), not in `Category`
+     * (L2aCoreDomain), which cannot depend on it directly. `getSingleColumnResult()`
+     * never applies custom Doctrine Type conversion (`op.catId` comes
+     * back as a plain scalar despite being `CategoryId`-typed), same
+     * gotcha every other `getSingleColumnResult()` caller in this
+     * codebase already accounts for.
+     *
+     * @return list<string>
+     */
+    #[Override]
+    public function findOrphanedCatIds(): array
+    {
+        $ids = $this->em->createQueryBuilder()
+            ->select('DISTINCT op.catId')
+            ->from(OldPermalinkEntity::class, 'op')
+            ->leftJoin(CategoryEntity::class, 'c', Join::WITH, 'op.catId = c.id')
+            ->where('c.id IS NULL')
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return array_values(array_map(
+            static fn (mixed $id): string => is_scalar($id) ? (string) $id : '',
+            $ids
+        ));
+    }
+
+    /**
+     * {@see OldPermalinkLookupInterface} implementation -- sibling of
+     * {@see findOrphanedCatIds()} above.
+     *
+     * @param list<string> $catIds
+     */
+    #[Override]
+    public function deleteOldPermalinksForCatIds(array $catIds): void
+    {
+        if ($catIds === []) {
+            return;
+        }
+
+        $this->em->createQueryBuilder()
+            ->delete(OldPermalinkEntity::class, 'op')
+            ->where('op.catId IN (:catIds)')
+            ->setParameter('catIds', array_map(intval(...), $catIds), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $this->em->clear();
+    }
 }

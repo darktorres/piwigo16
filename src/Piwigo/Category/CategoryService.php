@@ -1256,14 +1256,18 @@ final readonly class CategoryService
     /**
      * Checks and repairs integrity on categories.
      * Removes all entries from related tables which correspond to a deleted category.
+     *
+     * $oldPermalinkRepo is an explicit parameter, not constructor-injected
+     * -- same reasoning as findCategoryIdFromPermalinks()'s own docblock:
+     * `old_permalinks` is owned by Permalink (L2bExtendedDomain), which
+     * Category (L2aCoreDomain) cannot depend on directly.
      */
-    public function checkCategoriesIntegrity(): void
+    public function checkCategoriesIntegrity(OldPermalinkLookupInterface $oldPermalinkRepo): void
     {
         $relatedTargets = [
             CategoryOrphanTarget::ImageCategory,
             CategoryOrphanTarget::UserAccess,
             CategoryOrphanTarget::GroupAccess,
-            CategoryOrphanTarget::OldPermalinks,
         ];
 
         foreach ($relatedTargets as $target) {
@@ -1272,6 +1276,11 @@ final readonly class CategoryService
             if (count($orphans) > 0) {
                 $this->repo->deleteRowsWhereColumnIn($target, $orphans);
             }
+        }
+
+        $orphanedCatIds = $oldPermalinkRepo->findOrphanedCatIds();
+        if ($orphanedCatIds !== []) {
+            $oldPermalinkRepo->deleteOldPermalinksForCatIds($orphanedCatIds);
         }
     }
 

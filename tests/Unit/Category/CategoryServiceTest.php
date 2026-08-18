@@ -926,11 +926,10 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
 
 test('checkCategoriesIntegrity() deletes orphaned image_category/user_access/group_access rows', function (): void {
     // findOrphanedColumnValues()/deleteRowsWhereColumnIn() use real DQL
-    // for 3 of CategoryOrphanTarget's 4 cases (OldPermalinks stays on
-    // raw DBAL, a real deptrac boundary). All 3 target tables carry a
-    // real ON DELETE CASCADE FK on the category-id column, so a genuine
-    // orphan can never arise through normal writes -- disabling FK
-    // checks just for these inserts reproduces the only real way this
+    // for all 3 of CategoryOrphanTarget's cases. All 3 target tables
+    // carry a real ON DELETE CASCADE FK on the category-id column, so a
+    // genuine orphan can never arise through normal writes -- disabling
+    // FK checks just for these inserts reproduces the only real way this
     // state has ever existed in practice.
     $conn = categoryServiceTestConn();
     $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
@@ -940,7 +939,7 @@ test('checkCategoriesIntegrity() deletes orphaned image_category/user_access/gro
     $conn->executeStatement(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
 
     try {
-        categoryServiceTestService()->checkCategoriesIntegrity();
+        categoryServiceTestService()->checkCategoriesIntegrity(new PermalinkRepository(EntityManagerFactory::build($conn)));
 
         $orphanedImageCategoryCount = $conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
@@ -1006,7 +1005,7 @@ test('checkCategoriesIntegrity() deletes an orphaned old_permalinks row and keep
     }
 
     categoryServiceTestService()
-        ->checkCategoriesIntegrity();
+        ->checkCategoriesIntegrity(new PermalinkRepository(EntityManagerFactory::build($conn)));
 
     $orphanCount = $conn->createQueryBuilder()
         ->select('COUNT(*) AS c')

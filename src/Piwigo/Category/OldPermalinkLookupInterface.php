@@ -32,4 +32,18 @@ interface OldPermalinkLookupInterface
     public function findPermalinkMatches(array $permalinks): array;
 
     public function touchOldPermalinkHit(string $permalink, int $catId): void;
+
+    /**
+     * `old_permalinks.cat_id` values with no matching `categories` row
+     * anymore -- {@see \Piwigo\Category\CategoryService::
+     * checkCategoriesIntegrity()}'s own permalink-domain orphan check.
+     *
+     * @return list<string>
+     */
+    public function findOrphanedCatIds(): array;
+
+    /**
+     * @param list<string> $catIds
+     */
+    public function deleteOldPermalinksForCatIds(array $catIds): void;
 }

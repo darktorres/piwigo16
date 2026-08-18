@@ -27,6 +27,7 @@ use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
+use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
@@ -110,7 +111,7 @@ final readonly class MaintenanceActionDispatcher
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
                 $categoriesService = $this->categoryService;
-                $categoriesService->checkCategoriesIntegrity();
+                $categoriesService->checkCategoriesIntegrity(new PermalinkRepository($this->entityManager));
                 $categoriesService->updateUppercats();
                 $categoriesService->updateCategory('all');
                 $categoriesService->updateGlobalRank();

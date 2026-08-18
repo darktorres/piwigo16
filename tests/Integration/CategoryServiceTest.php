@@ -905,10 +905,11 @@ namespace Piwigo\Tests\Integration {
         public function testCheckCategoriesIntegrityDeletesOrphanedImageCategoryUserAccessAndGroupAccessRows(): void
         {
             // findOrphanedColumnValues()/deleteRowsWhereColumnIn() use real
-            // DQL for 3 of CategoryOrphanTarget's 4 cases (OldPermalinks stays
-            // on raw DBAL, a real deptrac boundary, and is covered by this
-            // file's sibling old-permalinks test below) -- this is the only
-            // coverage for these 3. All 3 target tables carry a real ON DELETE
+            // DQL for all 3 of CategoryOrphanTarget's cases (old_permalinks'
+            // own orphan check moved to OldPermalinkLookupInterface, a real
+            // deptrac boundary, covered by this file's sibling old-permalinks
+            // test below) -- this is the only coverage for these 3. All 3
+            // target tables carry a real ON DELETE
             // CASCADE FK on the category-id column, so a genuine orphan can
             // never arise through normal writes -- disabling FK checks just
             // for these inserts reproduces the only real way this state has
@@ -921,7 +922,7 @@ namespace Piwigo\Tests\Integration {
             $this->enableForeignKeyChecks($this->conn);
 
             try {
-                $this->service->checkCategoriesIntegrity();
+                $this->service->checkCategoriesIntegrity(new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
                 $orphanedImageCategoryCount = $this->conn->createQueryBuilder()
                     ->select('COUNT(*) AS c')
@@ -983,7 +984,7 @@ namespace Piwigo\Tests\Integration {
                 $this->conn->executeStatement($isPostgres ? "SET session_replication_role = 'origin'" : 'SET FOREIGN_KEY_CHECKS = 1');
             }
 
-            $this->service->checkCategoriesIntegrity();
+            $this->service->checkCategoriesIntegrity(new PermalinkRepository(EntityManagerFactory::build($this->conn)));
 
             $orphanCount = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')

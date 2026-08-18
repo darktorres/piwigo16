@@ -31,6 +31,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\Projection\Image;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -1163,24 +1164,51 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * (since `visible_images` falls through to the images-table's own
      * `level <= x` check in the old `getSqlConditionFandFAsCondition()`
      * mapping, so maxLevel applies here too, against `i.level`).
-     * $orderBySql stays a raw fragment, same reasoning as
-     * findVisibleFavoriteImageIds() above.
+     * $orderBySql stays a raw fragment for the fallback path, same
+     * reasoning as findVisibleFavoriteImageIds() above -- resolveDqlOrderBy()
+     * rejects it (falls to raw) whenever it isn't plain closed-vocabulary
+     * PhotoSortOrder text.
      *
-     * Stays on DBAL: $orderBySql is a caller-composed raw fragment, and it
-     * selects `i.*` (a whole-row shape, not a fixed DQL property list).
-     * Builds its own `Connection::createQueryBuilder()` (rather than
-     * splicing `(string) $condition->expr` into a heredoc directly) because
-     * `SqlCondition::applyTo()` needs a real `QueryBuilder` to apply the
-     * permission condition onto, same reasoning as
-     * {@see findVisibleFavoriteImageIds()} above; $orderBySql always
-     * carries its own leading `ORDER BY ` keyword (every real caller's
-     * own construction guarantees this), stripped before
-     * `QueryBuilder::orderBy()`, which adds it back itself.
+     * `i.*`'s own "whole-row, not a fixed DQL property list" used to read
+     * as a real blocker, but {@see \Piwigo\Image\ImageEntity} maps every
+     * one of `images`' 24 columns (verified directly against the schema,
+     * not assumed) and {@see \Piwigo\Image\Projection\Image::toArray()}
+     * already hands back exactly this same snake_case shape --
+     * {@see \Piwigo\Image\ImageRepository::findByIds()}'s own established
+     * "fetch entities, map through Image::fromEntity()" precedent.
      *
      * @return list<array<string, mixed>>
      */
     public function findVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
+        $dqlOrderBy = $this->sortRenderer()
+            ->resolveDqlOrderBy($orderBySql, 'i');
+        if ($dqlOrderBy !== null) {
+            $qb = $this->em
+                ->createQueryBuilder()
+                ->select('i')
+                ->from(FavoriteEntity::class, 'f')
+                ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'f.imageId = i.id')
+                ->where('f.userId = :userId')
+                ->setParameter('userId', $userId);
+            SqlCondition::combine(
+                'AND',
+                $criteria->visibleImagesCondition('i.id'),
+                $criteria->maxLevelCondition('i.level'),
+            )->applyTo($qb);
+            foreach ($dqlOrderBy as $entry) {
+                $qb->addOrderBy($entry->property, $entry->dir);
+            }
+
+            $entities = $qb->getQuery()
+                ->getResult();
+
+            return array_map(
+                static fn (ImageEntity $entity): array => Image::fromEntity($entity)->toArray(),
+                $entities
+            );
+        }
+
         $qb = $this->em
             ->getConnection()
             ->createQueryBuilder()

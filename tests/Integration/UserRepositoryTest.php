@@ -847,6 +847,73 @@ final class UserRepositoryTest extends IntegrationTestCase
         );
     }
 
+    public function testFindVisibleFavoriteImagesReturnsTheRealRows(): void
+    {
+        // Fixture: user 1 has favorites [1, 3, 5].
+        $rows = $this->repo->findVisibleFavoriteImages(
+            UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY id ASC'
+        );
+
+        self::assertSame([1, 3, 5], array_map(static fn (array $row): mixed => $row['id'], $rows));
+        self::assertArrayHasKey('file', $rows[0]);
+        self::assertArrayHasKey('path', $rows[0]);
+    }
+
+    public function testFindVisibleFavoriteImagesOrdersByTheGivenFragment(): void
+    {
+        $rows = $this->repo->findVisibleFavoriteImages(
+            UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY id DESC'
+        );
+
+        self::assertSame([5, 3, 1], array_map(static fn (array $row): mixed => $row['id'], $rows));
+    }
+
+    public function testFindVisibleFavoriteImagesFallsBackToRawDbalForUnparseableOrderBy(): void
+    {
+        // Same reasoning as findVisibleFavoriteImageIds()'s own sibling
+        // test above -- `comment` isn't a bounded $sort_fields token, so
+        // resolveDqlOrderBy() returns null and this must still return the
+        // right members via the raw-DBAL path.
+        $rows = $this->repo->findVisibleFavoriteImages(
+            UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY comment ASC'
+        );
+        $ids = array_map(static fn (array $row): mixed => $row['id'], $rows);
+        sort($ids);
+
+        self::assertSame([1, 3, 5], $ids);
+    }
+
+    public function testFindVisibleFavoriteImagesRunsARandomOrderAsDql(): void
+    {
+        $rows = $this->repo->findVisibleFavoriteImages(
+            UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY RAND()'
+        );
+        $ids = array_map(static fn (array $row): mixed => $row['id'], $rows);
+        sort($ids);
+
+        self::assertSame([1, 3, 5], $ids);
+    }
+
+    public function testFindVisibleFavoriteImagesReturnsEmptyForAUserWithNoFavorites(): void
+    {
+        self::assertSame(
+            [],
+            $this->repo->findVisibleFavoriteImages(
+                UserId::from(2),
+                self::noPermissionRestriction(),
+                'ORDER BY id ASC'
+            )
+        );
+    }
+
     private static function noPermissionRestriction(): PermissionCriteria
     {
         return new PermissionCriteria(null, null, null, null, null, null);

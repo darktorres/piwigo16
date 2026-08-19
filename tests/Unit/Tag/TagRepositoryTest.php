@@ -482,10 +482,12 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
     // FULLTEXT-deadlock reason as deleteImageTagByTagIds()'s no-op test
     // far above.
     //
-    // KNOWN, ACCEPTED RESIDUAL: this test's own image_tag inserts below
-    // can collide with TagServiceTest.php's own bulk 1000-tag cleanup --
-    // see 'massInsertImageTags() clears the identity map...' far below
-    // for the full mechanism.
+    // This test's own image_tag inserts below used to be able to collide
+    // with TagServiceTest.php's own bulk 1000-tag cleanup -- see
+    // 'massInsertImageTags() clears the identity map...' far below for
+    // the full mechanism; fixed on that side (the cleanup's own DELETE
+    // no longer takes the lock that caused the collision), so nothing
+    // needs to change on this side.
     DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagIdA = $repo->insert(tagTestName(), tagTestName());
@@ -662,10 +664,11 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
     // reaches `tags` -- same FULLTEXT-deadlock reason as
     // deleteImageTagByTagIds()'s no-op test far above.
     //
-    // KNOWN, ACCEPTED RESIDUAL: this test's own massInsertImageTags()
-    // call below can collide with TagServiceTest.php's own bulk 1000-tag
-    // cleanup -- see 'massInsertImageTags() clears the identity map...'
-    // above for the full mechanism.
+    // This test's own massInsertImageTags() call below used to be able
+    // to collide with TagServiceTest.php's own bulk 1000-tag cleanup --
+    // see 'massInsertImageTags() clears the identity map...' above for
+    // the full mechanism; fixed on that side, so nothing needs to change
+    // on this side.
     DbTransactionTestOverride::rollback();
     $repo = tagTestRepo();
     $tagId = $repo->insert(tagTestName(), tagTestName());
@@ -724,14 +727,13 @@ test('massInsertImageTags() clears the identity map, so a later find() sees the 
     // reaches `tags` -- same FULLTEXT-deadlock reason as
     // deleteImageTagByTagIds()'s no-op test far above.
     //
-    // KNOWN, ACCEPTED RESIDUAL: this test's own massInsertImageTags()
-    // call below inserts a single image_tag row and can collide with
+    // This test's own massInsertImageTags() call below inserts a single
+    // image_tag row and used to be able to collide with
     // TagServiceTest.php's own 'getAvailableTags() skips a tag absent
     // from the counters once past the 1000 id threshold' -- see that
     // test's own leading docblock for the full FK-cascade-locking
-    // mechanism (reproduced live, ~1-in-2 rate under --parallel,
-    // accepted as a genuine InnoDB deadlock between 2 correctly-isolated
-    // transactions, not a bug here).
+    // mechanism; fixed on that side, so nothing needs to change on this
+    // side.
     DbTransactionTestOverride::rollback();
     [$repo, $em] = tagTestRepoWithEm();
     $tagId = $repo->insert(tagTestName(), tagTestName());

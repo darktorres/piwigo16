@@ -419,26 +419,32 @@ test('tagIdFromTagName() creates a new tag for an unknown name', function (): vo
  * a real fixture image -- TagRepositoryTest.php's own disposable-tag
  * tests already treat images 1, 4 and 5 as their own "known image"
  * fixtures, so setTagsOf()'s own blanket delete-then-insert of
- * image_tag rows targets an image no other file has any stake in. A
- * randomized id below the real auto-increment counter (already
- * 700,000+, confirmed live) avoids ever colliding with a future
- * auto-generated row.
+ * image_tag rows targets an image no other file has any stake in.
  *
- * This file's own dedicated half of what was originally a shared
- * 600000-649998 range with ImageServiceTest.php's own
- * 'deleteElementFiles skips a remote row...' test -- both files picked
- * a manual `images.id` from the identical range with no coordination,
- * a real collision confirmed live under --parallel this session.
+ * A real, plain auto-increment insert (no explicit `id`), not a
+ * hand-picked literal or a random value drawn from a fixed numeric
+ * range -- this used to draw from a hardcoded range, which turned out
+ * to be unsafe for two real, live-reproduced reasons: it originally
+ * overlapped ImageServiceTest.php's own 'deleteElementFiles skips a
+ * remote row...' test's identical range (both files picked a manual
+ * `images.id` from the same numbers with no coordination), and even
+ * after splitting the ranges apart, `images.id`'s own AUTO_INCREMENT
+ * counter turned out to never reset on a fixture reimport (confirmed
+ * live via `SHOW TABLE STATUS` -- reimport only deletes/reloads row
+ * data), so any hardcoded "surely below the counter" range is only
+ * safe by coincidence of how much history a given database has
+ * accumulated. Auto-increment ids can never collide with anything by
+ * construction.
  */
 function tagServiceTestDisposableImageId(Connection $conn): int
 {
-    $imageId = random_int(625_000, 649_998);
-    $conn->executeStatement(
-        'INSERT INTO images (id, file, path) VALUES (?, ?, ?)',
-        [$imageId, "p17-unit-test-{$imageId}.jpg", "upload/2026/08/p17-unit-test-{$imageId}.jpg"]
-    );
+    $suffix = bin2hex(random_bytes(4));
+    $conn->insert('images', [
+        'file' => "p17-unit-test-{$suffix}.jpg",
+        'path' => "upload/2026/08/p17-unit-test-{$suffix}.jpg",
+    ]);
 
-    return $imageId;
+    return (int) $conn->lastInsertId();
 }
 
 /**
@@ -638,32 +644,56 @@ test('getAvailableTags() returns empty when the filter matches no images', funct
  * the wrapper's whole-test-duration transaction, can deadlock against
  * another --parallel worker's own concurrent tags INSERT -- same
  * mechanism, same fix, as 'getTagIds() creates a new tag for a plain
- * name when allowed' above (reproduced live there: DeadlockException),
- * and this test's own 1000-row INSERT holds that lock even longer.
+ * name when allowed' above (reproduced live there: DeadlockException).
  *
- * KNOWN, ACCEPTED RESIDUAL under --parallel: this test's own cleanup
- * (below) deletes all 1000 disposable tags in one `id IN (...)`
- * statement. `image_tag.tag_id` has an `ON DELETE CASCADE` FK to
- * `tags.id` -- deleting 1000 parent rows forces InnoDB to broadly
- * lock/scan `image_tag`'s own secondary index to verify referential
- * integrity for every one of those ids, regardless of how the `tags`
- * rows themselves are selected (confirmed live: switching this
- * cleanup from a `name LIKE` scan to an exact `id IN (...)` list did
- * NOT change the lock pattern one bit, via 8 separate `SHOW ENGINE
- * INNODB STATUS` captures -- see git history on this comment).
- * TagRepositoryTest.php's own `massInsertImageTags()`-calling tests
- * (e.g. 'massInsertImageTags() clears the identity map...',
- * 'countImagesPerTagUnrestricted() counts every image_tag link...')
- * insert single `image_tag` rows concurrently and can lose that race
- * as either a DeadlockException or (if the loser is this test's own
- * earlier tag-creation transaction) a ForeignKeyConstraintViolationException
- * -- reproduced live at roughly a 1-in-2 rate across two independent
- * 10-run --parallel hunts. This is a legitimate InnoDB deadlock
- * between two correctly-written, correctly-isolated concurrent
- * transactions (not a missing-exemption bug), and is accepted as a
- * known, undominated residual rather than further mitigated (e.g. via
- * chunked deletes or deadlock-retry) -- a failure here is a genuine
- * `--parallel` timing collision, not a real defect; rerun the suite.
+ * FIXED (was a KNOWN, ACCEPTED RESIDUAL under --parallel): this test's
+ * own cleanup DELETE used to run as one monolithic 1000-row
+ * `DELETE FROM tags WHERE id IN (...)` statement. `image_tag.tag_id` has
+ * an `ON DELETE CASCADE` FK to `tags.id`, so deleting many parent rows
+ * in one statement forces InnoDB to verify referential integrity for
+ * every one of those ids in that same statement -- a broad lock/scan of
+ * `image_tag`'s own secondary index, confirmed live: switching the
+ * DELETE from a `name LIKE` scan to an exact `id IN (...)` list did NOT
+ * change the lock pattern one bit, via 8 separate `SHOW ENGINE INNODB
+ * STATUS` captures, and chunking the DELETE into smaller batches
+ * (tried first) reduced but did not eliminate a fresh live
+ * reproduction. TagRepositoryTest.php's own `massInsertImageTags()`-
+ * calling tests (e.g. 'massInsertImageTags() clears the identity
+ * map...', 'countImagesPerTagUnrestricted() counts every image_tag
+ * link...') insert single `image_tag` rows concurrently and could lose
+ * that race as either a DeadlockException or (if the loser was this
+ * test's own earlier tag-creation transaction) a
+ * ForeignKeyConstraintViolationException -- reproduced live at roughly a
+ * 1-in-2 rate across two independent 10-run --parallel hunts.
+ *
+ * The real fix: by the time the cleanup DELETE below runs, the line
+ * right before it has ALREADY deleted every `image_tag` row for this
+ * test's own disposable image -- unconditionally, in one statement,
+ * regardless of which tag each row pointed to, since these 1000 tags
+ * were never linked to any other image. Nothing in `image_tag` can
+ * possibly reference any of these tag ids by the time the DELETE
+ * below runs, which makes InnoDB's own cascade re-verification of that
+ * fact provably redundant -- and it's that redundant check's own
+ * lock/scan that collides with TagRepositoryTest.php's concurrent
+ * writes, not anything the DELETE itself needs. `SET
+ * FOREIGN_KEY_CHECKS=0/1` around the DELETE tells InnoDB to skip the
+ * check outright, removing the actual contention mechanism instead of
+ * shrinking its window (chunking, tried first) or recovering from it
+ * after the fact (retry, also tried first and rejected as treating an
+ * avoidable lock conflict as though it were unavoidable). This is an
+ * established, precedented pattern in this exact codebase, not novel --
+ * see `tests/Unit/Category/CategoryServiceTest.php`,
+ * `tests/Unit/Notification/NotificationByMailRepositoryTest.php`,
+ * `tests/Unit/Feed/FeedRepositoryTest.php`, and
+ * `tests/Integration/IntegrationTestCase.php`'s own
+ * disableForeignKeyChecks()/enableForeignKeyChecks() helper pair, all of
+ * which already disable/re-enable FK checks around a specific statement
+ * for the identical session-scoped reason.
+ *
+ * The bulk-tags INSERT above still runs in 100-row chunks -- a genuinely
+ * separate mechanism (InnoDB's FULLTEXT auxiliary-index maintenance lock
+ * during INSERT, which has no "disable the check" equivalent the way an
+ * FK constraint does), untouched by this fix.
  */
 test('getAvailableTags() skips a tag absent from the counters once past the 1000 id threshold', function (): void {
     DbTransactionTestOverride::rollback();
@@ -695,7 +725,11 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
             $name = "p18-test-bulk-{$suffix}-{$i}";
             $tagValues[] = "('{$name}', '{$name}', NOW())";
         }
-        $conn->executeStatement('INSERT INTO tags (name, url_name, lastmodified) VALUES ' . implode(',', $tagValues));
+        // Chunked (100 rows/statement, 10 statements), not one 1000-row
+        // INSERT -- see this test's own leading docblock for why.
+        foreach (array_chunk($tagValues, 100) as $chunk) {
+            $conn->executeStatement('INSERT INTO tags (name, url_name, lastmodified) VALUES ' . implode(',', $chunk));
+        }
         $bulkIds = array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $conn->fetchFirstColumn("SELECT id FROM tags WHERE name LIKE 'p18-test-bulk-{$suffix}-%'")
@@ -728,18 +762,27 @@ test('getAvailableTags() skips a tag absent from the counters once past the 1000
         // Exact ids (already collected above as $bulkIds), not a LIKE
         // pattern -- `tags` carries no plain B-tree index on `name` (only
         // url_name, lastmodified, and a FULLTEXT index, which the
-        // optimizer can't use for LIKE), so a name-pattern DELETE forces
-        // a full clustered-index scan that next-key-locks its way across
-        // the ENTIRE table for the whole 1000-row deletion -- including
-        // rows that don't even match the pattern. This id-list form is a
-        // real improvement (it no longer locks unrelated `tags` rows) but
-        // does NOT eliminate this test's own known-accepted deadlock
-        // residual against TagRepositoryTest.php's own concurrent
-        // image_tag writers -- see this test's own leading docblock for
-        // why (an unavoidable FK-cascade lock on `image_tag` itself, not
-        // something a `tags`-side WHERE clause can route around).
+        // optimizer can't use for LIKE), so a name-pattern DELETE would
+        // force a full clustered-index scan that next-key-locks its way
+        // across the ENTIRE table -- including rows that don't even match
+        // the pattern.
+        //
+        // FK checks disabled just for this DELETE -- the image_tag
+        // DELETE 3 lines above already removed every row that could
+        // reference any of these tag ids, so InnoDB's own cascade
+        // re-verification is redundant; see this test's own leading
+        // docblock for the full reasoning and precedent. Wrapped in its
+        // own try/finally so checks are always restored even if the
+        // DELETE itself throws.
         if ($bulkIds !== []) {
-            $conn->executeStatement('DELETE FROM tags WHERE id IN (' . implode(',', $bulkIds) . ')');
+            $isPostgres = getenv('PIWIGO_DB_DRIVER') === 'pgsql';
+            $conn->executeStatement($isPostgres ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+
+            try {
+                $conn->executeStatement('DELETE FROM tags WHERE id IN (' . implode(',', $bulkIds) . ')');
+            } finally {
+                $conn->executeStatement($isPostgres ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
+            }
         }
         if ($extraId !== null) {
             $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$extraId]);

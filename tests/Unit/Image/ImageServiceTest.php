@@ -865,26 +865,31 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     // Kills line 211's ContinueToBreak. findPathsForFileDeletion() has
     // no ORDER BY, but a real WHERE id IN (a, b) lookup on an InnoDB
     // PRIMARY KEY walks the clustered index in ascending id order in
-    // practice -- an adjacent, ascending pair (remote < local) so the
-    // remote row is genuinely visited FIRST, making `continue` vs
-    // `break` observable via whether the local row after it still gets
-    // processed. Randomized, not a hardcoded literal pair -- a fixed
-    // literal here previously hit a real Duplicate entry collision, and
-    // this test's own setup ran outside its try/finally, so the failure
-    // orphaned the row for
-    // the rest of that run, cascading into unrelated tests' own
-    // unbounded "every image" assertions elsewhere in the suite. The
-    // whole arrange-and-insert step now lives inside try/finally too,
-    // so any failure (setup or assertion alike) still cleans up.
-    //
-    // A SECOND, real collision source was found live this session:
-    // TagServiceTest.php's own tagServiceTestDisposableImageId() drew
-    // from this exact same 600000-649998 range for its own manual
-    // `images` inserts, so the two files could -- and, reproduced live,
-    // did -- pick the identical id under --parallel. Narrowed to this
-    // file's own dedicated half of the original range; the sibling
-    // 650000-699998 range below (readable/unreadable pair) and
-    // TagServiceTest.php's own now-disjoint half stay clear of it.
+    // practice -- an ascending pair (remote < local) so the remote row
+    // is genuinely visited FIRST, making `continue` vs `break`
+    // observable via whether the local row after it still gets
+    // processed. Both ids come from a real, plain auto-increment insert
+    // (no explicit `id`), not a hand-picked literal or a random value
+    // drawn from a fixed numeric range -- a fixed literal here
+    // previously hit a real Duplicate entry collision (orphaning the
+    // row for the rest of that run, since setup then ran outside its
+    // try/finally -- fixed by moving the whole arrange-and-insert step
+    // inside try/finally, still true below), and a LATER randomized
+    // range (600000-649998) turned out to be unsafe for a second,
+    // deeper reason found live this session: `images.id`'s own
+    // AUTO_INCREMENT counter is not reset by a fixture reimport (it
+    // only deletes/reloads row data, confirmed live via `SHOW TABLE
+    // STATUS`), so any hardcoded "surely below the counter" range is
+    // only safe by coincidence of how much history a given database has
+    // accumulated -- a fresh database's own counter climbs THROUGH any
+    // such range organically before ever clearing it, and a real
+    // organic auto-increment insert from an unrelated concurrent test
+    // landing on the exact same hand-picked value is exactly what
+    // reproduced live here (`Duplicate entry '613460'`). Auto-increment
+    // ids can never collide with anything by construction (guaranteed
+    // unique, monotonic, driven by the one authoritative source of
+    // truth), which is why this is the real fix rather than picking yet
+    // another "hopefully safe" literal range.
     //
     // Exempt from tests/Pest.php's blanket per-test transaction -- see
     // 'currentUser() throws...' above for why.
@@ -897,12 +902,22 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
 
-    $remoteId = random_int(600_000, 624_998);
-    $localId = $remoteId + 1;
+    // Pre-initialized -- finally must stay safe to reach even if an
+    // exception fires before either id is assigned.
+    $remoteId = null;
+    $localId = null;
 
     try {
-        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$remoteId, 'remote.jpg', 'https://remote.example.test/remote.jpg']);
-        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$localId, 'afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
+        $conn->insert('images', [
+            'file' => 'remote.jpg',
+            'path' => 'https://remote.example.test/remote.jpg',
+        ]);
+        $remoteId = (int) $conn->lastInsertId();
+        $conn->insert('images', [
+            'file' => 'afterremote.jpg',
+            'path' => 'upload/2026/07/afterremote.jpg',
+        ]);
+        $localId = (int) $conn->lastInsertId();
 
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
         $urlService = new ImageServiceTestFakeUrlService();
@@ -913,7 +928,9 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
             ->toBe([$localId]);
         expect(file_exists($root . '/upload/2026/07/afterremote.jpg'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$remoteId, $localId]);
+        if ($remoteId !== null || $localId !== null) {
+            $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$remoteId ?? -1, $localId ?? -1]);
+        }
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1546,15 +1563,22 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
 });
 
 test('addMd5sum() does not stop at the first unhashable id -- a later id in the same call is still processed', function (): void {
-    // Kills line 530's ContinueToBreak. An adjacent, ascending pair
-    // (unreadable < readable) so findPathsForMd5sum()'s real WHERE id
-    // IN (...) lookup walks an InnoDB PRIMARY KEY in ascending id order,
-    // visiting the unhashable row first. Randomized,
-    // not a hardcoded literal pair -- see the sibling deleteElementFiles()
-    // test above for why: a fixed literal here previously hit a real
-    // Duplicate entry collision, with setup outside try/finally letting
-    // the failure orphan the row and cascade into unrelated tests
-    // elsewhere in the suite.
+    // Kills line 530's ContinueToBreak. An ascending pair (unreadable <
+    // readable) so findPathsForMd5sum()'s real WHERE id IN (...) lookup
+    // walks an InnoDB PRIMARY KEY in ascending id order, visiting the
+    // unhashable row first. Both ids come from a real, plain
+    // auto-increment insert (no explicit `id`), not a hand-picked
+    // literal or a random value drawn from a fixed numeric range -- see
+    // the sibling deleteElementFiles() test above for the full history:
+    // a fixed literal here previously hit a real Duplicate entry
+    // collision (setup outside try/finally letting the failure orphan
+    // the row), and a later randomized-range fix
+    // (`random_int(650000, 699998)`) turned out to still be unsafe for a
+    // second, deeper reason -- `images.id`'s own AUTO_INCREMENT counter
+    // is never reset by a fixture reimport, so any hardcoded "surely
+    // below the counter" range is only safe by coincidence of how much
+    // history a given database has accumulated. Auto-increment ids can
+    // never collide with anything by construction.
     //
     // Exempt from tests/Pest.php's blanket per-test transaction -- see
     // 'currentUser() throws...' above for why.
@@ -1565,12 +1589,22 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/readable.jpg', 'hashable content');
 
-    $unreadableId = random_int(650000, 699998);
-    $readableId = $unreadableId + 1;
+    // Pre-initialized -- finally must stay safe to reach even if an
+    // exception fires before either id is assigned.
+    $unreadableId = null;
+    $readableId = null;
 
     try {
-        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$unreadableId, 'unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
-        $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (?, ?, ?)', [$readableId, 'readable.jpg', 'upload/2026/07/readable.jpg']);
+        $conn->insert('images', [
+            'file' => 'unreadable.jpg',
+            'path' => 'upload/2026/07/does-not-exist-on-disk.jpg',
+        ]);
+        $unreadableId = (int) $conn->lastInsertId();
+        $conn->insert('images', [
+            'file' => 'readable.jpg',
+            'path' => 'upload/2026/07/readable.jpg',
+        ]);
+        $readableId = (int) $conn->lastInsertId();
 
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
 
@@ -1580,7 +1614,9 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
         expect($md5sum)
             ->toBe(md5_file($root . '/upload/2026/07/readable.jpg'));
     } finally {
-        $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$unreadableId, $readableId]);
+        if ($unreadableId !== null || $readableId !== null) {
+            $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$unreadableId ?? -1, $readableId ?? -1]);
+        }
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -2168,7 +2204,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
  * snapshot -- can observe this specific segment's content.
  */
 test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh, not yet stale', function (): void {
-    // Kills line 335's DecrementInteger (`> 59` instead of `> 60`).
+    // Kills line 410's DecrementInteger (`> 59` instead of `> 60`).
     // Every sibling emptyLounge() test uses a lock comfortably on one
     // side of the boundary (100s old = stale either way, 30s old =
     // fresh either way) -- only a lock aged to exactly the threshold
@@ -2176,6 +2212,15 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
     // is not yet true at exactly 60 elapsed seconds (not stale, guard
     // skipped); the mutant's `> 59` is already true there (wrongly
     // stale).
+    //
+    // $now is passed explicitly (not left to emptyLounge()'s own
+    // default `time()` read) so this test pins the exact instant the
+    // method treats as "now" -- otherwise this test's own $t0 and the
+    // method's internal `time()` read are two separate wall-clock
+    // calls that can straddle a real second boundary under --parallel,
+    // turning 60 elapsed seconds into 61 and flipping the assertion.
+    // Reproduced live this session (a genuine, if rare, flake caused
+    // by this test targeting an exact 1-second-resolution boundary).
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
@@ -2201,7 +2246,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
         try {
             $service = imageServiceTestNewService($repo, $conn);
 
-            $result = $service->emptyLounge(invalidateUserCache: false);
+            $result = $service->emptyLounge(invalidateUserCache: false, now: $t0);
 
             expect($result)
                 ->toBeNull();
@@ -2232,7 +2277,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
 });
 
 test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely stale', function (): void {
-    // Kills line 335's IncrementInteger (`> 61` instead of `> 60`) --
+    // Kills line 410's IncrementInteger (`> 61` instead of `> 60`) --
     // the sibling "exactly 60 seconds" test above pins the boundary
     // from the not-yet-stale side; this pins it from the other side.
     // Real code's strict `> 60` is already true at 61 elapsed seconds
@@ -2242,6 +2287,12 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
     // not just CurrentConfig's own static cache, so tryAcquireLoungeLock()'s
     // own real INSERT IGNORE genuinely succeeds only if the stale row
     // was genuinely cleared first.
+    //
+    // $now pinned explicitly, same reason as the sibling "exactly 60
+    // seconds" test above -- this direction can't actually flip (a
+    // clock tick forward only pushes 61 further past the boundary),
+    // but pinning it keeps both boundary tests symmetric and equally
+    // immune to the underlying race by construction, not by luck.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
@@ -2250,7 +2301,8 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             'severity' => Logger::OFF,
         ]));
         $conn->executeStatement("DELETE FROM config WHERE param = 'empty_lounge_running'");
-        $staleValue = 'boundary61execid-' . (time() - 61);
+        $t0 = time();
+        $staleValue = 'boundary61execid-' . ($t0 - 61);
         $conn->executeStatement(
             "INSERT INTO config (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
@@ -2262,7 +2314,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
         try {
             $service = imageServiceTestNewService($repo, $conn);
 
-            $result = $service->emptyLounge(invalidateUserCache: false);
+            $result = $service->emptyLounge(invalidateUserCache: false, now: $t0);
 
             expect($result)
                 ->toBeArray();

@@ -388,18 +388,26 @@ final readonly class ImageService
     /**
      * Move images from the lounge to the categories they were intended for.
      *
+     * @param ?int $now the current Unix timestamp, used for both the
+     *   staleness check below and the new lock's own timestamp -- defaults
+     *   to a real `time()` read; the explicit parameter exists so a test
+     *   can pin the exact instant this method treats as "now" instead of
+     *   racing its own separately-captured `time()` call against this
+     *   method's internal one (real risk only at the exact 60-second
+     *   staleness boundary, confirmed live)
      * @return list<array{image_id: int, category_id: int}>|null the moved
      *   image_id/category_id rows, or null if another call is already
      *   emptying the lounge concurrently
      */
-    public function emptyLounge(bool $invalidateUserCache = true): ?array
+    public function emptyLounge(bool $invalidateUserCache = true, ?int $now = null): ?array
     {
+        $now ??= time();
         $logger = $this->logger();
 
         $emptyLoungeRunning = $this->currentConfig->emptyLoungeRunning;
         if ($emptyLoungeRunning !== null) {
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
-            if (time() - (int) $runningExecStartTime > 60) {
+            if ($now - (int) $runningExecStartTime > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $runningExecId . ', timeout stopped by another call to the function');
                 $this->currentConfigService()
                     ->get()
@@ -413,7 +421,7 @@ final readonly class ImageService
         $logger->debug(__FUNCTION__ . $apiSuffix . ', exec=' . $execId . ', begins');
 
         // if lounge is already being emptied, skip
-        $this->repo->tryAcquireLoungeLock($execId . '-' . time());
+        $this->repo->tryAcquireLoungeLock($execId . '-' . $now);
 
         $emptyLoungeRunning = $this->repo->findLoungeLockValue();
         assert($emptyLoungeRunning !== null);

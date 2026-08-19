@@ -342,7 +342,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         // Order index 11 ("Permissions", 'level DESC') is only visible
         // when AccessControl::isAdmin() -- false for regular_user, so
-        // getPreferredImageOrders()[11][2] is false: incompatible. (Index
+        // getPreferredImageOrders()[11]->visible is false: incompatible. (Index
         // 10 is "Visits, low -> high", always visible -- confirmed live,
         // that index alone doesn't exercise the incompatible-clear branch.)
         $_SESSION['pwg_image_order'] = 11;

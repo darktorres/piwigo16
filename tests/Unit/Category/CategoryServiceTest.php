@@ -11,6 +11,7 @@ use Piwigo\Category\Event\DeleteSite;
 use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\ComputedCategoryRow;
+use Piwigo\Category\Projection\ImageOrderPreference;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\FilterState;
@@ -250,11 +251,11 @@ test('getPreferredImageOrders() returns the fixed option list', function (): voi
 
     expect($orders)
         ->not->toBeEmpty();
-    expect($orders[0][1])
+    expect($orders[0]->orderBy)
         ->toBe('');
     // 'Permissions' (level DESC) is only visible to admins.
-    $permissionsOrder = array_values(array_filter($orders, static fn (array $o): bool => $o[1] === 'level DESC'));
-    expect($permissionsOrder[0][2])
+    $permissionsOrder = array_values(array_filter($orders, static fn (ImageOrderPreference $o): bool => $o->orderBy === 'level DESC'));
+    expect($permissionsOrder[0]->visible)
         ->toBeFalse();
 });
 
@@ -267,8 +268,8 @@ test('getPreferredImageOrders() Permissions option is visible to admin', functio
     $orders = categoryServiceTestService()
         ->getPreferredImageOrders();
 
-    $permissionsOrder = array_values(array_filter($orders, static fn (array $o): bool => $o[1] === 'level DESC'));
-    expect($permissionsOrder[0][2])
+    $permissionsOrder = array_values(array_filter($orders, static fn (ImageOrderPreference $o): bool => $o->orderBy === 'level DESC'));
+    expect($permissionsOrder[0]->visible)
         ->toBeTrue();
 });
 
@@ -524,7 +525,7 @@ test('getPreferredImageOrders() skips a malformed entry from the event handler',
     }
 
     expect($orders)
-        ->toBe([['Real Order', 'hit DESC', true]]);
+        ->toEqual([new ImageOrderPreference('Real Order', 'hit DESC', true)]);
 });
 
 test('findCategoryIdFromPermalinks() skips a non-match before finding an older match', function (): void {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Projection\ElementSetRanksHeaderPageContext;
+use Piwigo\Admin\Projection\ElementSetThumbnailRow;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new ElementSetRanksHeaderPageContext(
@@ -14,13 +15,9 @@ test('toArray flattens every property to its real Latte template variable name',
             'file ASC' => 'File name, A to Z',
         ],
         imageOrderChoice: 'rank',
-        thumbnails: [[
-            'ID' => 5,
-            'NAME' => 'Sunset',
-            'TN_SRC' => '/i/5.jpg',
-            'RANK' => 20,
-            'SIZE' => '120x80',
-        ]],
+        thumbnails: [
+            new ElementSetThumbnailRow(id: 5, name: 'Sunset', tnSrc: '/i/5.jpg', rank: 20, size: [120, 80]),
+        ],
         imageOrder: ['file ASC', '', ''],
     );
 
@@ -39,7 +36,7 @@ test('toArray flattens every property to its real Latte template variable name',
                 'NAME' => 'Sunset',
                 'TN_SRC' => '/i/5.jpg',
                 'RANK' => 20,
-                'SIZE' => '120x80',
+                'SIZE' => [120, 80],
             ]],
             'image_order' => ['file ASC', '', ''],
         ]);

@@ -21,7 +21,7 @@ final readonly class ElementSetRanksHeaderPageContext implements TemplatePageCon
 {
     /**
      * @param array<string, string> $imageOrderOptions
-     * @param list<array<string, mixed>> $thumbnails
+     * @param list<ElementSetThumbnailRow> $thumbnails
      * @param list<string> $imageOrder
      */
     public function __construct(
@@ -46,7 +46,7 @@ final readonly class ElementSetRanksHeaderPageContext implements TemplatePageCon
             'CSRF_TOKEN' => $this->pwgToken,
             'image_order_options' => $this->imageOrderOptions,
             'image_order_choice' => $this->imageOrderChoice,
-            'thumbnails' => $this->thumbnails,
+            'thumbnails' => array_map(static fn (ElementSetThumbnailRow $thumbnail): array => $thumbnail->toArray(), $this->thumbnails),
             'image_order' => $this->imageOrder,
         ];
     }

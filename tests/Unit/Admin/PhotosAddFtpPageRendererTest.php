@@ -6,6 +6,7 @@ use Latte\Runtime\Html;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -60,14 +61,13 @@ test('render() falls back to empty ftp help content when the real language file 
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'photos_add_ftp.latte', 'ftp={$FTP_HELP_CONTENT}|title={$ADMIN_PAGE_TITLE}');
+        file_put_contents($tplDir . 'photos_add_ftp.latte', 'ftp={$ftpHelpContent}');
         $template->setTemplateDir($tplDir);
 
         new PhotosAddFtpPageRenderer()
-            ->render(LangTestFactory::get(), CurrentTemplateTestFactory::get());
+            ->render(LangTestFactory::get(), CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -75,12 +75,10 @@ test('render() falls back to empty ftp help content when the real language file 
             throw new LogicException('unreachable -- asserted above');
         }
 
-        expect($template->getTemplateVars('FTP_HELP_CONTENT'))
-            ->toBe('')
-            ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('Upload Photos')
             ->and((string) $adminContent)
-            ->toBe('ftp=|title=Upload Photos');
+            ->toBe('ftp=');
     } finally {
         photosAddFtpTestRrmdir($root);
         CurrentTemplateTestFactory::get()->reset();

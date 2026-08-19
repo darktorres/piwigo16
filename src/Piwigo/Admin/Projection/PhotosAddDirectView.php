@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Admin\Projection;
+
+use Piwigo\Core\View;
+use Piwigo\Template\Latte\Attribute\Template;
+
+/**
+ * `photos_add_direct.latte`'s own typed view, constructed by {@see
+ * \Piwigo\Admin\PhotosAddDirectPageRenderer::render()}, which merges
+ * in its own private `prepareUploadForm()`'s fields too -- both feed
+ * this one file. No `$fAddAction`, `$levelOptions`/
+ * `$levelOptionsSelected`, or `$cacheKeys` field here -- confirmed dead
+ * in `photos_add_direct.latte`'s own real body: the "Manage
+ * Permissions" fieldset that would have used the first three is
+ * commented out (Smarty-era `{html_options ...}` syntax, not even this
+ * project's own `{=htmlOptions(...)}` convention), and `CACHE_KEYS`
+ * has zero real references at all.
+ */
+#[Template('photos_add_direct.latte')]
+final readonly class PhotosAddDirectView implements View
+{
+    /**
+     * @param array<array-key, mixed>|null $formatsOriginalInfo
+     * @param list<int> $selectedCategory
+     * @param list<string> $setupErrors
+     * @param list<string> $setupWarnings
+     */
+    public function __construct(
+        public bool $promoteMobileApps,
+        public string $phpwgUrl,
+        public bool $enableFormats,
+        public bool $displayFormats,
+        public bool $haveFormatsOriginal,
+        public ?array $formatsOriginalInfo,
+        public string|false|null $formatsExtInfo,
+        public string $switchFormatModeUrl,
+        public string $formatExt,
+        public string $strFormatExt,
+        public int $chunkSize,
+        public int $maxFileSize,
+        public ?float $maxUploadWidth,
+        public ?float $maxUploadHeight,
+        public ?float $maxUploadResolution,
+        public ?int $originalResizeMaxwidth,
+        public ?int $originalResizeMaxheight,
+        public string $formAction,
+        public string $pwgToken,
+        public string $uploadFileTypes,
+        public string $fileExts,
+        public ?string $addToAlbum,
+        public ?string $selectedCategoryName,
+        public array $selectedCategory,
+        public int $nbAlbums,
+        public array $setupErrors,
+        public array $setupWarnings,
+        public ?string $hideWarningsLink,
+    ) {}
+}

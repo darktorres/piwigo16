@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Projection\PhotosAddApplicationsPageContext;
+use Piwigo\Admin\Projection\PhotosAddApplicationsView;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Ported from admin/photos_add_applications.php (the "applications" tab of
@@ -14,12 +16,15 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class PhotosAddApplicationsPageRenderer
 {
-    public function render(Lang $lang, CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, CurrentTemplate $currentTemplate, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
-        $template->assignContext(new PhotosAddApplicationsPageContext(adminPageTitle: $lang->t('Upload Photos')));
+        $adminContent = $renderer->render(new PhotosAddApplicationsView());
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_applications.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Upload Photos'),
+        ));
     }
 }

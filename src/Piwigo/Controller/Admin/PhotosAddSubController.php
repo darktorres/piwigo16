@@ -13,6 +13,7 @@ use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Core\Lang;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -32,6 +33,7 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
         private EventDispatcher $eventDispatcher,
         private CurrentTemplate $currentTemplate,
         private PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -69,10 +71,10 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
                 ->render();
         } elseif ($tab === 'applications') {
             new PhotosAddApplicationsPageRenderer()
-                ->render($this->lang, $this->currentTemplate);
+                ->render($this->lang, $this->currentTemplate, $this->renderer);
         } else {
             new PhotosAddFtpPageRenderer()
-                ->render($this->lang, $this->currentTemplate);
+                ->render($this->lang, $this->currentTemplate, $this->renderer);
         }
     }
 }

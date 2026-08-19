@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Projection\PhotosAddFtpPageContext;
+use Piwigo\Admin\Projection\PhotosAddFtpView;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Ported from admin/photos_add_ftp.php (the "ftp" tab of the "photos_add"
@@ -14,7 +16,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class PhotosAddFtpPageRenderer
 {
-    public function render(Lang $lang, CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, CurrentTemplate $currentTemplate, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -26,11 +28,13 @@ final class PhotosAddFtpPageRenderer
             ]
         );
 
-        $template->assignContext(new PhotosAddFtpPageContext(
+        $adminContent = $renderer->render(new PhotosAddFtpView(
             ftpHelpContent: is_string($ftp_help_content_raw) ? $ftp_help_content_raw : '',
-            adminPageTitle: $lang->t('Upload Photos'),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_ftp.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Upload Photos'),
+        ));
     }
 }

@@ -7,14 +7,14 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Event\PhotosAddDirectPageRendered;
 use Piwigo\Admin\Image\ImageBackend;
-use Piwigo\Admin\Projection\PhotosAddDirectPageContext;
-use Piwigo\Admin\Projection\PhotosAddDirectUploadFormPageContext;
+use Piwigo\Admin\Projection\PhotosAddDirectView;
 use Piwigo\Admin\Request\PhotosAddDirectRequest;
 use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -28,9 +28,9 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
@@ -63,6 +63,7 @@ final readonly class PhotosAddDirectPageRenderer
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -170,13 +171,14 @@ final readonly class PhotosAddDirectPageRenderer
             }
         }
 
-        $this->prepareUploadForm($photosAddDirectRequest);
+        $uploadFormData = $this->prepareUploadForm($photosAddDirectRequest);
 
         $this->eventDispatcher->dispatch(new PhotosAddDirectPageRendered());
 
         $conf_format_ext = $this->currentConfig->formatExtensions;
 
-        $template->assignContext(new PhotosAddDirectPageContext(
+        $adminContent = $this->renderer->render(new PhotosAddDirectView(
+            ...$uploadFormData,
             promoteMobileApps: $promote_mobile_apps,
             phpwgUrl: AppInfo::URL,
             enableFormats: $this->currentConfig->isFormatsEnabled,
@@ -189,7 +191,10 @@ final readonly class PhotosAddDirectPageRenderer
             strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_direct.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Upload Photos'),
+        ));
     }
 
     /**
@@ -198,19 +203,17 @@ final readonly class PhotosAddDirectPageRenderer
      * errors/warnings). No real external callers besides this class's own
      * render(), unlike the shared admin/include/*.inc.php files this
      * project has kept as real includes elsewhere.
+     *
+     * @return array{chunkSize: int, maxFileSize: int, maxUploadWidth: ?float, maxUploadHeight: ?float, maxUploadResolution: ?float, originalResizeMaxwidth: ?int, originalResizeMaxheight: ?int, formAction: string, pwgToken: string, uploadFileTypes: string, fileExts: string, addToAlbum: ?string, selectedCategoryName: ?string, selectedCategory: list<int>, nbAlbums: int, setupErrors: list<string>, setupWarnings: list<string>, hideWarningsLink: ?string}
      */
-    private function prepareUploadForm(PhotosAddDirectRequest $photosAddDirectRequest): void
+    private function prepareUploadForm(PhotosAddDirectRequest $photosAddDirectRequest): array
     {
-        $template = $this->currentTemplate->get();
-
         $htmlRenderer = $this->htmlRenderer;
 
         $uploadService = AdminAccessor::uploadService();
 
-        $f_add_action = self::baseUrl($this->urlService);
         $chunk_size = $this->currentConfig->uploadFormChunkSize;
         $max_file_size = $this->currentConfig->uploadFormMaxFileSize;
-        $admin_page_title = $this->lang->t('Upload Photos');
 
         $max_upload_width_ctx = null;
         $max_upload_height_ctx = null;
@@ -293,11 +296,6 @@ final readonly class PhotosAddDirectPageRenderer
         $nb_albums = new CategoryRepository($this->entityManager, $this->currentConfig)
             ->countAllCategories();
 
-        // image level options
-        $selected_level = $photosAddDirectRequest->postLevel;
-        $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
-        $level_options_selected = [$selected_level];
-
         // Errors
         $setup_errors = [];
 
@@ -309,8 +307,6 @@ final readonly class PhotosAddDirectPageRenderer
         if (! function_exists('gd_info')) {
             $setup_errors[] = $this->lang->t('GD library is missing');
         }
-
-        $cache_keys = AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['categories']);
 
         // Warnings
         if ($photosAddDirectRequest->hideWarningsPresent) {
@@ -350,30 +346,25 @@ final readonly class PhotosAddDirectPageRenderer
             $hide_warnings_link = self::baseUrl($this->urlService) . '&amp;hide_warnings=1';
         }
 
-        $template->assignContext(new PhotosAddDirectUploadFormPageContext(
-            fAddAction: $f_add_action,
-            chunkSize: $chunk_size,
-            maxFileSize: $max_file_size,
-            adminPageTitle: $admin_page_title,
-            maxUploadWidth: $max_upload_width_ctx,
-            maxUploadHeight: $max_upload_height_ctx,
-            maxUploadResolution: $max_upload_resolution_ctx,
-            originalResizeMaxwidth: $original_resize_maxwidth,
-            originalResizeMaxheight: $original_resize_maxheight,
-            formAction: $form_action,
-            pwgToken: $pwg_token,
-            uploadFileTypes: $upload_file_types,
-            fileExts: $file_exts,
-            addToAlbum: $add_to_album,
-            selectedCategoryName: $selected_category_name,
-            selectedCategory: $selected_category,
-            nbAlbums: $nb_albums,
-            levelOptions: $level_options,
-            levelOptionsSelected: $level_options_selected,
-            setupErrors: $setup_errors,
-            cacheKeys: $cache_keys,
-            setupWarnings: $setup_warnings,
-            hideWarningsLink: $hide_warnings_link,
-        ));
+        return [
+            'chunkSize' => $chunk_size,
+            'maxFileSize' => $max_file_size,
+            'maxUploadWidth' => $max_upload_width_ctx,
+            'maxUploadHeight' => $max_upload_height_ctx,
+            'maxUploadResolution' => $max_upload_resolution_ctx,
+            'originalResizeMaxwidth' => $original_resize_maxwidth,
+            'originalResizeMaxheight' => $original_resize_maxheight,
+            'formAction' => $form_action,
+            'pwgToken' => $pwg_token,
+            'uploadFileTypes' => $upload_file_types,
+            'fileExts' => $file_exts,
+            'addToAlbum' => $add_to_album,
+            'selectedCategoryName' => $selected_category_name,
+            'selectedCategory' => $selected_category,
+            'nbAlbums' => $nb_albums,
+            'setupErrors' => $setup_errors,
+            'setupWarnings' => $setup_warnings,
+            'hideWarningsLink' => $hide_warnings_link,
+        ];
     }
 }

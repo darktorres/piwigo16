@@ -10,6 +10,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Lang\Translator;
 use Piwigo\Notification\Projection\RecentCategoryForDate;
 use Piwigo\Permission\PermissionService;
@@ -365,7 +366,7 @@ final readonly class NotificationService
 
         $elements = $dateDetail['elements'] ?? [];
         foreach ($elements as $element) {
-            $tnSrc = DerivativeImage::thumbUrl($element);
+            $tnSrc = DerivativeImage::thumbUrl(SrcImageInfo::fromRow($element));
             $description .= '<a href="' .
               $this->urlService->addUrlParams(
                   $this->urlService->makePictureUrl(

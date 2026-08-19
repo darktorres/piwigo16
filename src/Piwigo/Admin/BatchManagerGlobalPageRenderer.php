@@ -38,6 +38,8 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\ImageTextField;
+use Piwigo\Image\Projection\DerivativePathInfo;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Metadata\MetadataRepository;
@@ -420,12 +422,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 $this->pageState->addInfo($this->lang->t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
             } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
                 foreach ($imageService->getPathsForFileDeletion($collection) as $info) {
-                    $derivative_infos = [
-                        'path' => $info->path,
-                    ];
-                    if ($info->representativeExt !== null && $info->representativeExt !== '') {
-                        $derivative_infos['representative_ext'] = $info->representativeExt;
-                    }
+                    $derivative_infos = new DerivativePathInfo($info->path, $info->representativeExt);
                     foreach ($post['del_derivatives_type'] as $type) {
                         if (is_string($type)) {
                             new DerivativeCacheService($this->currentConfig, $this->paths)
@@ -550,7 +547,7 @@ final readonly class BatchManagerGlobalPageRenderer
             // template thumbnail initialization
             foreach ($this->imageService->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
                 $nb_thumbs_page++;
-                $src_image = new SrcImage($row);
+                $src_image = new SrcImage(SrcImageInfo::fromRow($row));
 
                 $ttitle = $this->htmlRenderer
                     ->renderElementName($row);

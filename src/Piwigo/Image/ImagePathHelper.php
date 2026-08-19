@@ -53,15 +53,10 @@ final class ImagePathHelper
      * get the full path of an image. Same cross-domain-generic-row-reader
      * rationale as SrcImage::__construct() -- only 'path' is read here.
      *
-     * @param array<string, mixed> $elementInfo element information from db (at least 'path')
+     * @param string $path images.path -- `varchar(255) NOT NULL` in the schema
      */
-    public static function getElementPath(array $elementInfo, UrlServiceInterface $urlService, Paths $paths): string
+    public static function getElementPath(string $path, UrlServiceInterface $urlService, Paths $paths): string
     {
-        $path = $elementInfo['path'];
-        // images.path is `varchar(255) NOT NULL` in the schema — a genuine DB
-        // row for this element always carries a string here.
-        assert(is_string($path));
-
         // `path` is root-relative for uploaded photos, but already
         // absolute for locally site-synced photos (see ImageEntity::$path's
         // own docblock) -- same guard MetadataService::getSyncMetadata()

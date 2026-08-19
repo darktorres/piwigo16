@@ -43,6 +43,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
@@ -522,7 +523,7 @@ final readonly class CommentsController implements ControllerInterface
                 }
 
                 // source of the thumbnail picture
-                $src_image = new SrcImage($elements[$image_id_int]);
+                $src_image = new SrcImage(SrcImageInfo::fromRow($elements[$image_id_int]));
 
                 // link to the full size picture
                 $url = $urlService->makePictureUrl(

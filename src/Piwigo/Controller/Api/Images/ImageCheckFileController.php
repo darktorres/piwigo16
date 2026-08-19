@@ -48,9 +48,7 @@ final readonly class ImageCheckFileController implements ControllerInterface
             return ResponseFactory::problem('Not Found', 404, 'image_id not found.');
         }
 
-        $path = ImagePathHelper::getElementPath([
-            'path' => $path,
-        ], $this->urlService, $this->paths);
+        $path = ImagePathHelper::getElementPath($path, $this->urlService, $this->paths);
 
         $query = $request->getQueryParams();
         $highSum = $query['highSum'] ?? null;

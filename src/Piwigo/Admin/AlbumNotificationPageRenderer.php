@@ -24,6 +24,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -108,7 +109,7 @@ final readonly class AlbumNotificationPageRenderer
                                 'category' => $category,
                             ]
                         ),
-                        'src' => DerivativeImage::url(ImageStdParams::THUMB, $element),
+                        'src' => DerivativeImage::url(ImageStdParams::THUMB, SrcImageInfo::fromRow($element)),
                     ];
                 }
             }

@@ -56,6 +56,7 @@ use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\ImageFormat;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\Projection\VisibleCategoryRow;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
@@ -618,14 +619,14 @@ final readonly class PictureController implements ControllerInterface
                 $i = 'current';
             }
 
-            $row['src_image'] = new SrcImage($row);
+            $row['src_image'] = new SrcImage(SrcImageInfo::fromRow($row));
             $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
 
             $row['path_ext'] = strtolower(StringHelper::getExtension($row['path']));
             $row['file_ext'] = strtolower(StringHelper::getExtension($row['file']));
 
             if ($i === 'current') {
-                $row['element_path'] = ImagePathHelper::getElementPath($row, $urlService, $this->paths);
+                $row['element_path'] = ImagePathHelper::getElementPath($imageRow->path, $urlService, $this->paths);
 
                 $row_id = $row['id'];
 

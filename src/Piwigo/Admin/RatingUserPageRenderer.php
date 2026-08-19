@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Template\CurrentTemplate;
@@ -100,7 +101,7 @@ final class RatingUserPageRenderer
             $params = $imageStdParams->getByType(ImageStdParams::SQUARE);
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
                 $image_urls[$thumb_row->id] = [
-                    'tn' => DerivativeImage::url($params, $thumb_row->toArray()),
+                    'tn' => DerivativeImage::url($params, SrcImageInfo::fromRow($thumb_row->toArray())),
                     'page' => $urlService->makePictureUrl([
                         'image_id' => $thumb_row->id,
                         'image_file' => $thumb_row->file,

@@ -8,6 +8,7 @@ use Exception;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
+use Piwigo\Image\Projection\DerivativePathInfo;
 
 /**
  * Derivative-cache invalidation. Piwigo's real derivative-generation design
@@ -78,13 +79,12 @@ final readonly class DerivativeCacheService
     /**
      * Deletes derivatives of a particular element.
      *
-     * @param array{path: string, representative_ext?: string} $infos
      * @param string $type 'all', or one of the ImageStdParams size-type constants
      */
-    public function deleteElementDerivatives(array $infos, string $type = 'all'): void
+    public function deleteElementDerivatives(DerivativePathInfo $infos, string $type = 'all'): void
     {
-        $path = $infos['path'];
-        $representativeExt = $infos['representative_ext'] ?? null;
+        $path = $infos->path;
+        $representativeExt = $infos->representativeExt;
         if ($representativeExt !== null && $representativeExt !== '') {
             $path = ImagePathHelper::originalToRepresentative($path, $representativeExt);
         }

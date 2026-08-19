@@ -19,6 +19,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Image\DerivativeImage;
     use Piwigo\Image\ImageStdParams;
+    use Piwigo\Image\Projection\SrcImageInfo;
     use Piwigo\Image\SrcImage;
     use Piwigo\Permission\SqlCondition;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -416,7 +417,7 @@ namespace Piwigo\Tests\Integration {
                 ->executeQuery()
                 ->fetchAssociative();
             self::assertIsArray($row1);
-            $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row1), CurrentConfigTestFactory::get());
+            $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage(SrcImageInfo::fromRow($row1)), CurrentConfigTestFactory::get());
             self::assertSame($expectedDerivative->getUrl(), $day10['IMAGE']);
 
             // Empty grid cells (no images) carry only DAY, no DOW/IMAGE/etc.

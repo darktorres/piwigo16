@@ -69,7 +69,7 @@ final readonly class ImageFormatDeleteController implements ControllerInterface
                 continue;
             }
 
-            $imagePath = ImagePathHelper::getElementPath($imageRow->toArray(), $this->urlService, $this->paths);
+            $imagePath = ImagePathHelper::getElementPath($imageRow->path, $this->urlService, $this->paths);
 
             $files = [];
             foreach ($formatsOf[$imageRow->id] ?? [] as $formatExt) {

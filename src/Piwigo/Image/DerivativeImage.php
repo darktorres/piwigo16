@@ -17,6 +17,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetDerivativeUrl;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use RuntimeException;
 
@@ -146,9 +147,9 @@ final class DerivativeImage
     /**
      * Generates the url of a thumbnail.
      *
-     * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage -- see SrcImage::__construct()'s own docblock for why the array form stays generic
+     * @param SrcImageInfo|SrcImage $infos info from db or SrcImage
      */
-    public static function thumbUrl(array|SrcImage $infos): string
+    public static function thumbUrl(SrcImageInfo|SrcImage $infos): string
     {
         return self::url(ImageStdParams::THUMB, $infos);
     }
@@ -158,11 +159,11 @@ final class DerivativeImage
      *
      * @param string|DerivativeParams $type standard derivative param type (an
      *    ImageStdParams size-type constant) or a DerivativeParams object
-     * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
+     * @param SrcImageInfo|SrcImage $infos info from db or SrcImage
      */
-    public static function url(string|DerivativeParams $type, array|SrcImage $infos, ?DerivativeUrlStyleOverride $urlStyleOverride = null): string
+    public static function url(string|DerivativeParams $type, SrcImageInfo|SrcImage $infos, ?DerivativeUrlStyleOverride $urlStyleOverride = null): string
     {
-        $src_image = is_object($infos) ? $infos : new SrcImage($infos);
+        $src_image = $infos instanceof SrcImage ? $infos : new SrcImage($infos);
         $params = is_string($type) ? self::imageStdParams()->getByType($type) : $type;
         $rel_path = '';
         $rel_url = '';
@@ -188,12 +189,12 @@ final class DerivativeImage
      * This is useful for any plugin/theme to just use $deriv[ImageStdParams::XLARGE] even if
      * the XLARGE is disabled.
      *
-     * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
+     * @param SrcImageInfo|SrcImage $src_image info from db or SrcImage
      * @return DerivativeImage[]
      */
-    public static function getAll(array|SrcImage $src_image): array
+    public static function getAll(SrcImageInfo|SrcImage $src_image): array
     {
-        if (! is_object($src_image)) {
+        if (! $src_image instanceof SrcImage) {
             $src_image = new SrcImage($src_image);
         }
 
@@ -217,12 +218,12 @@ final class DerivativeImage
      *
      * @param string $type standard derivative param type (an ImageStdParams
      *    size-type constant)
-     * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
+     * @param SrcImageInfo|SrcImage $src_image info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
-    public static function getOne(string $type, array|SrcImage $src_image): ?self
+    public static function getOne(string $type, SrcImageInfo|SrcImage $src_image): ?self
     {
-        if (! is_object($src_image)) {
+        if (! $src_image instanceof SrcImage) {
             $src_image = new SrcImage($src_image);
         }
 

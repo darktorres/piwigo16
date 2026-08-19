@@ -31,6 +31,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
@@ -291,7 +292,7 @@ final readonly class BatchManagerUnitPageRenderer
                 // its linked categories.
                 $storage_category_id = is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null;
 
-                $src_image = new SrcImage($row);
+                $src_image = new SrcImage(SrcImageInfo::fromRow($row));
 
                 $image_file = $row['file'];
 

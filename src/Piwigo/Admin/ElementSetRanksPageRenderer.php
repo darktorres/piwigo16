@@ -24,6 +24,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\CurrentTemplate;
 
@@ -161,7 +162,7 @@ final readonly class ElementSetRanksPageRenderer
             $current_rank = 1;
             $derivativeParams = $this->imageStdParams->getByType(ImageStdParams::SQUARE);
             foreach ($thumbnail_rows as $row) {
-                $derivative = new DerivativeImage($derivativeParams, new SrcImage($row), $this->currentConfig);
+                $derivative = new DerivativeImage($derivativeParams, new SrcImage(SrcImageInfo::fromRow($row)), $this->currentConfig);
 
                 if (! in_array($row['name'], [null, false, 0, '0', '', []], true)) {
                     $thumbnail_name = $row['name'];

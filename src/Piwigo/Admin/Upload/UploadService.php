@@ -39,6 +39,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
@@ -599,19 +600,11 @@ final readonly class UploadService
             ->syncMetadata([$image_id], $this->permissionService, $this->entityManager);
 
         // cache a derivative
-        //
-        // SrcImage::
-        // __construct()'s own docblock states id/path/file are all
-        // NOT-NULL DB columns it trusts will be present -- unlike
-        // representative_ext, which it reads via `?? null` as genuinely
-        // optional -- but this query never selected `file`, so every real
-        // addUploadedFile() call (new photo or update) hit that warning
-        // right here, not just the update branch.
         $image_infos = $this->imageService->getImageRow($image_id);
         if ($image_infos === null) {
             throw new Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
         }
-        $src_image = new SrcImage($image_infos);
+        $src_image = new SrcImage(SrcImageInfo::fromRow($image_infos));
 
         $urlService->setMakeFullUrl();
         // in case we are on uploadify.php, we have to replace the false path

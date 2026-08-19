@@ -65,6 +65,7 @@ use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionService;
@@ -1720,14 +1721,11 @@ final readonly class CategoryService
         if ($row === null) {
             throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }
-        // DerivativeImage::thumbUrl()/url() take array<string, mixed>|SrcImage
-        // by design -- cross-domain-generic, matching
-        // SrcImage::__construct()'s own docblock, not a gap.
-        $rowArray = $row->toArray();
+        $srcImageInfo = SrcImageInfo::fromRow($row->toArray());
         if ($size === null) {
-            $src = DerivativeImage::thumbUrl($rowArray);
+            $src = DerivativeImage::thumbUrl($srcImageInfo);
         } else {
-            $src = DerivativeImage::url($size, $rowArray);
+            $src = DerivativeImage::url($size, $srcImageInfo);
         }
         $url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $imageId;
 

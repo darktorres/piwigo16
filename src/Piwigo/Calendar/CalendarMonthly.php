@@ -17,6 +17,7 @@ use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\SqlCondition;
 
@@ -413,7 +414,7 @@ final class CalendarMonthly extends CalendarBase
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row
             assert($row instanceof RandomImageForDay);
-            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row->toArray()), $this->currentConfig);
+            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage(SrcImageInfo::fromRow($row->toArray())), $this->currentConfig);
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row->file;
             $items[$day]['dow'] = $row->dow;

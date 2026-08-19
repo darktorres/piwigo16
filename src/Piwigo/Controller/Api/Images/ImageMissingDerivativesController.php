@@ -18,6 +18,7 @@ use Piwigo\Image\ImageFilterCriteriaBuilder;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\MissingDerivativesCriteria;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -107,7 +108,7 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
 
             foreach ($rows as $imageRow) {
                 $startId = $imageRow->id;
-                $srcImage = new SrcImage($imageRow->toArray());
+                $srcImage = new SrcImage(SrcImageInfo::fromRow($imageRow->toArray()));
                 if ($srcImage->isMimetype()) {
                     continue;
                 }

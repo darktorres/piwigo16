@@ -13,6 +13,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetHighUrl;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
@@ -30,9 +31,13 @@ final readonly class ImageUrlBuilder
     ) {}
 
     /**
-     * $image_row is genuinely arbitrary by design (built into a SrcImage
-     * below, the same cross-domain generic-row-reader shape SrcImage's own
-     * docblock documents across its ~17 real construction sites).
+     * $image_row stays a raw array, not SrcImageInfo -- it's a shared
+     * shape read by several unrelated /api/v1/images*-family callers
+     * beyond just the SrcImageInfo::fromRow() conversion below
+     * (`image_id`/`image_file`/UrlServiceInterface::getElementUrl()'s own
+     * whole-row param), so the array-to-object boundary conversion
+     * belongs right at the SrcImage construction point, not this
+     * method's own public signature.
      *
      * @param array<string, mixed> $image_row
      * @return array{page_url: string, element_url?: string, download_url: ?string, derivatives: array<string, array{url: string, width: int, height: int}>}
@@ -48,7 +53,7 @@ final readonly class ImageUrlBuilder
             ]
         );
 
-        $src_image = new SrcImage($image_row);
+        $src_image = new SrcImage(SrcImageInfo::fromRow($image_row));
 
         $provide_download_url = false;
 

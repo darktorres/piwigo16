@@ -17,6 +17,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Template\CurrentTemplate;
@@ -116,7 +117,7 @@ final class RatingPageRenderer
 
         $tpl_images = [];
         foreach ($images as $image) {
-            $thumbnail_src = DerivativeImage::thumbUrl($image->toArray());
+            $thumbnail_src = DerivativeImage::thumbUrl(SrcImageInfo::fromRow($image->toArray()));
 
             $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image->id;
 

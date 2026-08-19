@@ -23,6 +23,7 @@ use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
@@ -173,11 +174,10 @@ test('urlService() throws when the container returns an unexpected type for UrlS
     // sibling test above. getSrcImageUrlProtectionHandler() is the
     // simplest public entry point that reaches urlService() without also
     // needing lang().
-    $srcImage = new SrcImage([
-        'id' => 7,
-        'path' => 'upload/2026/07/photo.jpg',
-        'file' => 'photo.jpg',
-    ]);
+    $srcImage = new SrcImage(new SrcImageInfo(
+        id: 7,
+        path: 'upload/2026/07/photo.jpg',
+    ));
 
     KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, static function () use ($srcImage): void {
         $service = HtmlServiceTestFactory::build();
@@ -1655,17 +1655,15 @@ function htmlServiceTestElementUrlProtection(HtmlService $service, string $url, 
 
 test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for a non-original representative', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $original = new SrcImage([
-        'id' => 7,
-        'path' => 'upload/2026/07/photo.jpg',
-        'file' => 'photo.jpg',
-    ]);
-    $representative = new SrcImage([
-        'id' => 9,
-        'path' => 'upload/2026/07/video.mp4',
-        'file' => 'video.mp4',
-        'representative_ext' => 'jpg',
-    ]);
+    $original = new SrcImage(new SrcImageInfo(
+        id: 7,
+        path: 'upload/2026/07/photo.jpg',
+    ));
+    $representative = new SrcImage(new SrcImageInfo(
+        id: 9,
+        path: 'upload/2026/07/video.mp4',
+        representativeExt: 'jpg',
+    ));
 
     expect($original->isOriginal())
         ->toBeTrue()

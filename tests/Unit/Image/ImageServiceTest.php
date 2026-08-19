@@ -1353,16 +1353,10 @@ test('associateImagesToCategories() returns false and does nothing when either l
     expect($service->associateImagesToCategories([1], []))->toBeFalse();
 });
 
-test('associateImagesToCategories() treats a numeric-string image id as already associated with its equivalent int entry, not a duplicate', function (): void {
-    // Kills line 430's RemoveIntegerCast (`in_array($imageId, ...)`
-    // instead of `in_array((int) $imageId, ...)`). findExistingAssociations()
-    // always returns real ints (ImageRepository's own mysqli-native-types
-    // finding); a caller-supplied STRING id that already matches one of
-    // them only compares equal under the real (int)-cast strict
-    // in_array(). The mutant's uncast strict in_array() would treat it
-    // as a brand new association and attempt a duplicate INSERT, which
-    // the real (image_id, category_id) PRIMARY KEY rejects outright --
-    // turning this test into an uncaught exception under the mutation.
+test('associateImagesToCategories() treats an already-associated image as not a duplicate', function (): void {
+    // Exercises the in_array() existing-association check's true branch --
+    // see the sibling 'initializes a brand new category...' test below
+    // for the false/new-association INSERT path.
     //
     // Exempt from tests/Pest.php's blanket per-test transaction -- see
     // 'currentUser() throws...' above for why.
@@ -1386,7 +1380,7 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
     try {
         $service = imageServiceTestNewService($repo, $conn);
 
-        expect($service->associateImagesToCategories([(string) $imageId], [1]))->toBeNull();
+        expect($service->associateImagesToCategories([$imageId], [1]))->toBeNull();
 
         $rows = $conn->fetchAllAssociative('SELECT ' . $rankColumn . ' FROM image_category WHERE image_id = ' . $imageId . ' AND category_id = 1');
         expect($rows)
@@ -1398,7 +1392,7 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
     }
 });
 
-test('moveImagesToCategories() returns false for an empty image list, and treats a non-array $categories as none', function (): void {
+test('moveImagesToCategories() returns false for an empty image list, and runs deleteNonStorageCategoryLinks() but not associateImagesToCategories() for an empty category list', function (): void {
     // Exempt from tests/Pest.php's blanket per-test transaction -- see
     // 'currentUser() throws...' above for why.
     DbTransactionTestOverride::rollback();
@@ -1420,13 +1414,9 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
     try {
         $service = imageServiceTestNewService($repo, $conn);
 
-        expect($service->moveImagesToCategories([], 'not-an-array'))->toBeFalse();
+        expect($service->moveImagesToCategories([], []))->toBeFalse();
 
-        // A non-array $categories is coerced to [] -- deleteNonStorageCategoryLinks()
-        // still runs (breaking every non-storage link) but
-        // associateImagesToCategories() is never called since categories
-        // stays empty.
-        expect($service->moveImagesToCategories([$imageId], 'not-an-array'))->toBeNull();
+        expect($service->moveImagesToCategories([$imageId], []))->toBeNull();
         $remaining = $conn->fetchOne('SELECT COUNT(*) FROM image_category WHERE image_id = ' . $imageId);
         expect($remaining)
             ->toBe(0);

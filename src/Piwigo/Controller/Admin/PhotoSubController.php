@@ -62,8 +62,6 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        /** @var array<string, mixed> $page */
-        $page = [];
         $template = $this->currentTemplate->get();
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -74,8 +72,11 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
         $this->coreTabs->setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));
 
-        // retrieving direct information about picture
-        $page['image'] = $this->imageService
+        // Guards against a nonexistent image id (fatal_errors) before dispatching
+        // to any tab; the returned row itself is unused -- each tab renderer
+        // fetches its own image info independently (PictureModifyPageRenderer)
+        // or doesn't need it at all (PictureCoiPageRenderer/PictureFormatsPageRenderer).
+        $this->imageService
             ->getImageInfos($get_image_id, $this->htmlRenderer, true);
 
         $tab = $photoDispatch->tab;

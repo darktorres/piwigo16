@@ -39,10 +39,11 @@ namespace Piwigo\Tests\Integration {
 
     /**
      * insertComment()/updateComment()'s admin-notification mail dispatch
-     * and emailAdmin() itself build exact keyargsContent arrays passed to
-     * MailerInterface::mailNotificationAdmins() -- this fake records every
-     * call verbatim so tests can assert on that exact shape without a real
-     * Mail\MailService (Symfony Mailer) round trip.
+     * and emailAdminOnEdit()/emailAdminOnDelete() themselves build exact
+     * keyargsContent arrays passed to MailerInterface::
+     * mailNotificationAdmins() -- this fake records every call verbatim so
+     * tests can assert on that exact shape without a real Mail\MailService
+     * (Symfony Mailer) round trip.
      */
     final class CommentServiceFakeMailerRecordsNotifications implements MailerInterface
     {
@@ -1029,7 +1030,7 @@ namespace Piwigo\Tests\Integration {
          * email_admin_on_comment_validation fires mailNotificationAdmins()
          * with the exact keyargs, including the trailing "(!) This comment
          * requires validation" line -- distinct from the plain "just mail
-         * admin" (emailAdmin('edit', ...)) elseif branch exercised by
+         * admin" (emailAdminOnEdit(...)) elseif branch exercised by
          * test_update_comment_moderates_when_validation_required above,
          * which never reaches that flag check because it's off there.
          */
@@ -1181,19 +1182,16 @@ namespace Piwigo\Tests\Integration {
             $service->getCommentAuthorId(CommentId::from(999999));
         }
 
-        // --- emailAdmin() -----------------------------------------------------
+        // --- emailAdminOnDelete()/emailAdminOnEdit() --------------------------
 
-        public function testEmailAdminNotifiesOnDeleteWithTheCommentId(): void
+        public function testEmailAdminOnDeleteNotifiesWithTheCommentId(): void
         {
             CurrentConfigTestFactory::get()->emailAdminOnCommentDeletion = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
 
-            $service->emailAdmin('delete', [
-                'author' => 'evicted_author',
-                'comment_id' => 42,
-            ]);
+            $service->emailAdminOnDelete('evicted_author', 42);
 
             self::assertCount(1, $mailer->calls);
             $call = $mailer->calls[0];
@@ -1210,17 +1208,26 @@ namespace Piwigo\Tests\Integration {
             ], $call['content']);
         }
 
-        public function testEmailAdminNotifiesOnEditWithTheNewContent(): void
+        public function testEmailAdminOnDeleteDoesNothingWhenTheConfigFlagIsOff(): void
+        {
+            CurrentConfigTestFactory::get()->emailAdminOnCommentDeletion = false;
+
+            $mailer = new CommentServiceFakeMailerRecordsNotifications();
+            $service = $this->serviceWithMailer($mailer);
+
+            $service->emailAdminOnDelete('evicted_author', 42);
+
+            self::assertSame([], $mailer->calls);
+        }
+
+        public function testEmailAdminOnEditNotifiesWithTheNewContent(): void
         {
             CurrentConfigTestFactory::get()->emailAdminOnCommentEdition = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
 
-            $service->emailAdmin('edit', [
-                'author' => 'editing_author',
-                'content' => 'the revised text',
-            ]);
+            $service->emailAdminOnEdit('editing_author', 'the revised text');
 
             self::assertCount(1, $mailer->calls);
             $call = $mailer->calls[0];
@@ -1240,17 +1247,14 @@ namespace Piwigo\Tests\Integration {
             ], $call['content']);
         }
 
-        public function testEmailAdminDoesNothingForAnUnrecognizedAction(): void
+        public function testEmailAdminOnEditDoesNothingWhenTheConfigFlagIsOff(): void
         {
-            CurrentConfigTestFactory::get()->emailAdminOnCommentDeletion = true;
-            CurrentConfigTestFactory::get()->emailAdminOnCommentEdition = true;
+            CurrentConfigTestFactory::get()->emailAdminOnCommentEdition = false;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
 
-            $service->emailAdmin('rename', [
-                'author' => 'someone',
-            ]);
+            $service->emailAdminOnEdit('editing_author', 'the revised text');
 
             self::assertSame([], $mailer->calls);
         }
@@ -1337,8 +1341,9 @@ namespace Piwigo\Tests\Integration {
         /**
          * A CommentService wired to a fake MailerInterface so the
          * admin-notification mail dispatch paths (insertComment()/
-         * updateComment()/emailAdmin()) can be asserted on exactly,
-         * without a real Mail\MailService (Symfony Mailer) round trip.
+         * updateComment()/emailAdminOnEdit()/emailAdminOnDelete()) can be
+         * asserted on exactly, without a real Mail\MailService (Symfony
+         * Mailer) round trip.
          */
         private function serviceWithMailer(MailerInterface $mailer): CommentService
         {

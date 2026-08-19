@@ -17,6 +17,7 @@ use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentListRow;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
+use Piwigo\Comment\Projection\CommentUpdateData;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -131,10 +132,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * non-null, only a row owned by that author is updated (matches the
      * original update_user_comment()'s non-admin restriction). Returns
      * whether a row was actually updated.
-     *
-     * @param array{content: string, websiteUrl: ?string, validated: bool} $data
      */
-    public function update(CommentId $id, array $data, ?int $authorId): bool
+    public function update(CommentId $id, CommentUpdateData $data, ?int $authorId): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -144,10 +143,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->set('c.validated', ':validated')
             ->set('c.validationDate', ':validationDate')
             ->where('c.id = :id')
-            ->setParameter('content', $data['content'])
-            ->setParameter('websiteUrl', $data['websiteUrl'])
-            ->setParameter('validated', $data['validated'])
-            ->setParameter('validationDate', $data['validated'] ? Env::now()->format('Y-m-d H:i:s') : null)
+            ->setParameter('content', $data->content)
+            ->setParameter('websiteUrl', $data->websiteUrl)
+            ->setParameter('validated', $data->validated)
+            ->setParameter('validationDate', $data->validated ? Env::now()->format('Y-m-d H:i:s') : null)
             ->setParameter('id', $id);
 
         if ($authorId !== null) {

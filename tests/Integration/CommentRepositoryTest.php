@@ -12,6 +12,7 @@ use Override;
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\Projection\CommentUpdateData;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
@@ -118,11 +119,11 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $updated = $this->repo->update(
             $id,
-            [
-                'content' => 'Edited content.',
-                'websiteUrl' => 'http://edited.test',
-                'validated' => true,
-            ],
+            new CommentUpdateData(
+                content: 'Edited content.',
+                websiteUrl: 'http://edited.test',
+                validated: true,
+            ),
             null
         );
 
@@ -138,11 +139,11 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $updated = $this->repo->update(
             $id,
-            [
-                'content' => 'Should not apply.',
-                'websiteUrl' => null,
-                'validated' => true,
-            ],
+            new CommentUpdateData(
+                content: 'Should not apply.',
+                websiteUrl: null,
+                validated: true,
+            ),
             999
         );
 

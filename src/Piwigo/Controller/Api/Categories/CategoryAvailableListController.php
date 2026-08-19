@@ -160,14 +160,14 @@ final readonly class CategoryAvailableListController implements ControllerInterf
         $cats = [];
         foreach ($rows as $row) {
             $rowCatId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            $rollup = $rollupByCatId[$rowCatId] ?? [];
-            $row['nb_images'] = $rollup['nb_images'] ?? 0;
-            $row['total_nb_images'] = $rollup['count_images'] ?? 0;
-            $row['count_images'] = $rollup['count_images'] ?? 0;
-            $row['count_categories'] = $rollup['count_categories'] ?? 0;
-            $row['nb_categories'] = $rollup['count_categories'] ?? 0;
-            $row['date_last'] = $rollup['date_last'] ?? null;
-            $row['max_date_last'] = $rollup['max_date_last'] ?? null;
+            $rollup = $rollupByCatId[$rowCatId] ?? null;
+            $row['nb_images'] = $rollup->nbImages ?? 0;
+            $row['total_nb_images'] = $rollup->countImages ?? 0;
+            $row['count_images'] = $rollup->countImages ?? 0;
+            $row['count_categories'] = $rollup->countCategories ?? 0;
+            $row['nb_categories'] = $rollup->countCategories ?? 0;
+            $row['date_last'] = $rollup?->dateLast;
+            $row['max_date_last'] = $rollup?->maxDateLast;
 
             $row['url'] = $this->urlService->makeIndexUrl([
                 'category' => $row,

@@ -38,6 +38,7 @@ use Piwigo\Category\Projection\CategoryRankInfoRow;
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
+use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -246,13 +247,13 @@ final readonly class CategoryService
      * `visible_categories` condition), applied to `CategoryTreeCache`'s
      * cached, permission-filtered row set.
      *
-     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $allRows keyed by category id,
+     * @param array<int, ComputedCategoryRow> $allRows keyed by category id,
      *   already permission-filtered (CategoryTreeCache::getForUser())
      * @param array<string, mixed>|null $categoryPage the currently-viewed
      *   category ($page['category']/SectionContext::$category), if any --
      *   only 'uppercats' is read here, defensively, matching that
      *   property's own already-declared array<string,mixed>|null type
-     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}>
+     * @return array<int, ComputedCategoryRow>
      */
     public static function filterMenuRows(
         array $allRows,
@@ -271,8 +272,8 @@ final readonly class CategoryService
 
             return array_filter(
                 $allRows,
-                static fn (array $row): bool => $row['id_uppercat'] === null
-                    || in_array($row['id_uppercat'], $uppercatIds, true)
+                static fn (ComputedCategoryRow $row): bool => $row->idUppercat === null
+                    || in_array($row->idUppercat, $uppercatIds, true)
             );
         }
 
@@ -286,7 +287,7 @@ final readonly class CategoryService
 
         return array_filter(
             $allRows,
-            static fn (array $row): bool => in_array($row['id'], $visibleIds, true)
+            static fn (ComputedCategoryRow $row): bool => in_array($row->catId, $visibleIds, true)
         );
     }
 
@@ -473,7 +474,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @return array{categories: array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>, lastPhotoDate: ?string}
+     * @return array{categories: array<int, ComputedCategoryRow>, lastPhotoDate: ?string}
      */
     public function getComputedCategories(int $userId, int $level, string $forbiddenCategories, ?int $filterDays = null): array
     {
@@ -482,62 +483,58 @@ final readonly class CategoryService
         $lastPhotoDate = null;
         $cats = [];
         foreach ($rows as $row) {
-            $catId = $row->catId;
-            $nbImages = $row->nbImages;
             $dateLast = $row->dateLast;
-
-            $catRow = $row->toArray();
-            $catRow['user_id'] = $userId;
-            $catRow['nb_categories'] = 0;
-            $catRow['count_categories'] = 0;
-            $catRow['count_images'] = $nbImages;
-            $catRow['max_date_last'] = $dateLast;
             if ($dateLast !== null && ($lastPhotoDate === null || $dateLast > $lastPhotoDate)) {
                 $lastPhotoDate = $dateLast;
             }
 
-            $cats[$catId] = $catRow;
+            $cats[$row->catId] = new ComputedCategoryRow(
+                catId: $row->catId,
+                idUppercat: $row->idUppercat,
+                globalRank: $row->globalRank,
+                rank: $row->rank,
+                dateLast: $dateLast,
+                nbImages: $row->nbImages,
+                userId: $userId,
+                countImages: $row->nbImages,
+                maxDateLast: $dateLast,
+            );
         }
 
-        uasort($cats, self::compareByGlobalRank(...));
+        uasort($cats, static fn (ComputedCategoryRow $a, ComputedCategoryRow $b): int => strnatcasecmp($a->globalRank ?? '', $b->globalRank ?? ''));
 
         foreach ($cats as $cat) {
-            $idUppercat = $cat['id_uppercat'];
-            if (! is_int($idUppercat)) {
+            $idUppercat = $cat->idUppercat;
+            if ($idUppercat === null || ! isset($cats[$idUppercat])) {
                 continue;
             }
 
-            if (! isset($cats[$idUppercat])) {
-                continue;
-            }
+            $parent = $cats[$idUppercat];
+            $parent->nbCategories++;
 
-            $parent = &$cats[$idUppercat];
-            $parent['nb_categories']++;
-
-            $nbImages = $cat['nb_images'];
+            $nbImages = $cat->nbImages;
 
             do {
-                $parent['count_images'] += $nbImages;
-                $parent['count_categories']++;
+                $parent->countImages += $nbImages;
+                $parent->countCategories++;
 
-                $parentMaxDateLast = $parent['max_date_last'];
-                if ($parentMaxDateLast === null || $parentMaxDateLast === '' || $parentMaxDateLast < $cat['date_last']) {
-                    $parent['max_date_last'] = $cat['date_last'];
+                $parentMaxDateLast = $parent->maxDateLast;
+                if ($parentMaxDateLast === null || $parentMaxDateLast === '' || $parentMaxDateLast < $cat->dateLast) {
+                    $parent->maxDateLast = $cat->dateLast;
                 }
 
-                $parentIdUppercat = $parent['id_uppercat'];
-                if (! is_int($parentIdUppercat)) {
+                $parentIdUppercat = $parent->idUppercat;
+                if ($parentIdUppercat === null || ! isset($cats[$parentIdUppercat])) {
                     break;
                 }
 
-                $parent = &$cats[$parentIdUppercat];
+                $parent = $cats[$parentIdUppercat];
             } while (true);
-            unset($parent);
         }
 
         if ($filterDays !== null) {
             foreach ($cats as $category) {
-                $categoryMaxDateLast = $category['max_date_last'];
+                $categoryMaxDateLast = $category->maxDateLast;
                 if ($categoryMaxDateLast === null || $categoryMaxDateLast === '') {
                     self::removeComputedCategory($cats, $category);
                 }
@@ -551,31 +548,30 @@ final readonly class CategoryService
     }
 
     /**
-     * @param  array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>  $cats
-     * @param  array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}  $cat  category to remove
+     * @param  array<int, ComputedCategoryRow>  $cats
      */
-    public static function removeComputedCategory(array &$cats, array $cat): void
+    public static function removeComputedCategory(array &$cats, ComputedCategoryRow $cat): void
     {
-        $idUppercat = $cat['id_uppercat'];
+        $idUppercat = $cat->idUppercat;
         if ($idUppercat !== null && isset($cats[$idUppercat])) {
-            $parent = &$cats[$idUppercat];
+            $parent = $cats[$idUppercat];
 
-            $parent['nb_categories']--;
+            $parent->nbCategories--;
 
             do {
-                $parent['count_images'] -= $cat['nb_images'];
-                $parent['count_categories'] -= 1 + $cat['count_categories'];
+                $parent->countImages -= $cat->nbImages;
+                $parent->countCategories -= 1 + $cat->countCategories;
 
-                $parentIdUppercat = $parent['id_uppercat'];
+                $parentIdUppercat = $parent->idUppercat;
                 if ($parentIdUppercat === null || ! isset($cats[$parentIdUppercat])) {
                     break;
                 }
 
-                $parent = &$cats[$parentIdUppercat];
+                $parent = $cats[$parentIdUppercat];
             } while (true);
         }
 
-        unset($cats[$cat['cat_id']]);
+        unset($cats[$cat->catId]);
     }
 
     /**
@@ -797,49 +793,47 @@ final readonly class CategoryService
 
         $cats = [];
         $selectedCategory = $categoryPage;
-        foreach ($rows as $row) {
-            // both sides get coerced to string for comparison: $row['id'] is
-            // always a DB-fetch string, but $page['category']['id'] may already
+        foreach ($rows as $computedRow) {
+            // both sides get coerced to string for comparison: $computedRow->catId
+            // is always a DB-fetch value, but $page['category']['id'] may already
             // be an int depending on how that array was populated -- matches
             // the original's loose ==, which PHPStan disallows outright.
-            $rowIdStr = (string) $row['id'];
-            $rowGlobalRank = $row['global_rank'];
-            $childDateLast = @$row['max_date_last'] > @$row['date_last'];
+            $rowIdStr = (string) $computedRow->catId;
+            $rowGlobalRank = $computedRow->globalRank;
+            $childDateLast = @$computedRow->maxDateLast > @$computedRow->dateLast;
             $selectedId = $selectedCategory['id'] ?? null;
             $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
             $selectedIdUppercat = $selectedCategory['id_uppercat'] ?? null;
             $selectedIdUppercatStr = is_scalar($selectedIdUppercat) ? (string) $selectedIdUppercat : null;
-            $menuNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($row['name'], 'get_categories_menu'));
-            $row = array_merge(
-                $row,
-                [
-                    'NAME' => $menuNameEvent->categoryName,
-                    'TITLE' => self::getDisplayImagesCount(
-                        $lang,
-                        $row['nb_images'],
-                        $row['count_images'],
-                        $row['count_categories'],
-                        false,
-                        ' / '
-                    ),
-                    'URL' => $urlService->makeIndexUrl([
-                        'category' => $row,
-                    ]),
-                    'LEVEL' => substr_count(is_string($rowGlobalRank) ? $rowGlobalRank : '', '.') + 1,
-                    'SELECTED' => $selectedCategory !== null && $selectedIdStr !== null && $selectedIdStr === $rowIdStr,
-                    'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
-                ]
-            );
+            $menuNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($computedRow->name ?? '', 'get_categories_menu'));
+            $row = [
+                ...$computedRow->toArray(),
+                'NAME' => $menuNameEvent->categoryName,
+                'TITLE' => self::getDisplayImagesCount(
+                    $lang,
+                    $computedRow->nbImages,
+                    $computedRow->countImages,
+                    $computedRow->countCategories,
+                    false,
+                    ' / '
+                ),
+                'URL' => $urlService->makeIndexUrl([
+                    'category' => $computedRow->toArray(),
+                ]),
+                'LEVEL' => substr_count($rowGlobalRank ?? '', '.') + 1,
+                'SELECTED' => $selectedCategory !== null && $selectedIdStr !== null && $selectedIdStr === $rowIdStr,
+                'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
+            ];
             if ($this->currentConfig->indexNewIcon) {
-                $maxDateLast = $row['max_date_last'];
+                $maxDateLast = $computedRow->maxDateLast;
                 $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
-                $row['icon_ts'] = RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
+                $row['icon_ts'] = RecentIconResolver::getIcon($maxDateLast ?? '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
             }
             $cats[] = $row;
             $categoryPageId = $categoryPage['id'] ?? null;
             $categoryPageIdStr = is_scalar($categoryPageId) ? (string) $categoryPageId : null;
             if ($categoryPage !== null && $categoryPageIdStr !== null && $categoryPageIdStr === $rowIdStr) { // save the number of subcats for later optim
-                $countCategories = $row['count_categories'];
+                $countCategories = $computedRow->countCategories;
             }
         }
         usort($cats, self::compareByGlobalRank(...));

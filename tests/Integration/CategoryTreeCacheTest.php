@@ -108,11 +108,10 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
     {
         $cats = $this->cache->getForUser(1, 0, '');
 
-        self::assertSame('Sample Album', $cats[1]['name']);
-        self::assertArrayHasKey('permalink', $cats[1]);
-        self::assertSame(5, $cats[1]['count_images']);
-        self::assertSame(2, $cats[2]['count_images']);
-        self::assertSame('Nested Sub Album', $cats[2]['name']);
+        self::assertSame('Sample Album', $cats[1]->name);
+        self::assertSame(5, $cats[1]->countImages);
+        self::assertSame(2, $cats[2]->countImages);
+        self::assertSame('Nested Sub Album', $cats[2]->name);
     }
 
     public function testGetForUserExcludesAForbiddenCategory(): void
@@ -126,14 +125,14 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
     public function testGetForUserServesACacheHitWithoutReflectingADbChange(): void
     {
         $first = $this->cache->getForUser(1, 0, '');
-        self::assertSame('Sample Album', $first[1]['name']);
+        self::assertSame('Sample Album', $first[1]->name);
 
         $this->conn->executeStatement(
             "UPDATE categories SET name = 'Renamed' WHERE id = 1"
         );
 
         $second = $this->cache->getForUser(1, 0, '');
-        self::assertSame('Sample Album', $second[1]['name'], 'a cache hit must not re-query the DB');
+        self::assertSame('Sample Album', $second[1]->name, 'a cache hit must not re-query the DB');
 
         $this->conn->executeStatement(
             "UPDATE categories SET name = 'Sample Album' WHERE id = 1"

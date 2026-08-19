@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Projection\ComputedCategoryRow;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -37,7 +38,7 @@ final readonly class CategoryTreeCache
     ) {}
 
     /**
-     * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> keyed by category id
+     * @return array<int, ComputedCategoryRow> keyed by category id
      */
     public function getForUser(int $userId, int $level, string $forbiddenCategories): array
     {
@@ -45,7 +46,7 @@ final readonly class CategoryTreeCache
         if ($item->isHit()) {
             $cached = $item->get();
             if (is_array($cached)) {
-                /** @var array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $cached */
+                /** @var array<int, ComputedCategoryRow> $cached */
                 return $cached;
             }
         }
@@ -64,9 +65,9 @@ final readonly class CategoryTreeCache
                 // transaction), skip rather than emit a row with no name.
                 continue;
             }
-            $merged[$catId] = array_merge($row, $names[$catId]->toArray(), [
-                'id' => $catId,
-            ]);
+            $row->name = $names[$catId]->name;
+            $row->permalink = $names[$catId]->permalink;
+            $merged[$catId] = $row;
         }
 
         $item->set($merged);

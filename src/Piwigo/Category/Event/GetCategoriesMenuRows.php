@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Event;
 
+use Piwigo\Category\Projection\ComputedCategoryRow;
+
 /**
  * Typed event for the legacy `get_categories_menu_sql_where` filter. The
  * legacy hook filtered a raw SQL WHERE-clause string (`string $where,
@@ -21,7 +23,7 @@ namespace Piwigo\Category\Event;
 final class GetCategoriesMenuRows
 {
     /**
-     * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $rows
+     * @param array<int, ComputedCategoryRow> $rows
      */
     public function __construct(
         public array $rows,

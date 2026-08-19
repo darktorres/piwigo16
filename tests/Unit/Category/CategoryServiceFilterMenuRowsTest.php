@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Category;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\ComputedCategoryRow;
 
 /**
  * CategoryService::filterMenuRows() is the PHP-side equivalent of
@@ -15,60 +16,50 @@ use Piwigo\Category\CategoryService;
  */
 final class CategoryServiceFilterMenuRowsTest extends TestCase
 {
-    private const array ALL_ROWS = [
-        1 => [
-            'cat_id' => 1,
-            'id_uppercat' => null,
-            'global_rank' => '1',
-            'rank' => 1,
-            'date_last' => null,
-            'nb_images' => 0,
-            'user_id' => 1,
-            'nb_categories' => 2,
-            'count_categories' => 2,
-            'count_images' => 0,
-            'max_date_last' => null,
-            'name' => 'Sample Album',
-            'permalink' => null,
-            'id' => 1,
-        ],
-        2 => [
-            'cat_id' => 2,
-            'id_uppercat' => 1,
-            'global_rank' => '1.2',
-            'rank' => 1,
-            'date_last' => null,
-            'nb_images' => 0,
-            'user_id' => 1,
-            'nb_categories' => 0,
-            'count_categories' => 0,
-            'count_images' => 0,
-            'max_date_last' => null,
-            'name' => 'Nested Sub Album',
-            'permalink' => null,
-            'id' => 2,
-        ],
-        3 => [
-            'cat_id' => 3,
-            'id_uppercat' => 1,
-            'global_rank' => '1.3',
-            'rank' => 2,
-            'date_last' => null,
-            'nb_images' => 0,
-            'user_id' => 1,
-            'nb_categories' => 0,
-            'count_categories' => 0,
-            'count_images' => 0,
-            'max_date_last' => null,
-            'name' => 'Sibling Album',
-            'permalink' => null,
-            'id' => 3,
-        ],
-    ];
+    /**
+     * @return array<int, ComputedCategoryRow>
+     */
+    private static function allRows(): array
+    {
+        return [
+            1 => new ComputedCategoryRow(
+                catId: 1,
+                idUppercat: null,
+                globalRank: '1',
+                rank: 1,
+                dateLast: null,
+                nbImages: 0,
+                userId: 1,
+                nbCategories: 2,
+                countCategories: 2,
+                name: 'Sample Album',
+            ),
+            2 => new ComputedCategoryRow(
+                catId: 2,
+                idUppercat: 1,
+                globalRank: '1.2',
+                rank: 1,
+                dateLast: null,
+                nbImages: 0,
+                userId: 1,
+                name: 'Nested Sub Album',
+            ),
+            3 => new ComputedCategoryRow(
+                catId: 3,
+                idUppercat: 1,
+                globalRank: '1.3',
+                rank: 2,
+                dateLast: null,
+                nbImages: 0,
+                userId: 1,
+                name: 'Sibling Album',
+            ),
+        ];
+    }
 
     public function testCollapsedViewKeepsOnlyRootCategoriesWhenNoCategoryIsViewed(): void
     {
-        $rows = CategoryService::filterMenuRows(self::ALL_ROWS, null, false, false, '');
+        $rows = CategoryService::filterMenuRows(self::allRows(), null, false, false, '');
 
         self::assertSame([1], array_keys($rows));
     }
@@ -76,7 +67,7 @@ final class CategoryServiceFilterMenuRowsTest extends TestCase
     public function testCollapsedViewAlsoKeepsDirectChildrenOfTheViewedCategory(): void
     {
         $rows = CategoryService::filterMenuRows(
-            self::ALL_ROWS,
+            self::allRows(),
             [
                 'id' => 1,
                 'uppercats' => '1',
@@ -91,7 +82,7 @@ final class CategoryServiceFilterMenuRowsTest extends TestCase
 
     public function testExpandedViewShowsEveryRowWhenNoFilterIsActive(): void
     {
-        $rows = CategoryService::filterMenuRows(self::ALL_ROWS, null, true, false, '');
+        $rows = CategoryService::filterMenuRows(self::allRows(), null, true, false, '');
 
         self::assertSame([1, 2, 3], array_keys($rows));
     }
@@ -101,21 +92,21 @@ final class CategoryServiceFilterMenuRowsTest extends TestCase
         // Matches the original SQL branch condition exactly: "always
         // expand when filter is activated" applies regardless of the
         // user's own 'expand' preference.
-        $rows = CategoryService::filterMenuRows(self::ALL_ROWS, null, false, true, '');
+        $rows = CategoryService::filterMenuRows(self::allRows(), null, false, true, '');
 
         self::assertSame([1, 2, 3], array_keys($rows));
     }
 
     public function testVisibleCategoriesFilterRestrictsToTheListedIds(): void
     {
-        $rows = CategoryService::filterMenuRows(self::ALL_ROWS, null, true, false, '1,3');
+        $rows = CategoryService::filterMenuRows(self::allRows(), null, true, false, '1,3');
 
         self::assertSame([1, 3], array_keys($rows));
     }
 
     public function testVisibleCategoriesFilterCanExcludeEveryRow(): void
     {
-        $rows = CategoryService::filterMenuRows(self::ALL_ROWS, null, true, false, '999');
+        $rows = CategoryService::filterMenuRows(self::allRows(), null, true, false, '999');
 
         self::assertSame([], $rows);
     }

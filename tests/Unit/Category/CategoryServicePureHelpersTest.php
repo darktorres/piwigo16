@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -141,30 +142,18 @@ test('isRecentCategory zeroes out the today-threshold time-of-day down to the se
     expect(CategoryService::isRecentCategory('2026-06-09 23:59:59', 5, '2026-06-15', $now))->toBeFalse();
 });
 
-/**
- * @return array{cat_id: int, id_uppercat: ?int, global_rank: ?string,
- *   rank: ?int, date_last: ?string, nb_images: int, user_id: int,
- *   nb_categories: int, count_categories: int, count_images: int,
- *   max_date_last: ?string, name: string, permalink: ?string, id: int}
- */
-function catMenuRow(int $id, ?int $idUppercat): array
+function catMenuRow(int $id, ?int $idUppercat): ComputedCategoryRow
 {
-    return [
-        'cat_id' => $id,
-        'id_uppercat' => $idUppercat,
-        'global_rank' => null,
-        'rank' => null,
-        'date_last' => null,
-        'nb_images' => 0,
-        'user_id' => 0,
-        'nb_categories' => 0,
-        'count_categories' => 0,
-        'count_images' => 0,
-        'max_date_last' => null,
-        'name' => 'Category ' . $id,
-        'permalink' => null,
-        'id' => $id,
-    ];
+    return new ComputedCategoryRow(
+        catId: $id,
+        idUppercat: $idUppercat,
+        globalRank: null,
+        rank: null,
+        dateLast: null,
+        nbImages: 0,
+        userId: 0,
+        name: 'Category ' . $id,
+    );
 }
 
 test('filterMenuRows returns every row unfiltered when expanded and no visible-categories filter is active', function (): void {
@@ -194,7 +183,7 @@ test('filterMenuRows restricts to direct children of the current category page w
     // Row 1 (top-level, id_uppercat null) always passes; row 2's
     // id_uppercat (5) is in the page's own uppercats chain; row 3's (7)
     // is not.
-    expect(array_column($result, 'id'))
+    expect(array_values(array_map(static fn (ComputedCategoryRow $r): int => $r->catId, $result)))
         ->toBe([1, 2]);
 });
 
@@ -203,7 +192,7 @@ test('filterMenuRows restricts to the visible-categories csv when a filter is ac
 
     $result = CategoryService::filterMenuRows($rows, null, true, true, '1,3');
 
-    expect(array_column($result, 'id'))
+    expect(array_values(array_map(static fn (ComputedCategoryRow $r): int => $r->catId, $result)))
         ->toBe([1, 3]);
 });
 
@@ -215,7 +204,7 @@ test('filterMenuRows treats a categoryPage with no uppercats key as having no up
 
     $result = CategoryService::filterMenuRows($rows, [], false, false, '');
 
-    expect(array_column($result, 'id'))
+    expect(array_values(array_map(static fn (ComputedCategoryRow $r): int => $r->catId, $result)))
         ->toBe([1]);
 });
 
@@ -226,7 +215,7 @@ test('filterMenuRows treats an empty-string uppercats value the same as absent',
         'uppercats' => '',
     ], false, false, '');
 
-    expect(array_column($result, 'id'))
+    expect(array_values(array_map(static fn (ComputedCategoryRow $r): int => $r->catId, $result)))
         ->toBe([1]);
 });
 
@@ -240,7 +229,7 @@ test('filterMenuRows string-casts a non-string scalar uppercats value before exp
         'uppercats' => 0,
     ], false, false, '');
 
-    expect(array_column($result, 'id'))
+    expect(array_values(array_map(static fn (ComputedCategoryRow $r): int => $r->catId, $result)))
         ->toBe([1, 2]);
 });
 
@@ -305,27 +294,20 @@ test('getDisplayImagesCount reports sub-albums after a direct/remainder split wh
         ->toBe('3 photos-1 photo in 2 sub-albums');
 });
 
-/**
- * @return array{cat_id: int, id_uppercat: ?int, global_rank: ?string,
- *   rank: ?int, date_last: ?string, nb_images: int, user_id: int,
- *   nb_categories: int, count_categories: int, count_images: int,
- *   max_date_last: ?string}
- */
-function catComputedRow(int $id, ?int $idUppercat, int $nbCategories, int $countImages, int $countCategories): array
+function catComputedRow(int $id, ?int $idUppercat, int $nbCategories, int $countImages, int $countCategories, int $nbImages = 0): ComputedCategoryRow
 {
-    return [
-        'cat_id' => $id,
-        'id_uppercat' => $idUppercat,
-        'global_rank' => null,
-        'rank' => null,
-        'date_last' => null,
-        'nb_images' => 0,
-        'user_id' => 0,
-        'nb_categories' => $nbCategories,
-        'count_categories' => $countCategories,
-        'count_images' => $countImages,
-        'max_date_last' => null,
-    ];
+    return new ComputedCategoryRow(
+        catId: $id,
+        idUppercat: $idUppercat,
+        globalRank: null,
+        rank: null,
+        dateLast: null,
+        nbImages: $nbImages,
+        userId: 0,
+        nbCategories: $nbCategories,
+        countCategories: $countCategories,
+        countImages: $countImages,
+    );
 }
 
 test('removeComputedCategory decrements the parent\'s own counters and bubbles up to grandparents', function (): void {
@@ -333,23 +315,22 @@ test('removeComputedCategory decrements the parent\'s own counters and bubbles u
         1 => catComputedRow(1, null, 2, 100, 5),
         2 => catComputedRow(2, 1, 1, 40, 1),
     ];
-    $removed = catComputedRow(3, 2, 0, 10, 0);
-    $removed['nb_images'] = 10;
+    $removed = catComputedRow(3, 2, 0, 10, 0, nbImages: 10);
 
     CategoryService::removeComputedCategory($cats, $removed);
 
     // Direct parent (id=2): nb_categories decremented, its own
     // count_images/count_categories reduced by the removed leaf's counts.
-    expect($cats[2]['nb_categories'])->toBe(0);
-    expect($cats[2]['count_images'])->toBe(30);
-    expect($cats[2]['count_categories'])->toBe(0);
+    expect($cats[2]->nbCategories)->toBe(0);
+    expect($cats[2]->countImages)->toBe(30);
+    expect($cats[2]->countCategories)->toBe(0);
 
     // Grandparent (id=1) bubbles up the same count_images/count_categories
     // reduction, but its own nb_categories (direct-children count) is
     // untouched -- only the immediate parent's nb_categories changes.
-    expect($cats[1]['nb_categories'])->toBe(2);
-    expect($cats[1]['count_images'])->toBe(90);
-    expect($cats[1]['count_categories'])->toBe(4);
+    expect($cats[1]->nbCategories)->toBe(2);
+    expect($cats[1]->countImages)->toBe(90);
+    expect($cats[1]->countCategories)->toBe(4);
 });
 
 test('removeComputedCategory subtracts both the removed leaf itself and its own sub-category count from the parent', function (): void {
@@ -358,12 +339,11 @@ test('removeComputedCategory subtracts both the removed leaf itself and its own 
     $cats = [
         1 => catComputedRow(1, null, 3, 50, 10),
     ];
-    $removed = catComputedRow(2, 1, 0, 5, 4);
-    $removed['nb_images'] = 5;
+    $removed = catComputedRow(2, 1, 0, 5, 4, nbImages: 5);
 
     CategoryService::removeComputedCategory($cats, $removed);
 
-    expect($cats[1]['count_categories'])->toBe(5);
+    expect($cats[1]->countCategories)->toBe(5);
 });
 
 test('removeComputedCategory does nothing when the category has no known parent in the map', function (): void {
@@ -371,8 +351,7 @@ test('removeComputedCategory does nothing when the category has no known parent 
         1 => catComputedRow(1, null, 3, 50, 2),
     ];
     $original = $cats[1];
-    $removed = catComputedRow(9, null, 0, 5, 0);
-    $removed['nb_images'] = 5;
+    $removed = catComputedRow(9, null, 0, 5, 0, nbImages: 5);
 
     CategoryService::removeComputedCategory($cats, $removed);
 

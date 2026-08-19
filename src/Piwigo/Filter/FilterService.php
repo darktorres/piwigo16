@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\FilterUpdaterInterface;
@@ -191,7 +192,14 @@ final readonly class FilterService implements FilterUpdaterInterface
                     $accessLevelChecker,
                     new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
                 )->getComputedCategories($user->id->value, $user->level, $user->forbiddenCategories, $filter_recent_period);
-                $filter['categories'] = $computedCategories['categories'];
+                // FilterState::$categories stays a plain array by design (it
+                // may also be restored from an untrusted session
+                // unserialize() result) -- toArray() once here, at the
+                // boundary, rather than widen that contract.
+                $filter['categories'] = array_map(
+                    static fn (ComputedCategoryRow $row): array => $row->toArray(),
+                    $computedCategories['categories']
+                );
                 $currentUser->set($user->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));
 
                 $filter['visible_categories'] = implode(',', array_keys($filter['categories']));

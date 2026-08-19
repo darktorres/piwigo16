@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Projection\MenubarBlockConfigRow;
 use Piwigo\Admin\Projection\MenubarPageContext;
 use Piwigo\Admin\Projection\MenubarSaveSuccessPageContext;
 use Piwigo\Admin\Request\MenubarSubmitRequest;
@@ -105,10 +106,10 @@ final class MenubarPageRenderer
 
         $blocks = [];
         foreach ($mb_conf as $id => $pos) {
-            $blocks[] = [
-                'pos' => $pos / 5,
-                'reg' => $reg_blocks[$id],
-            ];
+            $blocks[] = new MenubarBlockConfigRow(
+                pos: $pos / 5,
+                reg: $reg_blocks[$id],
+            );
         }
 
         $action = $urlService->getRootUrl() . 'admin.php?page=menubar';

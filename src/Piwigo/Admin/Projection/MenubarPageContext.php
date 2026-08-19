@@ -17,7 +17,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class MenubarPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array{pos: int|float, reg: mixed}> $blocks
+     * @param list<MenubarBlockConfigRow> $blocks
      */
     public function __construct(
         public string $formAction,
@@ -36,7 +36,7 @@ final readonly class MenubarPageContext implements TemplatePageContext
             'F_ACTION' => $this->formAction,
             'isWebmaster' => $this->isWebmaster ? 1 : 0,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
-            'blocks' => $this->blocks,
+            'blocks' => array_map(static fn (MenubarBlockConfigRow $block): array => $block->toArray(), $this->blocks),
         ];
     }
 }

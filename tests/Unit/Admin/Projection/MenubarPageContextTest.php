@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Projection\MenubarBlockConfigRow;
 use Piwigo\Admin\Projection\MenubarPageContext;
+use Piwigo\Menu\RegisteredBlock;
 
 test('toArray flattens every property to its real Latte template variable name, casting isWebmaster to an int', function (): void {
-    $context = new MenubarPageContext(formAction: '/admin.php?page=menubar', isWebmaster: true, adminPageTitle: 'Menu Management', blocks: [[
-        'pos' => 10,
-        'reg' => 'search',
-    ]]);
+    $reg = new RegisteredBlock('search', 'Search', 'piwigo');
+    $context = new MenubarPageContext(formAction: '/admin.php?page=menubar', isWebmaster: true, adminPageTitle: 'Menu Management', blocks: [
+        new MenubarBlockConfigRow(pos: 10, reg: $reg),
+    ]);
 
     expect($context->toArray())
         ->toBe([
@@ -17,7 +19,7 @@ test('toArray flattens every property to its real Latte template variable name, 
             'ADMIN_PAGE_TITLE' => 'Menu Management',
             'blocks' => [[
                 'pos' => 10,
-                'reg' => 'search',
+                'reg' => $reg,
             ]],
         ]);
 });

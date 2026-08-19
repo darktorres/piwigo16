@@ -787,9 +787,6 @@
     </p>
   </form>
 
-  <script
-    type="text/javascript"
-  ><!--
-document.login_form.username.focus();
-//--></script>
+  {do combineScript(id: 'core.scripts', load: 'footer', path: 'themes/default/js/scripts.js')}
+  {do footerScript("pwg_tryFocus('username');")}
 </div> <!-- content -->

@@ -776,10 +776,7 @@
       </p>
     </form>
 
-    <script
-      type="text/javascript"
-    ><!--
-document.register_form.login.focus();
-//--></script>
+    {do combineScript(id: 'core.scripts', load: 'footer', path: 'themes/default/js/scripts.js')}
+    {do footerScript("pwg_tryFocus('login');")}
   </div> <!-- content -->
 </div> <!-- registerPage -->

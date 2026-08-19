@@ -16,8 +16,6 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', eve
 });
 
 jQuery( document ).ready(function() {
-  jQuery("#selected-language").textContent = selected_language;
-
   //Override empty input message
   jQuery("form").on("submit", function (e) {
     let isValid = true;
@@ -64,14 +62,15 @@ jQuery( document ).ready(function() {
 
 function toggle_mode(mode) {
   setCookie("mode",mode,30);
-  if ("dark" == mode)
+  var logo = document.getElementById('piwigo-logo');
+  if ("dark" === mode)
   {
     //Dark mode
-    jQuery( "#toggle_mode_light" ).hide(); 
-    jQuery( "#toggle_mode_dark" ).show(); 
+    jQuery( "#toggle_mode_light" ).hide();
+    jQuery( "#toggle_mode_dark" ).show();
     jQuery( "#mode" ).addClass("dark");
-    jQuery( "#mode" ).removeClass("light"); 
-    jQuery( "#piwigo-logo" ).attr("src", url_logo_dark);
+    jQuery( "#mode" ).removeClass("light");
+    if (logo) { logo.src = logo.dataset.logoDark; }
   }
   else
   {
@@ -79,8 +78,8 @@ function toggle_mode(mode) {
     jQuery( "#toggle_mode_dark" ).hide();
     jQuery( "#toggle_mode_light" ).show();
     jQuery( "#mode" ).addClass("light");
-    jQuery( "#mode" ).removeClass("dark"); 
-    jQuery( "#piwigo-logo" ).attr("src", url_logo_light);
+    jQuery( "#mode" ).removeClass("dark");
+    if (logo) { logo.src = logo.dataset.logoLight; }
   }
 }
 
@@ -130,4 +129,16 @@ jQuery("#other-languages a").click(function(e){
   if (selectedLang) {
     setCookie('lang',selectedLang,1);
   }
+});
+
+jQuery("#toggle_mode_light").click(function() {
+  toggle_mode('dark');
+});
+
+jQuery("#toggle_mode_dark").click(function() {
+  toggle_mode('light');
+});
+
+jQuery("#other-languages").on("click", "[data-lang-code]", function() {
+  setCookie('lang', jQuery(this).data("langCode"), 30);
 });

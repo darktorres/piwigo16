@@ -322,10 +322,7 @@
   },
   "themes/standard_pages/js/standard_pages.js": {
     "eqeqeq": {
-      "count": 6
-    },
-    "no-undef": {
-      "count": 3
+      "count": 5
     }
   }
 }

@@ -693,11 +693,6 @@
 {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 {do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -11)}
 
-<script>
-  var selected_language = `{$language_options[$language_selection]|noescape}`;
-  var url_logo_light = `{$ROOT_URL|noescape}themes/standard_pages/images/piwigo_logo.svg`;
-  var url_logo_dark = `{$ROOT_URL|noescape}themes/standard_pages/images/piwigo_logo_dark.svg`;
-</script>
 {do combineScript(id: 'standard_pages_js', load: 'async', require: 'jquery', path: 'themes/standard_pages/js/standard_pages.js')}
 {do combineScript(id: 'standard_profile_js', load: 'footer', require: 'jquery', path: 'themes/standard_pages/js/profile.js')}
 {do combineScript(id: 'common', load: 'footer', require: 'jquery', path: 'themes/admin/default/js/common.js')}
@@ -752,12 +747,10 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
       <i
         class="gallery-icon-moon toggle-mode"
         id="toggle_mode_light"
-        onclick="toggle_mode('dark')"
       ></i>
       <i
         class="gallery-icon-sun toggle-mode"
         id="toggle_mode_dark"
-        onclick="toggle_mode('light')"
       ></i>
     </div>
     <div>
@@ -770,6 +763,8 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
       <img
         id="piwigo-logo"
         src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+        data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+        data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
       >
     {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
       <img id="custom-logo" src="{$ROOT_URL}logo.php">
@@ -1326,7 +1321,7 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
         <span
           n:foreach="$language_options as $code => $lang"
           id="lang={$code}"
-          onclick="setCookie('lang',{$code},30)"
+          data-lang-code="{$code}"
         >{$lang}</span>
       </span>
       <div id="selected-language-container">

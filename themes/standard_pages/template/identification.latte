@@ -692,11 +692,6 @@
 {do combineCss(id: 'standard_pages_css', path: "themes/standard_pages/skins/" . $STD_PGS_SELECTED_SKIN . ".css", order: 100)}
 {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 
-<script>
-  var selected_language = `{$language_options[$current_language]|noescape}`;
-  var url_logo_light = `{$ROOT_URL|noescape}themes/standard_pages/images/piwigo_logo.svg`;
-  var url_logo_dark = `{$ROOT_URL|noescape}themes/standard_pages/images/piwigo_logo_dark.svg`;
-</script>
 {do combineScript(id: 'standard_pages_js', load: 'async', require: 'jquery', path: 'themes/standard_pages/js/standard_pages.js')}
 
 <container id="mode" class="light">
@@ -705,12 +700,10 @@
       <i
         class="gallery-icon-moon toggle-mode"
         id="toggle_mode_light"
-        onclick="toggle_mode('dark')"
       ></i>
       <i
         class="gallery-icon-sun toggle-mode"
         id="toggle_mode_dark"
-        onclick="toggle_mode('light')"
       ></i>
     </div>
     <div>
@@ -735,6 +728,8 @@
       <img
         id="piwigo-logo"
         src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+        data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+        data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
       >
     {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
       <img id="custom-logo" src="{$ROOT_URL}logo.php">
@@ -853,7 +848,7 @@
         <span
           n:foreach="$language_options as $code => $lang"
           id="lang={$code}"
-          onclick="setCookie('lang',{$code},30)"
+          data-lang-code="{$code}"
         >{$lang}</span>
       </span>
       <div id="selected-language-container">

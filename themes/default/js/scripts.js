@@ -26,5 +26,14 @@ function pwgAddEventListener(elem, evt, fn)
 	if (window.addEventListener)
 		elem.addEventListener(evt, fn, false);
 	else
-		elem.attachEvent('on'+evt, fn);		
+		elem.attachEvent('on'+evt, fn);
+}
+
+function pwg_tryFocus(id)
+{
+	var el = document.getElementById(id);
+	if (el)
+	{
+		el.focus();
+	}
 }

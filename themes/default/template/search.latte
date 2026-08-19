@@ -708,7 +708,7 @@ jQuery(document).ready(function() {
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
     <ul class="categoryActions">
-      {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
+      {do combineScript(id: 'core.scripts', load: 'footer', path: 'themes/default/js/scripts.js')}
       <li><a
           href="{$U_HELP|noescape}"
           onclick="popuphelp(this.href); return false;"
@@ -736,7 +736,7 @@ jQuery(document).ready(function() {
     <fieldset>
       <legend>{='Search for words'|translate}</legend>
       <p>
-        <input type="text" name="search_allwords">
+        <input type="text" name="search_allwords" id="search_allwords">
         <br>
         <label><input
             type="radio"
@@ -946,9 +946,5 @@ jQuery(document).ready(function() {
     </p>
   </form>
 
-  <script
-    type="text/javascript"
-  ><!--
-document.search.search_allwords.focus();
-//--></script>
+  {do footerScript("pwg_tryFocus('search_allwords');")}
 </div> <!-- content -->

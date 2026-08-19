@@ -2063,7 +2063,8 @@ Advanced filter
   }
 }
 
-.selection-mode-group-manager {
+/* Beats theme.css's .selection-mode-group-manager{right:15px} (equal specificity, cascade-order risk). */
+.selection-mode-group-manager.selection-mode-group-manager {
   right: 30px;
 }
 

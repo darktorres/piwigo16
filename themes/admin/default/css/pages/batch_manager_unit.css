@@ -22,7 +22,8 @@
   margin-right: 21px;
 }
 
-.pagination-per-page span {
+/* Beats theme.css's .pagination-per-page span{color:#BBB} (equal specificity, cascade-order risk). */
+.pagination-bar .pagination-per-page span {
   font-weight: bold;
   color: unset;
 }

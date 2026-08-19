@@ -832,39 +832,12 @@
   {/if}
 </div>
 {spaceless}
-  {capture $tmpFooterScript}
-document.onkeydown = function(e){
-  e=e||window.event;
-  if (e.altKey) return true;
-  var target=e.target||e.srcElement;
-  if (target && target.type) return true;{* an input editable element *}
-  var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;
-  switch(keyCode){
-{if isset($next)}
-  case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="{$next['U_IMG']|noescape}"; break;
-{/if}
-{if isset($previous)}
-  case 63234: case 37: if (e.ctrlKey || docElem.scrollLeft==0)url="{$previous['U_IMG']|noescape}"; break;
-{/if}
-{if isset($first)}
-  {* Home *}case 36: if (e.ctrlKey)url="{$first['U_IMG']|noescape}"; break;
-{/if}
-{if isset($last)}
-  {* End *}case 35: if (e.ctrlKey)url="{$last['U_IMG']|noescape}"; break;
-{/if}
-{if isset($U_UP) and !isset($slideshow)}
-  {* Up *}case 38: if (e.ctrlKey)url="{$U_UP|noescape}"; break;
-{/if}
-{if isset($slideshow['U_START_PLAY'])}
-  {* Pause *}case 32: url="{$slideshow['U_START_PLAY']|noescape}"; break;
-{/if}
-{if isset($slideshow['U_STOP_PLAY'])}
-  {* Play *}case 32: url="{$slideshow['U_STOP_PLAY']|noescape}"; break;
-{/if}
-  }
-  if (url) { window.location=url.replace("&amp;","&"); return false;}
-  return true;
-}
-{/capture}
-  {do footerScript($tmpFooterScript)}
+  {do combineScript(id: 'picture_nav_buttons', load: 'footer', require: 'page-data', path: 'themes/default/js/picture_nav_buttons.js')}
+  {if isset($next)}{do exposeData('nav_next_url', $next['U_IMG'])}{/if}
+  {if isset($previous)}{do exposeData('nav_previous_url', $previous['U_IMG'])}{/if}
+  {if isset($first)}{do exposeData('nav_first_url', $first['U_IMG'])}{/if}
+  {if isset($last)}{do exposeData('nav_last_url', $last['U_IMG'])}{/if}
+  {if isset($U_UP) and !isset($slideshow)}{do exposeData('nav_up_url', $U_UP)}{/if}
+  {if isset($slideshow['U_START_PLAY'])}{do exposeData('nav_slideshow_start_url', $slideshow['U_START_PLAY'])}{/if}
+  {if isset($slideshow['U_STOP_PLAY'])}{do exposeData('nav_slideshow_stop_url', $slideshow['U_STOP_PLAY'])}{/if}
 {/spaceless}

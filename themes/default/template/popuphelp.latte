@@ -714,11 +714,5 @@
     <a href="#" onclick="window.close();">{='Close this window'|translate}</a>
   </p>
 
-  {capture $tmpFooterScript}
-if (window.opener || window.name) {
-  jQuery("#closeLink").show();
-  jQuery("#homeLink").hide();
-}
-{/capture}
-  {do footerScript($tmpFooterScript, 'jquery')}
+  {do combineScript(id: 'popuphelp', load: 'footer', require: 'jquery', path: 'themes/default/js/popuphelp.js')}
 </div> <!-- content -->

@@ -169,8 +169,6 @@
   
 
 
-
-
 <div class="mcs-container">
   <div class="filter-manager-popin">
     <div class="filter-manager-popin-container">
@@ -959,53 +957,12 @@
 
 </div>
 
-<script type="application/json" id="page-data">{"data":{"section":"search","search_id":"psk-20260801-{{SEARCH_SUFFIX}}"},"strings":{"Quick search":"Quick search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind"}}</script>
+<script type="application/json" id="page-data">{"data":{"section":"search","search_id":"psk-20260801-{{SEARCH_SUFFIX}}","global_params_json":"{\"mode\":\"AND\",\"fields\":{\"cat\":{\"words\":[],\"sub_inc\":true},\"allwords\":{\"mode\":\"AND\",\"words\":[],\"fields\":[\"file\",\"name\",\"comment\",\"tags\",\"author\",\"cat-title\",\"cat-desc\"]},\"date_created\":{\"preset\":\"\"}}}","user_rank":"none","show_filter_ratings":true},"strings":{"Quick search":"Quick search","Search for words":"Search for words","Tag":"Tag","Album":"Album","Author":"Author","Added by":"Added by","File type":"File type","Rating":"Rating","no rate":"no rate","between %d and %d":"between %d and %d","Filesize":"Filesize","Width":"Width","Height":"Height","Ratio":"Ratio","Portrait":"Portrait","square":"Square","Landscape":"Landscape","Panorama":"Panorama","Expert mode":"Expert mode","Fill in the filters to start a search":"Fill in the filters to start a search","Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button.":"Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button.","Search in albums":"Search in albums","between %s and %s MB":"between %s and %s MB","between %d and %d pixels":"between %d and %d pixels","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-global_params = {"mode":"AND","fields":{"cat":{"words":[],"sub_inc":true},"allwords":{"mode":"AND","words":[],"fields":["file","name","comment","tags","author","cat-title","cat-desc"]},"date_created":{"preset":""}}};
-
-
-search_id = 'psk-20260801-{{SEARCH_SUFFIX}}';
-
-user_rank = "none";
-
-str_word_widget_label = "Search for words";
-str_tags_widget_label = "Tag";
-str_album_widget_label = "Album";
-str_author_widget_label = "Author";
-str_added_by_widget_label = "Added by";
-str_filetypes_widget_label = "File type";
-
-str_rating_widget_label = "Rating";
-str_no_rating = "no rate";
-str_between_rating= "between %d and %d";
-str_filesize_widget_label = "Filesize";
-str_width_widget_label = "Width";
-str_height_widget_label = "Height";
-str_ratio_widget_label = "Ratio";
-str_ratios_label = [];
-str_ratios_label['Portrait'] ="Portrait";
-str_ratios_label['square'] = "Square";
-str_ratios_label['Landscape'] = "Landscape";
-str_ratios_label['Panorama'] = "Panorama";
-str_expert_widget_label = "Expert mode";
-
-str_empty_search_top_alt = "Fill in the filters to start a search";
-str_empty_search_bot_alt = "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button.";
-const str_search_in_ab = "Search in albums";
-
-const prefix_icon = 'gallery-icon-';
-
-  var sliders = {
-
-
-
-  };
-
-  var show_filter_ratings = 1;
 const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
 const str_album_selected = "Album already selected"
 const str_already_in_related_cats = "This albums is already in related categories list";

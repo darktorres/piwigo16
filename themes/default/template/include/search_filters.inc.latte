@@ -701,97 +701,46 @@
 {do combineCss(path: "themes/default/css/" . $themeconf['colorscheme'] . "-search.css", order: -100)}
 {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 
-{capture $tmpFooterScript}
-{if isset($GP)}
-  global_params = {$GP|noescape};
-{/if}
-
-{if isset($fullname_of)}
-fullname_of_cat = {$fullname_of|noescape};
-{/if}
-
-{if isset($SEARCH_ID)}
-search_id = '{$SEARCH_ID|noescape}';
-{/if}
-
+{do combineScript(id: 'search_filters', load: 'footer', require: 'page-data', path: 'themes/default/js/search_filters.js')}
+{if isset($GP)}{do exposeData('global_params_json', $GP)}{/if}
+{if isset($fullname_of)}{do exposeData('fullname_of_cat_json', $fullname_of)}{/if}
+{if isset($SEARCH_ID)}{do exposeData('search_id', $SEARCH_ID)}{/if}
 {if is_admin('')}
-user_rank = "admin";
+  {do exposeData('user_rank', 'admin')}
 {elseif is_classic_user('')}
-user_rank = "user";
+  {do exposeData('user_rank', 'user')}
 {else}
-user_rank = "none";
+  {do exposeData('user_rank', 'none')}
 {/if}
 
-str_word_widget_label = {=json_encode(translate('Search for words'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_tags_widget_label = {=json_encode(translate('Tag'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_album_widget_label = {=json_encode(translate('Album'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_author_widget_label = {=json_encode(translate('Author'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_added_by_widget_label = {=json_encode(translate('Added by'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_filetypes_widget_label = {=json_encode(translate('File type'), \JSON_UNESCAPED_UNICODE)|noescape};
+{do exposeString('Search for words')}
+{do exposeString('Tag')}
+{do exposeString('Album')}
+{do exposeString('Author')}
+{do exposeString('Added by')}
+{do exposeString('File type')}
+{do exposeString('Rating')}
+{do exposeString('no rate')}
+{do exposeString('between %d and %d')}
+{do exposeString('Filesize')}
+{do exposeString('Width')}
+{do exposeString('Height')}
+{do exposeString('Ratio')}
+{do exposeString('Portrait')}
+{do exposeString('square')}
+{do exposeString('Landscape')}
+{do exposeString('Panorama')}
+{do exposeString('Expert mode')}
+{do exposeString('Fill in the filters to start a search')}
+{do exposeString('Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.')}
+{do exposeString('Search in albums')}
+{do exposeString('between %s and %s MB')}
+{do exposeString('between %d and %d pixels')}
 
-str_rating_widget_label = {=json_encode(translate('Rating'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_no_rating = {=json_encode(translate('no rate'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_between_rating= {=json_encode(translate('between %d and %d'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_filesize_widget_label = {=json_encode(translate('Filesize'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_width_widget_label = {=json_encode(translate('Width'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_height_widget_label = {=json_encode(translate('Height'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_ratio_widget_label = {=json_encode(translate('Ratio'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_ratios_label = [];
-str_ratios_label['Portrait'] ={=json_encode(translate('Portrait'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_ratios_label['square'] = {=json_encode(translate('square'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_ratios_label['Landscape'] = {=json_encode(translate('Landscape'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_ratios_label['Panorama'] = {=json_encode(translate('Panorama'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_expert_widget_label = {=json_encode(translate('Expert mode'), \JSON_UNESCAPED_UNICODE)|noescape};
-
-str_empty_search_top_alt = {=json_encode(translate('Fill in the filters to start a search'), \JSON_UNESCAPED_UNICODE)|noescape};
-str_empty_search_bot_alt = {=json_encode(translate('Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'), \JSON_UNESCAPED_UNICODE)|noescape};
-const str_search_in_ab = {=json_encode(translate('Search in albums'), \JSON_UNESCAPED_UNICODE)|noescape};
-
-const prefix_icon = 'gallery-icon-';
-
-{*<!-- sliders config -->*}
-  var sliders = {
-
-    {if isset($FILESIZE)}
-    filesizes: {  
-      values: [{$FILESIZE['list']}],
-      selected: {
-        min: {$FILESIZE['selected']['min']},
-        max: {$FILESIZE['selected']['max']},
-      },
-      text: {=json_encode(translate('between %s and %s MB'), \JSON_UNESCAPED_UNICODE)|noescape},
-    },
-    {/if}
-
-    {if isset($HEIGHT)}
-    heights: {
-      values: [{$HEIGHT['list']}],
-      selected: {
-        min: {$HEIGHT['selected']['min']},
-        max: {$HEIGHT['selected']['max']},
-      },
-      text: {=json_encode(translate('between %d and %d pixels'), \JSON_UNESCAPED_UNICODE)|noescape},
-    },
-    {/if}
-
-    {if isset($WIDTH)}
-    widths: {
-      values: [{$WIDTH['list']}],
-      selected: {
-        min: {$WIDTH['selected']['min']},
-        max: {$WIDTH['selected']['max']},
-      },
-      text: {=json_encode(translate('between %d and %d pixels'), \JSON_UNESCAPED_UNICODE)|noescape},
-    },
-    {/if}
-  };
-
-  {if isset($SHOW_FILTER_RATINGS)}
-  var show_filter_ratings = {if $SHOW_FILTER_RATINGS}{$SHOW_FILTER_RATINGS}{else}false{/if};
-  {/if}
-
-{/capture}
-{do footerScript($tmpFooterScript)}
+{if isset($FILESIZE)}{do exposeData('filesize', $FILESIZE)}{/if}
+{if isset($HEIGHT)}{do exposeData('height', $HEIGHT)}{/if}
+{if isset($WIDTH)}{do exposeData('width', $WIDTH)}{/if}
+{if isset($SHOW_FILTER_RATINGS)}{do exposeData('show_filter_ratings', $SHOW_FILTER_RATINGS)}{/if}
 
 {do combineScript(id: 'mcs', load: 'async', require: 'jquery', path: 'themes/default/js/mcs.js')}
 <div class="mcs-container">

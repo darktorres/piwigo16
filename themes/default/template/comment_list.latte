@@ -700,8 +700,7 @@
 }
 {/capture}
   {do htmlStyle($tmpHtmlStyle)}
-  {capture $tmpFooterScript}var error_icon = "{$ROOT_URL}{$themeconf['icon_dir']}/errors_small.png";{/capture}
-  {do footerScript($tmpFooterScript)}
+  {do exposeData('error_icon', $ROOT_URL . $themeconf['icon_dir'] . '/errors_small.png')}
   <div class="loader"><img
       src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
     ></div>
@@ -719,7 +718,7 @@
       {/if}
       {if !$derivative->isCached()}
         {do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
-        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager', load: 'footer')}
+        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager,page-data', load: 'footer')}
       {/if}
       <div class="illustration">
         <a href="{$comment['U_PICTURE']|noescape}">
@@ -742,9 +741,10 @@
         style="float:right;font-size:90%"
       >
         {if isset($comment['U_DELETE'])}
+          {do combineScript(id: 'core.scripts', load: 'footer', require: 'page-data', path: 'themes/default/js/scripts.js')}
           <a
             href="{$comment['U_DELETE']|noescape}"
-            onclick="return confirm({='Are you sure?'|translate});"
+            data-confirm
           >
             {='Delete'|translate}
           </a>{if isset($comment['U_VALIDATE']) or isset($comment['U_EDIT']) or isset($comment['U_CANCEL'])} | {/if}

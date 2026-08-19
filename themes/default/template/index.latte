@@ -690,6 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'core.switchbox', load: 'async', require: 'jquery', path: 'themes/default/js/switchbox.js')}
+{do combineScript(id: 'index', load: 'footer', path: 'themes/default/js/index.js')}
 {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 
 {$MENUBAR|noescape}
@@ -742,8 +743,6 @@
               {$tag['name']}
             </a>
           </div>
-          {capture $tmpFooterScript1}(window.SwitchBox=window.SwitchBox||[]).push("#cmdRelatedTags", "#relatedTagsBox");{/capture}
-          {do footerScript($tmpFooterScript1)}
         {/spaceless}</li>
 
       <li n:if="!empty($image_orders)">{spaceless}<a
@@ -769,8 +768,6 @@
               {/if}
             {/foreach}
           </div>
-          {capture $tmpFooterScript2}(window.SwitchBox=window.SwitchBox||[]).push("#sortOrderLink", "#sortOrderBox");{/capture}
-          {do footerScript($tmpFooterScript2)}
         {/spaceless}</li>
       <li n:if="!empty($image_derivatives)">{spaceless}<a
             id="derivativeSwitchLink"
@@ -797,8 +794,6 @@
               {/if}
             {/foreach}
           </div>
-          {capture $tmpFooterScript3}(window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");{/capture}
-          {do footerScript($tmpFooterScript3)}
         {/spaceless}</li>
 
       <li n:if="isset($favorite)" id="cmdFavorite"><a
@@ -910,8 +905,6 @@
           >{$view['CONTENT']}</a>
         {/foreach}
       </div>
-      {capture $tmpFooterScript4}(window.SwitchBox=window.SwitchBox||[]).push("#calendarViewSwitchLink", "#calendarViewSwitchBox");{/capture}
-      {do footerScript($tmpFooterScript4)}
     </div>
 
     <h2

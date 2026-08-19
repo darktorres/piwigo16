@@ -282,7 +282,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 9
+      "count": 6
     },
     "no-with": {
       "count": 1
@@ -304,9 +304,6 @@
   "themes/default/js/thumbnails.loader.js": {
     "eqeqeq": {
       "count": 2
-    },
-    "no-undef": {
-      "count": 3
     }
   },
   "themes/standard_pages/js/profile.js": {

@@ -65,6 +65,25 @@ export default tseslint.config(
     },
   },
   {
+    // themes/default/js/scripts.js -- this codebase's pre-existing
+    // shared-utility file (docs/PLAN.md P1), always loaded via
+    // ScriptLoader's own `core.scripts` well-known id. P38 batches
+    // increasingly wire real addEventListener calls into its exported
+    // functions (previously only reachable from inline onclick=
+    // attributes, which ESLint never saw) -- excludes scripts.js
+    // itself, which legitimately declares these as real functions.
+    files: ["**/*.{js,mjs,cjs}"],
+    ignores: ["themes/default/js/scripts.js"],
+    languageOptions: {
+      globals: {
+        phpWGOpenWindow: "readonly",
+        popuphelp: "readonly",
+        pwgAddEventListener: "readonly",
+        pwg_tryFocus: "readonly",
+      },
+    },
+  },
+  {
     files: ["**/*.ts"],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {

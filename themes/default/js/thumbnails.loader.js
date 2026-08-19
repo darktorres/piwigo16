@@ -1,3 +1,4 @@
+var max_requests = pwg_getPageData('max_requests');
 if ( typeof( max_requests ) == "undefined" )
   max_requests = 3;
 
@@ -22,6 +23,7 @@ function add_thumbnail_to_queue(img, loop) {
     error: function() {
       if (loop < 3)
         add_thumbnail_to_queue(img, ++loop); // Retry 3 times
+      var error_icon = pwg_getPageData('error_icon');
       if ( typeof( error_icon ) != "undefined" )
         img.attr('src', error_icon);
       jQuery('.loader').hide();

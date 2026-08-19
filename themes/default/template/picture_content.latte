@@ -691,9 +691,8 @@
 {* END varType *}
 {if !$current['selected_derivative']->isCached()}
   {do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
-  {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager', load: 'footer')}
-  {capture $tmpFooterScript}var error_icon = "{$ROOT_URL}{$themeconf['icon_dir']}/errors_small.png"{/capture}
-  {do footerScript($tmpFooterScript)}
+  {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager,page-data', load: 'footer')}
+  {do exposeData('error_icon', $ROOT_URL . $themeconf['icon_dir'] . '/errors_small.png')}
 {/if}
 
 {if isset($current['path_ext']) and $current['path_ext'] == 'pdf' and $current['filesize'] < $PDF_VIEWER_FILESIZE_THRESHOLD}

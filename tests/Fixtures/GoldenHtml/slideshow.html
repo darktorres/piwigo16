@@ -151,27 +151,10 @@
 
 </div>
 
-<script type="application/json" id="page-data">{"data":{"section":"categories","category_id":"1","image_id":"1"},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind"}}</script>
+<script type="application/json" id="page-data">{"data":{"section":"categories","category_id":"1","image_id":"1","nav_next_url":"picture.php?\/2\/category\/1\u0026amp;slideshow=","nav_last_url":"picture.php?\/3\/category\/1\u0026amp;slideshow=","nav_slideshow_stop_url":"picture.php?\/1\/category\/1\u0026amp;slideshow=+play-false"},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
-<script type="text/javascript">//<![CDATA[
-
-document.onkeydown = function(e){
-  e=e||window.event;
-  if (e.altKey) return true;
-  var target=e.target||e.srcElement;
-  if (target && target.type) return true;
-  var keyCode=e.keyCode||e.which, docElem=document.documentElement, url;
-  switch(keyCode){
-case 63235: case 39: if (e.ctrlKey || docElem.scrollLeft==docElem.scrollWidth-docElem.clientWidth)url="picture.php?/2/category/1&amp;slideshow="; break;
-case 35: if (e.ctrlKey)url="picture.php?/3/category/1&amp;slideshow="; break;
-case 32: url="picture.php?/1/category/1&amp;slideshow=+play-false"; break;
-  }
-  if (url) { window.location=url.replace("&amp;","&"); return false;}
-  return true;
-}
-//]]></script>
 <!-- END get_combined -->
 
 <script

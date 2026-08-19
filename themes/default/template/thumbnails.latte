@@ -712,15 +712,13 @@
 {/if}
 {/capture}
     {do htmlStyle($tmpHtmlStyle)}
-    {capture $tmpFooterScript}
-  var error_icon = "{$ROOT_URL}{$themeconf['icon_dir']}/errors_small.png", max_requests = {$maxRequests};
-{/capture}
-    {do footerScript($tmpFooterScript)}
+    {do exposeData('error_icon', $ROOT_URL . $themeconf['icon_dir'] . '/errors_small.png')}
+    {do exposeData('max_requests', $maxRequests)}
     {foreach $thumbnails as $thumbnail}
       {var $derivative = $pwg->derivative($derivative_params, $thumbnail['src_image'])}
       {if !$derivative->isCached()}
         {do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
-        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager', load: 'footer')}
+        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager,page-data', load: 'footer')}
       {/if}
       <li>
         <span class="wrap1">

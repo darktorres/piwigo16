@@ -37,3 +37,11 @@ function pwg_tryFocus(id)
 		el.focus();
 	}
 }
+
+document.addEventListener('click', function(e) {
+	var link = e.target.closest('[data-confirm]');
+	if (link && !confirm(pwg_getPageString('Are you sure?')))
+	{
+		e.preventDefault();
+	}
+});

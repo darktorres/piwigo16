@@ -16,6 +16,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -101,7 +102,7 @@ test('render() shows the English documentation message for an en_ user and defau
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'help.latte', 'content={$HELP_CONTENT}|title={$HELP_SECTION_TITLE}');
+        file_put_contents($tplDir . 'help.latte', 'content={$helpContent}|title={$helpSectionTitle}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -121,10 +122,9 @@ test('render() shows the English documentation message for an en_ user and defau
         ));
 
         new HelpPageRenderer()
-            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get());
+            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -132,11 +132,7 @@ test('render() shows the English documentation message for an en_ user and defau
             throw new LogicException('unreachable -- asserted above');
         }
 
-        expect($template->getTemplateVars('HELP_CONTENT'))
-            ->toBe('')
-            ->and($template->getTemplateVars('HELP_SECTION_TITLE'))
-            ->toBe('Add Photos')
-            ->and((string) $adminContent)
+        expect((string) $adminContent)
             ->toBe('content=|title=Add Photos')
             ->and($pageState->messages)
             ->toHaveCount(1)

@@ -17,6 +17,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -104,7 +105,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'help.latte', 'title={$HELP_SECTION_TITLE}');
+        file_put_contents($tplDir . 'help.latte', 'title={$helpSectionTitle}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -121,12 +122,12 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             new PageState(),
             CurrentUserTestFactory::get(),
             CurrentTemplateTestFactory::get(),
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -134,9 +135,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             throw new LogicException('unreachable -- asserted above');
         }
 
-        expect($template->getTemplateVars('HELP_SECTION_TITLE'))
-            ->toBe('Add Photos')
-            ->and((string) $adminContent)
+        expect((string) $adminContent)
             ->toBe('title=Add Photos');
     } finally {
         CurrentTemplateTestFactory::get()->reset();

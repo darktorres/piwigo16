@@ -21,7 +21,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class CatListCategoriesPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array<string, mixed>> $categories
+     * @param list<CategoryListRow> $categories
      */
     public function __construct(
         public ?string $parentEditUrl,
@@ -35,7 +35,7 @@ final readonly class CatListCategoriesPageContext implements TemplatePageContext
     public function toArray(): array
     {
         $result = [
-            'categories' => $this->categories,
+            'categories' => array_map(static fn (CategoryListRow $category): array => $category->toArray(), $this->categories),
         ];
         if ($this->parentEditUrl !== null) {
             $result['PARENT_EDIT'] = $this->parentEditUrl;

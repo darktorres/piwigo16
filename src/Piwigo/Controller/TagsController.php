@@ -13,7 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\TagsPageRendered;
 use Piwigo\Controller\Event\TagsPageRendering;
-use Piwigo\Controller\Projection\TagsDisplayModePageContext;
+use Piwigo\Controller\Projection\TagsView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -34,6 +34,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -63,6 +64,7 @@ final readonly class TagsController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -194,13 +196,13 @@ final readonly class TagsController implements ControllerInterface
             }
         }
 
-        $template->assignContext(new TagsDisplayModePageContext(
+        $tagsView = new TagsView(
             cloudUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'cloud' ? '' : '?display_mode=cloud'),
             lettersUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'letters' ? '' : '?display_mode=letters'),
             displayMode: $display_mode,
             letters: $tpl_letters,
             tags: $tpl_tags,
-        ));
+        );
 
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -214,7 +216,7 @@ final readonly class TagsController implements ControllerInterface
         $this->eventDispatcher->dispatch(new TagsPageRendered());
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('tags.latte', false);
+        $template->appendOutput($this->renderer->render($tagsView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

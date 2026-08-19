@@ -16,7 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\IdentificationPageRendered;
 use Piwigo\Controller\Event\IdentificationPageRendering;
-use Piwigo\Controller\Projection\IdentificationPageContext;
+use Piwigo\Controller\Projection\IdentificationView;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ConnectedWith;
@@ -40,6 +40,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -82,6 +83,7 @@ final readonly class IdentificationController implements ControllerInterface
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
         private ConnectedWithSession $connectedWithSession,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -224,7 +226,7 @@ final readonly class IdentificationController implements ControllerInterface
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assignContext(new IdentificationPageContext(
+        $identificationView = new IdentificationView(
             redirect: $redirect_to,
             loginAction: $urlService->getRootUrl() . 'identification.php',
             authorizeRemembering: $this->currentConfig->authorizeRemembering,
@@ -234,7 +236,7 @@ final readonly class IdentificationController implements ControllerInterface
             currentLanguage: $this->currentUser->get()
                 ->language->value,
             helpLink: $help_link,
-        ));
+        );
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
@@ -243,7 +245,7 @@ final readonly class IdentificationController implements ControllerInterface
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($errors);
-        $template->parse('identification.latte', false);
+        $template->appendOutput($this->renderer->render($identificationView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

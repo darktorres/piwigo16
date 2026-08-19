@@ -22,7 +22,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\PasswordPageRendered;
 use Piwigo\Controller\Event\PasswordPageRendering;
-use Piwigo\Controller\Projection\PasswordPageContext;
+use Piwigo\Controller\Projection\PasswordView;
 use Piwigo\Controller\Request\PasswordRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -46,6 +46,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
@@ -90,6 +91,7 @@ final class PasswordController implements ControllerInterface
         private readonly Paths $paths,
         private readonly PermissionService $permissionService,
         private readonly EntityManagerInterface $entityManager,
+        private readonly Renderer $renderer,
     ) {}
 
     /**
@@ -283,7 +285,7 @@ final class PasswordController implements ControllerInterface
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assignContext(new PasswordPageContext(
+        $passwordView = new PasswordView(
             key: $key_value,
             usernameOrEmail: $username_or_email_value,
             isFirstLogin: $is_first_login_value,
@@ -298,7 +300,7 @@ final class PasswordController implements ControllerInterface
             currentLanguage: $this->currentUser->get()
                 ->language->value,
             helpLink: $help_link,
-        ));
+        );
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
@@ -307,7 +309,7 @@ final class PasswordController implements ControllerInterface
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($formErrors);
-        $template->parse('password.latte', false);
+        $template->appendOutput($this->renderer->render($passwordView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

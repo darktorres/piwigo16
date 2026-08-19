@@ -11,6 +11,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\NbmView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -31,6 +32,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -62,6 +64,7 @@ final readonly class NbmController implements ControllerInterface
         private Paths $paths,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -115,7 +118,7 @@ final readonly class NbmController implements ControllerInterface
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('nbm.latte');
+        $template->appendOutput($this->renderer->render(new NbmView()));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

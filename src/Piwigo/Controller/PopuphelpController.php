@@ -9,7 +9,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Event\GetPopupHelpContent;
-use Piwigo\Controller\Projection\PopuphelpPageContext;
+use Piwigo\Controller\Projection\PopuphelpView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -19,6 +19,7 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,13 +30,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * directly on failure, the same pattern every controller here uses.
  *
  * Nothing in this chain echoes directly: PageHeaderRenderer only calls
- * assign()/parse($handle, false) internally, parse('popuphelp', false)
- * accumulates into Template's own $output buffer, and
- * PageTail::renderToString() drains that whole buffer as one string at
- * the end. Because nothing has been echoed to the Response body before
- * that point, the `?page=` validation below can throw
- * ResponseReadyException on an invalid value with a clean 400 response --
- * there is no partial HTML to preserve.
+ * assign()/parse($handle, false) internally, and
+ * `$template->appendOutput($this->renderer->render(...))` accumulates
+ * into Template's own $output buffer, which PageTail::renderToString()
+ * drains as one string at the end. Because nothing has been echoed to
+ * the Response body before that point, the `?page=` validation below
+ * can throw ResponseReadyException on an invalid value with a clean 400
+ * response -- there is no partial HTML to preserve.
  */
 final readonly class PopuphelpController implements ControllerInterface
 {
@@ -46,6 +47,7 @@ final readonly class PopuphelpController implements ControllerInterface
         private PageState $pageState,
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -93,9 +95,7 @@ final readonly class PopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatch(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
-
-        $template->parse('popuphelp.latte', false);
+        $template->appendOutput($this->renderer->render(new PopuphelpView(helpContent: $help_content)));
 
         $body = PageTail::renderToString();
 

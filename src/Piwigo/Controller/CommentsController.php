@@ -19,7 +19,8 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\CommentsPageRendered;
-use Piwigo\Controller\Projection\CommentsPageContext;
+use Piwigo\Controller\Projection\CommentListView;
+use Piwigo\Controller\Projection\CommentsView;
 use Piwigo\Controller\Request\CommentsRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -55,6 +56,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Sort\CommentSortField;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
@@ -92,6 +94,7 @@ final readonly class CommentsController implements ControllerInterface
         private InputValidator $inputValidator,
         private Translator $translator,
         private CurrentLogger $currentLogger,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -624,24 +627,6 @@ final readonly class CommentsController implements ControllerInterface
 
         $derivative_params = $this->imageStdParams->getByType(ImageStdParams::THUMB);
 
-        $template->assignContext(new CommentsPageContext(
-            fAction: $this->urlService->getRootUrl() . 'comments.php',
-            fKeyword: $keyword_param !== null ? htmlspecialchars($keyword_param) : '',
-            fAuthor: $author_param !== null ? htmlspecialchars($author_param) : '',
-            sinceOptions: $since_options_tpl,
-            sinceOptionsSelected: $since,
-            sortByOptions: $sort_by,
-            sortByOptionsSelected: $sort_by_value,
-            sortOrderOptions: $sort_order,
-            sortOrderOptionsSelected: $sort_order_value,
-            itemNumberOptions: $item_number_options,
-            itemNumberOptionsSelected: $selected_items_number,
-            navbar: $navbar,
-            commentDerivativeParams: $derivative_params,
-            comments: $tpl_comments,
-            categoriesOptions: $categoriesOptions,
-        ));
-
         // include menubar
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -655,10 +640,29 @@ final readonly class CommentsController implements ControllerInterface
         $this->eventDispatcher->dispatch(new CommentsPageRendered());
         $this->htmlService
             ->flushPageMessages();
-        if (count($comments) > 0) {
-            $template->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
-        }
-        $template->parse('comments.latte', false);
+        $commentList = count($comments) > 0
+            ? $this->renderer->render(new CommentListView(comments: $tpl_comments, commentDerivativeParams: $derivative_params))
+            : null;
+
+        $commentsView = new CommentsView(
+            fAction: $this->urlService->getRootUrl() . 'comments.php',
+            fKeyword: $keyword_param !== null ? htmlspecialchars($keyword_param) : '',
+            fAuthor: $author_param !== null ? htmlspecialchars($author_param) : '',
+            sinceOptions: $since_options_tpl,
+            sinceOptionsSelected: $since,
+            sortByOptions: $sort_by,
+            sortByOptionsSelected: $sort_by_value,
+            sortOrderOptions: $sort_order,
+            sortOrderOptionsSelected: $sort_order_value,
+            itemNumberOptions: $item_number_options,
+            itemNumberOptionsSelected: $selected_items_number,
+            navbar: $navbar,
+            commentDerivativeParams: $derivative_params,
+            categories: $categoriesOptions->options,
+            categoriesSelected: $categoriesOptions->selected,
+            commentList: $commentList,
+        );
+        $template->appendOutput($this->renderer->render($commentsView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

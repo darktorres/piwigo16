@@ -15,6 +15,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -26,14 +27,14 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Controller\Admin\AdminPopuphelpController -- 6 constructor
+ * Piwigo\Controller\Admin\AdminPopuphelpController -- 7 constructor
  * deps, no dedicated Integration/Browser spec of its own.
  *
  * Covers 2 branches:
  * - `?output=content_only` with a valid page: skips both
  *   PageHeaderRenderer::render() AND Bootstrap\PageTail::renderToString()
- *   entirely (returns $help_content directly, before $template->parse()
- *   is ever called) -- the cheapest real path through this controller.
+ *   entirely (returns $help_content directly, before the view is ever
+ *   rendered) -- the cheapest real path through this controller.
  * - An invalid `?page=` value with the default (non-content_only)
  *   output: needs PageHeaderRenderer::render() first (already
  *   independently covered, cheap), then throws before ever reaching
@@ -104,6 +105,7 @@ test('__invoke returns the raw help content directly for output=content_only, sk
             new PageState(),
             CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $response = $controller(new ServerRequest('GET', '/admin/popuphelp.php?page=&output=content_only'));
@@ -138,6 +140,7 @@ test('__invoke returns a 400 "Request rejected" response for an invalid page val
             new PageState(),
             CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $exception = null;

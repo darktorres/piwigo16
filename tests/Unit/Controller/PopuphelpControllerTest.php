@@ -15,6 +15,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -104,6 +105,7 @@ test('__invoke returns a 400 "Request rejected" response for a page value with d
             new PageState(),
             CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $request = new ServerRequest('GET', '/popuphelp.php?page=not-valid-123');

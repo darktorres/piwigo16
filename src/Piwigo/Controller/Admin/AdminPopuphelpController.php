@@ -10,7 +10,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPopuphelpPlaceholdersPageContext;
 use Piwigo\Controller\Event\GetPopupHelpContent;
-use Piwigo\Controller\Projection\PopuphelpPageContext;
+use Piwigo\Controller\Projection\PopuphelpView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -20,6 +20,7 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -34,11 +35,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * `IN_ADMIN` is read elsewhere (Piwigo\Page\PageHeaderRenderer), set by
  * the bootstrap file the same way admin.php itself sets it.
  *
- * $template->parse('popuphelp.latte', false) accumulates into Template's own
- * buffer; PageTail::renderToString() drains it as one string. The
- * `?page=` validation throws ResponseReadyException rather than dying
- * mid-render. The `output=content_only` branch returns $help_content
- * directly since by that point it is already fully computed.
+ * `$template->appendOutput($this->renderer->render(...))` accumulates
+ * into Template's own buffer; PageTail::renderToString() drains it as
+ * one string. The `?page=` validation throws ResponseReadyException
+ * rather than dying mid-render. The `output=content_only` branch
+ * returns $help_content directly since by that point it is already
+ * fully computed.
  */
 final readonly class AdminPopuphelpController implements ControllerInterface
 {
@@ -49,6 +51,7 @@ final readonly class AdminPopuphelpController implements ControllerInterface
         private PageState $pageState,
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -100,13 +103,11 @@ final readonly class AdminPopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatch(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
-
         if ($output === 'content_only') {
             return ResponseFactory::html($help_content);
         }
 
-        $template->parse('popuphelp.latte', false);
+        $template->appendOutput($this->renderer->render(new PopuphelpView(helpContent: $help_content)));
 
         $body = PageTail::renderToString();
 

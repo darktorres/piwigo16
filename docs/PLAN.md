@@ -1910,7 +1910,11 @@ analyse` 0 violations; `lint:vartype` 0 drift (128 templates'
 `#[Template]` file declares `{templateType}` back at that same class;
 `test:golden-html` 73/73 byte-identical; `test:visual` 65/65 (66 minus
 the one Batch 1 deleted); `composer test` (Unit/Arch) 5695 passed;
-`test:integration` 2119 passed.
+`test:integration` 2119 passed; `tests/Browser/GalleryControllerTest.php`
+20/20 (the real regression net for this conversion — exercises the
+`U_MODE_FLAT` clear, `SELECTED_TAGS_TEMPLATE` conditional render,
+canonical URL and `IndexRendered` event wrinkles through a real
+browser request, not just static output diffing).
 
 **P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
 lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's

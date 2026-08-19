@@ -18,7 +18,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\RegisterPageRendered;
 use Piwigo\Controller\Event\RegisterPageRendering;
-use Piwigo\Controller\Projection\RegisterPageContext;
+use Piwigo\Controller\Projection\RegisterView;
 use Piwigo\Controller\Request\RegisterSubmitRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -41,6 +41,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
@@ -82,6 +83,7 @@ final readonly class RegisterController implements ControllerInterface
         private Paths $paths,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -281,7 +283,7 @@ final readonly class RegisterController implements ControllerInterface
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assignContext(new RegisterPageContext(
+        $registerView = new RegisterView(
             homeUrl: $urlService->makeIndexUrl(),
             formKey: $registration_post_key,
             formAction: 'register.php',
@@ -290,9 +292,9 @@ final readonly class RegisterController implements ControllerInterface
             obligatoryUserMailAddress: $this->currentConfig->obligatoryUserMailAddress,
             languageOptions: $language_options,
             currentLanguage: $this->currentUser->get()
-                ->language,
+                ->language->value,
             helpLink: $help_link,
-        ));
+        );
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
@@ -301,7 +303,7 @@ final readonly class RegisterController implements ControllerInterface
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($errors);
-        $template->parse('register.latte');
+        $template->appendOutput($this->renderer->render($registerView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body, $status);

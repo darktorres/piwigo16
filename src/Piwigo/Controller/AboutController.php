@@ -12,7 +12,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\AboutPageRendering;
-use Piwigo\Controller\Projection\AboutPageContext;
+use Piwigo\Controller\Projection\AboutView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -30,6 +30,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -39,9 +40,9 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * Nothing in this render chain echoes -- PageHeaderRenderer/MenubarRenderer
  * only ever call $template->assignContext()/parse($file, true) internally,
- * $template->parse('about.latte', false) accumulates into Template's own
- * $output buffer, and PageTail::renderToString() drains that whole buffer
- * (header + about content + tail) as one string. See
+ * $template->appendOutput($this->renderer->render($aboutView)) accumulates
+ * into Template's own $output buffer, and PageTail::renderToString() drains
+ * that whole buffer (header + about content + tail) as one string. See
  * Template::fetchOutput()'s own docblock for the accumulator mechanics
  * this relies on.
  *
@@ -69,6 +70,7 @@ final readonly class AboutController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -99,10 +101,10 @@ final readonly class AboutController implements ControllerInterface
             'return' => true,
         ]);
 
-        $template->assignContext(new AboutPageContext(
+        $aboutView = new AboutView(
             aboutMessage: is_string($about_message_raw) ? $about_message_raw : '',
             themeAbout: is_string($theme_about) ? $theme_about : null,
-        ));
+        );
 
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -115,7 +117,7 @@ final readonly class AboutController implements ControllerInterface
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('about.latte', false);
+        $template->appendOutput($this->renderer->render($aboutView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

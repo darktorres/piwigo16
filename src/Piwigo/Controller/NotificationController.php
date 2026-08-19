@@ -11,7 +11,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Controller\Projection\NotificationPageContext;
+use Piwigo\Controller\Projection\NotificationView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -31,6 +31,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -62,6 +63,7 @@ final readonly class NotificationController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -99,10 +101,10 @@ final readonly class NotificationController implements ControllerInterface
             'nofollow' => 1,
         ]);
 
-        $template->assignContext(new NotificationPageContext(
+        $notificationView = new NotificationView(
             feedUrl: $feed_url,
             feedImageOnlyUrl: $feed_image_only_url,
-        ));
+        );
 
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -115,7 +117,7 @@ final readonly class NotificationController implements ControllerInterface
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('notification.latte', false);
+        $template->appendOutput($this->renderer->render($notificationView));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

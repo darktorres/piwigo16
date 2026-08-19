@@ -400,24 +400,22 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
             foreach ($rows as $nbm_user) {
                 // Calculate key
-                $nbm_user['check_key'] = $nbmSender->findAvailableCheckKey();
+                $checkKey = $nbmSender->findAvailableCheckKey();
 
                 // Save key
-                $check_key_list[] = $nbm_user['check_key'];
+                $check_key_list[] = $checkKey;
 
                 // Insert new nbm_users
                 $inserts[] = [
-                    'user_id' => $nbm_user['user_id'],
-                    'check_key' => $nbm_user['check_key'],
+                    'user_id' => $nbm_user->userId,
+                    'check_key' => $checkKey,
                     'enabled' => 0, // By default if false, set to true with specific functions
                 ];
 
-                $nbm_username = $nbm_user['username'];
-                $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
                 $this->pageState->addInfo($lang->t(
                     'User %s [%s] added.',
-                    $nbm_username,
-                    $nbm_user['mail_address']
+                    $nbm_user->username ?? '',
+                    $nbm_user->mailAddress
                 ));
             }
 

@@ -13,6 +13,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Notification\Projection\UserMailNotification;
+use Piwigo\Notification\Projection\UserWithoutNotificationRow;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserRelatedTableSyncInterface;
@@ -163,7 +164,7 @@ final class NotificationByMailRepository extends EntityRepository implements Use
      * `UserEntity`/`UserMailNotificationEntity`), same pattern as
      * {@see \Piwigo\Tag\TagRepository::findOrphanTags()}.
      *
-     * @return list<array<string, mixed>>
+     * @return list<UserWithoutNotificationRow>
      */
     public function findUsersWithoutNotificationRow(): array
     {
@@ -187,11 +188,15 @@ final class NotificationByMailRepository extends EntityRepository implements Use
             $userId = $row['user_id'] ?? null;
             $username = $row['username'] ?? null;
             $mailAddress = $row['mail_address'] ?? null;
-            $result[] = [
-                'user_id' => $userId instanceof UserId ? $userId->value : $userId,
-                'username' => $username instanceof Username ? $username->value : null,
-                'mail_address' => $mailAddress instanceof Email ? $mailAddress->value : null,
-            ];
+            if (! $userId instanceof UserId) {
+                continue;
+            }
+
+            $result[] = new UserWithoutNotificationRow(
+                userId: $userId->value,
+                username: $username instanceof Username ? $username->value : null,
+                mailAddress: $mailAddress instanceof Email ? $mailAddress->value : null,
+            );
         }
 
         return $result;

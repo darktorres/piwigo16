@@ -716,6 +716,7 @@
 
     {spaceless}
       {do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -10)}
+      {do combineCss(path: "themes/admin/default/css/utilities.css", order: -5)}
       {var $theme_id = ""}
       {foreach $themes as $theme}
         {var $theme_id = $theme['id']}

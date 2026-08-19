@@ -3,16 +3,13 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Admin\Projection\NotificationByMailSendPageContext;
+use Piwigo\Controller\Admin\Projection\NotificationByMailUserRow;
 
 test('toArray nests users/CUSTOMIZE_MAIL_CONTENT under the literal send key, and omits auth_key_duration when null', function (): void {
     $context = new NotificationByMailSendPageContext(
-        users: [[
-            'ID' => 'abc',
-            'CHECKED' => 'checked="checked"',
-            'USERNAME' => 'jane',
-            'EMAIL' => 'jane@example.test',
-            'LAST_SEND' => null,
-        ]],
+        users: [
+            new NotificationByMailUserRow(id: 'abc', checked: 'checked="checked"', username: 'jane', email: 'jane@example.test', lastSend: null),
+        ],
         customizeMailContent: 'Enjoy!',
         authKeyDuration: null,
     );

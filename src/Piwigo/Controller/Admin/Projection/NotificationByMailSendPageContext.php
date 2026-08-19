@@ -18,7 +18,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class NotificationByMailSendPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array{ID: string, CHECKED: string, USERNAME: string, EMAIL: string, LAST_SEND: ?string}> $users
+     * @param list<NotificationByMailUserRow> $users
      */
     public function __construct(
         public array $users,
@@ -34,7 +34,7 @@ final readonly class NotificationByMailSendPageContext implements TemplatePageCo
     {
         $result = [
             'send' => [
-                'users' => $this->users,
+                'users' => array_map(static fn (NotificationByMailUserRow $user): array => $user->toArray(), $this->users),
                 'CUSTOMIZE_MAIL_CONTENT' => $this->customizeMailContent,
             ],
         ];

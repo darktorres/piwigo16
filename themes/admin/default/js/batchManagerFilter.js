@@ -1,3 +1,51 @@
+var dimensions = pwg_getPageData('dimensions');
+var filesizeData = pwg_getPageData('filesize');
+
+var sliders = {
+  widths: {
+    values: dimensions.widths.split(',').map(Number),
+    selected: {
+      min: Number(dimensions.selected.min_width),
+      max: Number(dimensions.selected.max_width),
+    },
+    text: pwg_getPageString('between %d and %d pixels')
+  },
+
+  heights: {
+    values: dimensions.heights.split(',').map(Number),
+    selected: {
+      min: Number(dimensions.selected.min_height),
+      max: Number(dimensions.selected.max_height),
+    },
+    text: pwg_getPageString('between %d and %d pixels')
+  },
+
+  ratios: {
+    values: dimensions.ratios.split(',').map(Number),
+    selected: {
+      min: Number(dimensions.selected.min_ratio),
+      max: Number(dimensions.selected.max_ratio),
+    },
+    text: pwg_getPageString('between %.2f and %.2f')
+  },
+
+  filesizes: {
+    values: filesizeData.list.split(',').map(Number),
+    selected: {
+      min: Number(filesizeData.selected.min),
+      max: Number(filesizeData.selected.max),
+    },
+    text: pwg_getPageString('between %s and %s MB')
+  }
+};
+
+var filterCategorySelected = pwg_getPageData('filter_category_selected');
+var selected_filter_cat_ids = filterCategorySelected ? [String(filterCategorySelected)] : [];
+
+var str_select_album = pwg_getPageString('Select at least one album');
+var str_select_tag = pwg_getPageString('Select at least one tag');
+var errorFilters = '';
+
 /* ********** Filters*/
 function filter_enable(filter) {
 	/* show the filter*/

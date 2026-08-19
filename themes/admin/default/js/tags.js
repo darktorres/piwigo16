@@ -1071,12 +1071,51 @@ function updateSearchInfo () {
   }
 }
 
+var pwg_token = pwg_getPageData('csrf_token');
+var orphan_tag_names = JSON.parse(pwg_getPageData('orphan_tag_names_array'));
+var str_delete = pwg_getPageString('Delete tag "%s"?');
+var str_delete_tags = pwg_getPageString('Delete tags {%s}?');
+var str_yes_delete_confirmation = pwg_getPageString('Yes, delete');
+var str_no_delete_confirmation = pwg_getPageString('No, I have changed my mind');
+var str_yes_rename_confirmation = pwg_getPageString('Yes, rename');
+var str_tag_deleted = pwg_getPageString('Tag "%s" succesfully deleted');
+var str_tags_deleted = pwg_getPageString('Tags {%s} succesfully deleted');
+var str_already_exist = pwg_getPageString('Tag "%s" already exists');
+var str_tag_created = pwg_getPageString('Tag "%s" created');
+var str_tag_renamed = pwg_getPageString('Tag "%s1" renamed in "%s2"');
+var str_tag_rename = pwg_getPageString('Rename "%s"');
+var str_delete_orphan_tags = pwg_getPageString('Delete orphan tags ?');
+var str_orphan_tags = pwg_getPageString('You have %s1 orphan : %s2');
+var str_delete_them = pwg_getPageString('Delete them');
+var str_keep_them = pwg_getPageString('Keep them');
+var str_copy = pwg_getPageString(' (copy)');
+var str_other_copy = pwg_getPageString(' (copy %s)');
+var str_merged_into = pwg_getPageString('Tag(s) {%s1} succesfully merged into "%s2"');
+var str_and_others_tags = pwg_getPageString('and %s others');
+var str_others_tags_available = pwg_getPageString('%s other tags available...');
+var str_number_photos = pwg_getPageString('%d photos');
+var str_no_photos = pwg_getPageString('no photo');
+var str_select_all_tag = pwg_getPageString('Select all %d tags');
+var str_clear_selection = pwg_getPageString('Clear Selection');
+var str_selection_done = pwg_getPageString('The %d tags on this page are selected');
+var str_tag_selected = pwg_getPageString('<b>%d</b> tag selected');
+var str_tags_found = pwg_getPageString('<b>%d</b> tags found');
+var str_tag_found = pwg_getPageString('<b>%d</b> tag found');
+
+$(document).ready(function() {
+  $("h1").append('<span class="badge-number">' + pwg_getPageData('total') + '</span>');
+});
+
+if (!$.cookie("pwg_tags_per_page")) {
+  $.cookie("pwg_tags_per_page", "100");
+}
+
 $(function () {
   function setPagination() {
     let test = $.cookie("pwg_tags_per_page");
     $(".pagination-per-page .selected").removeClass("selected");
     $("#"+test).trigger("click");
   }
-  
+
   setPagination()
 })

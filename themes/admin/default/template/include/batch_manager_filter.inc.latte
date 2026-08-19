@@ -696,58 +696,16 @@
 {do combineCss(path: "themes/default/js/ui/theme/jquery.ui.slider.css")}
 {do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
 
-{capture $tmpFooterScript}
-<!-- sliders config -->
-var sliders = {
-  widths: {
-    values: [{$dimensions['widths']}],
-    selected: {
-      min: {$dimensions['selected']['min_width']},
-      max: {$dimensions['selected']['max_width']},
-    },
-    text: '{_ 'between %d and %d pixels'|escapeJavascript|noescape}'
-  },
+{do exposeData('dimensions', $dimensions)}
+{do exposeData('filesize', $filesize)}
+{do exposeData('filter_category_selected', $filter_category_selected)}
+{do exposeString('between %d and %d pixels')}
+{do exposeString('between %.2f and %.2f')}
+{do exposeString('between %s and %s MB')}
+{do exposeString('Select at least one album')}
+{do exposeString('Select at least one tag')}
 
-  heights: {
-    values: [{$dimensions['heights']}],
-    selected: {
-      min: {$dimensions['selected']['min_height']},
-      max: {$dimensions['selected']['max_height']},
-    },
-    text: '{_ 'between %d and %d pixels'|escapeJavascript|noescape}'
-  },
-
-  ratios: {
-    values: [{$dimensions['ratios']}],
-    selected: {
-      min: {$dimensions['selected']['min_ratio']},
-      max: {$dimensions['selected']['max_ratio']},
-    },
-    text: '{_ 'between %.2f and %.2f'|escapeJavascript|noescape}'
-  },
-
-  filesizes: {
-    values: [{$filesize['list']}],
-    selected: {
-      min: {$filesize['selected']['min']},
-      max: {$filesize['selected']['max']},
-    },
-    text: '{_ 'between %s and %s MB'|escapeJavascript|noescape}'
-  }
-};
-{if isset($filter_category_selected) && $filter_category_selected}
-const selected_filter_cat_ids = ["{$filter_category_selected|json_encode|htmlspecialchars|noescape}"];
-{else}
-const selected_filter_cat_ids = [];
-{/if}
-
-const str_select_album = "{_ 'Select at least one album'|escapeJavascript|noescape}";
-const str_select_tag = "{_ 'Select at least one tag'|escapeJavascript|noescape}";
-let errorFilters = '';
-{/capture}
-{do footerScript($tmpFooterScript)}
-
-{do combineScript(id: 'batchManagerFilter', load: 'footer', path: 'themes/admin/default/js/batchManagerFilter.js')}
+{do combineScript(id: 'batchManagerFilter', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/batchManagerFilter.js')}
 <fieldset>
   <legend><span
       class='icon-filter icon-green'

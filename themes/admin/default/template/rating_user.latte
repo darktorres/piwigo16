@@ -728,12 +728,12 @@ body .ui-tooltip {
 
 {/capture}
 {do htmlStyle($tmpHtmlStyle)}
-{capture $tmpFooterScript1}
-$(document).ready(function() {
-  $('h1').append("<span class='badge-number'>{$NB_ELEMENTS}</span>")
-});
-{/capture}
-{do footerScript($tmpFooterScript1)}
+{do exposeData('nb_elements', $NB_ELEMENTS)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeData('root_url', $ROOT_URL)}
+{do exposeString('Are you sure you want to delete the ratings of the user "%s"?')}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
 
 <form action="{$F_ACTION|noescape}" method="GET">
   <fieldset>
@@ -772,107 +772,6 @@ $(document).ready(function() {
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
 {do combineScript(id: 'jquery.geoip', load: 'async', path: 'themes/admin/default/js/jquery.geoip.js')}
-{capture $tmpFooterScript2}
-const pwg_token = "{$CSRF_TOKEN}";
-
-jQuery('#rateTable').dataTable({
-  dom : '<"dtBar"filp>rt<"dtBar"ilp>',
-  pageLength: 100,
-  lengthMenu: [ [25, 50, 100, 500, -1], [25, 50, 100, 500, "All"]],
-  sorting: [], //[[1,'desc']],
-  autoWidth: false,
-  sortClasses: false,
-  columnDefs: [
-    {
-      aTargets: ["dtc_user"],
-      sType: "string",
-      sClass: null
-    },
-    {
-      aTargets: ["dtc_date"],
-      asSorting: ["desc","asc"],
-      sType: "string",
-      sClass: null
-    },
-    {
-      aTargets: ["dtc_stat"],
-      asSorting: ["desc","asc"],
-      bSearchable: false,
-      sType: "numeric",
-      sClass: null
-    },
-    {
-      aTargets: ["dtc_rate"],
-      asSorting: ["desc","asc"],
-      bSearchable: false,
-      sType: "html",
-      sClass: null
-    },
-    {
-      aTargets: ["dtc_del"],
-      bSortable: false,
-      bSearchable: false,
-      sType: "string",
-      sClass: null
-    }
-  ]
-});
-
-var oTable = jQuery('#rateTable').DataTable();
-
-function uidFromCell(cell){
-  var tr = cell;
-  while ( tr.nodeName != "TR") tr = tr.parentNode;
-  return $(tr).data("usr");
-}
-
-{* -----DELETE----- *}
-$(document).ready( function(){
-  $("#rateTable").on( "click", ".del", function(e) {
-    e.preventDefault();
-    const title_msg  = '{_ 'Are you sure you want to delete the ratings of the user "%s"?'|escapeJavascript|noescape}';
-    const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
-    const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
-    let usr_name = $(this).closest("tr").find(".usr").html();
-    $.confirm({
-      title: title_msg.replace("%s", usr_name),
-      buttons: {
-        confirm: {
-          text: confirm_msg,
-          btnClass: 'btn-red',
-          action: function () {
-            var cell = e.target.parentNode,
-            tr = cell;
-            while ( tr.nodeName != "TR") tr = tr.parentNode;
-            tr = jQuery(tr).fadeTo(1000, 0.4);
-            var data=uidFromCell(cell);
-            $.ajax({
-              url: "{$ROOT_URL|escapeJavascript|noescape}api/v1/users/" + data.uid + "/actions/delete-ratings",
-              method: "POST",
-              contentType: "application/json",
-              data: JSON.stringify({ anonymousId: data.aid || null }),
-              headers: {'X-CSRF-Token': pwg_token},
-              error: function(jqXHR) { tr.stop(); tr.fadeTo(0,1); alert(jqXHR.status + " " + jqXHR.statusText); },
-              success: function(result){
-                if (result.deletedCount)
-                  oTable.row(tr[0]).remove().draw();
-                else
-                  alert(result.deletedCount);
-              }
-            });
-          }
-        },
-        cancel: {
-          text: cancel_msg
-        }
-      },
-      ...jConfirm_confirm_options
-    });
-  });
-});
-
-{/capture}
-{do footerScript($tmpFooterScript2)}
 <table id="rateTable">
   <thead>
     <tr class="throw">
@@ -916,37 +815,4 @@ $(document).ready( function(){
 </table>
 
 {do combineScript(id: 'jquery.ui.tooltip', load: 'footer')}
-{capture $tmpFooterScript3}
-jQuery(document).ready(function(){
-  jQuery("#rateTable").tooltip({
-    items: ".usr,[title]",
-    content: function(callback) {
-      var t = $(this).attr("title");
-      if (t)
-        return t;
-      var that = $(this),
-        udata = uidFromCell(this);
-      if (!udata.aid)
-        return;
-      that
-        .data("isOver", true)
-        .one("mouseleave", function() {
-          that.removeData("isOver");
-        });
-
-      GeoIp.get( udata.aid + ".1", function(data) {
-        if (!data.fullName) return;
-        var content = data.fullName;
-        if (data.latitude && data.region_name) {
-          content += "<" + "br>" + "<" + "img width=300 height=220 src=\"http://maps.googleapis.com/maps/api/staticmap?sensor=false&size=300x220&zoom=6"
-            + "&markers=size:tiny%7C" + data.latitude + "," + data.longitude
-            + "\">";
-        }
-        if (that.data("isOver"))
-          callback(content);
-      });
-    }
-  });
-})
-{/capture}
-{do footerScript($tmpFooterScript3, 'jquery.ui.tooltip')}
+{do combineScript(id: 'rating_user', load: 'footer', require: 'jquery.dataTables,jquery.ui.tooltip,page-data', path: 'themes/admin/default/js/rating_user.js')}

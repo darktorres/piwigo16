@@ -1,3 +1,13 @@
+const str_yes_delete_confirmation = pwg_getPageString('Yes, delete');
+const str_no_delete_confirmation = pwg_getPageString('No, I have changed my mind');
+const str_delete = pwg_getPageString('Are you sure you want to delete comment #%s?');
+const str_deletes = pwg_getPageString('Are you sure you want to delete "%d" comments?');
+const pwg_token = pwg_getPageData('csrf_token');
+const str_an_error_has = pwg_getPageString('An error has occured');
+const str_comment_validated = pwg_getPageString('The comment has been validated.');
+const str_comments_validated = pwg_getPageString('The comments have been validated.');
+const str_and_others = pwg_getPageString('and %s others');
+
 const commentsContainer = $('#comments');
 const advancedFilters = $('#advancedFilters');
 const switchMode = $('#toggleSelectionMode');

@@ -407,7 +407,6 @@
 
 
 
-
 <style>
 
 .notClickable {
@@ -931,111 +930,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"user_name":"","user_id":-1,"image_id":"","ip":"","guest_id":2},"strings":{"Downloaded":"Downloaded","Most visited":"Most visited","Best rated":"Best rated","Random photo":"Random photo","Your favorites":"My favorites","Recent albums":"Recent albums","Recent photos":"Recent photos","Memories":"Souvenirs","This photo no longer exists":"This photo no longer exists","Tags":"Tags","%s MB":"%s MB","guest":"guest","Contact Form":"Contact Form","Edit photo":"Edit photo","Search for words":"Search for words","Post date":"Post date","Album":"Album","Author":"Author","Added by":"Added by","File type":"File type","and %d more":"and %d more","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-jQuery(function(){ 
-  jQuery('[data-datepicker]').pwgDatepicker();
-});
-
-var dateObj = new Date();
-var month = dateObj.getUTCMonth() + 1; //months from 1-12
-var day = dateObj.getUTCDate();
-var year = dateObj.getUTCFullYear();
-
-var filter_user_name = "";
-
-if (month < 10) month = "0" + month;
-if (day < 10) day = "0" + day;
-
-today = year + "-" + month + "-" + day;
-var current_param = {
-  start: "",
-  end: today,
-  types: {
-    0: "none",
-    1: "picture",
-    2: "high",
-    3: "other"
-  },
-  user_id: -1,
-  image_id: "",
-  filename: "",
-  ip: "",
-  pageNumber: 0 
-}
-
-const str_dwld = "Downloaded";
-const str_most_visited = "Most visited";
-const str_best_rated = "Best rated";
-const str_list = "Random photo";
-const str_favorites = "My favorites";
-const str_recent_cats = "Recent albums";
-const str_recent_pics = "Recent photos";
-const str_memories = "Souvenirs";
-const str_no_longer_exist_photo = "This photo no longer exists";
-const str_tags = "Tags";
-const unit_MB = "%s MB";
-const str_guest = 'guest';
-const str_contact_form = 'Contact Form';
-const str_edit_img = 'Edit photo';
-
-const str_search_details = {
-    "allwords": "Search for words",
-    "datePosted": "Post date",
-    "tags": str_tags,
-    "cat": "Album",
-    "author": "Author",
-    "addedBy": "Added by",
-    "filetypes": "File type",
-};
-const str_and_more = "and %d more"
-
-const guest_id = 2;
-jQuery(document).ready( function() {
-  jQuery(".IP").one( "mouseenter", function(){
-    var that = $(this);
-    that
-      .data("isOver", true)
-      .one("mouseleave", function() {
-        that.removeData("isOver");
-      });
-    GeoIp.get( that.text(), function(data) {
-      if (!data.fullName) return;
-
-      var content = data.fullName;
-      if (data.latitude && data.region_name) {
-        content += '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="'+data.latitude+'" data-lon="'+data.longitude+'"';
-        content += ' href="#">show on a Google Map</a>';
-      }
-
-      that.tipTip( {
-        content: content,
-        keepAlive: true,
-        defaultPosition: "right",
-        maxWidth: 320,
-        } );
-      if (that.data("isOver"))
-        that.trigger("mouseenter");
-    });
-  } );
-
-  jQuery(document).on('click', '.ipGeoOpen',  function() {
-    var lat = jQuery(this).data("lat");
-    var lon = jQuery(this).data("lon");
-    var parent = jQuery(this).parent();
-    jQuery(this).remove();
-
-    var append = '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
-    append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
-
-    jQuery(parent).append(append);
-    return false;
-  });
-});
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

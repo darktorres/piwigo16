@@ -691,70 +691,35 @@
 {* END varType *}
 {include 'include/datepicker.inc.latte'}
 
-{capture $tmpFooterScript}
-jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker();
-});
-
-var dateObj = new Date();
-var month = dateObj.getUTCMonth() + 1; //months from 1-12
-var day = dateObj.getUTCDate();
-var year = dateObj.getUTCFullYear();
-
-var filter_user_name = "{$USER_NAME|noescape}";
-
-if (month < 10) month = "0" + month;
-if (day < 10) day = "0" + day;
-
-today = year + "-" + month + "-" + day;
-var current_param = {
-  start: "",
-  end: today,
-  types: {
-    0: "none",
-    1: "picture",
-    2: "high",
-    3: "other"
-  },
-  user_id: {$USER_ID},
-  image_id: {if isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if},
-  filename: "",
-  ip: {if isset($IP)}"{$IP}"{else}""{/if},
-  pageNumber: 0 {* fetch lines from line 0 to line 100*}
-}
-
-const str_dwld = "{_ 'Downloaded'|noescape}";
-const str_most_visited = "{_ 'Most visited'|noescape}";
-const str_best_rated = "{_ 'Best rated'|noescape}";
-const str_list = "{_ 'Random photo'|noescape}";
-const str_favorites = "{_ 'Your favorites'|noescape}";
-const str_recent_cats = "{_ 'Recent albums'|noescape}";
-const str_recent_pics = "{_ 'Recent photos'|noescape}";
-const str_memories = "{_ 'Memories'|noescape}";
-const str_no_longer_exist_photo = "{_ 'This photo no longer exists'|noescape}";
-const str_tags = "{_ 'Tags'|noescape}";
-const unit_MB = "{_ "%s MB"|noescape}";
-const str_guest = '{_ 'guest'|noescape}';
-const str_contact_form = '{_ 'Contact Form'|noescape}';
-const str_edit_img = '{_ 'Edit photo'|noescape}';
-
-const str_search_details = {
-    "allwords": "{_ 'Search for words'|noescape}",
-    "datePosted": "{_ 'Post date'|noescape}",
-    "tags": str_tags,
-    "cat": "{_ 'Album'|noescape}",
-    "author": "{_ 'Author'|noescape}",
-    "addedBy": "{_ 'Added by'|noescape}",
-    "filetypes": "{_ 'File type'|noescape}",
-};
-const str_and_more = "{_ 'and %d more'|noescape}"
-
-const guest_id = {$guest_id};
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('user_name', $USER_NAME ?? '')}
+{do exposeData('user_id', $USER_ID)}
+{do exposeData('image_id', $IMAGE_ID ?? '')}
+{do exposeData('ip', $IP ?? '')}
+{do exposeData('guest_id', $guest_id)}
+{do exposeString('Downloaded')}
+{do exposeString('Most visited')}
+{do exposeString('Best rated')}
+{do exposeString('Random photo')}
+{do exposeString('Your favorites')}
+{do exposeString('Recent albums')}
+{do exposeString('Recent photos')}
+{do exposeString('Memories')}
+{do exposeString('This photo no longer exists')}
+{do exposeString('Tags')}
+{do exposeString('%s MB')}
+{do exposeString('guest')}
+{do exposeString('Contact Form')}
+{do exposeString('Edit photo')}
+{do exposeString('Search for words')}
+{do exposeString('Post date')}
+{do exposeString('Album')}
+{do exposeString('Author')}
+{do exposeString('Added by')}
+{do exposeString('File type')}
+{do exposeString('and %d more')}
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'history', load: 'footer', path: 'themes/admin/default/js/history.js')}
+{do combineScript(id: 'history', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/history.js')}
 
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
@@ -970,51 +935,6 @@ const guest_id = {$guest_id};
 {if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
 
 {do combineScript(id: 'jquery.geoip', load: 'async', path: 'themes/admin/default/js/jquery.geoip.js')}
-
-{capture $tmpFooterScript2}
-jQuery(document).ready( function() {
-  jQuery(".IP").one( "mouseenter", function(){
-    var that = $(this);
-    that
-      .data("isOver", true)
-      .one("mouseleave", function() {
-        that.removeData("isOver");
-      });
-    GeoIp.get( that.text(), function(data) {
-      if (!data.fullName) return;
-
-      var content = data.fullName;
-      if (data.latitude && data.region_name) {
-        content += '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="'+data.latitude+'" data-lon="'+data.longitude+'"';
-        content += ' href="#">show on a Google Map</a>';
-      }
-
-      that.tipTip( {
-        content: content,
-        keepAlive: true,
-        defaultPosition: "right",
-        maxWidth: 320,
-        } );
-      if (that.data("isOver"))
-        that.trigger("mouseenter");
-    });
-  } );
-
-  jQuery(document).on('click', '.ipGeoOpen',  function() {
-    var lat = jQuery(this).data("lat");
-    var lon = jQuery(this).data("lon");
-    var parent = jQuery(this).parent();
-    jQuery(this).remove();
-
-    var append = '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
-    append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
-
-    jQuery(parent).append(append);
-    return false;
-  });
-});
-{/capture}
-{do footerScript($tmpFooterScript2)}
 
 <style>
 

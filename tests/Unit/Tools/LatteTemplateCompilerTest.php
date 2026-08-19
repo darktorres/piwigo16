@@ -77,10 +77,22 @@ it('rewrites filter property-invokes to shim static calls', function (): void {
 });
 
 it('strips the leading $this for non-Template-aware functions, keeping named args intact', function (): void {
-    $result = $this->compiler->compile(
-        $this->repoRoot . '/themes/admin/default/template/comments.latte',
-        [],
-    );
+    // A dedicated fixture, not a real template (P38's own inline-JS-extraction
+    // campaign is steadily removing footerScript() from production templates,
+    // so pinning this compiler-behavior test to a real template's content
+    // would keep breaking as unrelated batches land) -- this only needs one
+    // combineScript() call and one footerScript() call to exercise the
+    // rewrite this test is actually about.
+    $fixture = $this->root . '/footerscript-fixture.latte';
+    file_put_contents($fixture, <<<'LATTE'
+        {do combineScript(id: 'comments', load: 'footer', path: 'x.js')}
+        {capture $tmpFooterScript}
+        console.log('x');
+        {/capture}
+        {do footerScript($tmpFooterScript)}
+        LATTE);
+
+    $result = $this->compiler->compile($fixture, []);
 
     $code = (string) file_get_contents($result->outputPath);
     expect($code)
@@ -90,6 +102,15 @@ it('strips the leading $this for non-Template-aware functions, keeping named arg
 });
 
 it('keeps the leading $this for functions declared Template-aware', function (): void {
+    $fixture = $this->root . '/footerscript-fixture.latte';
+    file_put_contents($fixture, <<<'LATTE'
+        {do combineScript(id: 'comments', load: 'footer', path: 'x.js')}
+        {capture $tmpFooterScript}
+        console.log('x');
+        {/capture}
+        {do footerScript($tmpFooterScript)}
+        LATTE);
+
     $compiler = new LatteTemplateCompiler(
         latte_template_compiler_test_engine(),
         $this->repoRoot,
@@ -97,10 +118,7 @@ it('keeps the leading $this for functions declared Template-aware', function ():
         templateAwareFunctions: ['footerScript'],
     );
 
-    $result = $compiler->compile(
-        $this->repoRoot . '/themes/admin/default/template/comments.latte',
-        [],
-    );
+    $result = $compiler->compile($fixture, []);
 
     expect((string) file_get_contents($result->outputPath))
         ->toContain('LatteAnalysisShims::footerScript($this, $tmpFooterScript)');

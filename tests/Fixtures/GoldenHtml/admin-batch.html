@@ -257,8 +257,6 @@
   <form action="admin.php?page=batch_manager" method="post">
     <input type="hidden" name="start" value="0">
     <input type="hidden" name="pwg_token" value="{{TOKEN}}">
-
-
 <fieldset>
   <legend><span
       class='icon-filter icon-green'
@@ -1730,70 +1728,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":{"cache_key_tags":"1785553200_3","cache_key_categories":"1785639600_2","cache_key_hash":"{{TOKEN}}","root_url":"","associated_categories":[],"nb_thumbs_page":0,"nb_thumbs_set":0,"all_elements":[]},"strings":{"Cancel":"Cancel","Deletion in progress":"Deletion in progress","Synchronization in progress":"Synchronization in progress","Are you sure?":"Are you sure?","Generate multiple size images":"Generate multiple size images","Create":"Create","on the %d selected photos":"on the %d selected photos","%d of %d photos selected":"%d of %d photos selected","No photo selected, %d photos in current set":"No photos selected, %d photos in current set","All %d photos are selected":"All %d photos are selected","Add Album":"Add Album","Select an album":"Select an album","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind"}}</script>
+<script type="application/json" id="page-data">{"data":{"cache_key_tags":"1785553200_3","cache_key_categories":"1785639600_2","cache_key_hash":"{{TOKEN}}","root_url":"","associated_categories":[],"nb_thumbs_page":0,"nb_thumbs_set":0,"all_elements":[],"dimensions":{"widths":"200","heights":"150","ratios":"1.33","bounds":{"min_width":200,"max_width":200,"min_height":150,"max_height":150,"min_ratio":1.33,"max_ratio":1.33},"ratio_landscape":{"min":1.33,"max":1.33},"selected":{"min_width":200,"max_width":200,"min_height":150,"max_height":150,"min_ratio":1.33,"max_ratio":1.33}},"filesize":{"list":"0.0","bounds":{"min":"0.0","max":"0.0"},"selected":{"min":"0.0","max":"0.0"}},"filter_category_selected":null},"strings":{"Cancel":"Cancel","Deletion in progress":"Deletion in progress","Synchronization in progress":"Synchronization in progress","Are you sure?":"Are you sure?","Generate multiple size images":"Generate multiple size images","Create":"Create","on the %d selected photos":"on the %d selected photos","%d of %d photos selected":"%d of %d photos selected","No photo selected, %d photos in current set":"No photos selected, %d photos in current set","All %d photos are selected":"All %d photos are selected","Add Album":"Add Album","Select an album":"Select an album","between %d and %d pixels":"between %d and %d pixels","between %.2f and %.2f":"between %.2f and %.2f","between %s and %s MB":"between %s and %s MB","Select at least one album":"Select at least one album","Select at least one tag":"Select at least one tag","Only the first %d albums are displayed, out of %d.":"Only the first %d albums are displayed, out of %d.","Album already selected":"Album already selected","No search in progress":"No search in progress","\u003Cb\u003E%d\u003C\/b\u003E albums found":"\u003Cb\u003E%d\u003C\/b\u003E albums found","\u003Cb\u003E1\u003C\/b\u003E album found":"\u003Cb\u003E1\u003C\/b\u003E album found","\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search":"\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search","Add a sub-album to “%s”":"Add a sub-album to “%s”","Create and select":"Create and select","Root":"Root","Name field must not be empty":"Name field must not be empty","An error has occured":"An error has occured","Search":"Search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-<!-- sliders config -->
-var sliders = {
-  widths: {
-    values: [200],
-    selected: {
-      min: 200,
-      max: 200,
-    },
-    text: 'between %d and %d pixels'
-  },
-
-  heights: {
-    values: [150],
-    selected: {
-      min: 150,
-      max: 150,
-    },
-    text: 'between %d and %d pixels'
-  },
-
-  ratios: {
-    values: [1.33],
-    selected: {
-      min: 1.33,
-      max: 1.33,
-    },
-    text: 'between %.2f and %.2f'
-  },
-
-  filesizes: {
-    values: [0.0],
-    selected: {
-      min: 0.0,
-      max: 0.0,
-    },
-    text: 'between %s and %s MB'
-  }
-};
-const selected_filter_cat_ids = [];
-
-const str_select_album = "Select at least one album";
-const str_select_tag = "Select at least one tag";
-let errorFilters = '';
-const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
-const str_album_selected = "Album already selected"
-const str_already_in_related_cats = "This albums is already in related albums list";
-const str_no_search_in_progress = "No search in progress";
-const str_albums_found = "<b>%d<\/b> albums found";
-const str_album_found = "<b>1<\/b> album found";
-const str_result_limit = "<b>%d+<\/b> albums found, try to refine the search";
-const str_add_subcat_of = "Add a sub-album to “%s”";
-const str_create_and_select = "Create and select";
-const str_root_album_select = "Root";
-const str_complete_name_field = "Name field must not be empty";
-const str_an_error_has_occured = "An error has occured";
-const str_album_modal_title = "Select an album";
-const str_album_modal_placeholder = "Search";
-const str_root = "Root";
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

@@ -690,63 +690,37 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {include 'include/colorbox.inc.latte'}
-{capture $tmpFooterScript}
-var pwg_token = "{$CSRF_TOKEN}";
-var str_member_default = "{_ 'member'|escapeJavascript|noescape}"
-var str_members_default = "{_ 'members'|escapeJavascript|noescape}"
-var str_group_created = "{_ 'Group added'|escapeJavascript|noescape}"
-var str_renaming_done = "{_ 'Group renamed'|escapeJavascript|noescape}"
-var str_name_taken = "{_ 'Name is already taken'|escapeJavascript|noescape}"
-var str_name_not_empty = "{_ 'Name field must not be empty'|escapeJavascript|noescape}"
-var str_group_deleted = '{_ 'Group "%s" succesfully deleted'|escapeJavascript|noescape}'
-var str_groups_deleted = '{_ 'Groups {%s} succesfully deleted'|noescape}'
-var str_set_default = "{_ 'Set as group for new users'|escapeJavascript|noescape}"
-var str_unset_default = "{_ 'Unset as group for new users'|escapeJavascript|noescape}"
-var str_delete = '{_ 'Are you sure you want to delete group "%s"?'|escapeJavascript|noescape}'
-var str_yes_delete_confirmation = "{_ 'Yes, delete'|escapeJavascript|noescape}"
-var str_no_delete_confirmation = "{_ 'No, I have changed my mind'|escapeJavascript|noescape}"
-var str_user_associated = "{_ 'User associated'|escapeJavascript|noescape}"
-var str_user_dissociate = "{_ 'Dissociate user from this group'|escapeJavascript|noescape}"
-var str_user_dissociated = '{_ 'User "%s" dissociated from this group'|escapeJavascript|noescape}'
-var str_user_list = "{_ 'Manage the members'|escapeJavascript|noescape}"
-var str_merged_into = '{_ 'Group(s) {%s1} succesfully merged into "%s2"'|noescape}'
-var str_copy = '{_ ' (copy)'|escapeJavascript|noescape}'
-var str_other_copy = '{_ ' (copy %s)'|escapeJavascript|noescape}'
-
-var serverKey = '{$CACHE_KEYS['users']}'
-var serverId = '{$CACHE_KEYS['_hash']}'
-var rootUrl = '{$ROOT_URL}'
-
-$(document).on('keydown', function (e) {
-  if ( e.keyCode === 27) { // ESC button
-    $("#UserList").fadeOut();
-  }
-})
-$(document).on('click', function (e) {
-  if ($(e.target).closest(".UserListPopInContainer").length === 0) {
-    $("#UserList").fadeOut();
-  }
-});
-
-{* temporary fix for #1283 (begin) : force user local storage cache on page load. *}
-var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS['users']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-usersCache.selectize(jQuery('select.UserSearch'));
-{* temporary fix for #1283 (end) *}
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('cache_key_users', $CACHE_KEYS['users'])}
+{do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
+{do exposeData('root_url', $ROOT_URL)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeString('member')}
+{do exposeString('members')}
+{do exposeString('Group added')}
+{do exposeString('Group renamed')}
+{do exposeString('Name is already taken')}
+{do exposeString('Name field must not be empty')}
+{do exposeString('Group "%s" succesfully deleted')}
+{do exposeString('Groups {%s} succesfully deleted')}
+{do exposeString('Set as group for new users')}
+{do exposeString('Unset as group for new users')}
+{do exposeString('Are you sure you want to delete group "%s"?')}
+{do exposeString('Yes, delete')}
+{do exposeString('User associated')}
+{do exposeString('Dissociate user from this group')}
+{do exposeString('User "%s" dissociated from this group')}
+{do exposeString('Manage the members')}
+{do exposeString('Group(s) {%s1} succesfully merged into "%s2"')}
+{do exposeString(' (copy)')}
+{do exposeString(' (copy %s)')}
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'group_list', load: 'footer', path: 'themes/admin/default/js/group_list.js')}
-
 {do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
 {do combineCss(path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
 
 {do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
+
+{do combineScript(id: 'group_list', load: 'footer', require: 'jquery.selectize,page-data,LocalStorageCache', path: 'themes/admin/default/js/group_list.js')}
 
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}

@@ -450,6 +450,10 @@ $(document).ready(function () {
         $(".addAlbum p").show(800);
     });
 
+    $(".addAlbumHead").click(function () {
+        $(".addAlbum input[name=virtual_name]").focus();
+    });
+
     if ($("#displayCompact").is(":checked")) {
         setDisplayCompact();
     };

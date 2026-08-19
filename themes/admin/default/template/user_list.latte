@@ -704,112 +704,76 @@
 
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
+{do exposeData('u_history', $U_HISTORY)}
+{do exposeData('connected_user', $connected_user)}
+{do exposeData('connected_user_status', $connected_user_status)}
+{do exposeData('owner', $owner)}
+{do exposeData('owner_username', $owner_username)}
+{do exposeData('groups_arr_name', $groups_arr_name)}
+{do exposeData('groups_arr_id', $groups_arr_id)}
+{do exposeData('guest_id', $guest_id)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeData('filter_group', $filter_group)}
+{do exposeData('register_dates', $register_dates)}
+{do exposeData('view_selector', $view_selector)}
+{do exposeData('pagination', $pagination)}
+{do exposeString('Are you sure you want to delete the user "%s"?')}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('and %s others')}
+{do exposeString('You need to confirm deletion')}
+{do exposeString('Please, enter a login')}
+{do exposeString('Password is missing. Please enter the password.')}
+{do exposeString('Password confirmation is missing. Please confirm the chosen password.')}
+{do exposeString('Name field must not be empty')}
+{do exposeString('The passwords do not match')}
+{do exposeString('Please complete all fields')}
+{do exposeString('Password copied')}
+{do exposeString('Mail sent to %s [%s].')}
+{do exposeString('Error sending email')}
+{do exposeString("Cannot send an email to this user because he doesn't have an email address")}
+{do exposeString('You are about to set %s as main user instead of %s, do you wish to continue ?')}
+{do exposeString('To be sure, please rewrite the word “%s” below')}
+{do exposeString('You can now change the main user from %s to %s.')}
+{do exposeString('%s is the new main user')}
+{do exposeString('Main user')}
+{do exposeString('You are not authorised to change the main user, please ask your webmaster')}
+{do exposeString('Set as main user')}
+{do exposeString('This user must first be defined as the webmaster before it can be upgraded to the main user')}
+{do exposeString('an error happened')}
+{do exposeString('Copied link')}
+{do exposeString('You cannot copy the password if the connection to this site is not secure.')}
+{do exposeString('An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.')}
+{do exposeString('Copy the link below and send it to the user so the password can be set.')}
+{do exposeString('An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.')}
+{do exposeString('Registered')}
+{do exposeString('Last visit')}
+{do exposeString('between %s and %s')}
+{do exposeString('User %s added')}
+{do exposeString('<b>%d</b> filtered users')}
+{do exposeString('<b>%d</b> filtered user')}
+{do exposeString('user_status_webmaster')}
+{do exposeString('user_status_admin')}
+{do exposeString('user_status_normal')}
+{do exposeString('user_status_generic')}
+{do exposeString('user_status_guest')}
+{do exposeString('%d days')}
+{do exposeString('%d photos')}
+{do exposeString('%d photos per page')}
+{do exposeString('Jan')}
+{do exposeString('Feb')}
+{do exposeString('Mar')}
+{do exposeString('Apr')}
+{do exposeString('May')}
+{do exposeString('Jun')}
+{do exposeString('Jul')}
+{do exposeString('Aug')}
+{do exposeString('Sep')}
+{do exposeString('Oct')}
+{do exposeString('Nov')}
+{do exposeString('Dec')}
+
 {capture $tmpFooterScript}
-
-/* Translates */
-const title_msg = '{_ 'Are you sure you want to delete the user "%s"?'|escapeJavascript|noescape}';
-const are_you_sure_msg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
-const confirm_msg = '{_ 'Yes, I am sure'|htmlspecialchars|noescape}';
-const cancel_msg = '{_ 'No, I have changed my mind'|htmlspecialchars|noescape}';
-const str_and_others_tags = '{_ 'and %s others'|escapeJavascript|noescape}';
-const missingConfirm = "{_ 'You need to confirm deletion'|escapeJavascript|noescape}";
-const missingUsername = "{_ 'Please, enter a login'|escapeJavascript|noescape}";
-const missingPassword = "{_ 'Password is missing. Please enter the password.'|escapeJavascript|noescape}";
-const missingConfPassword = "{_ 'Password confirmation is missing. Please confirm the chosen password.'|escapeJavascript|noescape}";
-const fieldNotEmpty = "{_ 'Name field must not be empty'|escapeJavascript|noescape}"
-const noMatchPassword = "{_ 'The passwords do not match'|escapeJavascript|noescape}";
-const missingField = "{_ 'Please complete all fields'|escapeJavascript|noescape}";
-const passwordUpdated = "{_ 'Password updated'|escapeJavascript|noescape}";
-const passwordCopied = "{_ 'Password copied'|escapeJavascript|noescape}";
-const copyPassword = "{_ 'Copy password'|escapeJavascript|noescape}";
-const mailSentAt = "{_ 'Mail sent to %s [%s].'|escapeJavascript|noescape}";
-const errorMailSent = "{_ 'Error sending email'|escapeJavascript|noescape}";
-const cannotSendMail = "{_ 'Cannot send an email to this user because he doesn\'t have an email address'|escapeJavascript|noescape}";
-const mainUserContinue = "{_ 'You are about to set %s as main user instead of %s, do you wish to continue ?'|escapeJavascript|noescape}";
-const mainUserRewrite = "{_ 'To be sure, please rewrite the word “%s” below'|escapeJavascript|noescape}";
-const mainUserValidate = "{_ 'You can now change the main user from %s to %s.'|escapeJavascript|noescape}";
-const mainUserSuccess = "{_ '%s is the new main user'|escapeJavascript|noescape}";
-const mainUserStr = "{_ 'Main user'|escapeJavascript|noescape}";
-const mainAskWebmaster = "{_ 'You are not authorised to change the main user, please ask your webmaster'|escapeJavascript|noescape}";
-const mainUserSet = "{_ 'Set as main user'|escapeJavascript|noescape}";
-const mainUserUpgradeWebmaster = "{_ 'This user must first be defined as the webmaster before it can be upgraded to the main user'|escapeJavascript|noescape}";
-const errorStr = "{_ 'an error happened'|escapeJavascript|noescape}";
-const copyLinkStr = "{_ 'Copied link'|escapeJavascript|noescape}";
-const cantCopy = "{_ 'You cannot copy the password if the connection to this site is not secure.'|escapeJavascript|noescape}";
-const validLinkMail = "{_ 'An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.'|escapeJavascript|noescape}";
-const validLinkWithoutMail = "{_ 'Copy the link below and send it to the user so the password can be set.'|escapeJavascript|noescape}";
-const errorMailSentMsg = "{_ 'An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.'|escapeJavascript|noescape}";
-
-const registered_str = '{_ "Registered"|escapeJavascript|noescape}';
-const last_visit_str = '{_ "Last visit"|escapeJavascript|noescape}';
-const dates_infos = '{_ 'between %s and %s'|escapeJavascript|noescape}'
-const hide_str = '{_ 'Hide'|escapeJavascript|noescape}';
-const show_str = '{_ 'Show'|escapeJavascript|noescape}';
-const user_added_str = '{_ 'User %s added'|escapeJavascript|noescape}';
-const str_popin_update_btn = '{_ 'Update'|escapeJavascript|noescape}';
-const filtered_users = '{_ '<b>%d</b> filtered users'|escapeJavascript|noescape}';
-const filtered_user = '{_ '<b>%d</b> filtered user'|escapeJavascript|noescape}';
-const history_base_url = "{$U_HISTORY|noescape}";
-
-const status_to_str = {
-  'webmaster': "{_ 'user_status_webmaster'|noescape}",
-  'admin': "{_ 'user_status_admin'|noescape}",
-  'normal': "{_ 'user_status_normal'|noescape}",
-  'generic': "{_ 'user_status_generic'|noescape}",
-  'guest': "{_ 'user_status_guest'|noescape}",
-}
-
-const view_selector = '{$view_selector}';
-const pagination = '{$pagination}';
-per_page = parseInt(pagination);
-
-months = [
-  "{_ 'Jan'|noescape}",
-  "{_ 'Feb'|noescape}",
-  "{_ 'Mar'|noescape}",
-  "{_ 'Apr'|noescape}",
-  "{_ 'May'|noescape}",
-  "{_ 'Jun'|noescape}",
-  "{_ 'Jul'|noescape}",
-  "{_ 'Aug'|noescape}",
-  "{_ 'Sep'|noescape}",
-  "{_ 'Oct'|noescape}",
-  "{_ 'Nov'|noescape}",
-  "{_ 'Dec'|noescape}"
-];
-
-/* Template variables */
-connected_user = {$connected_user};
-connected_user_status = "{$connected_user_status}";
-owner_id = {$owner};
-owner_username = "{$owner_username|noescape}";
-let groups_arr_name = {$groups_arr_name|noescape};
-let groups_arr_id = [{$groups_arr_id|noescape}];
-groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
-guest_id = {$guest_id};
-nb_days = "{_ '%d days'|noescape}";
-//per page is too long for the popin
-nb_photos = "{_ '%d photos'|noescape}";
-nb_photos_per_page = "{_ '%d photos per page'|noescape}";
-pwg_token = '{$CSRF_TOKEN}';
-has_group = "{$filter_group|noescape}";
-
-let register_dates_str = '{$register_dates|noescape}';
-let register_dates = register_dates_str.split(',');
-let groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
-
-/* Startup */
-setupRegisterDates(register_dates);
-selectionMode(false);
-get_guest_info();
-update_user_list();
-update_selection_content();
-
-$(".icon-help-circled").tipTip({
-  'maxWidth':'700px',
-  'fadeIn': '1000',
-});
-
 $(document).ready(function() {
   // Only webmaster can set admin or webmaster to others users
   if (connected_user_status !== 'webmaster') {
@@ -930,7 +894,7 @@ $(document).ready(function() {
 {/capture}
 {do footerScript($tmpFooterScript)}
 
-{do combineScript(id: 'user_list', load: 'footer', path: 'themes/admin/default/js/user_list.js')}
+{do combineScript(id: 'user_list', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/user_list.js')}
 
 {do combineScript(id: 'jquery.cookie', path: 'themes/default/js/jquery.cookie.js', load: 'footer')}
 

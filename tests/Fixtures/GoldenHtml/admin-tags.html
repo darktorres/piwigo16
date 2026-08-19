@@ -206,9 +206,6 @@
   </div> 
 
   
- 
-
-
 <meta http-equiv='cache-control' content='no-cache'>
 <meta http-equiv='expires' content='0'>
 <meta http-equiv='pragma' content='no-cache'>
@@ -611,49 +608,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}","orphan_tag_names_array":"[]","total":3},"strings":{"Delete tag \"%s\"?":"Delete tag \"%s\"?","Delete tags {%s}?":"Delete tags {%s}?","Yes, delete":"Yes, delete","No, I have changed my mind":"No, I have changed my mind","Yes, rename":"Yes, rename","Tag \"%s\" succesfully deleted":"Tag \\\"%s\\\" succesfully deleted","Tags {%s} succesfully deleted":"Tags {%s} succesfully deleted","Tag \"%s\" already exists":"Tag \"%s\" already exists","Tag \"%s\" created":"Tag \"%s\" created","Tag \"%s1\" renamed in \"%s2\"":"Tag \\\"%s1\\\" renamed in \\\"%s2\\\"","Rename \"%s\"":"Rename \"%s\"","Delete orphan tags ?":"Delete orphan tags?","You have %s1 orphan : %s2":"You have %s1 orphan: %s2","Delete them":"Delete them","Keep them":"Keep them"," (copy)":" (copy)"," (copy %s)":" (copy %s)","Tag(s) {%s1} succesfully merged into \"%s2\"":"Tag(s) {%s1} succesfully merged into \"%s2\"","and %s others":"and %s others","%s other tags available...":"%s other tags available...","%d photos":"%d photos","no photo":"no photo","Select all %d tags":"Select all %d tags","Clear Selection":"Clear Selection","The %d tags on this page are selected":"The %d tags on this page are selected","\u003Cb\u003E%d\u003C\/b\u003E tag selected":"\u003Cb\u003E%d\u003C\/b\u003E tag selected","\u003Cb\u003E%d\u003C\/b\u003E tags found":"\u003Cb\u003E%d\u003C\/b\u003E tags found","\u003Cb\u003E%d\u003C\/b\u003E tag found":"\u003Cb\u003E%d\u003C\/b\u003E tag found","Yes, I am sure":"Yes, I am sure","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var pwg_token = "{{TOKEN}}";
-var orphan_tag_names = [];
-var str_delete = 'Delete tag "%s"?';
-var str_delete_tags = 'Delete tags {%s}?';
-var str_yes_delete_confirmation = "Yes, delete";
-var str_no_delete_confirmation = "No, I have changed my mind";
-var str_yes_rename_confirmation = "Yes, rename";
-var str_tag_deleted = 'Tag \"%s\" succesfully deleted';
-var str_tags_deleted = 'Tags {%s} succesfully deleted';
-var str_already_exist = 'Tag "%s" already exists';
-var str_tag_created = 'Tag "%s" created';
-var str_tag_renamed = 'Tag \"%s1\" renamed in \"%s2\"';
-var str_tag_rename = 'Rename "%s"';
-var str_delete_orphan_tags = 'Delete orphan tags?';
-var str_orphan_tags = 'You have %s1 orphan: %s2';
-var str_delete_them = 'Delete them';
-var str_keep_them = 'Keep them';
-var str_copy = ' (copy)';
-var str_other_copy = ' (copy %s)';
-var str_merged_into = 'Tag(s) {%s1} succesfully merged into "%s2"';
-var str_and_others_tags = 'and %s others';
-var str_others_tags_available = '%s other tags available...'
-var str_number_photos = '%d photos'
-var str_no_photos = 'no photo'
-var str_select_all_tag = 'Select all %d tags';
-var str_clear_selection = 'Clear Selection';
-var str_selection_done = 'The %d tags on this page are selected';
-var str_tag_selected = '<b>%d</b> tag selected';
-var str_tags_found = '<b>%d</b> tags found';
-var str_tag_found = '<b>%d</b> tag found';
-
-$(document).ready(function() {
-  $("h1").append('<span class="badge-number">3</span>');
-});
-if (!$.cookie("pwg_tags_per_page")) {
-  $.cookie("pwg_tags_per_page", "100");
-}
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

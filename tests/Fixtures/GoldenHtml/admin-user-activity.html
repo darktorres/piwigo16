@@ -775,103 +775,12 @@ div:has(> .activity-header) {
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"cache_key_users":"1785553200_4","cache_key_hash":"{{TOKEN}}","root_url":"","nb_users":4,"additional_filt_type":false,"additional_filt_value":null,"activity_dates_min":"2026-08-01","activity_dates_max":"2026-08-01"},"strings":{"Users":"Users","%s line":"%s line","%s lines":"%s lines","add":"add","deletion":"deletion","move":"move","edit":"edit","login":"login","logout":"logout","%d album added":"%d album added","%d album deleted":"%d album deleted","%d album edited":"%d album edited","%d album moved":"%d album moved","%d albums added":"%d albums added","%d albums deleted":"%d albums deleted","%d albums edited":"%d albums edited","%d albums moved":"%d albums moved","%d user added":"%d user added","%d user deleted":"%d user deleted","%d user edited":"%d user edited","%d user logged in":"%d user logged in","%d user logged out":"%d user logged out","%d users added":"%d users added","%d users deleted":"%d users deleted","%d users edited":"%d users edited","%d users logged in":"%d users logged in","%d users logged out":"%d users logged out","%d photo added":"%d photo added","%d photo deleted":"%d photo deleted","%d photo edited":"%d photo edited","%d photo moved":"%d photo moved","%d photos added":"%d photos added","%d photos deleted":"%d photos deleted","%d photos edited":"%d photos edited","%d photos moved":"%d photos moved","%d group added":"%d group added","%d group deleted":"%d group deleted","%d group edited":"%d group edited","%d group moved":"%d group moved","%d groups added":"%d groups added","%d groups deleted":"%d groups deleted","%d groups edited":"%d groups edited","%d groups moved":"%d groups moved","%d tag added":"%d tag added","%d tag deleted":"%d tag deleted","%d tag edited":"%d tag edited","%d tag moved":"%d tag moved","%d tags added":"%d tags added","%d tags deleted":"%d tags deleted","%d tags edited":"%d tags edited","%d tags moved":"%d tags moved","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-var usersCache = new UsersCache({
-  serverKey: '1785553200_4',
-  serverId: '{{TOKEN}}',
-  rootUrl: ''
-});
-const nb_users = 4;
-
-const additional_filt_type = '';
-const additional_filt_value =  null ;
-
-const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
-var activity_page = 1;
-let current_page_offset = 0;
-let page_offsets = [0];
-let actual_page = 1;
-let end_page = false;
-let uid_filter;
-let action_filter;
-let object_filter;
-let date_min_filter = '2026-08-01';
-let date_max_filter = '2026-08-01';
-
-const date_min = '2026-08-01';
-const date_max = '2026-08-01';
-
-const page_ellipsis = '<span>...</span>'
-const page_item = '<a data-page="%d">%d</a>';
-var create_selecter = true;
-const users_key = "Users";
-
-const line_key = "%s line";
-const lines_key = "%s lines";
-
-var actionType_add = "add";
-var actionType_delete = "deletion";
-var actionType_move = "move";
-var actionType_edit = "edit";
-var actionType_login = "login";
-var actionType_logout = "logout";
-
-var actionInfos_album_added = "%d album added";
-var actionInfos_album_deleted = "%d album deleted";
-var actionInfos_album_edited = "%d album edited";
-var actionInfos_album_moved = "%d album moved";
-
-var actionInfos_albums_added = "%d albums added";
-var actionInfos_albums_deleted = "%d albums deleted";
-var actionInfos_albums_edited = "%d albums edited";
-var actionInfos_albums_moved = "%d albums moved";
-
-var actionInfos_user_added = "%d user added";
-var actionInfos_user_deleted = "%d user deleted";
-var actionInfos_user_edited = "%d user edited";
-var actionInfos_user_logged_in = "%d user logged in";
-var actionInfos_user_logged_out = "%d user logged out";
-
-var actionInfos_users_added = "%d users added";
-var actionInfos_users_deleted = "%d users deleted";
-var actionInfos_users_edited = "%d users edited";
-var actionInfos_users_logged_in = "%d users logged in";
-var actionInfos_users_logged_out = "%d users logged out";
-
-var actionInfos_photo_added = "%d photo added";
-var actionInfos_photo_deleted = "%d photo deleted";
-var actionInfos_photo_edited = "%d photo edited";
-var actionInfos_photo_moved = "%d photo moved";
-
-var actionInfos_photos_added = "%d photos added";
-var actionInfos_photos_deleted = "%d photos deleted";
-var actionInfos_photos_edited = "%d photos edited";
-var actionInfos_photos_moved = "%d photos moved";
-
-var actionInfos_group_added = "%d group added";
-var actionInfos_group_deleted = "%d group deleted";
-var actionInfos_group_edited = "%d group edited";
-var actionInfos_group_moved = "%d group moved";
-
-var actionInfos_groups_added = "%d groups added";
-var actionInfos_groups_deleted = "%d groups deleted";
-var actionInfos_groups_edited = "%d groups edited";
-var actionInfos_groups_moved = "%d groups moved";
-
-var actionInfos_tag_added = "%d tag added";
-var actionInfos_tag_deleted = "%d tag deleted";
-var actionInfos_tag_edited = "%d tag edited";
-var actionInfos_tag_moved = "%d tag moved";
-
-var actionInfos_tags_added = "%d tags added";
-var actionInfos_tags_deleted = "%d tags deleted";
-var actionInfos_tags_edited = "%d tags edited";
-var actionInfos_tags_moved = "%d tags moved";
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

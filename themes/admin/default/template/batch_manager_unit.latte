@@ -700,78 +700,26 @@
 
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)}
 {var $all_selected_album = []}
-{capture $tmpFooterScript}
-{* <!-- PLUGINS --> *}
-var activePlugins = {$ACTIVE_PLUGINS|json_encode|noescape};
-{if isset($CACHE_KEYS)}
-{* <!-- TAGS --> *}
-var tagsCache = new TagsCache({
-  serverKey: '{$CACHE_KEYS['tags']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
-tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-  'Add': '{_ 'Create'|noescape}'
-}});
+{do exposeData('active_plugins', $ACTIVE_PLUGINS)}
+{do exposeData('cache_key_tags', $CACHE_KEYS['tags'])}
+{do exposeData('cache_key_categories', $CACHE_KEYS['categories'])}
+{do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
+{do exposeData('root_url', $ROOT_URL)}
+{do exposeData('associated_categories', $associated_categories)}
+{do exposeString('Create')}
+{do exposeString('Cancel')}
+{do exposeString('Are you sure?')}
+{do exposeString('Yes, delete')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('This photo is an orphan')}
+{do exposeString('Warning ! Unsaved changes will be lost')}
+{do exposeString('I want to continue')}
+{do exposeString('Associate to album')}
 
-{* <!-- CATEGORIES --> *}
-window.categoriesCache = new CategoriesCache({
-    serverKey: '{$CACHE_KEYS['categories']}',
-    serverId: '{$CACHE_KEYS['_hash']}',
-    rootUrl: '{$ROOT_URL}'
-  });
-
-  var associated_categories = {$associated_categories|json_encode|noescape};
-
-  categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
-    filter: function(categories, options) {
-      if (this.name == 'dissociate') {
-        var filtered = jQuery.grep(categories, function(cat) {
-          return !!associated_categories[cat.id];
-        });
-
-        if (filtered.length > 0) {
-          options.default = filtered[0].id;
-        }
-
-        return filtered;
-      }
-      else {
-        return categories;
-      }
-    }
-  });
-{/if}
-
-
-{* <!-- DATEPICKER --> *}
-jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker({
-    showTimepicker: true,
-    cancelButton: '{_ 'Cancel'|noescape}'
-  });
-});
-
-{* <!-- THUMBNAILS --> *}
-jQuery("a.preview-box").colorbox( {
-  photo: true
-});
-
-str_are_you_sure = "{_ 'Are you sure?'|escapeJavascript|noescape}";
-str_yes = "{_ 'Yes, delete'|escapeJavascript|noescape}";
-str_no = "{_ 'No, I have changed my mind'|escapeJavascript|noescape}";
-str_orphan = "{_ 'This photo is an orphan'|escapeJavascript|noescape}";
-str_meta_warning = "{_ 'Warning ! Unsaved changes will be lost'|escapeJavascript|noescape}";
-str_meta_yes = "{_ 'I want to continue'|escapeJavascript|noescape}";
-const str_title_ab = "{_ 'Associate to album'|noescape}";
-
-let b_current_picture_id;
-{* Check Skeleton extension for more details about extensibility *}
-pluginValues = [];
-{/capture}
-{do footerScript($tmpFooterScript)}
-
-{do combineScript(id: 'batchManagerUnit', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort', path: 'themes/admin/default/js/batchManagerUnit.js')}
+{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
+{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
+{do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
+{do combineScript(id: 'batchManagerUnit', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort,jquery.selectize,LocalStorageCache,jquery.colorbox,page-data', path: 'themes/admin/default/js/batchManagerUnit.js')}
 <div id="batchManagerGlobal" style="margin-bottom: 80px;">
   <div style="clear:both"></div>
   <div n:if="isset($ELEMENT_IDS)">
@@ -825,10 +773,6 @@ pluginValues = [];
     </div>
     {foreach $elements as $element}
       {do $all_selected_album[$element['ID']] = json_decode($element['related_category_ids'])}
-      {capture $tmpElementScript}
-      url_delete_{$element['id']} = '{$element['U_DELETE']|noescape}';
-    {/capture}
-      {do footerScript($tmpElementScript)}
       <div
         class="infos deleted-badge"
         data-image_id="{$element['ID']}"
@@ -1169,11 +1113,7 @@ pluginValues = [];
 
 {include 'include/album_selector.inc.latte'}
 
-{capture $tmpFooterScript2}
-var pluginFunctionNames = pluginFunctionMapInit(activePlugins);
-const all_related_categories_ids = {$all_selected_album|json_encode|noescape};
-{/capture}
-{do footerScript($tmpFooterScript2)}
+{do exposeData('all_related_categories_ids', $all_selected_album)}
 
 <style>
 #action_add_tags .item,

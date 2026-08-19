@@ -722,48 +722,39 @@
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
 
 {do combineScript(id: 'piecon', load: 'footer', path: 'themes/default/js/plugins/piecon.js')}
-{do combineScript(id: 'add_photo', load: 'footer', require: 'tus-js-client', path: 'themes/admin/default/js/photos_add_direct.js')}
+{do combineScript(id: 'add_photo', load: 'footer', require: 'tus-js-client,page-data', path: 'themes/admin/default/js/photos_add_direct.js')}
 
 {capture $tmpHtmlStyle}
 .addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */
 {/capture}
 {do htmlStyle($tmpHtmlStyle)}
 
-{capture $tmpFooterScript}
-
-const formatMode = {if $DISPLAY_FORMATS}true{else}false{/if};
-const haveFormatsOriginal = {if $HAVE_FORMATS_ORIGINAL}true{else}false{/if};
-const originalImageId = haveFormatsOriginal? '{if isset($FORMATS_ORIGINAL_INFO['id'])} {$FORMATS_ORIGINAL_INFO['id']} {else} -1 {/if}' : -1;
-const imageFormatsExtensions = '{$FORMATS_EXT_INFO|noescape}';
-const nb_albums = {=(string) $NB_ALBUMS|escapeJavascript|noescape};
-const chunk_size = '{$chunk_size|noescape}kb';
-const max_file_size = '{$max_file_size|noescape}mb';
-const format_update_warning = "{_ 'This format already exists, it will be overwritten !'|noescape}";
-const format_remove = "{_ 'Remove'|noescape}";
-var pwg_token = '{$pwg_token|noescape}';
-const photosAdded_label = "{_ '%d photos uploaded'|escapeJavascript|noescape}";
-const photosUpdated_label = "{_ '%d photos updated'|escapeJavascript|noescape}";
-const formatsAdded_label = "{_ '%d formats added for %d photos'|escapeJavascript|noescape}";
-const formatsUpdated_label = "{_ '%d formats updated for %d photos'|escapeJavascript|noescape}";
-const batch_Label = "{_ 'Manage this set of %d photos'|escapeJavascript|noescape}";
-const albumSummary_label = "{_ 'Album "%s" now contains %d photos'|escapeJavascript|noescape}";
-const str_format_warning = "{_ 'Error when trying to detect formats'|escapeJavascript|noescape}";
-const str_ok = "{_ 'Ok'|escapeJavascript|noescape}";
-const str_format_warning_multiple = "{_ 'There is multiple image in the database with the following names : %s.'|escapeJavascript|noescape}";
-const str_format_warning_notFound = "{_ 'No picture found with the following name : %s.'|escapeJavascript|noescape}";
-const str_and_X_others = "{_ 'and %d more'|escapeJavascript|noescape}";
-const str_upload_in_progress = "{_ 'Upload in progress'|escapeJavascript|noescape}";
-const str_drop_album_ab = '{_ 'Drop into album'|escapeJavascript|noescape}';
-const file_ext = "{$file_exts|noescape}";
-const format_ext = "{$format_ext|noescape}";
-const uploadedPhotos = [];
-let uploadCategory = null;
-const addedPhotos = [];
-const updatedPhotos = [];
-let related_categories_ids = {$selected_category|json_encode|noescape};
-
-{/capture}
-{do footerScript($tmpFooterScript)}
+{var $originalImageIdStr = ' ' . ($FORMATS_ORIGINAL_INFO['id'] ?? -1) . ' '}
+{do exposeData('display_formats', $DISPLAY_FORMATS)}
+{do exposeData('have_formats_original', $HAVE_FORMATS_ORIGINAL)}
+{do exposeData('original_image_id_str', $originalImageIdStr)}
+{do exposeData('formats_ext_info', $FORMATS_EXT_INFO)}
+{do exposeData('nb_albums', (string) $NB_ALBUMS)}
+{do exposeData('chunk_size', $chunk_size)}
+{do exposeData('max_file_size', $max_file_size)}
+{do exposeData('csrf_token', $pwg_token)}
+{do exposeData('file_exts', $file_exts)}
+{do exposeData('format_ext', $format_ext)}
+{do exposeData('related_categories_ids', $selected_category)}
+{do exposeString('This format already exists, it will be overwritten !')}
+{do exposeString('Remove')}
+{do exposeString('%d photos uploaded')}
+{do exposeString('%d photos updated')}
+{do exposeString('%d formats added for %d photos')}
+{do exposeString('%d formats updated for %d photos')}
+{do exposeString('Manage this set of %d photos')}
+{do exposeString('Album "%s" now contains %d photos')}
+{do exposeString('Error when trying to detect formats')}
+{do exposeString('There is multiple image in the database with the following names : %s.')}
+{do exposeString('No picture found with the following name : %s.')}
+{do exposeString('and %d more')}
+{do exposeString('Upload in progress')}
+{do exposeString('Drop into album')}
 
 <div id="photosAddContent">
   {if count($setup_errors) > 0}

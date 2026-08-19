@@ -694,15 +694,6 @@
 {do combineScript(id: 'alternativeView', load: 'footer', path: 'themes/admin/default/js/cat_list.js')}
 {do combineScript(id: 'jquery.cookie', path: 'themes/default/js/jquery.cookie.js', load: 'footer')}
 
-{capture $tmpFooterScript}
-jQuery(document).ready(function(){
-  $(".addAlbumHead").click(function () {
-    $(".addAlbum input[name=virtual_name]").focus();
-  })
-});
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.ui.sortable')}
-
 <div class="selectedAlbum cat-list-album-path">
   <span
     class="icon-sitemap selectedAlbum-first"

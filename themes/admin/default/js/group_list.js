@@ -1005,3 +1005,50 @@ $(".input-user-name").on("input", function() {
     $(".UsernameBlock").last().remove();
   }
 })
+
+var pwg_token = pwg_getPageData('csrf_token');
+var str_member_default = pwg_getPageString('member');
+var str_members_default = pwg_getPageString('members');
+var str_group_created = pwg_getPageString('Group added');
+var str_renaming_done = pwg_getPageString('Group renamed');
+var str_name_taken = pwg_getPageString('Name is already taken');
+var str_name_not_empty = pwg_getPageString('Name field must not be empty');
+var str_group_deleted = pwg_getPageString('Group "%s" succesfully deleted');
+var str_groups_deleted = pwg_getPageString('Groups {%s} succesfully deleted');
+var str_set_default = pwg_getPageString('Set as group for new users');
+var str_unset_default = pwg_getPageString('Unset as group for new users');
+var str_delete = pwg_getPageString('Are you sure you want to delete group "%s"?');
+var str_yes_delete_confirmation = pwg_getPageString('Yes, delete');
+var str_no_delete_confirmation = pwg_getPageString('No, I have changed my mind');
+var str_user_associated = pwg_getPageString('User associated');
+var str_user_dissociate = pwg_getPageString('Dissociate user from this group');
+var str_user_dissociated = pwg_getPageString('User "%s" dissociated from this group');
+var str_user_list = pwg_getPageString('Manage the members');
+var str_merged_into = pwg_getPageString('Group(s) {%s1} succesfully merged into "%s2"');
+var str_copy = pwg_getPageString(' (copy)');
+var str_other_copy = pwg_getPageString(' (copy %s)');
+
+var serverKey = pwg_getPageData('cache_key_users');
+var serverId = pwg_getPageData('cache_key_hash');
+var rootUrl = pwg_getPageData('root_url');
+
+$(document).on('keydown', function (e) {
+  if (e.keyCode === 27) { // ESC button
+    $("#UserList").fadeOut();
+  }
+});
+$(document).on('click', function (e) {
+  if ($(e.target).closest(".UserListPopInContainer").length === 0) {
+    $("#UserList").fadeOut();
+  }
+});
+
+// temporary fix for #1283 (begin) : force user local storage cache on page load.
+usersCache = new UsersCache({
+  serverKey: serverKey,
+  serverId: serverId,
+  rootUrl: rootUrl
+});
+
+usersCache.selectize(jQuery('select.UserSearch'));
+// temporary fix for #1283 (end)

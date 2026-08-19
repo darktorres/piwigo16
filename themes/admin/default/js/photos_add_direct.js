@@ -727,3 +727,33 @@ function add_first_album(add_cat) {
     }
   });
 }
+
+const formatMode = pwg_getPageData('display_formats');
+const haveFormatsOriginal = pwg_getPageData('have_formats_original');
+const originalImageId = haveFormatsOriginal ? pwg_getPageData('original_image_id_str') : -1;
+const imageFormatsExtensions = pwg_getPageData('formats_ext_info') || '';
+const nb_albums = pwg_getPageData('nb_albums');
+const chunk_size = pwg_getPageData('chunk_size') + 'kb';
+const max_file_size = pwg_getPageData('max_file_size') + 'mb';
+const format_update_warning = pwg_getPageString('This format already exists, it will be overwritten !');
+const format_remove = pwg_getPageString('Remove');
+var pwg_token = pwg_getPageData('csrf_token');
+const photosAdded_label = pwg_getPageString('%d photos uploaded');
+const photosUpdated_label = pwg_getPageString('%d photos updated');
+const formatsAdded_label = pwg_getPageString('%d formats added for %d photos');
+const formatsUpdated_label = pwg_getPageString('%d formats updated for %d photos');
+const batch_Label = pwg_getPageString('Manage this set of %d photos');
+const albumSummary_label = pwg_getPageString('Album "%s" now contains %d photos');
+const str_format_warning = pwg_getPageString('Error when trying to detect formats');
+const str_format_warning_multiple = pwg_getPageString('There is multiple image in the database with the following names : %s.');
+const str_format_warning_notFound = pwg_getPageString('No picture found with the following name : %s.');
+const str_and_X_others = pwg_getPageString('and %d more');
+const str_upload_in_progress = pwg_getPageString('Upload in progress');
+const str_drop_album_ab = pwg_getPageString('Drop into album');
+const file_ext = pwg_getPageData('file_exts');
+const format_ext = pwg_getPageData('format_ext');
+const uploadedPhotos = [];
+let uploadCategory = null;
+const addedPhotos = [];
+const updatedPhotos = [];
+let related_categories_ids = pwg_getPageData('related_categories_ids');

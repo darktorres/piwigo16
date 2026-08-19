@@ -694,27 +694,22 @@
   {include 'colorbox.inc.latte', load_mode: $load_mode}
   {do combineCss(path: "themes/admin/default/css/components/album_selector.css")}
   {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
-  {do combineScript(id: 'albumSelector', load: $load_mode, path: 'themes/admin/default/js/album_selector.js')}
+  {do combineScript(id: 'albumSelector', load: $load_mode, require: 'page-data', path: 'themes/admin/default/js/album_selector.js')}
   {* {combine_script id='albumSelector' load=$load_mode path='themes/admin/default/js/test-ab.js'} *}
   {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-  {capture $tmpFooterScript}
-  const str_plus_albums_found = {=json_encode(translate('Only the first %d albums are displayed, out of %d.'), \JSON_UNESCAPED_UNICODE)|noescape}
-  const str_album_selected = {=json_encode(translate('Album already selected'), \JSON_UNESCAPED_UNICODE)|noescape}
-  const str_already_in_related_cats = {=json_encode(translate('This albums is already in related categories list'), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_no_search_in_progress = {=json_encode(translate('No search in progress'), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_albums_found = {=json_encode(translate("<b>%d</b> albums found"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_album_found = {=json_encode(translate("<b>1</b> album found"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_result_limit = {=json_encode(translate("<b>%d+</b> albums found, try to refine the search"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_add_subcat_of = {=json_encode(translate("Add a sub-album to “%s”"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_create_and_select = {=json_encode(translate("Create and select"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_root_album_select = {=json_encode(translate("Root"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_complete_name_field = {=json_encode(translate("Name field must not be empty"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_an_error_has_occured = {=json_encode(translate("An error has occured"), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_album_modal_title = {=json_encode(translate('Select an album'), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_album_modal_placeholder = {=json_encode(translate('Search'), \JSON_UNESCAPED_UNICODE)|noescape};
-  const str_root = {=json_encode(translate('Root'), \JSON_UNESCAPED_UNICODE)|noescape};
-{/capture}
-  {do footerScript($tmpFooterScript)}
+  {do exposeString('Only the first %d albums are displayed, out of %d.')}
+  {do exposeString('Album already selected')}
+  {do exposeString('No search in progress')}
+  {do exposeString('<b>%d</b> albums found')}
+  {do exposeString('<b>1</b> album found')}
+  {do exposeString('<b>%d+</b> albums found, try to refine the search')}
+  {do exposeString('Add a sub-album to “%s”')}
+  {do exposeString('Create and select')}
+  {do exposeString('Root')}
+  {do exposeString('Name field must not be empty')}
+  {do exposeString('An error has occured')}
+  {do exposeString('Select an album')}
+  {do exposeString('Search')}
 
   <div id="addLinkedAlbum" class="linkedAlbumPopIn">
     <div class="linkedAlbumPopInContainer">

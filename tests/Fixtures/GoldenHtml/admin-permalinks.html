@@ -403,24 +403,12 @@ form fieldset p.actionButtons { margin-bottom:0}
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"nb_cats":2},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-jQuery(document).ready(function(){
-  $("h1").append("<span class='badge-number'>2</span>")
-  jQuery("#addPermalinkOpen").click(function(){
-    jQuery("#addPermalink").show();
-    jQuery("#showAddPermalink").hide();
-  });
-
-  jQuery("#addPermalinkClose").click(function(){
-    jQuery("#addPermalink").hide();
-    jQuery("#showAddPermalink").show();
-  });
-});
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

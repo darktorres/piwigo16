@@ -23,7 +23,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/admin/default/js/albums.js": {
@@ -42,7 +42,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 14
+      "count": 1
     }
   },
   "themes/admin/default/js/batchManagerGlobal.js": {
@@ -64,7 +64,7 @@
       "count": 5
     },
     "no-undef": {
-      "count": 27
+      "count": 1
     },
     "no-useless-assignment": {
       "count": 1
@@ -97,9 +97,6 @@
   "themes/admin/default/js/comments.js": {
     "eqeqeq": {
       "count": 4
-    },
-    "no-undef": {
-      "count": 11
     }
   },
   "themes/admin/default/js/common.js": {
@@ -140,7 +137,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 124
+      "count": 84
     }
   },
   "themes/admin/default/js/history.js": {
@@ -154,7 +151,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 107
+      "count": 13
     }
   },
   "themes/admin/default/js/intro_tooltips.js": {
@@ -178,7 +175,7 @@
       "count": 6
     },
     "no-undef": {
-      "count": 87
+      "count": 23
     },
     "no-useless-escape": {
       "count": 64
@@ -232,7 +229,7 @@
       "count": 32
     },
     "no-undef": {
-      "count": 146
+      "count": 103
     }
   },
   "themes/admin/default/js/user_activity.js": {
@@ -240,7 +237,7 @@
       "count": 19
     },
     "no-undef": {
-      "count": 161
+      "count": 4
     }
   },
   "themes/admin/default/js/user_list.js": {
@@ -251,7 +248,7 @@
       "count": 10
     },
     "no-undef": {
-      "count": 88
+      "count": 5
     }
   },
   "themes/default/js/mcs.js": {

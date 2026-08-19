@@ -689,21 +689,8 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-jQuery(document).ready(function(){
-  $("h1").append("<span class='badge-number'>{$nb_cats}</span>")
-  jQuery("#addPermalinkOpen").click(function(){
-    jQuery("#addPermalink").show();
-    jQuery("#showAddPermalink").hide();
-  });
-
-  jQuery("#addPermalinkClose").click(function(){
-    jQuery("#addPermalink").hide();
-    jQuery("#showAddPermalink").show();
-  });
-});
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.ui.sortable')}
+{do exposeData('nb_cats', $nb_cats)}
+{do combineScript(id: 'permalinks', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/permalinks.js')}
 
 <style>
 #showAddPermalink { text-align:left;margin-left:1em;margin-top:0;}

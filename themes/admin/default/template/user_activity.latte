@@ -697,116 +697,67 @@
 
 {do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{capture $tmpFooterScript}
-{* <!-- USERS --> *}
-var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS['users']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
-const nb_users = {$nb_users};
+{do exposeData('cache_key_users', $CACHE_KEYS['users'])}
+{do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
+{do exposeData('root_url', $ROOT_URL)}
+{do exposeData('nb_users', $nb_users)}
+{do exposeData('additional_filt_type', $ADDITIONAL_FILT['type'])}
+{do exposeData('additional_filt_value', $ADDITIONAL_FILT['value'])}
+{do exposeData('activity_dates_min', $ACTIVITY_DATES['min'])}
+{do exposeData('activity_dates_max', $ACTIVITY_DATES['max'])}
+{do exposeString('Users')}
+{do exposeString('%s line')}
+{do exposeString('%s lines')}
+{do exposeString('add')}
+{do exposeString('deletion')}
+{do exposeString('move')}
+{do exposeString('edit')}
+{do exposeString('login')}
+{do exposeString('logout')}
+{do exposeString('%d album added')}
+{do exposeString('%d album deleted')}
+{do exposeString('%d album edited')}
+{do exposeString('%d album moved')}
+{do exposeString('%d albums added')}
+{do exposeString('%d albums deleted')}
+{do exposeString('%d albums edited')}
+{do exposeString('%d albums moved')}
+{do exposeString('%d user added')}
+{do exposeString('%d user deleted')}
+{do exposeString('%d user edited')}
+{do exposeString('%d user logged in')}
+{do exposeString('%d user logged out')}
+{do exposeString('%d users added')}
+{do exposeString('%d users deleted')}
+{do exposeString('%d users edited')}
+{do exposeString('%d users logged in')}
+{do exposeString('%d users logged out')}
+{do exposeString('%d photo added')}
+{do exposeString('%d photo deleted')}
+{do exposeString('%d photo edited')}
+{do exposeString('%d photo moved')}
+{do exposeString('%d photos added')}
+{do exposeString('%d photos deleted')}
+{do exposeString('%d photos edited')}
+{do exposeString('%d photos moved')}
+{do exposeString('%d group added')}
+{do exposeString('%d group deleted')}
+{do exposeString('%d group edited')}
+{do exposeString('%d group moved')}
+{do exposeString('%d groups added')}
+{do exposeString('%d groups deleted')}
+{do exposeString('%d groups edited')}
+{do exposeString('%d groups moved')}
+{do exposeString('%d tag added')}
+{do exposeString('%d tag deleted')}
+{do exposeString('%d tag edited')}
+{do exposeString('%d tag moved')}
+{do exposeString('%d tags added')}
+{do exposeString('%d tags deleted')}
+{do exposeString('%d tags edited')}
+{do exposeString('%d tags moved')}
 
-const additional_filt_type = '{$ADDITIONAL_FILT['type']|noescape}';
-const additional_filt_value = {if $ADDITIONAL_FILT['type']} {$ADDITIONAL_FILT['value']|noescape} {else} null {/if};
-
-const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
-var activity_page = 1;
-let current_page_offset = 0;
-let page_offsets = [0];
-let actual_page = 1;
-let end_page = false;
-let uid_filter;
-let action_filter;
-let object_filter;
-let date_min_filter = '{$ACTIVITY_DATES['min']}';
-let date_max_filter = '{$ACTIVITY_DATES['max']}';
-
-const date_min = '{$ACTIVITY_DATES['min']}';
-const date_max = '{$ACTIVITY_DATES['max']}';
-
-const page_ellipsis = '<span>...</span>'
-const page_item = '<a data-page="%d">%d</a>';
-var create_selecter = true;
-const users_key = "{_ "Users"|noescape}";
-
-const line_key = "{_ '%s line'|noescape}";
-const lines_key = "{_ '%s lines'|noescape}";
-
-{*<-- Translation keys -->*}
-
-var actionType_add = "{_ 'add'|noescape}";
-var actionType_delete = "{_ 'deletion'|noescape}";
-var actionType_move = "{_ 'move'|noescape}";
-var actionType_edit = "{_ 'edit'|noescape}";
-var actionType_login = "{_ 'login'|noescape}";
-var actionType_logout = "{_ 'logout'|noescape}";
-
-{* Album keys *}
-
-var actionInfos_album_added = "{_ '%d album added'|noescape}";
-var actionInfos_album_deleted = "{_ '%d album deleted'|noescape}";
-var actionInfos_album_edited = "{_ '%d album edited'|noescape}";
-var actionInfos_album_moved = "{_ '%d album moved'|noescape}";
-
-var actionInfos_albums_added = "{_ '%d albums added'|noescape}";
-var actionInfos_albums_deleted = "{_ '%d albums deleted'|noescape}";
-var actionInfos_albums_edited = "{_ '%d albums edited'|noescape}";
-var actionInfos_albums_moved = "{_ '%d albums moved'|noescape}";
-
-{* User keys *}
-
-var actionInfos_user_added = "{_ '%d user added'|noescape}";
-var actionInfos_user_deleted = "{_ '%d user deleted'|noescape}";
-var actionInfos_user_edited = "{_ '%d user edited'|noescape}";
-var actionInfos_user_logged_in = "{_ '%d user logged in'|noescape}";
-var actionInfos_user_logged_out = "{_ '%d user logged out'|noescape}";
-
-var actionInfos_users_added = "{_ '%d users added'|noescape}";
-var actionInfos_users_deleted = "{_ '%d users deleted'|noescape}";
-var actionInfos_users_edited = "{_ '%d users edited'|noescape}";
-var actionInfos_users_logged_in = "{_ '%d users logged in'|noescape}";
-var actionInfos_users_logged_out = "{_ '%d users logged out'|noescape}";
-
-{* Photo keys *}
-
-var actionInfos_photo_added = "{_ '%d photo added'|noescape}";
-var actionInfos_photo_deleted = "{_ '%d photo deleted'|noescape}";
-var actionInfos_photo_edited = "{_ '%d photo edited'|noescape}";
-var actionInfos_photo_moved = "{_ '%d photo moved'|noescape}";
-
-var actionInfos_photos_added = "{_ '%d photos added'|noescape}";
-var actionInfos_photos_deleted = "{_ '%d photos deleted'|noescape}";
-var actionInfos_photos_edited = "{_ '%d photos edited'|noescape}";
-var actionInfos_photos_moved = "{_ '%d photos moved'|noescape}";
-
-{* Group keys *}
-
-var actionInfos_group_added = "{_ '%d group added'|noescape}";
-var actionInfos_group_deleted = "{_ '%d group deleted'|noescape}";
-var actionInfos_group_edited = "{_ '%d group edited'|noescape}";
-var actionInfos_group_moved = "{_ '%d group moved'|noescape}";
-
-var actionInfos_groups_added = "{_ '%d groups added'|noescape}";
-var actionInfos_groups_deleted = "{_ '%d groups deleted'|noescape}";
-var actionInfos_groups_edited = "{_ '%d groups edited'|noescape}";
-var actionInfos_groups_moved = "{_ '%d groups moved'|noescape}";
-
-{* Tags keys *}
-
-var actionInfos_tag_added = "{_ '%d tag added'|noescape}";
-var actionInfos_tag_deleted = "{_ '%d tag deleted'|noescape}";
-var actionInfos_tag_edited = "{_ '%d tag edited'|noescape}";
-var actionInfos_tag_moved = "{_ '%d tag moved'|noescape}";
-
-var actionInfos_tags_added = "{_ '%d tags added'|noescape}";
-var actionInfos_tags_deleted = "{_ '%d tags deleted'|noescape}";
-var actionInfos_tags_edited = "{_ '%d tags edited'|noescape}";
-var actionInfos_tags_moved = "{_ '%d tags moved'|noescape}";
-
-{/capture}
-{do footerScript($tmpFooterScript)}
-
-{do combineScript(id: 'user_activity', load: 'async', require: 'jquery', path: 'themes/admin/default/js/user_activity.js')}
+{do combineScript(id: 'user_activity', load: 'async', require: 'jquery,page-data,LocalStorageCache', path: 'themes/admin/default/js/user_activity.js')}
 <div class="container">
   <div>
     <div class="activity-header">

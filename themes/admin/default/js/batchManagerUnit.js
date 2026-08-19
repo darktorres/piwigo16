@@ -1,4 +1,66 @@
-$(document).ready(function() {  
+var activePlugins = pwg_getPageData('active_plugins');
+
+var tagsCache = new TagsCache({
+  serverKey: pwg_getPageData('cache_key_tags'),
+  serverId: pwg_getPageData('cache_key_hash'),
+  rootUrl: pwg_getPageData('root_url')
+});
+tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
+  'Add': pwg_getPageString('Create')
+}});
+
+var categoriesCache = new CategoriesCache({
+  serverKey: pwg_getPageData('cache_key_categories'),
+  serverId: pwg_getPageData('cache_key_hash'),
+  rootUrl: pwg_getPageData('root_url')
+});
+
+var associated_categories = pwg_getPageData('associated_categories');
+
+categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
+  filter: function(categories, options) {
+    if (this.name === 'dissociate') {
+      var filtered = jQuery.grep(categories, function(cat) {
+        return Boolean(associated_categories[cat.id]);
+      });
+
+      if (filtered.length > 0) {
+        options.default = filtered[0].id;
+      }
+
+      return filtered;
+    }
+    else {
+      return categories;
+    }
+  }
+});
+
+// onLoad needed to wait localization loads
+jQuery(function(){
+  jQuery('[data-datepicker]').pwgDatepicker({
+    showTimepicker: true,
+    cancelButton: pwg_getPageString('Cancel')
+  });
+});
+
+jQuery("a.preview-box").colorbox( {
+  photo: true
+});
+
+var str_are_you_sure = pwg_getPageString('Are you sure?');
+var str_yes = pwg_getPageString('Yes, delete');
+var str_no = pwg_getPageString('No, I have changed my mind');
+var str_orphan = pwg_getPageString('This photo is an orphan');
+var str_meta_warning = pwg_getPageString('Warning ! Unsaved changes will be lost');
+var str_meta_yes = pwg_getPageString('I want to continue');
+const str_title_ab = pwg_getPageString('Associate to album');
+
+let b_current_picture_id;
+// Check Skeleton extension for more details about extensibility
+var pluginValues = [];
+
+$(document).ready(function() {
   // Detect unsaved changes on any inputs
   let user_interacted = false;
 
@@ -460,6 +522,10 @@ function updateBlock(pictureId) {
     }
   });
 }
+
+var all_related_categories_ids = pwg_getPageData('all_related_categories_ids');
+pluginFunctionMapInit(activePlugins);
+
 // TAGS UPDATE Yet to be implemented
 // function updateTags(tagsData, pictureId) {
 //   const $tagsUpdate = $('#tags-'+pictureId).selectize({

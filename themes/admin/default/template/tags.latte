@@ -689,59 +689,45 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-var pwg_token = "{$CSRF_TOKEN}";
-var orphan_tag_names = {$orphan_tag_names_array|noescape};
-var str_delete = '{_ 'Delete tag "%s"?'|noescape}';
-var str_delete_tags = '{_ 'Delete tags {%s}?'|noescape}';
-var str_yes_delete_confirmation = "{_ 'Yes, delete'|noescape}";
-var str_no_delete_confirmation = "{_ 'No, I have changed my mind'|noescape}";
-var str_yes_rename_confirmation = "{_ 'Yes, rename'|noescape}";
-var str_tag_deleted = '{_ 'Tag "%s" succesfully deleted'|noescape}';
-var str_tags_deleted = '{_ 'Tags {%s} succesfully deleted'|noescape}';
-var str_already_exist = '{_ 'Tag "%s" already exists'|noescape}';
-var str_tag_created = '{_ 'Tag "%s" created'|noescape}';
-var str_tag_renamed = '{_ 'Tag "%s1" renamed in "%s2"'|noescape}';
-var str_tag_rename = '{_ 'Rename "%s"'|noescape}';
-var str_delete_orphan_tags = '{_ 'Delete orphan tags ?'|noescape}';
-var str_orphan_tags = '{_ 'You have %s1 orphan : %s2'|noescape}';
-var str_delete_them = '{_ 'Delete them'|noescape}';
-var str_keep_them = '{_ 'Keep them'|noescape}';
-var str_copy = '{_ ' (copy)'|noescape}';
-var str_other_copy = '{_ ' (copy %s)'|noescape}';
-var str_merged_into = '{_ 'Tag(s) {%s1} succesfully merged into "%s2"'|noescape}';
-var str_and_others_tags = '{_ 'and %s others'|noescape}';
-var str_others_tags_available = '{_ '%s other tags available...'|noescape}'
-var str_number_photos = '{='%d photos'|noescape}'
-var str_no_photos = '{='no photo'|noescape}'
-var str_select_all_tag = '{_ 'Select all %d tags'|noescape}';
-var str_clear_selection = '{_ 'Clear Selection'|noescape}';
-var str_selection_done = '{_ 'The %d tags on this page are selected'|noescape}';
-var str_tag_selected = '{_ '<b>%d</b> tag selected'|noescape}';
-var str_tags_found = '{_ '<b>%d</b> tags found'|noescape}';
-var str_tag_found = '{_ '<b>%d</b> tag found'|noescape}';
-
-$(document).ready(function() {
-  $("h1").append('<span class="badge-number">{$total}</span>');
-});
-
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeData('orphan_tag_names_array', $orphan_tag_names_array)}
+{do exposeData('total', $total)}
+{do exposeString('Delete tag "%s"?')}
+{do exposeString('Delete tags {%s}?')}
+{do exposeString('Yes, delete')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Yes, rename')}
+{do exposeString('Tag "%s" succesfully deleted')}
+{do exposeString('Tags {%s} succesfully deleted')}
+{do exposeString('Tag "%s" already exists')}
+{do exposeString('Tag "%s" created')}
+{do exposeString('Tag "%s1" renamed in "%s2"')}
+{do exposeString('Rename "%s"')}
+{do exposeString('Delete orphan tags ?')}
+{do exposeString('You have %s1 orphan : %s2')}
+{do exposeString('Delete them')}
+{do exposeString('Keep them')}
+{do exposeString(' (copy)')}
+{do exposeString(' (copy %s)')}
+{do exposeString('Tag(s) {%s1} succesfully merged into "%s2"')}
+{do exposeString('and %s others')}
+{do exposeString('%s other tags available...')}
+{do exposeString('%d photos')}
+{do exposeString('no photo')}
+{do exposeString('Select all %d tags')}
+{do exposeString('Clear Selection')}
+{do exposeString('The %d tags on this page are selected')}
+{do exposeString('<b>%d</b> tag selected')}
+{do exposeString('<b>%d</b> tags found')}
+{do exposeString('<b>%d</b> tag found')}
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 {do combineScript(id: 'tiptip', load: 'header', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
-{do combineScript(id: 'tags', load: 'footer', path: 'themes/admin/default/js/tags.js')}
+{do combineScript(id: 'tags', load: 'footer', require: 'page-data,jquery.cookie', path: 'themes/admin/default/js/tags.js')}
 {do combineScript(id: 'jquery.cookie', path: 'themes/default/js/jquery.cookie.js', load: 'footer')}
-
-{capture $tmpFooterScript2}
-if (!$.cookie("pwg_tags_per_page")) {
-  $.cookie("pwg_tags_per_page", "100");
-}
-{/capture}
-{do footerScript($tmpFooterScript2)}
 
 <meta http-equiv='cache-control' content='no-cache'>
 <meta http-equiv='expires' content='0'>

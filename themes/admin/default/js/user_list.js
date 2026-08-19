@@ -2455,3 +2455,99 @@ function set_main_user(user_id, new_username) {
         }
     });
 }
+
+var title_msg = pwg_getPageString('Are you sure you want to delete the user "%s"?');
+var confirm_msg = pwg_getPageString('Yes, I am sure');
+var cancel_msg = pwg_getPageString('No, I have changed my mind');
+var str_and_others_tags = pwg_getPageString('and %s others');
+var missingUsername = pwg_getPageString('Please, enter a login');
+var missingPassword = pwg_getPageString('Password is missing. Please enter the password.');
+var missingConfPassword = pwg_getPageString('Password confirmation is missing. Please confirm the chosen password.');
+var fieldNotEmpty = pwg_getPageString('Name field must not be empty');
+var noMatchPassword = pwg_getPageString('The passwords do not match');
+var missingField = pwg_getPageString('Please complete all fields');
+var passwordCopied = pwg_getPageString('Password copied');
+var mailSentAt = pwg_getPageString('Mail sent to %s [%s].');
+var errorMailSent = pwg_getPageString('Error sending email');
+var cannotSendMail = pwg_getPageString("Cannot send an email to this user because he doesn't have an email address");
+var mainUserContinue = pwg_getPageString('You are about to set %s as main user instead of %s, do you wish to continue ?');
+var mainUserRewrite = pwg_getPageString('To be sure, please rewrite the word “%s” below');
+var mainUserValidate = pwg_getPageString('You can now change the main user from %s to %s.');
+var mainUserSuccess = pwg_getPageString('%s is the new main user');
+var mainUserStr = pwg_getPageString('Main user');
+var mainAskWebmaster = pwg_getPageString('You are not authorised to change the main user, please ask your webmaster');
+var mainUserSet = pwg_getPageString('Set as main user');
+var mainUserUpgradeWebmaster = pwg_getPageString('This user must first be defined as the webmaster before it can be upgraded to the main user');
+var errorStr = pwg_getPageString('an error happened');
+var copyLinkStr = pwg_getPageString('Copied link');
+var cantCopy = pwg_getPageString('You cannot copy the password if the connection to this site is not secure.');
+var validLinkMail = pwg_getPageString('An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.');
+var validLinkWithoutMail = pwg_getPageString('Copy the link below and send it to the user so the password can be set.');
+var errorMailSentMsg = pwg_getPageString('An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.');
+
+var registered_str = pwg_getPageString('Registered');
+var last_visit_str = pwg_getPageString('Last visit');
+var dates_infos = pwg_getPageString('between %s and %s');
+var user_added_str = pwg_getPageString('User %s added');
+var filtered_users = pwg_getPageString('<b>%d</b> filtered users');
+var filtered_user = pwg_getPageString('<b>%d</b> filtered user');
+var history_base_url = pwg_getPageData('u_history');
+
+var status_to_str = {
+    webmaster: pwg_getPageString('user_status_webmaster'),
+    admin: pwg_getPageString('user_status_admin'),
+    normal: pwg_getPageString('user_status_normal'),
+    generic: pwg_getPageString('user_status_generic'),
+    guest: pwg_getPageString('user_status_guest')
+};
+
+var view_selector = pwg_getPageData('view_selector');
+var pagination = String(pwg_getPageData('pagination'));
+per_page = parseInt(pagination);
+
+months = [
+    pwg_getPageString('Jan'),
+    pwg_getPageString('Feb'),
+    pwg_getPageString('Mar'),
+    pwg_getPageString('Apr'),
+    pwg_getPageString('May'),
+    pwg_getPageString('Jun'),
+    pwg_getPageString('Jul'),
+    pwg_getPageString('Aug'),
+    pwg_getPageString('Sep'),
+    pwg_getPageString('Oct'),
+    pwg_getPageString('Nov'),
+    pwg_getPageString('Dec')
+];
+
+/* Template variables */
+connected_user = pwg_getPageData('connected_user');
+var connected_user_status = pwg_getPageData('connected_user_status');
+var owner_id = pwg_getPageData('owner');
+owner_username = pwg_getPageData('owner_username');
+var groups_arr_name = JSON.parse(pwg_getPageData('groups_arr_name'));
+var groups_arr_id = pwg_getPageData('groups_arr_id') ? pwg_getPageData('groups_arr_id').split(',').map(Number) : [];
+groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
+guest_id = pwg_getPageData('guest_id');
+nb_days = pwg_getPageString('%d days');
+//per page is too long for the popin
+nb_photos = pwg_getPageString('%d photos');
+nb_photos_per_page = pwg_getPageString('%d photos per page');
+pwg_token = pwg_getPageData('csrf_token');
+var has_group = pwg_getPageData('filter_group');
+
+var register_dates_str = pwg_getPageData('register_dates');
+var register_dates = register_dates_str.split(',');
+var groupOptions = groups_arr.map(function(x) { return { value: x[0], label: x[1], isSelected: 0 }; });
+
+/* Startup */
+setupRegisterDates(register_dates);
+selectionMode(false);
+get_guest_info();
+update_user_list();
+update_selection_content();
+
+$(".icon-help-circled").tipTip({
+    maxWidth: '700px',
+    fadeIn: '1000'
+});

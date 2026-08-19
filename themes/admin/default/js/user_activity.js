@@ -1,3 +1,95 @@
+var usersCache = new UsersCache({
+    serverKey: pwg_getPageData('cache_key_users'),
+    serverId: pwg_getPageData('cache_key_hash'),
+    rootUrl: pwg_getPageData('root_url')
+});
+var nb_users = pwg_getPageData('nb_users');
+
+var additional_filt_type = pwg_getPageData('additional_filt_type');
+var additional_filt_value = pwg_getPageData('additional_filt_value');
+
+var color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
+var activity_page = 1;
+var current_page_offset = 0;
+var page_offsets = [0];
+var actual_page = 1;
+var end_page = false;
+var uid_filter;
+var action_filter;
+var object_filter;
+var date_min_filter = pwg_getPageData('activity_dates_min');
+var date_max_filter = pwg_getPageData('activity_dates_max');
+
+var date_min = pwg_getPageData('activity_dates_min');
+var date_max = pwg_getPageData('activity_dates_max');
+
+var page_ellipsis = '<span>...</span>';
+var page_item = '<a data-page="%d">%d</a>';
+var create_selecter = true;
+var users_key = pwg_getPageString('Users');
+
+var line_key = pwg_getPageString('%s line');
+var lines_key = pwg_getPageString('%s lines');
+
+var actionType_add = pwg_getPageString('add');
+var actionType_delete = pwg_getPageString('deletion');
+var actionType_move = pwg_getPageString('move');
+var actionType_edit = pwg_getPageString('edit');
+var actionType_login = pwg_getPageString('login');
+var actionType_logout = pwg_getPageString('logout');
+
+var actionInfos_album_added = pwg_getPageString('%d album added');
+var actionInfos_album_deleted = pwg_getPageString('%d album deleted');
+var actionInfos_album_edited = pwg_getPageString('%d album edited');
+var actionInfos_album_moved = pwg_getPageString('%d album moved');
+
+var actionInfos_albums_added = pwg_getPageString('%d albums added');
+var actionInfos_albums_deleted = pwg_getPageString('%d albums deleted');
+var actionInfos_albums_edited = pwg_getPageString('%d albums edited');
+var actionInfos_albums_moved = pwg_getPageString('%d albums moved');
+
+var actionInfos_user_added = pwg_getPageString('%d user added');
+var actionInfos_user_deleted = pwg_getPageString('%d user deleted');
+var actionInfos_user_edited = pwg_getPageString('%d user edited');
+var actionInfos_user_logged_in = pwg_getPageString('%d user logged in');
+var actionInfos_user_logged_out = pwg_getPageString('%d user logged out');
+
+var actionInfos_users_added = pwg_getPageString('%d users added');
+var actionInfos_users_deleted = pwg_getPageString('%d users deleted');
+var actionInfos_users_edited = pwg_getPageString('%d users edited');
+var actionInfos_users_logged_in = pwg_getPageString('%d users logged in');
+var actionInfos_users_logged_out = pwg_getPageString('%d users logged out');
+
+var actionInfos_photo_added = pwg_getPageString('%d photo added');
+var actionInfos_photo_deleted = pwg_getPageString('%d photo deleted');
+var actionInfos_photo_edited = pwg_getPageString('%d photo edited');
+var actionInfos_photo_moved = pwg_getPageString('%d photo moved');
+
+var actionInfos_photos_added = pwg_getPageString('%d photos added');
+var actionInfos_photos_deleted = pwg_getPageString('%d photos deleted');
+var actionInfos_photos_edited = pwg_getPageString('%d photos edited');
+var actionInfos_photos_moved = pwg_getPageString('%d photos moved');
+
+var actionInfos_group_added = pwg_getPageString('%d group added');
+var actionInfos_group_deleted = pwg_getPageString('%d group deleted');
+var actionInfos_group_edited = pwg_getPageString('%d group edited');
+var actionInfos_group_moved = pwg_getPageString('%d group moved');
+
+var actionInfos_groups_added = pwg_getPageString('%d groups added');
+var actionInfos_groups_deleted = pwg_getPageString('%d groups deleted');
+var actionInfos_groups_edited = pwg_getPageString('%d groups edited');
+var actionInfos_groups_moved = pwg_getPageString('%d groups moved');
+
+var actionInfos_tag_added = pwg_getPageString('%d tag added');
+var actionInfos_tag_deleted = pwg_getPageString('%d tag deleted');
+var actionInfos_tag_edited = pwg_getPageString('%d tag edited');
+var actionInfos_tag_moved = pwg_getPageString('%d tag moved');
+
+var actionInfos_tags_added = pwg_getPageString('%d tags added');
+var actionInfos_tags_deleted = pwg_getPageString('%d tags deleted');
+var actionInfos_tags_edited = pwg_getPageString('%d tags edited');
+var actionInfos_tags_moved = pwg_getPageString('%d tags moved');
+
 //{*<-- Getting and Displaying Activities -->*}
 
 // Declared before the immediately-invoked call below: get_user_activity()

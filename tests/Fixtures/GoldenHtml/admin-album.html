@@ -727,27 +727,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":{"cat_id":1,"parent_cat_id":0,"cat_name":"Sample Album","nb_subcats":1,"csrf_token":"{{TOKEN}}","u_delete":"admin.php?page=albums","is_visible":true},"strings":{"No, I have changed my mind":"No, I have changed my mind","Delete album":"Delete album","Delete album \"%s\" and its %d sub-albums.":"Delete album \"%s\" and its %d sub-albums.","Just now":"Just now","delete only album, not photos":"delete only album, not photos","delete album and the %d orphan photos":"delete album and the %d orphan photos","delete album and all %d photos, even the %d associated to other albums":"delete album and all %d photos, even the %d associated to other albums","Comments allowed for sub-albums":"Comments allowed for sub-albums","Comments disallowed for sub-albums":"Comments disallowed for sub-albums","New parent album":"New parent album","Yes, I am sure":"Yes, I am sure","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"cat_id":1,"parent_cat_id":0,"cat_name":"Sample Album","nb_subcats":1,"csrf_token":"{{TOKEN}}","u_delete":"admin.php?page=albums","is_visible":true},"strings":{"No, I have changed my mind":"No, I have changed my mind","Delete album":"Delete album","Delete album \"%s\" and its %d sub-albums.":"Delete album \"%s\" and its %d sub-albums.","Just now":"Just now","delete only album, not photos":"delete only album, not photos","delete album and the %d orphan photos":"delete album and the %d orphan photos","delete album and all %d photos, even the %d associated to other albums":"delete album and all %d photos, even the %d associated to other albums","Comments allowed for sub-albums":"Comments allowed for sub-albums","Comments disallowed for sub-albums":"Comments disallowed for sub-albums","New parent album":"New parent album","Only the first %d albums are displayed, out of %d.":"Only the first %d albums are displayed, out of %d.","Album already selected":"Album already selected","No search in progress":"No search in progress","\u003Cb\u003E%d\u003C\/b\u003E albums found":"\u003Cb\u003E%d\u003C\/b\u003E albums found","\u003Cb\u003E1\u003C\/b\u003E album found":"\u003Cb\u003E1\u003C\/b\u003E album found","\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search":"\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search","Add a sub-album to “%s”":"Add a sub-album to “%s”","Create and select":"Create and select","Root":"Root","Name field must not be empty":"Name field must not be empty","An error has occured":"An error has occured","Select an album":"Select an album","Search":"Search","Yes, I am sure":"Yes, I am sure","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
-const str_album_selected = "Album already selected"
-const str_already_in_related_cats = "This albums is already in related albums list";
-const str_no_search_in_progress = "No search in progress";
-const str_albums_found = "<b>%d<\/b> albums found";
-const str_album_found = "<b>1<\/b> album found";
-const str_result_limit = "<b>%d+<\/b> albums found, try to refine the search";
-const str_add_subcat_of = "Add a sub-album to “%s”";
-const str_create_and_select = "Create and select";
-const str_root_album_select = "Root";
-const str_complete_name_field = "Name field must not be empty";
-const str_an_error_has_occured = "An error has occured";
-const str_album_modal_title = "Select an album";
-const str_album_modal_placeholder = "Search";
-const str_root = "Root";
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

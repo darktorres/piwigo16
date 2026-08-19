@@ -558,22 +558,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}"},"strings":{"Yes, delete":"Yes, delete","Are you sure you want to delete comment #%s?":"Are you sure you want to delete comment #%s?","Are you sure you want to delete \"%d\" comments?":"Are you sure you want to delete \"%d\" comments?","An error has occured":"An error has occured","The comment has been validated.":"The comment has been validated.","The comments have been validated.":"The comments have been validated.","and %s others":"and %s others","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-const str_yes_delete_confirmation = "Yes, delete"
-const str_no_delete_confirmation = "No, I have changed my mind"
-const str_delete = "Are you sure you want to delete comment #%s?"
-const str_deletes = "Are you sure you want to delete \"%d\" comments?"
-const str_no_comments_selected = "No comments selected, no actions possible."
-const pwg_token = "{{TOKEN}}"
-const str_an_error_has = "An error has occured"
-const str_comment_validated = "The comment has been validated."
-const str_comments_validated = "The comments have been validated."
-const str_and_others = "and %s others"
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

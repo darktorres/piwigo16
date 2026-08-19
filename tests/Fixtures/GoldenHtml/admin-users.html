@@ -212,8 +212,7 @@
 
   </div> 
 
-   
-
+  
 
 
 
@@ -3839,115 +3838,11 @@ Advanced filter
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"u_history":"admin.php?page=history\u0026filter_user_id=","connected_user":1,"connected_user_status":"webmaster","owner":1,"owner_username":"fixture_admin","groups_arr_name":"[\"Editors\",\"Guests\",\"Reviewers\"]","groups_arr_id":"1,3,2","guest_id":2,"csrf_token":"{{TOKEN}}","filter_group":null,"register_dates":"2026-08","view_selector":"line","pagination":5},"strings":{"Are you sure you want to delete the user \"%s\"?":"Are you sure you want to delete the user \"%s\"?","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","and %s others":"and %s others","You need to confirm deletion":"You must confirm deletion","Please, enter a login":"Please, enter a login","Password is missing. Please enter the password.":"Password is missing. Please enter the password.","Password confirmation is missing. Please confirm the chosen password.":"Password confirmation is missing. Please confirm the chosen password.","Name field must not be empty":"Name field must not be empty","The passwords do not match":"The passwords do not match","Please complete all fields":"Please complete all fields","Password copied":"Password copied","Mail sent to %s [%s].":"Mail sent to %s [%s].","Error sending email":"Error when sending email","Cannot send an email to this user because he doesn't have an email address":"Cannot send an email to this user because he doesn't have an email address","You are about to set %s as main user instead of %s, do you wish to continue ?":"You are about to set %s as main user instead of %s, do you wish to continue ?","To be sure, please rewrite the word “%s” below":"To be sure, please rewrite the word “%s” below","You can now change the main user from %s to %s.":"You can now change the main user from %s to %s.","%s is the new main user":"%s is the new main user","Main user":"Main user","You are not authorised to change the main user, please ask your webmaster":"You are not authorised to change the main user, please ask your webmaster","Set as main user":"Set as main user","This user must first be defined as the webmaster before it can be upgraded to the main user":"This user must first be defined as the webmaster before it can be upgraded to the main user","an error happened":"an error occurred","Copied link":"Copied link","You cannot copy the password if the connection to this site is not secure.":"You cannot copy the password if the connection to this site is not secure.","An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password.":"An activation link valid for %s has been sent to \"%s\". If the link is not received, a new one can be generated and copied by editing the user and managing their password.","Copy the link below and send it to the user so the password can be set.":"Copy the link below and send it to the user so the password can be set.","An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.":"An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.","Registered":"Registered","Last visit":"Last visit","between %s and %s":"between %s and %s","User %s added":"User %s added","\u003Cb\u003E%d\u003C\/b\u003E filtered users":"\u003Cb\u003E%d\u003C\/b\u003E filtered users","\u003Cb\u003E%d\u003C\/b\u003E filtered user":"\u003Cb\u003E%d\u003C\/b\u003E filtered user","user_status_webmaster":"Webmaster","user_status_admin":"Administrator","user_status_normal":"Basic","user_status_generic":"Generic","user_status_guest":"Guest","%d days":"%d days","%d photos":"%d photos","%d photos per page":"%d photos per page","Jan":"Jan","Feb":"Feb","Mar":"Mar","Apr":"Apr","May":"May","Jun":"Jun","Jul":"Jul","Aug":"Aug","Sep":"Sep","Oct":"Oct","Nov":"Nov","Dec":"Dec","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
-
-/* Translates */
-const title_msg = 'Are you sure you want to delete the user \"%s\"?';
-const are_you_sure_msg  = 'Are you sure?';
-const confirm_msg = 'Yes, I am sure';
-const cancel_msg = 'No, I have changed my mind';
-const str_and_others_tags = 'and %s others';
-const missingConfirm = "You must confirm deletion";
-const missingUsername = "Please, enter a login";
-const missingPassword = "Password is missing. Please enter the password.";
-const missingConfPassword = "Password confirmation is missing. Please confirm the chosen password.";
-const fieldNotEmpty = "Name field must not be empty"
-const noMatchPassword = "The passwords do not match";
-const missingField = "Please complete all fields";
-const passwordUpdated = "Password updated";
-const passwordCopied = "Password copied";
-const copyPassword = "Copy password";
-const mailSentAt = "Mail sent to %s [%s].";
-const errorMailSent = "Error when sending email";
-const cannotSendMail = "Cannot send an email to this user because he doesn\'t have an email address";
-const mainUserContinue = "You are about to set %s as main user instead of %s, do you wish to continue ?";
-const mainUserRewrite = "To be sure, please rewrite the word “%s” below";
-const mainUserValidate = "You can now change the main user from %s to %s.";
-const mainUserSuccess = "%s is the new main user";
-const mainUserStr = "Main user";
-const mainAskWebmaster = "You are not authorised to change the main user, please ask your webmaster";
-const mainUserSet = "Set as main user";
-const mainUserUpgradeWebmaster = "This user must first be defined as the webmaster before it can be upgraded to the main user";
-const errorStr = "an error occurred";
-const copyLinkStr = "Copied link";
-const cantCopy = "You cannot copy the password if the connection to this site is not secure.";
-const validLinkMail = "An activation link valid for %s has been sent to \"%s\". If the link is not received, a new one can be generated and copied by editing the user and managing their password.";
-const validLinkWithoutMail = "Copy the link below and send it to the user so the password can be set.";
-const errorMailSentMsg = "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.";
-
-const registered_str = 'Registered';
-const last_visit_str = 'Last visit';
-const dates_infos = 'between %s and %s'
-const hide_str = 'Hide';
-const show_str = 'Show';
-const user_added_str = 'User %s added';
-const str_popin_update_btn = 'Update';
-const filtered_users = '<b>%d<\/b> filtered users';
-const filtered_user = '<b>%d<\/b> filtered user';
-const history_base_url = "admin.php?page=history&filter_user_id=";
-
-const status_to_str = {
-  'webmaster': "Webmaster",
-  'admin': "Administrator",
-  'normal': "Basic",
-  'generic': "Generic",
-  'guest': "Guest",
-}
-
-const view_selector = 'line';
-const pagination = '5';
-per_page = parseInt(pagination);
-
-months = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec"
-];
-
-/* Template variables */
-connected_user = 1;
-connected_user_status = "webmaster";
-owner_id = 1;
-owner_username = "fixture_admin";
-let groups_arr_name = ["Editors","Guests","Reviewers"];
-let groups_arr_id = [1,3,2];
-groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
-guest_id = 2;
-nb_days = "%d days";
-//per page is too long for the popin
-nb_photos = "%d photos";
-nb_photos_per_page = "%d photos per page";
-pwg_token = '{{TOKEN}}';
-has_group = "";
-
-let register_dates_str = '2026-08';
-let register_dates = register_dates_str.split(',');
-let groupOptions = groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
-
-/* Startup */
-setupRegisterDates(register_dates);
-selectionMode(false);
-get_guest_info();
-update_user_list();
-update_selection_content();
-
-$(".icon-help-circled").tipTip({
-  'maxWidth':'700px',
-  'fadeIn': '1000',
-});
 
 $(document).ready(function() {
   // Only webmaster can set admin or webmaster to others users

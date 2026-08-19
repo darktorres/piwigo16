@@ -1,3 +1,58 @@
+var dateObj = new Date();
+var month = dateObj.getUTCMonth() + 1; //months from 1-12
+var day = dateObj.getUTCDate();
+var year = dateObj.getUTCFullYear();
+
+var filter_user_name = pwg_getPageData('user_name');
+
+if (month < 10) month = "0" + month;
+if (day < 10) day = "0" + day;
+
+var today = year + "-" + month + "-" + day;
+var current_param = {
+  start: "",
+  end: today,
+  types: {
+    0: "none",
+    1: "picture",
+    2: "high",
+    3: "other"
+  },
+  user_id: pwg_getPageData('user_id'),
+  image_id: pwg_getPageData('image_id'),
+  filename: "",
+  ip: pwg_getPageData('ip'),
+  pageNumber: 0 // fetch lines from line 0 to line 100
+};
+
+var str_dwld = pwg_getPageString('Downloaded');
+var str_most_visited = pwg_getPageString('Most visited');
+var str_best_rated = pwg_getPageString('Best rated');
+var str_list = pwg_getPageString('Random photo');
+var str_favorites = pwg_getPageString('Your favorites');
+var str_recent_cats = pwg_getPageString('Recent albums');
+var str_recent_pics = pwg_getPageString('Recent photos');
+var str_memories = pwg_getPageString('Memories');
+var str_no_longer_exist_photo = pwg_getPageString('This photo no longer exists');
+var str_tags = pwg_getPageString('Tags');
+var unit_MB = pwg_getPageString('%s MB');
+var str_guest = pwg_getPageString('guest');
+var str_contact_form = pwg_getPageString('Contact Form');
+var str_edit_img = pwg_getPageString('Edit photo');
+
+var str_search_details = {
+    "allwords": pwg_getPageString('Search for words'),
+    "datePosted": pwg_getPageString('Post date'),
+    "tags": str_tags,
+    "cat": pwg_getPageString('Album'),
+    "author": pwg_getPageString('Author'),
+    "addedBy": pwg_getPageString('Added by'),
+    "filetypes": pwg_getPageString('File type'),
+};
+var str_and_more = pwg_getPageString('and %d more');
+
+var guest_id = pwg_getPageData('guest_id');
+
 $(document).ready(() => {
 
   activateLineOptions();
@@ -93,6 +148,11 @@ $(document).ready(() => {
     fillHistoryResult(current_param);
   })
 })
+
+// onLoad needed to wait localization loads
+jQuery(function(){
+  jQuery('[data-datepicker]').pwgDatepicker();
+});
 
 function activateLineOptions() {
   $(".search-line").find(".img-option").hide();
@@ -667,3 +727,47 @@ function checkFilters() {
     $(".filter-tags label").hide();
   }
 }
+
+/* global GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the same page's own combineScript() call */
+
+jQuery(document).ready( function() {
+  jQuery(".IP").one( "mouseenter", function(){
+    var that = $(this);
+    that
+      .data("isOver", true)
+      .one("mouseleave", function() {
+        that.removeData("isOver");
+      });
+    GeoIp.get( that.text(), function(data) {
+      if (!data.fullName) return;
+
+      var content = data.fullName;
+      if (data.latitude && data.region_name) {
+        content += '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="'+data.latitude+'" data-lon="'+data.longitude+'"';
+        content += ' href="#">show on a Google Map</a>';
+      }
+
+      that.tipTip( {
+        content: content,
+        keepAlive: true,
+        defaultPosition: "right",
+        maxWidth: 320,
+        } );
+      if (that.data("isOver"))
+        that.trigger("mouseenter");
+    });
+  } );
+
+  jQuery(document).on('click', '.ipGeoOpen',  function() {
+    var lat = jQuery(this).data("lat");
+    var lon = jQuery(this).data("lon");
+    var parent = jQuery(this).parent();
+    jQuery(this).remove();
+
+    var append = '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
+    append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
+
+    jQuery(parent).append(append);
+    return false;
+  });
+});

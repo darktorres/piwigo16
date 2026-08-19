@@ -1,3 +1,18 @@
+const str_plus_albums_found = pwg_getPageString('Only the first %d albums are displayed, out of %d.');
+const str_album_selected = pwg_getPageString('Album already selected');
+const str_no_search_in_progress = pwg_getPageString('No search in progress');
+const str_albums_found = pwg_getPageString('<b>%d</b> albums found');
+const str_album_found = pwg_getPageString('<b>1</b> album found');
+const str_result_limit = pwg_getPageString('<b>%d+</b> albums found, try to refine the search');
+const str_add_subcat_of = pwg_getPageString('Add a sub-album to “%s”');
+const str_create_and_select = pwg_getPageString('Create and select');
+const str_root_album_select = pwg_getPageString('Root');
+const str_complete_name_field = pwg_getPageString('Name field must not be empty');
+const str_an_error_has_occured = pwg_getPageString('An error has occured');
+const str_album_modal_title = pwg_getPageString('Select an album');
+const str_album_modal_placeholder = pwg_getPageString('Search');
+const str_root = pwg_getPageString('Root');
+
 let activeAlbumSelector = null;
 
 $(window).on('keypress', function(e) {

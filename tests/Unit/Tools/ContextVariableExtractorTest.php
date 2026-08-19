@@ -103,6 +103,7 @@ it('builds per-template maps with same-class association and a cross-class fallb
                 'messages' => 'list<string>',
             ],
         ],
+        extractor: $this->extractor,
     )->build();
 
     expect($map->byTemplate['/t/a.latte'])->toBe([
@@ -143,6 +144,7 @@ it('unions conflicting types deterministically and never overrides specific vars
                 'val' => 'float',
             ],
         ],
+        extractor: $this->extractor,
     )->build();
 
     expect($map->byTemplate['/t/shared.latte']['val'])->toBe('int|string');

@@ -526,11 +526,17 @@ final readonly class ContextVariableExtractor
      * lines win over native types; both are FQCN-expanded through the
      * file's use map.
      *
+     * Public: also the reflection source for a `View` implementation's own
+     * public properties (`VariableMapBuilder`'s `{templateType}` branch) --
+     * the same precedence applies there too, so a `View`'s array-shaped
+     * properties get the same precision a context class's promoted
+     * constructor properties do.
+     *
      * @param ReflectionClass<object> $reflection
      * @param list<string> $notices
      * @return array<string, string>
      */
-    private function propertyTypes(ReflectionClass $reflection, array &$notices): array
+    public function propertyTypes(ReflectionClass $reflection, array &$notices): array
     {
         $nameContext = $this->buildNameContext($reflection);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -19,8 +20,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\IndexRendered;
 use Piwigo\Controller\Event\IndexRendering;
-use Piwigo\Controller\Projection\GalleryPageContext;
-use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
+use Piwigo\Controller\Projection\CanonicalUrlPageContext;
+use Piwigo\Controller\Projection\IndexView;
+use Piwigo\Controller\Projection\SelectedTagsView;
 use Piwigo\Controller\Request\GalleryDisplayRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -50,6 +52,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -96,6 +99,7 @@ final readonly class GalleryController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -196,10 +200,10 @@ final readonly class GalleryController implements ControllerInterface
                 'start' => $start,
             ]);
         }
-        // Standard Pages
-        // Some themes will want to use standard pages so this will let
-        // them know
-        $use_standard_pages = $this->currentConfig->useStandardPages;
+
+        // header.latte renders this before IndexView is ever
+        // constructed -- see CanonicalUrlPageContext's own docblock.
+        $template->assignContext(new CanonicalUrlPageContext($canonical_url));
 
         $title = $section_context->title;
         $template_title = $section_context->sectionTitle;
@@ -360,29 +364,14 @@ final readonly class GalleryController implements ControllerInterface
             $select_related_tags = $selected_related_tags_info;
         }
 
-        $template->assignContext(new GalleryPageContext(
-            thumbNavbar: $navigationBar,
-            uCanonical: $canonical_url,
-            useStandardPages: $use_standard_pages,
-            title: $template_title,
-            nbItems: $nb_items,
-            uModeNormal: $u_mode_normal,
-            uModeFlat: $u_mode_flat,
-            uModeCreated: $u_mode_created,
-            uModePosted: $u_mode_posted,
-            searchInSetButton: $search_in_set_button,
-            searchInSetAction: $search_in_set_action,
-            searchInSetUrl: $search_in_set_url,
-            selectRelatedTags: $select_related_tags ?? null,
-        ));
-
         $search_in_set_button_tags = null;
         $search_in_set_action_tags = null;
         $search_in_set_url_tags = null;
         $combinable_tags = null;
+        $selected_tags_template = new Html('');
 
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
-            $template->assignVarFromTemplate('SELECTED_TAGS_TEMPLATE', 'include/selected_tags.inc.latte');
+            $selected_tags_template = $this->renderer->render(new SelectedTagsView($select_related_tags ?? null));
 
             $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 
@@ -515,7 +504,7 @@ final readonly class GalleryController implements ControllerInterface
         }
 
         if ($section_context->category !== null and $categoryCountCategories === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
-            $template->clearAssign('U_MODE_FLAT');
+            $u_mode_flat = null;
         }
 
         if ($page_start === 0
@@ -595,24 +584,6 @@ final readonly class GalleryController implements ControllerInterface
             $related_tags_list = $related_tags;
         }
 
-        $template->assignContext(new GalleryThumbnailsPageContext(
-            searchInSetButton: $search_in_set_button_tags,
-            searchInSetAction: $search_in_set_action_tags,
-            searchInSetUrl: $search_in_set_url_tags,
-            combinableTags: $combinable_tags,
-            uEdit: $u_edit,
-            uCaddie: $u_caddie,
-            categorySearchResults: $category_search_results,
-            noSearchResults: $no_search_results,
-            imageOrders: $image_orders,
-            contentDescription: $content_description,
-            uSlideshow: $u_slideshow,
-            relatedTagsAction: $related_tags_action,
-            relatedTags: $related_tags_list,
-            tagSearchResults: $tag_search_results,
-            imageDerivatives: $image_derivatives,
-        ));
-
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $single_category = $section_context->section === Section::Categories ? $section_context->category : null;
@@ -626,8 +597,34 @@ final readonly class GalleryController implements ControllerInterface
         ));
         $this->htmlService
             ->flushPageMessages();
-        $template->parseIndexButtons();
-        $template->parse('index.latte', false);
+
+        $indexView = new IndexView(
+            thumbNavbar: $navigationBar,
+            title: $template_title,
+            nbItems: $nb_items,
+            uModeNormal: $u_mode_normal,
+            uModeFlat: $u_mode_flat,
+            uModeCreated: $u_mode_created,
+            uModePosted: $u_mode_posted,
+            searchInSetButton: $search_in_set_button_tags ?? $search_in_set_button,
+            searchInSetAction: $search_in_set_action_tags ?? $search_in_set_action,
+            searchInSetUrl: $search_in_set_url_tags ?? $search_in_set_url,
+            combinableTags: $combinable_tags,
+            uEdit: $u_edit,
+            uCaddie: $u_caddie,
+            categorySearchResults: $category_search_results,
+            noSearchResults: $no_search_results,
+            imageOrders: $image_orders,
+            contentDescription: $content_description,
+            uSlideshow: $u_slideshow,
+            relatedTagsAction: $related_tags_action,
+            relatedTags: $related_tags_list,
+            tagSearchResults: $tag_search_results,
+            imageDerivatives: $image_derivatives,
+            selectedTagsTemplate: $selected_tags_template,
+            pluginIndexButtons: $template->indexButtons(),
+        );
+        $template->appendOutput($this->renderer->render($indexView));
 
         $this->historyService
             ->logVisit(

@@ -92,6 +92,19 @@ it('is a no-op when there were no vars and no block to begin with', function ():
         ->toBe("<div></div>\n");
 });
 
+it('leaves a {templateType}-declaring template untouched instead of prepending a redundant block', function (): void {
+    $source = "{templateType Piwigo\\Controller\\Projection\\IndexView}\n<div>{\$title}</div>\n";
+
+    $result = $this->syncer->sync($source, [
+        'title' => 'string',
+    ], 'index.latte');
+
+    expect($result->changed)
+        ->toBeFalse();
+    expect($result->content)
+        ->toBe($source);
+});
+
 it('skips invalid PHP identifiers with a notice instead of emitting a broken tag', function (): void {
     $result = $this->syncer->sync(
         "<div></div>\n",

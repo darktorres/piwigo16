@@ -49,7 +49,6 @@
 {varType string $CAT_NAME}
 {varType bool $CHECK_FOR_UPDATES}
 {varType ?bool $CHECK_VERSION}
-{varType list<array<string, mixed>>|null $COMBINABLE_TAGS}
 {varType string $COMMENTS_ORDER_TITLE}
 {varType string $COMMENTS_ORDER_URL}
 {varType int $COMMENT_COUNT}
@@ -63,7 +62,6 @@
 {varType string $CONTAINER_INFO}
 {varType ?string $CONTAINER_VERSION}
 {varType string $CONTENT}
-{varType ?string $CONTENT_DESCRIPTION}
 {varType string $CONTENT_ENCODING}
 {varType string $COOKIE_PATH}
 {varType string $CSRF_TOKEN}
@@ -190,7 +188,6 @@
 {varType int $NB_GROUPS}
 {varType int $NB_IMAGE_PAGE}
 {varType int $NB_IMAGE_TAG}
-{varType int $NB_ITEMS}
 {varType int $NB_NEW_CATEGORIES}
 {varType int $NB_NEW_ELEMENTS}
 {varType string|int $NB_NO_MD5SUM}
@@ -229,20 +226,13 @@
 {varType int $RECENT_PERIOD}
 {varType string $REDIRECT_MSG}
 {varType string $REGISTRATION_DATE}
-{varType list<array<string, mixed>>|null $RELATED_TAGS}
-{varType ?bool $RELATED_TAGS_ACTION}
 {varType string $RELEASE}
 {varType string $RELEASE_NOTE_URL}
 {varType ?string $REPOST_SUBMIT_NAME}
 {varType string $ROOT_PATH}
 {varType string $ROOT_URL}
 {varType ?string $SEARCH_ID}
-{varType ?string $SEARCH_IN_SET_ACTION}
-{varType ?bool $SEARCH_IN_SET_BUTTON}
-{varType ?string $SEARCH_IN_SET_URL}
 {varType string $SECTION_TITLE}
-{varType \Latte\Runtime\Html $SELECTED_TAGS_TEMPLATE}
-{varType array<array-key, mixed>|null $SELECT_RELATED_TAGS}
 {varType ?string $SEND_AS_NAME}
 {varType bool $SEND_DETAILED_CONTENT}
 {varType bool $SEND_HTML_MAIL}
@@ -310,7 +300,6 @@
 {varType ?string $U_COI}
 {varType ?string $U_COMMENTS}
 {varType string $U_CONFIG_DISPLAY}
-{varType string $U_CONFIG_EXTENTS}
 {varType string $U_CONFIG_GENERAL}
 {varType string $U_CONFIG_LANGUAGES}
 {varType string $U_CONFIG_MENUBAR}
@@ -318,7 +307,6 @@
 {varType string $U_DELETE}
 {varType string $U_DISPLAY}
 {varType string $U_DOWNLOAD}
-{varType ?string $U_EDIT}
 {varType string $U_ELEMENTS_PAGE}
 {varType ?string $U_EMPTY_LOUNGE}
 {varType mixed|string $U_FAQ}
@@ -355,10 +343,6 @@
 {varType ?string $U_MANAGE_ELEMENTS}
 {varType string $U_MANAGE_RANKS}
 {varType ?string $U_METADATA}
-{varType ?string $U_MODE_CREATED}
-{varType ?string $U_MODE_FLAT}
-{varType ?string $U_MODE_NORMAL}
-{varType ?string $U_MODE_POSTED}
 {varType string $U_MOVE}
 {varType string $U_NOTIFICATION_BY_MAIL}
 {varType ?string $U_ORIGINAL}
@@ -375,9 +359,7 @@
 {varType ?string $U_REGISTER}
 {varType mixed|string $U_RETURN}
 {varType ?string $U_SET_AS_REPRESENTATIVE}
-{varType bool $U_SHOW_TEMPLATE_TAB}
 {varType string $U_SITE_MANAGER}
-{varType ?string $U_SLIDESHOW}
 {varType ?string $U_SLIDESHOW_START}
 {varType ?string $U_SLIDESHOW_STOP}
 {varType ?string $U_START_FILTER}
@@ -422,7 +404,6 @@
 {varType array|list<string> $category_option_true_selected}
 {varType array $category_options}
 {varType array $category_options_selected}
-{varType list<string>|null $category_search_results}
 {varType array<int|string, mixed> $category_thumbnails}
 {varType array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $cats_navbar}
 {varType string $chronology}
@@ -465,7 +446,6 @@
 {varType string $display_mode}
 {varType list<array<string, mixed>> $elements}
 {varType array<array-key, string>|null|array<int, string>|null $errors}
-{varType list<array{replacer: string, url_parameter: mixed, original_tpl: list<string>, bound_tpl: mixed, selected_tpl: mixed, selected_url: string, selected_bound: string}>|null $extents}
 {varType array{IS_FAVORITE: bool, U_FAVORITE: string}|null|string $favorite}
 {varType array<string, mixed>|null $ferrors}
 {varType string $file_exts}
@@ -498,11 +478,9 @@
 {varType list<string> $header_msgs}
 {varType list<string>|null $header_notes}
 {varType ?string $hide_warnings_link}
-{varType list<array{DISPLAY: string, URL: string, SELECTED: bool}> $image_derivatives}
 {varType list<string> $image_order}
 {varType string $image_order_choice}
 {varType array<string, string> $image_order_options}
-{varType array<int, array<string, mixed>>|null $image_orders}
 {varType array<int, array{tn: string, page: string}> $image_urls}
 {varType list<array<string, mixed>> $images}
 {varType array<array-key, string>|null|array<int, string>|null $infos}
@@ -567,7 +545,7 @@
 {varType array<string, mixed>|null $next}
 {varType string $next_step_url}
 {varType ?bool $no_group_in_gallery}
-{varType list<string>|list<string>|null $no_search_results}
+{varType list<string> $no_search_results}
 {varType bool $obligatory_user_mail_address}
 {varType string $open_cat}
 {varType list<string> $order_by_options}
@@ -654,7 +632,6 @@
 {varType bool $sync_meta}
 {varType array<string, array{caption: string, url: string}> $tabsheet}
 {varType string $tabsheet_selected}
-{varType list<array<string, mixed>> $tag_search_results}
 {varType array<int, array{name: mixed, id: string}> $tag_selection}
 {varType list<array<string, mixed>>|null $tags}
 {varType array<int|string, string> $template_options}
@@ -662,7 +639,6 @@
 {varType array<array-key, string> $theme_options}
 {varType string $theme_selected}
 {varType array<string, mixed> $themeconf}
-{varType array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $thumb_navbar}
 {varType ?\Piwigo\Image\DerivativeParams $thumb_params}
 {varType array<int|string, mixed>|list<array<string, mixed>> $thumbnails}
 {varType ?string $time_elapsed_since_last_calc}

@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | Scoped and designed, execution starting | 0 |
+| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) landed | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -1839,6 +1839,78 @@ with the View's own properties, not from the View alone — `Renderer`
 calls a new `Template::renderView()` that does exactly this merge,
 rather than routing through `Latte\Engine`'s own native object-param
 support directly.
+
+**Batch 1 (landed)**: template-extension feature deletion, exactly as
+scoped above, plus the `CategoryRepository`/`CategoryService` dead-code
+chain it exposed and 6 pre-existing Browser tests found asserting
+against pre-P37/P38/P39 template shapes (fixed, not deferred).
+
+**Batch 2 (landed)**: the mechanism (`Core\View`, `Template\Latte\
+Attribute\Template`, `Template\Renderer`, `Template::renderView()`/
+`appendOutput()`/`indexButtons()`) plus `index.latte` + `include/
+selected_tags.inc.latte` converted to `{templateType}`, replacing
+`GalleryPageContext`/`GalleryThumbnailsPageContext` with one merged
+`Controller\Projection\IndexView` (+ `SelectedTagsView`). Two real
+corrections found only once `index.latte`'s actual body was
+grepped, not assumed from its old `{varType}` prelude:
+
+- **`U_CANONICAL` is shell data, not body data.** `header.latte`'s own
+  `<link rel="canonical">` (`isset($U_CANONICAL)`) renders while
+  `PageHeaderRenderer::render()` parses `header.latte` — before
+  `GalleryController` ever constructs its `IndexView`, whose render
+  happens too late for `header.latte` to see it. `uCanonical`/
+  `useStandardPages` (the latter has no real template reader anywhere
+  in the app — corpus-wide-fallback noise) both stay off `IndexView`;
+  `U_CANONICAL` gets its own single-field `Controller\Projection\
+  CanonicalUrlPageContext`, assigned via the old ambient
+  `assignContext()` mechanism at the same point in the method
+  `GalleryPageContext` used to be built, before `PageHeaderRenderer`
+  runs.
+- **`VariableMapBuilder`'s `{templateType}` branch doesn't need a
+  hardcoded ambient table.** The design section above lists
+  `ROOT_URL`/`ROOT_PATH`/`themeconf`/`themes`/`lang_info` as globals a
+  View's data merges with at runtime, but `index.latte`'s own body also
+  references several more ambient names with no IndexView property at
+  all (`MENUBAR`, `CATEGORIES`, `CONTENT`, `THUMBNAILS`, `chronology`,
+  `chronology_views`, `favorite`, `QUERY_SEARCH`, `SEARCH_ID`, the
+  `PLUGIN_INDEX_CONTENT_*` slots) — all assigned by sibling renderers
+  (`MenubarRenderer`/`CategoryCatsRenderer`/`CategoryDefaultRenderer`/
+  `SearchFilterRenderer`/etc.) that stay completely untouched by this
+  batch. Actual fix: `VariableMapBuilder`'s `{templateType}` branch
+  populates a `{templateType}` template's `byTemplate` entry from the
+  View's own reflected public properties (via `ContextVariableExtractor
+  ::propertyTypes()`, widened to `public`) and leaves `VariableMap::
+  forTemplate()`'s existing fallback-union + `$globals` merge
+  completely unchanged — those sibling renderers' own context classes
+  are still live, unconverted `TemplatePageContext`s, so they keep
+  contributing to the same corpus-wide fallback every other template
+  already draws on. No new hardcoded list to keep in sync as more
+  page-families convert.
+
+`VarTypeSyncer`/`PhpStanLatteSyncVarTypeCommand` (`lint:vartype`/
+`lint:vartype:fix`) are **not** deleted by this batch, despite the
+"Delete the tooling this obsoletes" line above — that line describes
+the *end* of the whole P40 campaign, once every template has converted
+and there's no classic per-template `{varType}` corpus left to sync.
+Mid-campaign, the 128 still-unconverted templates' `{varType}` blocks
+keep drifting as their own corpus-wide fallback union changes (e.g.
+losing `GalleryPageContext`/`GalleryThumbnailsPageContext`'s fields
+once Batch 2 deleted them), so `VarTypeSyncer` stays live for the
+length of the campaign — it just gained one new rule: skip (no-op) any
+template whose raw source already contains `{templateType ...}`,
+instead of prepending a second, redundant block onto it.
+
+Batch 1+2 verified: `composer lint:latte` clean (130 files);
+`analyse:phpstan` 0 errors; `lint:php` (ECS) 0 errors; `deptrac
+analyse` 0 violations; `lint:vartype` 0 drift (128 templates'
+`{varType}` blocks shrank once `GalleryPageContext`/
+`GalleryThumbnailsPageContext` left the fallback union, `index.latte`/
+`selected_tags.inc.latte` untouched); a new round-trip test
+(`ViewTemplateTypeRoundTripTest`) confirming every `View`'s
+`#[Template]` file declares `{templateType}` back at that same class;
+`test:golden-html` 73/73 byte-identical; `test:visual` 65/65 (66 minus
+the one Batch 1 deleted); `composer test` (Unit/Arch) 5695 passed;
+`test:integration` 2119 passed.
 
 **P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
 lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's

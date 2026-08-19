@@ -33,6 +33,7 @@ use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Page\PageDataPayload;
@@ -767,6 +768,43 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Renders `$file` against a typed `View` instead of the accumulated
+     * `$vars` bag alone -- the `View`'s own public properties are merged
+     * on top of `$vars` (winning on any key collision), so a migrated
+     * template still sees the ambient globals `parse()` itself relies on
+     * (`ROOT_URL`/`ROOT_PATH` here, `themeconf`/`lang_info`/`pwg` from
+     * the constructor/`setTheme()`, plus whatever an earlier
+     * `assignContext()`/`assignVarFromTemplate()` call on this same
+     * request already put there) without each `View` having to carry
+     * them itself. `Renderer::render()` is the one real caller.
+     */
+    public function renderView(string $file, View $view): string
+    {
+        $this->assign('ROOT_URL', self::urlService()->getRootUrl());
+        $this->assign('ROOT_PATH', $this->paths->root);
+        $path = $this->resolveLatteTemplatePath($file);
+
+        /** @var array<string, mixed> $params */
+        $params = [...$this->vars, ...get_object_vars($view)];
+
+        return $this->latteEngine()
+            ->render($path, $params);
+    }
+
+    /**
+     * Appends an already-rendered `View` (via `Renderer::render()`) onto
+     * the accumulated output -- the `View`-based sibling of `parse()`'s
+     * own internal `$this->output .= $v;`. `$output` is mutated only from
+     * inside this class everywhere else in the app; this preserves that
+     * invariant instead of making `Renderer` the first external caller to
+     * append directly.
+     */
+    public function appendOutput(Html $html): void
+    {
+        $this->output .= (string) $html;
+    }
+
+    /**
      * Compiles `$file` into the Latte cache without rendering it -- unlike
      * `parse()`, no `ROOT_URL`/`ROOT_PATH` var assignment, since compiling
      * doesn't execute the template.
@@ -1335,5 +1373,27 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
             $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
         }
+    }
+
+    /**
+     * Same ksort+flatten logic as `parseIndexButtons()` above, returned
+     * instead of `assign()`-ed -- the `View`-based sibling for a migrated
+     * page's own `IndexView::$pluginIndexButtons` property.
+     *
+     * @return list<string>
+     */
+    public function indexButtons(): array
+    {
+        if ($this->indexButtons === []) {
+            return [];
+        }
+
+        ksort($this->indexButtons);
+        $buttons = [];
+        foreach ($this->indexButtons as $row) {
+            $buttons = array_merge($buttons, $row);
+        }
+
+        return array_values($buttons);
     }
 }

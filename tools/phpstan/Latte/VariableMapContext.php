@@ -49,7 +49,9 @@ final readonly class VariableMapContext
             }
         }
 
-        $map = new VariableMapBuilder($scan->templatesByClass, $scan->contextsByClass, $varsByContext)
+        $templateTypes = TemplateTypeScanner::scan(LatteTemplateFiles::discover($root));
+
+        $map = new VariableMapBuilder($scan->templatesByClass, $scan->contextsByClass, $varsByContext, $extractor, $templateTypes)
             ->build();
 
         // Always-available variables from outside the context system:

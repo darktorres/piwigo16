@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tools\PhpStan\Latte;
 
+use ReflectionClass;
+
 /**
  * Joins the scanner's class->template / class->context maps with the
  * extractor's per-context variable maps into per-template `@var` data.
@@ -20,6 +22,19 @@ namespace Piwigo\Tools\PhpStan\Latte;
  * cross-class 25 would need real call-graph tracing -- explicitly not
  * v1; `fallbackContexts` keeps the tradeoff visible in the compile
  * Command's output instead of silent.
+ *
+ * A template declaring `{templateType FooView}` (`$templateTypesByTemplate`)
+ * gets its `byTemplate` entry populated directly from `FooView`'s own
+ * reflected public properties instead -- those properties win over
+ * whatever the classic association above would have produced for the
+ * same path (there normally is none, once the migrated page's own
+ * controller stops calling `assignContext()`). The fallback union and
+ * `VariableMap::forTemplate()`'s own `$globals` merge still apply
+ * afterwards, filling in only names the `View` doesn't itself declare --
+ * true cross-cutting ambient values (`ROOT_URL`, a sibling renderer's own
+ * ambient assign like `MENUBAR`/`CATEGORIES`, ...) reach a `{templateType}`
+ * template exactly the way they reach every other template, with no new
+ * hardcoded list to keep in sync.
  */
 final readonly class VariableMapBuilder
 {
@@ -27,11 +42,14 @@ final readonly class VariableMapBuilder
      * @param array<string, list<string>> $templatesByClass class FQCN => template realpaths
      * @param array<string, list<string>> $contextsByClass class FQCN => context FQCNs
      * @param array<string, array<string, string>> $varsByContext context FQCN => {var => type}
+     * @param array<string, string> $templateTypesByTemplate template realpath => View class FQCN
      */
     public function __construct(
         private array $templatesByClass,
         private array $contextsByClass,
         private array $varsByContext,
+        private ContextVariableExtractor $extractor,
+        private array $templateTypesByTemplate = [],
     ) {}
 
     public function build(): VariableMap
@@ -74,8 +92,19 @@ final readonly class VariableMapBuilder
         }
         ksort($setsByTemplate);
 
+        $byTemplate = array_map(self::joinSets(...), $setsByTemplate);
+
+        foreach ($this->templateTypesByTemplate as $path => $viewClass) {
+            if (! class_exists($viewClass)) {
+                continue;
+            }
+            $discardedNotices = [];
+            $byTemplate[$path] = $this->extractor->propertyTypes(new ReflectionClass($viewClass), $discardedNotices);
+        }
+        ksort($byTemplate);
+
         return new VariableMap(
-            array_map(self::joinSets(...), $setsByTemplate),
+            $byTemplate,
             self::joinSets($fallbackSets),
             $fallbackContexts,
         );

@@ -42,7 +42,6 @@ use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Image\Projection\PathRepresentativeExtLevel;
 use Piwigo\Image\Projection\RelatedCategoryRow;
-use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Image\Projection\VisibleCategoryRow;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
@@ -2390,32 +2389,6 @@ final class ImageRepository extends EntityRepository
         }
 
         return is_string($row['path']) ? $row['path'] : null;
-    }
-
-    /**
-     * id/name/representative_ext/path for $imageId -- the tus upload
-     * pipeline's own "what does the just-uploaded/replaced photo look
-     * like" lookup, used to build the response's thumbnail URLs.
-     */
-    public function findUploadResultInfoById(ImageId $imageId): ?UploadResultInfo
-    {
-        $row = $this->createQueryBuilder('i')
-            ->select('i.id', 'i.name', 'i.representativeExt AS representative_ext', 'i.path')
-            ->where('i.id = :imageId')
-            ->setParameter('imageId', $imageId)
-            ->getQuery()
-            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
-
-        if (! is_array($row)) {
-            return null;
-        }
-
-        return new UploadResultInfo(
-            id: $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-            name: is_string($row['name'] ?? null) ? $row['name'] : null,
-            representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            path: is_string($row['path']) ? $row['path'] : '',
-        );
     }
 
     /**

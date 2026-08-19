@@ -836,11 +836,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', CategoryId::from(2)));
     }
 
-    public function testFindUploadResultInfoByIdReturnsNullForANonexistentImage(): void
-    {
-        self::assertNull($this->repo->findUploadResultInfoById(ImageId::from(999_999)));
-    }
-
     public function testFindIdsByMd5sumsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findIdsByMd5sums([]));

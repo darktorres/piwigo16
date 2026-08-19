@@ -73,6 +73,25 @@ final readonly class TusUploadPatchController implements ControllerInterface
         }
 
         $expectedOffset = (int) $offsetHeader;
+        if ($expectedOffset > $session->uploadLength) {
+            return $this->problem('Bad Request', 400, "Upload-Offset exceeds the upload's declared Upload-Length.");
+        }
+
+        // Reject up front, before touching disk, when the client's own
+        // declared body size would push the upload past its declared
+        // Upload-Length -- tus requires Content-Length on every PATCH
+        // (this server doesn't support the deferred-length extension, see
+        // TusUploadCreateController). TusUploadStore::appendChunk() also
+        // caps the real write defensively, in case Content-Length ever
+        // undercounts the true body.
+        $contentLengthHeader = $request->getHeaderLine('Content-Length');
+        if (! ctype_digit($contentLengthHeader)) {
+            return $this->problem('Bad Request', 400, 'A numeric Content-Length header is required.');
+        }
+
+        if ($expectedOffset + (int) $contentLengthHeader > $session->uploadLength) {
+            return $this->problem('Bad Request', 400, "PATCH body would exceed the upload's declared Upload-Length.");
+        }
 
         $stream = $request->getBody()
             ->detach();
@@ -80,7 +99,7 @@ final readonly class TusUploadPatchController implements ControllerInterface
             return $this->problem('Internal Server Error', 500, 'Missing request body stream.');
         }
 
-        $newOffset = $this->tusUploadStore->appendChunk($session->id, $expectedOffset, $stream);
+        $newOffset = $this->tusUploadStore->appendChunk($session->id, $expectedOffset, $stream, $session->uploadLength);
         if (is_resource($stream)) {
             fclose($stream);
         }

@@ -19,6 +19,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -225,6 +226,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             CurrentUserTestFactory::get(),
             EventDispatcherTestFactory::get(),
             EntityManagerFactory::build(DbConnection::build()),
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
     }
 
@@ -315,9 +317,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $this->renderer->render();
 
             $uploadDir = $fixtureRoot . 'logo';
-            self::assertSame(
+            self::assertStringContainsString(
                 sprintf(LangTestFactory::get()->t('Add write access to the "%s" directory'), $uploadDir),
-                CurrentTemplateTestFactory::get()->get()->getTemplateVars('save_error')
+                (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT')
             );
         } finally {
             @unlink($realPng);
@@ -366,9 +368,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             self::assertSame(2, ThemesStandardPagesLogoStreamWrapper::$opens);
 
             $uploadDir = $fixtureRoot . 'logo';
-            self::assertSame(
+            self::assertStringContainsString(
                 "{$uploadDir}/stdpageslogo.png " . LangTestFactory::get()->t('no write access'),
-                CurrentTemplateTestFactory::get()->get()->getTemplateVars('save_error')
+                (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT')
             );
 
             // confUpdateParam('standard_pages_selected_logo_path', ...)
@@ -411,12 +413,21 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->themesDir = rtrim($themesFixtureRoot, '/') . '/themes';
+        // themes_standard_pages.latte's own "still used by these themes"
+        // warning box only renders when $isStandardPagesUsed AND
+        // !$useStandardPages (CurrentConfig::$useStandardPages defaults to
+        // true) -- exactly the real-world scenario the warning exists for
+        // (standard pages turned off gallery-wide, but some installed
+        // theme still declares it wants them), so this is the state that
+        // actually makes the accumulated list observable in the rendered
+        // markup.
+        $currentConfig->useStandardPages = false;
 
         $this->renderer->render();
 
-        $template = CurrentTemplateTestFactory::get()->get();
-        self::assertTrue($template->getTemplateVars('is_standard_pages_used'));
-        self::assertSame(['Uses Standard Pages Theme'], $template->getTemplateVars('standard_pages_used_by'));
+        $adminContent = (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+        self::assertStringContainsString('Uses Standard Pages Theme', $adminContent);
+        self::assertStringNotContainsString('Plain Theme', $adminContent);
     }
 
     private function writeFixtureTheme(string $fixtureRoot, string $id, string $name, ?bool $useStandardPages): void

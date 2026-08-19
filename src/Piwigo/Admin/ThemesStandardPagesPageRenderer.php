@@ -7,11 +7,12 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Admin\Projection\ThemesStandardPagesPageContext;
+use Piwigo\Admin\Projection\ThemesStandardPagesView;
 use Piwigo\Admin\Request\ThemesStandardPagesSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,6 +25,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -56,6 +58,7 @@ final readonly class ThemesStandardPagesPageRenderer
         private CurrentUser $currentUser,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -193,22 +196,23 @@ final readonly class ThemesStandardPagesPageRenderer
             : null;
 
         // Send all info to template
-        $template->assignContext(new ThemesStandardPagesPageContext(
+        $adminContent = $this->renderer->render(new ThemesStandardPagesView(
             useStandardPages: $this->currentConfig->useStandardPages,
             stdPgsSelectedLogo: $this->currentConfig->standardPagesSelectedLogo,
-            stdPgsLogoOptions: $std_pgs_logo_options,
             stdPgsSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
             stdPgsSkinOptions: $std_pgs_skin_options,
             isStandardPagesUsed: $is_standard_pages_used,
             standardPagesUsedBy: $standard_pages_used_by,
             stdPgsSelectedLogoPath: $std_pgs_selected_logo_path,
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
             isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
-            adminPageTitle: $this->lang->t('Themes'),
             saveError: $save_error,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'themes_standard_pages.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Themes'),
+        ));
     }
 }

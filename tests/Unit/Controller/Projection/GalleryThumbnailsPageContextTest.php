@@ -3,15 +3,16 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
+use Piwigo\Controller\Projection\ImageOrderOption;
 
 /**
  * @param list<array<string, mixed>>|null $combinableTags
  * @param list<string>|null $categorySearchResults
  * @param list<string>|null $noSearchResults
- * @param array<int, array<string, mixed>>|null $imageOrders
+ * @param array<int, ImageOrderOption>|null $imageOrders
  * @param list<array<string, mixed>>|null $relatedTags
  * @param list<array<string, mixed>> $tagSearchResults
- * @param list<array{DISPLAY: string, URL: string, SELECTED: bool}> $imageDerivatives
+ * @param list<ImageOrderOption> $imageDerivatives
  */
 function makeGalleryThumbnailsPageContextForTest(
     ?bool $searchInSetButton = null,
@@ -67,11 +68,9 @@ test('toArray includes real tag_search_results/image_derivatives when set', func
             'name' => 'sunset',
             'URL' => '/index.php?/tags/1',
         ]],
-        imageDerivatives: [[
-            'DISPLAY' => 'Small',
-            'URL' => '/index.php?display=SM',
-            'SELECTED' => true,
-        ]],
+        imageDerivatives: [
+            new ImageOrderOption(display: 'Small', url: '/index.php?display=SM', selected: true),
+        ],
     )->toArray();
 
     expect($result['tag_search_results'])->toBe([[
@@ -113,11 +112,7 @@ test('toArray includes every other optional key when set', function (): void {
         categorySearchResults: ['Holidays'],
         noSearchResults: ['balloon'],
         imageOrders: [
-            0 => [
-                'DISPLAY' => 'Default',
-                'URL' => '/index.php?image_order=0',
-                'SELECTED' => true,
-            ],
+            0 => new ImageOrderOption(display: 'Default', url: '/index.php?image_order=0', selected: true),
         ],
         contentDescription: 'A gallery of holidays',
         uSlideshow: '/index.php?slideshow',

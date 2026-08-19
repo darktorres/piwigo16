@@ -21,6 +21,7 @@ use Piwigo\Controller\Event\IndexRendered;
 use Piwigo\Controller\Event\IndexRendering;
 use Piwigo\Controller\Projection\GalleryPageContext;
 use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
+use Piwigo\Controller\Projection\ImageOrderOption;
 use Piwigo\Controller\Request\GalleryDisplayRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -495,15 +496,15 @@ final readonly class GalleryController implements ControllerInterface
                         $order_selected = true;
                     }
 
-                    $tpl_orders[$order_id] = [
-                        'DISPLAY' => $order->label,
-                        'URL' => $url . $order_id,
-                        'SELECTED' => (string) $order_idx === (string) $order_id,
-                    ];
+                    $tpl_orders[$order_id] = new ImageOrderOption(
+                        display: $order->label,
+                        url: $url . $order_id,
+                        selected: (string) $order_idx === (string) $order_id,
+                    );
                 }
             }
 
-            $tpl_orders[0]['SELECTED'] = ! $order_selected; // unselect "Default" if another one is selected
+            $tpl_orders[0]->selected = ! $order_selected; // unselect "Default" if another one is selected
             $image_orders = $tpl_orders;
         }
 
@@ -548,11 +549,11 @@ final readonly class GalleryController implements ControllerInterface
                 unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
                 foreach ($type_map as $params) {
-                    $image_derivatives[] = [
-                        'DISPLAY' => $this->lang->t($params->type),
-                        'URL' => $url . $params->type,
-                        'SELECTED' => $params->type === $selected_type,
-                    ];
+                    $image_derivatives[] = new ImageOrderOption(
+                        display: $this->lang->t($params->type),
+                        url: $url . $params->type,
+                        selected: $params->type === $selected_type,
+                    );
                 }
             }
         }

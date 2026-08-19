@@ -31,10 +31,10 @@ final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
      * @param list<array<string, mixed>>|null $combinableTags
      * @param list<string>|null $categorySearchResults
      * @param list<string>|null $noSearchResults
-     * @param array<int, array<string, mixed>>|null $imageOrders
+     * @param array<int, ImageOrderOption>|null $imageOrders
      * @param list<array<string, mixed>>|null $relatedTags
      * @param list<array<string, mixed>> $tagSearchResults
-     * @param list<array{DISPLAY: string, URL: string, SELECTED: bool}> $imageDerivatives
+     * @param list<ImageOrderOption> $imageDerivatives
      */
     public function __construct(
         public ?bool $searchInSetButton,
@@ -62,7 +62,7 @@ final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
     {
         $result = [
             'tag_search_results' => $this->tagSearchResults,
-            'image_derivatives' => $this->imageDerivatives,
+            'image_derivatives' => array_map(static fn (ImageOrderOption $option): array => $option->toArray(), $this->imageDerivatives),
         ];
 
         if ($this->searchInSetButton !== null) {
@@ -89,7 +89,7 @@ final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
         }
 
         if ($this->imageOrders !== null) {
-            $result['image_orders'] = $this->imageOrders;
+            $result['image_orders'] = array_map(static fn (ImageOrderOption $option): array => $option->toArray(), $this->imageOrders);
         }
 
         if ($this->contentDescription !== null) {

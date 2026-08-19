@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) landed | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) landed, full validation pass still owed | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -1915,6 +1915,45 @@ the one Batch 1 deleted); `composer test` (Unit/Arch) 5695 passed;
 `U_MODE_FLAT` clear, `SELECTED_TAGS_TEMPLATE` conditional render,
 canonical URL and `IndexRendered` event wrinkles through a real
 browser request, not just static output diffing).
+
+**Batch 3 (landed)**: the admin `ADMIN_CONTENT` renderer sweep — every
+remaining conversion candidate whose controller/renderer called
+`Template::assignVarFromTemplate('ADMIN_CONTENT', …)` (directly, or via
+a page-family's own `*PageRenderer`), one page-family at a time:
+`Rating`, `CatPerm`, `UserActivity`, `ElementSetRanks`, `LanguagesNew`,
+`ThemesNew`, `ThemesStandardPages`, `UserList`, `PluginsInstalled`,
+`CatList`, `RatingUser`, `PluginsNew`, `AlbumNotification`,
+`ThemesInstalled`, `Stats`, `Albums`, `CatModify`, `PictureModify`,
+`BatchManagerUnit`, `BatchManagerGlobal`, `UpdatesPwg`, and
+`ConfigurationSubController` (22 renderers total). Same per-conversion
+pattern throughout: one new `#[Template]` View class, dead fields
+dropped (verified against the template body and any paired `.js`
+file's `pwg_getPageData()` reads), the old context class plus its own
+unit test deleted, callers updated to inject `Renderer`.
+
+`ConfigurationSubController` (last in the batch) needed two extra
+wrinkles no earlier conversion did: its 7 tabs each needed their own
+View class, selected via a `match` on `$page['section']` since
+`#[Template]` requires one fixed compile-time string per class; and
+its two POST-handler methods (`processSizes()`/`processWatermark()`)
+were changed to *return* a plain internal DTO instead of mutating
+template state directly, since each tab's field set is populated from
+two different call sites (the POST handler and the main render-time
+switch) in the same request.
+
+`grep -rn "assignVarFromTemplate('ADMIN_CONTENT'" src/Piwigo` now
+returns zero real call sites (one docblock comment reference in
+`SettingsPageInterface.php` only) — this exhausts the pool this batch
+targeted. The front-end and remaining non-`ADMIN_CONTENT` page
+-families (44 `TemplatePageContext` classes still live, confirmed via
+`grep -rl "implements TemplatePageContext" src/Piwigo`) are open for a
+future batch, not yet scoped.
+
+Validation deferred to a later checkpoint per explicit direction —
+each conversion this batch verified only by `php -l` plus the
+narrative-docblock grep sweep at commit time, not the full
+`lint:latte`/`analyse:phpstan`/`lint:php`/`deptrac`/`test:*` gate list.
+That full pass is still owed before this batch can be marked verified.
 
 **P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
 lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's

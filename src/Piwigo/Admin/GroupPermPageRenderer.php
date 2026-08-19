@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\GroupPermPageContext;
+use Piwigo\Admin\Projection\DoubleSelectView;
+use Piwigo\Admin\Projection\GroupPermView;
 use Piwigo\Admin\Request\GroupPermSubmitRequest;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -22,6 +24,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
@@ -47,6 +50,7 @@ final readonly class GroupPermPageRenderer
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -120,24 +124,29 @@ final readonly class GroupPermPageRenderer
 
         $categoryOptionFalse = $categoryService->displaySelectPrivateExcluding($authorized_ids, $this->htmlRenderer);
 
-        $template->assignContext(new GroupPermPageContext(
+        $doubleSelect = $this->renderer->render(new DoubleSelectView(
+            lCatOptionsTrue: $this->lang->t('Authorized'),
+            lCatOptionsFalse: $this->lang->t('Forbidden'),
+            categoryOptionTrue: $categoryOptionTrue->options,
+            categoryOptionTrueSelected: $categoryOptionTrue->selected,
+            categoryOptionFalse: $categoryOptionFalse->options,
+            categoryOptionFalseSelected: $categoryOptionFalse->selected,
+        ));
+
+        $adminContent = $this->renderer->render(new GroupPermView(
             title: $this->lang->t(
                 'Manage permissions for group "%s"',
                 $this->entityManager->getRepository(GroupEntity::class)
                     ->findName($groupId) ?? false
             ),
-            catOptionsTrueLabel: $this->lang->t('Authorized'),
-            catOptionsFalseLabel: $this->lang->t('Forbidden'),
             formAction: $this->urlService->getRootUrl() .
                 'admin.php?page=group_perm&amp;group_id=' .
                 $groupId->value,
             pwgToken: $this->csrfService
                 ->getToken(),
-            categoryOptionTrue: $categoryOptionTrue,
-            categoryOptionFalse: $categoryOptionFalse,
+            doubleSelect: $doubleSelect,
         ));
 
-        $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'group_perm.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

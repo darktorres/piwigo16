@@ -18,6 +18,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -45,12 +46,13 @@ final readonly class GroupPermSubController implements AdminSubControllerInterfa
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->entityManager, $this->csrfService)
+        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->entityManager, $this->csrfService, $this->renderer)
             ->render();
     }
 }

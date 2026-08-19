@@ -261,7 +261,8 @@ final readonly class ProfileController implements ControllerInterface
             templateOptions: $formData->templateOptions,
             templateSelection: $formData->templateSelection->value,
             languageOptions: $language_options,
-            languageSelection: $this->currentUser->get()->language->value,
+            languageSelection: $this->currentUser->get()
+                ->language->value,
             recentPeriod: $formData->recentPeriod,
             expand: $formData->expand,
             activateComments: $formData->activateComments,

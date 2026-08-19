@@ -1278,8 +1278,13 @@ final readonly class PictureController implements ControllerInterface
         // conditional mutation inside the findByIds() loop above.
         $current_element_url = $picture['current']['element_url'] ?? null;
         $u_original = $this->computeUOriginal(is_string($current_element_url)
-            ? ['derivatives' => $picture['current']['derivatives'], 'element_url' => $current_element_url]
-            : ['derivatives' => $picture['current']['derivatives']]);
+            ? [
+                'derivatives' => $picture['current']['derivatives'],
+                'element_url' => $current_element_url,
+            ]
+            : [
+                'derivatives' => $picture['current']['derivatives'],
+            ]);
 
         $commonPictureViewArgs = [
             'navFirst' => $nav['first'] ?? null,
@@ -1410,8 +1415,13 @@ final readonly class PictureController implements ControllerInterface
         // conditional construction.
         $element_url = $element_info['element_url'] ?? null;
         $u_original = $this->computeUOriginal(is_string($element_url)
-            ? ['derivatives' => $element_info['derivatives'], 'element_url' => $element_url]
-            : ['derivatives' => $element_info['derivatives']]);
+            ? [
+                'derivatives' => $element_info['derivatives'],
+                'element_url' => $element_url,
+            ]
+            : [
+                'derivatives' => $element_info['derivatives'],
+            ]);
 
         $pdf_viewer_filesize_threshold = null;
         if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {

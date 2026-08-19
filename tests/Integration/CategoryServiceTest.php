@@ -283,16 +283,12 @@ namespace Piwigo\Tests\Integration {
         public function testCompareByGlobalRankOrdersNaturally(): void
         {
             $rows = [
-                [
-                    'global_rank' => '1.10',
-                ],
-                [
-                    'global_rank' => '1.2',
-                ],
+                new ComputedCategoryRow(catId: 1, idUppercat: null, globalRank: '1.10', rank: null, dateLast: null, nbImages: 0, userId: 0),
+                new ComputedCategoryRow(catId: 2, idUppercat: null, globalRank: '1.2', rank: null, dateLast: null, nbImages: 0, userId: 0),
             ];
             usort($rows, CategoryService::compareByGlobalRank(...));
 
-            self::assertSame('1.2', $rows[0]['global_rank']);
+            self::assertSame('1.2', $rows[0]->globalRank);
         }
 
         public function testCompareByRankOrdersNumerically(): void

@@ -98,14 +98,18 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $sortHeaders = $sortResult['headers'];
 
         $order_by_column = ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') ? $sort_by[0] : null;
-        $categories = [];
-        foreach ($this->categoryService->getActivePermalinksList($order_by_column) as $row) {
-            $row['name'] = $htmlRenderer->getCatDisplayNameCache($row['uppercats']);
-            $categories[] = $row;
-        }
+        $activePermalinks = $this->categoryService->getActivePermalinksList($order_by_column);
 
         if ($sort_by[0] === 'name') {
-            usort($categories, CategoryService::compareByGlobalRank(...));
+            usort($activePermalinks, CategoryService::compareByGlobalRank(...));
+        }
+
+        $categories = [];
+        foreach ($activePermalinks as $row) {
+            $categories[] = [
+                ...$row->toArray(),
+                'name' => $htmlRenderer->getCatDisplayNameCache($row->uppercats),
+            ];
         }
 
         $sortResult = $this->parseSortVariables(

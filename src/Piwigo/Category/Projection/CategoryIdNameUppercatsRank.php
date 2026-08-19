@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use Piwigo\Common\Contract\HasGlobalRank;
+
 /**
  * Shared `id`/`name`/`uppercats`/`global_rank` row shape for 9
  * {@see \Piwigo\Category\CategoryRepository} methods, all narrowed through
@@ -14,15 +16,9 @@ namespace Piwigo\Category\Projection;
  * `findPrivateCategoriesExcluding()`, `findIdNameUppercatsRank()`,
  * `findIdNameUppercatsRankBySite()`) -- every one of them funnels into
  * {@see \Piwigo\Category\CategoryService::sortAndDisplaySelectCategories()},
- * their real (and only) shared consumer.
- *
- * `toArray()` exists for that consumer: it `usort()`s the result via the
- * generic, cross-domain {@see \Piwigo\Category\CategoryService::
- * compareByGlobalRank()} comparator (deliberately `array`-typed so it stays
- * reusable across several differently-shaped rows, not just this one), so
- * this DTO is unwrapped to a plain array once, right where it arrives.
+ * their real (and only) shared consumer, which reads this object directly.
  */
-final readonly class CategoryIdNameUppercatsRank
+final readonly class CategoryIdNameUppercatsRank implements HasGlobalRank
 {
     public function __construct(
         public int $id,
@@ -30,6 +26,11 @@ final readonly class CategoryIdNameUppercatsRank
         public string $uppercats,
         public ?string $globalRank,
     ) {}
+
+    public function getGlobalRank(): ?string
+    {
+        return $this->globalRank;
+    }
 
     /**
      * @return array{id: int, name: string, uppercats: string, global_rank: ?string}

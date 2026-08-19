@@ -168,16 +168,12 @@ afterEach(function (): void {
 
 test('compareByGlobalRank() orders naturally', function (): void {
     $rows = [
-        [
-            'global_rank' => '1.10',
-        ],
-        [
-            'global_rank' => '1.2',
-        ],
+        new ComputedCategoryRow(catId: 1, idUppercat: null, globalRank: '1.10', rank: null, dateLast: null, nbImages: 0, userId: 0),
+        new ComputedCategoryRow(catId: 2, idUppercat: null, globalRank: '1.2', rank: null, dateLast: null, nbImages: 0, userId: 0),
     ];
     usort($rows, CategoryService::compareByGlobalRank(...));
 
-    expect($rows[0]['global_rank'])
+    expect($rows[0]->globalRank)
         ->toBe('1.2');
 });
 

@@ -44,6 +44,7 @@ use Piwigo\Category\Projection\GroupCategoryPair;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
+use Piwigo\Common\Contract\HasGlobalRank;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -184,30 +185,23 @@ final readonly class CategoryService
     }
 
     /**
-     * Generic cross-domain sort comparator -- 12 real call sites across
-     * Category/Admin/Controller/Picture pass wildly different row
-     * shapes (category rows, picture rows, image rows, ...) that merely
-     * happen to share a 'global_rank' key; only that one key is read, and
-     * defensively (is_scalar()-checked), so $a/$b can't be narrowed to any
-     * single domain's row shape without being wrong for the other 11.
-     *
-     * @param  array<string, mixed>  $a
-     * @param  array<string, mixed>  $b
+     * Generic cross-domain sort comparator -- real call sites across
+     * Category/Admin/Controller/Picture pass different real Projections
+     * that merely happen to share a `global_rank` value, via
+     * {@see \Piwigo\Common\Contract\HasGlobalRank}.
      */
-    public static function compareByGlobalRank(array $a, array $b): int
+    public static function compareByGlobalRank(HasGlobalRank $a, HasGlobalRank $b): int
     {
-        $aRank = $a['global_rank'];
-        $bRank = $b['global_rank'];
-
-        return strnatcasecmp(
-            is_scalar($aRank) ? (string) $aRank : '',
-            is_scalar($bRank) ? (string) $bRank : ''
-        );
+        return strnatcasecmp($a->getGlobalRank() ?? '', $b->getGlobalRank() ?? '');
     }
 
     /**
-     * Same generic cross-domain comparator rationale as
-     * compareByGlobalRank() above -- only reads 'rank', defensively.
+     * Unlike compareByGlobalRank() above, both real call sites
+     * (Category\CategoryDefaultRenderer, Controller\Api\Tags\
+     * TagImagesController) sort a `rank` value synthesized via
+     * `array_flip()`-based position lookup, spliced onto an already
+     * template-/JSON-response-shaped row -- not a real object property --
+     * so this stays array-typed.
      *
      * @param  array<string, mixed>  $a
      * @param  array<string, mixed>  $b
@@ -796,6 +790,7 @@ final readonly class CategoryService
         // it filters the row set rather than a SQL string.
         $rows = $this->eventDispatcher->dispatch(new GetCategoriesMenuRows($rows, $userExpand, $filterEnabled))
             ->rows;
+        usort($rows, self::compareByGlobalRank(...));
 
         $cats = [];
         $selectedCategory = $categoryPage;
@@ -842,7 +837,6 @@ final readonly class CategoryService
                 $countCategories = $computedRow->countCategories;
             }
         }
-        usort($cats, self::compareByGlobalRank(...));
 
         // Update filtered data
         $filterUpdater->updateCatsWithFilteredData($cats);
@@ -856,12 +850,10 @@ final readonly class CategoryService
     /**
      * Builds an {html_options}-ready shape from a list of categories.
      *
-     * Same cross-domain generic-row-reader rationale as
-     * compareByGlobalRank() for $categories; $selecteds is passed straight
-     * through, matching this method's own by-design arbitrary-value
-     * contract.
+     * $selecteds is passed straight through, matching this method's own
+     * by-design arbitrary-value contract.
      *
-     * @param array<int, array<string, mixed>> $categories (at least id,name,global_rank,uppercats for each)
+     * @param list<CategoryIdNameUppercatsRank|CategoryPermalinkDisplayRow> $categories
      * @param array<int, mixed> $selecteds
      * @param bool $fullname full breadcrumb or not
      */
@@ -874,27 +866,19 @@ final readonly class CategoryService
         $tplCats = [];
         foreach ($categories as $category) {
             if ($fullname) {
-                $uppercats = $category['uppercats'];
                 $option = strip_tags(
-                    $htmlRenderer->getCatDisplayNameCache(
-                        is_string($uppercats) ? $uppercats : '',
-                        null
-                    )
+                    $htmlRenderer->getCatDisplayNameCache($category->uppercats, null)
                 );
             } else {
-                $globalRank = $category['global_rank'];
                 $option = str_repeat(
                     '&nbsp;',
-                    (3 * substr_count(is_string($globalRank) ? $globalRank : '', '.'))
+                    (3 * substr_count($category->globalRank ?? '', '.'))
                 );
                 $option .= '- ';
-                $selectNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'display_select_categories'));
+                $selectNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category->name, 'display_select_categories'));
                 $option .= strip_tags($selectNameEvent->categoryName);
             }
-            $id = $category['id'];
-            if (is_int($id) || is_string($id)) {
-                $tplCats[$id] = $option;
-            }
+            $tplCats[$category->id] = $option;
         }
 
         return new CategorySelectOptions($tplCats, $selecteds);
@@ -906,7 +890,7 @@ final readonly class CategoryService
      * tail -- same as displaySelectCategories() but categories are
      * ordered by rank first.
      *
-     * @param  list<array<string, mixed>>  $categories
+     * @param  list<CategoryIdNameUppercatsRank|CategoryPermalinkDisplayRow>  $categories
      * @param  array<int, mixed>  $selecteds
      */
     private function sortAndDisplaySelectCategories(
@@ -925,7 +909,7 @@ final readonly class CategoryService
     public function displaySelectByCommentable(bool $commentable, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByCommentable($commentable)),
+            $this->repo->findByCommentable($commentable),
             [],
             $htmlRenderer
         );
@@ -937,7 +921,7 @@ final readonly class CategoryService
     public function displaySelectByVisible(bool $visible, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByVisible($visible)),
+            $this->repo->findByVisible($visible),
             [],
             $htmlRenderer
         );
@@ -950,7 +934,7 @@ final readonly class CategoryService
     public function displaySelectByStatus(string $status, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByStatus($status)),
+            $this->repo->findByStatus($status),
             [],
             $htmlRenderer
         );
@@ -962,7 +946,7 @@ final readonly class CategoryService
     public function displaySelectByRepresentativePresence(bool $hasRepresentative, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByRepresentativePresence($hasRepresentative)),
+            $this->repo->findByRepresentativePresence($hasRepresentative),
             [],
             $htmlRenderer
         );
@@ -976,7 +960,7 @@ final readonly class CategoryService
     public function displaySelectPrivateGrantedToUser(int $userId, array $groupAuthorizedCatIds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds)),
+            $this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds),
             [],
             $htmlRenderer
         );
@@ -988,7 +972,7 @@ final readonly class CategoryService
     public function displaySelectPrivateGrantedToGroup(int $groupId, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesGrantedToGroup($groupId)),
+            $this->repo->findPrivateCategoriesGrantedToGroup($groupId),
             [],
             $htmlRenderer
         );
@@ -1003,7 +987,7 @@ final readonly class CategoryService
     public function displaySelectPrivateExcluding(array $excludeCatIds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesExcluding($excludeCatIds)),
+            $this->repo->findPrivateCategoriesExcluding($excludeCatIds),
             [],
             $htmlRenderer
         );
@@ -1017,7 +1001,7 @@ final readonly class CategoryService
     public function displaySelectByCondition(PermissionCriteria $criteria, array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findIdNameUppercatsRank($criteria)),
+            $this->repo->findIdNameUppercatsRank($criteria),
             $selecteds,
             $htmlRenderer
         );
@@ -1031,7 +1015,7 @@ final readonly class CategoryService
     public function displaySelectForPermalinks(array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryPermalinkDisplayRow $row): array => $row->toArray(), $this->repo->findAllForPermalinksDisplay()),
+            $this->repo->findAllForPermalinksDisplay(),
             $selecteds,
             $htmlRenderer,
             false
@@ -1046,7 +1030,7 @@ final readonly class CategoryService
     public function displaySelectBySite(int $siteId, array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
         return $this->sortAndDisplaySelectCategories(
-            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findIdNameUppercatsRankBySite($siteId)),
+            $this->repo->findIdNameUppercatsRankBySite($siteId),
             $selecteds,
             $htmlRenderer,
             false
@@ -1556,18 +1540,15 @@ final readonly class CategoryService
             $topCategories = [];
             $parentIds = [];
 
-            $allCategories = array_map(
-                static fn (CategoryListingRow $row): array => $row->toArray(),
-                $this->repo->findCategoriesByIds(array_values(array_map(intval(...), $categories)))
-            );
+            $allCategories = $this->repo->findCategoriesByIds(array_values(array_map(intval(...), $categories)));
             usort($allCategories, self::compareByGlobalRank(...));
 
             foreach ($allCategories as $cat) {
                 $isTop = true;
 
-                $catIdUppercat = $cat['id_uppercat'];
+                $catIdUppercat = $cat->idUppercat;
                 $catHasParent = $catIdUppercat !== null && $catIdUppercat !== 0;
-                $catUppercats = $cat['uppercats'];
+                $catUppercats = $cat->uppercats;
 
                 if ($catHasParent) {
                     foreach (explode(',', $catUppercats) as $idUppercat) {
@@ -1579,7 +1560,7 @@ final readonly class CategoryService
                 }
 
                 if ($isTop) {
-                    $catId = $cat['id'];
+                    $catId = $cat->id;
                     $topCategories[$catId] = $cat;
 
                     if ($catHasParent) {
@@ -1600,10 +1581,10 @@ final readonly class CategoryService
             foreach ($topCategories as $topCategory) {
                 // what is the "reference" for list of permissions? The parent album
                 // if it is private, else the album itself
-                $topCategoryId = $topCategory['id'];
+                $topCategoryId = $topCategory->id;
                 $refCatId = $topCategoryId;
 
-                $topCategoryIdUppercat = $topCategory['id_uppercat'];
+                $topCategoryIdUppercat = $topCategory->idUppercat;
                 $topCategoryHasParent = $topCategoryIdUppercat !== null && $topCategoryIdUppercat !== 0;
                 if ($topCategoryHasParent) {
                     $parentCatId = $topCategoryIdUppercat;
@@ -2160,14 +2141,11 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array{cat_id: int, uppercats: string, global_rank: ?string}>
+     * @return list<CategoryGroupAuthorizationRow>
      */
     public function getCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
-        return array_map(
-            static fn (CategoryGroupAuthorizationRow $row): array => $row->toArray(),
-            $this->repo->findCategoriesAuthorizedViaGroupsForUser($userId)
-        );
+        return $this->repo->findCategoriesAuthorizedViaGroupsForUser($userId);
     }
 
     /**
@@ -2319,14 +2297,11 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array{id: int, permalink: ?string, uppercats: string, global_rank: ?string}>
+     * @return list<ActivePermalinkRow>
      */
     public function getActivePermalinksList(?string $orderByColumn): array
     {
-        return array_map(
-            static fn (ActivePermalinkRow $row): array => $row->toArray(),
-            $this->repo->findActivePermalinksList($orderByColumn)
-        );
+        return $this->repo->findActivePermalinksList($orderByColumn);
     }
 
     public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool

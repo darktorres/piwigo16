@@ -34,33 +34,9 @@ function category_service_pure_helpers_test_lang(): Lang
 }
 
 test('compareByGlobalRank sorts naturally by the global_rank string', function (): void {
-    expect(CategoryService::compareByGlobalRank([
-        'global_rank' => '1.2',
-    ], [
-        'global_rank' => '1.10',
-    ]))->toBeLessThan(0);
-    expect(CategoryService::compareByGlobalRank([
-        'global_rank' => '1.10',
-    ], [
-        'global_rank' => '1.2',
-    ]))->toBeGreaterThan(0);
-    expect(CategoryService::compareByGlobalRank([
-        'global_rank' => null,
-    ], [
-        'global_rank' => null,
-    ]))->toBe(0);
-});
-
-test('compareByGlobalRank casts non-string scalars to string before comparing', function (): void {
-    // Both sides are ints here (is_scalar() but not string) -- strnatcasecmp()
-    // requires strings, and this file is declare(strict_types=1), so if
-    // either (string) cast were dropped this would throw a TypeError
-    // instead of comparing naturally.
-    expect(CategoryService::compareByGlobalRank([
-        'global_rank' => 5,
-    ], [
-        'global_rank' => 10,
-    ]))->toBeLessThan(0);
+    expect(CategoryService::compareByGlobalRank(catMenuRow(1, null, '1.2'), catMenuRow(2, null, '1.10')))->toBeLessThan(0);
+    expect(CategoryService::compareByGlobalRank(catMenuRow(1, null, '1.10'), catMenuRow(2, null, '1.2')))->toBeGreaterThan(0);
+    expect(CategoryService::compareByGlobalRank(catMenuRow(1, null, null), catMenuRow(2, null, null)))->toBe(0);
 });
 
 test('compareByRank sorts numerically by the rank column, treating non-numeric as 0', function (): void {
@@ -142,12 +118,12 @@ test('isRecentCategory zeroes out the today-threshold time-of-day down to the se
     expect(CategoryService::isRecentCategory('2026-06-09 23:59:59', 5, '2026-06-15', $now))->toBeFalse();
 });
 
-function catMenuRow(int $id, ?int $idUppercat): ComputedCategoryRow
+function catMenuRow(int $id, ?int $idUppercat, ?string $globalRank = null): ComputedCategoryRow
 {
     return new ComputedCategoryRow(
         catId: $id,
         idUppercat: $idUppercat,
-        globalRank: null,
+        globalRank: $globalRank,
         rank: null,
         dateLast: null,
         nbImages: 0,

@@ -9,12 +9,12 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `tags.latte`'s own typed view, constructed by {@see
- * \Piwigo\Controller\TagsController::__invoke()} in place of its former
- * `TagsDisplayModePageContext`. `$letters`/`$tags` are mutually
- * exclusive (populated by the controller's own `$display_mode ===
- * 'letters'` if/else) and both genuinely optional -- `tags.latte` reads
- * each with its own `isset($letters)`/`isset($tags)` guard, which treats
- * an explicit `null` identically to "never assigned".
+ * \Piwigo\Controller\TagsController::__invoke()}. `$letters`/`$tags` are
+ * mutually exclusive (populated by the controller's own
+ * `$display_mode === 'letters'` if/else) and both genuinely optional --
+ * `tags.latte` reads each with its own `isset($letters)`/`isset($tags)`
+ * guard, which treats an explicit `null` identically to "never
+ * assigned".
  */
 #[Template('tags.latte')]
 final readonly class TagsView implements View

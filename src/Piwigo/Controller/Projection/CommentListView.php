@@ -10,9 +10,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `comment_list.latte`'s own typed view -- rendered by {@see
- * \Piwigo\Controller\CommentsController::__invoke()} in place of its
- * former `assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte')`
- * call, only when there is at least one comment to show.
+ * \Piwigo\Controller\CommentsController::__invoke()} only when there is
+ * at least one comment to show.
  */
 #[Template('comment_list.latte')]
 final readonly class CommentListView implements View

@@ -9,9 +9,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `register.latte`'s own typed view, constructed by {@see
- * \Piwigo\Controller\RegisterController::__invoke()} in place of its
- * former `RegisterPageContext`. Shared by two real `.latte` files
- * (`themes/default/template/register.latte` and `themes/
+ * \Piwigo\Controller\RegisterController::__invoke()}. Shared by two real
+ * `.latte` files (`themes/default/template/register.latte` and `themes/
  * standard_pages/template/register.latte` -- `Template::setTheme()`
  * substitutes `standard_pages` for this page, same as `identification`/
  * `password`/`profile`), which is why `$currentLanguage` is a plain

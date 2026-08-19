@@ -9,8 +9,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `notification.latte`'s own typed view, constructed by {@see
- * \Piwigo\Controller\NotificationController::__invoke()} in place of its
- * former `NotificationPageContext`.
+ * \Piwigo\Controller\NotificationController::__invoke()}.
  */
 #[Template('notification.latte')]
 final readonly class NotificationView implements View

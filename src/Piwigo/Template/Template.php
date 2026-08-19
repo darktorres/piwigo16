@@ -1396,4 +1396,26 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         return array_values($buttons);
     }
+
+    /**
+     * Same ksort+flatten logic as `parsePictureButtons()` above, returned
+     * instead of `assign()`-ed -- the `View`-based sibling for a migrated
+     * page's own `PictureView::$pluginPictureButtons` property.
+     *
+     * @return list<string>
+     */
+    public function pictureButtons(): array
+    {
+        if ($this->pictureButtons === []) {
+            return [];
+        }
+
+        ksort($this->pictureButtons);
+        $buttons = [];
+        foreach ($this->pictureButtons as $row) {
+            $buttons = array_merge($buttons, $row);
+        }
+
+        return array_values($buttons);
+    }
 }

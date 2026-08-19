@@ -29,8 +29,10 @@ use Piwigo\Controller\Event\PicturePageRendered;
 use Piwigo\Controller\Event\PicturePageRendering;
 use Piwigo\Controller\Event\PicturePicturesData;
 use Piwigo\Controller\Event\RenderElementContent;
-use Piwigo\Controller\Projection\PictureContentPageContext;
-use Piwigo\Controller\Projection\PicturePageContext;
+use Piwigo\Controller\Projection\CanonicalUrlPageContext;
+use Piwigo\Controller\Projection\PictureContentView;
+use Piwigo\Controller\Projection\PictureView;
+use Piwigo\Controller\Projection\SlideshowView;
 use Piwigo\Controller\Request\PictureRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -74,6 +76,7 @@ use Piwigo\Section\SectionPopulator;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -97,10 +100,10 @@ use RuntimeException;
  * Picture\PictureCommentRenderer::render()'s own die() calls (reached
  * from within this body) throw ResponseReadyException.
  *
- * The render body is flat code directly in this method: it parses the
- * template with `parse($handle, false)`, which accumulates into
- * Template's own buffer, and PageTail::renderToString() drains that
- * buffer as one string -- the same mechanism
+ * The render body is flat code directly in this method: it renders a
+ * `PictureView`/`SlideshowView` via `Renderer::render()` and appends the
+ * result onto `Template::$output`, which `PageTail::renderToString()`
+ * then drains as one string -- the same mechanism
  * Controller\AboutController/PopuphelpController use.
  * $urlService/$configService keep their own local aliases, referenced
  * throughout the body, rather than $this->urlService/$this->configService
@@ -146,11 +149,43 @@ final readonly class PictureController implements ControllerInterface
         private InputValidator $inputValidator,
         private Translator $translator,
         private Paths $paths,
+        private Renderer $renderer,
     ) {}
 
     private function commentService(UrlServiceInterface $urlService): CommentService
     {
         return new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
+    }
+
+    /**
+     * `U_ORIGINAL` -- the linked-original-file URL, shown only when a
+     * real `element_url` exists and every displayed derivative differs
+     * from the source file (`!$derivative->sameAsSource()`). Shared by
+     * `defaultPictureContent()` (its own real owner) and `__invoke()`
+     * (which needs the same value for `PictureView::$uOriginal` -- see
+     * that class's own docblock for why).
+     *
+     * @param array{derivatives: array<string, DerivativeImage>, element_url?: string} $element_info
+     */
+    private function computeUOriginal(array $element_info): ?string
+    {
+        if (! isset($element_info['element_url'])) {
+            return null;
+        }
+
+        foreach ($element_info['derivatives'] as $type => $derivative) {
+            if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
+                continue;
+            }
+            if (! array_key_exists($type, $this->imageStdParams->getDefinedTypeMap())) {
+                continue;
+            }
+            if ($derivative->sameAsSource()) {
+                return null;
+            }
+        }
+
+        return $element_info['element_url'];
     }
 
     #[Override]
@@ -704,12 +739,6 @@ final readonly class PictureController implements ControllerInterface
         } else {
             $slideshow = false;
         }
-        if ($slideshow and $this->currentConfig->lightSlideshow) {
-            $pictureTemplateFile = 'slideshow.latte';
-        } else {
-            $pictureTemplateFile = 'picture.latte';
-        }
-
         // $image_id is always in $ids (see the query above) and
         // always hits the while loop's final `else { $i =
         // 'current'; }` branch
@@ -752,7 +781,7 @@ final readonly class PictureController implements ControllerInterface
          * authoritative return shape -- id/hit/width/height/filesize are
          * genuinely typed int|null there, not the string|null a raw DB
          * row would have; this docblock previously claimed the latter,
-         * a stale mismatch real enough to hide a live bug: PicturePageContext
+         * a stale mismatch real enough to hide a live bug: PictureView
          * ::$infoVisits expects a string, and PHPStan trusted this
          * docblock's wrong `hit: string` claim instead of flagging the
          * real int flowing in uncast) per navigation slot, plus the
@@ -852,8 +881,7 @@ final readonly class PictureController implements ControllerInterface
         // above, always set whenever $download_url_present can be true,
         // since that itself reads $picture['current']) rather than through
         // a separate Template::append('current', ..., merge: true) call,
-        // now that PicturePageContext owns 'current' entirely via
-        // navCurrent.
+        // now that PictureView owns 'current' entirely via navCurrent.
         if ($this->currentConfig->pictureDownloadIcon and $download_url_present and $this->currentUser->get()->enabledHigh) {
             $nav['current']['U_DOWNLOAD'] = $download_url;
 
@@ -1029,7 +1057,7 @@ final readonly class PictureController implements ControllerInterface
         }
 
         // date of availability -- date_available is nullable (a photo can
-        // simply lack EXIF/IPTC date info); PicturePageContext::$infoPostedDate
+        // simply lack EXIF/IPTC date info); PictureView::$infoPostedDate
         // stays a required string (this info row is unconditional in
         // picture.latte, unlike the optional INFO_CREATION_DATE above), so
         // fall back to an empty string instead of feeding formatDate()/
@@ -1068,13 +1096,14 @@ final readonly class PictureController implements ControllerInterface
         }
 
         // number of visits -- ImageEntity::$hit is a real int
-        // (src/Piwigo/Image/ImageEntity.php:100); PicturePageContext::
+        // (src/Piwigo/Image/ImageEntity.php:100); PictureView::
         // $infoVisits is a pre-formatted display string like its
         // info_dimensions/info_filesize siblings above, so this needs
         // the same explicit stringification they get implicitly from
         // their own string-returning sources (a real picture.php request
         // once threw "PicturePageContext::__construct(): Argument #27
-        // ($infoVisits) must be of type string, int given").
+        // ($infoVisits) must be of type string, int given" before this
+        // cast existed).
         $info_visits = (string) $picture['current']['hit'];
 
         // file
@@ -1196,44 +1225,9 @@ final readonly class PictureController implements ControllerInterface
             ]
         );
 
-        $template->assignContext(new PicturePageContext(
-            navFirst: $nav['first'] ?? null,
-            navPrevious: $nav['previous'] ?? null,
-            navNext: $nav['next'] ?? null,
-            navLast: $nav['last'] ?? null,
-            navCurrent: $nav['current'] ?? null,
-            uSlideshowStop: $u_slideshow_stop,
-            slideshowNav: $slideshow_nav ?? null,
-            uSlideshowStart: $u_slideshow_start,
-            sectionTitle: $section_title,
-            photo: $photo,
-            isHome: $is_home,
-            levelSeparator: $level_separator,
-            uUp: $url_up,
-            displayNavButtons: $display_nav_buttons,
-            displayNavThumb: $display_nav_thumb,
-            uMetadata: $u_metadata,
-            uSetAsRepresentative: $u_set_as_representative,
-            uPhotoAdmin: $u_photo_admin,
-            uCaddie: $u_caddie,
-            favorite: $favorite,
-            commentImg: $comment_img,
-            infoAuthor: $info_author,
-            infoCreationDate: $info_creation_date,
-            infoPostedDate: $info_posted_date,
-            infoDimensions: $info_dimensions,
-            infoFilesize: $info_filesize,
-            infoVisits: $info_visits,
-            infoFile: $info_file,
-            displayInfo: $display_info,
-            pdfNbPages: $pdf_nb_pages,
-            elementContent: $element_content,
-            uPrefetch: $u_prefetch,
-            uCanonical: $u_canonical,
-            relatedTags: $related_tags !== [] ? $related_tags : null,
-            relatedCategories: $related_categories_display !== [] ? $related_categories_display : null,
-            csrfToken: $this->csrfService->getToken(),
-        ));
+        // header.latte renders this before PictureView is ever
+        // constructed -- see CanonicalUrlPageContext's own docblock.
+        $template->assignContext(new CanonicalUrlPageContext($u_canonical));
 
         $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
@@ -1264,11 +1258,53 @@ final readonly class PictureController implements ControllerInterface
         $this->eventDispatcher->dispatch(new PicturePageRendered($image_id));
         $this->htmlService
             ->flushPageMessages();
+
+        $commonPictureViewArgs = [
+            'navFirst' => $nav['first'] ?? null,
+            'navPrevious' => $nav['previous'] ?? null,
+            'navNext' => $nav['next'] ?? null,
+            'navLast' => $nav['last'] ?? null,
+            'navCurrent' => $nav['current'] ?? null,
+            'uSlideshowStop' => $u_slideshow_stop,
+            'slideshowNav' => $slideshow_nav ?? null,
+            'uSlideshowStart' => $u_slideshow_start,
+            'sectionTitle' => $section_title,
+            'photo' => $photo,
+            'isHome' => $is_home,
+            'levelSeparator' => $level_separator,
+            'uUp' => $url_up,
+            'displayNavButtons' => $display_nav_buttons,
+            'displayNavThumb' => $display_nav_thumb,
+            'uMetadata' => $u_metadata,
+            'uSetAsRepresentative' => $u_set_as_representative,
+            'uPhotoAdmin' => $u_photo_admin,
+            'uCaddie' => $u_caddie,
+            'favorite' => $favorite,
+            'commentImg' => $comment_img,
+            'infoAuthor' => $info_author,
+            'infoCreationDate' => $info_creation_date,
+            'infoPostedDate' => $info_posted_date,
+            'infoDimensions' => $info_dimensions,
+            'infoFilesize' => $info_filesize,
+            'infoVisits' => $info_visits,
+            'infoFile' => $info_file,
+            'displayInfo' => $display_info,
+            'pdfNbPages' => $pdf_nb_pages,
+            'elementContent' => $element_content,
+            'uPrefetch' => $u_prefetch,
+            'relatedTags' => $related_tags !== [] ? $related_tags : null,
+            'relatedCategories' => $related_categories_display !== [] ? $related_categories_display : null,
+            'csrfToken' => $this->csrfService->getToken(),
+            'cookiePath' => new CookieService()
+                ->cookiePath(),
+            'uOriginal' => $this->computeUOriginal($picture['current']),
+            'pluginPictureButtons' => $template->pictureButtons(),
+        ];
+
         if ($slideshow and $this->currentConfig->lightSlideshow) {
-            $template->parse($pictureTemplateFile, false);
+            $template->appendOutput($this->renderer->render(new SlideshowView(...$commonPictureViewArgs)));
         } else {
-            $template->parsePictureButtons();
-            $template->parse($pictureTemplateFile, false);
+            $template->appendOutput($this->renderer->render(new PictureView(...$commonPictureViewArgs)));
         }
         $current_image_id = $picture['current']['id'];
         $this->historyService
@@ -1325,7 +1361,6 @@ final readonly class PictureController implements ControllerInterface
         $selected_derivative = $element_info['derivatives'][$deriv_type];
 
         $unique_derivatives = [];
-        $show_original = isset($element_info['element_url']);
         $added = [];
         foreach ($element_info['derivatives'] as $type => $derivative) {
             if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
@@ -1339,7 +1374,6 @@ final readonly class PictureController implements ControllerInterface
                 continue;
             }
             $added[$url] = 1;
-            $show_original = $show_original && ! ($derivative->sameAsSource());
 
             // in case we do not display the sizes icon, we only add the
             // selected size to unique_derivatives
@@ -1348,19 +1382,14 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        $template = $this->currentTemplate->get();
-
-        $u_original = null;
-        if ($show_original and isset($element_info['element_url'])) {
-            $u_original = $element_info['element_url'];
-        }
+        $u_original = $this->computeUOriginal($element_info);
 
         $pdf_viewer_filesize_threshold = null;
         if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {
             $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold * 1024;
         }
 
-        $template->assignContext(new PictureContentPageContext(
+        $pictureContentView = new PictureContentView(
             uOriginal: $u_original,
             altImg: $element_info['file'],
             cookiePath: new CookieService()
@@ -1371,8 +1400,8 @@ final readonly class PictureController implements ControllerInterface
                 'selected_derivative' => $selected_derivative,
                 'unique_derivatives' => $unique_derivatives,
             ],
-        ));
-        $event->content = $template->parse('picture_content.latte', true);
+        );
+        $event->content = (string) $this->renderer->render($pictureContentView);
 
         return $event;
     }

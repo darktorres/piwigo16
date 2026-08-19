@@ -9,17 +9,15 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `identification.latte`'s own typed view, constructed by {@see
- * \Piwigo\Controller\IdentificationController::__invoke()} in place of
- * its former `IdentificationPageContext`. Shared by two real `.latte`
- * files (`themes/default/template/identification.latte` and `themes/
- * standard_pages/template/identification.latte` -- `Template::
- * setTheme()` substitutes `standard_pages` for this page) -- neither
- * theme's own body references every property here, matching the same
- * asymmetry `RegisterView`'s own docblock explains. `$register`/
+ * \Piwigo\Controller\IdentificationController::__invoke()}. Shared by
+ * two real `.latte` files (`themes/default/template/identification.latte`
+ * and `themes/standard_pages/template/identification.latte` --
+ * `Template::setTheme()` substitutes `standard_pages` for this page) --
+ * neither theme's own body references every property here, matching the
+ * same asymmetry `RegisterView`'s own docblock explains. `$register`/
  * `$lostPassword` stay nullable: both templates guard them with
  * `isset()`, which treats an explicit `null` identically to "never
- * assigned", matching the original `toArray()`'s own conditional-key
- * omission.
+ * assigned".
  */
 #[Template('identification.latte')]
 final readonly class IdentificationView implements View

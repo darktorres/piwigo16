@@ -9,7 +9,7 @@ namespace Piwigo\Picture\Event;
  * the picture page's own "display info" panel -- real dispatch site:
  * Controller\PictureController, right after reading
  * CurrentConfig::$pictureInformations, before it's threaded into
- * Controller\Projection\PicturePageContext.
+ * Controller\Projection\PictureView.
  *
  * Real caller this was ported for: AdminTools_16.3.0's own
  * set_prefilter('picture', 'admintools_remove_privacy') -- hides the

@@ -10,11 +10,12 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * `U_CANONICAL` alone -- `header.latte`'s own `<link rel="canonical">`
  * tag (`isset($U_CANONICAL)`) renders while `PageHeaderRenderer::render()`
- * parses `header.latte`, which happens before {@see
- * \Piwigo\Controller\GalleryController::__invoke()} constructs its own
- * `IndexView` -- so this one field stays on the old ambient
- * `assignContext()` mechanism instead of moving into `IndexView`, whose
- * render happens too late for `header.latte` to see it.
+ * parses `header.latte`, which happens before a page's own `View`
+ * (`GalleryController`'s `IndexView`, `PictureController`'s
+ * `PictureView`/`SlideshowView`) is ever constructed -- so this one field
+ * stays on the ambient `assignContext()` mechanism instead, since a
+ * `View`'s own render always happens too late for `header.latte` to see
+ * it.
  */
 final readonly class CanonicalUrlPageContext implements TemplatePageContext
 {

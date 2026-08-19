@@ -664,11 +664,11 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 <div class="navigationButtons">
-  {if $DISPLAY_NAV_BUTTONS or isset($slideshow)}
-    {if isset($slideshow)}
-      {if isset($slideshow['U_INC_PERIOD'])}
+  {if $displayNavButtons or isset($slideshowNav)}
+    {if isset($slideshowNav)}
+      {if isset($slideshowNav['U_INC_PERIOD'])}
         <a
-          href="{$slideshow['U_INC_PERIOD']|noescape}"
+          href="{$slideshowNav['U_INC_PERIOD']|noescape}"
           title="{='Reduce diaporama speed'|translate}"
           class="pwg-state-default pwg-button"
         >
@@ -683,9 +683,9 @@
           >{='Reduce diaporama speed'|translate}</span>
         </span>
       {/if}
-      {if isset($slideshow['U_DEC_PERIOD'])}
+      {if isset($slideshowNav['U_DEC_PERIOD'])}
         <a
-          href="{$slideshow['U_DEC_PERIOD']|noescape}"
+          href="{$slideshowNav['U_DEC_PERIOD']|noescape}"
           title="{='Accelerate diaporama speed'|translate}"
           class="pwg-state-default pwg-button"
         >
@@ -702,8 +702,8 @@
       {/if}
     {/if}
     <a
-      n:if="isset($slideshow['U_START_REPEAT'])"
-      href="{$slideshow['U_START_REPEAT']|noescape}"
+      n:if="isset($slideshowNav['U_START_REPEAT'])"
+      href="{$slideshowNav['U_START_REPEAT']|noescape}"
       title="{='Repeat the slideshow'|translate}"
       class="pwg-state-default pwg-button"
     >
@@ -712,8 +712,8 @@
       >{='Repeat the slideshow'|translate}</span>
     </a>
     <a
-      n:if="isset($slideshow['U_STOP_REPEAT'])"
-      href="{$slideshow['U_STOP_REPEAT']|noescape}"
+      n:if="isset($slideshowNav['U_STOP_REPEAT'])"
+      href="{$slideshowNav['U_STOP_REPEAT']|noescape}"
       title="{='Not repeat the slideshow'|translate}"
       class="pwg-state-default pwg-button"
     >
@@ -721,8 +721,8 @@
         class="pwg-button-text"
       >{='Not repeat the slideshow'|translate}</span>
     </a>
-    {*<!--{spaceless}{if isset($first)}
-  <a href="{$first['U_IMG']}" title="{='First'|translate} : {$first['TITLE']}" class="pwg-state-default pwg-button">
+    {*<!--{spaceless}{if isset($navFirst)}
+  <a href="{$navFirst['U_IMG']}" title="{='First'|translate} : {$navFirst['TITLE']}" class="pwg-state-default pwg-button">
     <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{='First'|translate}</span>
   </a>
 {else}
@@ -731,8 +731,8 @@
   </span>
 {/if}{/spaceless}-->*}
     {spaceless}<a
-        n:if="isset($U_UP) and !isset($slideshow)"
-        href="{$U_UP|noescape}"
+        n:if="isset($uUp) and !isset($slideshowNav)"
+        href="{$uUp|noescape}"
         title="{='Thumbnails'|translate}"
         class="pwg-state-default pwg-button"
       >
@@ -740,10 +740,10 @@
           class="pwg-button-text"
         >{='Thumbnails'|translate}</span>
       </a>{/spaceless}
-    {spaceless}{if isset($previous)}
+    {spaceless}{if isset($navPrevious)}
         <a
-          href="{$previous['U_IMG']|noescape}"
-          title="{='Previous'|translate} : {$previous['TITLE_ESC']|noescape}"
+          href="{$navPrevious['U_IMG']|noescape}"
+          title="{='Previous'|translate} : {$navPrevious['TITLE_ESC']|noescape}"
           class="pwg-state-default pwg-button"
         >
           <span class="pwg-icon pwg-icon-arrow-w"></span><span
@@ -758,8 +758,8 @@
         </span>
       {/if}{/spaceless}
     <a
-      n:if="isset($slideshow['U_START_PLAY'])"
-      href="{$slideshow['U_START_PLAY']|noescape}"
+      n:if="isset($slideshowNav['U_START_PLAY'])"
+      href="{$slideshowNav['U_START_PLAY']|noescape}"
       title="{='Play of slideshow'|translate}"
       class="pwg-state-default pwg-button"
     >
@@ -768,8 +768,8 @@
       >{='Play of slideshow'|translate}</span>
     </a>
     <a
-      n:if="isset($slideshow['U_STOP_PLAY'])"
-      href="{$slideshow['U_STOP_PLAY']|noescape}"
+      n:if="isset($slideshowNav['U_STOP_PLAY'])"
+      href="{$slideshowNav['U_STOP_PLAY']|noescape}"
       title="{='Pause of slideshow'|translate}"
       class="pwg-state-default pwg-button"
     >
@@ -777,10 +777,10 @@
         class="pwg-button-text"
       >{='Pause of slideshow'|translate}</span>
     </a>
-    {spaceless}{if isset($next)}
+    {spaceless}{if isset($navNext)}
         <a
-          href="{$next['U_IMG']|noescape}"
-          title="{='Next'|translate} : {$next['TITLE_ESC']|noescape}"
+          href="{$navNext['U_IMG']|noescape}"
+          title="{='Next'|translate} : {$navNext['TITLE_ESC']|noescape}"
           class="pwg-state-default pwg-button pwg-button-icon-right"
         >
           <span class="pwg-icon pwg-icon-arrow-e"></span><span
@@ -794,8 +794,8 @@
           >{='Next'|translate}</span>
         </span>
       {/if}{/spaceless}
-    {*<!--{spaceless}{if isset($last)}
-  <a href="{$last['U_IMG']}" title="{='Last'|translate} : {$last['TITLE']}" class="pwg-state-default pwg-button pwg-button-icon-right">
+    {*<!--{spaceless}{if isset($navLast)}
+  <a href="{$navLast['U_IMG']}" title="{='Last'|translate} : {$navLast['TITLE']}" class="pwg-state-default pwg-button pwg-button-icon-right">
     <span class="pwg-icon pwg-icon-arrowstop-e"></span><span class="pwg-button-text">{='Last'|translate}</span>
   </a>
 {else}
@@ -807,11 +807,11 @@
 </div>
 {spaceless}
   {do combineScript(id: 'picture_nav_buttons', load: 'footer', require: 'page-data', path: 'themes/default/js/picture_nav_buttons.js')}
-  {if isset($next)}{do exposeData('nav_next_url', $next['U_IMG'])}{/if}
-  {if isset($previous)}{do exposeData('nav_previous_url', $previous['U_IMG'])}{/if}
-  {if isset($first)}{do exposeData('nav_first_url', $first['U_IMG'])}{/if}
-  {if isset($last)}{do exposeData('nav_last_url', $last['U_IMG'])}{/if}
-  {if isset($U_UP) and !isset($slideshow)}{do exposeData('nav_up_url', $U_UP)}{/if}
-  {if isset($slideshow['U_START_PLAY'])}{do exposeData('nav_slideshow_start_url', $slideshow['U_START_PLAY'])}{/if}
-  {if isset($slideshow['U_STOP_PLAY'])}{do exposeData('nav_slideshow_stop_url', $slideshow['U_STOP_PLAY'])}{/if}
+  {if isset($navNext)}{do exposeData('nav_next_url', $navNext['U_IMG'])}{/if}
+  {if isset($navPrevious)}{do exposeData('nav_previous_url', $navPrevious['U_IMG'])}{/if}
+  {if isset($navFirst)}{do exposeData('nav_first_url', $navFirst['U_IMG'])}{/if}
+  {if isset($navLast)}{do exposeData('nav_last_url', $navLast['U_IMG'])}{/if}
+  {if isset($uUp) and !isset($slideshowNav)}{do exposeData('nav_up_url', $uUp)}{/if}
+  {if isset($slideshowNav['U_START_PLAY'])}{do exposeData('nav_slideshow_start_url', $slideshowNav['U_START_PLAY'])}{/if}
+  {if isset($slideshowNav['U_STOP_PLAY'])}{do exposeData('nav_slideshow_stop_url', $slideshowNav['U_STOP_PLAY'])}{/if}
 {/spaceless}

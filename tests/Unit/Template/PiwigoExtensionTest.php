@@ -254,18 +254,6 @@ test('join defaults the glue to a comma', function (): void {
         ->toBe('a,b');
 });
 
-// --- escapeJavascript ------------------------------------------------------
-
-test('escapeJavascript escapes quotes, backslashes, and newlines', function (): void {
-    expect(PiwigoExtension::escapeJavascript("it's \"quoted\"\nand \\backslashed\\"))
-        ->toBe('it\\\'s \\"quoted\\"\\nand \\\\backslashed\\\\');
-});
-
-test('escapeJavascript breaks up a closing </script> sequence', function (): void {
-    expect(PiwigoExtension::escapeJavascript('</script>'))
-        ->toBe('<\/script>');
-});
-
 // --- htmlOptions -----------------------------------------------------------
 
 test('htmlOptions renders one <option> per associative entry', function (): void {

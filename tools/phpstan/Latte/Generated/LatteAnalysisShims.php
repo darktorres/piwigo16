@@ -114,7 +114,6 @@ final class LatteAnalysisShims
         'default',
         'date_format',
         'number_format',
-        'escapeJavascript',
         'url_is_remote',
         'is_admin',
         'is_classic_user',
@@ -714,11 +713,6 @@ final class LatteAnalysisShims
     }
 
     public static function number_format(int|float $number, int $decimals = 0, string $decimalSeparator = '.', string $thousandsSeparator = ','): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function escapeJavascript(string $value): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

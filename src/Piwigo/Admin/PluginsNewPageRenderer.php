@@ -11,11 +11,12 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Projection\PluginsNewPageContext;
+use Piwigo\Admin\Projection\PluginsNewView;
 use Piwigo\Admin\Request\PluginsNewRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
@@ -31,6 +32,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -63,6 +65,7 @@ final readonly class PluginsNewPageRenderer
         private Paths $paths,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -293,15 +296,17 @@ final readonly class PluginsNewPageRenderer
             $beta_url = $base_url . '&amp;beta-test=true';
         }
 
-        $template->assignContext(new PluginsNewPageContext(
+        $adminContent = $this->renderer->render(new PluginsNewView(
             orderOptions: $order_options,
             orderSelected: $order_selected,
             betaUrl: $beta_url,
-            adminPageTitle: $this->lang->t('Plugins'),
             betaTest: $beta_test,
             plugins: $tpl_plugins,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_new.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Plugins'),
+        ));
     }
 }

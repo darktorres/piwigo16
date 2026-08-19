@@ -1,3 +1,50 @@
+let user = {
+  username: pwg_getPageData('username'),
+  email: pwg_getPageData('email'),
+  nb_image_page: $('input[name="nb_image_page"]').val(),
+  theme: $('select[name="theme"]').val(),
+  language: $('select[name="language"]').val(),
+  recent_period: $('input[name="recent_period"]').val(),
+  opt_album: $('#opt_album').is(':checked'),
+  opt_comment: $('#opt_comment').is(':checked'),
+  opt_hits: $('#opt_hits').is(':checked')
+}
+
+const canUpdatePreferences = pwg_getPageData('allow_user_customization');
+const canUpdatePassword = pwg_getPageData('can_update_password');
+// One '#save_<block id>' selector per plugin-extension block that opts into
+// the standard save button (profile.latte's PLUGINS_PROFILE extension
+// point) -- read from the DOM instead of a per-iteration exposeData() push,
+// since the rendered button ids already carry everything needed and this
+// is otherwise "same behavior" either way (see myInfoBody()'s own note:
+// currently always empty, no live plugin in this rewrite).
+const standardSaveSelector = Array.from(
+  document.querySelectorAll('.form.plugins .save button[id^="save_"]')
+).map((el) => '#' + el.id);
+const defaultUserValues = pwg_getPageData('default_user_values');
+const preferencesDefaultValues = {
+  nb_image_page: defaultUserValues.nb_image_page,
+  recent_period: defaultUserValues.recent_period,
+  opt_album: defaultUserValues.expand,
+  opt_comment: defaultUserValues.show_nb_comments,
+  opt_hits: defaultUserValues.show_nb_hits,
+};
+const selected_date = pwg_getPageData('selected_date');
+const can_manage_api = pwg_getPageData('api_can_manage');
+
+const str_copy_key_id = pwg_getPageString('ID copied.');
+const str_copy_key_secret = pwg_getPageString('Secret copied. Keep it in a safe place.');
+const str_cant_copy = pwg_getPageString('Impossible to copy automatically. Please copy manually.');
+const str_api_added = pwg_getPageString('The api key has been successfully created.');
+const str_show_expired = pwg_getPageString('Show expired keys');
+const str_hide_expired = pwg_getPageString('Hide expired keys');
+const str_handle_error = pwg_getPageString('An error has occured');
+const str_infos_saved = pwg_getPageString('Your changes have been applied.');
+const str_revoke_key = pwg_getPageString('Do you really want to revoke the "%s" API key?');
+const str_api_revoked = pwg_getPageString('API Key has been successfully revoked.');
+const str_api_edited = pwg_getPageString('API Key has been successfully edited.');
+const no_time_elapsed = pwg_getPageString('right now');
+
 let PWG_TOKEN;
 $(function() {
   PWG_TOKEN = $('#pwg_token').val();

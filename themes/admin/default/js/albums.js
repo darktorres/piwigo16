@@ -1,3 +1,44 @@
+var data = pwg_getPageData('album_data');
+var pwg_token = pwg_getPageData('csrf_token');
+var str_are_you_sure = pwg_getPageString('The status of the album \'%s\' and its sub-albums will change to private. Are you sure?');
+var str_yes_change_parent = pwg_getPageString('Yes change parent anyway');
+var str_no_change_parent = pwg_getPageString('No, don\'t move this album here');
+var str_root = pwg_getPageString('Root');
+var openCat = pwg_getPageData('open_cat');
+var nb_albums = pwg_getPageData('nb_albums');
+var light_album_manager = pwg_getPageData('light_album_manager');
+
+var x_nb_subcats = pwg_getPageString('%d sub-albums');
+var x_nb_images = pwg_getPageString('%d photos');
+var x_nb_sub_photos = pwg_getPageString('%d pictures in sub-albums');
+
+var str_albums_found = pwg_getPageString('<b>%d</b> albums found');
+var str_album_found = pwg_getPageString('<b>1</b> album found');
+var str_result_limit = pwg_getPageString('<b>%d+</b> albums found, try to refine the search');
+var str_albs_drag_drop = pwg_getPageString('Drag and drop to reorder albums');
+
+var delay_autoOpen = pwg_getPageData('delay_auto_open');
+
+var delete_album_with_name = pwg_getPageString('Delete album "%s".');
+var delete_album_with_subs = pwg_getPageString('Delete album "%s" and its %d sub-albums.');
+var has_images_associated_outside = pwg_getPageString('delete album and all %d photos, even the %d associated to other albums');
+var has_images_becomming_orphans = pwg_getPageString('delete album and the %d orphan photos');
+var rename_item = pwg_getPageString('Rename "%s"');
+
+var str_add_album = pwg_getPageString('Add Album');
+var str_edit_album = pwg_getPageString('Edit album');
+var str_add_photo = pwg_getPageString('Add Photos');
+var str_visit_gallery = pwg_getPageString('Visit Gallery');
+var str_sort_order = pwg_getPageString('Automatic sort order');
+var str_delete_album = pwg_getPageString('Delete album');
+var str_root_order = pwg_getPageString('Apply to root albums');
+var str_sub_album_order = pwg_getPageString('Apply to direct sub-albums');
+var str_album_name_empty = pwg_getPageString('Album name must not be empty');
+
+var add_album_root_title = pwg_getPageString('Create a new album at root');
+var add_sub_album_of = pwg_getPageString('Create a sub-album of "%s"');
+var tiptip_locked_album = pwg_getPageString('Locked album');
+
 $(document).ready(() => {
   const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
   const new_data = data.map((a) => {

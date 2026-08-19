@@ -354,41 +354,10 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":{"active_menu":-1},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"active_menu":-1,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
-<script type="text/javascript">//<![CDATA[
-
-jQuery('.tiptip').tipTip({
-  delay: 0,
-  fadeIn: 200,
-  fadeOut: 200
-});
-
-jQuery('a.externalLink').click(function() {
-  window.open(jQuery(this).attr("href"));
-  return false;
-});
-
-function hide_user_whats_new() {
-  $.ajax({
-    url: "api/v1/session/preferences/show_whats_new_17",
-    type: "PUT",
-    contentType: "application/json",
-    dataType: "JSON",
-    data: JSON.stringify({
-      value: JSON.stringify(false),
-      isJson: true,
-    }),
-  })
-  $('#whats_new').hide();
-}
-
-function show_user_whats_new() {
-  $('#whats_new').show();
-}
-//]]></script>
 <!-- END get_combined -->
 
 <script

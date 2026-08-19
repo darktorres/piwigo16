@@ -213,11 +213,6 @@
   </div> 
 
   
- 
-
-
-
-
 <div class="cat-move-order-popin">
   <div class="order-popin-container">
     <a
@@ -934,89 +929,10 @@ input[name="position"] {
 </style>
 
 
-<script type="application/json" id="page-data">{"data":{"active_menu":1},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"album_data":[{"rank":1,"name":"Sample Album","status":"public","id":"1","visible":"true","uppercats":"1","nb_images":3,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":2,"nb_subcats":1,"children":[{"rank":1,"name":"Nested Sub Album","status":"public","id":"2","visible":"true","uppercats":"1,2","nb_images":2,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":0}]}],"csrf_token":"{{TOKEN}}","open_cat":"-1","nb_albums":2,"light_album_manager":0,"delay_auto_open":3000,"active_menu":1,"whats_new_major_version":"17","show_whats_new":false},"strings":{"The status of the album '%s' and its sub-albums will change to private. Are you sure?":"The status of the album '%s' and its sub-albums will change to private. Are you sure?","Yes change parent anyway":"Yes change parent anyway","No, don't move this album here":"No, don't move this album here","Root":"Root","%d sub-albums":"%d sub-albums","%d photos":"%d photos","%d pictures in sub-albums":"%d pictures in sub-albums","\u003Cb\u003E%d\u003C\/b\u003E albums found":"\u003Cb\u003E%d\u003C\/b\u003E albums found","\u003Cb\u003E1\u003C\/b\u003E album found":"\u003Cb\u003E1\u003C\/b\u003E album found","\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search":"\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search","Drag and drop to reorder albums":"Drag and drop to reorder albums","Delete album \"%s\".":"Delete album \"%s\".","Delete album \"%s\" and its %d sub-albums.":"Delete album \"%s\" and its %d sub-albums.","delete album and all %d photos, even the %d associated to other albums":"delete album and all %d photos, even the %d associated to other albums","delete album and the %d orphan photos":"delete album and the %d orphan photos","Rename \"%s\"":"Rename \"%s\"","Add Album":"Add Album","Edit album":"Edit album","Add Photos":"Add Photos","Visit Gallery":"Visit the gallery","Automatic sort order":"Automatic sort order","Delete album":"Delete album","Apply to root albums":"Apply to root albums","Apply to direct sub-albums":"Apply to direct sub-albums","Album name must not be empty":"Album name must not be empty","Create a new album at root":"Create a new album at root","Create a sub-album of \"%s\"":"Create a sub-album of \"%s\"","Locked album":"Locked album","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
-<script type="text/javascript">//<![CDATA[
-
-var data = [{"rank":1,"name":"Sample Album","status":"public","id":"1","visible":"true","uppercats":"1","nb_images":3,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":2,"nb_subcats":1,"children":[{"rank":1,"name":"Nested Sub Album","status":"public","id":"2","visible":"true","uppercats":"1,2","nb_images":2,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":0}]}];
-var pwg_token = "{{TOKEN}}";
-var str_show_sub = "Show sub-albums";
-var str_hide_sub = "Hide sub-albums";
-var str_manage_sub_album = "Manage sub-albums";
-var str_apply_order_raw = "apply automatic sort order";
-var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
-var str_edit = "Edit album";
-var str_are_you_sure = "The status of the album \'%s\' and its sub-albums will change to private. Are you sure?";
-var str_yes_change_parent = "Yes change parent anyway";
-var str_no_change_parent = "No, don\'t move this album here";
-var str_root = "Root";
-var openCat = -1;
-var nb_albums = 2;
-var light_album_manager = 0;
-
-var x_nb_subcats = "%d sub-albums";
-var x_nb_images = "%d photos";
-var x_nb_sub_photos = "%d pictures in sub-albums";
-
-var str_albums_found = '<b>%d<\/b> albums found';
-var str_album_found = '<b>1<\/b> album found';
-var str_result_limit = '<b>%d+<\/b> albums found, try to refine the search';
-const str_albs_drag_drop = 'Drag and drop to reorder albums';
-
-var delay_autoOpen = 3000
-
-const categoriesforSearch = Object.values(data);
-const delete_album_with_name = 'Delete album \"%s\".';
-const delete_album_with_subs = 'Delete album \"%s\" and its %d sub-albums.'
-const has_images_associated_outside = 'delete album and all %d photos, even the %d associated to other albums';
-const has_images_becomming_orphans = 'delete album and the %d orphan photos';
-const has_images_recursives = 'delete only album, not photos';
-const rename_item = 'Rename \"%s\"';
-
-const str_add_album = 'Add Album';
-const str_edit_album = 'Edit album';
-const str_add_photo = 'Add Photos';
-const str_visit_gallery = 'Visit the gallery';
-const str_sort_order = 'Automatic sort order';
-const str_delete_album = 'Delete album';
-const str_root_order = 'Apply to root albums';
-str_sub_album_order = 'Apply to direct sub-albums';
-str_album_name_empty = 'Album name must not be empty'
-
-const add_album_root_title = 'Create a new album at root';
-const add_sub_album_of = 'Create a sub-album of \"%s\"';
-const tiptip_locked_album = "Locked album";
-jQuery('.tiptip').tipTip({
-  delay: 0,
-  fadeIn: 200,
-  fadeOut: 200
-});
-
-jQuery('a.externalLink').click(function() {
-  window.open(jQuery(this).attr("href"));
-  return false;
-});
-
-function hide_user_whats_new() {
-  $.ajax({
-    url: "api/v1/session/preferences/show_whats_new_17",
-    type: "PUT",
-    contentType: "application/json",
-    dataType: "JSON",
-    data: JSON.stringify({
-      value: JSON.stringify(false),
-      isJson: true,
-    }),
-  })
-  $('#whats_new').hide();
-}
-
-function show_user_whats_new() {
-  $('#whats_new').show();
-}
-//]]></script>
 <!-- END get_combined -->
 
 <script

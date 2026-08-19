@@ -791,41 +791,9 @@
 </style>
 
 {do combineScript(id: 'jquery.tipTip', load: 'footer', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
-{capture $tmpFooterScript}
-jQuery('.tiptip').tipTip({
-  delay: 0,
-  fadeIn: 200,
-  fadeOut: 200
-});
-
-jQuery('a.externalLink').click(function() {
-  window.open(jQuery(this).attr("href"));
-  return false;
-});
-
-function hide_user_whats_new() {
-  $.ajax({
-    url: "api/v1/session/preferences/show_whats_new_{$WHATS_NEW_MAJOR_VERSION|noescape}",
-    type: "PUT",
-    contentType: "application/json",
-    dataType: "JSON",
-    data: JSON.stringify({
-      value: JSON.stringify(false),
-      isJson: true,
-    }),
-  })
-  $('#whats_new').hide();
-}
-
-function show_user_whats_new() {
-  $('#whats_new').show();
-}
-
-{if isset($SHOW_WHATS_NEW) && $SHOW_WHATS_NEW}
-  show_user_whats_new()
-{/if}
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.tipTip')}
+{do exposeData('whats_new_major_version', $WHATS_NEW_MAJOR_VERSION)}
+{do exposeData('show_whats_new', $SHOW_WHATS_NEW ?? false)}
+{do combineScript(id: 'footer', load: 'footer', require: 'jquery.tipTip,page-data', path: 'themes/admin/default/js/footer.js')}
 
 {do combineScript(id: 'page-data', load: 'footer', path: 'themes/default/js/page-data.js')}
 {do exposeString('Yes, I am sure')}

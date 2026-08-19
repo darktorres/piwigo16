@@ -788,7 +788,9 @@
           <td><b>{$rate['USER']}</b></td>
           <td>{$rate['date']}</td>
           <td><a
-              onclick="return del(this,{$image['id']},{$rate['user_id']}{if !empty($rate['anonymous_id'])},{$rate['anonymous_id']}{/if})"
+              data-image-id="{$image['id']}"
+              data-user-id="{$rate['user_id']}"
+              data-anonymous-id="{$rate['anonymous_id']}"
               class="icon-trash"
             ></a></td>
         </tr>{* rates *}
@@ -797,33 +799,6 @@
   </tr>{* images *}
 </table>
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
-{capture $tmpFooterScript2}
-const pwg_token = "{$CSRF_TOKEN}";
-
-function del(node,id,uid,aid){
-  var tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),
-    data = {
-      imageId: id,
-      anonymousId: aid || null
-    };
-
-  $.ajax({
-    url: "{$ROOT_URL|escapeJavascript|noescape}api/v1/users/" + uid + "/actions/delete-ratings",
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify(data),
-    headers: {'X-CSRF-Token': pwg_token},
-    error: function(jqXHR) { tr.stop(); tr.fadeTo(0,1); alert(jqXHR.status + " " + jqXHR.statusText); },
-    success: function(result){
-      if (result.deletedCount)
-        tr.remove();
-      else
-        alert(result.deletedCount);
-    }
-  });
-  return false;
-}
-{/capture}
-{do footerScript($tmpFooterScript2)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
 
 {if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}

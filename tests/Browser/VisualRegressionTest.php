@@ -165,22 +165,25 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             H::waitUntilImagesLoaded($page, 10.0, '.std_pgs_mini_previews img, .std_pgs_selected_preview img');
         }
 
-        if ($name === 'admin-cat-list') {
+        if (in_array($name, ['admin-cat-list', 'admin-themes-new'], true)) {
             // Playwright's virtual mouse cursor doesn't reset on navigate --
             // it's still wherever loginAsAdmin()'s own click('login') left
-            // it. On this route that position can land on a .categoryBox
+            // it. On admin-cat-list that position can land on a .categoryBox
             // tile, whose real jQuery .hover() binding (cat_list.js's
             // AddHoverOnAlbumActions(), unrelated to any P38 change) then
-            // fires a genuine mouseenter and reveals the tile's action menu
-            // -- a real, pre-existing race, not a rendering bug, confirmed
-            // by rerunning this route in isolation: ~1/3 of runs failed
-            // before this line was added, 0/4 failed on an otherwise
-            // unmodified baseline (same binding, different route-to-route
-            // mouse-landing odds). Hovering <body> (always singular,
-            // present on every route, no hover styling of its own) moves
-            // the real cursor away from .categoryBox before the screenshot.
-            // "html>body", not "body" -- GuessLocator::for() only treats a
-            // selector as literal CSS when it carries a CSS special char
+            // fires a genuine mouseenter and reveals the tile's action menu.
+            // admin-themes-new has the same hazard with a different target:
+            // the theme-preview grid's own hover zoom effect on whichever
+            // thumbnail the stale cursor happens to land on (confirmed via
+            // the saved failure screenshot -- a hover circle over the
+            // "Pure_grey_plastic" tile, deterministic on that route/cursor
+            // combination, reproduced in isolation on an unmodified P38-F
+            // baseline, so a pre-existing race, not a rendering bug). Both
+            // are the same class: hovering <body> (always singular, present
+            // on every route, no hover styling of its own) moves the real
+            // cursor away from the grid before the screenshot. "html>body",
+            // not "body" -- GuessLocator::for() only treats a selector as
+            // literal CSS when it carries a CSS special char
             // (Support\Selector::isExplicit()); a bare tag name falls
             // through to a by-text lookup instead and times out finding no
             // element with the text "body".

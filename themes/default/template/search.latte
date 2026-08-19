@@ -692,17 +692,7 @@
 {do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
 
-{capture $tmpFooterScript}
-jQuery(document).ready(function() {
-  jQuery("#authors, #tags, #categories").each(function() {
-    jQuery(this).selectize({
-      plugins: ['remove_button'],
-      maxOptions:jQuery(this).find("option").length
-    });
-  })
-});
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do combineScript(id: 'search', load: 'footer', require: 'jquery.selectize', path: 'themes/default/js/search.js')}
 
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">

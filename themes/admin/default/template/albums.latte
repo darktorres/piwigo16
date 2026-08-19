@@ -689,37 +689,23 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-var data = {=json_encode($album_data)|noescape};
-var pwg_token = "{$CSRF_TOKEN}";
-var str_show_sub = "{_ 'Show sub-albums'|escapeJavascript|noescape}";
-var str_hide_sub = "{_ 'Hide sub-albums'|escapeJavascript|noescape}";
-var str_manage_sub_album = "{_ 'Manage sub-albums'|escapeJavascript|noescape}";
-var str_apply_order_raw = "{_ 'apply automatic sort order'|escapeJavascript|noescape}";
-var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
-var str_edit = "{_ 'Edit album'|escapeJavascript|noescape}";
-var str_are_you_sure = "{_ 'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|escapeJavascript|noescape}";
-var str_yes_change_parent = "{_ 'Yes change parent anyway'|escapeJavascript|noescape}";
-var str_no_change_parent = "{_ 'No, don\'t move this album here'|escapeJavascript|noescape}";
-var str_root = "{_ 'Root'|escapeJavascript|noescape}";
-var openCat = {$open_cat};
-var nb_albums = {$nb_albums};
-var light_album_manager = {$light_album_manager};
-
-var x_nb_subcats = "{_ '%d sub-albums'|escapeJavascript|noescape}";
-var x_nb_images = "{_ '%d photos'|escapeJavascript|noescape}";
-var x_nb_sub_photos = "{_ '%d pictures in sub-albums'|escapeJavascript|noescape}";
-
-var str_albums_found = '{_ "<b>%d</b> albums found"|escapeJavascript|noescape}';
-var str_album_found = '{_ "<b>1</b> album found"|escapeJavascript|noescape}';
-var str_result_limit = '{_ "<b>%d+</b> albums found, try to refine the search"|escapeJavascript|noescape}';
-const str_albs_drag_drop = '{_ "Drag and drop to reorder albums"|escapeJavascript|noescape}';
-
-var delay_autoOpen = {$delay_before_autoOpen}
-
-const categoriesforSearch = Object.values(data);
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('album_data', $album_data)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeString('The status of the album \'%s\' and its sub-albums will change to private. Are you sure?')}
+{do exposeString('Yes change parent anyway')}
+{do exposeString('No, don\'t move this album here')}
+{do exposeString('Root')}
+{do exposeData('open_cat', $open_cat)}
+{do exposeData('nb_albums', $nb_albums)}
+{do exposeData('light_album_manager', $light_album_manager)}
+{do exposeString('%d sub-albums')}
+{do exposeString('%d photos')}
+{do exposeString('%d pictures in sub-albums')}
+{do exposeString('<b>%d</b> albums found')}
+{do exposeString('<b>1</b> album found')}
+{do exposeString('<b>%d+</b> albums found, try to refine the search')}
+{do exposeString('Drag and drop to reorder albums')}
+{do exposeData('delay_auto_open', $delay_before_autoOpen)}
 
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
@@ -728,34 +714,28 @@ const categoriesforSearch = Object.values(data);
 {do combineScript(id: 'jtree', load: 'footer', path: 'themes/default/js/plugins/tree.jquery.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
-{capture $tmpFooterScript2}
-const delete_album_with_name = '{_ 'Delete album "%s".'|escapeJavascript|noescape}';
-const delete_album_with_subs = '{_ 'Delete album "%s" and its %d sub-albums.'|escapeJavascript|noescape}'
-const has_images_associated_outside = '{_ "delete album and all %d photos, even the %d associated to other albums"|escapeJavascript|noescape}';
-const has_images_becomming_orphans = '{_ 'delete album and the %d orphan photos'|escapeJavascript|noescape}';
-const has_images_recursives = '{_ 'delete only album, not photos'|escapeJavascript|noescape}';
-const rename_item = '{_ 'Rename "%s"'|escapeJavascript|noescape}';
-
-const str_add_album = '{_ 'Add Album'|escapeJavascript|noescape}';
-const str_edit_album = '{_ 'Edit album'|escapeJavascript|noescape}';
-const str_add_photo = '{_ 'Add Photos'|escapeJavascript|noescape}';
-const str_visit_gallery = '{_ 'Visit Gallery'|escapeJavascript|noescape}';
-const str_sort_order = '{_ 'Automatic sort order'|escapeJavascript|noescape}';
-const str_delete_album = '{_ 'Delete album'|escapeJavascript|noescape}';
-const str_root_order = '{_ 'Apply to root albums'|escapeJavascript|noescape}';
-str_sub_album_order = '{_ 'Apply to direct sub-albums'|escapeJavascript|noescape}';
-str_album_name_empty = '{_ 'Album name must not be empty'|escapeJavascript|noescape}'
-
-const add_album_root_title = '{_ 'Create a new album at root'|escapeJavascript|noescape}';
-const add_sub_album_of = '{_ 'Create a sub-album of "%s"'|escapeJavascript|noescape}';
-const tiptip_locked_album = "{_ 'Locked album'|escapeJavascript|noescape}";
-{/capture}
-{do footerScript($tmpFooterScript2)}
+{do exposeString('Delete album "%s".')}
+{do exposeString('Delete album "%s" and its %d sub-albums.')}
+{do exposeString('delete album and all %d photos, even the %d associated to other albums')}
+{do exposeString('delete album and the %d orphan photos')}
+{do exposeString('Rename "%s"')}
+{do exposeString('Add Album')}
+{do exposeString('Edit album')}
+{do exposeString('Add Photos')}
+{do exposeString('Visit Gallery')}
+{do exposeString('Automatic sort order')}
+{do exposeString('Delete album')}
+{do exposeString('Apply to root albums')}
+{do exposeString('Apply to direct sub-albums')}
+{do exposeString('Album name must not be empty')}
+{do exposeString('Create a new album at root')}
+{do exposeString('Create a sub-album of "%s"')}
+{do exposeString('Locked album')}
 
 {do combineScript(id: 'jquery.tipTip', load: 'footer', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
 
-{do combineScript(id: 'cat_search', load: 'footer', path: 'themes/admin/default/js/cat_search.js')}
-{do combineScript(id: 'albums', load: 'footer', path: 'themes/admin/default/js/albums.js')}
+{do combineScript(id: 'albums', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/albums.js')}
+{do combineScript(id: 'cat_search', load: 'footer', require: 'albums', path: 'themes/admin/default/js/cat_search.js')}
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">

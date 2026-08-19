@@ -694,52 +694,27 @@
 {do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -11)}
 
 {do combineScript(id: 'standard_pages_js', load: 'async', require: 'jquery', path: 'themes/standard_pages/js/standard_pages.js')}
-{do combineScript(id: 'standard_profile_js', load: 'footer', require: 'jquery', path: 'themes/standard_pages/js/profile.js')}
+{do combineScript(id: 'standard_profile_js', load: 'footer', require: 'jquery,page-data', path: 'themes/standard_pages/js/profile.js')}
 {do combineScript(id: 'common', load: 'footer', require: 'jquery', path: 'themes/admin/default/js/common.js')}
-{capture $tmpFooterScript}
-let user = {
-  username: "{$USERNAME}",
-  email: "{$EMAIL}",
-  nb_image_page: $('input[name="nb_image_page"]').val(),
-  theme: $('select[name="theme"]').val(),
-  language: $('select[name="language"]').val(),
-  recent_period: $('input[name="recent_period"]').val(),
-  opt_album: $('#opt_album').is(':checked'),
-  opt_comment: $('#opt_comment').is(':checked'),
-  opt_hits: $('#opt_hits').is(':checked')
-}
-
-const canUpdatePreferences = {if $ALLOW_USER_CUSTOMIZATION}true{else}false{/if};
-const canUpdatePassword = {if !$SPECIAL_USER}true{else}false{/if};
-const standardSaveSelector = [];
-const preferencesDefaultValues = {
-nb_image_page: {$DEFAULT_USER_VALUES['nb_image_page']},
-recent_period: {$DEFAULT_USER_VALUES['recent_period']},
-opt_album: {$DEFAULT_USER_VALUES['expand']},
-opt_comment: {$DEFAULT_USER_VALUES['show_nb_comments']},
-opt_hits: {$DEFAULT_USER_VALUES['show_nb_hits']},
-};
-const selected_date = "{$API_SELECTED_EXPIRATION}";
-const can_manage_api = {=($API_CAN_MANAGE) ? "true" : "false"};
-
-const str_copy_key_id = "{_ "ID copied."|escapeJavascript|noescape}";
-const str_copy_key_secret = "{_ "Secret copied. Keep it in a safe place."|escapeJavascript|noescape}";
-const str_cant_copy = "{_ "Impossible to copy automatically. Please copy manually."|escapeJavascript|noescape}";
-const str_api_added = "{_ "The api key has been successfully created."|escapeJavascript|noescape}";
-const str_revoked = "{_ "Revoked"|escapeJavascript|noescape}";
-const str_show_expired = "{_ "Show expired keys"|escapeJavascript|noescape}";
-const str_hide_expired = "{_ "Hide expired keys"|escapeJavascript|noescape}";
-const str_handle_error = "{_ "An error has occured"|escapeJavascript|noescape}";
-const str_infos_saved = "{_ "Your changes have been applied."|escapeJavascript|noescape}";
-const str_expires_in = "{_ "Expires in"|escapeJavascript|noescape}";
-const str_expires_on = "{_ "Expired on"|escapeJavascript|noescape}";
-const str_revoke_key = "{_ 'Do you really want to revoke the "%s" API key?'|escapeJavascript|noescape}";
-const str_api_revoked = "{_ "API Key has been successfully revoked."|escapeJavascript|noescape}";
-const str_api_edited = "{_ "API Key has been successfully edited."|escapeJavascript|noescape}";
-const no_time_elapsed = "{_ "right now"|escapeJavascript|noescape}";
-const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('username', $USERNAME)}
+{do exposeData('email', $EMAIL)}
+{do exposeData('allow_user_customization', $ALLOW_USER_CUSTOMIZATION)}
+{do exposeData('can_update_password', !$SPECIAL_USER)}
+{do exposeData('default_user_values', $DEFAULT_USER_VALUES)}
+{do exposeData('selected_date', (string) $API_SELECTED_EXPIRATION)}
+{do exposeData('api_can_manage', $API_CAN_MANAGE)}
+{do exposeString('ID copied.')}
+{do exposeString('Secret copied. Keep it in a safe place.')}
+{do exposeString('Impossible to copy automatically. Please copy manually.')}
+{do exposeString('The api key has been successfully created.')}
+{do exposeString('Show expired keys')}
+{do exposeString('Hide expired keys')}
+{do exposeString('An error has occured')}
+{do exposeString('Your changes have been applied.')}
+{do exposeString('Do you really want to revoke the "%s" API key?')}
+{do exposeString('API Key has been successfully revoked.')}
+{do exposeString('API Key has been successfully edited.')}
+{do exposeString('right now')}
 
 <container id="mode" class="light">
   <section id="header-options">
@@ -1306,10 +1281,6 @@ const str_must_not_empty = "{_ 'must not be empty'|escapeJavascript|noescape}";
               id="save_{$k_block}"
             >{='Submit'|translate}</button>
           </div>
-          {capture $tmpPluginSaveScript}
-            standardSaveSelector.push('#save_{$k_block}');
-            {/capture}
-          {do footerScript($tmpPluginSaveScript)}
         {/if}
       </div>
     </section>

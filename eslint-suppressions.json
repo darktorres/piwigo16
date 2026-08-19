@@ -31,7 +31,7 @@
       "count": 42
     },
     "no-undef": {
-      "count": 169
+      "count": 124
     }
   },
   "themes/admin/default/js/batchManagerFilter.js": {
@@ -305,7 +305,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 42
+      "count": 8
     }
   },
   "themes/standard_pages/js/standard_pages.js": {

@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\HistoryPageContext;
+use Piwigo\Admin\Projection\HistoryView;
 use Piwigo\Admin\Request\HistoryFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 
@@ -36,7 +38,7 @@ final class HistoryPageRenderer
      * tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -73,8 +75,7 @@ final class HistoryPageRenderer
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }
 
-        $template->assignContext(new HistoryPageContext(
-            fAction: $urlService->getRootUrl() . 'admin.php?page=history',
+        $adminContent = $renderer->render(new HistoryView(
             userId: $form_param['user_id'],
             userName: $form_param['user_name'] ?? null,
             imageId: $form_param['image_id'] ?? '',
@@ -82,9 +83,11 @@ final class HistoryPageRenderer
             start: $form['start'],
             end: $form['end'],
             guestId: $currentConfig->guestId,
-            adminPageTitle: $lang->t('History'),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'history.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('History'),
+        ));
     }
 }

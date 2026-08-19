@@ -18,6 +18,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -99,7 +100,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'history.latte', 'start={$START}');
+        file_put_contents($tplDir . 'history.latte', 'start={$start}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -122,14 +123,14 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             $eventDispatcher,
             new InputValidator(),
             $entityManager,
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
         $today = Env::now()->format('Y-m-d');
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -139,8 +140,6 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
 
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
-            ->and($template->getTemplateVars('START'))
-            ->toBe($today)
             ->and((string) $adminContent)
             ->toBe('start=' . $today);
     } finally {

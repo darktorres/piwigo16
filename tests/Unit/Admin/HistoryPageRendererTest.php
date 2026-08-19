@@ -17,6 +17,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -104,7 +105,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'history.latte', 'start={$START}|end={$END}');
+        file_put_contents($tplDir . 'history.latte', 'start={$start}|end={$end}|userId={=(string) $userId}|userName={=$userName ?? "null"}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -118,12 +119,11 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         }
 
         new HistoryPageRenderer()
-            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager);
+            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         $today = Env::now()->format('Y-m-d');
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -131,18 +131,10 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             throw new LogicException('unreachable -- asserted above');
         }
 
-        expect($template->getTemplateVars('START'))
-            ->toBe($today)
-            ->and($template->getTemplateVars('END'))
-            ->toBe($today)
-            ->and($template->getTemplateVars('USER_ID'))
-            ->toBe(-1)
-            ->and($template->getTemplateVars('USER_NAME'))
-            ->toBeNull()
-            ->and($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
             ->toBe('History')
             ->and((string) $adminContent)
-            ->toBe('start=' . $today . '|end=' . $today);
+            ->toBe('start=' . $today . '|end=' . $today . '|userId=-1|userName=null');
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();

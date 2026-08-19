@@ -16,6 +16,7 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Page\Event\PageTailRendered;
 use Piwigo\Page\Event\PageTailRendering;
+use Piwigo\Page\Projection\DebugInfo;
 use Piwigo\Page\Projection\PageTailPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -94,29 +95,23 @@ final readonly class PageTailRenderer
 
         $this->telemetrySender->send();
 
-        $debug_vars = [];
+        $queries_list = $this->currentConfig->showQueries ? $this->pageState->debugOutput : null;
 
-        if ($this->currentConfig->showQueries) {
-            $debug_vars = array_merge($debug_vars, [
-                'QUERIES_LIST' => $this->pageState->debugOutput,
-            ]);
-        }
-
+        $time = null;
+        $count_queries = null;
+        $sql_time = null;
         if ($this->currentConfig->showGt) {
             $count_queries = $this->pageState->countQueries;
-            $queries_time = $this->pageState->queriesTime;
-
             $time = TimingHelper::getElapsedTime($startTime, TimingHelper::getMoment());
-
-            $debug_vars = array_merge(
-                $debug_vars,
-                [
-                    'TIME' => $time,
-                    'NB_QUERIES' => $count_queries,
-                    'SQL_TIME' => number_format($queries_time, 3, '.', ' ') . ' s',
-                ]
-            );
+            $sql_time = number_format($this->pageState->queriesTime, 3, '.', ' ') . ' s';
         }
+
+        $debug_vars = new DebugInfo(
+            queriesList: $queries_list,
+            time: $time,
+            nbQueries: $count_queries,
+            sqlTime: $sql_time,
+        );
 
         $toggleMobileThemeUrl = null;
         if (! self::emptyValue($this->currentConfig->mobileTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {

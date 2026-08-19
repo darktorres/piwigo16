@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Page\Projection\DebugInfo;
 use Piwigo\Page\Projection\PageTailPageContext;
 
 test('toArray flattens every fixed property, and omits the 2 optional keys when null', function (): void {
@@ -10,7 +11,7 @@ test('toArray flattens every fixed property, and omits the 2 optional keys when 
         phpwgUrl: 'https://piwigo.example',
         vitalsScriptUrl: '/dist/vitals.js',
         contactMail: null,
-        debug: [],
+        debug: new DebugInfo(),
         toggleMobileThemeUrl: null,
     );
 
@@ -29,11 +30,7 @@ test('toArray includes CONTACT_MAIL/TOGGLE_MOBILE_THEME_URL when set, and passes
         phpwgUrl: 'https://piwigo.example',
         vitalsScriptUrl: '/dist/vitals.js',
         contactMail: 'webmaster@example.test',
-        debug: [
-            'TIME' => '0.123 s',
-            'NB_QUERIES' => 5,
-            'SQL_TIME' => '0.045 s',
-        ],
+        debug: new DebugInfo(time: '0.123 s', nbQueries: 5, sqlTime: '0.045 s'),
         toggleMobileThemeUrl: '/index.php?mobile=true',
     );
 

@@ -8,14 +8,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Event\CatListPageRendering;
-use Piwigo\Admin\Projection\CatListCategoriesPageContext;
-use Piwigo\Admin\Projection\CatListHeaderPageContext;
-use Piwigo\Admin\Projection\CatListNbCatsPageContext;
+use Piwigo\Admin\Projection\CatListView;
 use Piwigo\Admin\Request\CatListRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
@@ -25,6 +24,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
@@ -62,6 +62,7 @@ final readonly class CatListPageRenderer
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -79,15 +80,6 @@ final readonly class CatListPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $sort_orders = [
-            'name ASC' => $this->lang->t('Album name, A &rarr; Z'),
-            'name DESC' => $this->lang->t('Album name, Z &rarr; A'),
-            'date_creation DESC' => $this->lang->t('Date created, new &rarr; old') . ' ' . $this->lang->t('(determined from photos)'),
-            'date_creation ASC' => $this->lang->t('Date created, old &rarr; new') . ' ' . $this->lang->t('(determined from photos)'),
-            'date_available DESC' => $this->lang->t('Date posted, new &rarr; old') . ' ' . $this->lang->t('(determined from photos)'),
-            'date_available ASC' => $this->lang->t('Date posted, old &rarr; new') . ' ' . $this->lang->t('(determined from photos)'),
-        ];
-
         $parent_id = $catListRequest->parentId;
 
         $categories = [];
@@ -103,9 +95,6 @@ final readonly class CatListPageRenderer
         $tabsheet->setId('albums');
         $tabsheet->select('list', $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
-
-        $nb_cats = $categoryService->countAllCategories();
-        $template->assignContext(new CatListNbCatsPageContext($nb_cats));
 
         // request to delete a virtual category
         if ($catListRequest->deleteId !== null) {
@@ -166,17 +155,8 @@ final readonly class CatListPageRenderer
         if ($parent_id !== null) {
             $form_action .= '&amp;parent_id=' . $parent_id;
         }
-        $sort_orders_checked = array_keys($sort_orders);
 
-        $template->assignContext(new CatListHeaderPageContext(
-            adminPageTitle: $this->lang->t('Album list management'),
-            categoriesNav: (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-            formAction: $form_action,
-            pwgToken: $this->csrfService
-                ->getToken(),
-            sortOrders: $sort_orders,
-            sortOrderChecked: array_shift($sort_orders_checked),
-        ));
+        $categories_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation));
 
         $categories = [];
 
@@ -264,11 +244,17 @@ final readonly class CatListPageRenderer
             $tpl_categories[] = $tpl_cat;
         }
 
-        $template->assignContext(new CatListCategoriesPageContext(
-            parentEditUrl: $parent_id !== null ? $base_url . 'album-' . $parent_id : null,
+        $adminContent = $this->renderer->render(new CatListView(
+            categoriesNav: $categories_nav,
+            formAction: $form_action,
+            csrfToken: $this->csrfService
+                ->getToken(),
             categories: $tpl_categories,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_list.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Album list management'),
+        ));
     }
 }

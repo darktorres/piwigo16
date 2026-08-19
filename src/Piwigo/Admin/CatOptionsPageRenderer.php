@@ -6,10 +6,12 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Admin\Projection\CatOptionsPageContext;
+use Piwigo\Admin\Projection\CatOptionsView;
+use Piwigo\Admin\Projection\DoubleSelectView;
 use Piwigo\Admin\Request\CatOptionsRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -18,6 +20,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -43,6 +46,7 @@ final readonly class CatOptionsPageRenderer
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -129,20 +133,27 @@ final readonly class CatOptionsPageRenderer
             $categoryOptionTrue = $categoryService->displaySelectByRepresentativePresence(true, $htmlService);
             $categoryOptionFalse = $categoryService->displaySelectByRepresentativePresence(false, $htmlService);
         }
-        $template->assignContext(new CatOptionsPageContext(
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_options',
-            formAction: $base_url . $section,
-            section: $l_section,
-            catOptionsTrueLabel: $l_true,
-            catOptionsFalseLabel: $l_false,
-            pwgToken: $this->csrfService
-                ->getToken(),
-            adminPageTitle: $this->lang->t('Properties of abums'),
-            categoryOptionTrue: $categoryOptionTrue,
-            categoryOptionFalse: $categoryOptionFalse,
+        $doubleSelect = $this->renderer->render(new DoubleSelectView(
+            lCatOptionsTrue: $l_true,
+            lCatOptionsFalse: $l_false,
+            categoryOptionTrue: $categoryOptionTrue->options,
+            categoryOptionTrueSelected: $categoryOptionTrue->selected,
+            categoryOptionFalse: $categoryOptionFalse->options,
+            categoryOptionFalseSelected: $categoryOptionFalse->selected,
         ));
 
-        $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_options.latte');
+        $adminContent = $this->renderer->render(new CatOptionsView(
+            formAction: $base_url . $section,
+            section: $l_section,
+            pwgToken: $this->csrfService
+                ->getToken(),
+            doubleSelect: $doubleSelect,
+        ));
+
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Properties of abums'),
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_options',
+        ));
     }
 }

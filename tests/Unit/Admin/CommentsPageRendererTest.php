@@ -16,6 +16,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -98,7 +99,7 @@ test('render() assigns the comments page context and tabsheet without any real t
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'comments.latte', 'title={$ADMIN_PAGE_TITLE}');
+        file_put_contents($tplDir . 'comments.latte', 'csrf={$csrfToken}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -107,10 +108,9 @@ test('render() assigns the comments page context and tabsheet without any real t
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
         new CommentsPageRenderer()
-            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), $eventDispatcher, new CsrfService(CurrentConfigTestFactory::get()));
+            ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), $eventDispatcher, new CsrfService(CurrentConfigTestFactory::get()), new Renderer(CurrentTemplateTestFactory::get()));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -119,14 +119,11 @@ test('render() assigns the comments page context and tabsheet without any real t
         }
 
         expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
-            ->toBe('User comments')
-            ->and($template->getTemplateVars('F_ACTION'))
-            ->toContain('admin.php?page=comments')
+            ->toBe('User comments');
+        expect((string) $adminContent)
+            ->toStartWith('csrf=')
             ->and((string) $adminContent)
-            ->toBe('title=User comments');
-        $pwgToken = $template->getTemplateVars('CSRF_TOKEN');
-        expect(is_string($pwgToken) && $pwgToken !== '')
-            ->toBeTrue();
+            ->not->toBe('csrf=');
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();

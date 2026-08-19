@@ -13,6 +13,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -30,12 +31,13 @@ final readonly class CommentsSubController implements AdminSubControllerInterfac
         private CurrentTemplate $currentTemplate,
         private EventDispatcher $eventDispatcher,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new CommentsPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->eventDispatcher, $this->csrfService);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->eventDispatcher, $this->csrfService, $this->renderer);
     }
 }

@@ -17,7 +17,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\ProfilePageRendered;
 use Piwigo\Controller\Event\ProfilePageRendering;
-use Piwigo\Controller\Projection\ProfilePageContext;
+use Piwigo\Controller\Projection\ProfileFormView;
+use Piwigo\Controller\Projection\ProfileView;
 use Piwigo\Controller\Request\ProfileActionRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AdminContext;
@@ -44,6 +45,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\UserService;
@@ -93,6 +95,7 @@ final readonly class ProfileController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private Paths $paths,
         private PermissionService $permissionService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -110,18 +113,9 @@ final readonly class ProfileController implements ControllerInterface
         }
 
         // Load language if cookie is set from login/register/password pages.
-        // This block
-        // used to run much later in this method, *after*
-        // assignVarFromTemplate('PROFILE_CONTENT', 'profile_content.latte')
-        // below -- assignVarFromTemplate() renders the referenced
-        // template immediately (not lazily deferred to the final page
-        // render), so profile_content.latte was always rendered with
-        // whatever language was active BEFORE this switch, and the
-        // Lang::load() call had no effect on anything the response actually
-        // showed. Moved to run first, before $userdata/any template
-        // rendering, so the whole response (including $userdata's own
-        // 'language' field) consistently reflects the just-switched
-        // language.
+        // Runs before $userdata is built and before any rendering, so the
+        // whole response (including $userdata's own 'language' field)
+        // consistently reflects the just-switched language.
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language->value !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
@@ -183,19 +177,38 @@ final readonly class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
+        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
         $this->pageState->errors = array_values($page_errors);
 
         $this->pageState->setBodyId('theProfilePage');
-        $profileFormHandler->loadIntoTemplate(
+        $formData = $profileFormHandler->loadIntoTemplate(
             $this->urlService->getRootUrl() . 'profile.php', // action
             $this->urlService->makeIndexUrl(), // for redirect
             $userdata
         );
-        $template->assignVarFromTemplate('PROFILE_CONTENT', 'profile_content.latte');
+        $profileContent = $this->renderer->render(new ProfileFormView(
+            fAction: $formData->fAction,
+            redirect: $formData->redirect,
+            username: $formData->username,
+            specialUser: $formData->specialUser,
+            email: $formData->email?->value,
+            allowUserCustomization: $formData->allowUserCustomization,
+            nbImagePage: $formData->nbImagePage,
+            templateOptions: $formData->templateOptions,
+            templateSelection: $formData->templateSelection->value,
+            languageOptions: $formData->languageOptions,
+            languageSelection: $formData->languageSelection,
+            recentPeriod: $formData->recentPeriod,
+            radioOptions: $formData->radioOptions,
+            expand: $formData->expand,
+            activateComments: $formData->activateComments,
+            nbComments: $formData->nbComments,
+            nbHits: $formData->nbHits,
+            csrfToken: $formData->pwgToken,
+        ));
 
         $urlService = $this->urlService;
 
@@ -231,18 +244,34 @@ final readonly class ProfileController implements ControllerInterface
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assignContext(new ProfilePageContext(
-            defaultUserValues: $default_user_for_template,
-            languageOptions: $language_options,
-            languageSelection: $this->currentUser->get()
-                ->language,
-            helpLink: $help_link,
-        ));
-
         $this->eventDispatcher->dispatch(new ProfilePageRendered());
         $this->htmlService
             ->flushPageMessages();
-        $template->parse('profile.latte', false);
+        $template->appendOutput($this->renderer->render(new ProfileView(
+            profileContent: $profileContent,
+            username: $formData->username,
+            email: $formData->email?->value,
+            allowUserCustomization: $formData->allowUserCustomization,
+            defaultUserValues: $default_user_for_template,
+            apiSelectedExpiration: $formData->apiSelectedExpiration,
+            apiCanManage: $formData->apiCanManage,
+            helpLink: $help_link,
+            csrfToken: $formData->pwgToken,
+            nbImagePage: $formData->nbImagePage,
+            templateOptions: $formData->templateOptions,
+            templateSelection: $formData->templateSelection->value,
+            languageOptions: $language_options,
+            languageSelection: $this->currentUser->get()->language->value,
+            recentPeriod: $formData->recentPeriod,
+            expand: $formData->expand,
+            activateComments: $formData->activateComments,
+            nbComments: $formData->nbComments,
+            nbHits: $formData->nbHits,
+            specialUser: $formData->specialUser,
+            apiExpiration: $formData->apiExpiration,
+            apiCurrentDate: $formData->apiCurrentDate,
+            apiEmailInfos: $formData->apiEmailInfos,
+        )));
         $body = PageTail::renderToString();
 
         return ResponseFactory::html($body);

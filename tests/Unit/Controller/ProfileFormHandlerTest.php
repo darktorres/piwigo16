@@ -9,9 +9,7 @@ use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -125,13 +123,11 @@ test('saveFromPost returns false immediately when the form was never submitted',
     }
 });
 
-test('loadIntoTemplate populates the real profile form template context', function (): void {
+test('loadIntoTemplate returns the real profile form data', function (): void {
     $root = profileFormHandlerTestRoot();
     unset($_POST['submit']);
 
     try {
-        $template = TemplateTestFactory::build();
-        CurrentTemplateTestFactory::get()->set($template);
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: null,
@@ -144,7 +140,7 @@ test('loadIntoTemplate populates the real profile form template context', functi
 
         $handler = profileFormHandlerTestSubject();
 
-        $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
+        $formData = $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
             'id' => 1,
             'username' => 'fixture_user',
             'email' => null,
@@ -157,12 +153,11 @@ test('loadIntoTemplate populates the real profile form template context', functi
             'show_nb_hits' => false,
         ]);
 
-        expect($template->getTemplateVars('USERNAME'))
+        expect($formData->username)
             ->toBe('fixture_user')
-            ->and($template->getTemplateVars('F_ACTION'))
+            ->and($formData->fAction)
             ->toBe('admin.php?page=user_list');
     } finally {
-        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();
@@ -235,9 +230,9 @@ test('saveFromPost accepts the default theme even though it has no themes-table 
 
 /**
  * [Mutation] Render-side counterpart to the test above -- closes the
- * same gap for loadIntoTemplate()'s own `template_options` (the theme
- * <select>'s real option list, see ProfileFormPageContext::toArray()),
- * not just the submit-time guard. Reuses
+ * same gap for loadIntoTemplate()'s own `templateOptions` (the theme
+ * <select>'s real option list, see ProfileFormData), not just the
+ * submit-time guard. Reuses
  * profileFormHandlerTestRootWithRealThemesAndLanguage() rather than the
  * sibling `loadIntoTemplate` test's own plain-empty-root helper, since
  * that emptiness is exactly what would make checkThemeInstalled() filter
@@ -248,8 +243,6 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
     unset($_POST['submit']);
 
     try {
-        $template = TemplateTestFactory::build();
-        CurrentTemplateTestFactory::get()->set($template);
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: null,
@@ -262,7 +255,7 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
 
         $handler = profileFormHandlerTestSubject();
 
-        $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
+        $formData = $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
             'id' => 1,
             'username' => 'fixture_user',
             'email' => null,
@@ -275,12 +268,11 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
             'show_nb_hits' => false,
         ]);
 
-        expect($template->getTemplateVars('template_options'))
+        expect($formData->templateOptions)
             ->toBe([
                 'default' => 'Default',
             ]);
     } finally {
-        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

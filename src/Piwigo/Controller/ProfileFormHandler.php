@@ -19,7 +19,7 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Event\LoadProfileInTemplate;
 use Piwigo\Controller\Event\SaveProfileFromPost;
-use Piwigo\Controller\Projection\ProfileFormPageContext;
+use Piwigo\Controller\Projection\ProfileFormData;
 use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
@@ -39,7 +39,6 @@ use Piwigo\Db\SqlDialectExecutor;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
@@ -59,7 +58,6 @@ final readonly class ProfileFormHandler
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
         private CurrentUser $currentUser,
-        private CurrentTemplate $currentTemplate,
         private EntityManagerInterface $entityManager,
         private ActivityService $activityService,
         private UserService $userService,
@@ -318,15 +316,14 @@ final readonly class ProfileFormHandler
     }
 
     /**
-     * Assign template variables, from arguments
-     * Used to build profile edition pages
+     * Computes the profile-edition-page data shared by both real
+     * callers -- `ProfileController` and `Controller\Admin\
+     * ConfigurationSubController`'s "default" (Guest settings) tab.
      *
      * @param array<string, mixed> $userdata
      */
-    public function loadIntoTemplate(string $url_action, string $url_redirect, array $userdata, ?string $template_prefixe = null): void
+    public function loadIntoTemplate(string $url_action, string $url_redirect, array $userdata): ProfileFormData
     {
-        $template = $this->currentTemplate->get();
-
         $radio_options = [
             'true' => $this->lang->t('Yes'),
             'false' => $this->lang->t('No'),
@@ -385,8 +382,7 @@ final readonly class ProfileFormHandler
         // allow plugins to add their own form data to content
         $this->eventDispatcher->dispatch(new LoadProfileInTemplate($userdata));
 
-        $template->assignContext(new ProfileFormPageContext(
-            templatePrefixe: $template_prefixe ?? '',
+        return new ProfileFormData(
             username: is_string($userdata['username']) ? $userdata['username'] : '',
             email: Email::tryFrom($userdata['email'] ?? null),
             allowUserCustomization: $this->currentConfig->allowUserCustomization,
@@ -412,6 +408,6 @@ final readonly class ProfileFormHandler
             apiEmailInfos: $email_notifications_infos,
             pwgToken: $this->csrfService
                 ->getToken(),
-        ));
+        );
     }
 }

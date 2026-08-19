@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\PictureCoiPageContext;
+use Piwigo\Admin\Projection\PictureCoiView;
 use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Paths;
@@ -22,6 +23,7 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -39,6 +41,7 @@ final readonly class PictureCoiPageRenderer
         private InputValidator $inputValidator,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -98,7 +101,6 @@ final readonly class PictureCoiPageRenderer
             $urlStyleOverride = null;
         }
 
-        $title = $htmlRenderer->renderElementName($row);
         $alt = $row['file'];
         $imgUrl = DerivativeImage::url(ImageStdParams::LARGE, $row, $urlStyleOverride);
 
@@ -125,13 +127,13 @@ final readonly class PictureCoiPageRenderer
             }
         }
 
-        $template->assignContext(new PictureCoiPageContext(
-            title: $title,
+        $adminContent = $this->renderer->render(new PictureCoiView(
             alt: $alt,
             imgUrl: $imgUrl,
             coi: $coi,
             croppedDerivatives: $cropped_derivatives,
         ));
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_coi.latte');
+
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

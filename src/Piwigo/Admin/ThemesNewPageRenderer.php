@@ -10,11 +10,12 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Projection\ThemesNewPageContext;
+use Piwigo\Admin\Projection\ThemesNewView;
 use Piwigo\Admin\Request\ThemesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -26,6 +27,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 
@@ -57,6 +59,7 @@ final readonly class ThemesNewPageRenderer
         private Paths $paths,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -197,12 +200,14 @@ final readonly class ThemesNewPageRenderer
         }
 
         $admin_theme_pref = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme;
-        $template->assignContext(new ThemesNewPageContext(
+        $adminContent = $this->renderer->render(new ThemesNewView(
             defaultScreenshot: $this->urlService->getRootUrl() . 'themes/admin/' . $admin_theme_pref . '/images/missing_screenshot.png',
-            adminPageTitle: $this->lang->t('Themes'),
             newThemes: $new_themes,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'themes_new.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Themes'),
+        ));
     }
 }

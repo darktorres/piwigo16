@@ -10,14 +10,13 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\PictureFormatsPageRenderer::render()}. `$formats`
- * stays a loose row shape: each entry is a real format DB row plus 3
- * view-only keys spliced on per row (`download_url`/`label`/`filesize`),
- * not a fixed structural shape worth minting its own DTO for here.
+ * is a real {@see \Piwigo\Image\Projection\ImageFormat} row plus 3
+ * view-only fields -- see {@see \Piwigo\Admin\Projection\PictureFormatRow}.
  */
 final readonly class PictureFormatsPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array<string, mixed>> $formats
+     * @param list<PictureFormatRow> $formats
      */
     public function __construct(
         public string $addFormatsUrl,
@@ -35,7 +34,7 @@ final readonly class PictureFormatsPageContext implements TemplatePageContext
         return [
             'ADD_FORMATS_URL' => $this->addFormatsUrl,
             'IMG_SQUARE_SRC' => $this->imgSquareSrc,
-            'FORMATS' => $this->formats,
+            'FORMATS' => array_map(static fn (PictureFormatRow $format): array => $format->toArray(), $this->formats),
             'CSRF_TOKEN' => $this->pwgToken,
         ];
     }

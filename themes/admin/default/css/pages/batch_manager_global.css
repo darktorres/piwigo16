@@ -1,0 +1,76 @@
+.thumbnails .wrap2 {
+  width: var(--tn-width);
+  height: var(--tn-height);
+}
+
+/* Beats theme.css's #permitAction{display:flex} (higher ID specificity). */
+#permitAction.u-hidden {
+  display: none;
+}
+
+#confirmDel .errors {
+  margin: 0;
+}
+
+#applyActionBlock {
+  margin: 1em 0 0;
+}
+
+#action_move select,
+#action_dissociate select {
+  width: 600px;
+}
+
+#action_add_tags select,
+#action_del_tags select {
+  width: 400px;
+}
+
+#regenerationMsg {
+  margin-left: 0;
+}
+
+#regenerationStatus {
+  margin-bottom: 10px;
+}
+
+#regenerationStatus .badge-number {
+  font-size: 12.8px;
+}
+
+.big-progressbar {
+  max-width: 100%;
+  margin-bottom: 10px;
+}
+
+.progressbar {
+  width: 0%;
+}
+
+#action_move .selectize-input {
+  min-width: 500px;
+  height: 44px;
+}
+
+#action_add_tags .item,
+#action_add_tags .item.active {
+  background-image: none;
+  background-color: #ffa646;
+  border-color: transparent;
+  color: #000;
+
+  border-radius: 20px;
+}
+
+#action_add_tags .item .remove {
+  background-color: transparent;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  color: #000;
+
+  border-left: 1px solid transparent;
+}
+
+#action_add_tags .item .remove:hover {
+  background-color: #f70;
+}

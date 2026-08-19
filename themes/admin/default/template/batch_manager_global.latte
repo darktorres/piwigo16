@@ -701,6 +701,7 @@
 {do combineScript(id: 'batchManagerGlobal', load: 'async', require: 'jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider', path: 'themes/admin/default/js/batchManagerGlobal.js')}
 
 {do combineScript(id: 'batch_manager_global', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/batch_manager_global.js')}
+{do combineCss(id: 'batch_manager_global', path: 'themes/admin/default/css/pages/batch_manager_global.css')}
 {do exposeData('cache_key_tags', $CACHE_KEYS['tags'])}
 {do exposeData('cache_key_categories', $CACHE_KEYS['categories'])}
 {do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
@@ -754,7 +755,7 @@
           <input
             type="checkbox"
             name="setSelected"
-            style="display:none"
+            class="u-hidden"
             {if count($selection) == $nb_thumbs_set}
             checked="checked"
             {/if}
@@ -762,16 +763,7 @@
           <input type="hidden" name="whole_set" value="">
         </p>
 
-        <ul class="thumbnails">
-          {capture $tmpHtmlStyle}
-          UL.thumbnails SPAN.wrap2{
-            width: {$thumb_params->maxWidth() + 2}px;
-          }
-          UL.thumbnails SPAN.wrap2 {
-            height: {$thumb_params->maxHeight() + 25}px;
-          }
-          {/capture}
-          {do htmlStyle($tmpHtmlStyle)}
+        <ul class="thumbnails" style="--tn-width:{$thumb_params->maxWidth() + 2}px; --tn-height:{$thumb_params->maxHeight() + 25}px;">
           {foreach $thumbnails as $thumbnail}
             {var $isSelected = ($thumbnail['id']|in_array:$selection)}
             <li {if $isSelected} class="thumbSelected" {/if}>
@@ -844,13 +836,13 @@
       <div
         id="forbidAction"
         {if count($selection) != 0}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >{='No photos selected, no actions possible.'|translate}</div>
       <div
         id="permitAction"
         {if count($selection) == 0}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <div class="permitActionListButton">
@@ -910,7 +902,7 @@
               {/if}
             </select>
           </div>
-          <p id="confirmDel" style="visibility:hidden">
+          <p id="confirmDel" class="u-invisible">
             <label class="font-checkbox">
               <span class="icon-check"></span>
               <input
@@ -920,14 +912,12 @@
               > {='Are you sure?'|translate}
             </label><br /><br />
             <span
-              class="errors"
-              style="visibility:hidden;margin:0;"
+              class="errors u-invisible"
             >{="You need to confirm deletion"|translate}</span>
           </p>
           <p
             id="applyActionBlock"
-            style="display:none;margin:1em 0 0 0;"
-            class="actionButtons"
+            class="actionButtons u-hidden"
           >
             <button
               id="applyAction"
@@ -959,7 +949,6 @@
               data-selectize="categories"
               data-default=""
               name="move"
-              style="width:600px"
               placeholder="{='Select an album... or type it!'|translate}"
             ></select>
             <a
@@ -976,7 +965,6 @@
               data-selectize="categories"
               placeholder="{='Type in a search term'|translate}"
               name="dissociate"
-              style="width:600px"
             ></select>
           </div>
 
@@ -988,7 +976,6 @@
               placeholder="{='Type in a search term'|translate}"
               name="add_tags[]"
               multiple
-              style="width:400px;"
             ></select>
           </div>
 
@@ -999,7 +986,6 @@
               data-selectize="tags"
               name="del_tags[]"
               multiple
-              style="width:400px;"
               placeholder="{='Type in a search term'|translate}"
             >
               <option
@@ -1118,60 +1104,26 @@
       </div> <!-- #permitAction -->
       <div
         id="regenerationMsg"
-        class="bulkAction"
-        style="display:none;margin-left:0;"
+        class="bulkAction u-hidden"
       >
-        <div id="regenerationStatus" style="margin-bottom:10px;">
+        <div id="regenerationStatus">
           <span
             id="regenerationText"
           >{='Generate multiple size images'|translate}</span>
-          <span class="badge-number" style="font-size:12.8px"></span>
+          <span class="badge-number"></span>
         </div>
         <input type="hidden" name="regenerateSuccess" value="0">
         <input type="hidden" name="regenerateError" value="0">
       </div>
       <!-- progress bar -->
-      <div id="uploadingActions" style="display:none">
+      <div id="uploadingActions" class="u-hidden">
         <div
           class="big-progressbar"
-          style="max-width:100%;margin-bottom: 10px;"
         >
-          <div class="progressbar" style="width:0%"></div>
+          <div class="progressbar"></div>
         </div>
       </div>
     </fieldset>
   </form>
 </div> <!-- #batchManagerGlobal -->
 {include 'include/album_selector.inc.latte'}
-
-<style>
-#action_move .selectize-input {
-  min-width: 500px;
-  height: 44px;
-}
-
-#action_add_tags .item,
-#action_add_tags .item.active {
-  background-image:none;
-  background-color: #ffa646;
-  border-color: transparent;
-  color: black;
-
-  border-radius: 20px;
-}
-
-#action_add_tags .item .remove,
-#action_add_tags .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  color: black;
-
-  border-left: 1px solid transparent;
-
-}
-#action_add_tags .item .remove:hover,
-#action_add_tags .item .remove:hover {
-  background-color: #ff7700;
-}
-</style>

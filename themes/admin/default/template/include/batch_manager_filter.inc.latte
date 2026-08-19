@@ -706,6 +706,7 @@
 {do exposeString('Select at least one tag')}
 
 {do combineScript(id: 'batchManagerFilter', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/batchManagerFilter.js')}
+{do combineCss(id: 'batch_manager_filter', path: 'themes/admin/default/css/components/batch_manager_filter.css')}
 <fieldset>
   <legend><span
       class='icon-filter icon-green'
@@ -715,7 +716,7 @@
       <li
         id="filter_prefilter"
         {if !isset($filter['prefilter'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -750,24 +751,22 @@
         <a
           id="empty_caddie"
           href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token={$CSRF_TOKEN}"
-          style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'caddie'}display:none{/if}"
+          class="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'caddie'}u-hidden{/if}"
         >{='Empty caddie'|translate}</a>
         <a
           n:if="$NB_ORPHANS > 0"
           id="delete_orphans"
           href="#"
-          style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_album'}display:none{/if}"
-          class="icon-trash"
+          class="icon-trash{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_album'} u-hidden{/if}"
         >{='Delete %d orphan photos'|translate:$NB_ORPHANS}</a>
         <a
           n:if="$NB_NO_MD5SUM > 0"
           id="sync_md5sum"
           href="#"
-          style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_sync_md5sum'}display:none{/if}"
-          class="icon-arrows-cw"
+          class="icon-arrows-cw{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_sync_md5sum'} u-hidden{/if}"
         >{='Compute %d missing checksums'|translate:$NB_NO_MD5SUM}</a>
 
-        <span id="add_md5sum" style="display:none">
+        <span id="add_md5sum" class="u-hidden">
           <img
             class="loading"
             src="themes/default/images/ajax-loader-small.gif"
@@ -780,9 +779,9 @@
           {='checksums to add'|translate}
         </span>
 
-        <span id="add_md5sum_error" class="errors" style="display:none"></span>
+        <span id="add_md5sum_error" class="errors u-hidden"></span>
 
-        <span id="orphans_deletion" style="display:none">
+        <span id="orphans_deletion" class="u-hidden">
           <img
             class="loading"
             src="themes/default/images/ajax-loader-small.gif"
@@ -797,13 +796,12 @@
 
         <span
           id="orphans_deletion_error"
-          class="errors"
-          style="display:none"
+          class="errors u-hidden"
         ></span>
 
         <span
           id="duplicates_options"
-          style="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'duplicates'}display:none{/if}"
+          class="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'duplicates'}u-hidden{/if}"
         >
           {='based on'|translate}
           <label class="font-checkbox"><span class="icon-check"></span><input
@@ -845,7 +843,7 @@
       <li
         id="filter_category"
         {if !isset($filter['category'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -867,7 +865,7 @@
         <div
           id="selectedAlbumFilterArea"
           {if !$filter_category_selected}
-          style="display: none;"
+          class="u-hidden"
           {/if}
         >
           <div class="selectedAlbum" id="selectedAlbumFilter">
@@ -892,11 +890,8 @@
             > {='include child albums'|translate}</label>
         </div>
         <p
-          class="head-button-1"
+          class="head-button-1{if $filter_category_selected} u-hidden{/if}"
           id="selectAlbumFilter"
-          {if $filter_category_selected}
-          style="display: none;"
-          {/if}
         >
           {="Select an album"|translate}
         </p>
@@ -905,7 +900,7 @@
       <li
         id="filter_tags"
         {if !isset($filter['tags'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -928,7 +923,6 @@
           placeholder="{='Type in a search term'|translate}"
           name="filter_tags[]"
           multiple
-          style="width:600px;"
         ></select>
         <label class="font-checkbox"><span
             class="icon-circle-empty"
@@ -955,7 +949,7 @@
       <li
         id="filter_level"
         {if !isset($filter['level'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -987,7 +981,7 @@
       <li
         id="filter_dimension"
         {if !isset($filter['dimension'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -1064,7 +1058,7 @@
           </div>
 
           <div data-slider="ratios" class="dimensionSlidersBlocks">
-            <div style="margin-bottom: 11px;">
+            <div class="ratio-slider-label">
               <span>{='Ratio'|translate} ({='Width'|translate}/{='Height'|translate})</span>
               <span
                 class="slider-info"
@@ -1127,7 +1121,7 @@
       <li
         id="filter_search"
         {if !isset($filter['search'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -1167,7 +1161,7 @@
       <li
         id="filter_filesize"
         {if !isset($filter['filesize'])}
-        style="display:none"
+        class="u-hidden"
         {/if}
       >
         <input
@@ -1267,8 +1261,7 @@
         </div>
         <a
           id="removeFilters"
-          class="icon-cancel"
-          style="display: none;"
+          class="icon-cancel u-hidden"
         >{='Remove all filters'|translate}</a>
       </div>
 
@@ -1278,8 +1271,7 @@
 
       <div
         id="errorFilter"
-        class="icon-red-error"
-        style="display: none; margin-left: 10px;"
+        class="icon-red-error u-hidden"
       ></div>
     </div>
   </div>

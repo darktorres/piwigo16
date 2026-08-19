@@ -720,8 +720,9 @@
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
 {do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
 {do combineScript(id: 'batchManagerUnit', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort,jquery.selectize,LocalStorageCache,jquery.colorbox,page-data', path: 'themes/admin/default/js/batchManagerUnit.js')}
-<div id="batchManagerGlobal" style="margin-bottom: 80px;">
-  <div style="clear:both"></div>
+{do combineCss(id: 'batch_manager_unit', path: 'themes/admin/default/css/pages/batch_manager_unit.css')}
+<div id="batchManagerGlobal">
+  <div class="clear-both"></div>
   <div n:if="isset($ELEMENT_IDS)">
     <input type="hidden" name="element_ids" value="{$ELEMENT_IDS}">
   </div>
@@ -731,18 +732,17 @@
     {var $filterSearchPlaceholder = ('Filters'|translate)}
     {include 'include/batch_manager_filter.inc.latte', title: $filterTitle, searchPlaceholder: $filterSearchPlaceholder}
   </form>
-  <legend style="padding: 1em;">
+  <legend class="list-legend">
     <span class='icon-menu icon-blue'></span>
     {='List'|translate}
     <span class="count-badge"> {count($all_elements)}</span>
   </legend>
   {if !empty($elements)}
     <div
-      style="margin: 10px 0; display: flex; justify-content: space-between; padding: 1em; height: 33px;"
+      class="pagination-bar"
     >
-      <div style="margin-right: 21px;" class="pagination-per-page">
+      <div class="pagination-per-page">
         <span
-          style="font-weight: bold;color: unset;"
         >{='photos per page'|translate} :</span>
         <a
           href="{$U_ELEMENTS_PAGE|noescape}&amp;display=5"
@@ -758,13 +758,12 @@
         >50</a>
       </div>
 
-      <div style="margin-left: 22px;">
+      <div class="pagination-reload-container">
         <div class="pagination-reload">
           {if !empty($navbar)}
             <a
               class="button-reload tiptip"
               title="{='Pagination has changed and needs to be reloaded !'|translate}"
-              style="display: none;"
               href="{$F_ACTION|noescape}"
             ><i class="icon-cw"></i></a>
             {include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
@@ -776,12 +775,11 @@
       <div
         class="infos deleted-badge"
         data-image_id="{$element['ID']}"
-        style="display: none;"
       >
-        <i class="icon-ok" style="font-size: 20px;"></i>
+        <i class="icon-ok"></i>
         <p>
           &nbsp;{='Image'|translate}&nbsp;
-          <p style="font-weight: bold;">
+          <p>
             #{$element['ID']} '{$element['FILE']}'
           </p>
           &nbsp;{='was succesfully deleted'|translate}
@@ -792,7 +790,7 @@
         id="picture-{$element['ID']}"
         data-image_id="{$element['ID']}"
       >
-        <div class="metasync-success badge-container" style="display: none;">
+        <div class="metasync-success badge-container">
           <div class="badge-succes">
             <i class="icon-ok"></i>
             {='Metadata sync complete'|translate}
@@ -805,8 +803,7 @@
           <img
             src="{$element['TN_SRC']|noescape}"
             alt="imagename"
-            class="media-box-embed"
-            style="{if $element['FORMAT']}width:100%; max-height:100%;{else}max-width:100%; height:100%;{/if}"
+            class="media-box-embed {if $element['FORMAT']}is-portrait{else}is-landscape{/if}"
           >
           <div class="media-hover">
             <div class='picture-preview-actions'>
@@ -868,7 +865,7 @@
         </div>
         <div class="main-info-container">
           <div class="main-info-block">
-            <div class='info-framed-icon' style="margin-right:0px;">
+            <div class='info-framed-icon'>
               <i class='icon-picture'></i>
             </div>
             <span
@@ -886,7 +883,7 @@
             <span class="main-info-desc">{$element['EXT']}</span>
           </div>
           <div class="main-info-block">
-            <div class='info-framed-icon' style="margin-right:0px;">
+            <div class='info-framed-icon'>
               <span class='icon-calendar'></span>
             </div>
             <span
@@ -1019,7 +1016,6 @@
             </div>
             <div
               class="local-unsaved-badge badge-container"
-              style="display: none;"
             >
               <div class="badge-unsaved">
                 <i class="icon-attention"></i>
@@ -1028,7 +1024,6 @@
             </div>
             <div
               class="local-success-badge badge-container"
-              style="display: none;"
             >
               <div class="badge-succes">
                 <i class="icon-ok"></i>
@@ -1037,7 +1032,6 @@
             </div>
             <div
               class="local-error-badge badge-container"
-              style="display: none;"
             >
               <div class="badge-error">
                 <i class="icon-cancel"></i>
@@ -1049,11 +1043,10 @@
       </fieldset>
     {/foreach}
     <div
-      style="margin: 10px 0; display: flex; justify-content: space-between; padding: 1em; height: 33px;"
+      class="pagination-bar"
     >
-      <div style="margin-right: 21px;" class="pagination-per-page">
+      <div class="pagination-per-page">
         <span
-          style="font-weight: bold;color: unset;"
         >{='photos per page'|translate} :</span>
         <a
           href="{$U_ELEMENTS_PAGE|noescape}&amp;display=5"
@@ -1069,13 +1062,12 @@
         >50</a>
       </div>
 
-      <div style="margin-left: 22px;">
+      <div class="pagination-reload-container">
         <div class="pagination-reload">
           {if !empty($navbar)}
             <a
               class="button-reload tiptip"
               title="{='Pagination has changed and needs to be reloaded !'|translate}"
-              style="display: none;"
               href="{$F_ACTION|noescape}"
             ><i class="icon-cw"></i></a>
             {include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
@@ -1085,20 +1077,20 @@
   {/if}
   <div class="bottom-save-bar">
     <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
-    <div class="badge-container global-unsaved-badge" style="display: none;">
+    <div class="badge-container global-unsaved-badge">
       <div class="badge-unsaved">
         <i class="icon-attention"></i>
         <span id="unsaved-count"></span>
         {='image(s) contains unsaved changes'|translate}
       </div>
     </div>
-    <div class="badge-container global-succes-badge" style="display: none;">
+    <div class="badge-container global-succes-badge">
       <div class="badge-succes">
         <i class="icon-ok"></i>
         {='Changes saved'|translate}
       </div>
     </div>
-    <div class="badge-container global-error-badge" style="display: none;">
+    <div class="badge-container global-error-badge">
       <div class="badge-error">
         <i class="icon-cancel"></i>
         {='An error has occured'|translate}
@@ -1114,40 +1106,3 @@
 {include 'include/album_selector.inc.latte'}
 
 {do exposeData('all_related_categories_ids', $all_selected_album)}
-
-<style>
-#action_add_tags .item,
-#action_add_tags .item.active {
-  background-image:none;
-  background-color: #ffa646;
-  border-color: transparent;
-  color: black;
-  border-radius: 20px;
-}
-
-#action_add_tags .item .remove,
-#action_add_tags .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  color: black;
-  border-left: 1px solid transparent;
-
-}
-#action_add_tags .item .remove:hover,
-#action_add_tags .item .remove:hover {
-  background-color: #ff7700;
-}
-
-/* .selectize-input.items.not-full.has-options,
-.selectize-input.items.not-full.has-options.focus.input-active.dropdown-active,
-.selectize-input.items.not-full,
-.selectize-input.items.full{
-  border: 1px solid #D3D3D3 !important;
-} */
-
-.breadcrumb-item{
-  margin: 5px 0 5px 0 !important;
-}
-
-</style>

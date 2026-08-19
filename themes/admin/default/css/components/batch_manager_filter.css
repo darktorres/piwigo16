@@ -1,0 +1,12 @@
+.ratio-slider-label {
+  margin-bottom: 11px;
+}
+
+/* Beats theme.css's #duplicates_options{display:flex} (higher ID specificity). */
+#duplicates_options.u-hidden {
+  display: none;
+}
+
+#errorFilter {
+  margin-left: 10px;
+}

@@ -7,3 +7,7 @@
 .u-help-cursor {
   cursor: help;
 }
+
+.u-invisible {
+  visibility: hidden;
+}

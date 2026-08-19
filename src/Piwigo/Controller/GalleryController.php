@@ -28,6 +28,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SortRenderer;
@@ -173,7 +174,7 @@ final readonly class GalleryController implements ControllerInterface
         }
 
         // navigation bar
-        $navigationBar = [];
+        $navigationBar = Navbar::none();
         if (count($page_items) > $page_nb_image_page) {
             $navigationBar = new PaginationService($this->currentConfig)
                 ->createNavigationBar($urlService->duplicateIndexUrl([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');

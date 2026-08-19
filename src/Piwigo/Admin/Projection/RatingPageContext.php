@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -18,7 +19,6 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class RatingPageContext implements TemplatePageContext
 {
     /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
      * @param list<mixed> $category
      * @param array<array-key, string> $cacheKeys
      * @param list<int> $orderByOptionsSelected
@@ -28,7 +28,7 @@ final readonly class RatingPageContext implements TemplatePageContext
      * @param list<array<string, mixed>> $images
      */
     public function __construct(
-        public array $navbar,
+        public Navbar $navbar,
         public string $fAction,
         public int $display,
         public int $nbElements,
@@ -49,7 +49,7 @@ final readonly class RatingPageContext implements TemplatePageContext
     public function toArray(): array
     {
         return [
-            'navbar' => $this->navbar,
+            'navbar' => $this->navbar->toArray(),
             'F_ACTION' => $this->fAction,
             'DISPLAY' => $this->display,
             'NB_ELEMENTS' => $this->nbElements,

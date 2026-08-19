@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Projection\GalleryPageContext;
+use Piwigo\Core\Projection\Navbar;
 
 /** @param array<string, mixed>|null $selectRelatedTags */
 $makeContext = fn (
@@ -15,9 +16,7 @@ $makeContext = fn (
     ?string $searchInSetUrl = null,
     ?array $selectRelatedTags = null,
 ): GalleryPageContext => new GalleryPageContext(
-    thumbNavbar: [
-        'NB_PAGE' => 3,
-    ],
+    thumbNavbar: new Navbar(nbPage: 3),
     uCanonical: '/index.php?/category/1',
     useStandardPages: true,
     title: 'Holidays',

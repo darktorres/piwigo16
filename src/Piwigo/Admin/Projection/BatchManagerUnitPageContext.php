@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -27,7 +28,6 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
     /**
      * @param array<array-key, string> $levelOptions
      * @param list<string> $activePlugins
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
      * @param list<array<string, mixed>> $elements
      */
@@ -38,7 +38,7 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
         public string $pwgToken,
         public array $activePlugins,
         public int $perPage,
-        public ?array $navbar,
+        public ?Navbar $navbar,
         public ?string $storageCategory,
         public ?string $elementIds,
         public array $cacheKeys,
@@ -61,8 +61,8 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
             'elements' => $this->elements,
         ];
 
-        if ($this->navbar !== null) {
-            $result['navbar'] = $this->navbar;
+        if ($this->navbar instanceof Navbar) {
+            $result['navbar'] = $this->navbar->toArray();
         }
 
         if ($this->storageCategory !== null) {

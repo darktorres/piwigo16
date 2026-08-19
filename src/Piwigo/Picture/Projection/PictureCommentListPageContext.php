@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Picture\Projection;
 
 use Override;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -17,12 +18,11 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class PictureCommentListPageContext implements TemplatePageContext
 {
     /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
      * @param list<array<string, mixed>> $comments
      */
     public function __construct(
         public int $commentCount,
-        public array $navbar,
+        public Navbar $navbar,
         public array $comments,
     ) {}
 
@@ -34,7 +34,7 @@ final readonly class PictureCommentListPageContext implements TemplatePageContex
     {
         return [
             'COMMENT_COUNT' => $this->commentCount,
-            'navbar' => $this->navbar,
+            'navbar' => $this->navbar->toArray(),
             'comments' => $this->comments,
         ];
     }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Projection\BatchManagerGlobalPageContext;
+use Piwigo\Core\Projection\Navbar;
 
 test('toArray flattens every fixed property, and omits associated_tags/navbar/thumb_params when null', function (): void {
     $context = new BatchManagerGlobalPageContext(
@@ -78,9 +79,7 @@ test('toArray includes associated_tags/navbar when set', function (): void {
         generateDerivativesTypes: [
             'sq' => 'Square',
         ],
-        navbar: [
-            'NB_PAGE' => 3,
-        ],
+        navbar: new Navbar(nbPage: 3),
         thumbParams: null,
         nbThumbsPage: 10,
         nbThumbsSet: 42,

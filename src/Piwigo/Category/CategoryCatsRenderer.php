@@ -28,6 +28,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
@@ -440,7 +441,7 @@ final readonly class CategoryCatsRenderer
             $template->assignVarFromTemplate('CATEGORIES', 'mainpage_categories.latte');
 
             // navigation bar
-            $catsNavigationBar = [];
+            $catsNavigationBar = Navbar::none();
             if ($totalCategories > $nbCategoriesPage) {
                 // PaginationService takes this file's own constructor-injected
                 // $currentConfig directly (same instance nbCategoriesPage()/

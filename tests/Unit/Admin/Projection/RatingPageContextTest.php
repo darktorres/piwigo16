@@ -3,12 +3,11 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Projection\RatingPageContext;
+use Piwigo\Core\Projection\Navbar;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new RatingPageContext(
-        navbar: [
-            'NB_PAGE' => 3,
-        ],
+        navbar: new Navbar(nbPage: 3),
         fAction: '/admin.php',
         display: 20,
         nbElements: 42,
@@ -61,7 +60,7 @@ test('toArray flattens every property to its real Latte template variable name',
 
 test('toArray includes empty order_by_options/images lists (not omitted)', function (): void {
     $context = new RatingPageContext(
-        navbar: [],
+        navbar: Navbar::none(),
         fAction: '/admin.php',
         display: 20,
         nbElements: 0,

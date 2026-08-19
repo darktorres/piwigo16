@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Controller\Projection\CommentsPageContext;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
 
@@ -32,9 +33,7 @@ test('toArray flattens every property to its real Latte template variable name',
             'all' => 'all',
         ],
         itemNumberOptionsSelected: 20,
-        navbar: [
-            'NB_PAGE' => 3,
-        ],
+        navbar: new Navbar(nbPage: 3),
         commentDerivativeParams: $derivativeParams,
         comments: [[
             'ID' => 5,
@@ -98,7 +97,7 @@ test('toArray includes an empty comments list (not omitted)', function (): void 
         sortOrderOptionsSelected: 'DESC',
         itemNumberOptions: [],
         itemNumberOptionsSelected: 20,
-        navbar: [],
+        navbar: Navbar::none(),
         commentDerivativeParams: $derivativeParams,
         comments: [],
         categoriesOptions: new CategorySelectOptions(options: [], selected: []),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Override;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -29,11 +30,10 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class GalleryPageContext implements TemplatePageContext
 {
     /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $thumbNavbar
      * @param array<array-key, mixed>|null $selectRelatedTags
      */
     public function __construct(
-        public array $thumbNavbar,
+        public Navbar $thumbNavbar,
         public string $uCanonical,
         public bool $useStandardPages,
         public string $title,
@@ -55,7 +55,7 @@ final readonly class GalleryPageContext implements TemplatePageContext
     public function toArray(): array
     {
         $result = [
-            'thumb_navbar' => $this->thumbNavbar,
+            'thumb_navbar' => $this->thumbNavbar->toArray(),
             'U_CANONICAL' => $this->uCanonical,
             'use_standard_pages' => $this->useStandardPages,
             'TITLE' => $this->title,

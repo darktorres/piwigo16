@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Image\DerivativeParams;
 
@@ -26,7 +27,6 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
      * @param array<array-key, string> $levelOptions
      * @param array<string, string> $delDerivativesTypes
      * @param array<string, string> $generateDerivativesTypes
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
      * @param list<array<string, mixed>> $thumbnails
      */
@@ -39,7 +39,7 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
         public string $usedMetadata,
         public array $delDerivativesTypes,
         public array $generateDerivativesTypes,
-        public ?array $navbar,
+        public ?Navbar $navbar,
         public ?DerivativeParams $thumbParams,
         public int $nbThumbsPage,
         public int $nbThumbsSet,
@@ -71,8 +71,8 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
             $result['associated_tags'] = $this->associatedTags;
         }
 
-        if ($this->navbar !== null) {
-            $result['navbar'] = $this->navbar;
+        if ($this->navbar instanceof Navbar) {
+            $result['navbar'] = $this->navbar->toArray();
         }
 
         if ($this->thumbParams instanceof DerivativeParams) {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Projection\BatchManagerUnitPageContext;
+use Piwigo\Core\Projection\Navbar;
 
 test('toArray flattens every fixed property, and omits navbar/STORAGE_CATEGORY/ELEMENT_IDS when null', function (): void {
     $context = new BatchManagerUnitPageContext(
@@ -52,9 +53,7 @@ test('toArray includes navbar/STORAGE_CATEGORY/ELEMENT_IDS when set', function (
         pwgToken: 'abc123',
         activePlugins: ['foo'],
         perPage: 5,
-        navbar: [
-            'NB_PAGE' => 3,
-        ],
+        navbar: new Navbar(nbPage: 3),
         storageCategory: 'Holidays',
         elementIds: '1,2,3',
         cacheKeys: [

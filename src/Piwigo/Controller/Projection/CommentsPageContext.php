@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Projection;
 
 use Override;
 use Piwigo\Category\Projection\CategorySelectOptions;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Image\DerivativeParams;
 
@@ -24,7 +25,6 @@ final readonly class CommentsPageContext implements TemplatePageContext
      * @param array<string, string> $sortByOptions
      * @param array<string, string> $sortOrderOptions
      * @param array<int|string, int|string> $itemNumberOptions
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
      * @param list<array<string, mixed>> $comments
      */
     public function __construct(
@@ -39,7 +39,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
         public string $sortOrderOptionsSelected,
         public array $itemNumberOptions,
         public int|string $itemNumberOptionsSelected,
-        public array $navbar,
+        public Navbar $navbar,
         public DerivativeParams $commentDerivativeParams,
         public array $comments,
         public CategorySelectOptions $categoriesOptions,
@@ -63,7 +63,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
             'sort_order_options_selected' => $this->sortOrderOptionsSelected,
             'item_number_options' => $this->itemNumberOptions,
             'item_number_options_selected' => $this->itemNumberOptionsSelected,
-            'navbar' => $this->navbar,
+            'navbar' => $this->navbar->toArray(),
             'comment_derivative_params' => $this->commentDerivativeParams,
             'comments' => $this->comments,
             'categories' => $this->categoriesOptions->options,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category\Projection;
 
 use Override;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -15,11 +16,8 @@ use Piwigo\Core\TemplatePageContext;
  */
 final readonly class CategoryCatsNavbarPageContext implements TemplatePageContext
 {
-    /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $catsNavbar
-     */
     public function __construct(
-        public array $catsNavbar,
+        public Navbar $catsNavbar,
     ) {}
 
     /**
@@ -29,7 +27,7 @@ final readonly class CategoryCatsNavbarPageContext implements TemplatePageContex
     public function toArray(): array
     {
         return [
-            'cats_navbar' => $this->catsNavbar,
+            'cats_navbar' => $this->catsNavbar->toArray(),
         ];
     }
 }

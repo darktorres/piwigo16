@@ -6,7 +6,10 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\Projection\ActionCount;
+use Piwigo\Admin\Projection\ActivityDateRange;
+use Piwigo\Admin\Projection\UserActivityActionRow;
 use Piwigo\Admin\Projection\UserActivityPageContext;
+use Piwigo\Admin\Projection\UserActivityUserRow;
 use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -100,13 +103,10 @@ final class UserActivityPageRenderer
         $filterable_users = [];
 
         foreach ($nb_lines_for_user as $id => $nb_line) {
-            array_push(
-                $filterable_users,
-                [
-                    'id' => $id,
-                    'username' => $username_of[$id] ?? 'user#' . $id,
-                    'nb_lines' => $nb_line,
-                ]
+            $filterable_users[] = new UserActivityUserRow(
+                id: $id,
+                username: $username_of[$id] ?? 'user#' . $id,
+                nbLines: $nb_line,
             );
         }
         $nb_users = $userService->getTotalUserCount();
@@ -114,10 +114,10 @@ final class UserActivityPageRenderer
         $min_date = $activity_service->getMinOccuredOn();
         $max_date = $activity_service->getMaxOccuredOn();
 
-        $activity_dates = [
-            'min' => ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10),
-            'max' => ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10),
-        ];
+        $activity_dates = new ActivityDateRange(
+            min: ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10),
+            max: ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10),
+        );
 
         $additional_filt_type = false;
         $additional_filt_name = null;
@@ -154,10 +154,12 @@ final class UserActivityPageRenderer
         }
 
         $actions = array_map(
-            static fn (ActionCount $action): array => [
-                ...$action->toArray(),
-                'value' => $action->object . '/' . $action->action,
-            ],
+            static fn (ActionCount $action): UserActivityActionRow => new UserActivityActionRow(
+                object: $action->object,
+                action: $action->action,
+                counter: $action->counter,
+                value: $action->object . '/' . $action->action,
+            ),
             $activity_service->getActionCounts($additional_filt_type !== false ? $additional_filt_type : null)
         );
 

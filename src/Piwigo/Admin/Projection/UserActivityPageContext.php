@@ -15,9 +15,8 @@ final readonly class UserActivityPageContext implements TemplatePageContext
 {
     /**
      * @param array<array-key, string> $cacheKeys
-     * @param list<array{id: int, username: string, nb_lines: int}> $ulist
-     * @param array{min: string, max: string} $activityDates
-     * @param list<array{object: string, action: string, counter: int, value: string}> $actions
+     * @param list<UserActivityUserRow> $ulist
+     * @param list<UserActivityActionRow> $actions
      */
     public function __construct(
         public string $adminPageTitle,
@@ -26,7 +25,7 @@ final readonly class UserActivityPageContext implements TemplatePageContext
         public array $cacheKeys,
         public array $ulist,
         public int $nbUsers,
-        public array $activityDates,
+        public ActivityDateRange $activityDates,
         public string|false $additionalFiltType,
         public ?string $additionalFiltName,
         public ?string $additionalFiltValue,
@@ -44,15 +43,15 @@ final readonly class UserActivityPageContext implements TemplatePageContext
             'CSRF_TOKEN' => $this->pwgToken,
             'INHERIT' => $this->inherit,
             'CACHE_KEYS' => $this->cacheKeys,
-            'ulist' => $this->ulist,
+            'ulist' => array_map(static fn (UserActivityUserRow $row): array => $row->toArray(), $this->ulist),
             'nb_users' => $this->nbUsers,
-            'ACTIVITY_DATES' => $this->activityDates,
+            'ACTIVITY_DATES' => $this->activityDates->toArray(),
             'ADDITIONAL_FILT' => [
                 'type' => $this->additionalFiltType,
                 'name' => $this->additionalFiltName,
                 'value' => $this->additionalFiltValue,
             ],
-            'ACTIONS' => $this->actions,
+            'ACTIONS' => array_map(static fn (UserActivityActionRow $row): array => $row->toArray(), $this->actions),
         ];
     }
 }

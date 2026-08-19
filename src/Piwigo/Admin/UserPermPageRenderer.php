@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Projection\UserPermPageContext;
+use Piwigo\Admin\Projection\DoubleSelectView;
+use Piwigo\Admin\Projection\UserPermView;
 use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -17,6 +19,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
@@ -42,6 +45,7 @@ final readonly class UserPermPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -112,25 +116,30 @@ final readonly class UserPermPageRenderer
 
         $categoryOptionFalse = $categoryService->displaySelectPrivateExcluding([...$authorized_ids, ...$group_authorized], $htmlRenderer);
 
-        $template->assignContext(new UserPermPageContext(
+        $doubleSelect = $this->renderer->render(new DoubleSelectView(
+            lCatOptionsTrue: $this->lang->t('Authorized'),
+            lCatOptionsFalse: $this->lang->t('Forbidden'),
+            categoryOptionTrue: $categoryOptionTrue->options,
+            categoryOptionTrueSelected: $categoryOptionTrue->selected,
+            categoryOptionFalse: $categoryOptionFalse->options,
+            categoryOptionFalseSelected: $categoryOptionFalse->selected,
+        ));
+
+        $adminContent = $this->renderer->render(new UserPermView(
             title: $this->lang->t(
                 'Manage permissions for user "%s"',
                 $this->userService
                     ->getUsername(UserId::from($user_id))->value ?? ''
             ),
-            catOptionsTrueLabel: $this->lang->t('Authorized'),
-            catOptionsFalseLabel: $this->lang->t('Forbidden'),
+            categoriesBecauseOfGroups: $categories_because_of_groups,
             formAction: $this->urlService->getRootUrl() .
                 'admin.php?page=user_perm' .
                 '&amp;user_id=' . $user_id,
             pwgToken: $this->csrfService
                 ->getToken(),
-            categoriesBecauseOfGroups: $categories_because_of_groups,
-            categoryOptionTrue: $categoryOptionTrue,
-            categoryOptionFalse: $categoryOptionFalse,
+            doubleSelect: $doubleSelect,
         ));
 
-        $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'user_perm.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

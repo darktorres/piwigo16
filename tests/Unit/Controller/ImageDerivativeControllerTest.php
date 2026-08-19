@@ -13,6 +13,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Permission\PermissionRepository;
@@ -189,7 +190,7 @@ test('parseCustomParams() parses a single bare "s"-prefixed size token', functio
     $params = callParseCustomParams($controller, ['s100x100']);
 
     expect($params->sizing->ideal_size)
-        ->toBe([100, 100])
+        ->toEqual(new Dimensions(100, 100))
         ->and($params->sizing->max_crop)
         ->toBe(0)
         ->and($params->sizing->min_size)
@@ -206,11 +207,11 @@ test('parseCustomParams() parses a single bare "e"-prefixed exact-crop token', f
     $params = callParseCustomParams($controller, ['e50x50']);
 
     expect($params->sizing->ideal_size)
-        ->toBe([50, 50])
+        ->toEqual(new Dimensions(50, 50))
         ->and($params->sizing->max_crop)
         ->toBe(1)
         ->and($params->sizing->min_size)
-        ->toBe([50, 50]);
+        ->toEqual(new Dimensions(50, 50));
 });
 
 test('parseCustomParams() rejects a plain size token with no crop/min-size tokens following it', function (): void {
@@ -290,11 +291,11 @@ test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50']);
 
     expect($params->sizing->ideal_size)
-        ->toBe([100, 100])
+        ->toEqual(new Dimensions(100, 100))
         ->and($params->sizing->max_crop)
         ->toBe(DerivativeUrlCodec::charToFraction('n'))
         ->and($params->sizing->min_size)
-        ->toBe([50, 50]);
+        ->toEqual(new Dimensions(50, 50));
 });
 
 test('parseCustomParams() takes the min-size token from the front of the remaining tokens, not the back', function (): void {
@@ -309,7 +310,7 @@ test('parseCustomParams() takes the min-size token from the front of the remaini
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50', 'ignored-extra']);
 
     expect($params->sizing->min_size)
-        ->toBe([50, 50]);
+        ->toEqual(new Dimensions(50, 50));
 });
 
 /**

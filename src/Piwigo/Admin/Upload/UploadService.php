@@ -1542,16 +1542,18 @@ final readonly class UploadService
             // condition to bool, so removing it can't change which branch
             // runs.
             if ((bool) $params) {
-                [$w, $h] = $params->sizing->ideal_size;
+                $w = $params->sizing->ideal_size->width;
+                $h = $params->sizing->ideal_size->height;
             }
         }
 
         $margin_coef = 1.5;
 
         // Both (float) casts are redundant: $w/$h are always int (the 2000
-        // default, or SizingParams::$ideal_size's own int[] contract), and
-        // int * float already promotes to float in PHP regardless of an
-        // explicit cast on the int operand.
+        // default, or Dimensions::$width/$height's own always-int contract
+        // for a SizingParams::$ideal_size specifically), and int * float
+        // already promotes to float in PHP regardless of an explicit cast
+        // on the int operand.
         return [(int) ((float) $w * $margin_coef), (int) ((float) $h * $margin_coef)];
     }
 }

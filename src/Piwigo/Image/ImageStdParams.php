@@ -202,8 +202,8 @@ final class ImageStdParams
     {
         // $minw/$minh are always both null or both set together (see the
         // sole caller, Template::funcDefineDerivative()).
-        $min_size = $minw !== null && $minh !== null ? [$minw, $minh] : null;
-        $params = new DerivativeParams(new SizingParams([$w, $h], $crop, $min_size));
+        $min_size = $minw !== null && $minh !== null ? new Dimensions($minw, $minh) : null;
+        $params = new DerivativeParams(new SizingParams(new Dimensions($w, $h), $crop, $min_size));
         $this->applyGlobal($params);
 
         $key = [];
@@ -444,11 +444,11 @@ final class ImageStdParams
         $map = [];
         foreach ($entities as $entity) {
             $minSize = $entity->minWidth !== null && $entity->minHeight !== null
-                ? [$entity->minWidth, $entity->minHeight]
+                ? new Dimensions($entity->minWidth, $entity->minHeight)
                 : null;
 
             $params = new DerivativeParams(new SizingParams(
-                [$entity->maxWidth, $entity->maxHeight],
+                new Dimensions($entity->maxWidth, $entity->maxHeight),
                 (float) $entity->maxCrop,
                 $minSize,
             ));
@@ -486,11 +486,11 @@ final class ImageStdParams
         return new DerivativeSizeEntity(
             $name,
             $enabled,
-            $params->sizing->ideal_size[0],
-            $params->sizing->ideal_size[1],
+            (int) $params->sizing->ideal_size->width,
+            (int) $params->sizing->ideal_size->height,
             self::decimalToString((float) $params->sizing->max_crop),
-            $minSize !== null ? $minSize[0] : null,
-            $minSize !== null ? $minSize[1] : null,
+            $minSize instanceof Dimensions ? (int) $minSize->width : null,
+            $minSize instanceof Dimensions ? (int) $minSize->height : null,
             self::decimalToString($params->sharpen),
             $params->last_mod_time,
         );
@@ -639,8 +639,8 @@ final class ImageStdParams
         $this->watermark ??= new WatermarkParams();
 
         $params->use_watermark = $this->watermark->file !== '' &&
-            ($this->watermark->min_size[0] <= $params->sizing->ideal_size[0]
-            or $this->watermark->min_size[1] <= $params->sizing->ideal_size[1]);
+            ($this->watermark->min_size[0] <= $params->sizing->ideal_size->width
+            or $this->watermark->min_size[1] <= $params->sizing->ideal_size->height);
     }
 
     /**

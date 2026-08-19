@@ -51,6 +51,7 @@ use Piwigo\Group\GroupService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
@@ -651,10 +652,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         }
 
                         if ((bool) $params) {
-                            [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
+                            $tpl_var['w'] = $params->sizing->ideal_size->width;
+                            $tpl_var['h'] = $params->sizing->ideal_size->height;
                             $minSize = $params->sizing->min_size;
-                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0 && $minSize !== null) {
-                                [$tpl_var['minw'], $tpl_var['minh']] = $minSize;
+                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0 && $minSize instanceof Dimensions) {
+                                $tpl_var['minw'] = $minSize->width;
+                                $tpl_var['minh'] = $minSize->height;
                             } else {
                                 $tpl_var['minw'] = $tpl_var['minh'] = '';
                             }
@@ -1019,9 +1022,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 if ($pderivative['enabled']) {
                     $new_params = new DerivativeParams(
                         new SizingParams(
-                            [intval($pderivative['w']), intval($pderivative['h'])],
+                            new Dimensions(intval($pderivative['w']), intval($pderivative['h'])),
                             round(intval($pderivative['crop']) / 100, 2),
-                            [intval($pderivative['minw']), intval($pderivative['minh'])]
+                            new Dimensions(intval($pderivative['minw']), intval($pderivative['minh']))
                         )
                     );
                     $new_params->sharpen = (float) intval($pderivative['sharpen']);

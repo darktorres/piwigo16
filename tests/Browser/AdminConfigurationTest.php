@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
@@ -173,10 +174,10 @@ function ctDecodedDerivatives(): array
         $name = is_string($rowName) ? $rowName : '';
         $minWidth = $row['min_width'] ?? null;
         $minHeight = $row['min_height'] ?? null;
-        $minSize = $minWidth !== null && $minHeight !== null ? [ctIntFromMixed($minWidth, 0), ctIntFromMixed($minHeight, 0)] : null;
+        $minSize = $minWidth !== null && $minHeight !== null ? new Dimensions(ctIntFromMixed($minWidth, 0), ctIntFromMixed($minHeight, 0)) : null;
 
         $params = new DerivativeParams(new SizingParams(
-            [ctIntFromMixed($row['max_width'] ?? null, 0), ctIntFromMixed($row['max_height'] ?? null, 0)],
+            new Dimensions(ctIntFromMixed($row['max_width'] ?? null, 0), ctIntFromMixed($row['max_height'] ?? null, 0)),
             ctFloatFromMixed($row['max_crop'] ?? null, 0.0),
             $minSize,
         ));
@@ -226,11 +227,11 @@ function ctSetDecodedDerivatives(array $decoded): void
         $rows[] = [
             'name' => $name,
             'enabled' => 1,
-            'max_width' => $params->sizing->ideal_size[0],
-            'max_height' => $params->sizing->ideal_size[1],
+            'max_width' => (int) $params->sizing->ideal_size->width,
+            'max_height' => (int) $params->sizing->ideal_size->height,
             'max_crop' => number_format((float) $params->sizing->max_crop, 4, '.', ''),
-            'min_width' => $params->sizing->min_size[0] ?? null,
-            'min_height' => $params->sizing->min_size[1] ?? null,
+            'min_width' => $params->sizing->min_size instanceof Dimensions ? (int) $params->sizing->min_size->width : null,
+            'min_height' => $params->sizing->min_size instanceof Dimensions ? (int) $params->sizing->min_size->height : null,
             'sharpen' => number_format($params->sharpen, 4, '.', ''),
             'last_mod_time' => $params->last_mod_time,
         ];
@@ -2255,11 +2256,12 @@ it('sizes tab: reconciles a min_size that drifted out of sync with an unchanged 
         // itself and is seeded directly at the DB layer instead, the same
         // "direct DB fixture, not a mock of the class under test"
         // technique the watermark last_mod_time test above already uses.
-        [$idealW, $idealH] = $decoded['d']['small']->sizing->ideal_size;
+        $idealW = (int) $decoded['d']['small']->sizing->ideal_size->width;
+        $idealH = (int) $decoded['d']['small']->sizing->ideal_size->height;
         $decoded['d']['small']->sizing = new SizingParams(
-            [$idealW, $idealH],
+            new Dimensions($idealW, $idealH),
             1.0,
-            [$idealW - 76, $idealH - 57]
+            new Dimensions($idealW - 76, $idealH - 57)
         );
         $seededLastMod = time() - 100_000;
         $decoded['d']['small']->last_mod_time = $seededLastMod;
@@ -2292,7 +2294,7 @@ it('sizes tab: reconciles a min_size that drifted out of sync with an unchanged 
         expect($reconciled->last_mod_time)
             ->toBeGreaterThan($seededLastMod);
         expect($reconciled->sizing->min_size)
-            ->toBe([$idealW, $idealH]);
+            ->toEqual(new Dimensions($idealW, $idealH));
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }

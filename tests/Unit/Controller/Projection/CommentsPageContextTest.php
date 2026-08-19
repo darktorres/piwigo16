@@ -6,10 +6,11 @@ use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Controller\Projection\CommentsPageContext;
 use Piwigo\Core\Projection\Navbar;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\SizingParams;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
-    $derivativeParams = new DerivativeParams(new SizingParams([100, 100]));
+    $derivativeParams = new DerivativeParams(new SizingParams(new Dimensions(100, 100)));
 
     $context = new CommentsPageContext(
         fAction: '/comments.php',
@@ -83,7 +84,7 @@ test('toArray flattens every property to its real Latte template variable name',
 });
 
 test('toArray includes an empty comments list (not omitted)', function (): void {
-    $derivativeParams = new DerivativeParams(new SizingParams([100, 100]));
+    $derivativeParams = new DerivativeParams(new SizingParams(new Dimensions(100, 100)));
 
     $context = new CommentsPageContext(
         fAction: '/comments.php',

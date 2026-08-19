@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Category\Projection\CategoryDefaultThumbnailsPageContext;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\SizingParams;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
-    $derivativeParams = new DerivativeParams(new SizingParams([100, 100]));
+    $derivativeParams = new DerivativeParams(new SizingParams(new Dimensions(100, 100)));
     $context = new CategoryDefaultThumbnailsPageContext(
         derivativeParams: $derivativeParams,
         maxRequests: 4,

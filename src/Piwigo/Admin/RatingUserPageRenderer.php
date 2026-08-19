@@ -205,7 +205,7 @@ final class RatingUserPageRenderer
             availableRates: $currentConfig->rateItems,
             ratings: $by_user_ratings,
             imageUrls: $image_urls,
-            tnWidth: $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size[0],
+            tnWidth: (int) $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->width,
             nbElements: $nb_elements,
             adminPageTitle: $lang->t('Rating'),
             orderByOptions: $order_by_options,

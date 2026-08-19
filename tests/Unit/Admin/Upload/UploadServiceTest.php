@@ -17,6 +17,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -1430,7 +1431,7 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
 
     try {
         $typeMapProp->setValue($stdParams, [
-            'xlarge' => new DerivativeParams(new SizingParams([1234, 5678])),
+            'xlarge' => new DerivativeParams(new SizingParams(new Dimensions(1234, 5678))),
         ]);
         $disabledMapProp->setValue($stdParams, []);
 
@@ -1458,7 +1459,7 @@ test('getOptimalDimensionsForRepresentative also reads a disabled-by-default typ
     try {
         $typeMapProp->setValue($stdParams, []);
         $disabledMapProp->setValue($stdParams, [
-            'xlarge' => new DerivativeParams(new SizingParams([222, 444])),
+            'xlarge' => new DerivativeParams(new SizingParams(new Dimensions(222, 444))),
         ]);
 
         [$w, $h] = upload_service_optimal_dimensions();

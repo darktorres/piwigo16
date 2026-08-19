@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageRect;
 
 /**
@@ -12,7 +13,7 @@ use Piwigo\Image\ImageRect;
  * are not something to hand-trace and trust blindly.
  */
 test('constructing from [width, height] sets l/t to 0 and r/b to the given size', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
 
     expect($rect->l)
         ->toBe(0);
@@ -29,7 +30,7 @@ test('constructing from [width, height] sets l/t to 0 and r/b to the given size'
 });
 
 test('cropH with no coi splits the crop evenly between left and right', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropH(50, null);
 
     expect($rect->l)
@@ -41,7 +42,7 @@ test('cropH with no coi splits the crop evenly between left and right', function
 });
 
 test('cropH is a no-op when the requested crop is not smaller than the current width', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropH(250, null);
 
     expect($rect->l)
@@ -51,7 +52,7 @@ test('cropH is a no-op when the requested crop is not smaller than the current w
 });
 
 test('cropH with a coi spanning the whole rectangle behaves the same as no coi', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropH(50, 'aaza');
 
     expect($rect->l)
@@ -61,7 +62,7 @@ test('cropH with a coi spanning the whole rectangle behaves the same as no coi',
 });
 
 test('cropH leans the crop toward the side with less room when the coi is off-center (tight on the right)', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     // left=n (0.52*200=104), right=y (0.96*200=192) -- only 8px of room to
     // the right of the coi, less than the default 25px half-crop, so the
     // right side effectively can't be cropped as much as usual.
@@ -74,7 +75,7 @@ test('cropH leans the crop toward the side with less room when the coi is off-ce
 });
 
 test('cropH leans the crop toward the side with less room when the coi is off-center (tight on the left)', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     // left=c (0.08*200=16), right=n (0.52*200=104) -- only 16px of room to
     // the left of the coi.
     $rect->cropH(50, 'c_n_');
@@ -86,7 +87,7 @@ test('cropH leans the crop toward the side with less room when the coi is off-ce
 });
 
 test('cropV with no coi splits the crop evenly between top and bottom', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropV(20, null);
 
     expect($rect->t)
@@ -98,7 +99,7 @@ test('cropV with no coi splits the crop evenly between top and bottom', function
 });
 
 test('cropV is a no-op when the requested crop is not smaller than the current height', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropV(150, null);
 
     expect($rect->t)
@@ -108,7 +109,7 @@ test('cropV is a no-op when the requested crop is not smaller than the current h
 });
 
 test('cropV leans the crop toward the side with less room when the coi is off-center (tight on the top)', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     // top=c (0.08*100=8), bottom=n (0.52*100=52) -- only 8px of room above the coi.
     $rect->cropV(20, '_c_n');
 
@@ -119,7 +120,7 @@ test('cropV leans the crop toward the side with less room when the coi is off-ce
 });
 
 test('cropV leans the crop toward the side with less room when the coi is off-center (tight on the bottom)', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     // top=n (0.52*100=52), bottom=y (0.96*100=96) -- only 4px of room below the coi.
     $rect->cropV(20, '_n_y');
 
@@ -133,7 +134,7 @@ test('cropH is a no-op when the requested crop exactly equals the current width,
     // Kills line 68's SmallerOrEqualToSmaller (`< $pixels` instead of
     // `<=`) -- the sibling no-op test above uses pixels=250, comfortably
     // past the width=200 boundary either way.
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropH(200, null);
 
     expect($rect->l)
@@ -144,7 +145,7 @@ test('cropH is a no-op when the requested crop exactly equals the current width,
 
 test('cropV is a no-op when the requested crop exactly equals the current height, not just when larger', function (): void {
     // Kills line 98's SmallerOrEqualToSmaller.
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropV(100, null);
 
     expect($rect->t)
@@ -169,7 +170,7 @@ test('cropH uses the exact floor()-truncated coi position, not a rounded or ceil
     // ceil() all agree. width=97 (not a multiple of 25) with coi 'b'
     // (fraction 0.04) gives a genuinely fractional intermediate
     // (97*0.04=3.88): floor=3, but round/ceil=4.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->cropH(10, 'b_n_');
 
     expect($rect->l)
@@ -180,7 +181,7 @@ test('cropH uses the exact floor()-truncated coi position, not a rounded or ceil
 
 test('cropV uses the exact floor()-truncated coi position, not a rounded or ceiling one', function (): void {
     // Kills line 101's FloorToRound/FloorToCiel.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->cropV(10, '_b_n');
 
     expect($rect->t)
@@ -192,7 +193,7 @@ test('cropV uses the exact floor()-truncated coi position, not a rounded or ceil
 test('cropH uses the exact ceil()-rounded-up coi position, not a floored or rounded one', function (): void {
     // Kills line 75's CeilToFloor/CeilToRound. width=97 with coi 'y'
     // (fraction 0.96) gives 97*0.96=93.12: ceil=94, but floor/round=93.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->cropH(8, 'n_y_');
 
     expect($rect->l)
@@ -203,7 +204,7 @@ test('cropH uses the exact ceil()-rounded-up coi position, not a floored or roun
 
 test('cropV uses the exact ceil()-rounded-up coi position, not a floored or rounded one', function (): void {
     // Kills line 104's CeilToFloor/CeilToRound.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->cropV(8, '_n_y');
 
     expect($rect->t)
@@ -220,7 +221,7 @@ test('cropH computes availableL by SUBTRACTING the current left edge from the co
     // 1.0 that's still strictly less than coil (3, so the true branch
     // still applies) is required for the two operators to actually
     // disagree.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->l = 1.0;
     $rect->cropH(10, 'b_n_');
 
@@ -232,7 +233,7 @@ test('cropH computes availableL by SUBTRACTING the current left edge from the co
 
 test('cropV computes availableT by SUBTRACTING the current top edge from the coi position, not adding it', function (): void {
     // Kills line 106's MinusToPlus.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->t = 1.0;
     $rect->cropV(10, '_b_n');
 
@@ -249,7 +250,7 @@ test('cropH defaults availableL to exactly 0.0, not a placeholder, when the coi 
     // branch. A pre-existing (simulated prior crop) left offset of
     // 5.0, with a coi[0] resolving to a position at or left of it (coi
     // 'a' => fraction 0, position 0), forces it.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->l = 5.0;
     $rect->cropH(30, 'a_n_');
 
@@ -261,7 +262,7 @@ test('cropH defaults availableL to exactly 0.0, not a placeholder, when the coi 
 
 test('cropV defaults availableT to exactly 0.0, not a placeholder, when the coi is not below the current top edge', function (): void {
     // Kills line 106's DecrementFloat/IncrementFloat.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->t = 5.0;
     $rect->cropV(30, '_a_n');
 
@@ -275,7 +276,7 @@ test('cropH defaults availableR to exactly 0.0, not a placeholder, when the coi 
     // Kills line 77's DecrementFloat/IncrementFloat -- coi[2] 'z'
     // (fraction 1.0) resolves coir to exactly $this->r, so it is never
     // "to the left" of the right edge.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->cropH(2, 'b_z_');
 
     expect($rect->l)
@@ -288,7 +289,7 @@ test('cropV defaults availableB to exactly 0.0, not a placeholder, when the coi 
     // Kills line 107's DecrementFloat/IncrementFloat -- coi[3] 'z'
     // (fraction 1.0) resolves coib to exactly $this->b, so it is never
     // "above" the bottom edge.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->cropV(2, '_b_z');
 
     expect($rect->t)
@@ -303,7 +304,7 @@ test('cropH only applies the coi-adjusted crop once the available room genuinely
     // === pixels === 46), where availableL(0) is small enough to force
     // a real, observable tlcrop adjustment if (and only if) the block
     // is actually entered.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->cropH(46, 'a_n_');
 
     expect($rect->l)
@@ -314,7 +315,7 @@ test('cropH only applies the coi-adjusted crop once the available room genuinely
 
 test('cropV only applies the coi-adjusted crop once the available room genuinely reaches the requested pixel count, not one short', function (): void {
     // Kills line 108's GreaterOrEqualToGreater.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->cropV(46, '_a_n');
 
     expect($rect->t)
@@ -331,7 +332,7 @@ test('cropH only widens the crop toward the tight side when it genuinely has LES
     // a genuinely different value (7-3=4) than leaving tlcrop
     // unchanged (3) -- an even pixel count can't expose this, since
     // floor(pixels/2) and pixels-floor(pixels/2) coincide there.
-    $rect = new ImageRect([97, 100]);
+    $rect = new ImageRect(new Dimensions(97, 100));
     $rect->cropH(7, 'n_y_');
 
     expect($rect->l)
@@ -342,7 +343,7 @@ test('cropH only widens the crop toward the tight side when it genuinely has LES
 
 test('cropV only widens the crop toward the tight side when it genuinely has LESS room than an even split, not exactly as much', function (): void {
     // Kills line 111's SmallerToSmallerOrEqual.
-    $rect = new ImageRect([100, 97]);
+    $rect = new ImageRect(new Dimensions(100, 97));
     $rect->cropV(7, '_n_y');
 
     expect($rect->t)
@@ -381,7 +382,7 @@ test('cropV only widens the crop toward the tight side when it genuinely has LES
  * suite too.
  */
 test('cropH and cropV tolerate an empty-string coi the same as null', function (): void {
-    $rect = new ImageRect([200, 100]);
+    $rect = new ImageRect(new Dimensions(200, 100));
     $rect->cropH(50, '');
     $rect->cropV(20, '');
 

@@ -22,42 +22,34 @@ final class DerivativeUrlCodec
     }
 
     /**
-     * Formats a size array into an identifier usable in filename.
-     *
-     * @param int[] $size
+     * Formats a size into an identifier usable in filename.
      */
-    public static function sizeToUrl(array $size): int|string
+    public static function sizeToUrl(Dimensions $size): int|string
     {
-        if ($size[0] === $size[1]) {
-            return $size[0];
+        if ($size->width === $size->height) {
+            return (int) $size->width;
         }
 
-        return $size[0] . 'x' . $size[1];
+        return $size->width . 'x' . $size->height;
     }
 
     /**
      * Parses a size identifier out of a derivative filename token --
      * the exact inverse of sizeToUrl() ('NNN' or 'WWWxHHH').
-     *
-     * @return array{0: int, 1: int}
      */
-    public static function urlToSize(string $s): array
+    public static function urlToSize(string $s): Dimensions
     {
         $pos = strpos($s, 'x');
         if ($pos === false) {
-            return [(int) $s, (int) $s];
+            return new Dimensions((int) $s, (int) $s);
         }
 
-        return [(int) substr($s, 0, $pos), (int) substr($s, $pos + 1)];
+        return new Dimensions((int) substr($s, 0, $pos), (int) substr($s, $pos + 1));
     }
 
-    /**
-     * @param int[] $size1
-     * @param int[] $size2
-     */
-    public static function sizeEquals(array $size1, array $size2): bool
+    public static function sizeEquals(Dimensions $size1, Dimensions $size2): bool
     {
-        return $size1[0] === $size2[0] && $size1[1] === $size2[1];
+        return $size1->width === $size2->width && $size1->height === $size2->height;
     }
 
     /**

@@ -21,6 +21,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -272,17 +273,17 @@ final class ImageDerivativeController implements ControllerInterface
         // ?array parameter types (an undefined variable is otherwise seen as mixed).
         $crop_rect = null;
         $scaled_size = null;
-        $params->sizing->compute($o_size, $this->coi, $crop_rect, $scaled_size);
+        $params->sizing->compute(new Dimensions($o_size[0], $o_size[1]), $this->coi, $crop_rect, $scaled_size);
         if ((bool) $crop_rect) {
             $changes++;
             $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
             $timing['crop'] = $this->timeStep($step);
         }
 
-        if ((bool) $scaled_size) {
+        if ($scaled_size instanceof Dimensions) {
             $changes++;
-            $image->resize($scaled_size[0], $scaled_size[1]);
-            $d_size = [(int) $scaled_size[0], (int) $scaled_size[1]];
+            $image->resize($scaled_size->width, $scaled_size->height);
+            $d_size = [(int) $scaled_size->width, (int) $scaled_size->height];
             $timing['scale'] = $this->timeStep($step);
         }
 
@@ -303,8 +304,8 @@ final class ImageDerivativeController implements ControllerInterface
                 // (see the analogous compute() call above).
                 $tmp = null;
                 $wm_scaled_size = null;
-                $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);
-                if ($wm_scaled_size === null) {
+                $wm_scaling_params->compute(new Dimensions($wm_size[0], $wm_size[1]), null, $tmp, $wm_scaled_size);
+                if (! $wm_scaled_size instanceof Dimensions) {
                     // compute()'s $scale_size out-param is only null when neither
                     // ratio exceeds 1 — impossible here, since we're inside the same
                     // "watermark bigger than destination in some dimension" guard
@@ -314,8 +315,8 @@ final class ImageDerivativeController implements ControllerInterface
                     // the array accesses below if the invariant were ever violated.
                     $this->ierror('Internal error: unexpected watermark scaling result', 500);
                 }
-                $wm_size = $wm_scaled_size;
-                $wm_image->resize($wm_scaled_size[0], $wm_scaled_size[1]);
+                $wm_size = [(int) $wm_scaled_size->width, (int) $wm_scaled_size->height];
+                $wm_image->resize($wm_scaled_size->width, $wm_scaled_size->height);
             }
             $x = round(((float) $wm->xpos / 100.0) * ((float) $d_size[0] - (float) $wm_size[0]));
             $y = round(((float) $wm->ypos / 100.0) * ((float) $d_size[1] - (float) $wm_size[1]));
@@ -582,7 +583,7 @@ final class ImageDerivativeController implements ControllerInterface
             $params = $this->derivativeParams = $this->parseCustomParams($deriv);
             $this->imageStdParams->applyGlobal($params);
 
-            if ($params->sizing->ideal_size[0] < 20 or $params->sizing->ideal_size[1] < 20) {
+            if ($params->sizing->ideal_size->width < 20 or $params->sizing->ideal_size->height < 20) {
                 $this->ierror('Invalid size', 400);
             }
             if ($params->sizing->max_crop < 0 or $params->sizing->max_crop > 1) {
@@ -714,7 +715,7 @@ final class ImageDerivativeController implements ControllerInterface
                 if ($minSize === null) {
                     continue;
                 }
-                if ($candidate_size[0] < $minSize[0] || $candidate_size[1] < $minSize[1]) {
+                if ($candidate_size[0] < $minSize->width || $candidate_size[1] < $minSize->height) {
                     continue;
                 }
             }

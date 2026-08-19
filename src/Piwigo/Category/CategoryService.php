@@ -40,6 +40,7 @@ use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\ComputedCategoryRow;
+use Piwigo\Category\Projection\GroupCategoryPair;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -1456,7 +1457,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<int, array{group_id: int, cat_id: int}> $inserts
+     * @param list<GroupCategoryPair> $inserts
      */
     public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {
@@ -1676,7 +1677,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<int, array{group_id: int, cat_id: int}> $inserts
+     * @param list<GroupCategoryPair> $inserts
      */
     public function grantGroupAccess(array $inserts): void
     {
@@ -2066,10 +2067,10 @@ final readonly class CategoryService
                     $grantedGrps = $this->repo->findAccessGroupIds(CategoryId::from($insertIdUppercat));
                     $inserts = [];
                     foreach ($grantedGrps as $grantedGrp) {
-                        $inserts[] = [
-                            'group_id' => $grantedGrp,
-                            'cat_id' => (int) $insertedId,
-                        ];
+                        $inserts[] = new GroupCategoryPair(
+                            groupId: $grantedGrp,
+                            catId: (int) $insertedId,
+                        );
                     }
                     $this->repo->massInsertGroupAccess($inserts);
 

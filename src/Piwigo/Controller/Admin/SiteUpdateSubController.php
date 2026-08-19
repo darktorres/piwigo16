@@ -12,6 +12,7 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\GroupCategoryPair;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\SiteUpdateIntroductionPageContext;
@@ -441,10 +442,10 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                             if ($db_categories[$ids]['status'] === 'private' and $parent_id !== null) {
                                 if (isset($granted_grps[$parent_id])) {
                                     foreach ($granted_grps[$parent_id] as $granted_grp) {
-                                        $insert_granted_grps[] = [
-                                            'group_id' => $granted_grp,
-                                            'cat_id' => $ids,
-                                        ];
+                                        $insert_granted_grps[] = new GroupCategoryPair(
+                                            groupId: $granted_grp,
+                                            catId: $ids,
+                                        );
                                     }
                                 }
                                 if (isset($granted_users[$parent_id])) {

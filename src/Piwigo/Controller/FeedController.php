@@ -22,6 +22,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedHelper;
+use Piwigo\Feed\Projection\FeedChannel;
+use Piwigo\Feed\Projection\FeedItem;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Notification\NotificationService;
@@ -137,15 +139,15 @@ final readonly class FeedController implements ControllerInterface
                 // always a valid datetime string
                 assert($dbnow_ts !== false);
 
-                $rss_items[] = [
-                    'title' => $this->lang->t('New on %s', DateHelper::formatDate($dbnow)),
-                    'link' => $this->urlService->getGalleryHomeUrl(),
-                    'description' => $description,
-                    'html' => true,
-                    'date' => $feed_helper->ts8601($dbnow_ts),
-                    'author' => $conf_rss_feed_author,
-                    'guid' => sprintf('%s', $dbnow),
-                ];
+                $rss_items[] = new FeedItem(
+                    title: $this->lang->t('New on %s', DateHelper::formatDate($dbnow)),
+                    link: $this->urlService->getGalleryHomeUrl(),
+                    description: $description,
+                    html: true,
+                    date: $feed_helper->ts8601($dbnow_ts),
+                    author: $conf_rss_feed_author,
+                    guid: sprintf('%s', $dbnow),
+                );
 
                 if ($feed_id !== '') {
                     $feed_repo->updateLastCheck($feed_id, new DateTimeImmutable($dbnow));
@@ -201,23 +203,23 @@ final readonly class FeedController implements ControllerInterface
             // always a valid datetime string
             assert($date_ts !== false);
 
-            $rss_items[] = [
-                'title' => $notificationService->getTitleRecentPostDate($date_detail),
-                'link' => $link,
-                'description' => $description,
-                'html' => true,
-                'date' => $feed_helper->ts8601($date_ts),
-                'author' => $conf_rss_feed_author,
-                'guid' => sprintf('%s', 'pics-' . $date),
-            ];
+            $rss_items[] = new FeedItem(
+                title: $notificationService->getTitleRecentPostDate($date_detail),
+                link: $link,
+                description: $description,
+                html: true,
+                date: $feed_helper->ts8601($date_ts),
+                author: $conf_rss_feed_author,
+                guid: sprintf('%s', 'pics-' . $date),
+            );
         }
 
         $feed_content = $feed_helper->generateRss2Feed(
-            [
-                'title' => $rss_title,
-                'link' => $rss_link,
-                'encoding' => $rss_encoding,
-            ],
+            new FeedChannel(
+                title: $rss_title,
+                link: $rss_link,
+                encoding: $rss_encoding,
+            ),
             $rss_items
         );
 

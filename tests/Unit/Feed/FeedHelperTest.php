@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Feed\FeedHelper;
+use Piwigo\Feed\Projection\FeedChannel;
+use Piwigo\Feed\Projection\FeedItem;
 
 test('datetimeToTs converts a datetime string to a Unix timestamp', function (): void {
     $helper = new FeedHelper();
@@ -30,11 +32,11 @@ test('generateRss2Feed escapes the channel title and link', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        [
-            'title' => 'My <Gallery>',
-            'link' => 'https://example.test/?a=1&b=2',
-            'encoding' => 'utf-8',
-        ],
+        new FeedChannel(
+            title: 'My <Gallery>',
+            link: 'https://example.test/?a=1&b=2',
+            encoding: 'utf-8',
+        ),
         [],
     );
 
@@ -50,19 +52,17 @@ test('generateRss2Feed strips tags from the item title but escapes the descripti
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
+        new FeedChannel(title: 't', link: 'l', encoding: 'utf-8'),
         [
-            'title' => 't',
-            'link' => 'l',
-            'encoding' => 'utf-8',
+            new FeedItem(
+                title: '<b>Bold</b> title',
+                link: 'https://example.test/item',
+                description: '<p>hello</p>',
+                html: false,
+                author: '',
+                guid: '',
+            ),
         ],
-        [[
-            'title' => '<b>Bold</b> title',
-            'link' => 'https://example.test/item',
-            'description' => '<p>hello</p>',
-            'html' => false,
-            'author' => '',
-            'guid' => '',
-        ]],
     );
 
     expect($feed)
@@ -75,19 +75,17 @@ test('generateRss2Feed wraps the description in CDATA when html is true', functi
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
+        new FeedChannel(title: 't', link: 'l', encoding: 'utf-8'),
         [
-            'title' => 't',
-            'link' => 'l',
-            'encoding' => 'utf-8',
+            new FeedItem(
+                title: 'title',
+                link: 'https://example.test/item',
+                description: '<p>hello</p>',
+                html: true,
+                author: '',
+                guid: '',
+            ),
         ],
-        [[
-            'title' => 'title',
-            'link' => 'https://example.test/item',
-            'description' => '<p>hello</p>',
-            'html' => true,
-            'author' => '',
-            'guid' => '',
-        ]],
     );
 
     expect($feed)
@@ -98,19 +96,17 @@ test('generateRss2Feed falls back to the link for guid when guid is empty', func
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
+        new FeedChannel(title: 't', link: 'l', encoding: 'utf-8'),
         [
-            'title' => 't',
-            'link' => 'l',
-            'encoding' => 'utf-8',
+            new FeedItem(
+                title: 'title',
+                link: 'https://example.test/item',
+                description: 'd',
+                html: false,
+                author: '',
+                guid: '',
+            ),
         ],
-        [[
-            'title' => 'title',
-            'link' => 'https://example.test/item',
-            'description' => 'd',
-            'html' => false,
-            'author' => '',
-            'guid' => '',
-        ]],
     );
 
     expect($feed)
@@ -121,20 +117,18 @@ test('generateRss2Feed omits author and pubDate when empty', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
+        new FeedChannel(title: 't', link: 'l', encoding: 'utf-8'),
         [
-            'title' => 't',
-            'link' => 'l',
-            'encoding' => 'utf-8',
+            new FeedItem(
+                title: 'title',
+                link: 'https://example.test/item',
+                description: 'd',
+                html: false,
+                author: '',
+                date: '',
+                guid: 'g',
+            ),
         ],
-        [[
-            'title' => 'title',
-            'link' => 'https://example.test/item',
-            'description' => 'd',
-            'html' => false,
-            'author' => '',
-            'date' => '',
-            'guid' => 'g',
-        ]],
     );
 
     expect($feed)
@@ -159,20 +153,22 @@ test('generateRss2Feed produces the exact well-formed RSS document, byte for byt
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
+        new FeedChannel(
+            title: 'My Gallery & Co',
+            link: 'https://example.test/?a=1&b=2',
+            encoding: 'utf-8',
+        ),
         [
-            'title' => 'My Gallery & Co',
-            'link' => 'https://example.test/?a=1&b=2',
-            'encoding' => 'utf-8',
+            new FeedItem(
+                title: '<b>Bold</b> & Title',
+                link: 'https://example.test/item?x=1&y=2',
+                description: 'plain & text',
+                html: false,
+                author: 'Jane & Bob',
+                date: '2020-06-15T10:30:00+00:00',
+                guid: 'guid-value & special',
+            ),
         ],
-        [[
-            'title' => '<b>Bold</b> & Title',
-            'link' => 'https://example.test/item?x=1&y=2',
-            'description' => 'plain & text',
-            'html' => false,
-            'author' => 'Jane & Bob',
-            'date' => '2020-06-15T10:30:00+00:00',
-            'guid' => 'guid-value & special',
-        ]],
     );
 
     $matched = preg_match('/<lastBuildDate>([^<]+)<\/lastBuildDate>/', $feed, $matches);
@@ -221,7 +217,7 @@ test('generateRss2Feed treats missing channel keys the same as empty strings', f
     // one) was never exercised.
     $helper = new FeedHelper();
 
-    $feed = $helper->generateRss2Feed([], []);
+    $feed = $helper->generateRss2Feed(new FeedChannel(), []);
 
     expect($feed)
         ->toContain('encoding=""?>')
@@ -239,12 +235,8 @@ test('generateRss2Feed treats missing item keys the same as their defaults', fun
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        [
-            'title' => 't',
-            'link' => 'l',
-            'encoding' => 'utf-8',
-        ],
-        [[]],
+        new FeedChannel(title: 't', link: 'l', encoding: 'utf-8'),
+        [new FeedItem()],
     );
 
     expect($feed)
@@ -267,20 +259,18 @@ test('generateRss2Feed includes author and pubDate when set', function (): void 
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
+        new FeedChannel(title: 't', link: 'l', encoding: 'utf-8'),
         [
-            'title' => 't',
-            'link' => 'l',
-            'encoding' => 'utf-8',
+            new FeedItem(
+                title: 'title',
+                link: 'https://example.test/item',
+                description: 'd',
+                html: false,
+                author: 'Jane',
+                date: '2020-01-01T00:00:00+00:00',
+                guid: 'g',
+            ),
         ],
-        [[
-            'title' => 'title',
-            'link' => 'https://example.test/item',
-            'description' => 'd',
-            'html' => false,
-            'author' => 'Jane',
-            'date' => '2020-01-01T00:00:00+00:00',
-            'guid' => 'g',
-        ]],
     );
 
     expect($feed)

@@ -6,10 +6,11 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
-use Piwigo\Admin\Projection\UpdatesPwgPageContext;
+use Piwigo\Admin\Projection\UpdatesPwgView;
 use Piwigo\Admin\Request\UpdatesPwgRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -18,6 +19,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -49,6 +51,7 @@ final readonly class UpdatesPwgPageRenderer
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -159,10 +162,9 @@ final readonly class UpdatesPwgPageRenderer
             $major_release_url = AppInfo::URL . '/releases/' .
               (($ct_env === 'Official') ? substr($new_versions->major, 0, -1) : $new_versions->major);
             $major_docker_release_url = 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->major);
-            $major_version_pwg = preg_replace('/[a-z]$/', '', $new_versions->major); // Remove container build ver
         }
 
-        $template->assignContext(new UpdatesPwgPageContext(
+        $adminContent = $this->renderer->render(new UpdatesPwgView(
             containerVersion: $container_version,
             dockerUpdateGuideUrl: $docker_update_guide_url,
             checkVersion: $check_version,
@@ -173,16 +175,18 @@ final readonly class UpdatesPwgPageRenderer
             step: $step,
             piwigoCurrentVersion: $this->pageState->updatedVersion ?? AppInfo::VERSION,
             upgradeTo: $upgrade_to,
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
             minorVersion: $minor_version,
             minorReleaseUrl: $minor_release_url,
             majorVersion: $major_version,
             majorReleaseUrl: $major_release_url,
             majorDockerReleaseUrl: $major_docker_release_url,
-            majorVersionPwg: $major_version_pwg,
+        ));
+
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
             adminPageTitle: $this->lang->t('Updates'),
         ));
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'updates_pwg.latte');
     }
 }

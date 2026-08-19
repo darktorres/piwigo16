@@ -16,7 +16,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\PluginsSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -29,6 +29,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Validation\InputValidator;
@@ -74,6 +75,7 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
         private Paths $paths,
         private PluginRegistry $pluginRegistry,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -96,8 +98,8 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService);
-            $template->assignContext(new PluginsSubControllerPageContext(adminPageTitle: $this->lang->t('Plugins')));
+                ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
+            $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Plugins')));
         } elseif ($tab === 'new') {
             $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);

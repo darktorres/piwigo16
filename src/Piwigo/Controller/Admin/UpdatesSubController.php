@@ -22,6 +22,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -67,6 +68,7 @@ final readonly class UpdatesSubController implements AdminSubControllerInterface
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -92,7 +94,7 @@ final readonly class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render($this->lang, $this->accessControl, 'updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService);
+                ->render($this->lang, $this->accessControl, 'updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
         } else {
             $this->updatesPwgPageRenderer
                 ->render();

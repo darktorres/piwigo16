@@ -16,7 +16,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\ThemesSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -25,6 +25,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -67,6 +68,7 @@ final readonly class ThemesSubController implements AdminSubControllerInterface
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -89,8 +91,8 @@ final readonly class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->lang, $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService);
-            $template->assignContext(new ThemesSubControllerPageContext(adminPageTitle: $this->lang->t('Themes')));
+                ->render($this->lang, $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
+            $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Themes')));
         } elseif ($tab === 'new') {
             $this->themesNewPageRenderer
                 ->render('themes', $tab);

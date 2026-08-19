@@ -6,17 +6,19 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
-use Piwigo\Admin\Projection\UpdatesExtPageContext;
+use Piwigo\Admin\Projection\UpdatesExtView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Cross-type "which installed plugins/themes/languages have a pending
@@ -39,7 +41,7 @@ final class UpdatesExtPageRenderer
      * (config/admin_pages.php registers each of those 4 controllers for
      * exactly one slug), so each passes its own literal.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -153,15 +155,18 @@ final class UpdatesExtPageRenderer
             return;
         }
 
-        $template->assignContext(new UpdatesExtPageContext(
+        $adminContent = $renderer->render(new UpdatesExtView(
             updatesExtension: $updates_extension,
             showReset: $show_reset,
             pwgToken: $csrfService
                 ->getToken(),
             extType: $pageSlug === 'updates' ? 'extensions' : $pageSlug,
             isWebmaster: ($accessControl->isWebmaster()) ? 1 : 0,
+        ));
+
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
             adminPageTitle: $lang->t('Updates'),
         ));
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'updates_ext.latte');
     }
 }

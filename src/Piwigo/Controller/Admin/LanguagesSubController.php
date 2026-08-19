@@ -15,7 +15,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\LanguagesSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,6 +24,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -62,6 +63,7 @@ final readonly class LanguagesSubController implements AdminSubControllerInterfa
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -84,8 +86,8 @@ final readonly class LanguagesSubController implements AdminSubControllerInterfa
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->lang, $this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService);
-            $template->assignContext(new LanguagesSubControllerPageContext(adminPageTitle: $this->lang->t('Languages')));
+                ->render($this->lang, $this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
+            $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Languages')));
         } elseif ($tab === 'new') {
             $this->languagesNewPageRenderer
                 ->render('languages', $tab);

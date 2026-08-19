@@ -23,7 +23,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class CheckIntegrityPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array<string, mixed>> $c13yList
+     * @param list<AnomalyDisplayRow> $c13yList
      * @param list<string>|null $c13yDoCheck
      */
     public function __construct(
@@ -42,7 +42,7 @@ final readonly class CheckIntegrityPageContext implements TemplatePageContext
         $result = [
             'c13y_show_submit_automatic_correction' => $this->showSubmitAutomaticCorrection,
             'c13y_show_submit_ignore' => $this->showSubmitIgnore,
-            'c13y_list' => $this->c13yList,
+            'c13y_list' => array_map(static fn (AnomalyDisplayRow $row): array => $row->toArray(), $this->c13yList),
         ];
 
         if ($this->c13yDoCheck !== null) {

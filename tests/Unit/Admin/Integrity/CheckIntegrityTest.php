@@ -56,14 +56,20 @@ test('addAnomaly records a new anomaly with a stable md5 id and reflects a real 
     expect($checkIntegrity->retrieve_list)
         ->toHaveCount(1);
     $entry = $checkIntegrity->retrieve_list[0];
-    expect($entry['anomaly'])->toBe('Something is wrong')
-        ->and($entry['correction_fct'])->toBe('strtoupper')
-        ->and($entry['correction_fct_args'])->toBe([
+    expect($entry->anomaly)
+        ->toBe('Something is wrong')
+        ->and($entry->correctionFct)
+        ->toBe('strtoupper')
+        ->and($entry->correctionFctArgs)
+        ->toBe([
             'arg' => 'x',
         ])
-        ->and($entry['correction_msg'])->toBe('Fix it')
-        ->and($entry['is_callable'])->toBeTrue()
-        ->and($entry['id'])->toBe(md5('Something is wrongstrtoupper' . serialize([
+        ->and($entry->correctionMsg)
+        ->toBe('Fix it')
+        ->and($entry->isCallable)
+        ->toBeTrue()
+        ->and($entry->id)
+        ->toBe(md5('Something is wrongstrtoupper' . serialize([
             'arg' => 'x',
         ]) . 'Fix it'));
 });
@@ -73,7 +79,7 @@ test('addAnomaly marks is_callable false for a non-existent correction function'
 
     $checkIntegrity->addAnomaly('Something is wrong', 'not_a_real_function_xyz');
 
-    expect($checkIntegrity->retrieve_list[0]['is_callable'])->toBeFalse();
+    expect($checkIntegrity->retrieve_list[0]->isCallable)->toBeFalse();
 });
 
 test('addAnomaly diverts an already-ignored anomaly id into build_ignore_list instead of retrieve_list', function (): void {

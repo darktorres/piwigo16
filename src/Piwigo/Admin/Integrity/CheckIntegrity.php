@@ -15,6 +15,8 @@ use Closure;
 use LogicException;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
+use Piwigo\Admin\Integrity\Projection\AnomalyDisplayRow;
+use Piwigo\Admin\Integrity\Projection\AnomalyRow;
 use Piwigo\Admin\Integrity\Projection\CheckIntegrityPageContext;
 use Piwigo\Admin\Integrity\Request\C13yTreatmentRequest;
 use Piwigo\Core\AppInfo;
@@ -38,20 +40,10 @@ final class CheckIntegrity
     public array $ignore_list;
 
     /**
-     * Every element is built exclusively by addAnomaly() below, or
-     * dynamically extended with 'corrected'/'ignored' by check(). See
-     * addAnomaly()'s own docblock for the precise element shape.
+     * Every element is built exclusively by addAnomaly() below; check()
+     * mutates an already-built row's own $corrected/$ignored in place.
      *
-     * @var list<array{
-     *   id: string,
-     *   anomaly: string,
-     *   correction_fct: string|Closure|null,
-     *   correction_fct_args: ?array<string, mixed>,
-     *   correction_msg: ?string,
-     *   is_callable: bool,
-     *   corrected?: mixed,
-     *   ignored?: bool,
-     * }>
+     * @var list<AnomalyRow>
      */
     public array $retrieve_list;
 
@@ -111,16 +103,16 @@ final class CheckIntegrity
             $corrected_count = 0;
             $not_corrected_count = 0;
 
-            foreach ($this->retrieve_list as $i => $c13y) {
-                if ($c13y['correction_fct'] !== null and
-                    $c13y['is_callable'] and
-                    in_array($c13y['id'], $c13y_selection, true)) {
-                    $args = is_array($c13y['correction_fct_args']) ? $c13y['correction_fct_args'] : [];
-                    $correction_fct = $c13y['correction_fct'];
+            foreach ($this->retrieve_list as $c13y) {
+                if ($c13y->correctionFct !== null and
+                    $c13y->isCallable and
+                    in_array($c13y->id, $c13y_selection, true)) {
+                    $args = $c13y->correctionFctArgs ?? [];
+                    $correction_fct = $c13y->correctionFct;
                     if (is_callable($correction_fct)) {
-                        $this->retrieve_list[$i]['corrected'] = call_user_func_array($correction_fct, $args);
+                        $c13y->corrected = (bool) call_user_func_array($correction_fct, $args);
 
-                        if ((bool) $this->retrieve_list[$i]['corrected']) {
+                        if ($c13y->corrected) {
                             ++$corrected_count;
                         } else {
                             ++$not_corrected_count;
@@ -148,10 +140,10 @@ final class CheckIntegrity
                 $c13y_selection = $c13yTreatment->selection;
                 $ignored_count = 0;
 
-                foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array($c13y['id'], $c13y_selection, true)) {
-                        $this->build_ignore_list[] = $c13y['id'];
-                        $this->retrieve_list[$i]['ignored'] = true;
+                foreach ($this->retrieve_list as $c13y) {
+                    if (in_array($c13y->id, $c13y_selection, true)) {
+                        $this->build_ignore_list[] = $c13y->id;
+                        $c13y->ignored = true;
                         ++$ignored_count;
                     }
                 }
@@ -208,58 +200,63 @@ final class CheckIntegrity
         if (count($this->retrieve_list) > 0) {
             $c13y_do_check = null;
             $c13y_list = [];
-            foreach ($this->retrieve_list as $i => $c13y) {
+            foreach ($this->retrieve_list as $c13y) {
                 $can_select = false;
-                $c13y_display = [
-                    'id' => $c13y['id'],
-                    'anomaly' => $c13y['anomaly'],
-                    'show_ignore_msg' => false,
-                    'show_correction_success_fct' => false,
-                    'correction_error_fct' => '',
-                    'show_correction_fct' => false,
-                    'show_correction_bad_fct' => false,
-                    'correction_msg' => '',
-                ];
+                $show_ignore_msg = false;
+                $show_correction_success_fct = false;
+                $correction_error_fct = '';
+                $show_correction_fct = false;
+                $show_correction_bad_fct = false;
+                $correction_msg = '';
 
-                if (isset($c13y['ignored'])) {
-                    if ($c13y['ignored']) {
-                        $c13y_display['show_ignore_msg'] = true;
+                if ($c13y->ignored !== null) {
+                    if ($c13y->ignored) {
+                        $show_ignore_msg = true;
                     } else {
-                        throw new LogicException('$c13y[\'ignored\'] cannot be false');
+                        throw new LogicException('$c13y->ignored cannot be false');
                     }
                 } else {
-                    if ($c13y['correction_fct'] !== null) {
-                        if (isset($c13y['corrected'])) {
-                            if ((bool) $c13y['corrected']) {
-                                $c13y_display['show_correction_success_fct'] = true;
+                    if ($c13y->correctionFct !== null) {
+                        if ($c13y->corrected !== null) {
+                            if ($c13y->corrected) {
+                                $show_correction_success_fct = true;
                             } else {
-                                $c13y_display['correction_error_fct'] = $this->getHtlmLinksMoreInfo();
+                                $correction_error_fct = $this->getHtlmLinksMoreInfo();
                             }
-                        } elseif ($c13y['is_callable']) {
-                            $c13y_display['show_correction_fct'] = true;
+                        } elseif ($c13y->isCallable) {
+                            $show_correction_fct = true;
                             $c13y_do_check ??= [];
-                            $c13y_do_check[] = $c13y['id'];
+                            $c13y_do_check[] = $c13y->id;
                             $submit_automatic_correction = true;
                             $can_select = true;
                         } else {
-                            $c13y_display['show_correction_bad_fct'] = true;
+                            $show_correction_bad_fct = true;
                             $can_select = true;
                         }
                     } else {
                         $can_select = true;
                     }
 
-                    if (! in_array($c13y['correction_msg'], [null, '0', ''], true) and ! isset($c13y['corrected'])) {
-                        $c13y_display['correction_msg'] = $c13y['correction_msg'];
+                    if (! in_array($c13y->correctionMsg, [null, '0', ''], true) and $c13y->corrected === null) {
+                        $correction_msg = $c13y->correctionMsg;
                     }
                 }
 
-                $c13y_display['can_select'] = $can_select;
                 if ($can_select) {
                     $submit_ignore = true;
                 }
 
-                $c13y_list[] = $c13y_display;
+                $c13y_list[] = new AnomalyDisplayRow(
+                    id: $c13y->id,
+                    anomaly: $c13y->anomaly,
+                    showIgnoreMsg: $show_ignore_msg,
+                    showCorrectionSuccessFct: $show_correction_success_fct,
+                    correctionErrorFct: $correction_error_fct,
+                    showCorrectionFct: $show_correction_fct,
+                    showCorrectionBadFct: $show_correction_bad_fct,
+                    correctionMsg: $correction_msg,
+                    canSelect: $can_select,
+                );
             }
 
             $template->assignContext(new CheckIntegrityPageContext(
@@ -307,15 +304,14 @@ final class CheckIntegrity
         if (in_array($id, array_map(strval(...), array_filter($this->ignore_list, is_scalar(...))), true)) {
             $this->build_ignore_list[] = $id;
         } else {
-            $this->retrieve_list[] =
-              [
-                  'id' => $id,
-                  'anomaly' => $anomaly,
-                  'correction_fct' => $correction_fct,
-                  'correction_fct_args' => $correction_fct_args,
-                  'correction_msg' => $correction_msg,
-                  'is_callable' => is_callable($correction_fct),
-              ];
+            $this->retrieve_list[] = new AnomalyRow(
+                id: $id,
+                anomaly: $anomaly,
+                correctionFct: $correction_fct,
+                correctionFctArgs: $correction_fct_args,
+                correctionMsg: $correction_msg,
+                isCallable: is_callable($correction_fct),
+            );
         }
     }
 

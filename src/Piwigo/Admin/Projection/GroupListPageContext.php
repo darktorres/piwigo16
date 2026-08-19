@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Projection;
 
 use Override;
 use Piwigo\Core\TemplatePageContext;
+use Piwigo\Group\Projection\GroupListRow;
 
 /**
  * The template variable set assigned by
@@ -17,7 +18,7 @@ final readonly class GroupListPageContext implements TemplatePageContext
 {
     /**
      * @param array<array-key, string> $cacheKeys
-     * @param list<array<string, mixed>> $groups
+     * @param list<GroupListRow> $groups
      */
     public function __construct(
         public string $addAction,
@@ -38,7 +39,7 @@ final readonly class GroupListPageContext implements TemplatePageContext
             'CSRF_TOKEN' => $this->pwgToken,
             'CACHE_KEYS' => $this->cacheKeys,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
-            'groups' => $this->groups,
+            'groups' => array_map(static fn (GroupListRow $group): array => $group->toArray(), $this->groups),
         ];
     }
 }

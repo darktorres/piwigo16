@@ -15,6 +15,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\Projection\GroupListRow;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -70,22 +71,18 @@ final readonly class GroupListPageRenderer
         foreach ($groups as $row) {
             $members = $group_repo->findMemberUsernames($row->id);
 
-            $tpl_groups[] = [
-                'NAME' => $row->name,
-                // Explicit ->value, not relying on GroupId's Stringable
-                // -- Latte templates elsewhere in this page do real
-                // arithmetic on ID (group_list.latte's `$group['ID']%5`),
-                // which would TypeError against a bare VO object.
-                'ID' => $row->id->value,
-                'IS_DEFAULT' => ($row->isDefault ? ' [' . $this->lang->t('default') . ']' : ''),
-                'NB_MEMBERS' => count($members),
-                'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
-                'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
-                'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . $this->csrfService->getToken(),
-                'U_PERM' => $perm_url . $row->id->value,
-                'U_USERS' => $users_url . $row->id->value,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . $this->csrfService->getToken(),
-            ];
+            $tpl_groups[] = new GroupListRow(
+                name: $row->name,
+                id: $row->id,
+                isDefaultLabel: $row->isDefault ? ' [' . $this->lang->t('default') . ']' : '',
+                nbMembers: count($members),
+                membersList: implode(' <span class="userSeparator">&middot;</span> ', $members),
+                membersLabel: $this->translator->plural('%d member', '%d members', count($members)),
+                deleteUrl: $del_url . $row->id->value . '&amp;pwg_token=' . $this->csrfService->getToken(),
+                permUrl: $perm_url . $row->id->value,
+                usersUrl: $users_url . $row->id->value,
+                toggleDefaultUrl: $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . $this->csrfService->getToken(),
+            );
 
             $group_counter++;
         }

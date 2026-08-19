@@ -6,9 +6,10 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Admin\Projection\CatPermPageContext;
+use Piwigo\Admin\Projection\CatPermView;
 use Piwigo\Admin\Request\CatPermSubmitRequest;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -17,6 +18,7 @@ use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\UserService;
 
 /**
@@ -43,6 +45,7 @@ final readonly class CatPermPageRenderer
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -86,12 +89,6 @@ final readonly class CatPermPageRenderer
 
             $save_success = $this->lang->t('Album updated successfully');
         }
-
-        $categories_nav = $this->htmlService
-            ->getCatDisplayNameFromId(
-                $page['cat'],
-                'admin.php?page=album-'
-            );
 
         // groups denied are the groups not granted. So we need to find all groups
         // minus groups granted to find groups denied.
@@ -157,24 +154,24 @@ final readonly class CatPermPageRenderer
             }
         }
 
-        $template->assignContext(new CatPermPageContext(
-            saveSuccess: $save_success,
-            categoriesNav: $categories_nav,
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
+        $adminContent = $this->renderer->render(new CatPermView(
             fAction: $admin_album_base_url . '-permissions',
             private: ($category['status'] === 'private'),
             groups: $groups,
             groupsSelected: $group_granted_ids,
-            users: $users,
             usersSelected: $user_granted_direct_ids,
             nbUsersGrantedIndirect: $nb_users_granted_indirect,
-            pwgToken: $this->csrfService
-                ->getToken(),
+            userGrantedIndirectGroups: $user_granted_indirect_groups,
             inherit: $this->currentConfig->inheritanceByDefault,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
-            userGrantedIndirectGroups: $user_granted_indirect_groups,
+            saveSuccess: $save_success,
+            csrfToken: $this->csrfService
+                ->getToken(),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_perm.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
+        ));
     }
 }

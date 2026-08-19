@@ -138,6 +138,21 @@ it('injects @var docblocks after every extract anchor, including block methods',
         ->toBe($anchors);
 });
 
+it('injects a Html|string|false @var docblock after every {capture} target assignment', function (): void {
+    $fixture = $this->root . '/capture-fixture.latte';
+    file_put_contents($fixture, <<<'LATTE'
+        {capture $rate_over}<img src="x.png">{/capture}
+        {=(string) $rate_over}
+        LATTE);
+
+    $result = $this->compiler->compile($fixture, []);
+
+    $code = (string) file_get_contents($result->outputPath);
+    expect($code)
+        ->toContain('$rate_over = $ʟ_tmp;')
+        ->toContain('@var \Latte\Runtime\Html|string|false $rate_over');
+});
+
 it('skips invalid PHP identifiers with a notice instead of emitting broken docblocks', function (): void {
     $result = $this->compiler->compile(
         $this->repoRoot . '/themes/admin/default/template/comments.latte',

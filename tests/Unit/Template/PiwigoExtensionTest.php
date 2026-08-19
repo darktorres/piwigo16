@@ -23,7 +23,7 @@ use Piwigo\Users\CurrentUser;
  * dedicated coverage -- this file closes that gap.
  *
  * `combineScript`/`combineCss`/`getCombinedScripts`/`getCombinedCss`/
- * `defineDerivative`/`htmlHead`/`htmlStyle`/`footerScript`/
+ * `defineDerivative`/`htmlHead`/`footerScript`/
  * `localCssRules`/`getExtent`/`once` are deliberately NOT retested here
  * -- they're thin `$this->template->x(...)` delegates with their own
  * real coverage in TemplateInstanceTest.php; duplicating it against a

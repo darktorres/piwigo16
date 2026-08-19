@@ -45,7 +45,7 @@ use Piwigo\Template\Template;
  *    wrapped function's first argument and those don't fit that shape.
  *  - **Stateful asset/page functions** -- `combineScript`/`combineCss`/
  *    `getCombinedScripts`/`getCombinedCss`/`defineDerivative`/`htmlHead`/
- *    `htmlStyle`/`footerScript`/`localCssRules`/`getExtent`/`exposeData`/
+ *    `footerScript`/`localCssRules`/`getExtent`/`exposeData`/
  *    `exposeString`/`getPageDataScript` all delegate to the owning
  *    `Template` instance's own (renamed, same-body) methods -- reusing
  *    its already-correct `ScriptLoader`/`CssLoader`/`PageState`/
@@ -198,7 +198,6 @@ final class PiwigoExtension extends Extension
             'getCombinedCss' => $this->template->getCombinedCss(...),
             'defineDerivative' => $this->template->defineDerivative(...),
             'htmlHead' => $this->template->htmlHead(...),
-            'htmlStyle' => $this->template->htmlStyle(...),
             'footerScript' => $this->template->footerScript(...),
             'localCssRules' => $this->template->localCssRules(...),
             'exposeData' => $this->template->exposeData(...),

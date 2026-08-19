@@ -96,11 +96,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public array $htmlHeadElements = [];
 
-    /**
-     * @var string - Runtime CSS rules
-     */
-    private string $htmlStyle = '';
-
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
 
     public ScriptLoader $scriptLoader;
@@ -960,7 +955,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $this->output
         );
 
-        if ((bool) count($this->htmlHeadElements) || (bool) strlen($this->htmlStyle)) {
+        if ((bool) count($this->htmlHeadElements)) {
             // `[ \t]*` tolerates the leading indentation a formatted
             // `</head>` line carries (Latte's `Feature::Dedent` isn't
             // enabled, so that indentation is literal in the rendered
@@ -971,13 +966,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 : false;
             if ($pos !== false) {
                 $rep = "\n" . implode("\n", $this->htmlHeadElements);
-                if ((bool) strlen($this->htmlStyle)) {
-                    $rep .= '<style type="text/css">' . $this->htmlStyle . '</style>';
-                }
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
             } // else maybe error or warning ?
             $this->htmlHeadElements = [];
-            $this->htmlStyle = '';
         }
 
         $output = $this->output;
@@ -1173,17 +1164,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $trimmed = trim((string) $content);
         if ($trimmed !== '') {
             $this->htmlHeadElements[] = $trimmed;
-        }
-    }
-
-    /**
-     * Same `{capture}`+`{do}` composition as `htmlHead()` above.
-     */
-    public function htmlStyle(string|Html $content): void
-    {
-        $trimmed = trim((string) $content);
-        if ($trimmed !== '') {
-            $this->htmlStyle .= "\n" . $trimmed;
         }
     }
 

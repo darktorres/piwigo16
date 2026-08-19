@@ -141,7 +141,6 @@ final class LatteAnalysisShims
         'getCombinedCss',
         'defineDerivative',
         'htmlHead',
-        'htmlStyle',
         'footerScript',
         'localCssRules',
         'exposeData',
@@ -793,11 +792,6 @@ final class LatteAnalysisShims
     }
 
     public static function htmlHead(\Latte\Runtime\Html|string $content): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function htmlStyle(\Latte\Runtime\Html|string $content): void
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

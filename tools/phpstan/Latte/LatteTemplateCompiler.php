@@ -10,7 +10,7 @@ use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
 
 /**
  * Compiles one real `.latte` template with the real `Latte\Engine`
- * (nothing re-derived) and applies exactly two mechanical transforms to
+ * (nothing re-derived) and applies exactly three mechanical transforms to
  * the generated PHP before writing it to the analysis directory:
  *
  * 1. Filter/function property-invokes -> static calls on the generated
@@ -37,7 +37,25 @@ use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
  *    inline `@var` comments narrow extract()ed locals at level 10 under
  *    this repo's real phpstan.neon, no Nop separators needed.
  *
- * Both transforms are textual, deliberately not parse-and-reprint:
+ * 3. `/** @var Html|string|false $name *``/` docblocks after every
+ *    `{capture}` target assignment (`$name = $ʟ_tmp;`, always immediately
+ *    preceded -- possibly several lines earlier, across the `try/finally`
+ *    that flushes the output buffer -- by
+ *    `$ʟ_tmp = ob_get_length() ? new LR\Html(ob_get_clean()) : ob_get_clean();`,
+ *    the one shape Latte's CaptureNode compiles to; confirmed against all
+ *    4 real `{capture}` sites in this codebase). Every compiled `main()`/
+ *    `prepare()`/`{block}` method starts with `extract()`, which makes
+ *    PHPStan treat *every* local variable in that scope as possibly
+ *    clobbered to `mixed` for the rest of the method (extract() can
+ *    define any name) -- confirmed by direct repro: a capture target
+ *    reassigned unconditionally right before use still typed `mixed` at
+ *    that use, purely because an earlier `extract()` shares the scope.
+ *    Transform #2 already solves this for real template parameters via
+ *    the VariableMap; this solves it for capture-only locals, which
+ *    aren't in that map, from Latte's own generated code shape instead
+ *    of a guessed or hand-asserted type.
+ *
+ * All transforms are textual, deliberately not parse-and-reprint:
  * every generated line and its `/* pos L:C *``/` comment stays
  * byte-identical to Latte's own output (injection only inserts lines),
  * so the error formatter's pos-comment line mapping stays exact.
@@ -80,6 +98,7 @@ final readonly class LatteTemplateCompiler
 
         $code = $this->rewriteInvocations($code, $templateRealPath);
         [$code, $notices] = $this->injectVarDocblocks($code, $vars, $templateRealPath);
+        $code = $this->injectCaptureVarDocblocks($code);
 
         $outputPath = $this->outputDir . '/' . $this->outputBasename($templateRealPath);
         $changed = ! is_file($outputPath) || file_get_contents($outputPath) !== $code;
@@ -184,6 +203,30 @@ final readonly class LatteTemplateCompiler
         }
 
         return [implode("\n", $out), $notices];
+    }
+
+    /**
+     * See class docblock transform #3: narrows every `{capture}` target
+     * (`$name = $ʟ_tmp;`) right after its assignment, from the type
+     * Latte's own CaptureNode ternary unambiguously produces.
+     */
+    private function injectCaptureVarDocblocks(string $code): string
+    {
+        $out = [];
+        $sawCaptureTernary = false;
+        foreach (explode("\n", $code) as $line) {
+            $out[] = $line;
+            if (preg_match('/\$ʟ_tmp = ob_get_length\(\) \? new LR\\\\Html\(ob_get_clean\(\)\) : ob_get_clean\(\);$/', $line) === 1) {
+                $sawCaptureTernary = true;
+                continue;
+            }
+            if ($sawCaptureTernary && preg_match('/^(\s*)\$([a-zA-Z_][a-zA-Z0-9_]*) = \$ʟ_tmp;$/u', $line, $m) === 1) {
+                $out[] = $m[1] . "/** @var \\Latte\\Runtime\\Html|string|false \${$m[2]} */";
+                $sawCaptureTernary = false;
+            }
+        }
+
+        return implode("\n", $out);
     }
 
     /**

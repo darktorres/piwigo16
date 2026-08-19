@@ -1551,18 +1551,7 @@ test('finalizeOutput injects head elements before </head> when the source contai
         ->toBe("<head>\n<meta a>\n</head>\nbody");
 });
 
-test('finalizeOutput injects the accumulated htmlStyle before </head> even with no head elements registered', function (): void {
-    $t = TemplateTestFactory::build();
-    $t->htmlStyle('body{color:red}');
-    $t->output = "<head>\n</head>\nbody";
-
-    $result = $t->fetchOutput();
-
-    expect($result)
-        ->toBe("<head>\n<style type=\"text/css\">\nbody{color:red}</style>\n</head>\nbody");
-});
-
-test('finalizeOutput does not touch </head> when no head elements or htmlStyle were registered', function (): void {
+test('finalizeOutput does not touch </head> when no head elements were registered', function (): void {
     $t = TemplateTestFactory::build();
     $t->output = "<head>\n</head>\nbody";
 
@@ -1583,27 +1572,6 @@ test('finalizeOutput does not inject head elements when the source has no </head
         ->toBe('no head tag here');
 });
 
-test('finalizeOutput resets htmlStyle after injecting it, so a second call does not reapply it', function (): void {
-    $t = TemplateTestFactory::build();
-    $t->htmlStyle('body{color:red}');
-    $t->output = "<head>\n</head>\nfirst";
-    $first = $t->fetchOutput();
-
-    $t->output = "<head>\n</head>\nsecond";
-    $second = $t->fetchOutput();
-
-    // Exact match on $second (not just "doesn't contain the old value") --
-    // an EmptyStringToNotEmpty mutation of the reset would leave htmlStyle
-    // as some OTHER non-empty sentinel, which would still re-trigger the
-    // injection gate and inject a (different, but still present) <style>
-    // tag into $second; a bare "not->toContain('color:red')" check
-    // wouldn't notice that.
-    expect($first)
-        ->toContain('color:red')
-        ->and($second)
-        ->toBe("<head>\n</head>\nsecond");
-});
-
 test('finalizeOutput resets the output buffer to an empty string after flushing', function (): void {
     $t = TemplateTestFactory::build();
     $t->output = 'hello';
@@ -1614,7 +1582,7 @@ test('finalizeOutput resets the output buffer to an empty string after flushing'
         ->toBe('');
 });
 
-// --- htmlHead / htmlStyle -------------------------------------------------
+// --- htmlHead ---------------------------------------------------------
 
 test('htmlHead is a no-op for empty or whitespace-only content', function (): void {
     $t = TemplateTestFactory::build();
@@ -1624,30 +1592,6 @@ test('htmlHead is a no-op for empty or whitespace-only content', function (): vo
 
     expect($t->htmlHeadElements)
         ->toBe([]);
-});
-
-test('htmlStyle is a no-op for empty or whitespace-only content', function (): void {
-    $t = TemplateTestFactory::build();
-    $t->htmlStyle('');
-    $t->htmlStyle("   \n");
-    $t->output = "<head>\n</head>\nbody";
-
-    $result = $t->fetchOutput();
-
-    expect($result)
-        ->toBe("<head>\n</head>\nbody");
-});
-
-test('htmlStyle accumulates multiple registrations rather than overwriting', function (): void {
-    $t = TemplateTestFactory::build();
-    $t->htmlStyle('a{color:red}');
-    $t->htmlStyle('b{color:blue}');
-    $t->output = "<head>\n</head>\nbody";
-
-    $result = $t->fetchOutput();
-
-    expect($result)
-        ->toBe("<head>\n<style type=\"text/css\">\na{color:red}\nb{color:blue}</style>\n</head>\nbody");
 });
 
 // --- localCssRules ----------------------------------------------------

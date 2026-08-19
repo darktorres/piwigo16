@@ -48,6 +48,23 @@ export default tseslint.config(
     },
   },
   {
+    // themes/default/js/page-data.js -- the plain-JS reader for P37's
+    // JSON data island (docs/PLAN.md P38), loaded via ScriptLoader on
+    // every real page before any consumer. Declared as globals here
+    // (same mechanism as globals.jquery above) rather than a per-file
+    // `/* global */` comment, since every P38 batch's new companion
+    // .js file calls into it -- excludes page-data.js itself, which
+    // legitimately declares these as real functions.
+    files: ["**/*.{js,mjs,cjs}"],
+    ignores: ["themes/default/js/page-data.js"],
+    languageOptions: {
+      globals: {
+        pwg_getPageData: "readonly",
+        pwg_getPageString: "readonly",
+      },
+    },
+  },
+  {
     files: ["**/*.ts"],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {

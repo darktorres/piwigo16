@@ -691,13 +691,15 @@
 {* END varType *}
 <dt>{='Links'|translate}</dt>
 <dd>
+  {do combineScript(id: 'menubar-links', load: 'footer', path: 'themes/default/js/menubar-links.js')}
   <ul>{spaceless}
       <li n:foreach="$block->data as $link">
         <a
           href="{$link['URL']}"
           class="external"
           {if isset($link['new_window'])}
-          onclick="window.open(this.href, {$link['new_window']['NAME']}, {$link['new_window']['FEATURES']}); return false;"
+          data-window-name="{$link['new_window']['NAME']}"
+          data-window-features="{$link['new_window']['FEATURES']}"
           {/if}
         >
           {$link['LABEL']}

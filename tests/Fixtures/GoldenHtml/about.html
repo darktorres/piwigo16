@@ -101,7 +101,6 @@
       action="qsearch.php"
       method="get"
       id="quicksearch"
-      onsubmit="return this.q.value!='' && this.q.value!=qsearch_prompt;"
     >
     <p
         style="margin:0;padding:0"
@@ -111,16 +110,11 @@
           type="text"
           name="q"
           id="qsearchInput"
-          onfocus="if (value==qsearch_prompt) value='';"
-          onblur="if (value=='') value=qsearch_prompt;"
           style="width:90%"
           
         >
     </p>
   </form>
-  <script
-      type="text/javascript"
-    >var qsearch_prompt="Quick search";document.getElementById('qsearchInput').value=qsearch_prompt;</script>
   <ul><li><a href="tags.php" title="display available tags">Tags</a> (3)</li><li><a href="search.php" title="search" rel="search">Search</a></li><li><a href="comments.php" title="display last user comments">Comments</a> (4)</li><li><a href="about.php" title="About Piwigo">About</a></li><li><a href="notification.php" title="RSS feed" rel="nofollow">Notification</a></li>    </ul>
 </dd>
   </dl>
@@ -164,7 +158,7 @@ customizable. Icing on the cake, Piwigo is free and opensource.</p>
 
 </div>
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind"}}</script>
+<script type="application/json" id="page-data">{"data":[],"strings":{"Quick search":"Quick search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>

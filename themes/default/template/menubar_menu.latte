@@ -692,11 +692,12 @@
 <dt>{='Menu'|translate}</dt>
 <dd>
   {if isset($block->data['qsearch']) and $block->data['qsearch'] == true}
+    {do combineScript(id: 'menubar-quicksearch', load: 'footer', require: 'page-data', path: 'themes/default/js/menubar-quicksearch.js')}
+    {do exposeString('Quick search')}
     <form
       action="{$ROOT_URL}qsearch.php"
       method="get"
       id="quicksearch"
-      onsubmit="return this.q.value!='' && this.q.value!=qsearch_prompt;"
     >
       <p
         style="margin:0;padding:0"
@@ -706,8 +707,6 @@
           type="text"
           name="q"
           id="qsearchInput"
-          onfocus="if (value==qsearch_prompt) value='';"
-          onblur="if (value=='') value=qsearch_prompt;"
           style="width:90%"
           {if !empty($QUERY_SEARCH)}
           value="{$QUERY_SEARCH|noescape}"
@@ -715,9 +714,6 @@
         >
       </p>
     </form>
-    <script
-      type="text/javascript"
-    >var qsearch_prompt={='Quick search'|translate};{if empty($QUERY_SEARCH)}document.getElementById('qsearchInput').value=qsearch_prompt;{/if}</script>
   {/if}
   <ul>{spaceless}
       {foreach $block->data as $link}

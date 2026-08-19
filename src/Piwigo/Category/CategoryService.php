@@ -35,6 +35,7 @@ use Piwigo\Category\Projection\CategoryMoveDetailRow;
 use Piwigo\Category\Projection\CategoryNextRankByParentRow;
 use Piwigo\Category\Projection\CategoryPermalinkDisplayRow;
 use Piwigo\Category\Projection\CategoryRankInfoRow;
+use Piwigo\Category\Projection\CategoryRelatedMenuRow;
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
@@ -598,7 +599,7 @@ final readonly class CategoryService
     /**
      * @param  list<int>  $items
      * @param  list<int>  $excludedCatIds
-     * @return array<int, array{id: int, uppercats: string, counter: int}>
+     * @return array<int, CategoryUppercatsCounter> keyed by category id
      */
     public function getCommonCategories(array $items, ?int $max = null, array $excludedCatIds = [], bool $usePermissions = true): array
     {
@@ -610,10 +611,7 @@ final readonly class CategoryService
             ? $this->permissionService->getPermissionCriteria()
             : new PermissionCriteria(null, null, null, null, null, null);
 
-        return array_map(
-            static fn (CategoryUppercatsCounter $row): array => $row->toArray(),
-            $this->repo->findCommonCategories($items, $max, $excludedCatIds, $criteria)
-        );
+        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $criteria);
     }
 
     /**
@@ -625,7 +623,7 @@ final readonly class CategoryService
      *
      * @param  list<int>  $items
      * @param  list<int>  $excludedCatIds
-     * @return list<array<string, mixed>>
+     * @return list<CategoryRelatedMenuRow>
      */
     public function getRelatedCategoriesMenu(array $items, array $excludedCatIds = []): array
     {
@@ -641,44 +639,50 @@ final readonly class CategoryService
 
         $catIds = [];
         foreach ($commonCats as $cat) {
-            foreach (explode(',', $cat['uppercats']) as $uppercat) {
+            foreach (explode(',', $cat->uppercats) as $uppercat) {
                 $catIds[$uppercat] = ($catIds[$uppercat] ?? 0) + 1;
             }
         }
 
+        $listingRows = $this->repo->findCategoriesByIds(array_map(intval(...), array_keys($catIds)));
+        usort($listingRows, static fn (CategoryListingRow $a, CategoryListingRow $b): int => strnatcasecmp($a->globalRank ?? '', $b->globalRank ?? ''));
+
         $cats = array_map(
-            static fn (CategoryListingRow $row): array => $row->toArray(),
-            $this->repo->findCategoriesByIds(array_map(intval(...), array_keys($catIds)))
+            static fn (CategoryListingRow $row): CategoryRelatedMenuRow => new CategoryRelatedMenuRow(
+                id: $row->id,
+                name: $row->name,
+                permalink: $row->permalink,
+                idUppercat: $row->idUppercat,
+                uppercats: $row->uppercats,
+                globalRank: $row->globalRank,
+            ),
+            $listingRows
         );
-        usort($cats, self::compareByGlobalRank(...));
 
         $indexOfCat = [];
 
         foreach ($cats as $idx => $cat) {
-            $catId = $cat['id'];
-            $indexOfCat[$catId] = $idx;
+            $indexOfCat[$cat->id] = $idx;
 
-            $globalRank = $cat['global_rank'];
-            $cats[$idx]['LEVEL'] = substr_count(is_string($globalRank) ? $globalRank : '', '.') + 1;
-            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($cat['name'], $cat));
-            $cats[$idx]['name'] = $nameEvent->categoryName;
+            $cat->level = substr_count($cat->globalRank ?? '', '.') + 1;
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($cat->name, $cat->toArray()));
+            $cat->name = $nameEvent->categoryName;
 
-            if (isset($commonCats[$catId])) {
-                $cats[$idx]['count_images'] = $commonCats[$catId]['counter'];
+            if (isset($commonCats[$cat->id])) {
+                $cat->countImages = $commonCats[$cat->id]->counter;
             }
 
-            $idUppercat = $cat['id_uppercat'];
-            $hasIdUppercat = $idUppercat !== null && $idUppercat !== 0;
-            $countImages = $cats[$idx]['count_images'] ?? 0;
+            $hasIdUppercat = $cat->idUppercat !== null && $cat->idUppercat !== 0;
+            $countImages = $cat->countImages ?? 0;
             if ($hasIdUppercat && $countImages > 0) {
-                foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercatId) {
+                foreach (array_slice(explode(',', $cat->uppercats), 0, -1) as $uppercatId) {
                     $parentIdx = $indexOfCat[$uppercatId] ?? null;
                     if (! is_int($parentIdx)) {
                         continue;
                     }
 
-                    $countCategories = $cats[$parentIdx]['count_categories'] ?? null;
-                    $cats[$parentIdx]['count_categories'] = (is_numeric($countCategories) ? $countCategories : 0) + 1;
+                    $parent = $cats[$parentIdx];
+                    $parent->countCategories = ($parent->countCategories ?? 0) + 1;
                 }
             }
         }
@@ -1073,13 +1077,16 @@ final readonly class CategoryService
      */
     public function getRelatedCategoriesMenuWithUrls(array $items, UrlServiceInterface $urlService, array $excludedCatIds = [], ?array $category = null, ?array $combinedCategories = null): array
     {
-        $cats = $this->getRelatedCategoriesMenu(
+        $rows = $this->getRelatedCategoriesMenu(
             array_values(array_map(intval(...), $items)),
             array_values(array_map(intval(...), $excludedCatIds))
         );
 
-        foreach ($cats as $idx => $cat) {
+        $cats = [];
+        foreach ($rows as $row) {
+            $cat = $row->toArray();
             if (! isset($cat['count_images'])) {
+                $cats[] = $cat;
                 continue;
             }
 
@@ -1095,7 +1102,8 @@ final readonly class CategoryService
                 $urlParams['category'] = $cat;
             }
 
-            $cats[$idx]['url'] = $urlService->makeIndexUrl($urlParams);
+            $cat['url'] = $urlService->makeIndexUrl($urlParams);
+            $cats[] = $cat;
         }
 
         return $cats;

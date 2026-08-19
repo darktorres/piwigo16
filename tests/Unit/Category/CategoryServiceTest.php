@@ -425,7 +425,7 @@ test('getCommonCategories() counts images per category', function (): void {
     $common = categoryServiceTestService()
         ->getCommonCategories([1, 2, 3], null, [], false);
 
-    expect($common['1']['counter'])
+    expect($common[1]->counter)
         ->toBe(3);
 });
 
@@ -435,16 +435,13 @@ test('getRelatedCategoriesMenu() sets count_images for directly linked categorie
 
     $byId = [];
     foreach ($cats as $cat) {
-        $catId = $cat['id'];
-        if (is_int($catId) || is_string($catId)) {
-            $byId[$catId] = $cat;
-        }
+        $byId[$cat->id] = $cat;
     }
 
-    expect($byId['1']['count_images'])
+    expect($byId[1]->countImages)
         ->toBe(3);
-    expect($byId['1'])
-        ->toHaveKey('LEVEL');
+    expect($byId[1]->level)
+        ->toBeGreaterThanOrEqual(1);
 });
 
 test('getRelatedCategoriesMenu() returns empty for no items', function (): void {
@@ -493,7 +490,7 @@ test('getCommonCategories() with permissions builds valid SQL', function (): voi
     $common = categoryServiceTestService()
         ->getCommonCategories([1, 2, 3], null, [4, 5], true);
 
-    expect($common['1']['counter'])
+    expect($common[1]->counter)
         ->toBe(3);
 });
 
@@ -652,13 +649,10 @@ test('getRelatedCategoriesMenu() skips a stale ancestor id in a corrupted upperc
 
         $byId = [];
         foreach ($cats as $cat) {
-            $catId = $cat['id'];
-            if (is_int($catId) || is_string($catId)) {
-                $byId[$catId] = $cat;
-            }
+            $byId[$cat->id] = $cat;
         }
 
-        expect($byId['1']['count_categories'])
+        expect($byId[1]->countCategories)
             ->toBe(1);
     } finally {
         $conn->executeStatement("UPDATE categories SET uppercats = '1,2' WHERE id = 2");

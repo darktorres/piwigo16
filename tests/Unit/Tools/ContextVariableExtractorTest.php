@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\StatsPageContext;
 use Piwigo\Admin\Projection\TabsheetPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkPageContext;
+use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\Projection\MenubarBlocksPageContext;
 use Piwigo\Template\TemplateAdapter;
@@ -161,10 +161,10 @@ it('unions conflicting types deterministically and never overrides specific vars
 
 it('extracts conditional dim-assigned variables with their declared types', function (): void {
     $extracted = new ContextVariableExtractor()
-        ->extract(ConfigurationWatermarkPageContext::class);
+        ->extract(CalendarChronologyPageContext::class);
 
     expect($extracted->vars)
-        ->toHaveKey('watermark');
+        ->toHaveKey('chronology_views');
 });
 
 it('enumerates theme_template_vars keys across real themeconf files with reflected config types', function (): void {

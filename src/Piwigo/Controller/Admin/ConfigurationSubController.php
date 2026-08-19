@@ -21,16 +21,16 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\FilterViewsSelection;
-use Piwigo\Controller\Admin\Projection\ConfigurationCommentsPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationDefaultPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationDisplayTabPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationMainPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationSearchTabPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationSizesPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkPageContext;
-use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkTabPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationCommentsView;
+use Piwigo\Controller\Admin\Projection\ConfigurationDefaultView;
+use Piwigo\Controller\Admin\Projection\ConfigurationDisplayView;
+use Piwigo\Controller\Admin\Projection\ConfigurationMainView;
+use Piwigo\Controller\Admin\Projection\ConfigurationSearchView;
+use Piwigo\Controller\Admin\Projection\ConfigurationSizesResult;
+use Piwigo\Controller\Admin\Projection\ConfigurationSizesView;
+use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkResult;
+use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView;
 use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
@@ -45,6 +45,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\View;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupService;
@@ -58,6 +59,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -132,17 +134,29 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
         private readonly Paths $paths,
+        private readonly Renderer $renderer,
     ) {}
 
     /**
      * Set by processSizes() when a submitted "sizes" tab form fails
      * validation, so handle()'s own tab-render branch below knows the
-     * template vars are already populated with the (invalid) submitted
-     * values and skips overwriting them with fresh defaults -- shared
-     * across two call sites of this same request's instance, hence an
-     * instance property rather than a local variable.
+     * ConfigurationSizesView it should build already has its
+     * (invalid) submitted values from $sizesResult and skips overwriting
+     * them with fresh defaults -- shared across two call sites of this
+     * same request's instance, hence an instance property rather than a
+     * local variable.
      */
     private bool $sizesLoadedInTpl = false;
+
+    /**
+     * Same shape as $sizesLoadedInTpl above, for the "watermark" tab --
+     * replaces the original's own `Template::getTemplateVars('watermark')
+     * === null` check, which read back whatever processWatermark() had
+     * already assigned onto the shared Template::$vars bag; that ambient
+     * read-back has no equivalent once processWatermark() stops calling
+     * assignContext() and returns its own result instead.
+     */
+    private bool $watermarkLoadedInTpl = false;
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
@@ -286,6 +300,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         $save_success = null;
 
+        // Populated only by the matching case below when this request
+        // submitted the "sizes"/"watermark" tab's own form -- read back by
+        // the render-time switch further down to merge processSizes()'s/
+        // processWatermark()'s own result into that tab's final View.
+        $sizesResult = null;
+        $watermarkResult = null;
+
         if ($configurationRequest->isSubmitted) {
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -364,12 +385,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 case 'watermark':
 
-                    $this->processWatermark($post, $configurationRequest->files);
+                    $watermarkResult = $this->processWatermark($post, $configurationRequest->files);
                     break;
 
                 case 'sizes':
 
-                    $this->processSizes($post);
+                    $sizesResult = $this->processSizes($post);
                     break;
 
                 case 'comments':
@@ -506,6 +527,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $u_help = $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration';
         $pwg_token = $this->csrfService
             ->getToken();
+        $is_webmaster = $this->accessControl->isWebmaster() ? 1 : 0;
+
+        $view = null;
 
         switch ($page['section']) {
             case 'main':
@@ -549,10 +573,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $main[$checkbox] = $this->checkboxValue($checkbox);
                 }
 
-                $template->assignContext(new ConfigurationMainPageContext(
+                $view = new ConfigurationMainView(
                     main: $main,
                     groupOptions: $groups,
-                ));
+                    fAction: $action,
+                    saveSuccess: $save_success,
+                    isWebmaster: $is_webmaster,
+                    csrfToken: $pwg_token,
+                );
                 break;
 
             case 'comments':
@@ -567,7 +595,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $comments[$checkbox] = $this->checkboxValue($checkbox);
                 }
 
-                $template->assignContext(new ConfigurationCommentsPageContext($comments));
+                $view = new ConfigurationCommentsView(
+                    comments: $comments,
+                    fAction: $action,
+                    saveSuccess: $save_success,
+                    isWebmaster: $is_webmaster,
+                    csrfToken: $pwg_token,
+                );
                 break;
 
             case 'default':
@@ -586,10 +620,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $this->pageState->errors = array_merge($this->pageState->errors, array_values(array_filter($errors, is_string(...))));
 
                 $guestFormData = $profileFormHandler->loadIntoTemplate($action, '', $edit_user);
-                $template->assignContext(new ConfigurationDefaultPageContext(
+                $view = new ConfigurationDefaultView(
                     username: $guestFormData->username,
-                    email: $guestFormData->email?->value,
-                    allowUserCustomization: $guestFormData->allowUserCustomization,
                     activateComments: $guestFormData->activateComments,
                     nbImagePage: $guestFormData->nbImagePage,
                     recentPeriod: $guestFormData->recentPeriod,
@@ -597,10 +629,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     nbComments: $guestFormData->nbComments,
                     nbHits: $guestFormData->nbHits,
                     redirect: $guestFormData->redirect,
-                    fAction: $guestFormData->fAction,
+                    guestFAction: $guestFormData->fAction,
                     radioOptions: $guestFormData->radioOptions,
                     csrfToken: $guestFormData->pwgToken,
-                ));
+                    isWebmaster: $is_webmaster,
+                );
                 break;
 
             case 'display':
@@ -612,13 +645,21 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $display['picture_informations'] = $this->currentConfig->pictureInformations;
                 $display['NB_CATEGORIES_PAGE'] = $this->currentConfig->nbCategoriesPage;
 
-                $template->assignContext(new ConfigurationDisplayTabPageContext($display));
+                $view = new ConfigurationDisplayView(
+                    display: $display,
+                    fAction: $action,
+                    saveSuccess: $save_success,
+                    isWebmaster: $is_webmaster,
+                    csrfToken: $pwg_token,
+                );
                 break;
 
             case 'sizes':
 
-                // we only load the derivatives if it was not already loaded: it occurs
-                // when submitting the form and an error remains
+                // we only load fresh derivatives if they weren't already
+                // loaded: it occurs when submitting the form and an error
+                // remains, in which case $sizesResult already carries the
+                // (invalid) submitted values to redisplay.
                 if (! $this->sizesLoadedInTpl) {
                     $is_gd = (ImageBackend::getLibrary() === 'gd') ? true : false;
 
@@ -630,14 +671,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     foreach ($sizes_checkboxes as $checkbox) {
                         $sizes[$checkbox] = $this->checkboxValue($checkbox);
                     }
-
-                    $template->assignContext(new ConfigurationSizesTabPageContext(
-                        isGd: $is_gd,
-                        sizes: $sizes,
-                        derivatives: null,
-                        resizeQuality: null,
-                        customDerivatives: null,
-                    ));
 
                     // derivatives = multiple size
                     $enabled = $this->imageStdParams->getDefinedTypeMap();
@@ -673,19 +706,39 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $derivatives = $tpl_vars;
                     $resize_quality = $this->imageStdParams->getQuality();
 
-                    $tpl_vars = [];
-                    $now = time();
-                    foreach ($this->imageStdParams->getCustomTimestamps() as $custom => $time) {
-                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? $this->lang->t('today') : DateHelper::timeSince($time, 'day');
-                    }
-
-                    $template->assignContext(new ConfigurationSizesTabPageContext(
-                        isGd: null,
-                        sizes: null,
+                    $view = new ConfigurationSizesView(
+                        isGd: $is_gd,
+                        sizes: $sizes,
                         derivatives: $derivatives,
                         resizeQuality: $resize_quality,
-                        customDerivatives: $tpl_vars,
-                    ));
+                        ferrors: null,
+                        fAction: $action,
+                        // $sizesResult is only non-null on a submitted "sizes"
+                        // form (see processSizes()'s own early-return for a
+                        // non-webmaster submitter) -- null here on every GET
+                        // request to this tab, so this can't collapse to a
+                        // plain ->saveSuccess read.
+                        saveSuccess: $sizesResult?->saveSuccess ?? $save_success,
+                        isWebmaster: $is_webmaster,
+                        csrfToken: $pwg_token,
+                    );
+                } else {
+                    // $sizesResult is guaranteed non-null here: $sizesLoadedInTpl
+                    // is only ever flipped true inside processSizes()'s own
+                    // validation-failure branch, which is the same branch that
+                    // populates $sizesResult.
+                    assert($sizesResult !== null);
+                    $view = new ConfigurationSizesView(
+                        isGd: null,
+                        sizes: $sizesResult->sizes,
+                        derivatives: $sizesResult->derivatives,
+                        resizeQuality: $sizesResult->resizeQuality,
+                        ferrors: $sizesResult->ferrors,
+                        fAction: $action,
+                        saveSuccess: $sizesResult->saveSuccess ?? $save_success,
+                        isWebmaster: $is_webmaster,
+                        csrfToken: $pwg_token,
+                    );
                 }
 
                 break;
@@ -712,7 +765,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $watermark_filemap[$file] = $display;
                 }
                 $watermark = null;
-                if ($template->getTemplateVars('watermark') === null) {
+                if (! $this->watermarkLoadedInTpl) {
                     $wm = $this->imageStdParams->getWatermark();
 
                     $position = 'custom';
@@ -749,16 +802,36 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ];
                 }
 
-                $template->assignContext(new ConfigurationWatermarkTabPageContext(
+                // $watermarkResult is guaranteed non-null when $watermark
+                // stayed null here: $watermarkLoadedInTpl is only ever
+                // flipped true inside processWatermark()'s own
+                // validation-failure branch, which is the same branch that
+                // populates $watermarkResult->watermark.
+                if ($watermark === null) {
+                    assert($watermarkResult !== null);
+                    $watermark = $watermarkResult->watermark;
+                }
+
+                $view = new ConfigurationWatermarkView(
                     watermarkFiles: $watermark_filemap,
                     watermark: $watermark,
-                ));
+                    // $watermarkResult is only non-null on a submitted
+                    // "watermark" form (see processWatermark()'s own
+                    // early-return for a non-webmaster submitter) -- null
+                    // here on every GET request to this tab, so neither read
+                    // below can collapse to a plain -> access.
+                    ferrors: $watermarkResult?->ferrors,
+                    fAction: $action,
+                    saveSuccess: $watermarkResult?->saveSuccess ?? $save_success,
+                    isWebmaster: $is_webmaster,
+                    csrfToken: $pwg_token,
+                );
 
                 break;
 
             case 'search':
 
-                $template->assignContext(new ConfigurationSearchTabPageContext(
+                $view = new ConfigurationSearchView(
                     search: [
                         'filters_views' => array_map(
                             static fn (FilterViewDefinition $d): array => $d->toArray(),
@@ -768,20 +841,22 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         'filters_names' => $filters_names_checkboxes,
                     ],
                     showFilterRatings: $this->currentConfig->rateEnabled,
-                ));
+                    fAction: $action,
+                    saveSuccess: $save_success,
+                    isWebmaster: $is_webmaster,
+                    csrfToken: $pwg_token,
+                );
 
         }
 
-        $template->assignContext(new ConfigurationPageContext(
-            saveSuccess: $save_success,
-            uHelp: $u_help,
-            pwgToken: $pwg_token,
-            fAction: $action,
-            isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
+        assert($view instanceof View);
+        $adminContent = $this->renderer->render($view);
+
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            helpUrl: $u_help,
             adminPageTitle: $this->lang->t('Configuration'),
         ));
-
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $page_section . '.latte');
     }
 
     /**
@@ -869,14 +944,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      *   working copy (see Request\ConfigurationRequest) -- read-only here,
      *   this tab persists through its own ImageStdParams::setAndSave()/
      *   setAndSaveDisabled() calls rather than the generic config-row
-     *   UPDATE loop, so nothing needs to flow back out.
+     *   UPDATE loop, so the only thing that flows back out is the
+     *   save-success/validation-failure result handle() needs to build the
+     *   final ConfigurationSizesView.
      */
-    private function processSizes(array $post): void
+    private function processSizes(array $post): ?ConfigurationSizesResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->accessControl->isWebmaster()) {
-            return;
+            return null;
         }
 
         $errors = [];
@@ -1099,35 +1174,36 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ->clearDerivativeCache($changed_types);
             }
 
-            $template->assignContext(new ConfigurationSizesPageContext(
+            $this->activityService->record('system', ActivitySystem::Core, 'config', [
+                'config_section' => 'sizes',
+            ]);
+
+            return new ConfigurationSizesResult(
                 saveSuccess: $this->lang->t('Your configuration settings are saved'),
                 derivatives: null,
                 ferrors: null,
                 resizeQuality: null,
                 sizes: null,
-            ));
-
-            $this->activityService->record('system', ActivitySystem::Core, 'config', [
-                'config_section' => 'sizes',
-            ]);
-        } else {
-            $sizes = null;
-            foreach ($original_fields as $field) {
-                if (isset($post[$field]) && is_string($post[$field])) {
-                    $sizes ??= [];
-                    $sizes[$field] = strip_tags($post[$field]); // strip_tags prevents from XSS attempt
-                }
-            }
-
-            $template->assignContext(new ConfigurationSizesPageContext(
-                saveSuccess: null,
-                derivatives: $pderivatives,
-                ferrors: $errors + $derivative_errors,
-                resizeQuality: is_string($post['resize_quality']) ? $post['resize_quality'] : null,
-                sizes: $sizes,
-            ));
-            $this->sizesLoadedInTpl = true;
+            );
         }
+
+        $sizes = null;
+        foreach ($original_fields as $field) {
+            if (isset($post[$field]) && is_string($post[$field])) {
+                $sizes ??= [];
+                $sizes[$field] = strip_tags($post[$field]); // strip_tags prevents from XSS attempt
+            }
+        }
+
+        $this->sizesLoadedInTpl = true;
+
+        return new ConfigurationSizesResult(
+            saveSuccess: null,
+            derivatives: $pderivatives,
+            ferrors: $errors + $derivative_errors,
+            resizeQuality: is_string($post['resize_quality']) ? $post['resize_quality'] : null,
+            sizes: $sizes,
+        );
     }
 
     /**
@@ -1139,12 +1215,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * @param array<int|string, mixed> $files raw $_FILES bag (see
      *   Request\ConfigurationRequest), for the watermarkImage upload below.
      */
-    private function processWatermark(array $post, array $files): void
+    private function processWatermark(array $post, array $files): ?ConfigurationWatermarkResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->accessControl->isWebmaster()) {
-            return;
+            return null;
         }
 
         $errors = [];
@@ -1351,22 +1425,24 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ->clearDerivativeCache($changed_types);
             }
 
-            $template->assignContext(new ConfigurationWatermarkPageContext(
-                saveSuccess: $this->lang->t('Your configuration settings are saved'),
-                watermark: null,
-                ferrors: null,
-            ));
-
             $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'watermark',
             ]);
-        } else {
-            $template->assignContext(new ConfigurationWatermarkPageContext(
-                saveSuccess: null,
-                watermark: $pwatermark,
-                ferrors: $errors,
-            ));
+
+            return new ConfigurationWatermarkResult(
+                saveSuccess: $this->lang->t('Your configuration settings are saved'),
+                watermark: null,
+                ferrors: null,
+            );
         }
+
+        $this->watermarkLoadedInTpl = true;
+
+        return new ConfigurationWatermarkResult(
+            saveSuccess: null,
+            watermark: $pwatermark,
+            ferrors: $errors,
+        );
     }
 
     /**

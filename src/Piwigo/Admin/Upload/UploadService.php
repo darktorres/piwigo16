@@ -40,6 +40,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\ImageInsertRow;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
@@ -546,35 +547,35 @@ final readonly class UploadService
             } else {
                 // database registration
                 $file = $original_filename ?? basename($file_path);
-                $insert = [
-                    'file' => $file,
-                    'name' => StringHelper::getNameFromFile($file),
-                    'date_available' => $dbnow,
+                // preg_replace() can return null on a PCRE engine error
+                // (never in practice for this simple anchored-prefix
+                // pattern) -- falls back to the original, unstripped
+                // $file_path rather than silently writing a NULL into the
+                // images.path NOT NULL column.
+                $insert_path = preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $file_path) ?? $file_path;
+                $insert = new ImageInsertRow(
+                    file: $file,
+                    name: StringHelper::getNameFromFile($file),
+                    dateAvailable: $dbnow,
                     // Otherwise relies on the schema's own DEFAULT
                     // CURRENT_TIMESTAMP, which reads the real DB-server clock --
                     // invisible to Env::now()'s PIWIGO_TEST_NOW freeze, same
-                    // reasoning as date_available above. Reuses $dbnow rather
+                    // reasoning as dateAvailable above. Reuses $dbnow rather
                     // than a second Env::now() call so both columns agree on the
                     // exact same instant, matching what the DB default would
                     // have produced for a single INSERT.
-                    'lastmodified' => $dbnow,
-                    'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $file_path),
-                    'filesize' => $file_infos->filesize,
-                    'width' => $file_infos->width,
-                    'height' => $file_infos->height,
-                    'md5sum' => $md5sum,
-                    'added_by' => $this->currentUser->get()
+                    lastmodified: $dbnow,
+                    path: $insert_path,
+                    filesize: $file_infos->filesize,
+                    width: $file_infos->width,
+                    height: $file_infos->height,
+                    md5sum: $md5sum,
+                    addedBy: $this->currentUser->get()
                         ->id->value,
-                    'rotation' => $rotation,
-                ];
-
-                if (isset($level)) {
-                    $insert['level'] = $level;
-                }
-
-                if (isset($representative_ext)) {
-                    $insert['representative_ext'] = $representative_ext;
-                }
+                    rotation: $rotation,
+                    level: $level,
+                    representativeExt: $representative_ext,
+                );
 
                 $image_id = $this->imageService->insertImage($insert);
                 $this->activityService

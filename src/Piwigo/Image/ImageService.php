@@ -31,7 +31,9 @@ use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\ImageIdExt;
 use Piwigo\Image\Projection\ImageIdFile;
+use Piwigo\Image\Projection\ImageInsertRow;
 use Piwigo\Image\Projection\ImageLookupRow;
+use Piwigo\Image\Projection\ImageSyncInsertRow;
 use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
@@ -724,16 +726,13 @@ final readonly class ImageService
         $this->repo->updateFields($imageId, $updates);
     }
 
-    /**
-     * @param array<string, mixed> $insert
-     */
-    public function insertImage(array $insert): int
+    public function insertImage(ImageInsertRow $insert): int
     {
         return $this->repo->insertImage($insert);
     }
 
     /**
-     * @param array<int, array<string, mixed>> $inserts
+     * @param list<ImageSyncInsertRow> $inserts
      */
     public function massInsertImages(array $inserts): void
     {

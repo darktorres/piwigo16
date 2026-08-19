@@ -12,11 +12,12 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Projection\LanguagesInstalledPageContext;
+use Piwigo\Admin\Projection\LanguagesInstalledView;
 use Piwigo\Admin\Request\LanguagesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -29,6 +30,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -68,6 +70,7 @@ final readonly class LanguagesInstalledPageRenderer
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -157,13 +160,15 @@ final readonly class LanguagesInstalledPageRenderer
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 
-        $template->assignContext(new LanguagesInstalledPageContext(
+        $adminContent = $this->renderer->render(new LanguagesInstalledView(
             languages: $tpl_languages,
-            isWebmaster: $this->accessControl->isWebmaster(),
-            adminPageTitle: $this->lang->t('Languages'),
+            isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'languages_installed.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Languages'),
+        ));
     }
 }

@@ -123,7 +123,7 @@ final readonly class TusUploadPatchController implements ControllerInterface
                 ->withHeader('Upload-Offset', (string) $newOffset);
         }
 
-        return ResponseFactory::json($result, 200)
+        return ResponseFactory::json($result->toArray(), 200)
             ->withHeader('Tus-Resumable', self::TUS_VERSION)
             ->withHeader('Upload-Offset', (string) $newOffset);
     }

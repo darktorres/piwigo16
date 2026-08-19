@@ -1,0 +1,19 @@
+.rating-album-filter {
+  width: 400px;
+}
+
+.clear-both {
+  clear: both;
+}
+
+.rating-submit {
+  margin: 10px 0 0;
+}
+
+.rating-sum-rate {
+  border-right: 1px solid;
+}
+
+.rating-detail-table {
+  width: 100%;
+}

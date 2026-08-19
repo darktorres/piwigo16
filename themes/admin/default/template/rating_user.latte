@@ -690,44 +690,11 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'jquery.dataTables', load: 'footer', path: 'themes/default/js/plugins/jquery.dataTables.js')}
-{capture $tmpHtmlStyle}
-.sorting { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_both.png) no-repeat center right; cursor:pointer; }
-.sorting_asc { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_asc.png) no-repeat center right; }
-.sorting_desc { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_desc.png) no-repeat center right; }
-
-.sorting, .sorting_asc, .sorting_desc {
-  padding: 3px 18px 3px 10px;
-}
-.sorting_asc_disabled { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_asc_disabled.png) no-repeat center right; }
-.sorting_desc_disabled { background: url({$ROOT_URL}themes/default/js/plugins/datatables/images/sort_desc_disabled.png) no-repeat center right; }
-
-.dtBar {
-  text-align:left;
-  padding: 10px 0 10px 20px
-}
-.dtBar DIV{
-  display:inline;
-  padding-right: 5px;
-}
-
-.dataTables_paginate A {
-  padding-left: 3px;
-}
-
-.ui-tooltip {
-  padding: 8px;
-  position: absolute;
-  z-index: 9999;
-  max-width: {=3 * $TN_WIDTH}px;
-  -webkit-box-shadow: 0 0 5px #aaa;
-  box-shadow: 0 0 5px #aaa;
-}
-body .ui-tooltip {
-  border-width: 2px;
-}
-
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'rating_user', path: 'themes/admin/default/css/pages/rating_user.css')}
+{* .ui-tooltip is appended to <body> by jquery.ui.tooltip.js, outside #rateTable's
+   subtree, so its max-width can't be inherited from an element-scoped custom
+   property -- :root is the only DOM-reachable common ancestor available here. *}
+<style>:root { --rating-tooltip-max-width: {=3 * $TN_WIDTH}px; }</style>
 {do exposeData('nb_elements', $NB_ELEMENTS)}
 {do exposeData('csrf_token', $CSRF_TOKEN)}
 {do exposeData('root_url', $ROOT_URL)}
@@ -757,9 +724,9 @@ body .ui-tooltip {
       {='Best rated'|translate}
     </label>
 
-    <div style="clear:both"></div>
+    <div class="clear-both"></div>
 
-    <p style="margin:10px 0 0 0">
+    <p class="rating-submit">
       <button name="submit" type="submit" class="buttonLike">
         <i class="icon-filter"></i> {='Submit'|translate}
       </button>

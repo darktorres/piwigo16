@@ -11,3 +11,11 @@
 .u-invisible {
   visibility: hidden;
 }
+
+.u-flex {
+  display: flex;
+}
+
+.u-inline {
+  display: inline;
+}

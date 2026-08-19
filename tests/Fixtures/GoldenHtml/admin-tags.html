@@ -286,7 +286,6 @@
   </div>
   <div
     class='info-message tag-info  icon-ok not-in-selection-mode'
-    
   > <p>  </p> </div>
   <div
     class='info-error tag-info icon-cancel not-in-selection-mode'
@@ -360,12 +359,10 @@
     <a
         class='dropdown-option icon-eye view'
         href="index.php?/tags/3-family"
-        
       > View in gallery</a>
     <a
         class='dropdown-option icon-picture manage'
         href="admin.php?page=batch_manager&amp;filter=tag-3"
-        
       > Manage photos</a>
     <a class='dropdown-option icon-pencil edit'> Edit</a>
     <a
@@ -397,12 +394,10 @@
     <a
         class='dropdown-option icon-eye view'
         href="index.php?/tags/1-nature"
-        
       > View in gallery</a>
     <a
         class='dropdown-option icon-picture manage'
         href="admin.php?page=batch_manager&amp;filter=tag-1"
-        
       > Manage photos</a>
     <a class='dropdown-option icon-pencil edit'> Edit</a>
     <a
@@ -434,12 +429,10 @@
     <a
         class='dropdown-option icon-eye view'
         href="index.php?/tags/2-travel"
-        
       > View in gallery</a>
     <a
         class='dropdown-option icon-picture manage'
         href="admin.php?page=batch_manager&amp;filter=tag-2"
-        
       > Manage photos</a>
     <a class='dropdown-option icon-pencil edit'> Edit</a>
     <a
@@ -458,7 +451,6 @@
   <div class="pagination-per-page">
     <span
       class="thumbnailsActionsShow"
-      style="font-weight: bold;"
     >Display</span>
     <a
       id="100"
@@ -491,7 +483,7 @@
   </div>
 </div>
 
-<div class='tag-template' style='display:none'>
+<div class='tag-template u-hidden'>
 <p
     class='tag-name icon-globe'
     data-rawname="%raw_name%"
@@ -504,18 +496,12 @@
       <i>no photo</i>
     </div>
     <a
-        class='dropdown-option icon-eye view'
+        class='dropdown-option icon-eye view u-hidden'
         href="%U_VIEW%"
-        
-        style='display:none'
-        
       > View in gallery</a>
     <a
-        class='dropdown-option icon-picture manage'
+        class='dropdown-option icon-picture manage u-hidden'
         href="%U_EDIT%"
-        
-        style='display:none'
-        
       > Manage photos</a>
     <a class='dropdown-option icon-pencil edit'> Edit</a>
     <a

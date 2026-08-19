@@ -25,41 +25,6 @@
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
 
-<style type="text/css">
-.sorting { background: url(themes/default/js/plugins/datatables/images/sort_both.png) no-repeat center right; cursor:pointer; }
-.sorting_asc { background: url(themes/default/js/plugins/datatables/images/sort_asc.png) no-repeat center right; }
-.sorting_desc { background: url(themes/default/js/plugins/datatables/images/sort_desc.png) no-repeat center right; }
-
-.sorting, .sorting_asc, .sorting_desc {
-  padding: 3px 18px 3px 10px;
-}
-.sorting_asc_disabled { background: url(themes/default/js/plugins/datatables/images/sort_asc_disabled.png) no-repeat center right; }
-.sorting_desc_disabled { background: url(themes/default/js/plugins/datatables/images/sort_desc_disabled.png) no-repeat center right; }
-
-.dtBar {
-  text-align:left;
-  padding: 10px 0 10px 20px
-}
-.dtBar DIV{
-  display:inline;
-  padding-right: 5px;
-}
-
-.dataTables_paginate A {
-  padding-left: 3px;
-}
-
-.ui-tooltip {
-  padding: 8px;
-  position: absolute;
-  z-index: 9999;
-  max-width: 360px;
-  -webkit-box-shadow: 0 0 5px #aaa;
-  box-shadow: 0 0 5px #aaa;
-}
-body .ui-tooltip {
-  border-width: 2px;
-}</style>
   </head>
 
   <body id="theAdminPage">
@@ -247,7 +212,8 @@ body .ui-tooltip {
 
   </div> 
 
-  
+  <style>:root { --rating-tooltip-max-width: 360px; }</style>
+
 <form action="admin.php" method="GET">
   <fieldset>
     <noscript>
@@ -275,9 +241,9 @@ body .ui-tooltip {
       Best rated
     </label>
 
-    <div style="clear:both"></div>
+    <div class="clear-both"></div>
 
-    <p style="margin:10px 0 0 0">
+    <p class="rating-submit">
       <button name="submit" type="submit" class="buttonLike">
         <i class="icon-filter"></i> Submit
       </button>

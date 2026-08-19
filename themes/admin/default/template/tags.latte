@@ -725,6 +725,7 @@
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{do combineCss(id: 'tags', path: 'themes/admin/default/css/pages/tags.css')}
 {do combineScript(id: 'tiptip', load: 'header', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
 {do combineScript(id: 'tags', load: 'footer', require: 'page-data,jquery.cookie', path: 'themes/admin/default/js/tags.js')}
 {do combineScript(id: 'jquery.cookie', path: 'themes/default/js/jquery.cookie.js', load: 'footer')}
@@ -746,18 +747,12 @@
         <i>{if !$has_image}{='no photo'|translate}{else}{='%d photos'|translate:$tag_count}{/if}</i>
       </div>
       <a
-        class='dropdown-option icon-eye view'
+        class='dropdown-option icon-eye view{if !$has_image} u-hidden{/if}'
         href="{$tag_U_VIEW|noescape}"
-        {if !$has_image}
-        style='display:none'
-        {/if}
       > {='View in gallery'|translate}</a>
       <a
-        class='dropdown-option icon-picture manage'
+        class='dropdown-option icon-picture manage{if !$has_image} u-hidden{/if}'
         href="{$tag_U_EDIT|noescape}"
-        {if !$has_image}
-        style='display:none'
-        {/if}
       > {='Manage photos'|translate}</a>
       <a class='dropdown-option icon-pencil edit'> {='Edit'|translate}</a>
       <a
@@ -849,10 +844,7 @@
     class='info-warning tag-info icon-attention not-in-selection-mode'
   ><p> {$warning_tags|noescape} </p></div>
   <div
-    class='info-message tag-info  icon-ok not-in-selection-mode'
-    {if $message_tags != ""}
-    style='display:flex'
-    {/if}
+    class='info-message tag-info  icon-ok not-in-selection-mode{if $message_tags != ""} u-flex{/if}'
   > <p> {$message_tags} </p> </div>
   <div
     class='info-error tag-info icon-cancel not-in-selection-mode'
@@ -925,7 +917,6 @@
   <div class="pagination-per-page">
     <span
       class="thumbnailsActionsShow"
-      style="font-weight: bold;"
     >{='Display'|translate}</span>
     <a
       id="100"
@@ -964,6 +955,6 @@
   </div>
 </div>
 
-<div class='tag-template' style='display:none'>
+<div class='tag-template u-hidden'>
   {include tagContent, tag_name: '%name%', tag_U_VIEW: '%U_VIEW%', tag_U_EDIT: '%U_EDIT%', has_image: false, tag_count: '%count%', tag_raw_name: '%raw_name%'}
 </div>

@@ -1,0 +1,13 @@
+/* Beats theme.css's .dropdown-option{display:block} (equal specificity, cascade-order risk). */
+.dropdown-option.u-hidden {
+  display: none;
+}
+
+/* Beats components/general.css's .info-message{display:none} (equal specificity, cascade-order risk). */
+.info-message.u-flex {
+  display: flex;
+}
+
+.thumbnailsActionsShow {
+  font-weight: bold;
+}

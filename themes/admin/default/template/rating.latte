@@ -694,6 +694,7 @@
 
 {do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
+{do combineCss(id: 'rating', path: 'themes/admin/default/css/pages/rating.css')}
 
 {do exposeData('cache_key_categories', $CACHE_KEYS['categories'])}
 {do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
@@ -738,13 +739,13 @@
         data-value="{$category|json_encode|noescape}"
         placeholder="{='No filter on album. Select one or type to search'|translate}"
         name="cat"
-        style="width:400px"
+        class="rating-album-filter"
       ></select>
     </label>
 
-    <div style="clear:both"></div>
+    <div class="clear-both"></div>
 
-    <p style="margin:10px 0 0 0">
+    <p class="rating-submit">
       <button name="submit" type="submit" class="buttonLike">
         <i class="icon-filter"></i> {='Submit'|translate}
       </button>
@@ -779,10 +780,10 @@
     <td><strong>{$image['SCORE_RATE']}</strong></td>
     <td><strong>{$image['AVG_RATE']}</strong></td>
     <td
-      style="border-right:1px solid"
+      class="rating-sum-rate"
     ><strong>{$image['SUM_RATE']}</strong></td>
     <td>
-      <table style="width:100%">
+      <table class="rating-detail-table">
         <tr n:foreach="$image['rates'] as $rate">
           <td>{$rate['rate']}</td>
           <td><b>{$rate['USER']}</b></td>

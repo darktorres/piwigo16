@@ -1,0 +1,63 @@
+.clear-both {
+  clear: both;
+}
+
+.rating-submit {
+  margin: 10px 0 0;
+}
+
+/* Paths are relative to this file's own location (themes/admin/default/css/pages/),
+   not the page URL -- browsers resolve stylesheet url()s against the stylesheet's
+   own address, so no site-root prefix is needed here. */
+.sorting {
+  background: url("../../../../default/js/plugins/datatables/images/sort_both.png") no-repeat center right;
+  cursor: pointer;
+}
+
+.sorting_asc {
+  background: url("../../../../default/js/plugins/datatables/images/sort_asc.png") no-repeat center right;
+}
+
+.sorting_desc {
+  background: url("../../../../default/js/plugins/datatables/images/sort_desc.png") no-repeat center right;
+}
+
+.sorting,
+.sorting_asc,
+.sorting_desc {
+  padding: 3px 18px 3px 10px;
+}
+
+.sorting_asc_disabled {
+  background: url("../../../../default/js/plugins/datatables/images/sort_asc_disabled.png") no-repeat center right;
+}
+
+.sorting_desc_disabled {
+  background: url("../../../../default/js/plugins/datatables/images/sort_desc_disabled.png") no-repeat center right;
+}
+
+.dtBar {
+  text-align: left;
+  padding: 10px 0 10px 20px;
+}
+
+.dtBar div {
+  display: inline;
+  padding-right: 5px;
+}
+
+.dataTables_paginate a {
+  padding-left: 3px;
+}
+
+.ui-tooltip {
+  padding: 8px;
+  position: absolute;
+  z-index: 9999;
+  max-width: var(--rating-tooltip-max-width);
+  box-shadow: 0 0 5px #aaa;
+}
+
+body .ui-tooltip {
+  border-width: 2px;
+}

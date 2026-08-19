@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\MenubarPageContext;
-use Piwigo\Admin\Projection\MenubarSaveSuccessPageContext;
+use Piwigo\Admin\Projection\MenubarView;
 use Piwigo\Admin\Request\MenubarSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Menu\BlockManager;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Ported from admin/menubar.php (page slug "menubar").
@@ -28,7 +29,7 @@ use Piwigo\Template\CurrentTemplate;
  */
 final class MenubarPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ConfigCachePool $configCachePool): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ConfigCachePool $configCachePool, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -71,6 +72,7 @@ final class MenubarPageRenderer
             $idx++;
         }
 
+        $save_success = null;
         $menubarSubmit = MenubarSubmitRequest::fromGlobals();
         if ($menubarSubmit->isSubmitted and $accessControl->isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
@@ -98,7 +100,7 @@ final class MenubarPageRenderer
             // write happened to clear the pool.
             $configCachePool->clear();
 
-            $template->assignContext(new MenubarSaveSuccessPageContext($lang->t('Order of menubar items has been updated successfully.')));
+            $save_success = $lang->t('Order of menubar items has been updated successfully.');
         }
 
         self::makeConsecutive($mb_conf);
@@ -112,14 +114,17 @@ final class MenubarPageRenderer
         }
 
         $action = $urlService->getRootUrl() . 'admin.php?page=menubar';
-        $template->assignContext(new MenubarPageContext(
+        $adminContent = $renderer->render(new MenubarView(
             formAction: $action,
-            isWebmaster: $accessControl->isWebmaster(),
-            adminPageTitle: $lang->t('Menu Management'),
+            isWebmaster: $accessControl->isWebmaster() ? 1 : 0,
             blocks: $blocks,
+            saveSuccess: $save_success,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'menubar.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Menu Management'),
+        ));
     }
 
     /**

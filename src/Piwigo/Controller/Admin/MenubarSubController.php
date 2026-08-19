@@ -16,6 +16,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -35,12 +36,13 @@ final readonly class MenubarSubController implements AdminSubControllerInterface
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
         private ConfigCachePool $configCachePool,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new MenubarPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager, $this->configCachePool);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager, $this->configCachePool, $this->renderer);
     }
 }

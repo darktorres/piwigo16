@@ -14,12 +14,8 @@ use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\SiteUpdateIntroductionPageContext;
-use Piwigo\Controller\Admin\Projection\SiteUpdateMetadataResultPageContext;
-use Piwigo\Controller\Admin\Projection\SiteUpdatePageContext;
-use Piwigo\Controller\Admin\Projection\SiteUpdateSaveErrorPageContext;
-use Piwigo\Controller\Admin\Projection\SiteUpdateSyncErrorsPageContext;
-use Piwigo\Controller\Admin\Projection\SiteUpdateSyncResultPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\SiteUpdateView;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
@@ -46,6 +42,7 @@ use Piwigo\Site\LocalSiteReader;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
@@ -103,6 +100,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private Renderer $renderer,
     ) {}
 
     private function imageService(): ImageService
@@ -181,11 +179,9 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
         }
 
+        $save_error = null;
         if ($this->pageState->noMd5sumNumber !== null) {
-            $template->assignContext(new SiteUpdateSaveErrorPageContext(
-                saveError: '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>',
-            ));
-
+            $save_error = '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>';
         }
 
         // `footer_elements` accumulates real cross-branch shared state (a
@@ -194,8 +190,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         // metadata) -- not genuinely progressive/AJAX-polled (no
         // flush()/ob_flush()/echo anywhere in this class), so every
         // stage's own message is read back once, together, by the single
-        // unconditional SiteUpdatePageContext assign near the end of this
-        // method.
+        // SiteUpdateView render near the end of this method.
         $footer_elements = null;
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'site_update' case,
@@ -809,18 +804,20 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             }// end if sync files
         }
 
+        $update_result = null;
         if (isset($post['submit'])
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')) {
-            $template->assignContext(new SiteUpdateSyncResultPageContext(
-                newCategories: $counts['new_categories'],
-                delCategories: $counts['del_categories'],
-                newElements: $counts['new_elements'],
-                delElements: $counts['del_elements'],
-                updElements: $counts['upd_elements'],
-                errors: count($errors),
-            ));
+            $update_result = [
+                'NB_NEW_CATEGORIES' => $counts['new_categories'],
+                'NB_DEL_CATEGORIES' => $counts['del_categories'],
+                'NB_NEW_ELEMENTS' => $counts['new_elements'],
+                'NB_DEL_ELEMENTS' => $counts['del_elements'],
+                'NB_UPD_ELEMENTS' => $counts['upd_elements'],
+                'NB_ERRORS' => count($errors),
+            ];
         }
 
+        $metadata_result = null;
         if (isset($post['submit']) and isset($post['sync_meta'])
                  and ! $general_failure) {
             // sync only never synchronized files ?
@@ -914,11 +911,11 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->';
 
-            $template->assignContext(new SiteUpdateMetadataResultPageContext(
-                elementsDone: count($datas),
-                elementsCandidates: count($files),
-                errors: count($errors),
-            ));
+            $metadata_result = [
+                'NB_ELEMENTS_DONE' => count($datas),
+                'NB_ELEMENTS_CANDIDATES' => count($files),
+                'NB_ERRORS' => count($errors),
+            ];
         }
 
         $result_title = '';
@@ -929,19 +926,8 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         // used_metadata string is displayed to inform admin which metadata will be
         // used from files for synchronization
         $used_metadata = implode(', ', $site_reader->getMetadataAttributes());
-
-        $template->assignContext(new SiteUpdatePageContext(
-            siteUrl: $site_url,
-            siteManagerUrl: $this->urlService->getRootUrl() . 'admin.php?page=site_manager',
-            resultUpdateLabel: $result_title . $this->lang->t('Search for new images in the directories'),
-            resultMetadataLabel: $result_title . $this->lang->t('Metadata synchronization results'),
-            metadataList: $used_metadata,
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
-            adminPageTitle: $this->lang->t('Synchronize'),
-            pwgToken: $this->csrfService
-                ->getToken(),
-            footerElements: $footer_elements,
-        ));
+        $result_update_label = $result_title . $this->lang->t('Search for new images in the directories');
+        $result_metadata_label = $result_title . $this->lang->t('Metadata synchronization results');
 
         if (isset($post['submit'])) {
             $privacy_level_selected = 0;
@@ -986,18 +972,17 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $this->htmlRenderer,
         );
 
-        $template->assignContext(new SiteUpdateIntroductionPageContext(
-            sync: $sync_value,
-            syncMeta: $sync_meta_value,
-            displayInfo: $display_info_value,
-            addToCaddie: $add_to_caddie_value,
-            subcatsIncluded: $subcats_included_value,
-            privacyLevelSelected: $privacy_level_selected,
-            metaAll: $meta_all_value,
-            metaEmptyOverrides: $meta_empty_overrides_value,
-            privacyLevelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
-            categoryOptions: $categoryOptions,
-        ));
+        $introduction = [
+            'sync' => $sync_value,
+            'sync_meta' => $sync_meta_value,
+            'display_info' => $display_info_value,
+            'add_to_caddie' => $add_to_caddie_value,
+            'subcats_included' => $subcats_included_value,
+            'privacy_level_selected' => $privacy_level_selected,
+            'meta_all' => $meta_all_value,
+            'meta_empty_overrides' => $meta_empty_overrides_value,
+            'privacy_level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
+        ];
 
         $sync_errors = [];
         $sync_error_captions = [];
@@ -1029,12 +1014,28 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             }
         }
 
-        $template->assignContext(new SiteUpdateSyncErrorsPageContext(
+        $adminContent = $this->renderer->render(new SiteUpdateView(
+            siteUrl: $site_url,
+            updateResult: $update_result,
+            resultUpdateLabel: $result_update_label,
+            metadataResult: $metadata_result,
+            resultMetadataLabel: $result_metadata_label,
+            metadataList: $used_metadata,
             syncErrors: $sync_errors,
             syncErrorCaptions: $sync_error_captions,
             syncInfos: $sync_infos,
+            introduction: $introduction,
+            categoryOptions: $categoryOptions,
+            csrfToken: $this->csrfService
+                ->getToken(),
+            saveError: $save_error,
+            footerElements: $footer_elements,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'site_update.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Synchronize'),
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
+        ));
     }
 }

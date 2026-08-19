@@ -12,10 +12,9 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\NotificationByMailFramePageContext;
-use Piwigo\Controller\Admin\Projection\NotificationByMailParamPageContext;
-use Piwigo\Controller\Admin\Projection\NotificationByMailSendPageContext;
-use Piwigo\Controller\Admin\Projection\NotificationByMailSubscribePageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\DoubleSelectView;
+use Piwigo\Controller\Admin\Projection\NotificationByMailView;
 use Piwigo\Controller\Admin\Request\NotificationByMailRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
@@ -34,6 +33,7 @@ use Piwigo\Notification\UserMailNotificationEntity;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -88,6 +88,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         private InputValidator $inputValidator,
         private PageState $pageState,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -213,16 +214,22 @@ final readonly class NotificationByMailSubController implements AdminSubControll
             $repost_submit_name_value = $repost_submit_name;
         }
 
+        $paramData = null;
+        $subscribeActive = false;
+        $doubleSelect = null;
+        $sendData = null;
+        $authKeyDurationValue = null;
+
         switch ($page_mode) {
             case 'param':
 
-                $template->assignContext(new NotificationByMailParamPageContext(
-                    sendHtmlMail: $this->currentConfig->nbmSendHtmlMail,
-                    sendMailAs: $this->currentConfig->nbmSendMailAs,
-                    sendDetailedContent: $this->currentConfig->nbmSendDetailedContent,
-                    complementaryMailContent: $this->currentConfig->nbmComplementaryMailContent,
-                    sendRecentPostDates: $this->currentConfig->nbmSendRecentPostDates,
-                ));
+                $paramData = [
+                    'SEND_HTML_MAIL' => $this->currentConfig->nbmSendHtmlMail,
+                    'SEND_MAIL_AS' => $this->currentConfig->nbmSendMailAs,
+                    'SEND_DETAILED_CONTENT' => $this->currentConfig->nbmSendDetailedContent,
+                    'COMPLEMENTARY_MAIL_CONTENT' => $this->currentConfig->nbmComplementaryMailContent,
+                    'SEND_RECENT_POST_DATES' => $this->currentConfig->nbmSendRecentPostDates,
+                ];
                 break;
 
             case 'subscribe':
@@ -246,7 +253,8 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                         }
                     }
                 }
-                $template->assignContext(new NotificationByMailSubscribePageContext(
+                $subscribeActive = true;
+                $doubleSelect = $this->renderer->render(new DoubleSelectView(
                     lCatOptionsTrue: $this->lang->t('Subscribed'),
                     lCatOptionsFalse: $this->lang->t('Unsubscribed'),
                     categoryOptionTrue: $opt_true,
@@ -254,7 +262,6 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                     categoryOptionFalse: $opt_false,
                     categoryOptionFalseSelected: $opt_false_selected,
                 ));
-                $template->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
                 break;
 
             case 'send':
@@ -298,35 +305,40 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                 // include/config_default.inc.php).
                 $auth_key_duration = $this->currentConfig->authKeyDuration;
                 $auth_key_duration_num = $auth_key_duration;
-                $auth_key_duration_value = null;
                 if ($auth_key_duration_num > 0) {
                     $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
                     // the relative time expression above is always syntactically valid
                     assert($auth_key_since !== false);
-                    $auth_key_duration_value = DateHelper::timeSince($auth_key_since, 'second', null, false);
+                    $authKeyDurationValue = DateHelper::timeSince($auth_key_since, 'second', null, false);
                 }
 
-                $template->assignContext(new NotificationByMailSendPageContext(
-                    users: $tpl_var['users'],
-                    customizeMailContent: $tpl_var['CUSTOMIZE_MAIL_CONTENT'],
-                    authKeyDuration: $auth_key_duration_value,
-                ));
+                $sendData = [
+                    'users' => $tpl_var['users'],
+                    'CUSTOMIZE_MAIL_CONTENT' => $tpl_var['CUSTOMIZE_MAIL_CONTENT'],
+                ];
 
                 break;
 
         }
 
-        $template->assignContext(new NotificationByMailFramePageContext(
+        $adminContent = $this->renderer->render(new NotificationByMailView(
+            param: $paramData,
+            subscribeActive: $subscribeActive,
+            doubleSelect: $doubleSelect,
+            send: $sendData,
+            authKeyDuration: $authKeyDurationValue,
             saveSuccess: $save_success,
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
-            fAction: $base_url . $this->urlService->getQueryStringDiff([]),
+            formAction: $base_url . $this->urlService->getQueryStringDiff([]),
             repostSubmitName: $repost_submit_name_value,
-            adminPageTitle: $this->lang->t('Send mail to users'),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'notification_by_mail.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Send mail to users'),
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
+        ));
     }
 
     /**

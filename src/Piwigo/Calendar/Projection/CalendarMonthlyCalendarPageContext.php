@@ -12,15 +12,18 @@ use Piwigo\Core\TemplatePageContext;
  * {@see \Piwigo\Calendar\CalendarMonthly::generateCategoryContent()}
  * -- the same single key, filled by whichever of
  * buildGlobalCalendar()/buildYearCalendar()/buildMonthCalendar()
- * actually ran (mutually exclusive branches).
+ * actually ran (mutually exclusive: at most one of $calendarBars/
+ * $monthView is non-null; both null is also real -- buildMonthCalendar()
+ * returns null for a month with no images at all).
  */
 final readonly class CalendarMonthlyCalendarPageContext implements TemplatePageContext
 {
     /**
-     * @param array<array-key, mixed> $tplVar
+     * @param ?list<CalendarBarEntry> $calendarBars
      */
     public function __construct(
-        public array $tplVar,
+        public ?array $calendarBars,
+        public ?CalendarMonthView $monthView,
     ) {}
 
     /**
@@ -29,8 +32,24 @@ final readonly class CalendarMonthlyCalendarPageContext implements TemplatePageC
     #[Override]
     public function toArray(): array
     {
+        if ($this->calendarBars !== null) {
+            return [
+                'chronology_calendar' => [
+                    'calendar_bars' => array_map(static fn (CalendarBarEntry $entry): array => $entry->toArray(), $this->calendarBars),
+                ],
+            ];
+        }
+
+        if ($this->monthView !== null) {
+            return [
+                'chronology_calendar' => [
+                    'month_view' => $this->monthView->toArray(),
+                ],
+            ];
+        }
+
         return [
-            'chronology_calendar' => $this->tplVar,
+            'chronology_calendar' => [],
         ];
     }
 }

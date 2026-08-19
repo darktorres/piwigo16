@@ -12,7 +12,10 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Override;
+use Piwigo\Calendar\Projection\CalendarBarEntry;
+use Piwigo\Calendar\Projection\CalendarDayCell;
 use Piwigo\Calendar\Projection\CalendarMonthlyCalendarPageContext;
+use Piwigo\Calendar\Projection\CalendarMonthView;
 use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Image\DerivativeImage;
@@ -63,11 +66,11 @@ final class CalendarMonthly extends CalendarBase
     {
         $view_type = $this->chronology_view;
         if ($view_type === self::CAL_VIEW_CALENDAR) {
-            $tpl_var = [];
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 0) {// case A: no year given - display all years+months
-                if ($this->buildGlobalCalendar($tpl_var)) {
-                    $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
+                $calendarBars = $this->buildGlobalCalendar();
+                if ($calendarBars !== null) {
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext(calendarBars: $calendarBars, monthView: null));
                     return true;
                 }
             }
@@ -77,8 +80,9 @@ final class CalendarMonthly extends CalendarBase
             // chronology_date must be re-read, not cached above.
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 1) {// case B: year given - display all days in given year
-                if ($this->buildYearCalendar($tpl_var)) {
-                    $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
+                $calendarBars = $this->buildYearCalendar();
+                if ($calendarBars !== null) {
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext(calendarBars: $calendarBars, monthView: null));
                     $this->buildNavBar(self::CYEAR, null); // years
                     return true;
                 }
@@ -88,8 +92,9 @@ final class CalendarMonthly extends CalendarBase
             // to a single month.
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 2) {// case C: year+month given - display a nice month calendar
-                if ($this->buildMonthCalendar($tpl_var)) {
-                    $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
+                $monthView = $this->buildMonthCalendar();
+                if ($monthView !== null) {
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext(calendarBars: null, monthView: $monthView));
                 }
                 $this->buildNextPrev();
                 return true;
@@ -236,15 +241,14 @@ final class CalendarMonthly extends CalendarBase
     }
 
     /**
-     * Build global calendar and assign the result in _$tpl_var_
-     * $tpl_var is a growing Latte template-variable bag shared across this
-     * class's own build_*_calendar() methods, each assigning its own keys
-     * -- matches Template::assign()'s own by-design arbitrary-value
-     * contract, not a single reusable shape.
+     * Builds the global (all years) calendar_bars view, or null when only
+     * one year exists (this class's own chronology_date is narrowed to
+     * that year as a side effect, so the caller can bail out to the year
+     * view instead).
      *
-     * @param array<string, mixed> $tpl_var
+     * @return ?list<CalendarBarEntry>
      */
-    protected function buildGlobalCalendar(array &$tpl_var): bool
+    protected function buildGlobalCalendar(): ?array
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 0);
@@ -271,7 +275,7 @@ final class CalendarMonthly extends CalendarBase
         if (count($items) === 1) {// only one year exists so bail out to year view
             [$y] = array_keys($items);
             $this->chronology_date[self::CYEAR] = $y;
-            return false;
+            return null;
         }
 
         $month_labels = $this->lang->months();
@@ -290,29 +294,26 @@ final class CalendarMonthly extends CalendarBase
                 $month_labels
             );
 
-            $calendar_bars[] =
-              [
-                  'U_HEAD' => $url,
-                  'NB_IMAGES' => $year_data['nb_images'],
-                  'HEAD_LABEL' => $year,
-                  'items' => $nav_bar,
-              ];
+            $calendar_bars[] = new CalendarBarEntry(
+                uHead: $url,
+                nbImages: $year_data['nb_images'],
+                headLabel: $year,
+                items: $nav_bar,
+            );
         }
-        $tpl_var['calendar_bars'] = $calendar_bars;
 
-        return true;
+        return $calendar_bars;
     }
 
     /**
-     * Build year calendar and assign the result in _$tpl_var_
-     * $tpl_var is a growing Latte template-variable bag shared across this
-     * class's own build_*_calendar() methods, each assigning its own keys
-     * -- matches Template::assign()'s own by-design arbitrary-value
-     * contract, not a single reusable shape.
+     * Builds the year (all months) calendar_bars view, or null when only
+     * one month exists (this class's own chronology_date is narrowed to
+     * that month as a side effect, so the caller can bail out to the
+     * month view instead).
      *
-     * @param array<string, mixed> $tpl_var
+     * @return ?list<CalendarBarEntry>
      */
-    protected function buildYearCalendar(array &$tpl_var): bool
+    protected function buildYearCalendar(): ?array
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 1);
@@ -338,7 +339,7 @@ final class CalendarMonthly extends CalendarBase
         if (count($items) === 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
             $this->chronology_date[self::CMONTH] = $m;
-            return false;
+            return null;
         }
         $month_labels = $this->lang->months();
         $calendar_bars = [];
@@ -359,29 +360,22 @@ final class CalendarMonthly extends CalendarBase
                 false
             );
 
-            $calendar_bars[] =
-              [
-                  'U_HEAD' => $url,
-                  'NB_IMAGES' => $month_data['nb_images'],
-                  'HEAD_LABEL' => $month_labels[$month] ?? $month,
-                  'items' => $nav_bar,
-              ];
+            $calendar_bars[] = new CalendarBarEntry(
+                uHead: $url,
+                nbImages: $month_data['nb_images'],
+                headLabel: $month_labels[$month] ?? $month,
+                items: $nav_bar,
+            );
         }
-        $tpl_var['calendar_bars'] = $calendar_bars;
 
-        return true;
+        return $calendar_bars;
     }
 
     /**
-     * Build month calendar and assign the result in _$tpl_var_
-     * $tpl_var is a growing Latte template-variable bag shared across this
-     * class's own build_*_calendar() methods, each assigning its own keys
-     * -- matches Template::assign()'s own by-design arbitrary-value
-     * contract, not a single reusable shape.
-     *
-     * @param array<string, mixed> $tpl_var
+     * Builds the single-month day-grid view, or null when the month has
+     * no images at all.
      */
-    protected function buildMonthCalendar(array &$tpl_var): bool
+    protected function buildMonthCalendar(): ?CalendarMonthView
     {
         // self::CYEAR/self::CMONTH are never touched below (only self::CDAY is toggled, per
         // day, inside the loop), so a single snapshot taken here stays valid
@@ -399,7 +393,7 @@ final class CalendarMonthly extends CalendarBase
         $rows = $this->calendarRepository->countByDayOfMonth($this->date_field_dql, $scope, $dateWhere);
         foreach ($rows as $row) {
             $items[(int) $row->period] = [
-                'nb_images' => $row->count,
+                'nb_images' => (int) $row->count,
             ];
         }
 
@@ -448,7 +442,10 @@ final class CalendarMonthly extends CalendarBase
                     --$first_day_dow;
                 }
 
-                $wday_labels[] = array_shift($wday_labels);
+                $shiftedLabel = array_shift($wday_labels);
+                if ($shiftedLabel !== null) {
+                    $wday_labels[] = $shiftedLabel;
+                }
             }
 
             $cell_width = $this->imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->width;
@@ -459,7 +456,7 @@ final class CalendarMonthly extends CalendarBase
 
             // fill the empty days in the week before first day of this month
             for ($i = 0; $i < $first_day_dow; $i++) {
-                $tpl_crt_week[] = [];
+                $tpl_crt_week[] = new CalendarDayCell();
             }
 
             // getAllDaysInMonth() always returns >= 28, so this loop
@@ -476,10 +473,7 @@ final class CalendarMonthly extends CalendarBase
                 }
 
                 if (! isset($items[$day])) {// empty day
-                    $tpl_crt_week[] =
-                      [
-                          'DAY' => $day,
-                      ];
+                    $tpl_crt_week[] = new CalendarDayCell(day: $day);
                 } else {
                     $url = $this->urlService->duplicateIndexUrl(
                         [
@@ -491,33 +485,31 @@ final class CalendarMonthly extends CalendarBase
                         ]
                     );
 
-                    $tpl_crt_week[] =
-                      [
-                          'DAY' => $day,
-                          'DOW' => $dow,
-                          'NB_ELEMENTS' => $items[$day]['nb_images'],
-                          'IMAGE' => $items[$day]['derivative']->getUrl(),
-                          'U_IMG_LINK' => $url,
-                          'IMAGE_ALT' => $items[$day]['file'],
-                      ];
+                    $tpl_crt_week[] = new CalendarDayCell(
+                        day: $day,
+                        dow: $dow,
+                        nbElements: $items[$day]['nb_images'],
+                        image: $items[$day]['derivative']->getUrl(),
+                        uImgLink: $url,
+                        imageAlt: $items[$day]['file'],
+                    );
                 }
             }
             // fill the empty days in the week after the last day of this month
             while ($dow < 6) {
-                $tpl_crt_week[] = [];
+                $tpl_crt_week[] = new CalendarDayCell();
                 $dow++;
             }
             $tpl_weeks[] = $tpl_crt_week;
 
-            $tpl_var['month_view'] =
-                [
-                    'CELL_WIDTH' => $cell_width,
-                    'CELL_HEIGHT' => $cell_height,
-                    'wday_labels' => $wday_labels,
-                    'weeks' => $tpl_weeks,
-                ];
+            return new CalendarMonthView(
+                cellWidth: $cell_width,
+                cellHeight: $cell_height,
+                wdayLabels: array_values($wday_labels),
+                weeks: $tpl_weeks,
+            );
         }
 
-        return true;
+        return null;
     }
 }

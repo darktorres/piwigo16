@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\UserListPageContext;
+use Piwigo\Admin\Projection\UserListView;
 use Piwigo\Admin\Request\UserListFilterRequest;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -20,6 +21,7 @@ use Piwigo\Group\GroupService;
 use Piwigo\Lang\LangService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\Projection\DefaultUserInfo;
@@ -35,7 +37,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -68,44 +70,13 @@ final class UserListPageRenderer
                 ->fatalError('Default user not found');
         }
 
-        // conf's guest_id/default_user_id/webmaster_id are always scalar (raw DB
-        // fetch value or int config default -- same normalization already used by
+        // conf's guest_id/webmaster_id are always scalar (raw DB fetch value
+        // or int config default -- same normalization already used by
         // functions.inc.php's get_webmaster_mail_address() and build_user()).
         $guest_id = $currentConfig->guestId;
-        $default_user_id = $currentConfig->defaultUserId;
         $webmaster_id = $currentConfig->webmasterId;
 
-        $protected_users = [
-            $currentUser->get()
-                ->id->value,
-            $guest_id,
-            $default_user_id,
-            $webmaster_id,
-        ];
-
-        $password_protected_users = [$guest_id];
-
-        // an admin can't delete other admin/webmaster
-        if ($currentUser->get()->status === UserStatus::Admin) {
-            $admin_ids = array_map(strval(...), $userService->getAdminIds());
-
-            $protected_users = array_merge($protected_users, $admin_ids);
-
-            $current_user_id = (string) $currentUser->get()
-                ->id->value;
-
-            // we add all admin+webmaster users BUT the user herself
-            $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
-        }
-
         $owner_username = $userService->getUsernameById(UserId::from($webmaster_id))->value ?? '';
-
-        // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
-        // ids (already normalized to int above) and $admin_ids (query2array
-        // user_id values, always numeric strings from a NOT NULL primary key);
-        // stringify for implode() below.
-        $protected_users = array_map(strval(...), array_filter($protected_users, is_scalar(...)));
-        $password_protected_users = array_map(strval(...), array_filter($password_protected_users, is_scalar(...)));
 
         // Status options
         $label_of_status = [];
@@ -168,25 +139,18 @@ final class UserListPageRenderer
             $pageState->addWarning($lang->t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
-        $template->assignContext(new UserListPageContext(
+        $adminContent = $renderer->render(new UserListView(
             groupsForFilter: $groups_for_filter,
             registerDates: implode(',', $register_dates),
-            adminPageTitle: $lang->t('Users'),
             activateComments: $currentConfig->activateComments,
-            doublePassword: $currentConfig->doublePasswordTypeInAdmin,
             uHistory: $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
-            pwgToken: $csrfService
+            csrfToken: $csrfService
                 ->getToken(),
-            nbImagePage: $default_user->nbImagePage,
-            recentPeriod: $default_user->recentPeriod,
             themeOptions: ThemeCatalog::getPwgThemes($paths, $currentConfig, $lang, $entityManager),
             themeSelected: $userService->getDefaultTheme(),
             languageOptions: LangService::getLanguages($paths, $entityManager),
             languageSelected: $userService->getDefaultLanguage(),
             associationOptions: $groups,
-            protectedUsers: implode(',', array_unique($protected_users)),
-            passwordProtectedUsers: implode(',', array_unique($password_protected_users)),
-            guestUser: $guest_id,
             filterGroup: $userListFilter->groupId,
             searchInput: $userListFilter->userSearchInput,
             connectedUser: $currentUser->get()
@@ -195,8 +159,6 @@ final class UserListPageRenderer
                 ->status->value,
             owner: $webmaster_id,
             ownerUsername: $owner_username,
-            showAddUser: $userListFilter->showAddUser,
-            labelOfStatus: $label_of_status,
             prefStatusOptions: $pref_status_options,
             prefStatusSelected: 'normal',
             nbUsersByStatus: $nb_users_by_status,
@@ -220,7 +182,10 @@ final class UserListPageRenderer
             pagination: $pagination,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'user_list.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Users'),
+        ));
     }
 
     private static function webmasterIdIsLocal(Paths $paths): bool

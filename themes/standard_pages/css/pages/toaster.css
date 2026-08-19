@@ -1,0 +1,50 @@
+.toast.template-pwg-toaster {
+  display: none;
+}
+
+.toaster {
+  position: fixed;
+  right: 15px;
+  max-width: 300px;
+  top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.toast {
+  display: flex;
+  gap: 5px;
+  padding: 10px;
+  border-radius: 5px;
+  align-items: center;
+  font-size: 15px;
+  width: fit-content;
+  align-self: flex-end;
+  box-shadow: 0 4px 10px 0 rgb(0 0 0 / 0.15);
+}
+
+.toast i::before {
+  font-size: 33px;
+}
+
+.light .toast.success {
+  background-color: #d6ffcf;
+  color: #4ca530;
+}
+
+.light .toast.error {
+  background-color: #f8d7dc;
+  color: #eb3d33;
+}
+
+.dark .toast.success {
+  background-color: #4ea590;
+  color: #aaf6e4;
+}
+
+.dark .toast.error {
+  background-color: #be4949;
+  color: #ffc8c8;
+}

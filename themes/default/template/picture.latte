@@ -690,6 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'core.switchbox', load: 'async', require: 'jquery', path: 'themes/default/js/switchbox.js')}
+{do combineCss(id: 'picture', path: 'themes/default/css/pages/picture.css')}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
   {if isset($errors) or !empty($infos)}
@@ -735,11 +736,8 @@
             <div class="switchBoxTitle">{='Photo sizes'|translate}</div>
             {foreach $current['unique_derivatives'] as $derivative_type => $derivative}
               <span
-                class="switchCheck"
+                class="switchCheck{if $derivative->getType() != $current['selected_derivative']->getType()} u-invisible{/if}"
                 id="derivativeChecked{$derivative->getType()}"
-                {if $derivative->getType() != $current['selected_derivative']->getType()}
-                style="visibility:hidden"
-                {/if}
               >&#x2714; </span>
               <a
                 href="#"
@@ -1058,7 +1056,6 @@
                   action="{$rating['F_ACTION']|noescape}"
                   method="post"
                   id="rateForm"
-                  style="margin:0;"
                 >
                   <div>
                     {foreach $rating['marks'] as $mark}
@@ -1189,7 +1186,7 @@
             {$COMMENT_LIST}
           </div>
         {/if}
-        <div style="clear:both"></div>
+        <div class="clear-both"></div>
       </div>
     </div>
   {/if}{* comments *}

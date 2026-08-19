@@ -1,0 +1,13 @@
+/* Shared utility classes for the standard_pages theme. */
+
+/*
+ * .error-message's own base rule (theme.css) sets display:none;bottom:5px,
+ * and page-specific ID-scoped rules (e.g. #password-form .error-message)
+ * can set a higher-specificity bottom override too -- !important guarantees
+ * this reveal wins on every page that reuses it, matching what the inline
+ * style it replaces always guaranteed.
+ */
+.error-message-visible {
+  display: block !important;
+  bottom: -20px !important;
+}

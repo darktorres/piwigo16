@@ -689,6 +689,7 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
+{do combineCss(id: 'menubar_identification', path: 'themes/default/css/components/menubar_identification.css')}
 <dt>{='Identification'|translate}</dt>
 <dd>
   {spaceless}
@@ -728,7 +729,7 @@
               name="username"
               id="username"
               value=""
-              style="width:99%"
+              class="quickconnect-input"
             >
           </div>
 
@@ -737,7 +738,7 @@
               type="password"
               name="password"
               id="password"
-              style="width:99%"
+              class="quickconnect-input"
             >
           </div>
 

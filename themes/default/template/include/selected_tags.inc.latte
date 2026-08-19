@@ -689,6 +689,7 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
+{do combineCss(id: 'selected_tags', path: 'themes/default/css/components/selected_tags.css')}
 <span id="selected-tags-container">
   <span
     n:foreach="$SELECT_RELATED_TAGS as $TAG"
@@ -704,7 +705,6 @@
       n:if="count($SELECT_RELATED_TAGS) > 1"
       class="selected-related-tag-remove"
       href="{$TAG['remove_url']|noescape}"
-      style="border:none;"
       title="{='remove this tag from the list'|translate}"
     >
       <i class="gallery-icon-cancel fas fa-plus"></i>

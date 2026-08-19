@@ -1,0 +1,13 @@
+.thumbnails span,
+.thumbnails .wrap2 a,
+.thumbnails label {
+  width: var(--thumb-width);
+}
+
+.thumbnails .wrap2 {
+  height: var(--thumb-height);
+}
+
+.thumbLegend {
+  font-size: var(--thumb-legend-font-size);
+}

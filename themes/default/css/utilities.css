@@ -1,0 +1,9 @@
+/* Shared utility classes for the default (front-end) theme. */
+
+.u-hidden {
+  display: none;
+}
+
+.u-invisible {
+  visibility: hidden;
+}

@@ -689,15 +689,16 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
+{do combineCss(id: 'month_calendar', path: 'themes/default/css/pages/month_calendar.css')}
 {if !empty($chronology_navigation_bars)}
   <div n:foreach="$chronology_navigation_bars as $bar" class="calendarBar">
     <div
       n:if="isset($bar['previous'])"
-      style="float:left;margin-right:5px"
+      class="calendar-nav-prev"
     >&laquo; <a
         href="{$bar['previous']['URL']|noescape}"
       >{$bar['previous']['LABEL']}</a></div>
-    <div n:if="isset($bar['next'])" style="float:right;margin-left:5px"><a
+    <div n:if="isset($bar['next'])" class="calendar-nav-next"><a
         href="{$bar['next']['URL']|noescape}"
       >{$bar['next']['LABEL']}</a> &raquo;</div>
     {if empty($bar['items'])}
@@ -742,7 +743,11 @@
   </div>
 {/if}
 
-<table n:if="isset($chronology_calendar['month_view'])" class="calMonth">
+<table
+  n:if="isset($chronology_calendar['month_view'])"
+  class="calMonth"
+  style="--cal-cell-width: {$chronology_calendar['month_view']['CELL_WIDTH']}px; --cal-cell-height: {$chronology_calendar['month_view']['CELL_HEIGHT']}px;"
+>
   <thead>
     <tr>
       <th
@@ -750,12 +755,6 @@
       >{$wday}</th>
     </tr>
   </thead>
-  {capture $tmpHtmlStyle}
-  .calMonth TD, .calMonth .calImg{
-    width:{$chronology_calendar['month_view']['CELL_WIDTH']}px;height:{$chronology_calendar['month_view']['CELL_HEIGHT']}px
-  }
-  {/capture}
-  {do htmlStyle($tmpHtmlStyle)}
   <tr n:foreach="$chronology_calendar['month_view']['weeks'] as $week">
     {foreach $week as $day}
       {if !empty($day)}

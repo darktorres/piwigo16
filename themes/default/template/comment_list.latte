@@ -689,23 +689,17 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
+{do combineCss(id: 'comment_list', path: 'themes/default/css/pages/comment_list.css')}
 {if isset($comment_derivative_params)}
-  {capture $tmpHtmlStyle}
-.commentElement .illustration{
-  width:{$comment_derivative_params->maxWidth() + 5}px
-}
-
-.content .commentElement .description{
-  min-height:{$comment_derivative_params->maxHeight() + 5}px
-}
-{/capture}
-  {do htmlStyle($tmpHtmlStyle)}
   {do exposeData('error_icon', $ROOT_URL . $themeconf['icon_dir'] . '/errors_small.png')}
   <div class="loader"><img
       src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
     ></div>
 {/if}
-<ul class="commentsList">
+<ul
+  class="commentsList"
+  style="{if isset($comment_derivative_params)}--comment-illustration-width: {$comment_derivative_params->maxWidth() + 5}px; --comment-description-min-height: {$comment_derivative_params->maxHeight() + 5}px;{/if}"
+>
   <li
     n:foreach="$comments as $comment"
     class="commentElement {if $iterator->counter0 % 2 !== 0}odd{else}even{/if}"
@@ -738,7 +732,6 @@
       <div
         n:if="isset($comment['U_DELETE']) or isset($comment['U_VALIDATE']) or isset($comment['U_EDIT'])"
         class="actions"
-        style="float:right;font-size:90%"
       >
         {if isset($comment['U_DELETE'])}
           {do combineScript(id: 'core.scripts', load: 'footer', require: 'page-data', path: 'themes/default/js/scripts.js')}

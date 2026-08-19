@@ -66,3 +66,7 @@
 .dark .quick-search-item {
   border-left: 4px solid #333;
 }
+
+.quick-search-section-others {
+  padding-top: 30px;
+}

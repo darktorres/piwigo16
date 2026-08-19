@@ -1,0 +1,15 @@
+.calendar-nav-prev {
+  float: left;
+  margin-right: 5px;
+}
+
+.calendar-nav-next {
+  float: right;
+  margin-left: 5px;
+}
+
+.calMonth td,
+.calMonth .calImg {
+  width: var(--cal-cell-width);
+  height: var(--cal-cell-height);
+}

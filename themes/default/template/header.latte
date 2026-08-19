@@ -795,6 +795,7 @@
           {include $theme['local_head'], load_css: $theme['load_css']}
         {/if}
       {/foreach}
+      {do combineCss(path: "themes/default/css/utilities.css", order: -5)}
 
       {do combineScript(id: "jquery", load: "footer")}
     {/spaceless}

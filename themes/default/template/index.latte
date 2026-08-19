@@ -761,7 +761,7 @@
               {if $image_order['SELECTED']}
                 <span>&#x2714; </span>{$image_order['DISPLAY']|noescape}
               {else}
-                <span style="visibility:hidden">&#x2714; </span><a
+                <span class="u-invisible">&#x2714; </span><a
                   href="{$image_order['URL']|noescape}"
                   rel="nofollow"
                 >{$image_order['DISPLAY']|noescape}</a>
@@ -787,7 +787,7 @@
               {if $image_derivative['SELECTED']}
                 <span>&#x2714; </span>{$image_derivative['DISPLAY']}
               {else}
-                <span style="visibility:hidden">&#x2714; </span><a
+                <span class="u-invisible">&#x2714; </span><a
                   href="{$image_derivative['URL']|noescape}"
                   rel="nofollow"
                 >{$image_derivative['DISPLAY']}</a>
@@ -897,9 +897,7 @@
       <div id="calendarViewSwitchBox" class="switchBox">
         {foreach $chronology_views as $view}<br n:if="!$iterator->first">
           <span
-            {if !$view['SELECTED']}
-            style="visibility:hidden"
-            {/if}
+            class="{if !$view['SELECTED']}u-invisible{/if}"
           >&#x2714; </span><a
             href="{$view['VALUE']|noescape}"
           >{$view['CONTENT']}</a>

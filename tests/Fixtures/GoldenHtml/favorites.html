@@ -37,17 +37,6 @@
     
     <!-- END get_combined -->
 
-<style type="text/css">
-.thumbnails SPAN,
-.thumbnails .wrap2 A,
-.thumbnails LABEL{
-  width: 146px;
-}
-
-.thumbnails .wrap2{
-  height: 147px;
-}
-.thumbLegend { font-size: 90%}</style>
   </head>
 
   <body
@@ -119,14 +108,13 @@
       id="quicksearch"
     >
     <p
-        style="margin:0;padding:0"
+        class="quicksearch-form-p"
         
       >
       <input
           type="text"
           name="q"
           id="qsearchInput"
-          style="width:90%"
           
         >
     </p>
@@ -181,8 +169,8 @@
       <li
       ><a id="cmdRelatedTags" title="Related tags" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon gallery-icon-tag"></span><span class="pwg-button-text">Related tags</span></a><div id="relatedTagsBox" class="switchBox"><div class="switchBoxTitle">Related tags</div><a href="index.php?/tags/3-family" title="display photos linked to this tag">family</a> <a href="index.php?/tags/1-nature" title="display photos linked to this tag">nature</a> <a href="index.php?/tags/2-travel" title="display photos linked to this tag">travel</a></div>        </li>
 
-      <li><a id="sortOrderLink" title="Sort order" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-sort"></span><span class="pwg-button-text">Sort order</span></a><div id="sortOrderBox" class="switchBox"><div class="switchBoxTitle">Sort order</div><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=0" rel="nofollow">Default</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=1" rel="nofollow">Photo title, A &rarr; Z</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=2" rel="nofollow">Photo title, Z &rarr; A</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=3" rel="nofollow">Date created, new &rarr; old</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=4" rel="nofollow">Date created, old &rarr; new</a><br><span>&#x2714;</span> Date posted, new &rarr; old<br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=6" rel="nofollow">Date posted, old &rarr; new</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=7" rel="nofollow">Rating score, high &rarr; low</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=8" rel="nofollow">Rating score, low &rarr; high</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=9" rel="nofollow">Visits, high &rarr; low</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=10" rel="nofollow">Visits, low &rarr; high</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=11" rel="nofollow">Permissions</a></div>        </li>
-      <li><a id="derivativeSwitchLink" title="Photo sizes" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">Photo sizes</span></a><div id="derivativeSwitchBox" class="switchBox"><div class="switchBoxTitle">Photo sizes</div><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;display=square" rel="nofollow">Square</a><br><span>&#x2714;</span> Thumbnail<br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;display=2small" rel="nofollow">XXS - tiny</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;display=xsmall" rel="nofollow">XS - extra small</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;display=small" rel="nofollow">S - small</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;display=medium" rel="nofollow">M - medium</a><br><span style="visibility:hidden">&#x2714;</span> <a href="index.php?/favorites&amp;display=large" rel="nofollow">L - large</a></div>        </li>
+      <li><a id="sortOrderLink" title="Sort order" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-sort"></span><span class="pwg-button-text">Sort order</span></a><div id="sortOrderBox" class="switchBox"><div class="switchBoxTitle">Sort order</div><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=0" rel="nofollow">Default</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=1" rel="nofollow">Photo title, A &rarr; Z</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=2" rel="nofollow">Photo title, Z &rarr; A</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=3" rel="nofollow">Date created, new &rarr; old</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=4" rel="nofollow">Date created, old &rarr; new</a><br><span>&#x2714;</span> Date posted, new &rarr; old<br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=6" rel="nofollow">Date posted, old &rarr; new</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=7" rel="nofollow">Rating score, high &rarr; low</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=8" rel="nofollow">Rating score, low &rarr; high</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=9" rel="nofollow">Visits, high &rarr; low</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=10" rel="nofollow">Visits, low &rarr; high</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;image_order=11" rel="nofollow">Permissions</a></div>        </li>
+      <li><a id="derivativeSwitchLink" title="Photo sizes" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">Photo sizes</span></a><div id="derivativeSwitchBox" class="switchBox"><div class="switchBoxTitle">Photo sizes</div><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;display=square" rel="nofollow">Square</a><br><span>&#x2714;</span> Thumbnail<br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;display=2small" rel="nofollow">XXS - tiny</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;display=xsmall" rel="nofollow">XS - extra small</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;display=small" rel="nofollow">S - small</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;display=medium" rel="nofollow">M - medium</a><br><span class="u-invisible">&#x2714;</span> <a href="index.php?/favorites&amp;display=large" rel="nofollow">L - large</a></div>        </li>
 
       <li id="cmdFavorite"><a
           href="index.php?/favorites&amp;action=remove_all_from_favorites"
@@ -241,7 +229,11 @@
       ></div>
 
   <ul class="thumbnails" id="thumbnails">
-    <li><span class="wrap1"><span class="wrap2"><a href="picture.php?/1/favorites"><img class="thumbnail" src="i.php?/upload/2026/08/01/20260801000000-2e7e3a53-th.jpg" alt="Photo 1" title="Photo 1 (rating score 4.5)"></a></span> <span class="thumbLegend"><span class="thumbName">Photo 1</span> <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" alt="(!)"></span></span></li><li><span class="wrap1"><span class="wrap2"><a href="picture.php?/3/favorites"><img class="thumbnail" src="i.php?/upload/2026/08/01/20260801000000-a6a09864-th.jpg" alt="Photo 3" title="Photo 3 (rating score 5)"></a></span> <span class="thumbLegend"><span class="thumbName">Photo 3</span> <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" alt="(!)"></span></span></li><li><span class="wrap1"><span class="wrap2"><a href="picture.php?/5/favorites"><img class="thumbnail" src="i.php?/upload/2026/08/01/20260801000000-4b01365c-th.jpg" alt="Photo 5" title="Photo 5"></a></span> <span class="thumbLegend"><span class="thumbName">Photo 5</span> <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" alt="(!)"></span></span></li>
+    <style>:root {
+  --thumb-width: 146px;
+  --thumb-height: 147px;
+  --thumb-legend-font-size: 90%;
+}</style><li><span class="wrap1"><span class="wrap2"><a href="picture.php?/1/favorites"><img class="thumbnail" src="i.php?/upload/2026/08/01/20260801000000-2e7e3a53-th.jpg" alt="Photo 1" title="Photo 1 (rating score 4.5)"></a></span> <span class="thumbLegend"><span class="thumbName">Photo 1</span> <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" alt="(!)"></span></span></li><li><span class="wrap1"><span class="wrap2"><a href="picture.php?/3/favorites"><img class="thumbnail" src="i.php?/upload/2026/08/01/20260801000000-a6a09864-th.jpg" alt="Photo 3" title="Photo 3 (rating score 5)"></a></span> <span class="thumbLegend"><span class="thumbName">Photo 3</span> <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" alt="(!)"></span></span></li><li><span class="wrap1"><span class="wrap2"><a href="picture.php?/5/favorites"><img class="thumbnail" src="i.php?/upload/2026/08/01/20260801000000-4b01365c-th.jpg" alt="Photo 5" title="Photo 5"></a></span> <span class="thumbLegend"><span class="thumbName">Photo 5</span> <img title="photos posted during the last 7 days" src="themes/default/icon/recent.png" alt="(!)"></span></span></li>
   </ul>
 
   

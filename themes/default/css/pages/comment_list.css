@@ -1,0 +1,12 @@
+.commentElement .illustration {
+  width: var(--comment-illustration-width);
+}
+
+.content .commentElement .description {
+  min-height: var(--comment-description-min-height);
+}
+
+.actions {
+  float: right;
+  font-size: 90%;
+}

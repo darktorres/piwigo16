@@ -1,0 +1,4 @@
+/* Beats theme.css's .profile-section .api-tab-collapse{display:grid} (higher specificity: ID+class vs 2 classes). */
+#api_collapse.template-api {
+  display: none;
+}

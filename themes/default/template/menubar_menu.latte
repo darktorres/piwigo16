@@ -693,6 +693,7 @@
 <dd>
   {if isset($block->data['qsearch']) and $block->data['qsearch'] == true}
     {do combineScript(id: 'menubar-quicksearch', load: 'footer', require: 'page-data', path: 'themes/default/js/menubar-quicksearch.js')}
+    {do combineCss(id: 'menubar_menu', path: 'themes/default/css/components/menubar_menu.css')}
     {do exposeString('Quick search')}
     <form
       action="{$ROOT_URL}qsearch.php"
@@ -700,14 +701,13 @@
       id="quicksearch"
     >
       <p
-        style="margin:0;padding:0"
+        class="quicksearch-form-p"
         {*this <p> is for html validation only - does not affect positioning*}
       >
         <input
           type="text"
           name="q"
           id="qsearchInput"
-          style="width:90%"
           {if !empty($QUERY_SEARCH)}
           value="{$QUERY_SEARCH|noescape}"
           {/if}

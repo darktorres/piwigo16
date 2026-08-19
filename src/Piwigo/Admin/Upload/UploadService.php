@@ -791,12 +791,6 @@ final readonly class UploadService
 
         $file_infos = $this->pwgImageInfos($format_abs_path);
 
-        $insert = [
-            'image_id' => $format_of,
-            'ext' => $format_ext,
-            'filesize' => $file_infos->filesize,
-        ];
-
         $filesize = (int) $file_infos->filesize;
 
         $existing_format_id = $this->imageService->getFormatIdByImageAndExt(ImageId::from((int) $format_of), $format_ext);

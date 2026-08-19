@@ -105,7 +105,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->lang, $this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->activityService, $this->categoryService, $this->htmlRenderer, $this->entityManager);
+                ->render($this->lang, $this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->activityService, $this->categoryService, $this->htmlRenderer, $this->entityManager, $this->renderer);
         } elseif ($tab === 'sort_order') {
             $this->elementSetRanksPageRenderer
                 ->render();

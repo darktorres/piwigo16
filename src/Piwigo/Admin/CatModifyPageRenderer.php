@@ -9,9 +9,10 @@ use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\CatModifyPageRendered;
 use Piwigo\Admin\Event\CatModifyPageRendering;
-use Piwigo\Admin\Projection\CatModifyPageContext;
+use Piwigo\Admin\Projection\CatModifyView;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -22,6 +23,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -48,7 +50,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -115,7 +117,6 @@ final class CatModifyPageRenderer
 
         // ----------------------------------------------------- template initialization
         $base_url = $urlService->getRootUrl() . 'admin.php?page=';
-        $cat_list_url = $base_url . 'albums';
 
         // 'id_uppercat' is one of the nullable fields normalized to '' above
         // (root category); otherwise it is the parent category id.
@@ -132,11 +133,6 @@ final class CatModifyPageRenderer
         // album's current parent.
         $category_id_uppercat_raw = $category['id_uppercat'];
         $category_id_uppercat = (is_int($category_id_uppercat_raw) || is_string($category_id_uppercat_raw)) ? $category_id_uppercat_raw : '';
-
-        $self_url = $cat_list_url;
-        if ($category_id_uppercat !== '') {
-            $self_url .= '&amp;parent_id=' . $category_id_uppercat;
-        }
 
         // We show or hide this warning in JS
         $pageState->addWarning($lang->t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . $lang->t('Unlock it') . '</span>');
@@ -216,7 +212,6 @@ final class CatModifyPageRenderer
         // every fetched value as string|null; narrow with real fallbacks (matching
         // the min_date/max_date/occured_on pattern above) rather than assuming.
         $category_lastmodified = is_string($category['lastmodified']) ? $category['lastmodified'] : null;
-        $info_id = $lang->t('Numeric identifier : %d', $category_id);
         $info_last_modified_since = DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true);
         $info_last_modified = DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']);
         $info_images_recursive = $lang->t(
@@ -227,9 +222,6 @@ final class CatModifyPageRenderer
             '%d in whole branch',
             $category['nb_subcats']
         );
-
-        $u_manage_ranks = $base_url . 'element_set_ranks&amp;cat_id=' . $category_id;
-        $cache_keys = AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']);
 
         $cat_full_dir = null;
         $cat_dir_name = null;
@@ -285,12 +277,7 @@ final class CatModifyPageRenderer
             $representant = $tpl_representant;
         }
 
-        $parent_category = null;
-        if ((bool) $category['is_virtual']) {
-            $parent_category = $category_id_uppercat === '' ? [] : [$category_id_uppercat];
-        }
-
-        $template->assignContext(new CatModifyPageContext(
+        $adminContent = $renderer->render(new CatModifyView(
             categoriesNav: $categories_nav,
             categoriesParentNav: $categories_parent_nav,
             parentCatId: $category_id_uppercat !== '' ? $category_id_uppercat : 0,
@@ -302,7 +289,6 @@ final class CatModifyPageRenderer
             uDelete: $base_url . 'albums',
             uJumpto: $u_jumpto,
             uAddPhotosAlbum: $base_url . 'photos_add&amp;album=' . $category_id,
-            uChildren: $cat_list_url . '&amp;parent_id=' . $category_id,
             uMove: $base_url . 'albums&amp;parent_id=' . $category_id,
             uActivity: $urlService->getRootUrl() . 'admin.php?page=user_activity&album=' . $category_id,
             catCommentable: $cat_commentable,
@@ -312,28 +298,24 @@ final class CatModifyPageRenderer
             infoCreationSince: $info_creation_since,
             infoCreation: $info_creation,
             infoDirectSub: $info_direct_sub,
-            infoId: $info_id,
             infoLastModifiedSince: $info_last_modified_since,
             infoLastModified: $info_last_modified,
             infoImagesRecursive: $info_images_recursive,
             infoSubcats: $info_subcats,
             nbSubcats: $category['nb_subcats'],
-            uManageRanks: $u_manage_ranks,
-            cacheKeys: $cache_keys,
             catFullDir: $cat_full_dir,
             catDirName: $cat_dir_name,
             catMinDir: $cat_min_dir,
             uSync: $u_sync,
             representant: $representant,
-            parentCategory: $parent_category,
-            pwgToken: $csrfService
+            csrfToken: $csrfService
                 ->getToken(),
         ));
 
         $eventDispatcher->dispatch(new CatModifyPageRendered());
 
         // ----------------------------------------------------------- sending html code
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'cat_modify.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 
     /**

@@ -10,7 +10,8 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
-use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\PermalinksView;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -22,6 +23,7 @@ use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -40,6 +42,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -138,7 +141,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             $deleted_permalinks[] = $row;
         }
 
-        $template->assignContext(new PermalinksPageContext(
+        $adminContent = $this->renderer->render(new PermalinksView(
             nbCats: $nb_cats,
             sortId: $sortHeaders['SORT_ID'],
             sortName: $sortHeaders['SORT_NAME'],
@@ -149,14 +152,16 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             sortOldDateDeleted: $oldSortHeaders['SORT_OLD_DATE_DELETED'],
             sortOldLastHit: $oldSortHeaders['SORT_OLD_LAST_HIT'],
             sortOldHit: $oldSortHeaders['SORT_OLD_HIT'],
-            pwgToken: $pwg_token,
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
+            csrfToken: $pwg_token,
             deletedPermalinks: $deleted_permalinks,
-            adminPageTitle: $this->lang->t('Albums'),
             categoriesOptions: $categories_options,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'permalinks.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Albums'),
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
+        ));
     }
 
     /**

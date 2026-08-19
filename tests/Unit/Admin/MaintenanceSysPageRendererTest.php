@@ -136,7 +136,12 @@ test('render() adds no warning for a webmaster and passes the real system activi
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={=(int) $isWebmaster}|first={=json_encode($activityLogEntries[0] ?? null)}');
+        // |noescape is required here: json_encode()'s literal '{'/'}'
+        // characters otherwise go through Latte's own HTML-context
+        // auto-escaping (which Piwigo's escaper applies to Latte's own
+        // delimiter characters too) and come out as `&#123;`/`}`,
+        // corrupting the JSON.
+        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={=(int) $isWebmaster}|first={=json_encode($activityLogEntries[0] ?? null)|noescape}');
         $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 

@@ -690,6 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'site_update', load: 'footer', path: 'themes/admin/default/js/site_update.js')}
+{do combineCss(id: 'site_update', path: 'themes/admin/default/css/pages/site_update.css')}
 
 <div class="selectedAlbum site-url-path">
   <span class="icon-folder-open selectedAlbum-first">{$SITE_URL}</span>
@@ -787,7 +788,7 @@
             checked="checked"
             {/if}
           > {='directories + files'|translate}</label>
-        <ul style="display:none;padding-left:3em">
+        <ul class="sync-sublist u-hidden">
           <li><label><input
                 type="checkbox"
                 name="display_info"
@@ -823,7 +824,7 @@
         checked="checked"
         {/if}
       > {='Synchronize metadata'|translate} ({$METADATA_LIST})</label>
-    <ul style="padding-left:3em">
+    <ul class="sync-sublist">
       <li>
         <label><input
             type="checkbox"

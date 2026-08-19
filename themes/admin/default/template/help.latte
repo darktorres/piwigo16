@@ -690,10 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {if !$ENABLE_SYNCHRONIZATION}
-  {capture $tmpHtmlStyle}
-#helpSynchro { display:none; }
-{/capture}
-  {do htmlStyle($tmpHtmlStyle)}
+  {do combineCss(id: 'help', path: 'themes/admin/default/css/pages/help.css')}
 {/if}
 
 <h2>{='Help'|translate} &raquo; {$HELP_SECTION_TITLE|noescape}</h2>

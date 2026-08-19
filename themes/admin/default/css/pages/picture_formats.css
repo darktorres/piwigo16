@@ -1,0 +1,4 @@
+/* Beats theme.css's .formats-list{display:flex} (equal specificity, cascade-order risk). */
+.formats-list.u-hidden {
+  display: none;
+}

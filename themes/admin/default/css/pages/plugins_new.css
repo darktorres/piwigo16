@@ -1,0 +1,4 @@
+/* Beats theme.css's .pluginImage .screenshot{background-image:url(path-to-file/img.jpg)} (higher specificity: 3 classes vs 2). */
+.pluginImage .screenshot.has-screenshot {
+  background-image: var(--screenshot-url);
+}

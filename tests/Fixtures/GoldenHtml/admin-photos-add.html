@@ -25,8 +25,6 @@
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
 
-<style type="text/css">
-.addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */</style>
   </head>
 
   <body id="theAdminPage">
@@ -58,7 +56,7 @@
         </div>
       </div>
 
-      <div style="clear:both;"></div>
+      <div class="u-clear-both"></div>
 
 
       <div id="pwgMain">
@@ -267,10 +265,7 @@
 
 
   <div
-    class="addAlbumEmptyCenter"
-    
-    style="display:none;"
-    
+    class="addAlbumEmptyCenter u-hidden"
   >
     <div class="addAlbumEmpty">
       <div class="addAlbumEmptyTitle">Welcome!</div>
@@ -284,12 +279,12 @@
     </div>
   </div>
 
-  <div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
-  <div class="errors" style="display:none"><i
+  <div class="infos u-hidden"><i class="eiw-icon icon-ok"></i></div>
+  <div class="errors u-hidden"><i
       class="eiw-icon icon-cancel"
     ></i><ul></ul></div>
 
-  <p class="afterUploadActions" style="margin:10px; display:none;">
+  <p class="afterUploadActions u-hidden">
     <a class="batchLink icon-pencil"></a><span
         class="buttonSeparator"
       >or</span><a
@@ -304,7 +299,6 @@
     enctype="multipart/form-data"
     method="post"
     action="admin.php?page=photos_add"
-    
   >
     <fieldset class="selectAlbum">
       <legend><span
@@ -312,7 +306,6 @@
           ></span>Select an album</legend>
       <div
           class="selectedAlbum"
-          
           id="selectedAlbum"
         >
         <span
@@ -322,10 +315,7 @@
         <a class="icon-pencil" id="selectedAlbumEdit"></a>
       </div>
       <div
-          class="selectAlbumSelector"
-          
-          style="display: none"
-          
+          class="selectAlbumSelector u-hidden"
           id="addPhotosAS"
         >
         <p
@@ -336,7 +326,7 @@
     </fieldset>
     <fieldset class="selectFiles">
       <legend>
-        <div style="display:flex;align-items: center;">
+        <div class="select-files-legend-row">
           <span
             class="icon-file-image icon-yellow"
           ></span>Select files
@@ -357,7 +347,7 @@
             <input type="checkbox" id="toggleUpdateMode">
             <span class="slider round"></span>
           </label>
-          <div style="margin-left: 6px;">
+          <div class="update-mode-hint">
             <p>If a photo in this album has the same filename, update the file without changing the photo's properties</p>
           </div>
         </div>
@@ -382,24 +372,20 @@
       <div
         class="photosUploader"
         id="uploader"
-        
       >
         <p>Your browser doesn't have HTML5 support.</p>
       </div>
       <div
-        class="selectAlbumFirst"
+        class="selectAlbumFirst u-hidden"
         id="chooseAlbumFirst"
-        
-        style="display: none;"
-        
       >
         <p>First choose an album, then add your files</p>
       </div>
     </fieldset>
 
-    <div id="uploadingActions" style="display:none">
-      <div class="big-progressbar" style="max-width:98%;margin-bottom: 10px;">
-        <div class="progressbar" style="width:0%"></div>
+    <div id="uploadingActions" class="u-hidden">
+      <div class="big-progressbar">
+        <div class="progressbar"></div>
       </div>
       <button
         id="cancelUpload"
@@ -414,7 +400,7 @@
     >Start Upload</button>
   </form>
 
-  <fieldset style="display:none" class="Addedphotos">
+  <fieldset class="Addedphotos u-hidden">
     <div id="uploadedPhotos"></div>
   </fieldset>
 </div> <!-- photosAddContent -->

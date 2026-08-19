@@ -1,0 +1,14 @@
+/* Beats theme.css's .autoupdate_bar{display:flex} (equal specificity, cascade-order risk). */
+.autoupdate_bar.u-hidden {
+  display: none;
+}
+
+.up-to-date-message {
+  text-align: left;
+  margin-left: 20px;
+}
+
+/* Beats theme.css's .pluginBox{display:flex} (equal specificity, cascade-order risk). */
+.pluginBox.pluginMiniBox.u-hidden {
+  display: none;
+}

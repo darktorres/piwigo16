@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <div style="clear:both;"></div>
+      <div class="u-clear-both"></div>
 
 
       <div id="pwgMain">
@@ -220,8 +220,7 @@
     <td>Actions</td>
   </tr>
   <tr
-    style="text-align:left"
-    class="row2"
+    class="site-row row2"
   ><td>
       <a
         href="{{ROOT_PATH}}/galleries/"
@@ -234,7 +233,7 @@
     </td></tr>
 </table>
 
-<p id="showCreateSite" style="text-align:left;margin-left:1em;">
+<p id="showCreateSite">
   <a href="#">create a new site</a>
 </p>
 
@@ -242,13 +241,13 @@
   action="admin.php?page=site_manager"
   method="post"
   id="createSite"
-  style="display:none"
+  class="u-hidden"
 >
   <input type="hidden" name="pwg_token" value="{{TOKEN}}">
   <fieldset>
     <legend>create a new site</legend>
 
-    <p style="margin-top:0;"><strong>Directory</strong>
+    <p class="create-site-directory"><strong>Directory</strong>
       <br><input type="text" name="galleries_url" id="galleries_url">
     </p>
 

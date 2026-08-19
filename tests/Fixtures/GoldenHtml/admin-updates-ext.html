@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <div style="clear:both;"></div>
+      <div class="u-clear-both"></div>
 
 
       <div id="pwgMain">
@@ -224,15 +224,12 @@
       onClick="ignoreAll(); return false;"
     >Ignore All</div>
   <div
-      class="head-button-2 icon-ccw"
+      class="head-button-2 icon-ccw u-hidden"
       id="reset_ignore"
       onClick="resetIgnored(); return false;"
-      
-      style="display:none;"
-      
     >Reset ignored updates</div>
 </div>
-<div class="autoupdate_bar" style="display:none;">
+<div class="autoupdate_bar u-hidden">
   Please wait...<br><img
       src="themes/admin/default/images/ajax-loader-bar.gif"
     >
@@ -240,7 +237,7 @@
 
 <p
     id="up_to_date"
-    style="display:none; text-align:left; margin-left:20px;"
+    class="u-hidden up-to-date-message"
   >All extensions are up to date.</p>
 
 

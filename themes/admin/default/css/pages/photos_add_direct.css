@@ -1,0 +1,53 @@
+/* specific to this page, do not move in theme.css */
+.addAlbumFormParent {
+  display: none;
+}
+
+.centered-block {
+  text-align: center;
+}
+
+/* Beats theme.css's .infos, .errors, ...{display:flex} (equal specificity, cascade-order risk). */
+.infos.u-hidden,
+.errors.u-hidden {
+  display: none;
+}
+
+.afterUploadActions {
+  margin: 10px;
+}
+
+.select-files-legend-row {
+  display: flex;
+  align-items: center;
+}
+
+.update-mode-hint {
+  margin-left: 6px;
+}
+
+/* Beats theme.css's .selectedAlbum{display:flex} (equal specificity, cascade-order risk). */
+.selectedAlbum.u-hidden {
+  display: none;
+}
+
+/* Beats theme.css's .selectAlbumSelector{display:flex} (equal specificity, cascade-order risk). */
+.selectAlbumSelector.u-hidden {
+  display: none;
+}
+
+/* Beats theme.css's .selectAlbumFirst{display:flex} (equal specificity, cascade-order risk). */
+.selectAlbumFirst.u-hidden {
+  display: none;
+}
+
+/* Beats theme.css's .big-progressbar{max-width:90%} (equal specificity, cascade-order risk);
+   also scopes past #uploadForm .big-progressbar{...} (a different, non-overlapping property set). */
+#uploadingActions .big-progressbar {
+  max-width: 98%;
+  margin-bottom: 10px;
+}
+
+#uploadingActions .progressbar {
+  width: 0%;
+}

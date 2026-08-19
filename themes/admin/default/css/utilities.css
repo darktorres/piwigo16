@@ -23,3 +23,7 @@
 .u-block {
   display: block;
 }
+
+.u-clear-both {
+  clear: both;
+}

@@ -693,6 +693,7 @@
 
 {do combineScript(id: 'jquery.ui.slider', require: 'jquery.ui', load: 'header', path: 'themes/default/js/ui/minified/jquery.ui.slider.min.js')}
 {do combineCss(path: "themes/default/js/ui/theme/jquery.ui.slider.css")}
+{do combineCss(id: 'plugins_new', path: 'themes/admin/default/css/pages/plugins_new.css')}
 
 {do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
@@ -867,8 +868,8 @@
               ></i></span>
           {else}
             <span
-              class="screenshot"
-              style="background-image: url({$plugin['SCREENSHOT']|noescape});"
+              class="screenshot has-screenshot"
+              style="--screenshot-url: url({$plugin['SCREENSHOT']|noescape});"
             ></span>
           {/if}
         </div>

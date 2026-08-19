@@ -724,10 +724,7 @@
 {do combineScript(id: 'piecon', load: 'footer', path: 'themes/default/js/plugins/piecon.js')}
 {do combineScript(id: 'add_photo', load: 'footer', require: 'tus-js-client,page-data', path: 'themes/admin/default/js/photos_add_direct.js')}
 
-{capture $tmpHtmlStyle}
-.addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'photos_add_direct', path: 'themes/admin/default/css/pages/photos_add_direct.css')}
 
 {var $originalImageIdStr = ' ' . ($FORMATS_ORIGINAL_INFO['id'] ?? -1) . ' '}
 {do exposeData('display_formats', $DISPLAY_FORMATS)}
@@ -768,7 +765,7 @@
       <ul>
         <li n:foreach="$setup_warnings as $warning">{$warning}</li>
       </ul>
-      <div class="hideButton" style="text-align:center"><a
+      <div class="hideButton centered-block"><a
           href="{$hide_warnings_link|noescape}"
         >{='Hide'|translate}</a></div>
     </div>
@@ -818,10 +815,7 @@
 
   <div
     n:if="!$DISPLAY_FORMATS"
-    class="addAlbumEmptyCenter"
-    {if $NB_ALBUMS > 0}
-    style="display:none;"
-    {/if}
+    class="addAlbumEmptyCenter{if $NB_ALBUMS > 0} u-hidden{/if}"
   >
     <div class="addAlbumEmpty">
       <div class="addAlbumEmptyTitle">{='Welcome!'|translate}</div>
@@ -835,12 +829,12 @@
     </div>
   </div>
 
-  <div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
-  <div class="errors" style="display:none"><i
+  <div class="infos u-hidden"><i class="eiw-icon icon-ok"></i></div>
+  <div class="errors u-hidden"><i
       class="eiw-icon icon-cancel"
     ></i><ul></ul></div>
 
-  <p class="afterUploadActions" style="margin:10px; display:none;">
+  <p class="afterUploadActions u-hidden">
     {if !$DISPLAY_FORMATS}
       <a class="batchLink icon-pencil"></a><span
         class="buttonSeparator"
@@ -858,13 +852,10 @@
 
   <form
     id="uploadForm"
-    class="{if $DISPLAY_FORMATS}format-mode{/if}"
+    class="{if $DISPLAY_FORMATS}format-mode{/if}{if $NB_ALBUMS == 0} u-hidden{/if}"
     enctype="multipart/form-data"
     method="post"
     action="{$form_action|noescape}"
-    {if $NB_ALBUMS == 0}
-    style="display:none;"
-    {/if}
   >
     {if !$DISPLAY_FORMATS}
       <fieldset class="selectAlbum">
@@ -872,10 +863,7 @@
             class="icon-folder-open icon-red"
           ></span>{='Drop into album'|translate}</legend>
         <div
-          class="selectedAlbum"
-          {if !$can_upload}
-          style="display: none"
-          {/if}
+          class="selectedAlbum{if !$can_upload} u-hidden{/if}"
           id="selectedAlbum"
         >
           <span
@@ -885,10 +873,7 @@
           <a class="icon-pencil" id="selectedAlbumEdit"></a>
         </div>
         <div
-          class="selectAlbumSelector"
-          {if $can_upload}
-          style="display: none"
-          {/if}
+          class="selectAlbumSelector{if $can_upload} u-hidden{/if}"
           id="addPhotosAS"
         >
           <p
@@ -935,7 +920,7 @@
 *}
     <fieldset class="selectFiles">
       <legend>
-        <div style="display:flex;align-items: center;">
+        <div class="select-files-legend-row">
           <span
             class="icon-file-image icon-yellow"
           ></span>{='Select files'|translate}
@@ -958,7 +943,7 @@
             <input type="checkbox" id="toggleUpdateMode">
             <span class="slider round"></span>
           </label>
-          <div style="margin-left: 6px;">
+          <div class="update-mode-hint">
             <p>{='If a photo in this album has the same filename, update the file without changing the photo\'s properties'|translate}</p>
           </div>
         </div>
@@ -997,28 +982,22 @@
         </div>
       </div>
       <div
-        class="photosUploader"
+        class="photosUploader{if !$can_upload} u-hidden{/if}"
         id="uploader"
-        {if !$can_upload}
-        style="display: none;"
-        {/if}
       >
         <p>Your browser doesn't have HTML5 support.</p>
       </div>
       <div
-        class="selectAlbumFirst"
+        class="selectAlbumFirst{if $can_upload} u-hidden{/if}"
         id="chooseAlbumFirst"
-        {if $can_upload}
-        style="display: none;"
-        {/if}
       >
         <p>{='First choose an album, then add your files'|translate}</p>
       </div>
     </fieldset>
 
-    <div id="uploadingActions" style="display:none">
-      <div class="big-progressbar" style="max-width:98%;margin-bottom: 10px;">
-        <div class="progressbar" style="width:0%"></div>
+    <div id="uploadingActions" class="u-hidden">
+      <div class="big-progressbar">
+        <div class="progressbar"></div>
       </div>
       <button
         id="cancelUpload"
@@ -1033,7 +1012,7 @@
     >{='Start Upload'|translate}</button>
   </form>
 
-  <fieldset style="display:none" class="Addedphotos">
+  <fieldset class="Addedphotos u-hidden">
     <div id="uploadedPhotos"></div>
   </fieldset>
 </div> <!-- photosAddContent -->

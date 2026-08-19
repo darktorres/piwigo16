@@ -692,6 +692,7 @@
 {do combineScript(id: 'jquery.ajaxmanager', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.ajaxmanager.js')}
 {do combineScript(id: 'jquery.jgrowl', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.jgrowl_minimized.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery.jgrowl.css")}
+{do combineCss(id: 'updates_ext', path: 'themes/admin/default/css/pages/updates_ext.css')}
 
 {do exposeData('csrf_token', $CSRF_TOKEN)}
 {do exposeData('ext_type', $EXT_TYPE)}
@@ -719,15 +720,12 @@
       onClick="ignoreAll(); return false;"
     >{='Ignore All'|translate}</div>
     <div
-      class="head-button-2 icon-ccw"
+      class="head-button-2 icon-ccw{if !$SHOW_RESET} u-hidden{/if}"
       id="reset_ignore"
       onClick="resetIgnored(); return false;"
-      {if !$SHOW_RESET}
-      style="display:none;"
-      {/if}
     >{='Reset ignored updates'|translate}</div>
   </div>
-  <div class="autoupdate_bar" style="display:none;">
+  <div class="autoupdate_bar u-hidden">
     {='Please wait...'|translate}<br><img
       src="themes/admin/default/images/ajax-loader-bar.gif"
     >
@@ -735,7 +733,7 @@
 
   <p
     id="up_to_date"
-    style="display:none; text-align:left; margin-left:20px;"
+    class="u-hidden up-to-date-message"
   >{='All %s are up to date.'|sprintf:$EXT_TYPE|translate}</p>
 
   {foreach $UPDATES_EXTENSION as $type => $updates}
@@ -759,11 +757,10 @@
 
       <div
         n:foreach="$updates as $extension"
-        class="pluginBox pluginMiniBox"
+        class="pluginBox pluginMiniBox{if $extension['IGNORED']} u-hidden{/if}"
         id="{$type}_{$extension['EXT_ID']}"
         {if $extension['IGNORED']}
         data-ignored="true"
-        style="display:none;"
         {/if}
       >
         <div class="pluginContent">

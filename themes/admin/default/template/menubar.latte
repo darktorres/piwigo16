@@ -693,12 +693,7 @@
 
 {do combineScript(id: 'menubar', load: 'footer', require: 'jquery.ui.sortable', path: 'themes/admin/default/js/menubar.js')}
 
-{capture $tmpHtmlStyle}
-.font-checkbox i {
-  margin-left:5px;
-}
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'menubar', path: 'themes/admin/default/css/pages/menubar.css')}
 
 <form id="menuOrdering" action="{$F_ACTION|noescape}" method="post">
   <ul class="menuUl">
@@ -722,8 +717,7 @@
 
         <img
           src="{$themeconf['admin_icon_dir']}/cat_move.png"
-          class="drag_button"
-          style="display:none;"
+          class="drag_button u-hidden"
           alt="{='Drag to re-order'|translate}"
           title="{='Drag to re-order'|translate}"
         >

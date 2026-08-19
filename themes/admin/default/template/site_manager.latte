@@ -695,6 +695,7 @@
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
+{do combineCss(id: 'site_manager', path: 'themes/admin/default/css/pages/site_manager.css')}
 {do combineScript(id: 'site_manager', load: 'footer', require: 'common,jquery.confirm,page-data', path: 'themes/admin/default/js/site_manager.js')}
 
 <div n:if="!empty($remote_output)" class="remoteOutput">
@@ -713,8 +714,7 @@
   </tr>
   <tr
     n:foreach="$sites as $site"
-    style="text-align:left"
-    class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
+    class="site-row {if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
   ><td>
       <a
         href="{$site['NAME']}"
@@ -743,7 +743,7 @@
     </td></tr>
 </table>
 
-<p id="showCreateSite" style="text-align:left;margin-left:1em;">
+<p id="showCreateSite">
   <a href="#">{='create a new site'|translate}</a>
 </p>
 
@@ -751,13 +751,13 @@
   action="{$F_ACTION|noescape}"
   method="post"
   id="createSite"
-  style="display:none"
+  class="u-hidden"
 >
   <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
   <fieldset>
     <legend>{='create a new site'|translate}</legend>
 
-    <p style="margin-top:0;"><strong>{='Directory'|translate}</strong>
+    <p class="create-site-directory"><strong>{='Directory'|translate}</strong>
       <br><input type="text" name="galleries_url" id="galleries_url">
     </p>
 

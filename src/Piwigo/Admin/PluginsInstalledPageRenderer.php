@@ -11,11 +11,12 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Projection\PluginsInstalledPageContext;
+use Piwigo\Admin\Projection\PluginsInstalledView;
 use Piwigo\Admin\Request\PluginsInstalledDisplayRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -26,6 +27,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 
@@ -41,13 +43,7 @@ use Piwigo\Users\PreferencesService;
  */
 final class PluginsInstalledPageRenderer
 {
-    /**
-     * $pageSlug is an explicit param instead of `global $page['page'];` --
-     * the one real caller (PluginsSubController) already knows its own
-     * fixed page slug statically (it's the only class registered for the
-     * 'plugins' slug in config/admin_pages.php).
-     */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -62,7 +58,6 @@ final class PluginsInstalledPageRenderer
             $show_details = $sessionService->getPluginsShowDetails() ?? false;
         }
 
-        $base_url = $urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
         $pwg_token = $csrfService
             ->getToken();
 
@@ -148,7 +143,6 @@ final class PluginsInstalledPageRenderer
         }
 
         $merged_extensions = $pem_catalog->getLocallyMergedExtensions();
-        $merged_plugins = false;
         $tpl_plugins = [];
         $count_types_plugins = [
             'active' => 0,
@@ -220,18 +214,11 @@ final class PluginsInstalledPageRenderer
                 $plugin_state = 'merged';
                 $tpl_plugin['STATE'] = $plugin_state;
                 $tpl_plugin['DESC'] = $lang->t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
-                $merged_plugins = true;
             }
 
             $count_types_plugins[$plugin_state]++;
 
             $tpl_plugins[] = $tpl_plugin;
-        }
-
-        $plugin_states = ['active', 'inactive'];
-
-        if ($merged_plugins) {
-            $plugin_states[] = 'merged';
         }
 
         $missing_plugin_ids = array_diff(
@@ -250,23 +237,21 @@ final class PluginsInstalledPageRenderer
                 ];
                 $count_types_plugins['missing']++;
             }
-            $plugin_states[] = 'missing';
         }
 
-        $template->assignContext(new PluginsInstalledPageContext(
+        $adminContent = $renderer->render(new PluginsInstalledView(
             plugins: $tpl_plugins,
             countTypesPlugins: $count_types_plugins,
-            pwgToken: $pwg_token,
-            baseUrl: $base_url,
+            csrfToken: $pwg_token,
             showDetails: $show_details,
-            maxInactiveBeforeHide: $pluginsDisplay->showInactive ? 999 : 8,
-            isWebmaster: $accessControl->isWebmaster(),
-            adminPageTitle: $lang->t('Plugins'),
+            isWebmaster: $accessControl->isWebmaster() ? 1 : 0,
             viewSelector: $preferencesService->getPluginManagerView() ?? 'classic',
             enableExtensionsInstall: $currentConfig->enableExtensionsInstall,
-            pluginStates: $plugin_states,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_installed.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Plugins'),
+        ));
     }
 }

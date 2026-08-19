@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\PictureModifyBeforeUpdate;
 use Piwigo\Admin\Event\PictureModifyPageRendered;
-use Piwigo\Admin\Projection\PictureModifyPageContext;
+use Piwigo\Admin\Projection\PictureModifyView;
 use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -19,6 +19,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -27,7 +28,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\DerivativeImage;
@@ -43,6 +43,7 @@ use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -84,6 +85,7 @@ final readonly class PictureModifyPageRenderer
         private InputValidator $inputValidator,
         private Paths $paths,
         private PermissionsCachePool $permissionsCachePool,
+        private Renderer $renderer,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -287,11 +289,7 @@ final readonly class PictureModifyPageRenderer
         $path = is_string($row['path']) ? $row['path'] : '';
         $tn_src = DerivativeImage::url(ImageStdParams::MEDIUM, $src_image);
         $file_src = DerivativeImage::url(ImageStdParams::LARGE, $src_image);
-        $title = $htmlRenderer->renderElementName($row);
-        $dimensions = (is_scalar($row['width']) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height']) ? (string) $row['height'] : '');
         $format_flag = ($row['width'] >= $row['height']) ? 1 : 0; // 0:horizontal, 1:vertical
-        $filesize = (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB';
-        $registration_date = DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false);
         $date_creation = is_string($row['date_creation']) || is_int($row['date_creation']) ? $row['date_creation'] : null;
         $f_action = $this->urlService->getRootUrl() . 'admin.php'
             . $this->urlService->getQueryStringDiff(['sync_metadata']);
@@ -338,13 +336,6 @@ final readonly class PictureModifyPageRenderer
             $intro_vars['formats'] = $this->lang->t('Formats: %s', implode(', ', $format_strings));
         }
 
-        $row_path = is_string($row['path']) ? $row['path'] : null;
-        $picture_ext = $this->currentConfig->pictureExtensions;
-        $u_coi = null;
-        if (in_array(StringHelper::getExtension($row_path), $picture_ext, true)) {
-            $u_coi = $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id;
-        }
-
         // image level options
         $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
@@ -352,7 +343,6 @@ final readonly class PictureModifyPageRenderer
         // categories
         $related_categories = [];
         $related_categories_ids = [];
-        $storage_category = null;
 
         foreach ($imageService->getCategoryLinksForImage(ImageId::from($image_id)) as $cat_row) {
             $row_category_id = (string) $cat_row['category_id'];
@@ -363,10 +353,6 @@ final readonly class PictureModifyPageRenderer
                   $row_uppercats,
                   $this->urlService->getRootUrl() . 'admin.php?page=album-'
               );
-
-            if ($row_category_id === $storage_category_id) {
-                $storage_category = $name;
-            }
 
             $related_categories[$row_category_id] = [
                 'name' => $name,
@@ -434,10 +420,7 @@ final readonly class PictureModifyPageRenderer
             }
         }
 
-        // associate to albums
-        $associated_albums = $imageService->getAssociatedCategoryIds(ImageId::from($image_id));
-
-        $template->assignContext(new PictureModifyPageContext(
+        $adminContent = $this->renderer->render(new PictureModifyView(
             saveSuccess: $save_success,
             tagSelection: $tag_selection,
             uDownload: $u_download,
@@ -449,34 +432,25 @@ final readonly class PictureModifyPageRenderer
             tnSrc: $tn_src,
             fileSrc: $file_src,
             name: $name_value,
-            title: $title,
-            dimensions: $dimensions,
             format: $format_flag,
-            filesize: $filesize,
-            registrationDate: $registration_date,
             author: htmlspecialchars($author_value),
             dateCreation: $date_creation,
             description: htmlspecialchars($comment_value),
             fAction: $f_action,
             introVars: $intro_vars,
-            uCoi: $u_coi,
             levelOptions: $level_options,
             levelOptionsSelected: [$selected_level],
-            storageCategory: $storage_category,
             relatedCategories: $related_categories,
             relatedCategoriesIds: $related_categories_ids,
             uJumpto: $u_jumpto,
-            associatedAlbums: $associated_albums,
             representedAlbums: $represented_albums,
-            storageAlbum: $storage_category_id,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
         ));
 
-        $this->eventDispatcher->dispatch(new PictureModifyPageRendered());
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
 
-        // ----------------------------------------------------------- sending html code
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_modify.latte');
+        $this->eventDispatcher->dispatch(new PictureModifyPageRendered());
     }
 }

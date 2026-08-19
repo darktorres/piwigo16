@@ -18,7 +18,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class PictureMetadataPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
+     * @param list<MetadataPanel>|null $metadata
      */
     public function __construct(
         public ?array $metadata,
@@ -33,7 +33,7 @@ final readonly class PictureMetadataPageContext implements TemplatePageContext
         $result = [];
 
         if ($this->metadata !== null) {
-            $result['metadata'] = $this->metadata;
+            $result['metadata'] = array_map(static fn (MetadataPanel $panel): array => $panel->toArray(), $this->metadata);
         }
 
         return $result;

@@ -877,6 +877,15 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     // whole arrange-and-insert step now lives inside try/finally too,
     // so any failure (setup or assertion alike) still cleans up.
     //
+    // A SECOND, real collision source was found live this session:
+    // TagServiceTest.php's own tagServiceTestDisposableImageId() drew
+    // from this exact same 600000-649998 range for its own manual
+    // `images` inserts, so the two files could -- and, reproduced live,
+    // did -- pick the identical id under --parallel. Narrowed to this
+    // file's own dedicated half of the original range; the sibling
+    // 650000-699998 range below (readable/unreadable pair) and
+    // TagServiceTest.php's own now-disjoint half stay clear of it.
+    //
     // Exempt from tests/Pest.php's blanket per-test transaction -- see
     // 'currentUser() throws...' above for why.
     DbTransactionTestOverride::rollback();
@@ -888,7 +897,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
 
-    $remoteId = random_int(600000, 649998);
+    $remoteId = random_int(600_000, 624_998);
     $localId = $remoteId + 1;
 
     try {

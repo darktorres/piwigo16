@@ -423,10 +423,16 @@ test('tagIdFromTagName() creates a new tag for an unknown name', function (): vo
  * randomized id below the real auto-increment counter (already
  * 700,000+, confirmed live) avoids ever colliding with a future
  * auto-generated row.
+ *
+ * This file's own dedicated half of what was originally a shared
+ * 600000-649998 range with ImageServiceTest.php's own
+ * 'deleteElementFiles skips a remote row...' test -- both files picked
+ * a manual `images.id` from the identical range with no coordination,
+ * a real collision confirmed live under --parallel this session.
  */
 function tagServiceTestDisposableImageId(Connection $conn): int
 {
-    $imageId = random_int(600_000, 649_998);
+    $imageId = random_int(625_000, 649_998);
     $conn->executeStatement(
         'INSERT INTO images (id, file, path) VALUES (?, ?, ?)',
         [$imageId, "p17-unit-test-{$imageId}.jpg", "upload/2026/08/p17-unit-test-{$imageId}.jpg"]

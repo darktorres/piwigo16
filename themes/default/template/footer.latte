@@ -731,6 +731,11 @@
 </div>
 </div>{* <!-- the_page --> *}
 
+{do combineScript(id: 'page-data', load: 'footer', path: 'themes/default/js/page-data.js')}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{=getPageDataScript()}
+
 <!-- BEGIN get_combined -->
 {=getCombinedScripts('footer')}
 <!-- END get_combined -->
@@ -740,8 +745,6 @@
   type="module"
   src="{$VITALS_SCRIPT_URL}"
 ></script>
-
-{=getPageDataScript()}
 
 <div n:if="isset($EXTRA_BODY_CONTENT)">{$EXTRA_BODY_CONTENT|noescape}</div>
 

@@ -97,7 +97,7 @@
 {varType string $FILE_CHRONOLOGY_VIEW}
 {varType string $FILE_SRC}
 {varType int $FORMAT}
-{varType list<array<string, mixed>> $FORMATS}
+{varType list<\Piwigo\Admin\Projection\PictureFormatRow> $FORMATS}
 {varType string|false|null $FORMATS_EXT_INFO}
 {varType array<array-key, mixed>|null $FORMATS_ORIGINAL_INFO}
 {varType string $FTP_HELP_CONTENT}
@@ -406,13 +406,15 @@
 {varType bool $authorize_remembering}
 {varType list<int> $available_rates}
 {varType string $base_url}
-{varType array<int|string, \Piwigo\Menu\DisplayBlock>|list<array{pos: int|float, reg: mixed}> $blocks}
+{varType list<\Piwigo\Admin\Projection\MenubarBlockConfigRow> $block_configs}
+{varType array<int|string, \Piwigo\Menu\DisplayBlock> $blocks}
 {varType list<string>|null $c13y_do_check}
-{varType list<array<string, mixed>> $c13y_list}
+{varType list<\Piwigo\Admin\Integrity\Projection\AnomalyDisplayRow> $c13y_list}
 {varType bool $c13y_show_submit_automatic_correction}
 {varType bool $c13y_show_submit_ignore}
 {varType ?\Piwigo\Config\CacheSizesSnapshot $cache_sizes}
-{varType array|list<array<string, mixed>> $categories}
+{varType ?list<\Piwigo\Calendar\Projection\CalendarBarEntry> $calendar_bars}
+{varType array|list<\Piwigo\Admin\Projection\CategoryListRow> $categories}
 {varType list<string>|null $categories_because_of_groups}
 {varType array $categories_selected}
 {varType list<mixed> $category}
@@ -424,13 +426,13 @@
 {varType array $category_options_selected}
 {varType list<string>|null $category_search_results}
 {varType array<int|string, mixed> $category_thumbnails}
-{varType array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $cats_navbar}
+{varType \Piwigo\Core\Projection\Navbar $cats_navbar}
 {varType string $chronology}
-{varType array<array-key, mixed> $chronology_calendar}
-{varType list<array<string, mixed>> $chronology_navigation_bars}
+{varType mixed $chronology_calendar}
+{varType list<\Piwigo\Calendar\Projection\ChronologyNavBarRow> $chronology_navigation_bars}
 {varType list<array{VALUE: string, CONTENT: string, SELECTED: bool}>|null $chronology_views}
 {varType int $chunk_size}
-{varType array{l: float, t: float, r: float, b: float}|null $coi}
+{varType ?\Piwigo\Image\Projection\CenterOfInterest $coi}
 {varType array<string, mixed> $comment_add}
 {varType \Piwigo\Image\DerivativeParams $comment_derivative_params}
 {varType array<string, mixed>|list<array<string, mixed>> $comments}
@@ -441,7 +443,7 @@
 {varType array{DATE_BETWEEN_1: string, DATE_BETWEEN_2: string}|null $content_new_elements_between}
 {varType array{DATE_SINGLE: string}|null $content_new_elements_single}
 {varType array<string, int> $count_types_plugins}
-{varType list<array{U_IMG: string, HTM_SIZE: string}> $cropped_derivatives}
+{varType list<\Piwigo\Admin\Projection\CroppedDerivativeLink> $cropped_derivatives}
 {varType array<string, mixed>|array<string, mixed>|null $current}
 {varType string $current_language}
 {varType array<string, string>|null $custom_derivatives}
@@ -487,7 +489,7 @@
 {varType array<int, string>|null $global_new_lines}
 {varType array<int, string>|null $group_mail_options}
 {varType array<int, string> $group_options}
-{varType array<int, string>|list<array<string, mixed>> $groups}
+{varType array<int, string>|list<\Piwigo\Group\Projection\GroupListRow> $groups}
 {varType string $groups_arr_id}
 {varType string $groups_arr_name}
 {varType list<array{id: int, name: string, counter: int}> $groups_for_filter}
@@ -503,8 +505,8 @@
 {varType string $image_order_choice}
 {varType array<string, string> $image_order_options}
 {varType array<int, array<string, mixed>>|null $image_orders}
-{varType array<int, array{tn: string, page: string}> $image_urls}
-{varType list<array<string, mixed>> $images}
+{varType array<int, \Piwigo\Rate\Projection\ImageThumbUrl> $image_urls}
+{varType list<\Piwigo\Admin\Projection\RatingReportImageRow> $images}
 {varType array<array-key, string>|null|array<int, string>|null $infos}
 {varType ?bool $install}
 {varType string $intro}
@@ -548,13 +550,14 @@
 {varType bool $meta_all}
 {varType bool $meta_empty_overrides}
 {varType ?int $meta_ref}
-{varType list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata}
+{varType list<\Piwigo\Picture\Projection\MetadataPanel>|null $metadata}
 {varType int $metadata_result}
 {varType array<string, list<array<string, mixed>>>|null $missing}
 {varType array{month?: list<array<int|string, float|int>>, avg: ?float} $monthStats}
 {varType string $month_labels}
+{varType ?\Piwigo\Calendar\Projection\CalendarMonthView $month_view}
 {varType ?string $name}
-{varType array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar}
+{varType ?\Piwigo\Core\Projection\Navbar|\Piwigo\Core\Projection\Navbar $navbar}
 {varType int $nb_albums}
 {varType int $nb_cats}
 {varType int $nb_thumbs_page}
@@ -610,7 +613,7 @@
 {varType array<array-key, array{name: string, unlinkable: bool}>|list<string>|null $related_categories}
 {varType list<string> $related_categories_ids}
 {varType list<array<string, mixed>>|null $related_tags}
-{varType array<string, mixed>|null $representant}
+{varType ?\Piwigo\Admin\Projection\CategoryRepresentant $representant}
 {varType list<int> $represented_albums}
 {varType ?int|?string $resize_quality}
 {varType ?string|string $save_error}
@@ -662,9 +665,9 @@
 {varType array<array-key, string> $theme_options}
 {varType string $theme_selected}
 {varType array<string, mixed> $themeconf}
-{varType array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $thumb_navbar}
+{varType \Piwigo\Core\Projection\Navbar $thumb_navbar}
 {varType ?\Piwigo\Image\DerivativeParams $thumb_params}
-{varType list<array<string, mixed>> $thumbnails}
+{varType list<\Piwigo\Admin\Projection\ElementSetThumbnailRow> $thumbnails}
 {varType ?string $time_elapsed_since_last_calc}
 {varType string $title}
 {varType int $total}

@@ -17,7 +17,7 @@ test('toArray flattens every property to its real Latte template variable name, 
             'F_ACTION' => '/admin.php?page=menubar',
             'isWebmaster' => 1,
             'ADMIN_PAGE_TITLE' => 'Menu Management',
-            'blocks' => [[
+            'block_configs' => [[
                 'pos' => 10,
                 'reg' => $reg,
             ]],

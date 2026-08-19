@@ -11,6 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Calendar\CalendarMonthly;
     use Piwigo\Calendar\CalendarQueryScope;
     use Piwigo\Calendar\CalendarRepository;
+    use Piwigo\Calendar\Projection\ChronologyNavBarRow;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
     use Piwigo\Core\RedirectServiceInterface;
@@ -182,6 +183,20 @@ namespace Piwigo\Tests\Integration {
             $result = $this->dig($value, $path);
 
             return is_array($result) ? $result : [];
+        }
+
+        /**
+         * getChronologyNavigationBars() returns real ChronologyNavBarRow
+         * objects; dig()/digArray() above only walk arrays, matching the
+         * original array-shaped $chronology_navigation_bars template
+         * variable -- convert back to that exact shape at this one test
+         * boundary rather than reworking dig() itself.
+         *
+         * @return list<array<string, mixed>>
+         */
+        private function navBarsAsArrays(CalendarBase $calendar): array
+        {
+            return array_map(static fn (ChronologyNavBarRow $row): array => $row->toArray(), $calendar->getChronologyNavigationBars());
         }
 
         public function testInitializeSelectsDateAvailableForPostedAndDateCreationForCreated(): void
@@ -362,7 +377,7 @@ namespace Piwigo\Tests\Integration {
 
             // buildNavBar(CYEAR) also ran (case B always calls it) -- 2024
             // has 3 images total, 2025 has 2, plus the "All" link.
-            $navVars = $calendar->getChronologyNavigationBars();
+            $navVars = $this->navBarsAsArrays($calendar);
             self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
             self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
             self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
@@ -473,7 +488,7 @@ namespace Piwigo\Tests\Integration {
             $templateStrings = TemplateTestFactory::build();
             $withStrings->generateCategoryContent($templateStrings);
 
-            $navStrings = $this->digArray($withStrings->getChronologyNavigationBars(), [0]);
+            $navStrings = $this->digArray($this->navBarsAsArrays($withStrings), [0]);
             self::assertArrayNotHasKey('previous', $navStrings);
             self::assertSame('7 2024', $this->dig($navStrings, ['next', 'LABEL']));
 
@@ -483,7 +498,7 @@ namespace Piwigo\Tests\Integration {
             $templateInts = TemplateTestFactory::build();
             $withInts->generateCategoryContent($templateInts);
 
-            $navInts = $this->digArray($withInts->getChronologyNavigationBars(), [0]);
+            $navInts = $this->digArray($this->navBarsAsArrays($withInts), [0]);
             self::assertArrayNotHasKey('previous', $navInts);
             // Fixed: "next" now correctly points at the real next period
             // (2024-7), identically to the string-typed case above, instead of
@@ -505,7 +520,7 @@ namespace Piwigo\Tests\Integration {
             $yearLevel->chronology_date = [];
             $yearTemplate = TemplateTestFactory::build();
             self::assertFalse($yearLevel->generateCategoryContent($yearTemplate));
-            $yearNav = $yearLevel->getChronologyNavigationBars();
+            $yearNav = $this->navBarsAsArrays($yearLevel);
             self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
             self::assertSame(3, $this->dig($yearNav, [0, 'items', 0, 'NB_IMAGES']));
 
@@ -515,7 +530,7 @@ namespace Piwigo\Tests\Integration {
             $monthLevel->chronology_date = [2024];
             $monthTemplate = TemplateTestFactory::build();
             self::assertFalse($monthLevel->generateCategoryContent($monthTemplate));
-            $monthNav = $monthLevel->getChronologyNavigationBars();
+            $monthNav = $this->navBarsAsArrays($monthLevel);
             self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
             self::assertSame(2, $this->dig($monthNav, [0, 'items', 0, 'NB_IMAGES']));
             self::assertSame(7, $this->dig($monthNav, [0, 'items', 1, 'LABEL']));
@@ -534,7 +549,7 @@ namespace Piwigo\Tests\Integration {
             $dayLevel->chronology_date = [2024, 3];
             $dayTemplate = TemplateTestFactory::build();
             self::assertFalse($dayLevel->generateCategoryContent($dayTemplate));
-            $dayItems = $this->digArray($dayLevel->getChronologyNavigationBars(), [0, 'items']);
+            $dayItems = $this->digArray($this->navBarsAsArrays($dayLevel), [0, 'items']);
             self::assertCount(31, $dayItems);
             self::assertSame([
                 'LABEL' => 1,
@@ -637,7 +652,7 @@ namespace Piwigo\Tests\Integration {
             // now that it's fixed, it correctly finds that 2025-1 is the only
             // period id 4/5 (the only images in scope) ever fall into, so
             // there is genuinely no next or previous period at all.
-            $navVars = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
+            $navVars = $this->digArray($this->navBarsAsArrays($calendar), [0]);
             self::assertSame([], $navVars);
         }
 
@@ -693,7 +708,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $dayNav = $this->digArray($calendar->getChronologyNavigationBars(), [0, 'items']);
+            $dayNav = $this->digArray($this->navBarsAsArrays($calendar), [0, 'items']);
             self::assertCount(31, $dayNav);
         }
 
@@ -720,7 +735,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
+            $nav = $this->digArray($this->navBarsAsArrays($calendar), [0]);
             self::assertArrayNotHasKey('previous', $nav);
             self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
             self::assertSame(
@@ -755,7 +770,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
+            $nav = $this->digArray($this->navBarsAsArrays($calendar), [0]);
             self::assertArrayNotHasKey('previous', $nav);
             self::assertSame('3 2024', $this->dig($nav, ['next', 'LABEL']));
             self::assertSame(

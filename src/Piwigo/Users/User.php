@@ -95,36 +95,6 @@ final readonly class User
     }
 
     /**
-     * The inverse of fromUserArray() -- rawAttributes already carries the
-     * full legacy array and every wither above keeps it in sync with this
-     * object's own named properties, but this overlays them explicitly
-     * anyway so the guarantee holds regardless of construction path (e.g.
-     * a direct `new self(...)` call that didn't go through a wither).
-     *
-     * @return array<string, mixed>
-     */
-    public function toUserArray(): array
-    {
-        return array_merge($this->rawAttributes, [
-            'id' => $this->id->value,
-            'username' => $this->username?->value,
-            'email' => $this->email?->value,
-            'language' => $this->language->value,
-            'theme' => $this->theme->value,
-            'status' => $this->status->value,
-            'enabled_high' => $this->enabledHigh,
-            'forbidden_categories' => $this->forbiddenCategories,
-            'level' => $this->level,
-            'preferences' => $this->preferences,
-            'nb_image_page' => $this->nbImagePage,
-            'recent_period' => $this->recentPeriod,
-            'expand' => $this->expand,
-            'show_nb_comments' => $this->showNbComments,
-            'show_nb_hits' => $this->showNbHits,
-        ]);
-    }
-
-    /**
      * Overlays the site-default `user_infos` preferences onto this
      * instance -- {@see \Piwigo\Controller\ProfileController}'s "reset to
      * default (Guest) custom settings" action, the only real caller.

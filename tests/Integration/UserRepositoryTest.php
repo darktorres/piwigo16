@@ -10,6 +10,7 @@ use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
@@ -637,10 +638,9 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $result = $this->repo->findList([
             'u.id' => 'id',
-        ], false, $criteria, [[
-            'field' => UserSortField::Id,
-            'dir' => 'ASC',
-        ]], false, null, 0);
+        ], false, $criteria, [
+            new SortEntry(UserSortField::Id, 'ASC'),
+        ], false, null, 0);
 
         return array_map(
             static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0,
@@ -722,10 +722,9 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $result = $this->repo->findList([
             'u.id' => 'id',
-        ], false, new UserListCriteria(), [[
-            'field' => UserSortField::Id,
-            'dir' => 'ASC',
-        ]], true, 2, 0);
+        ], false, new UserListCriteria(), [
+            new SortEntry(UserSortField::Id, 'ASC'),
+        ], true, 2, 0);
 
         self::assertCount(2, $result->rows);
         self::assertSame(4, $result->total);
@@ -751,10 +750,9 @@ final class UserRepositoryTest extends IntegrationTestCase
             'ui.language' => 'language',
             'ui.theme' => 'theme',
             'ui.registration_date' => 'registration_date',
-        ], false, new UserListCriteria(userId: [UserId::from(1)]), [[
-            'field' => UserSortField::Id,
-            'dir' => 'ASC',
-        ]], false, null, 0);
+        ], false, new UserListCriteria(userId: [UserId::from(1)]), [
+            new SortEntry(UserSortField::Id, 'ASC'),
+        ], false, null, 0);
 
         self::assertCount(1, $result->rows);
         $row = $result->rows[0];

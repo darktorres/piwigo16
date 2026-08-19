@@ -17,6 +17,7 @@ use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
@@ -1674,7 +1675,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * object and every row would silently resolve to id 0.
      *
      * @param  array<string, string>  $displayColumns
-     * @param  list<array{field: UserSortField, dir: string}>  $orderClauses
+     * @param  list<SortEntry<UserSortField, string>>  $orderClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findList(
@@ -1705,7 +1706,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         self::buildListConditionDql($criteria)->applyTo($qb);
 
         foreach ($orderClauses as $clause) {
-            $qb->addOrderBy($clause['field']->column(), $clause['dir']);
+            $qb->addOrderBy($clause->field->column(), $clause->dir);
         }
 
         $total = null;

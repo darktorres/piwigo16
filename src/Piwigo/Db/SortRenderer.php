@@ -61,15 +61,15 @@ final readonly class SortRenderer
 
         $fragments = [];
         foreach ($order->entries() as $entry) {
-            if ($entry['field'] === PhotoSortField::Random) {
+            if ($entry->field === PhotoSortField::Random) {
                 $fragments[] = $this->randomExpression();
 
                 continue;
             }
 
-            $column = $prefix . $this->column($entry['field']);
-            $dir = $entry['dir']->value;
-            if (self::isNullable($entry['field'])) {
+            $column = $prefix . $this->column($entry->field);
+            $dir = $entry->dir->value;
+            if (self::isNullable($entry->field)) {
                 $fragments[] = self::nullDiscriminant($column) . ' ' . $dir;
             }
 
@@ -96,13 +96,13 @@ final readonly class SortRenderer
 
         $clauses = [];
         foreach ($order->entries() as $entry) {
-            $property = self::dqlProperty($entry['field'], $imageAlias, $imageCategoryAlias);
+            $property = self::dqlProperty($entry->field, $imageAlias, $imageCategoryAlias);
             if ($property === null) {
                 return null;
             }
 
-            $dir = $entry['dir']->value;
-            if (self::isNullable($entry['field'])) {
+            $dir = $entry->dir->value;
+            if (self::isNullable($entry->field)) {
                 $clauses[] = new OrderByClause(self::nullDiscriminant($property), $dir);
             }
 

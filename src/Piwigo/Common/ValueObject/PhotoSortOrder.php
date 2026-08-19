@@ -32,7 +32,7 @@ use Piwigo\Common\Enum\SortOrder;
 final readonly class PhotoSortOrder
 {
     /**
-     * @param list<array{field: PhotoSortField, dir: SortOrder}> $entries
+     * @param list<SortEntry<PhotoSortField, SortOrder>> $entries
      */
     private function __construct(
         private array $entries,
@@ -116,10 +116,7 @@ final readonly class PhotoSortOrder
                 continue;
             }
 
-            $entries[] = [
-                'field' => $field,
-                'dir' => strtoupper($matches[2][$i]) === 'DESC' ? SortOrder::Desc : SortOrder::Asc,
-            ];
+            $entries[] = new SortEntry($field, strtoupper($matches[2][$i]) === 'DESC' ? SortOrder::Desc : SortOrder::Asc);
         }
 
         return new self($entries);
@@ -134,7 +131,7 @@ final readonly class PhotoSortOrder
      * parser that disagrees with the writer is how a round-trip silently
      * loses an order.
      *
-     * @return list<array{field: PhotoSortField, dir: SortOrder}>|null
+     * @return list<SortEntry<PhotoSortField, SortOrder>>|null
      */
     private static function parseConfigFragment(string $fragment): ?array
     {
@@ -152,10 +149,7 @@ final readonly class PhotoSortOrder
             // platforms spell it differently and only the structured path
             // is rendered per platform.
             if (preg_match('/^\s*(?:RAND|RANDOM)\s*\(\s*\)\s*$/i', $rawEntry) === 1) {
-                $entries[] = [
-                    'field' => PhotoSortField::Random,
-                    'dir' => SortOrder::Asc,
-                ];
+                $entries[] = new SortEntry(PhotoSortField::Random, SortOrder::Asc);
 
                 continue;
             }
@@ -169,10 +163,7 @@ final readonly class PhotoSortOrder
                 return null;
             }
 
-            $entries[] = [
-                'field' => $field,
-                'dir' => strtoupper($matches[2]) === 'DESC' ? SortOrder::Desc : SortOrder::Asc,
-            ];
+            $entries[] = new SortEntry($field, strtoupper($matches[2]) === 'DESC' ? SortOrder::Desc : SortOrder::Asc);
         }
 
         return $entries;
@@ -188,7 +179,7 @@ final readonly class PhotoSortOrder
      * and for callers that need the order's structure rather than its text
      * (the first sort field, whether it mentions `rank`, ...).
      *
-     * @return list<array{field: PhotoSortField, dir: SortOrder}>
+     * @return list<SortEntry<PhotoSortField, SortOrder>>
      */
     public function entries(): array
     {
@@ -206,7 +197,8 @@ final readonly class PhotoSortOrder
     public function toSortFieldTokens(): array
     {
         return array_map(
-            static fn (array $entry): string => $entry['field']->configToken() . ' ' . $entry['dir']->value,
+            /** @param SortEntry<PhotoSortField, SortOrder> $entry */
+            static fn (SortEntry $entry): string => $entry->field->configToken() . ' ' . $entry->dir->value,
             $this->entries,
         );
     }

@@ -23,6 +23,7 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
+use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -1622,7 +1623,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * @param  array<string, string>  $displayColumns
-     * @param  list<array{field: UserSortField, dir: string}>  $orderClauses
+     * @param  list<SortEntry<UserSortField, string>>  $orderClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getList(

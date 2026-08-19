@@ -129,7 +129,7 @@ Three structural changes produced that drift:
 | P36 | Asset-pipeline foundation (ViteManifest) | Done | 1 |
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
-| P39 | Inline CSS extraction | Not started | 0 |
+| P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Not started | 0 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
@@ -1714,6 +1714,46 @@ linter — so parallelizable with it. P39 also settles whether
 survives at all, or is superseded by real stylesheets plus the existing
 `local/css/*-rules.css` mechanism. P41 should not carry it forward by
 default.
+
+**Shipped**: all 67 touched templates (46 admin / 16 default / 5
+standard_pages) across 5 batches (P39-A mechanism through P39-E
+retirement) — every `<style>` block, `{do htmlStyle(...)}` capture, and
+`style="…"` attribute moved to a real `.css` file (new per-theme
+`css/utilities.css` for repeated shapes, new `css/pages/<template>.css`
+per template), registered via the existing `combineCss()` mechanism.
+`no_photo_yet.latte` incidentally dropped its `n:syntax="off"` attribute,
+no longer needed once its CSS left the template. `mail/text/html/
+header.latte`'s dynamic `<style>` stayed inline (HTML-email
+compatibility requirement), extended to `notification_admin.latte`'s and
+`notification_by_mail.latte`'s static inline styles for the same reason.
+`.stylelintrc.json` no longer double-lints every theme file through the
+`public/themes`/`public/dist` symlinks; a `stylelint-suppressions.json`
+baseline now separates pre-existing violations from new ones, though
+`bun run lint:css`'s own exit code can't reach 0 (a real limitation in
+stylelint 17's suppression feature, not a script bug) — verified per
+touched file instead. `Template::htmlStyle()`, its `$htmlStyle`
+accumulator, its `PiwigoExtension` filter-map entry, and its
+`finalizeOutput()` splice are removed (P39-E); `htmlHeadElements`
+handling is untouched. Several real, pre-existing bugs were found and
+fixed along the way, none visible in golden-HTML's text diff: repeated
+CSS-specificity regressions where a new class-based rule lost to an
+existing higher-specificity selector in `theme.css` (hide/show toggles,
+`margin`/`color`/`right`/`max-width` overrides, compound-class fixes);
+a custom-property `url()` resolution bug (`url()` piped through a CSS
+custom property resolves against the *consuming stylesheet's* location,
+not the page's — kept inline instead, on `cat_modify.latte` and 2 more
+shape-4 sites); a duplicate `class=` attribute from a bulk `style=`→
+`class=` replace (`site_manager.latte`, a 3rd recurrence of the same
+`install.latte`/other bug); and a genuine PHPStan `cast.string`
+false-positive on `rating_user.latte`'s `{capture}`-produced value, root
+caused to every compiled template's `extract($ʟ_args)` poisoning
+untyped locals to `mixed` — fixed by teaching `LatteTemplateCompiler` to
+inject a real `@var Html|string|false` docblock after every `{capture}`
+target assignment, derived from Latte's own generated code shape.
+Verified: `composer lint:latte` clean; `analyse:phpstan` 0 errors;
+`lint:php` (ECS) 0 errors; `deptrac analyse` 0 violations;
+`test:golden-html` 74/74; `test:visual` 66/66; `composer test`
+(Unit/Arch) 5734 passed; `test:integration` 2119 passed.
 
 **P40 — Typed view objects + `Template` split.** The largest single diff
 in the epoch. Mitigate by converting one page-family at a time, after

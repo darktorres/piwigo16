@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | Not started | 0 |
+| P40 | Typed view objects + `Template` split | Scoped and designed, execution starting | 0 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -141,7 +141,7 @@ Three structural changes produced that drift:
 | P48 | Remove jQuery | Not started | 0 |
 | P49 | Lit component catalog (conditional on P48) | Not started | 0 |
 | P50 | TS modernization | Not started | 0 |
-| P51 | CSS architecture modernization | Not started — Tailwind call due before P40 | 0 |
+| P51 | CSS architecture modernization | Not started — Tailwind call resolved (not adopted), work itself unstarted | 0 |
 | P52 | Picture pipeline (new feature) | Not started | 0 |
 | P53 | Dark mode (new feature) | Not started | 0 |
 | P54 | Real quality gates | Not started | 0 |
@@ -1569,13 +1569,15 @@ system stays completely untouched, serving all 76 templates exactly as
 today, while this phase builds the new `Piwigo\Asset` infrastructure
 (`ViteManifest`, `AssetContribution`, `PageAssets` collector,
 `GetPageAssets` event) alongside it with **zero template edits**.
-Migration onto the new mechanism happens incrementally starting in
-P40, which already documents converting "one page-family at a time,
-after proving the pattern end to end on a thin slice" — that vertical
-slice is where a template's JS/CSS extraction (P38/P39), typed view
-(P40), asset declaration, and shell-first rendering (P41) land
-together, once, instead of four separate passes. The old classes are
-deleted only once the last page-family migrates, at the end of P41.
+Migration onto the new mechanism happens once P40's page-family
+campaign fully completes: `PageAssets`/`AssetContribution`/
+`GetPageAssets` stay built but dormant through the whole of P40 (a
+migrated page's controller calls `Template::combineCss()`/
+`combineScript()` directly instead — see P40's own "Scope correction"
+note), and become the real, sole asset-resolution path only as part of
+P41's own single, one-time shell-last cutover, at the same point the
+old `CssLoader`/`ScriptLoader` classes are finally deleted — not
+per-page-family alongside each P40 batch.
 
 Two real behaviors the new ordering pass must preserve, found via
 direct template audit, not assumed: real multi-level `require:` chains
@@ -1757,8 +1759,10 @@ Verified: `composer lint:latte` clean; `analyse:phpstan` 0 errors;
 
 **P40 — Typed view objects + `Template` split.** The largest single diff
 in the epoch. Mitigate by converting one page-family at a time, after
-proving the pattern end to end on a thin slice (`index.latte` + a new
-`@layout.latte` + `GalleryController`) gated on golden-HTML and VR.
+proving the pattern end to end on a thin slice (`index.latte` +
+`GalleryController`, see the "Scope correction" note below for why
+`@layout.latte` is explicitly *not* part of this phase's thin slice)
+gated on golden-HTML, VR and real Browser tests.
 
 Per template: one `final readonly class XxxView` carrying
 `#[Template('index.latte')]`, so the template header collapses to
@@ -1786,8 +1790,13 @@ Delete the **template-extension feature** outright. It ships only samples
 `yoga/local/` — and has 6 real uses in the wild. Going with it:
 `setExtent`/`setExtents`/`getExtent`, `TemplateExtentsRequest`,
 `ExtendForTemplatesPageRenderer` (214 lines) with its context, admin page
-and tab, the `extents_for_templates` config and sanitiser, 15
-`getExtent()` template calls, and its unit, Browser and VR tests.
+and tab, the `extents_for_templates` config and sanitiser, 14
+`getExtent()` template calls (re-audited against the real tree: 14, not
+15 — `grep -rn "getExtent(" themes/ --include="*.latte"`), and its unit,
+Browser and VR tests. Also dead once this lands:
+`CategoryRepository::findActivePermalinks()`/`CategoryService::
+getActivePermalinks()`, which exist solely to feed this feature's own
+"selective URLs keyword" list and have no other caller.
 
 Delete the tooling this obsoletes: `tools/phpstan/Latte/VarTypeSyncer.php`,
 `VarTypeSyncResult.php`, `Command/PhpStanLatteSyncVarTypeCommand.php`,
@@ -1800,22 +1809,74 @@ that template back via `#[Template]`.
 
 Depends on P36, P37, P38 and P39.
 
+**Scope correction from the original plan text**: the thin slice above
+("`index.latte` + a new `@layout.latte` + `GalleryController`") reads
+as introducing real `{layout}`/`{block}` composition incrementally,
+per page-family, during P40 itself — meaning migrated and unmigrated
+pages would render through two different, coexisting shell mechanisms
+for the whole ~130-context-class length of the campaign.
+`header.latte`/`footer.latte` and the `PageHeaderRenderer`/
+`PageTailRenderer`/`PageState` infrastructure that composes them are
+shared by all 135 templates, not gallery-specific, so genuinely
+replacing shell-last composition means refactoring that shared
+infrastructure now — exactly P41's own stated scope, and consistent
+with this phase's own "Depends on..." line above not listing P41.
+**Decided instead**: P40 never touches `header.latte`/`footer.latte`/
+`PageHeaderRenderer`/`PageTailRenderer`/`PageState`/`@layout.latte` at
+all. A migrated page's `Renderer::render(View): Html` output gets
+appended into `Template::$output` exactly the way `parse($file,
+true)`'s return value does today — the middle piece of the same
+three-call sequence, just produced a different way — so P40 proceeds
+as a long, safe, page-family-at-a-time campaign with one rendering
+model live for the shell at any time, only the body mechanism varying
+per page. P41 becomes a single, one-time cutover for every page at
+once, done only after every page-family already has a typed View —
+see P41's own section below for what that unlocks. This also means a
+View's data comes from merging `Template::$vars`' request-ambient
+globals (`ROOT_URL`/`ROOT_PATH`/`themeconf`/`themes`/`lang_info`, plus
+whatever `PageHeaderRenderer` assigned earlier in the same request)
+with the View's own properties, not from the View alone — `Renderer`
+calls a new `Template::renderView()` that does exactly this merge,
+rather than routing through `Latte\Engine`'s own native object-param
+support directly.
+
 **P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
 lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's
-61 `assignVarFromTemplate('ADMIN_CONTENT', …)` calls become the same
+48 `assignVarFromTemplate('ADMIN_CONTENT', …)` calls (re-audited
+against the real tree — 48, not the original 61) become the same
 composition. Deletes `Template::$output`, both `COMBINED_*` placeholders,
 the `preg_match('#\n[ \t]*</head>#')` injection, and the
 `pparse`/`flush`/`finalizeOutput`/`fetchOutput` quartet. `AdminShell` and
 `InstallWizard` stop echoing and return strings; `flushPageMessages()`
 moves ahead of the body render.
 
-Splits `PageState` (25+ public mutable properties, 225 mutation sites) by
-concern: a `PageMessages` collector, page chrome into `LayoutView`, debug
-counters into `RequestMetrics`, loose domain facts back to their owners.
+Splits `PageState` (27 public mutable properties, confirmed by direct
+count) by concern: a `PageMessages` collector, page chrome into
+`LayoutView`, debug counters into `RequestMetrics`, admin-chrome badges
+(`nbPendingComments`/`noMd5sumNumber`/`nbOrphans`/`nbPhotosTotal`/
+`updatedVersion`/`notifyApiKeyExpiration`) into their own home,
+`commentRejectionReasons` back to the Comment domain, loose domain
+facts back to their owners. `exposedData`/`exposedStringKeys`/
+`bodyData`/`authKeyId`/`authKeyInvalid` stay as-is, already correctly
+homed per P37.
 
 **P36's fork is decided: view-declared** — `{layout}`/`{block}`
-inheritance replaces shell-last composition entirely, once the
-per-page-family migration P40 starts reaches this template.
+inheritance replaces shell-last composition entirely, but **not
+incrementally as P40 reaches each template**, per P40's own "Scope
+correction" note above: `header.latte`/`footer.latte`/
+`PageHeaderRenderer`/`PageTailRenderer` are shared by every template,
+so this phase is a single, one-time cutover for the whole tree at
+once, triggered only once P40's page-family campaign has fully
+completed — not a per-page-family migration running alongside it.
+This is also where `TemplateLocator`/`ThemeChain`'s logic physically
+moves out of `Template.php` (`resolveLatteTemplatePath()`/
+`loadThemeconf()`/`setTheme()`/`themeConf()`, kept as thin
+`Renderer`-delegating facades during P40 itself) and where P36's
+`PageAssets`/`AssetContribution`/`GetPageAssets`/`ViteManifest`
+mechanism becomes the real, sole asset-resolution path, replacing
+`CssLoader`/`ScriptLoader` — during P40, a migrated page's controller
+keeps calling `Template::combineCss()`/`combineScript()` directly
+instead, so `PageAssets` stays dormant until this cutover.
 
 **P42 — Typed contributions + plugin-owned routes.**
 
@@ -1931,18 +1992,22 @@ entirely if P48 turns up nothing that needs it.
 jQuery-free, fully-typed codebase from P45–P49. Same behavior.
 
 **P51 — CSS architecture modernization.** `@container` queries, `@layer`
-cascade, Tailwind evaluated (`@source` scanning needs Latte templates,
-already satisfied). Same visual output, proven via VR baselines. Depends
-on P39, not on the JS track, so parallelizable with all of P45–P50.
-Includes confirming that nothing in the vendored plugin RTL rules
+cascade. Same visual output, proven via VR baselines. Depends on P39,
+not on the JS track, so parallelizable with all of P45–P50. Includes
+confirming that nothing in the vendored plugin RTL rules
 (`selectize.dark.css`, `jqtree.css` — the only RTL handling anywhere in
 this repo) regresses if P48 touched those files.
 
-**The Tailwind *decision* is pulled forward, though the work stays
-here.** If Tailwind is adopted it rewrites `class=` across all 135
-templates, and P40/P41 restructure those same templates. Deciding late
-means touching every template a third time, so the adopt/don't-adopt call
-must be made **before P40 starts**.
+**The Tailwind decision, pulled forward and resolved: not adopted.**
+Decided before P40 started, per this section's own reasoning (adopting
+late would mean rewriting `class=` across all 135 templates a third
+time, on top of P40/P41's own restructuring). P39 (Inline CSS
+extraction) already built an extensive vanilla per-theme utility-CSS
+architecture — `themes/{admin/default,default,standard_pages}/css/
+utilities.css`, `css/pages/*.css`, `css/components/*.css` — kept
+as-is rather than partially replaced. P51's own scope here is
+therefore `@container`/`@layer` modernization of that existing
+architecture, not a utility-framework migration.
 
 #### New-feature track — lands last
 
@@ -2018,8 +2083,12 @@ phase only if T1/T2 alone is still oversized.
 - **P42's built-in filter swaps have real semantic differences.** Check
   each; golden-HTML catches the rest.
 - **P36's fork is decided (view-declared) — shell-last composition is
-  unnecessary once P41's migration completes.**
-- **P51's Tailwind decision is due before P40 starts.**
+  retired by P41's own single, one-time cutover, run only after P40's
+  page-family campaign fully completes, not interleaved with it.**
+- **P51's Tailwind decision, resolved: not adopted.** Kept the vanilla
+  per-theme utility-CSS architecture P39 already built; P51 modernizes
+  it via `@container`/`@layer` rather than migrating to a utility
+  framework.
 - **P29 breaks external extensions by design** — an accepted product
   decision, not an oversight. In-tree callers migrate in the same phase.
 - **Skipping workstream C3 Phase 0 breaks Phase 1 silently, not

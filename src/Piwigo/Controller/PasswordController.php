@@ -30,6 +30,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -394,7 +395,11 @@ final class PasswordController implements ControllerInterface
         // provably a non-empty string here.
         if (! $skip_mail) {
             $this->mailService
-                ->mail($email, $template_mail->toArray());
+                ->mail($email, new MailArgs(
+                    subject: $template_mail->subject,
+                    content: $template_mail->content,
+                    contentFormat: $template_mail->contentFormat,
+                ));
         }
         $this->mailService
             ->switchLangBack();
@@ -635,7 +640,11 @@ final class PasswordController implements ControllerInterface
             // guarantees this is a non-empty string.
             $reset_email = $reset_session_email;
             $this->mailService
-                ->mail($reset_email, $template_mail->toArray());
+                ->mail($reset_email, new MailArgs(
+                    subject: $template_mail->subject,
+                    content: $template_mail->content,
+                    contentFormat: $template_mail->contentFormat,
+                ));
 
             $this->mailService
                 ->switchLangBack();

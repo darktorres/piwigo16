@@ -18,6 +18,8 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
@@ -224,14 +226,14 @@ final readonly class CoreUpdateService
 
         $this->mailService
             ->mailAdmins(
-                [
-                    'subject' => $this->lang->t('Piwigo %s is available, please update', $newVersionsString),
-                    'content' => $content,
-                    'content_format' => 'text/plain',
-                ],
-                [
-                    'filename' => 'notification_admin',
-                ],
+                new MailArgs(
+                    subject: $this->lang->t('Piwigo %s is available, please update', $newVersionsString),
+                    content: $content,
+                    contentFormat: 'text/plain',
+                ),
+                new MailOptions(
+                    filename: 'notification_admin',
+                ),
                 false,
                 true
             );

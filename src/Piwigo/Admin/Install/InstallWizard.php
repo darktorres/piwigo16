@@ -62,6 +62,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -789,11 +790,11 @@ final class InstallWizard
                 PresentationAccessor::mailService()
                     ->mail(
                         $this->adminMail,
-                        [
-                            'subject' => $this->lang->t('Just another Piwigo gallery'),
-                            'content' => $this->lang->args($keyargs_content),
-                            'content_format' => 'text/plain',
-                        ]
+                        new MailArgs(
+                            subject: $this->lang->t('Just another Piwigo gallery'),
+                            content: $this->lang->args($keyargs_content),
+                            contentFormat: 'text/plain',
+                        )
                     );
             }
         }

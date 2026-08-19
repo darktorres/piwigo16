@@ -28,6 +28,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Csrf\CsrfService;
@@ -235,11 +236,11 @@ final readonly class ProfileFormHandler
                             $this->mailService
                                 ->mail(
                                     $mail_address,
-                                    [
-                                        'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Username modification'),
-                                        'content' => $this->lang->args($keyargs_content),
-                                        'content_format' => 'text/plain',
-                                    ]
+                                    new MailArgs(
+                                        subject: '[' . $gallery_title . '] ' . $this->lang->t('Username modification'),
+                                        content: $this->lang->args($keyargs_content),
+                                        contentFormat: 'text/plain',
+                                    )
                                 );
 
                             $this->mailService

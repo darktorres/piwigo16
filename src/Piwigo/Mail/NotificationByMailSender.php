@@ -10,6 +10,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
@@ -383,13 +384,13 @@ final class NotificationByMailSender
                                 'name' => $nbmUser->username,
                                 'email' => $nbmUser->mailAddress,
                             ],
-                            [
-                                'from' => $sendAsMailFormatted,
-                                'subject' => $subject,
-                                'email_format' => $emailFormat,
-                                'content' => $mailTemplate->parse('notification_by_mail.latte', true),
-                                'content_format' => $emailFormat,
-                            ]
+                            new MailArgs(
+                                from: $sendAsMailFormatted,
+                                subject: $subject,
+                                emailFormat: $emailFormat,
+                                content: $mailTemplate->parse('notification_by_mail.latte', true),
+                                contentFormat: $emailFormat,
+                            )
                         );
 
                     if ($ret) {
@@ -615,15 +616,15 @@ final class NotificationByMailSender
                                     recentPosts: $recent_posts,
                                 ));
 
-                                $mailArgs = [
-                                    'from' => $this->sendAsMailFormatted ?? '',
-                                    'subject' => $subject,
-                                    'email_format' => $mailEmailFormat,
-                                    'content' => $mailTemplate->parse('notification_by_mail.latte', true),
-                                    'content_format' => $mailEmailFormat,
-                                ];
+                                $mailArgs = new MailArgs(
+                                    from: $this->sendAsMailFormatted ?? '',
+                                    subject: $subject,
+                                    emailFormat: $mailEmailFormat,
+                                    content: $mailTemplate->parse('notification_by_mail.latte', true),
+                                    contentFormat: $mailEmailFormat,
+                                );
                                 if (is_string($auth)) {
-                                    $mailArgs['auth_key'] = $auth;
+                                    $mailArgs->authKey = $auth;
                                 }
 
                                 $ret = $this->mailer

@@ -22,6 +22,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\HttpStatusLine;
     use Piwigo\Core\Kernel;
     use Piwigo\Core\MailerInterface;
+    use Piwigo\Core\Projection\MailArgs;
+    use Piwigo\Core\Projection\MailOptions;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
@@ -54,7 +56,7 @@ namespace Piwigo\Tests\Integration {
         public array $calls = [];
 
         #[Override]
-        public function mail(string|array $to, array $args = [], array $tpl = []): bool
+        public function mail(string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): bool
         {
             throw new LogicException("not used by CommentService's mail dispatch paths");
         }

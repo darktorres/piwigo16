@@ -26,6 +26,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
@@ -265,11 +267,9 @@ final class MailServiceTest extends IntegrationTestCase
      * raw dumped-file content.
      *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
      * @return array{email: Email}
      */
-    private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): array
+    private function mailCaptureBeforeSend(string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): array
     {
         $spy = new MailServiceTestSpyTransport();
         $spyMailer = MailServiceTestTransportSwap::with($this->mailer, $spy);
@@ -320,7 +320,7 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function testMailAdminsReturnsFalseWhenContentAndTplAreBothEmpty(): void
     {
-        self::assertFalse($this->mailer->mailAdmins([], []));
+        self::assertFalse($this->mailer->mailAdmins(new MailArgs(), new MailOptions()));
     }
 
     public function testMailAdminsReturnsTrueWhenExcludingTheCurrentUserLeavesNoAdmin(): void
@@ -332,18 +332,14 @@ final class MailServiceTest extends IntegrationTestCase
         // reaching mail().
         $this->setCurrentUserToFixtureAdmin();
 
-        self::assertTrue($this->mailer->mailAdmins([
-            'content' => 'hi',
-        ], []));
+        self::assertTrue($this->mailer->mailAdmins(new MailArgs(content: 'hi'), new MailOptions()));
     }
 
     public function testMailAdminsSendsToTheAdminAndFailsDeliveryDeterministically(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailAdmins([
-            'content' => 'hi',
-        ], []));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailAdmins(new MailArgs(content: 'hi'), new MailOptions()));
 
         self::assertFalse($result);
     }
@@ -352,30 +348,24 @@ final class MailServiceTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailAdmins([
-            'content' => 'hi',
-        ], [], true, true));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailAdmins(new MailArgs(content: 'hi'), new MailOptions(), true, true));
 
         self::assertFalse($result);
     }
 
     public function testMailGroupReturnsFalseForGroupZero(): void
     {
-        self::assertFalse($this->mailer->mailGroup(0, [
-            'content' => 'hi',
-        ], []));
+        self::assertFalse($this->mailer->mailGroup(0, new MailArgs(content: 'hi'), new MailOptions()));
     }
 
     public function testMailGroupReturnsFalseWhenContentAndTplAreBothEmpty(): void
     {
-        self::assertFalse($this->mailer->mailGroup(1, [], []));
+        self::assertFalse($this->mailer->mailGroup(1, new MailArgs(), new MailOptions()));
     }
 
     public function testMailGroupReturnsTrueForAGroupWithNoLanguageMatches(): void
     {
-        self::assertTrue($this->mailer->mailGroup(99999, [
-            'content' => 'hi',
-        ], []));
+        self::assertTrue($this->mailer->mailGroup(99999, new MailArgs(content: 'hi'), new MailOptions()));
     }
 
     public function testMailGroupSendsToTheSingleRealRecipientAndFailsDeliveryDeterministically(): void
@@ -384,9 +374,7 @@ final class MailServiceTest extends IntegrationTestCase
         // out at the query level) -- exactly one real send attempt.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(1, [
-            'content' => 'hi',
-        ]));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(1, new MailArgs(content: 'hi')));
 
         self::assertFalse($result);
     }
@@ -403,30 +391,28 @@ final class MailServiceTest extends IntegrationTestCase
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(2, [
-            'content' => 'hi',
-        ], [
-            'assign' => [
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(2, new MailArgs(content: 'hi'), new MailOptions(
+            assign: [
                 'LINK' => 'http://example.test/link',
             ],
-        ]));
+        )));
 
         self::assertFalse($result);
     }
 
     public function testMailReturnsTrueImmediatelyWhenToAndCcAndBccAreAllEmpty(): void
     {
-        self::assertTrue($this->mailer->mail('', []));
+        self::assertTrue($this->mailer->mail('', new MailArgs()));
     }
 
     public function testMailAttemptsDeliveryWhenOnlyCcIsSetAndToIsEmpty(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail('', [
-            'Cc' => 'cc@example.test',
-            'content' => 'hi',
-        ]));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail('', new MailArgs(
+            cc: 'cc@example.test',
+            content: 'hi',
+        )));
 
         self::assertFalse($result);
     }
@@ -445,11 +431,11 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'subject' => 'hi',
-                'content' => 'body',
-                'content_format' => 'text/plain',
-            ]
+            new MailArgs(
+                subject: 'hi',
+                content: 'body',
+                contentFormat: 'text/plain',
+            )
         ));
         self::assertFalse($result);
 
@@ -496,11 +482,11 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'subject' => 'hi',
-                'content' => 'body',
-                'content_format' => 'text/plain',
-            ]
+            new MailArgs(
+                subject: 'hi',
+                content: 'body',
+                contentFormat: 'text/plain',
+            )
         ));
         self::assertFalse($result);
 
@@ -609,10 +595,7 @@ final class MailServiceTest extends IntegrationTestCase
         // non-empty ternary branch, not just its default-null fallback.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(1, [
-            'content' => 'hi',
-            'language_selected' => 'en_UK',
-        ]));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(1, new MailArgs(content: 'hi'), null, 'en_UK'));
 
         self::assertFalse($result);
     }
@@ -663,9 +646,7 @@ final class MailServiceTest extends IntegrationTestCase
         // The single '' entry is `continue`d over without ever reaching
         // findByGroupAndLanguage()/switchLangTo() -- $return stays at its
         // initial `true`, same as the real "no matching users" outcome.
-        self::assertTrue($mailer->mailGroup(1, [
-            'content' => 'hi',
-        ]));
+        self::assertTrue($mailer->mailGroup(1, new MailArgs(content: 'hi')));
     }
 
     public function testMailGroupSkipsALanguageWhosePerLanguageLookupComesBackWithNoUsers(): void
@@ -708,9 +689,7 @@ final class MailServiceTest extends IntegrationTestCase
         };
         $mailer = $this->mailServiceWithRecipientRepo($repo);
 
-        self::assertTrue($mailer->mailGroup(1, [
-            'content' => 'hi',
-        ]));
+        self::assertTrue($mailer->mailGroup(1, new MailArgs(content: 'hi')));
     }
 
     public function testMailGroupBuildsAnAuthKeyLinkForTheOptionalIMGAssignSlotToo(): void
@@ -725,17 +704,13 @@ final class MailServiceTest extends IntegrationTestCase
 
         $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(
             2,
-            [
-                'content' => 'hi',
-            ],
-            [
-                'assign' => [
-                    'LINK' => 'http://example.test/link',
-                    'IMG' => [
-                        'link' => 'http://example.test/img.png',
-                    ],
+            new MailArgs(content: 'hi'),
+            new MailOptions(assign: [
+                'LINK' => 'http://example.test/link',
+                'IMG' => [
+                    'link' => 'http://example.test/img.png',
                 ],
-            ]
+            ])
         ));
 
         self::assertFalse($result);
@@ -752,9 +727,7 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'content' => 'hi',
-            ]
+            new MailArgs(content: 'hi')
         ));
 
         self::assertFalse($result);
@@ -775,14 +748,11 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'content' => 'hi',
-            ],
-            [
-                'filename' => 'this_template_does_not_exist',
-                'dirname' => '_data/mail_templates_extra',
-                'assign' => [],
-            ]
+            new MailArgs(content: 'hi'),
+            new MailOptions(
+                filename: 'this_template_does_not_exist',
+                dirname: '_data/mail_templates_extra',
+            )
         ));
 
         self::assertFalse($result);
@@ -807,9 +777,7 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'content' => 'hi',
-            ]
+            new MailArgs(content: 'hi')
         ));
 
         self::assertFalse($result);
@@ -945,11 +913,7 @@ final class MailServiceTest extends IntegrationTestCase
                     'name' => 'Someone',
                     'email' => 'someone@example.test',
                 ],
-                [
-                    'subject' => 'x',
-                    'content' => 'y',
-                    'theme' => 'clear',
-                ]
+                new MailArgs(subject: 'x', content: 'y', theme: 'clear')
             );
         } finally {
             EventDispatcherTestFactory::get()->removeTypedHandler(BeforeParseMailTemplate::class, $handler);
@@ -980,10 +944,7 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'subject' => 'x',
-                'content' => 'Keep <this> tag as-is',
-            ]
+            new MailArgs(subject: 'x', content: 'Keep <this> tag as-is')
         );
 
         $textBody = $result['email']->getTextBody();
@@ -1014,10 +975,7 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'subject' => 'x',
-                'content' => 'MarkerContentXYZ',
-            ]
+            new MailArgs(subject: 'x', content: 'MarkerContentXYZ')
         );
 
         $htmlBody = $result['email']->getHtmlBody();
@@ -1037,9 +995,7 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'content' => 'hi',
-            ]
+            new MailArgs(content: 'hi')
         ));
 
         self::assertSame($before, $urlService->getRootUrl());
@@ -1070,9 +1026,7 @@ final class MailServiceTest extends IntegrationTestCase
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
             ],
-            [
-                'content' => 'hi',
-            ]
+            new MailArgs(content: 'hi')
         ));
 
         self::assertFalse($result);

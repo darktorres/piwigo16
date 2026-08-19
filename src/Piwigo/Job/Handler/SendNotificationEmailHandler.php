@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Job\Handler;
 
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 
@@ -21,6 +23,6 @@ final readonly class SendNotificationEmailHandler
 
     public function __invoke(SendNotificationEmailJob $job): void
     {
-        $this->mailService->mail($job->to, $job->args, $job->tpl);
+        $this->mailService->mail($job->to, MailArgs::fromArray($job->args), MailOptions::fromArray($job->tpl));
     }
 }

@@ -20,6 +20,8 @@ use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -423,10 +425,8 @@ final readonly class ExtensionContext
      * sanctioned, safe way core itself sends mail.
      *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
      */
-    public function mail(string|array $to, array $args = [], array $tpl = []): bool
+    public function mail(string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): bool
     {
         return $this->mailService->mail($to, $args, $tpl);
     }

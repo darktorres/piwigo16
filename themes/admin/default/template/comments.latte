@@ -690,6 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'comments', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/comments.js')}
+{do combineCss(id: 'comments', path: 'themes/admin/default/css/pages/comments.css')}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
@@ -701,11 +702,6 @@
 {do exposeString('The comment has been validated.')}
 {do exposeString('The comments have been validated.')}
 {do exposeString('and %s others')}
-<style>
-  #tabsheet {
-    margin: 0;
-  }
-</style>
 <div class="comments" id="comments">
   <div class="comments-filters">
     <div class="comments-tabs-filters">
@@ -849,7 +845,6 @@
         <div class="pagination-per-page" id="commentsNb">
           <span
             class="thumbnailsActionsShow"
-            style="font-weight: bold;"
           >{='Display'|translate}</span>
           <a id="pagination-per-page-5" class="selected-pagination">5</a>
           <a id="pagination-per-page-10">10</a>
@@ -865,8 +860,7 @@
             {* <a data-page="1" class="actual">1</a> *}
           </div>
           <div
-            class="user-update-spinner icon-spin6 animate-spin"
-            style="display: none;"
+            class="user-update-spinner icon-spin6 animate-spin u-hidden"
           ></div>
           <div class="pagination-arrow rigth unavailable">
             <span class="icon-left-open"></span>

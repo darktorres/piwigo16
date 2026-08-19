@@ -690,24 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
-{capture $tmpHtmlStyle}
-/*
-.adminOnlyIcon::before {
-  content:"(";
-}
-.adminOnlyIcon::after {
-  content:")";
-}
-*/
-.adminOnlyIcon {
-  background-color:#ddd;
-  padding:2px 5px;
-  border-radius:5px;
-  font-size:90%;
-}
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'configuration_display', path: 'themes/admin/default/css/pages/configuration_display.css')}
 
 <form method="post" action="{$F_ACTION|noescape}" class="properties">
   <div id="configContent">

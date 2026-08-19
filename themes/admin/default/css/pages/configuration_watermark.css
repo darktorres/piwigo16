@@ -1,0 +1,10 @@
+/* Beats theme.css's #addWatermark{display:none} (higher ID specificity). */
+#addWatermark.u-inline {
+  display: inline;
+}
+
+.custom-position-label {
+  display: block;
+  margin-top: 10px;
+  font-weight: normal;
+}

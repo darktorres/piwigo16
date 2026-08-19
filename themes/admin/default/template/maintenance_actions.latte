@@ -693,6 +693,7 @@
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{do combineCss(id: 'maintenance_actions', path: 'themes/admin/default/css/pages/maintenance_actions.css')}
 {do exposeString('Yes, I am sure')}
 {do exposeString('No, I have changed my mind')}
 {do exposeString('right now')}
@@ -718,7 +719,7 @@
     <legend><span
         class="icon-globe icon-blue"
       ></span>{='Global Gallery Actions'|translate}</legend>
-    <div style="display:flex;flex-wrap: wrap;">
+    <div class="maintenance-action-group">
       {if isset($U_MAINT_LOCK_GALLERY)}
         <a
           href="{$U_MAINT_LOCK_GALLERY|noescape}"
@@ -760,7 +761,7 @@
     <legend><span
         class="icon-trash-1 icon-green"
       ></span>{='Purge Actions'|translate}</legend>
-    <div style="display:flex;flex-wrap: wrap;">
+    <div class="maintenance-action-group">
       <a
         href="{$U_MAINT_USER_CACHE|noescape}"
         class="{$maint_actions['user_cache']['icon']} maintenance-action"
@@ -799,7 +800,7 @@
     <legend><span
         class="icon-puzzle icon-purple"
       ></span>{='Advanced features'|translate}</legend>
-    <div style="display:flex;flex-wrap: wrap;">
+    <div class="maintenance-action-group">
       <a
         n:foreach="$advanced_features as $key => $feature"
         href="{$feature['URL']}"
@@ -869,11 +870,9 @@
         >
           <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
           <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >{$name}</span>
         </div>
       </div>
@@ -882,80 +881,3 @@
     <a class="icon-ok delete-sizes">{='Delete these sizes'|translate}</a>
   </fieldset>
 {/if}
-<style>
-#label-delete-size-checkbox {
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.maintenance-action:hover {
-  color: #ff7700;
-  text-decoration: none;
-}
-
-.maintenance-action {
-  border: solid 1px;
-  padding: 8px 10px;
-  margin-right: 20px;
-  margin-bottom: 20px;
-}
-.maintenance-action.icon-th-list {
-  font-size: 13px;
-}
-
-.delete-size-checks {
-  display: flex;
-  text-align: left;
-  margin-bottom: 5px;
-
-  flex-direction: column;
-}
-
-.delete-check-container {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 15px;
-}
-
-.delete-size-check {
-  margin-right: 15px;
-  margin-bottom: 10px;
-  display: flex;
-  cursor: pointer
-}
-
-.select-checkbox {
-  display: inline-block;
-}
-
-.delete-sizes {
-  display: block;
-  width: max-content;
-  text-align: left;
-}
-
-.delete-sizes {
-  cursor: pointer;
-  padding: 8px 10px;
-  font-weight: bold;
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-.delete-sizes:hover {
-  background-color: #ff7700;
-  color: #3c3c3c;
-  text-decoration: none;
-}
-
-.rotate-anim {
-  animation: spin 4s linear infinite;
-}
-
-@keyframes spin {
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-</style>

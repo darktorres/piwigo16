@@ -691,47 +691,7 @@
 {* END varType *}
 {do exposeString('Are you sure?')}
 {do combineScript(id: 'updates_pwg', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/updates_pwg.js')}
-
-{capture $tmpHtmlHead}
-<style type="text/css">
-form { width: 750px; }
-fieldset { padding-bottom: 30px; }
-p, form p { text-align: left; margin-left:20px; }
-li { margin: 5px; }
-
-.badge-release {
-  padding:5px 10px;
-  border-radius: 5px;
-}
-
-a.badge-release:hover {
-  text-decoration:none;
-  color: currentColor;
-}
-
-.goto-update-page {
-  padding:5px 10px;
-  font-weight:bold;
-}
-
-.goto-update-page:hover {
-  text-decoration:none;
-}
-
-.update-recommendation {
-  margin-top:30px;
-}
-
-.goto-update-guide {
-  background-color: #F0F0F0;
-  padding: 10px;
-  font-weight: bold;
-}
-
-p.release .errors { margin:0 }
-</style>
-{/capture}
-{do htmlHead($tmpHtmlHead)}
+{do combineCss(id: 'updates_pwg', path: 'themes/admin/default/css/pages/updates_pwg.css')}
 
 <div
   n:if="isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)"
@@ -861,8 +821,7 @@ p.release .errors { margin:0 }
       {/if}
     </p>
     <p
-      class="autoupdate_bar"
-      style="display:none;"
+      class="autoupdate_bar u-hidden"
     >&nbsp; {='Update in progress...'|translate}<br><img
         src="themes/admin/default/images/ajax-loader-bar.gif"
       ></p>
@@ -945,8 +904,7 @@ p.release .errors { margin:0 }
         >{='Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
       </p>
       <p
-        class="autoupdate_bar"
-        style="display:none;"
+        class="autoupdate_bar u-hidden"
       >&nbsp; {='Update in progress...'|translate}<br><img
           src="themes/admin/default/images/ajax-loader-bar.gif"
         ></p>

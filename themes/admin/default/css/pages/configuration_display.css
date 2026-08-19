@@ -1,0 +1,14 @@
+/*
+.adminOnlyIcon::before {
+  content:"(";
+}
+.adminOnlyIcon::after {
+  content:")";
+}
+*/
+.adminOnlyIcon {
+  background-color: #ddd;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-size: 90%;
+}

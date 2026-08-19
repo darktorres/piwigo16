@@ -694,6 +694,7 @@
 
 {do exposeData('order_by_options_count', count($main['order_by_options']))}
 {do combineScript(id: 'configuration_main', load: 'footer', require: 'jquery,jquery.tipTip,jquery.colorbox,page-data', path: 'themes/admin/default/js/configuration_main.js')}
+{do combineCss(id: 'configuration_main', path: 'themes/admin/default/css/pages/configuration_main.css')}
 
 <form method="post" action="{$F_ACTION|noescape}" class="properties">
   <div id="configContent">
@@ -803,10 +804,7 @@
 
             <div
               id="email_admin_on_new_user_filter"
-              class="sub-setting"
-              {if (!$main['email_admin_on_new_user'])}
-              style="display:none"
-              {/if}
+              class="sub-setting{if !$main['email_admin_on_new_user']} u-hidden{/if}"
             >
               <label class="font-checkbox no-bold">
                 <span class="icon-dot-circled"></span>
@@ -836,9 +834,7 @@
 
               <span
                 id="email_admin_on_new_user_filter_group_options"
-                {if ($main['email_admin_on_new_user_filter'] != 'group')}
-                style="display:none"
-                {/if}
+                class="{if $main['email_admin_on_new_user_filter'] != 'group'}u-hidden{/if}"
               >
                 {if count($group_options) > 0}
                   <select name="email_admin_on_new_user_filter_group">
@@ -963,9 +959,8 @@
           </label>
 
           <span
-            class="icon-help-circled tiptip-with-img show-mobile-app-banner-tooltip"
-            title="{='Displays a banner to install or open the official Piwigo app'|translate}<br><img src='themes/admin/default/images/piwigo_app_banner.jpg' style='width:100%;margin-top:5px;'>"
-            style="cursor:help"
+            class="icon-help-circled tiptip-with-img show-mobile-app-banner-tooltip u-help-cursor"
+            title="{='Displays a banner to install or open the official Piwigo app'|translate}<br><img src='themes/admin/default/images/piwigo_app_banner.jpg' class='app-banner-tooltip-img'>"
           ></span>
         </li>
 
@@ -983,9 +978,8 @@
           </label>
 
           <span
-            class="icon-help-circled tiptip"
+            class="icon-help-circled tiptip u-help-cursor"
             title="{='During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file'|translate}"
-            style="cursor:help"
           ></span>
         </li>
 

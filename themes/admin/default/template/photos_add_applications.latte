@@ -692,69 +692,7 @@
 {include 'include/colorbox.inc.latte'}
 
 {do combineScript(id: 'photos_add_applications', load: 'footer', require: 'jquery.colorbox', path: 'themes/admin/default/js/photos_add_applications.js')}
-
-{capture $tmpHtmlHead}
-<style type="text/css">
-  .applicationContainer {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .applicationCard {
-    max-width: 500px;
-    margin: 20px;
-
-    display: flex;
-    flex-direction: row;
-  }
-
-  .applicationCard img {
-    max-width: 210px;
-    height: 175px;
-    margin: 20px;
-  }
-
-  .applicationCard .textSide {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .applicationCard .applicationName {
-    font-size: 15px;
-    font-weight: bold;
-    margin: 20px 0 10px 0;
-    padding-right: 15px;
-    text-align: left;
-  }
-
-  .applicationCard .applicationDesc {
-    text-align: left;
-    padding-right: 15px;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 6;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .applicationCard .applicationLink {
-    width: fit-content;
-    margin-top: auto;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .applicationCard .applicationLink a {
-    text-decoration: none;
-    margin-left: 0;
-  }
-
-</style>
-{/capture}
-{do htmlHead($tmpHtmlHead)}
+{do combineCss(id: 'photos_add_applications', path: 'themes/admin/default/css/pages/photos_add_applications.css')}
 
 <div class="applicationContainer">
   <div class="applicationCard">

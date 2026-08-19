@@ -1,0 +1,55 @@
+form {
+  width: 750px;
+}
+
+fieldset {
+  padding-bottom: 30px;
+}
+
+p,
+form p {
+  text-align: left;
+  margin-left: 20px;
+}
+
+li {
+  margin: 5px;
+}
+
+.badge-release {
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+a.badge-release:hover {
+  text-decoration: none;
+  color: currentColor;
+}
+
+.goto-update-page {
+  padding: 5px 10px;
+  font-weight: bold;
+}
+
+.goto-update-page:hover {
+  text-decoration: none;
+}
+
+.update-recommendation {
+  margin-top: 30px;
+}
+
+.goto-update-guide {
+  background-color: #f0f0f0;
+  padding: 10px;
+  font-weight: bold;
+}
+
+p.release .errors {
+  margin: 0;
+}
+
+/* Beats theme.css's .autoupdate_bar{display:flex} (equal specificity, cascade-order risk). */
+.autoupdate_bar.u-hidden {
+  display: none;
+}

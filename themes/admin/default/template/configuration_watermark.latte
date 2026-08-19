@@ -693,6 +693,7 @@
 
 {do exposeData('root_url', $ROOT_URL)}
 {do combineScript(id: 'configuration_watermark', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/configuration_watermark.js')}
+{do combineCss(id: 'configuration_watermark', path: 'themes/admin/default/css/pages/configuration_watermark.css')}
 
 <form
   method="post"
@@ -707,9 +708,7 @@
         <li>
           <span
             id="selectWatermark"
-            {if isset($ferrors['watermarkImage'])}
-            style="display:none"
-            {/if}
+            class="{if isset($ferrors['watermarkImage'])}u-hidden{/if}"
           ><label>{='Select a file'|translate}</label>
             <select name="w[file]" id="wSelect">
               {=htmlOptions(options: $watermark_files, selected: $watermark['file'])}
@@ -725,9 +724,7 @@
 
           <span
             id="addWatermark"
-            {if isset($ferrors['watermarkImage'])}
-            style="display:inline"
-            {/if}
+            class="{if isset($ferrors['watermarkImage'])}u-inline{/if}"
           >
             {='add a new watermark'|translate} {='... or '|translate}<a
               href="#"
@@ -847,8 +844,7 @@
           </div>
 
           <label
-            class="font-checkbox"
-            style="display:block;margin-top:10px;font-weight:normal;"
+            class="font-checkbox custom-position-label"
           ><span class="icon-dot-circled"></span><input
               name="w[position]"
               type="radio"

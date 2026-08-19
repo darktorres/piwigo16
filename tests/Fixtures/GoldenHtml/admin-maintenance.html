@@ -231,7 +231,7 @@
   <legend><span
         class="icon-globe icon-blue"
       ></span>Global Gallery Actions</legend>
-  <div style="display:flex;flex-wrap: wrap;">
+  <div class="maintenance-action-group">
     <a
           href="admin.php?page=maintenance&amp;action=lock_gallery&amp;pwg_token={{TOKEN}}"
           class="lock-gallery-button icon-lock maintenance-action"
@@ -258,7 +258,7 @@
   <legend><span
         class="icon-trash-1 icon-green"
       ></span>Purge Actions</legend>
-  <div style="display:flex;flex-wrap: wrap;">
+  <div class="maintenance-action-group">
     <a
         href="admin.php?page=maintenance&amp;action=user_cache&amp;pwg_token={{TOKEN}}"
         class="icon-user-1 maintenance-action"
@@ -339,11 +339,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >All</span>
       </div>
       <div
@@ -354,11 +352,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >Square</span>
       </div>
       <div
@@ -369,11 +365,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >Thumbnail</span>
       </div>
       <div
@@ -384,11 +378,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >XXS - tiny</span>
       </div>
       <div
@@ -399,11 +391,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >XS - extra small</span>
       </div>
       <div
@@ -414,11 +404,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >S - small</span>
       </div>
       <div
@@ -429,11 +417,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >M - medium</span>
       </div>
       <div
@@ -444,11 +430,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >L - large</span>
       </div>
       <div
@@ -459,11 +443,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >XL - extra large</span>
       </div>
       <div
@@ -474,11 +456,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >XXL - huge</span>
       </div>
       <div
@@ -489,11 +469,9 @@
         >
         <span class="select-checkbox"><i
               class="icon-ok"
-              style="margin-left:8px"
             ></i></span>
         <span
             class="picture-deletion-size"
-            style="font-size:14px;margin-left:5px;padding-top:2px;"
           >Custom</span>
       </div>
     </div>
@@ -501,83 +479,6 @@
 
   <a class="icon-ok delete-sizes">Delete these sizes</a>
 </fieldset>
-<style>
-#label-delete-size-checkbox {
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.maintenance-action:hover {
-  color: #ff7700;
-  text-decoration: none;
-}
-
-.maintenance-action {
-  border: solid 1px;
-  padding: 8px 10px;
-  margin-right: 20px;
-  margin-bottom: 20px;
-}
-.maintenance-action.icon-th-list {
-  font-size: 13px;
-}
-
-.delete-size-checks {
-  display: flex;
-  text-align: left;
-  margin-bottom: 5px;
-
-  flex-direction: column;
-}
-
-.delete-check-container {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 15px;
-}
-
-.delete-size-check {
-  margin-right: 15px;
-  margin-bottom: 10px;
-  display: flex;
-  cursor: pointer
-}
-
-.select-checkbox {
-  display: inline-block;
-}
-
-.delete-sizes {
-  display: block;
-  width: max-content;
-  text-align: left;
-}
-
-.delete-sizes {
-  cursor: pointer;
-  padding: 8px 10px;
-  font-weight: bold;
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-.delete-sizes:hover {
-  background-color: #ff7700;
-  color: #3c3c3c;
-  text-decoration: none;
-}
-
-.rotate-anim {
-  animation: spin 4s linear infinite;
-}
-
-@keyframes spin {
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-</style>
 
 </div>
 </div>

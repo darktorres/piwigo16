@@ -691,6 +691,7 @@
 {* END varType *}
 {do combineScript(id: 'ajax', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/maintenance.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)}
+{do combineCss(id: 'maintenance_env', path: 'themes/admin/default/css/pages/maintenance_env.css')}
 {* order 10 is required, see issue 1080 *}
 {do exposeString('right now')}
 {do exposeString('%s MB')}
@@ -699,7 +700,7 @@
   <legend><span
       class="icon-television icon-red"
     ></span> {='Environment'|translate}</legend>
-  <ul style="font-weight:bold">
+  <ul class="bold-list">
     <li><a href="{$APP_URL}" class="externalLink">Piwigo</a> {$APP_VERSION} <a
         href="{$U_CHECK_UPGRADE|noescape}&tab=env"
         class="icon-arrows-cw"
@@ -747,7 +748,7 @@
     ></span> {='Activated plugin list'|translate} <span
       class="badge-number"
     >{=count($ACTIVE_PLUGIN_NAMES)}</span></legend>
-  <ul style="font-weight:bold">
+  <ul class="bold-list">
     {if $ACTIVE_PLUGIN_NAMES === []}
       <p>{='No plugin activated'|translate}</p>
     {else}
@@ -755,23 +756,3 @@
     {/if}
   </ul>
 </fieldset>
-
-<style>
-
-.cache-size-value {
-  background: transparent;
-  padding: 0;
-}
-
-.cache-size-text, .cache-size-value {
-  font-size: 13px;
-}
-
-.cache-lastCalculated-text, .cache-lastCalculated-value {
-  font-size: 10px;
-}
-
-.badge-number {
-  color:white;
-}
-</style>

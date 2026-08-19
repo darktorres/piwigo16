@@ -56,13 +56,14 @@ final readonly class ImageCategoryRelationsHelper
         $tokens = explode(';', $categories_string);
         foreach ($tokens as $token) {
             $token_parts = explode(',', $token);
-            $cat_id = $token_parts[0];
+            $cat_id_token = $token_parts[0];
             $rank = $token_parts[1] ?? 'auto';
 
-            if (! (bool) preg_match('/^\d+$/', $cat_id)) {
+            if (! (bool) preg_match('/^\d+$/', $cat_id_token)) {
                 continue;
             }
 
+            $cat_id = (int) $cat_id_token;
             $cat_ids[] = $cat_id;
             $rank_on_category[$cat_id] = $rank;
 
@@ -81,10 +82,7 @@ final readonly class ImageCategoryRelationsHelper
             return true;
         }
 
-        // native int under DBAL -- cast to string so array_diff() below
-        // (string-based comparison against $cat_ids, which comes from
-        // explode()-derived string tokens) keeps comparing like-for-like.
-        $db_cat_ids = array_map(strval(...), $categoryService->getExistingIds(array_values(array_map(intval(...), $cat_ids))));
+        $db_cat_ids = $categoryService->getExistingIds(array_values($cat_ids));
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
         if (count($unknown_cat_ids) !== 0) {
@@ -94,9 +92,7 @@ final readonly class ImageCategoryRelationsHelper
         }
 
         // in case of replace mode, we first check the existing associations
-        // native int under DBAL -- same string-cast rationale as
-        // $db_cat_ids above.
-        $existing_cat_ids = array_map(strval(...), $this->imageService->getCategoryIdsForImage($image_id));
+        $existing_cat_ids = $this->imageService->getCategoryIdsForImage($image_id);
 
         if ($replace_mode) {
             $to_remove_cat_ids = array_values(array_diff($existing_cat_ids, $cat_ids));

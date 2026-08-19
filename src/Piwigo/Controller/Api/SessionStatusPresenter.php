@@ -31,41 +31,40 @@ final readonly class SessionStatusPresenter
         private ImageStdParams $imageStdParams,
     ) {}
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function present(): array
+    public function present(): SessionStatus
     {
         $currentUser = $this->currentUser->get();
 
-        $body = [
-            'username' => $this->accessControl->isAGuest() ? 'guest' : ($currentUser->username->value ?? ''),
-            'status' => $currentUser->status->value,
-            'theme' => $currentUser->theme->value,
-            'language' => $currentUser->language->value,
-            'pwgToken' => new CsrfService($this->currentConfig)
-                ->getToken(),
-            'charset' => 'utf-8',
-            // Env::now() (not SQL's NOW()) so this is freezable by
-            // PIWIGO_TEST_NOW in tests, same reasoning as
-            // GetStatusHandler's own identical line.
-            'currentDatetime' => Env::now()->format('Y-m-d H:i:s'),
-            'version' => AppInfo::VERSION,
-            'saveVisits' => $this->historyService->isLoggingAllowed(),
-            'connectedWith' => new ConnectedWithSession()
-                ->get()?->value,
-            'availableSizes' => array_keys($this->imageStdParams->getDefinedTypeMap()),
-        ];
-
+        $uploadFileTypes = null;
+        $uploadFormChunkSize = null;
         if ($this->accessControl->isAdmin()) {
             $uploadExtensions = $this->currentConfig->uploadFormAllTypes
                 ? $this->currentConfig->fileExtensions
                 : $this->currentConfig->pictureExtensions;
 
-            $body['uploadFileTypes'] = array_values(array_unique(array_map(strtolower(...), $uploadExtensions)));
-            $body['uploadFormChunkSize'] = $this->currentConfig->uploadFormChunkSize;
+            $uploadFileTypes = array_values(array_unique(array_map(strtolower(...), $uploadExtensions)));
+            $uploadFormChunkSize = $this->currentConfig->uploadFormChunkSize;
         }
 
-        return $body;
+        return new SessionStatus(
+            username: $this->accessControl->isAGuest() ? 'guest' : ($currentUser->username->value ?? ''),
+            status: $currentUser->status->value,
+            theme: $currentUser->theme->value,
+            language: $currentUser->language->value,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            charset: 'utf-8',
+            // Env::now() (not SQL's NOW()) so this is freezable by
+            // PIWIGO_TEST_NOW in tests, same reasoning as
+            // GetStatusHandler's own identical line.
+            currentDatetime: Env::now()->format('Y-m-d H:i:s'),
+            version: AppInfo::VERSION,
+            saveVisits: $this->historyService->isLoggingAllowed(),
+            connectedWith: new ConnectedWithSession()
+                ->get()?->value,
+            availableSizes: array_keys($this->imageStdParams->getDefinedTypeMap()),
+            uploadFileTypes: $uploadFileTypes,
+            uploadFormChunkSize: $uploadFormChunkSize,
+        );
     }
 }

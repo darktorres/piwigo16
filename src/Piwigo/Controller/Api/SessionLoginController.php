@@ -57,13 +57,13 @@ final readonly class SessionLoginController implements ControllerInterface
                 $this->connectedWithSession->set(ConnectedWith::ApiSessionLoginApiKey);
                 $this->refreshCurrentUser();
 
-                return ResponseFactory::json($this->sessionStatusPresenter->present());
+                return ResponseFactory::json($this->sessionStatusPresenter->present()->toArray());
             }
         } elseif ($this->authService->tryLogUser($input->username, $input->password, false)) {
             $this->connectedWithSession->set(ConnectedWith::ApiSessionLogin);
             $this->refreshCurrentUser();
 
-            return ResponseFactory::json($this->sessionStatusPresenter->present());
+            return ResponseFactory::json($this->sessionStatusPresenter->present()->toArray());
         }
 
         return ResponseFactory::problem('Unauthorized', 401, 'Invalid username/password.');

@@ -27,6 +27,6 @@ final readonly class SessionController implements ControllerInterface
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        return ResponseFactory::json($this->sessionStatusPresenter->present());
+        return ResponseFactory::json($this->sessionStatusPresenter->present()->toArray());
     }
 }

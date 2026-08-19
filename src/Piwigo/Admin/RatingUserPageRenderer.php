@@ -5,27 +5,36 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\RatingUserPageContext;
+use Piwigo\Admin\Projection\RatingUserView;
 use Piwigo\Admin\Request\RatingUserFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Ported from admin/rating_user.php (page slug "rating_user") -- the admin
  * "rating by user" report, a sibling top-level page to "rating" sharing the
  * same tabsheet group (not a nested tab of it).
+ *
+ * `rating_user.js`'s delete-ratings AJAX action reads `csrf_token` off
+ * the page data exposed by `rating_user.latte` and sends it back as the
+ * `X-CSRF-Token` header -- render() must supply a real token for that
+ * request to validate (same pre-existing gap RatingPageRenderer's own
+ * conversion found and fixed).
  */
 final class RatingUserPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager, CsrfService $csrfService, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -188,8 +197,8 @@ final class RatingUserPageRenderer
 
         $nb_elements = $rate_repository->countAllRates();
 
-        $template->assignContext(new RatingUserPageContext(
-            orderByIndex: $order_by_index,
+        $adminContent = $renderer->render(new RatingUserView(
+            orderByOptionsSelected: [$order_by_index],
             formAction: $urlService->getRootUrl() . 'admin.php',
             minRates: $filter_min_rates,
             consensusTopNumber: $consensus_top_number,
@@ -198,10 +207,15 @@ final class RatingUserPageRenderer
             imageUrls: $image_urls,
             tnWidth: $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             nbElements: $nb_elements,
-            adminPageTitle: $lang->t('Rating'),
             orderByOptions: $order_by_options,
+            csrfToken: $csrfService
+                ->getToken(),
         ));
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'rating_user.latte');
+
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Rating'),
+        ));
     }
 
     /**

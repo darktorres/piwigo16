@@ -11,9 +11,11 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -34,12 +36,14 @@ final readonly class RatingUserSubController implements AdminSubControllerInterf
         private CurrentConfig $currentConfig,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingUserPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->entityManager);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->entityManager, $this->csrfService, $this->renderer);
     }
 }

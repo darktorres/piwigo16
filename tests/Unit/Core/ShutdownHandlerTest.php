@@ -136,10 +136,21 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
     expect(is_file($autoloadPath))
         ->toBeTrue();
     $marker = sys_get_temp_dir() . '/piwigo-shutdownhandler-sigterm-' . bin2hex(random_bytes(8)) . '.marker';
+    $readyMarker = sys_get_temp_dir() . '/piwigo-shutdownhandler-ready-' . bin2hex(random_bytes(8)) . '.marker';
 
+    // The child writes $readyMarker itself, the instant its own
+    // install() call returns (pcntl_async_signals(true) + pcntl_signal()
+    // both already done by then) -- the parent polls for that file
+    // instead of guessing a fixed sleep is long enough for the child to
+    // finish requiring the autoloader and installing its handler. A
+    // fixed sleep here previously raced and lost under --parallel CPU
+    // contention (reproduced live: exit 15 instead of 143, meaning the
+    // signal hit the child before its real handler was installed, so
+    // the OS default SIGTERM disposition killed it outright instead).
     $script = 'require ' . var_export($autoloadPath, true) . ';'
         . '\Piwigo\Core\ShutdownHandler::register(function () { file_put_contents(' . var_export($marker, true) . ', "ran"); });'
         . '\Piwigo\Core\ShutdownHandler::install();'
+        . 'file_put_contents(' . var_export($readyMarker, true) . ', "ready");'
         . 'usleep(3000000);';
 
     $cmd = [PHP_BINARY, '-r', $script];
@@ -158,10 +169,18 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
     $status = proc_get_status($proc);
     $pid = $status['pid'];
 
-    // Give the child a moment to require the autoloader and install its
-    // own real pcntl_signal() handler before signalling it.
-    usleep(400000);
-    $sent = posix_kill($pid, SIGTERM);
+    $deadline = microtime(true) + 5.0;
+    $ready = false;
+    while (microtime(true) < $deadline) {
+        if (file_exists($readyMarker)) {
+            $ready = true;
+            break;
+        }
+        usleep(5000);
+    }
+    @unlink($readyMarker);
+
+    $sent = $ready && posix_kill($pid, SIGTERM);
 
     $stdout = stream_get_contents($pipes[1]);
     fclose($pipes[1]);
@@ -170,7 +189,10 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
     $exit = proc_close($proc);
 
     try {
-        expect($sent)->toBeTrue()
+        expect($ready)
+            ->toBeTrue('subprocess never signalled it had installed its handler within 5s: stdout=' . $stdout . ' stderr=' . $stderr)
+            ->and($sent)
+            ->toBeTrue()
             ->and($exit)
             ->toBe(143, 'ShutdownHandler subprocess exited unexpectedly: stdout=' . $stdout . ' stderr=' . $stderr)
             ->and(file_exists($marker))

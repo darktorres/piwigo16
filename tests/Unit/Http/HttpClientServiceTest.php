@@ -57,6 +57,23 @@ function httpClientServiceTestStartLocalServer(string $docRoot, bool $useRouter 
         set_error_handler(static fn (): bool => true);
         try {
             for ($i = 0; $i < 100; $i++) {
+                // A real, live-reproduced collision: $port is shared with
+                // several other test files' own random_int(20_000, 60_000)
+                // pool, and fsockopen() succeeding only proves SOMETHING is
+                // listening on $port -- not that THIS $proc is the one
+                // answering. If another --parallel worker's own server
+                // already held $port, THIS $proc's own bind() call already
+                // failed and it already exited; without this check,
+                // fsockopen() below would silently connect to that OTHER
+                // worker's unrelated server instead, and the caller would
+                // proceed thinking its own docRoot is being served. TCP
+                // never lets two processes both bind the same port, so a
+                // still-running $proc is sufficient proof it's genuinely
+                // the one listening.
+                $status = proc_get_status($proc);
+                if (! $status['running']) {
+                    break;
+                }
                 $sock = fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
                 if (is_resource($sock)) {
                     fclose($sock);

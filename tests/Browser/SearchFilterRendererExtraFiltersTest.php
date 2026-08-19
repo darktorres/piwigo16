@@ -95,21 +95,24 @@ function extraFiltersInsertRawSearchRow(array $rules): string
 }
 
 /**
- * Extracts the raw `global_params = {...};` JS statement body
- * search_filters.inc.latte emits from `$GP` (json_encode($mySearch),
+ * Extracts `global_params_json` -- `$GP` (json_encode($mySearch),
  * SearchFilterRenderer::render()'s own final template assignment) --
- * scoping a "does the removed field's key still appear" check to just
- * this blob, rather than the whole response body, avoids a false match
- * against an unrelated same-named label elsewhere on the page (e.g. a
- * photo's own "author" metadata display).
+ * from the page-data blob (H::pageData()), still as a raw JSON string
+ * (the value `exposeData('global_params_json', $GP)` pushes is itself
+ * already a JSON-encoded string, re-parsed client-side via
+ * `JSON.parse()`). Scoping a "does the removed field's key still appear"
+ * check to just this blob, rather than the whole response body, avoids a
+ * false match against an unrelated same-named label elsewhere on the
+ * page (e.g. a photo's own "author" metadata display).
  */
 function extraFiltersGlobalParamsJson(string $html): string
 {
-    if (preg_match('/global_params\s*=\s*(\{.*?\});/s', $html, $matches) !== 1) {
-        throw new RuntimeException('could not find the global_params JS assignment in the response body');
+    $globalParamsJson = H::pageData($html)['global_params_json'] ?? null;
+    if (! is_string($globalParamsJson)) {
+        throw new RuntimeException('page-data blob did not contain a string global_params_json entry');
     }
 
-    return $matches[1];
+    return $globalParamsJson;
 }
 
 /**
@@ -346,14 +349,14 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         expect(extraFiltersSettledContent($page))
             ->toContain('Search Ratings Disabled Photo');
 
-        // search_filters.inc.latte emits this JS var literally from
-        // $SHOW_FILTER_RATINGS, and only renders the ratings checkbox / the
-        // whole "filter-ratings" panel when it's true -- both are only
-        // observable by reading the raw response body, not assertSee()'s
-        // visible-text check.
+        // search_filters.inc.latte pushes $SHOW_FILTER_RATINGS into the
+        // page-data blob (exposeData('show_filter_ratings', ...)), and
+        // only renders the ratings checkbox / the whole "filter-ratings"
+        // panel when it's true -- both are only observable by reading the
+        // raw response body, not assertSee()'s visible-text check.
         $html = H::rawWebpage($page)->content();
-        expect($html)
-            ->toContain('var show_filter_ratings = false;');
+        expect(H::pageData($html)['show_filter_ratings'] ?? null)
+            ->toBeFalse();
         expect($html)
             ->not->toContain('filter-manager-controller ratings');
         // Proves searchFields['ratings'] was actually unset (not just

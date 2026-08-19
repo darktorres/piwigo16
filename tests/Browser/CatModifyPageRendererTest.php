@@ -151,11 +151,16 @@ it('assigns the real parent id to PARENT_CAT_ID for a sub-album, not 0', functio
     $result = H::rawGet($page, '/admin.php?page=album&cat_id=2&tab=properties');
 
     expect($result['status'])->toBe(200);
-    expect($result['body'])->toContain('var parent_album = 1');
-    expect($result['body'])->toContain('related_categories_ids = ["2", "1"]');
+    // cat_modify.js no longer receives these as literal JS variable
+    // assignments -- both are read client-side via pwg_getPageData() from
+    // the page's own page-data JSON blob (Piwigo\Core\PageState's
+    // "Typed-page-data-exposure" P37 migration).
+    $pageData = H::pageData($result['body']);
+    expect($pageData['parent_cat_id'] ?? null)->toBe(1);
+    expect($pageData['cat_id'] ?? null)->toBe(2);
     // The old, buggy behavior this replaces -- guards against a partial
     // fix that renders the right value in one JS global but not the other.
-    expect($result['body'])->not->toContain('var parent_album = 0');
+    expect($pageData['parent_cat_id'] ?? null)->not->toBe(0);
 });
 
 // ALLOW_DELETE (the "remove current representant" action) needs BOTH

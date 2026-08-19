@@ -1557,6 +1557,32 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Extracts and JSON-decodes the page's own `<script type=
+     * "application/json" id="page-data">` blob (Piwigo\Core\PageState's
+     * "Typed-page-data-exposure" P37 migration) -- every server-side
+     * `{do exposeData(key, value)}` call lands under this blob's own
+     * `data[key]`, read back client-side via `pwg_getPageData(key)`.
+     * Pages no longer emit these values as literal JS variable
+     * assignments, so this is the correct way to assert on them from raw
+     * HTML (rawGet()/rawWebpage()->content()) without executing JS.
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function pageData(string $html): array
+    {
+        if (preg_match('#<script type="application/json" id="page-data">(.*?)</script>#s', $html, $matches) !== 1) {
+            throw new ExpectationFailedException('could not find the page-data JSON blob in the response body');
+        }
+
+        $decoded = json_decode($matches[1], true);
+        if (! is_array($decoded) || ! is_array($decoded['data'] ?? null)) {
+            throw new ExpectationFailedException('page-data blob did not decode to the expected {data: {...}} shape: ' . $matches[1]);
+        }
+
+        return $decoded['data'];
+    }
+
+    /**
      * Polls in-browser (via script(), which awaits the returned promise —
      * see apiFetch()) until $selector is absent or hidden, instead of racing a
      * single check against an async request. Neither assertSee() nor

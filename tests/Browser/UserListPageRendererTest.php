@@ -186,9 +186,13 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
 
         // getUserManagerView() ?? 'line' defaults to 'line' when unset ->
         // the 'line' branch's own default pagination value (5) applies;
-        // both are rendered verbatim into a JS const.
-        $page->assertSourceHas("const view_selector = 'line';");
-        $page->assertSourceHas("const pagination = '5';");
+        // both are pushed into the page's own page-data JSON blob
+        // (Piwigo\Core\PageState's "Typed-page-data-exposure" P37
+        // migration -- user_list.js reads them back via
+        // pwg_getPageData()), not a literal JS const.
+        $pageData = H::pageData(H::rawWebpage($page)->content());
+        expect($pageData['view_selector'] ?? null)->toBe('line');
+        expect($pageData['pagination'] ?? null)->toBe(5);
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {
@@ -207,8 +211,9 @@ it('switches to grid-view pagination default of 10 when the saved view preferenc
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
-        $page->assertSourceHas("const view_selector = 'tile';");
-        $page->assertSourceHas("const pagination = '10';");
+        $pageData = H::pageData(H::rawWebpage($page)->content());
+        expect($pageData['view_selector'] ?? null)->toBe('tile');
+        expect($pageData['pagination'] ?? null)->toBe(10);
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {

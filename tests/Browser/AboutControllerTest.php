@@ -230,8 +230,8 @@ it('renders the mbLinks menu block for configured links, honoring CheckMenuLinkV
         $page->assertSeeLink('Plain String Link');
         $page->assertSeeLink('No Popup Link');
         $page->assertDontSee('Should Not Appear');
-        $page->assertPresent('a.external[href="https://example.test/plain"][onclick]');
-        $page->assertPresent('a.external[href="https://example.test/no-popup"]:not([onclick])');
+        $page->assertPresent('a.external[href="https://example.test/plain"][data-window-name]');
+        $page->assertPresent('a.external[href="https://example.test/no-popup"]:not([data-window-name])');
         $page->assertNoJavaScriptErrors();
     } finally {
         H::restoreConfig($snapshot);

@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Api\Images;
 
 use Override;
 use Piwigo\Comment\CommentService;
+use Piwigo\Comment\Projection\CommentInsertData;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Http\ControllerInterface;
@@ -48,11 +49,11 @@ final readonly class ImageAddCommentController implements ControllerInterface
 
         $input = ImageAddCommentInput::fromArray(JsonBody::decode($request));
 
-        $comm = [
-            'author' => trim($input->author),
-            'content' => trim($input->content),
-            'image_id' => $imageId,
-        ];
+        $comm = new CommentInsertData(
+            author: trim($input->author),
+            content: trim($input->content),
+            imageId: $imageId,
+        );
 
         $infos = [];
         $commentAction = $this->commentService->insertComment($comm, $input->key, $infos);
@@ -64,7 +65,7 @@ final readonly class ImageAddCommentController implements ControllerInterface
                 'Your comment has NOT been registered because it did not pass the validation rules. ' . implode('; ', $infos)
             ),
             'validate', 'moderate' => ResponseFactory::json([
-                'id' => $comm['id'] ?? 0,
+                'id' => $comm->id ?? 0,
                 'validated' => $commentAction === 'validate',
             ], 201),
             default => ResponseFactory::problem('Internal Server Error', 500, 'Unknown comment action ' . $commentAction . '.'),

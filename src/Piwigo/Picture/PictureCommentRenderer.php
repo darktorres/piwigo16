@@ -9,6 +9,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
+use Piwigo\Comment\Projection\CommentInsertData;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\Email;
@@ -92,13 +93,13 @@ final class PictureCommentRenderer
             $postWebsiteUrl = $pictureCommentSubmitRequest->websiteUrl;
             $postEmail = $pictureCommentSubmitRequest->email;
 
-            $comm = [
-                'author' => $postAuthor !== null && $postAuthor !== '' && $postAuthor !== '0' ? trim($postAuthor) : '',
-                'content' => $postContent !== null && $postContent !== '' && $postContent !== '0' ? trim($postContent) : '',
-                'website_url' => $postWebsiteUrl !== null && $postWebsiteUrl !== '' && $postWebsiteUrl !== '0' ? trim($postWebsiteUrl) : '',
-                'email' => $postEmail !== null && $postEmail !== '' && $postEmail !== '0' ? trim($postEmail) : '',
-                'image_id' => $imageId,
-            ];
+            $comm = new CommentInsertData(
+                author: $postAuthor !== null && $postAuthor !== '' && $postAuthor !== '0' ? trim($postAuthor) : '',
+                content: $postContent !== null && $postContent !== '' && $postContent !== '0' ? trim($postContent) : '',
+                imageId: $imageId,
+                websiteUrl: $postWebsiteUrl !== null && $postWebsiteUrl !== '' && $postWebsiteUrl !== '0' ? trim($postWebsiteUrl) : '',
+                email: $postEmail !== null && $postEmail !== '' && $postEmail !== '0' ? trim($postEmail) : '',
+            );
 
             $postKey = $pictureCommentSubmitRequest->key;
             // insertComment() overwrites $commentErrors unconditionally as its
@@ -136,7 +137,7 @@ final class PictureCommentRenderer
 
             // allow plugins to notify what's going on
             $eventDispatcher->dispatch(new UserCommentInsertion(
-                array_merge($comm, [
+                array_merge($comm->toArray(), [
                     'action' => $commentAction,
                 ])
             ));

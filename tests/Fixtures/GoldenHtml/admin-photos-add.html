@@ -226,7 +226,7 @@
  
 
 
-<div style="display:none">
+<div class="add-album-popin-wrap">
   <div id="addAlbumForm">
     <form>
       <div class="popinField addAlbumFormParent">
@@ -239,7 +239,6 @@
         <input name="category_name" type="text" maxlength="255">
         <span
           id="categoryNameError"
-          style="color:red;"
         >The name of an album must not be empty</span>
       </div>
 
@@ -468,7 +467,6 @@
         <span class='icon-search search-icon'></span>
         <span
             class="icon-cancel search-cancel-linked-album"
-            style="display: none;"
           ></span>
         <input
             class='search-input'
@@ -484,7 +482,7 @@
 
     <div id="searchResult"></div>
 
-    <div class="album-create" id="linkedAlbumCreate" style="display: none;">
+    <div class="album-create" id="linkedAlbumCreate">
       <div class="linked-album-subtitle">
         <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
       </div>
@@ -546,8 +544,7 @@
               class="switch-label"
               for="album-create-check"
             ><span>Creation mode</span> <i
-                class="icon-help-circled tiptip"
-                style="cursor:help"
+                class="icon-help-circled tiptip u-help-cursor"
                 title="Activate create mode to create and select an album"
               ></i></label>
         </div>

@@ -1,0 +1,376 @@
+.search-album-input-container {
+  position: relative;
+}
+
+.album-search-result-container,
+.search-album-elem,
+.search-album-elem-template {
+  display: none;
+}
+
+.animateFocus {
+  position: relative;
+  border-left: 4px solid #f70;
+}
+
+.animateFocus .icon-grip-vertical-solid {
+  color: #f70;
+}
+
+.animateFocus::before {
+  content: '';
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: ripples 0.8s ease-out 0.3s;
+  opacity: 0;
+  border-radius: 5px;
+}
+
+.jqtree_element {
+  transition: 1s;
+}
+
+@keyframes ripples {
+  0% {
+    border: 0 solid #f70;
+    opacity: 0.7;
+  }
+
+  100% {
+    border: 20px solid #f70;
+    opacity: 0;
+  }
+}
+
+.add-album-button label::before {
+  margin-right: 7px;
+}
+
+#AddAlbum, #DeleteAlbum, #RenameAlbum {
+  display: none;
+}
+
+.AddAlbumPopIn, .DeleteAlbumPopIn, .RenameAlbumPopIn {
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0 0 0 / 0.7);
+}
+
+.AddAlbumPopInContainer, .DeleteAlbumPopInContainer, .RenameAlbumPopInContainer {
+  display: flex;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -48%);
+  text-align: left;
+  padding: 20px;
+  flex-direction: column;
+  border-radius: 15px;
+  align-items: center;
+  width: 270px;
+}
+
+.DeleteAlbumPopInContainer {
+  width: 40%;
+  border-radius: 4px;
+  border-top: solid 7px #e74c3c;
+}
+
+.RenameAlbumPopInContainer {
+  width: auto;
+  min-width: 270px;
+  max-width: 700px;
+}
+
+.AddIconContainer, .DeleteIconContainer {
+  margin-top: 10px;
+}
+
+.AddIcon {
+  border-radius: 50%;
+  padding: 10px;
+  font-size: 2em;
+}
+
+.AddIconTitle, .RenameAlbumTitle {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-bottom: 20px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.DeleteIconTitle {
+  font-size: 1.7em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.AddAlbumSubmit,
+.DeleteAlbumSubmit,
+.RenameAlbumSubmit {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 10px 20px;
+  margin: 20px 10px 0 20px;
+  font-size: 1em;
+}
+
+.DeleteAlbumSubmit {
+  border-radius: 4px;
+  transition: 0.1s;
+}
+
+.AddAlbumCancel, .RenameAlbumCancel {
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.CloseAddAlbum, .CloseRenameAlbum {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  font-size: 30px;
+}
+
+.AddAlbumPositionSelect {
+  display: flex;
+  flex-direction: column;
+}
+
+.AddAlbumInputContainer {
+  width: 100%;
+  margin: 15px 0;
+}
+
+.DeleteAlbumInputContainer {
+  width: 70%;
+  margin: 15px auto;
+}
+
+input[name="position"] {
+  margin-right: 5px;
+}
+
+.AddAlbumRadioInput {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.AddAlbumRadioInput label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.deleteAlbumOptions label {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.AddAlbumFormValidation,
+.DeleteAlbumFormValidation,
+.RenameAlbumFormValidation {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.AddAlbumCancel,
+.DeleteAlbumCancel,
+.RenameAlbumCancel {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 10px 20px;
+  margin: 10px 20px 0;
+  font-size: 1em;
+}
+
+.DeleteAlbumCancel {
+  background-color: #ecf0f1;
+  color: #000;
+  border-radius: 4px;
+  transition: 0.1s;
+}
+
+.DeleteAlbumCancel:hover {
+  background: #bdc3c7;
+}
+
+.DeleteAlbumSubmit:hover {
+  background: #c0392b;
+}
+
+.deleteAlbumOptions {
+  list-style-type: none;
+}
+
+.deleteAlbumOptions input {
+  margin-right: 5px;
+}
+
+.album-add-button-label, .order-root-button-label {
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+  font-size: 13px;
+  height: 18px;
+}
+
+.album-add-button-label p,
+.order-root-button-label p {
+  white-space: nowrap;
+  margin: 0 !important;
+}
+
+.badge-container {
+  position: absolute;
+  right: 275px;
+}
+
+.badge-container i {
+  padding: 2px 6px 2px 4px !important;
+  border-radius: 10px !important;
+  font-size: 0.85em !important;
+  margin: 0 2px !important;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.notClickable {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.notClickable:hover {
+  cursor: not-allowed;
+}
+
+.move-cat-container, .move-cat-container .badge-container i {
+  transition: 0.2s;
+}
+
+.jqtree-moving .move-cat-container {
+  background-color: #ffd7ad;
+}
+
+.jqtree-moving .move-cat-container .badge-container i,
+.jqtree-moving .move-cat-container .node-icon {
+  color: #ffd7ad;
+  background-color: #f98100;
+}
+
+.dragging .move-cat-container {
+  pointer-events: none;
+}
+
+.dragging .move-cat-container .move-cat-toogler,
+.dragging .move-cat-container .move-cat-action-cont a,
+.dragging .move-cat-container .move-cat-title-container {
+  pointer-events: all;
+}
+
+.last-update {
+  display: none;
+}
+
+.badge-container:hover .badge-dropdown {
+  display: flex;
+}
+
+.badge-dropdown {
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  right: 50%;
+  top: 30px;
+  width: max-content;
+  border-radius: 10px;
+  z-index: 10;
+  transform: translateX(48%);
+  box-shadow: 0 3px 3px 1px rgb(0 0 0 / 0.2);
+  padding: 10px 20px;
+}
+
+.badge-dropdown::after {
+  content: " ";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: rotate(0);
+  border-width: 5px;
+  border-style: solid;
+}
+
+.badge-dropdown span {
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 5px 0;
+}
+
+.badge-dropdown span::before {
+  margin: 0 8px 0 0;
+  width: 20px;
+}
+
+@media (max-width: 1415px) {
+  .badge-container .last-update {
+    display: none;
+  }
+
+  .badge-container .nb-sub-photos {
+    display: none;
+  }
+}
+
+@media (max-width: 1300px) {
+  .badge-container {
+    display: none;
+  }
+}
+
+@media (max-width: 1230px) {
+  .badge-container {
+    display: none;
+  }
+
+  ul.jqtree-tree ul.jqtree_common {
+    margin-left: 20px !important;
+  }
+
+  .move-cat-title-container {
+    max-width: 60%;
+  }
+}
+
+@media (max-width: 1100px) {
+  .move-cat-title-container {
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 850px) {
+  .move-cat-title-container {
+    max-width: 40%;
+  }
+}

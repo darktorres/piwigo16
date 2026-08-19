@@ -118,9 +118,9 @@ final readonly class ProfileController implements ControllerInterface
         // render), so profile_content.latte was always rendered with
         // whatever language was active BEFORE this switch, and the
         // Lang::load() call had no effect on anything the response actually
-        // showed. Moved to run first, before $userdata/any template
-        // rendering, so the whole response (including $userdata's own
-        // 'language' field) consistently reflects the just-switched
+        // showed. Moved to run first, before $user/any template
+        // rendering, so the whole response (including $user's own
+        // language) consistently reflects the just-switched
         // language.
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language->value !== $cookie_lang)) {
@@ -144,8 +144,7 @@ final readonly class ProfileController implements ControllerInterface
             ]);
         }
 
-        $userdata = $this->currentUser->get()
-            ->toUserArray();
+        $user = $this->currentUser->get();
 
         $this->eventDispatcher->dispatch(new ProfilePageRendering());
 
@@ -156,12 +155,14 @@ final readonly class ProfileController implements ControllerInterface
 
         // Get the Guest custom settings -- UserService::getDefaultUserInfo()
         // already provides this exact row (process-cached, expand/
-        // show_nb_comments/show_nb_hits already real bool), narrowed back
-        // down to $fields so no extra column (activation_key included)
-        // leaks into the DEFAULT_USER_VALUES template assignment below,
-        // matching this method's own original raw-query column list.
-        $default_user = $this->userService->getDefaultUserInfo();
-        $default_user = $default_user instanceof DefaultUserInfo ? array_intersect_key($default_user->toArray(), array_flip($fields)) : [];
+        // show_nb_comments/show_nb_hits already real bool). $default_user
+        // (narrowed back down to $fields so no extra column -- activation_key
+        // included -- leaks into the DEFAULT_USER_VALUES template assignment
+        // below, matching this method's own original raw-query column list)
+        // feeds the JS-facing template value only; $defaultUserInfo (the
+        // real object) feeds $user->withDefaultsFrom() below.
+        $defaultUserInfo = $this->userService->getDefaultUserInfo();
+        $default_user = $defaultUserInfo instanceof DefaultUserInfo ? array_intersect_key($defaultUserInfo->toArray(), array_flip($fields)) : [];
 
         // profile.latte's inline JS (preferencesDefaultValues) interpolates
         // these bare/unquoted, relying on the *old* enum('true','false')
@@ -169,9 +170,7 @@ final readonly class ProfileController implements ControllerInterface
         // bool would render as PHP's own `1`/`` instead, so render the
         // same JS-literal string explicitly, matching
         // ProfileFormHandler::loadIntoTemplate()'s existing convention for
-        // the identical case. A separate array, not a mutation of
-        // $default_user itself -- that one still feeds the $userdata
-        // merge below as real bool.
+        // the identical case.
         $default_user_for_template = $default_user;
         foreach (['expand', 'show_nb_comments', 'show_nb_hits'] as $k) {
             if (isset($default_user_for_template[$k])) {
@@ -179,21 +178,21 @@ final readonly class ProfileController implements ControllerInterface
             }
         }
         // Reset to default (Guest) custom settings
-        if ($profileAction->resetToDefault) {
-            $userdata = array_merge($userdata, $default_user);
+        if ($profileAction->resetToDefault && $defaultUserInfo instanceof DefaultUserInfo) {
+            $user = $user->withDefaultsFrom($defaultUserInfo);
         }
 
         $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
         $page_errors = $this->pageState->errors;
-        $profileFormHandler->saveFromPost($userdata, $page_errors);
+        $profileFormHandler->saveFromPost($user, $page_errors);
         $this->pageState->errors = array_values($page_errors);
 
         $this->pageState->setBodyId('theProfilePage');
         $profileFormHandler->loadIntoTemplate(
             $this->urlService->getRootUrl() . 'profile.php', // action
             $this->urlService->makeIndexUrl(), // for redirect
-            $userdata
+            $user
         );
         $template->assignVarFromTemplate('PROFILE_CONTENT', 'profile_content.latte');
 

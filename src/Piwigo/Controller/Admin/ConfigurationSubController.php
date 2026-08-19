@@ -59,6 +59,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -574,13 +575,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 $guest_id = $this->currentConfig->guestId;
 
-                $edit_user = $this->userService->buildUser(UserId::from($guest_id));
+                $edit_user = User::fromUserArray($this->userService->buildUser(UserId::from($guest_id)));
                 $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = $this->userService->buildUser(UserId::from($guest_id));
+                    $edit_user = User::fromUserArray($this->userService->buildUser(UserId::from($guest_id)));
                     $this->pageState->addInfo($this->lang->t('Information data registered in database'));
                 }
                 $this->pageState->errors = array_merge($this->pageState->errors, array_values(array_filter($errors, is_string(...))));

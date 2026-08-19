@@ -14,6 +14,7 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
+use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
 
@@ -592,11 +593,11 @@ test('massInsertImageCategory persists every real row it is given', function ():
 
     try {
         $repo->massInsertImageCategory([
-            [
-                'image_id' => $imageId,
-                'category_id' => 1,
-                'rank' => 3,
-            ],
+            new ImageCategoryPair(
+                imageId: $imageId,
+                categoryId: 1,
+                rank: 3,
+            ),
         ]);
 
         $conn = DbConnection::build();

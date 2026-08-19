@@ -689,32 +689,17 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-var str_number_page_visited = "{='Page Visited'|translate}";
-var str_number_page_visited_with_year = "{='Page Visited in %s'|translate}";
-var str_tooltip_format = {
-  "years":"YYYY",
-  "months":"MMMM YYYY",
-  "days":"DD MMM",
-  "hours":"LT"
-};
-var str_unit_format = {
-  "day":"dddd",
-  "month":"MMM YYYY"
-}
-var str_avg = "{='Average last 12 months'|translate}";
-var str_months_tosplit = "{$month_labels}";
-var str_months = str_months_tosplit.split('~');
-moment.locale("{$langCode}");
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeString('Page Visited')}
+{do exposeString('Average last 12 months')}
+{do exposeData('month_labels', $month_labels)}
+{do exposeData('lang_code', $langCode)}
 
 {do combineScript(id: 'chart.js', load: 'footer', path: 'themes/default/js/plugins/Chart.min.js')}
 {do combineCss(path: "themes/default/js/plugins/Chart.min.css")}
 
 {do combineScript(id: 'moment-with-locales.js', path: 'themes/default/js/plugins/moment-with-locales.min.js')}
 
-{do combineScript(id: 'stats', load: 'footer', path: 'themes/admin/default/js/stats.js')}
+{do combineScript(id: 'stats', load: 'footer', require: 'chart.js,moment-with-locales.js,page-data', path: 'themes/admin/default/js/stats.js')}
 
 <div class="stat-compare-mode">
   <label class="switch">

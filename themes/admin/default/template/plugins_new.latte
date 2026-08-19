@@ -699,27 +699,22 @@
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineScript(id: 'pluginsNew', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort', path: 'themes/admin/default/js/plugins_new.js')}
+{do combineScript(id: 'pluginsNew', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort,page-data', path: 'themes/admin/default/js/plugins_new.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 
-{capture $tmpFooterScript}
-const str_confirm_msg = "{='Yes, I am sure'|translate}";
-const str_cancel_msg = "{='No, I have changed my mind'|translate}";
-const str_install_title = "{_ 'Are you sure you want to install the plugin "%s"?'|escapeJavascript|noescape}";
-const strs_certification = {
-  "-1" : "{='This plugin is incompatible with your version'|translate}",
-  "0" : "{='This plugin have no update since 3 years ! It may be outdated'|translate}",
-  "1" : "{='This plugin has no recent update'|translate}",
-  "2" : "{='This plugin was updated less than 6 months ago'|translate}",
-  "3" : "{='This plugin have been updated recently'|translate}",
-};
-const str_x_month = "{='%d month'|translate}";
-const str_x_months = "{='%d months'|translate}";
-const str_x_year = "{='%d year'|translate}";
-const str_x_years = "{='%d years'|translate}";
-const str_from_begining = "{='since the beginning'|translate}";
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Are you sure you want to install the plugin "%s"?')}
+{do exposeString('This plugin is incompatible with your version')}
+{do exposeString('This plugin have no update since 3 years ! It may be outdated')}
+{do exposeString('This plugin has no recent update')}
+{do exposeString('This plugin was updated less than 6 months ago')}
+{do exposeString('This plugin have been updated recently')}
+{do exposeString('%d month')}
+{do exposeString('%d months')}
+{do exposeString('%d year')}
+{do exposeString('%d years')}
+{do exposeString('since the beginning')}
 
 <div class="titrePage">
   <div class="sort">

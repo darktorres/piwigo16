@@ -692,73 +692,14 @@
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{capture $tmpFooterScript}
-
-
-const title_msg = '{_ 'Are you sure you want to restore to default settings?'|escapeJavascript|noescape}';
-const confirm_msg = '{='Yes, I am sure'|translate}';
-const cancel_msg = '{='No, I have changed my mind'|translate}';
-
-$(".restore-settings-button").each(function() {
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title_msg,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-
-(function(){
-  var labelMaxWidth = "{='Maximum width'|translate}",
-      labelWidth = "{='Width'|translate}",
-      labelMaxHeight = "{='Maximum height'|translate}",
-      labelHeight = "{='Height'|translate}";
-
-  function toggleResizeFields(size) {
-    var checkbox = jQuery("[name=original_resize]");
-    var needToggle = jQuery("#sizeEdit-original");
-
-    if (jQuery(checkbox).is(':checked')) {
-      needToggle.show();
-    }
-    else {
-      needToggle.hide();
-    }
-  }
-
-  toggleResizeFields("original");
-  jQuery("[name=original_resize]").click(function () {
-    toggleResizeFields("original");
-  });
-
-  jQuery("a[id^='sizeEditOpen-']").click(function(){
-    var sizeName = jQuery(this).attr("id").split("-")[1];
-    jQuery("#sizeEdit-"+sizeName).toggle();
-    jQuery(this).hide();
-    return false;
-  });
-
-  jQuery(".cropToggle").click(function() {
-    var labelBoxWidth = jQuery(this).parents('table.sizeEditForm').find('td.sizeEditWidth');
-    var labelBoxHeight = jQuery(this).parents('table.sizeEditForm').find('td.sizeEditHeight');
-
-    if (jQuery(this).is(':checked')) {
-      jQuery(labelBoxWidth).html(labelWidth);
-      jQuery(labelBoxHeight).html(labelHeight);
-    }
-    else {
-      jQuery(labelBoxWidth).html(labelMaxWidth);
-      jQuery(labelBoxHeight).html(labelMaxHeight);
-    }
-  });
-
-  jQuery("#showDetails").click(function() {
-    jQuery(".sizeDetails").show();
-    jQuery(this).css("visibility", "hidden");
-    return false;
-  });
-})();
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeString('Are you sure you want to restore to default settings?')}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Maximum width')}
+{do exposeString('Width')}
+{do exposeString('Maximum height')}
+{do exposeString('Height')}
+{do combineScript(id: 'configuration_sizes', load: 'footer', require: 'common,jquery.confirm,page-data', path: 'themes/admin/default/js/configuration_sizes.js')}
 
 {capture $tmpHtmlStyle}
 .sizeEnable { width:50px; }

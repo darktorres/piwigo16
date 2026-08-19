@@ -689,53 +689,8 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
-    header: 'dt',
-    content: 'dd',
-    active: 0
-  }, options);
-
-  return this.each(function() {
-    var self = jQuery(this);
-
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-    contents.not(contents[settings.active]).hide();
-
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-    });
-  });
-};
-
-$('#menubar').lightAccordion({
-  active: {$ACTIVE_MENU}
-});
-
-/* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
-
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
-
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
-    }
-  }
-
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
-  }
-});
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('active_menu', $ACTIVE_MENU)}
+{do combineScript(id: 'admin', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/admin.js')}
 
 <div id="menubar">
   <div id="adminHome"><a href="{$U_ADMIN|noescape}" class="admin-main"><i
@@ -881,10 +836,7 @@ jQuery(document).ready(function() {
   {/if}
   {if isset($U_HELP)}
     {include 'include/colorbox.inc.latte'}
-    {capture $tmpFooterScriptHelp}
-  jQuery('.help-popin').colorbox({ width:"500px" });
-{/capture}
-    {do footerScript($tmpFooterScriptHelp)}
+    {do combineScript(id: 'admin_help', load: 'footer', require: 'jquery.colorbox', path: 'themes/admin/default/js/admin_help.js')}
     <ul class="HelpActions">
       <li><a
           href="{$U_HELP|noescape}&amp;output=content_only"

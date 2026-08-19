@@ -212,13 +212,13 @@
   </ul>
 </div>
 
-    <ul class="HelpActions">
-      <li><a
+  <ul class="HelpActions">
+    <li><a
           href="admin/popuphelp.php?page=maintenance&amp;output=content_only"
           title="Help"
           class="help-popin"
         ><span class="icon-help-circled"></span></a></li>
-    </ul>
+  </ul>
 
   <div class="eiw">
 
@@ -226,9 +226,7 @@
 
   </div> 
 
-   
-
-
+  
 <fieldset class="">
   <legend><span
         class="icon-globe icon-blue"
@@ -660,163 +658,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"u_maint_lock_gallery":"admin.php?page=maintenance\u0026amp;action=lock_gallery\u0026amp;pwg_token={{TOKEN}}","pwg_token":"{{TOKEN}}","active_menu":3},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","right now":"right now","%s MB":"%s MB","A locked gallery is only visible to administrators":"A locked gallery is only visible to administrators","Are you sure you want to lock the gallery?":"Are you sure you want to lock the gallery?","Are you sure you want to unlock the gallery?":"Are you sure you want to unlock the gallery?","Yes, I want to lock the gallery":"Yes, I want to lock the gallery","Keep it unlocked":"Keep it unlocked","Purge history detail":"Purge history details","Purge history summary":"Purge history summary","Purge search history":"Purge search history","Are you sure you want to delete all sizes?":"Are you sure you want to delete all sizes?","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-const confirm_msg = 'Yes, I am sure';
-const cancel_msg = "No, I have changed my mind";
-const no_time_elapsed = "right now";
-const unit_MB = "%s MB"
-let selected = [];
-$(".lock-gallery-button").each(function() {
-  const gallery_tip = 'A locked gallery is only visible to administrators';
-  let title = 'Are you sure you want to lock the gallery?';
-
-  let confirm_msg_gallery = 'Yes, I want to lock the gallery';
-  let cancel_msg_gallery = 'Keep it unlocked';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
-    alert_content: gallery_tip
-  });
-});
-$(".purge-history-detail-button").each(function() {
-  const title = 'Purge history details';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-$(".purge-history-summary-button").each(function() {
-  const title = 'Purge history summary';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-$(".purge-search-history-button").each(function() {
-  const title = 'Purge search history';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-$(".delete-all-sizes-button").each(function() {
-  const title = 'Are you sure you want to delete all sizes?';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-
-$(".delete-size-check").click(function () {
-  if ($(this).attr('data-selected') == '1') {
-    $(this).attr('data-selected', '0');
-    $(this).find("i").hide();
-  } else {
-    $(this).attr('data-selected', '1');
-    $(this).find("i").show();
-  }
-  $(this).trigger("change");
-});
-$(".delete-size-check:first").change(function() {
-  if ($(this).attr('data-selected') == '1') {
-    $(".delete-size-check").hide();
-    $(".delete-size-check").attr("data-selected", "1");
-    $(this).show();
-  } else {
-    $(".delete-size-check").show();
-    $(".delete-size-check").attr("data-selected", "0");
-  }
-})
-const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
-$(".delete-size-check").change(function() {
-  let delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + "{{TOKEN}}&";
-  let types_str = '';
-  let selected = []
-  $(".delete-size-check").each(function () {
-    if ($(this).attr("data-selected") == '1') {
-      selected.push($(this).attr("name"));
-    }
-  })
-  if (selected.length == 0) {
-    $(".delete-sizes").attr("href", "");
-  } else {
-    if (selected[0] == "all") {
-      types_str = "all";
-    } else {
-      types_str = selected.join("_");
-    }
-    console.log(selected);
-    $(".delete-sizes").attr("href", delete_deriv_with_token + "type=" + types_str);
-  }
-})
-
-$(".delete-sizes").hide();
-$(".delete-size-check").click( function () {
-  let displayDeleteSizes = false;
-  $(".delete-size-check").each(function() {
-    if ($(this).attr("data-selected") == 1) {
-      displayDeleteSizes = true;
-    }
-  });
-
-  (displayDeleteSizes ? $(".delete-sizes").show() : $(".delete-sizes").hide())
-
-})
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
-    header: 'dt',
-    content: 'dd',
-    active: 0
-  }, options);
-
-  return this.each(function() {
-    var self = jQuery(this);
-
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-    contents.not(contents[settings.active]).hide();
-
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-    });
-  });
-};
-
-$('#menubar').lightAccordion({
-  active: 3
-});
-
-/* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
-
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
-
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
-    }
-  }
-
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
-  }
-});
-jQuery('.help-popin').colorbox({ width:"500px" });
 jQuery('.tiptip').tipTip({
   delay: 0,
   fadeIn: 200,

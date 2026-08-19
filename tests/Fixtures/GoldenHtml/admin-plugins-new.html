@@ -220,7 +220,6 @@
   </div> 
 
   
-
 <div class="titrePage">
   <div class="sort">
     <div class="sort-actions">
@@ -2357,71 +2356,12 @@ When visitor clicks on it, it saves the chosen language in his session or in pro
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"active_menu":-1},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure you want to install the plugin \"%s\"?":"Are you sure you want to install the plugin \"%s\"?","This plugin is incompatible with your version":"This plugin is incompatible with your version","This plugin have no update since 3 years ! It may be outdated":"This plugin have no update since 3 years! It may be outdated","This plugin has no recent update":"This plugin has no recent update","This plugin was updated less than 6 months ago":"This plugin was updated less than 6 months ago","This plugin have been updated recently":"This plugin have been updated recently","%d month":"%d month","%d months":"%d months","%d year":"%d year","%d years":"%d years","since the beginning":"since the beginning","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-const str_confirm_msg = "Yes, I am sure";
-const str_cancel_msg = "No, I have changed my mind";
-const str_install_title = "Are you sure you want to install the plugin \"%s\"?";
-const strs_certification = {
-  "-1" : "This plugin is incompatible with your version",
-  "0" : "This plugin have no update since 3 years! It may be outdated",
-  "1" : "This plugin has no recent update",
-  "2" : "This plugin was updated less than 6 months ago",
-  "3" : "This plugin have been updated recently",
-};
-const str_x_month = "%d month";
-const str_x_months = "%d months";
-const str_x_year = "%d year";
-const str_x_years = "%d years";
-const str_from_begining = "since the beginning";
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
-    header: 'dt',
-    content: 'dd',
-    active: 0
-  }, options);
-
-  return this.each(function() {
-    var self = jQuery(this);
-
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-    contents.not(contents[settings.active]).hide();
-
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-    });
-  });
-};
-
-$('#menubar').lightAccordion({
-  active: -1
-});
-
-/* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
-
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
-
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
-    }
-  }
-
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
-  }
-});
 jQuery('.tiptip').tipTip({
   delay: 0,
   fadeIn: 200,

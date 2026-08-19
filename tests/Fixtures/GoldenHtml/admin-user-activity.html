@@ -775,56 +775,12 @@ div:has(> .activity-header) {
 </style>
 
 
-<script type="application/json" id="page-data">{"data":{"cache_key_users":"1785553200_4","cache_key_hash":"{{TOKEN}}","root_url":"","nb_users":4,"additional_filt_type":false,"additional_filt_value":null,"activity_dates_min":"2026-08-01","activity_dates_max":"2026-08-01"},"strings":{"Users":"Users","%s line":"%s line","%s lines":"%s lines","add":"add","deletion":"deletion","move":"move","edit":"edit","login":"login","logout":"logout","%d album added":"%d album added","%d album deleted":"%d album deleted","%d album edited":"%d album edited","%d album moved":"%d album moved","%d albums added":"%d albums added","%d albums deleted":"%d albums deleted","%d albums edited":"%d albums edited","%d albums moved":"%d albums moved","%d user added":"%d user added","%d user deleted":"%d user deleted","%d user edited":"%d user edited","%d user logged in":"%d user logged in","%d user logged out":"%d user logged out","%d users added":"%d users added","%d users deleted":"%d users deleted","%d users edited":"%d users edited","%d users logged in":"%d users logged in","%d users logged out":"%d users logged out","%d photo added":"%d photo added","%d photo deleted":"%d photo deleted","%d photo edited":"%d photo edited","%d photo moved":"%d photo moved","%d photos added":"%d photos added","%d photos deleted":"%d photos deleted","%d photos edited":"%d photos edited","%d photos moved":"%d photos moved","%d group added":"%d group added","%d group deleted":"%d group deleted","%d group edited":"%d group edited","%d group moved":"%d group moved","%d groups added":"%d groups added","%d groups deleted":"%d groups deleted","%d groups edited":"%d groups edited","%d groups moved":"%d groups moved","%d tag added":"%d tag added","%d tag deleted":"%d tag deleted","%d tag edited":"%d tag edited","%d tag moved":"%d tag moved","%d tags added":"%d tags added","%d tags deleted":"%d tags deleted","%d tags edited":"%d tags edited","%d tags moved":"%d tags moved","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"cache_key_users":"1785553200_4","cache_key_hash":"{{TOKEN}}","root_url":"","nb_users":4,"additional_filt_type":false,"additional_filt_value":null,"activity_dates_min":"2026-08-01","activity_dates_max":"2026-08-01","active_menu":2},"strings":{"Users":"Users","%s line":"%s line","%s lines":"%s lines","add":"add","deletion":"deletion","move":"move","edit":"edit","login":"login","logout":"logout","%d album added":"%d album added","%d album deleted":"%d album deleted","%d album edited":"%d album edited","%d album moved":"%d album moved","%d albums added":"%d albums added","%d albums deleted":"%d albums deleted","%d albums edited":"%d albums edited","%d albums moved":"%d albums moved","%d user added":"%d user added","%d user deleted":"%d user deleted","%d user edited":"%d user edited","%d user logged in":"%d user logged in","%d user logged out":"%d user logged out","%d users added":"%d users added","%d users deleted":"%d users deleted","%d users edited":"%d users edited","%d users logged in":"%d users logged in","%d users logged out":"%d users logged out","%d photo added":"%d photo added","%d photo deleted":"%d photo deleted","%d photo edited":"%d photo edited","%d photo moved":"%d photo moved","%d photos added":"%d photos added","%d photos deleted":"%d photos deleted","%d photos edited":"%d photos edited","%d photos moved":"%d photos moved","%d group added":"%d group added","%d group deleted":"%d group deleted","%d group edited":"%d group edited","%d group moved":"%d group moved","%d groups added":"%d groups added","%d groups deleted":"%d groups deleted","%d groups edited":"%d groups edited","%d groups moved":"%d groups moved","%d tag added":"%d tag added","%d tag deleted":"%d tag deleted","%d tag edited":"%d tag edited","%d tag moved":"%d tag moved","%d tags added":"%d tags added","%d tags deleted":"%d tags deleted","%d tags edited":"%d tags edited","%d tags moved":"%d tags moved","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
-    header: 'dt',
-    content: 'dd',
-    active: 0
-  }, options);
-
-  return this.each(function() {
-    var self = jQuery(this);
-
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-    contents.not(contents[settings.active]).hide();
-
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-    });
-  });
-};
-
-$('#menubar').lightAccordion({
-  active: 2
-});
-
-/* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
-
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
-
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
-    }
-  }
-
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
-  }
-});
 jQuery('.tiptip').tipTip({
   delay: 0,
   fadeIn: 200,

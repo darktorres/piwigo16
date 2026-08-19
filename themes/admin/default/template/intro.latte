@@ -693,92 +693,29 @@
 
 {do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
 
-{capture $tmpFooterScript}
-var piwigo_need_update_msg = '<a href="admin.php?page=updates">{_ 'A new version of Piwigo is available.'|escapeJavascript|noescape} <i class="icon-right"></i></a>';
-var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{_ 'Some upgrades are available for extensions.'|escapeJavascript|noescape} <i class="icon-right"></i></a>';
-const str_gb_used = "{_ '%s GB used'|noescape}";
-const str_mb_used = "{_ '%s MB used'|noescape}";
-const str_gb = "{_ '%sGB'|noescape}".replace(' ', '&nbsp;');
-const str_mb = "{_ '%sMB'|noescape}".replace(' ', '&nbsp;');
-const storage_total = {$STORAGE_TOTAL};
-const storage_details = {$STORAGE_CHART_DATA|json_encode|noescape};
-const translate_files = "{_ '%d files'|escapeJavascript|noescape}";
-let translate_type = {};
-{if isset($SUBSCRIBE_BASE_URL)}
-  const newsletter_base_url = "{$SUBSCRIBE_BASE_URL}";
-{/if}
-jQuery().ready(function(){
-  jQuery('.cluetip').cluetip({
-    width: 300,
-    splitTitle: '|',
-    positionBy: 'bottomTop'
-  });
-{if $CHECK_FOR_UPDATES}
-  jQuery.ajax({
-    type: 'GET',
-    url: 'api/v1/extensions/updates',
-    dataType: 'json',
-    timeout: 5000,
-    success: function (data) {
-      piwigo_update = data['piwigoNeedUpdate'];
-      ext_update = data['extNeedUpdate']
-      if ((piwigo_update || ext_update) && !jQuery(".warnings").is('div'))
-        jQuery(".eiw").prepend('<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
-      if (piwigo_update)
-        jQuery(".warnings ul").append('<li>'+piwigo_need_update_msg+'</li>');
-      if (ext_update)
-        jQuery(".warnings ul").append('<li>'+ext_need_update_msg+'</li>');
-    }
-  });
-{/if}
-
-{if isset($SUBSCRIBE_BASE_URL)}
-  jQuery(".eiw").prepend(`
-  <div class="promote-newsletter">
-    <div class="promote-content">
-
-      <img class="promote-image" src="themes/admin/default/images/promote-newsletter.png">
-
-      <div class="promote-newsletter-content">
-        <span class="promote-newsletter-title">{_ 'Subscribe to our newsletter and stay updated!'|escapeJavascript|noescape}</span>
-        <div class="promote-content subscribe-newsletter">
-          <input type="text" id="newsletterSubscribeInput" value="{$EMAIL}" class="left-side">
-          <a href="{$SUBSCRIBE_BASE_URL}{$EMAIL}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">{_ 'Sign up to the newsletter'|escapeJavascript|noescape}</a>
-        </div>
-        <a href="{$OLD_NEWSLETTERS_URL}" class="promote-link">{_ 'See previous newsletters'|escapeJavascript|noescape}</a>
-      </div>
-
-    </div>
-    <a href="#" class="dont-show-again icon-cancel tiptip newsletter-hide" title="{_ 'Understood, do not show again'|escapeJavascript|noescape}"></a>
-  </div>`);
-
-{/if}
-
-  jQuery("#newsletterSubscribeInput").change(function(){
-    jQuery("#newsletterSubscribeLink").attr("href", newsletter_base_url + jQuery("#newsletterSubscribeInput").val())
-  })
-
-  jQuery('.newsletter-hide').click(function() {
-    jQuery('.promote-newsletter').hide();
-
-    jQuery.ajax({
-      type: 'GET',
-      url: 'admin.php?action=hide_newsletter_subscription'
-    });
-
-    if (jQuery(this).hasClass('newsletter-hide')) {
-      return false;
-    }
-  });
-  let size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
-  let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
-  $(".chart-title-infos").html(size_info.replace("%s", size_nb));
-});
+{do exposeString('A new version of Piwigo is available.')}
+{do exposeString('Some upgrades are available for extensions.')}
+{do exposeString('%s GB used')}
+{do exposeString('%s MB used')}
+{do exposeString('%sGB')}
+{do exposeString('%sMB')}
+{do exposeString('%d files')}
+{do exposeData('storage_total', $STORAGE_TOTAL)}
+{do exposeData('storage_chart_data', $STORAGE_CHART_DATA)}
+{do exposeData('check_for_updates', $CHECK_FOR_UPDATES)}
+{do exposeData('subscribe_base_url', $SUBSCRIBE_BASE_URL)}
+{do exposeData('email', $EMAIL)}
+{do exposeData('old_newsletters_url', $OLD_NEWSLETTERS_URL)}
 {foreach $STORAGE_CHART_DATA as $type_to_translate => $details}
-translate_type['{$type_to_translate|noescape}'] = "{$type_to_translate|translate|noescape}";
+  {do exposeString($type_to_translate)}
 {/foreach}
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.cluetip')}
+{if isset($SUBSCRIBE_BASE_URL)}
+  {do exposeString('Subscribe to our newsletter and stay updated!')}
+  {do exposeString('Sign up to the newsletter')}
+  {do exposeString('See previous newsletters')}
+  {do exposeString('Understood, do not show again')}
+{/if}
+{do combineScript(id: 'intro', load: 'footer', require: 'jquery.cluetip,page-data', path: 'themes/admin/default/js/intro.js')}
 {do combineScript(id: 'intro_tooltips', load: 'footer', path: 'themes/admin/default/js/intro_tooltips.js')}
 
 {capture $tmpHtmlStyle}

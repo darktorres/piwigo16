@@ -699,46 +699,29 @@
 
 {do combineScript(id: 'pluginInstallated', load: 'footer', require: 'jquery.ajaxmanager', path: 'themes/admin/default/js/plugins_installated.js')}
 
-{capture $tmpFooterScript}
-/* incompatible message */
-var incompatible_msg = '{_ 'WARNING! This plugin does not seem to be compatible with this version of Piwigo.'|escapeJavascript|noescape}';
-var activate_msg = '\n{_ 'Do you want to activate anyway?'|escapeJavascript|noescape}';
-var deactivate_all_msg = '{='Deactivate all'|translate}';
-
-/* group action */
-const pwg_token = '{$CSRF_TOKEN}';
-const nb_plugin = {
-  'all' : {$count_types_plugins["active"]} + {$count_types_plugins["inactive"]} + {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]},
-  'active' : {$count_types_plugins["active"]},
-  'inactive' : {$count_types_plugins["inactive"]},
-  'other' : {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]},
-};
-const are_you_sure_msg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
-const confirm_msg = '{='Yes, I am sure'|translate}';
-const cancel_msg = "{='No, I have changed my mind'|translate}";
-let delete_plugin_msg = '{_ 'Are you sure you want to delete the plugin "%s"?'|escapeJavascript|noescape}';
-let deleted_plugin_msg = '{_ 'Plugin "%s" deleted!'|escapeJavascript|noescape}';
-let restore_plugin_msg = '{_ 'Are you sure you want to restore the plugin "%s"?'|escapeJavascript|noescape}';
-let uninstall_plugin_msg = '{_ 'Are you sure you want to uninstall the plugin "%s"?'|escapeJavascript|noescape}';
-const restore_tip_msg = "{_ 'Restore default configuration. You will lose your plugin settings!'|escapeJavascript|noescape}";
-const plugin_added_str = '{_ 'Activated'|escapeJavascript|noescape}';
-const plugin_deactivated_str = '{_ 'Deactivated'|escapeJavascript|noescape}';
-const plugin_restored_str = '{_ 'Restored'|escapeJavascript|noescape}';
-const plugin_action_error = '{_ 'an error happened'|escapeJavascript|noescape}';
-const not_webmaster = '{_ 'Webmaster status required'|escapeJavascript|noescape}';
-const nothing_found = '{_ 'No plugins found'|escapeJavascript|noescape}';
-const x_plugins_found = '{_ '%s plugins found'|escapeJavascript|noescape}';
-const plugin_found = '{_ '%s plugin found'|escapeJavascript|noescape}';
-const isWebmaster = {$isWebmaster};
-const view_selector = '{$view_selector}';
-const str_restore_def = '{_ 'While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|escapeJavascript|noescape}';
-
-const show_details = {if $show_details} true {else} false {/if};
-
-let searchParams = new URLSearchParams(window.location.search);
-let plugin_filter = searchParams.get('filter');
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeString('WARNING! This plugin does not seem to be compatible with this version of Piwigo.')}
+{do exposeString('Do you want to activate anyway?')}
+{do exposeString('Deactivate all')}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeData('count_types_plugins', $count_types_plugins)}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Are you sure you want to delete the plugin "%s"?')}
+{do exposeString('Plugin "%s" deleted!')}
+{do exposeString('Are you sure you want to restore the plugin "%s"?')}
+{do exposeString('Are you sure you want to uninstall the plugin "%s"?')}
+{do exposeString('Activated')}
+{do exposeString('Deactivated')}
+{do exposeString('Restored')}
+{do exposeString('an error happened')}
+{do exposeString('Webmaster status required')}
+{do exposeString('No plugins found')}
+{do exposeString('%s plugins found')}
+{do exposeString('%s plugin found')}
+{do exposeData('is_webmaster', $isWebmaster)}
+{do exposeString('While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset')}
+{do exposeData('show_details', $show_details)}
+{do combineScript(id: 'plugins_installed_config', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/plugins_installed_config.js')}
 
 {if isset($plugins)}
   {var $field_name = 'null'} {* <!-- 'counter' for fieldset management --> *}

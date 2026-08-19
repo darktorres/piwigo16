@@ -689,16 +689,7 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-$('#syncFiles label').click(function () {
-  if ($("input[value='files']:checked").val()) {
-    $("input[value='files']").closest("li").find("ul").show();
-  } else {
-    $("input[value='files']").closest("li").find("ul").hide();
-  }
-})
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do combineScript(id: 'site_update', load: 'footer', path: 'themes/admin/default/js/site_update.js')}
 
 <div class="selectedAlbum site-url-path">
   <span class="icon-folder-open selectedAlbum-first">{$SITE_URL}</span>

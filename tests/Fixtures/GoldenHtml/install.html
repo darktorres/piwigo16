@@ -19,20 +19,6 @@
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined_scripts -->
 
-    <script
-      type="text/javascript"
-    >
-$(document).ready(function() {
-  $("a.externalLink").click(function() {
-    window.open($(this).attr("href"));
-    return false;
-  });
-
-  $("#admin_mail").keyup(function() {
-    $(".adminEmail").text($(this).val());
-  });
-});
-</script>
 
     <style
       type="text/css"
@@ -134,7 +120,6 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
 }
 
 </style>
-
 
 
     <title>Piwigo 17.0.0 - Installation</title>
@@ -430,17 +415,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
     </div> 
 
     <!-- BEGIN get_combined_scripts -->
-    <script type="text/javascript" src="themes/default/js/plugins/jquery.cluetip.js?v17.0.0"></script>
-<script type="text/javascript">//<![CDATA[
-
-jQuery().ready(function(){
-  jQuery('.cluetip').cluetip({
-    width: 300,
-    splitTitle: '|',
-    positionBy: 'bottomTop'
-  });
-});
-//]]></script>
+    <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
     <!-- END get_combined_scripts -->
   </body>
 </html>

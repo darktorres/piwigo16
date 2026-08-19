@@ -1,3 +1,19 @@
+var str_confirm_msg = pwg_getPageString('Yes, I am sure');
+var str_cancel_msg = pwg_getPageString('No, I have changed my mind');
+var str_install_title = pwg_getPageString('Are you sure you want to install the plugin "%s"?');
+var strs_certification = {
+  "-1" : pwg_getPageString('This plugin is incompatible with your version'),
+  "0" : pwg_getPageString('This plugin have no update since 3 years ! It may be outdated'),
+  "1" : pwg_getPageString('This plugin has no recent update'),
+  "2" : pwg_getPageString('This plugin was updated less than 6 months ago'),
+  "3" : pwg_getPageString('This plugin have been updated recently'),
+};
+var str_x_month = pwg_getPageString('%d month');
+var str_x_months = pwg_getPageString('%d months');
+var str_x_year = pwg_getPageString('%d year');
+var str_x_years = pwg_getPageString('%d years');
+var str_from_begining = pwg_getPageString('since the beginning');
+
 // <-- Define sort orders -->
 var sortOrder = 'date';
 var sortPlugins = (function (a, b) {

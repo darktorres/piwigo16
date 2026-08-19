@@ -1,3 +1,6 @@
+var no_time_elapsed = pwg_getPageString('right now');
+var unit_MB = pwg_getPageString('%s MB');
+
 function displayResponse(domElem, values, mDivs,  mValues) {
 
     for (let index = 0; index < domElem.length; index++) {

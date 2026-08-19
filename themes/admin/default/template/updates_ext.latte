@@ -693,188 +693,19 @@
 {do combineScript(id: 'jquery.jgrowl', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.jgrowl_minimized.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery.jgrowl.css")}
 
-{capture $tmpFooterScript}
-var pwg_token = '{$CSRF_TOKEN}';
-var extType = '{$EXT_TYPE}';
-var confirmMsg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
-var errorHead   = '{_ 'ERROR'|escapeJavascript|noescape}';
-var successHead = '{_ 'Update Complete'|escapeJavascript|noescape}';
-var errorMsg    = '{_ 'an error happened'|escapeJavascript|noescape}';
-var restoreMsg  = '{_ 'Reset ignored updates'|escapeJavascript|noescape}';
-
-var todo = 0;
-var queuedManager = $.manageAjax.create('queued', {
-  queue: true,
-  maxRequests: 1,
-  beforeSend: function() { autoupdate_bar_toggle(1); },
-  complete: function() { autoupdate_bar_toggle(-1); }
-});
-
-function updateAll() {
-  jQuery('.updateExtension').each( function() {
-    if (jQuery(this).parents('div').css('display') == 'block')
-      jQuery(this).click();
-  });
-};
-
-function ignoreAll() {
-  jQuery('.ignoreExtension').each( function() {
-    if (jQuery(this).parents('div').css('display') == 'block')
-      jQuery(this).click();
-  });
-};
-
-function resetIgnored() {
-  jQuery.ajax({
-    type: 'POST',
-    url: 'api/v1/extensions/updates/ignore',
-    contentType: 'application/json',
-    headers: {'X-CSRF-Token': pwg_token},
-    dataType: 'json',
-    data: JSON.stringify({ reset: true, type: extType }),
-    success: function(data) {
-      jQuery(".pluginBox, fieldset").show();
-      jQuery(".pluginBox").attr('data-ignored', 'false')
-      jQuery("#update_all").show();
-      jQuery("#ignore_all").show();
-      jQuery("#up_to_date").hide();
-      jQuery("#reset_ignore").hide();
-      jQuery("#ignored").hide();
-      checkFieldsets();
-    }
-  });
-};
-
-function checkFieldsets() {
-  var types = new Array('plugins', 'themes', 'languages');
-  var total = 0;
-  var ignored = 0;
-  for (i=0;i<3;i++) {
-    nbExtensions = 0;
-    jQuery("fieldset[data-type="+types[i]+"] .pluginBox").each(function(index) {
-      if (jQuery(this).attr('data-ignored')== 'true')
-        ignored++;
-      else
-        nbExtensions++;
-    });
-    total = total + nbExtensions;
-    if (nbExtensions == 0)
-      jQuery("#"+types[i]).hide();
-  }
-
-  if (total == 0) {
-    jQuery("#update_all").hide();
-    jQuery("#ignore_all").hide();
-    jQuery("#up_to_date").show();
-  }
-  if (ignored > 0) {
-    jQuery("#reset_ignore").val(restoreMsg + ' (' + ignored + ')');
-  }
-};
-
-function updateExtension(type, id, revision) {
-  queuedManager.add({
-    type: 'POST',
-    dataType: 'json',
-    contentType: 'application/json',
-    headers: {'X-CSRF-Token': pwg_token},
-    url: 'api/v1/extensions/' + type + '/' + id + '/actions/update',
-    data: JSON.stringify({ revision: revision }),
-    success: function(data) {
-      jQuery.jGrowl( data['message'], { theme: 'success', header: successHead, life: 4000, sticky: false });
-      jQuery("#"+type+"_"+id).remove();
-      checkFieldsets();
-    },
-    error: function(jqXHR) {
-      const message = jqXHR.responseJSON && jqXHR.responseJSON.detail ? jqXHR.responseJSON.detail : errorMsg;
-      jQuery.jGrowl( message, { theme: 'error', header: errorHead, sticky: true });
-    }
-  });
-};
-
-const targetNode = document.getElementById("theAdminPage");
-
-const config = { attributes: false, childList: true, subtree: true };
-
-const callback = (mutationList, observer) => {
-  for (const mutation of mutationList) {
-    if (mutation.type === "childList") {
-      let popup = jQuery("#jGrowl").children();
-      for (let i = 0; i < popup.length; i++){
-        if ((jQuery(popup[i])).hasClass("success")){
-          if (! ((jQuery(popup[i]).children(":first")).hasClass("jGrowl-popup-icon icon-ok"))){
-            jQuery(popup[i]).prepend('<div class="jGrowl-popup-icon icon-ok"></div>')
-          }
-        };
-
-        if ((jQuery(popup[i])).hasClass("error")){
-          if (! ((jQuery(popup[i]).children(":first")).hasClass("jGrowl-popup-icon icon-cancel"))){
-            jQuery(popup[i]).prepend('<div class="jGrowl-popup-icon icon-cancel"></div>')
-          }
-        }
-      };
-    }
-  }
-};
-
-const observer = new MutationObserver(callback);
-observer.observe(targetNode, config);
-
-function ignoreExtension(type, id) {
-  queuedManager.add({
-    type: 'POST',
-    url: 'api/v1/extensions/updates/ignore',
-    contentType: 'application/json',
-    headers: {'X-CSRF-Token': pwg_token},
-    dataType: 'json',
-    data: JSON.stringify({ type: type, id: id }),
-    success: function(data) {
-      jQuery("#"+type+"_"+id).hide();
-      jQuery("#"+type+"_"+id).attr('data-ignored', 'true')
-      jQuery("#reset_ignore").show();
-      checkFieldsets();
-    }
-  });
-};
-
-function autoupdate_bar_toggle(i) {
-  todo = todo + i;
-  if ((i == 1 && todo == 1) || (i == -1 && todo == 0))
-    jQuery('.autoupdate_bar').toggle();
-}
-
-checkFieldsets();
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl')}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeData('ext_type', $EXT_TYPE)}
+{do exposeString('ERROR')}
+{do exposeString('Update Complete')}
+{do exposeString('an error happened')}
+{do exposeString('Reset ignored updates')}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Are you sure you want to update all extensions?')}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{capture $tmpFooterScript2}
-
-const are_you_sure_msg  = '{_ 'Are you sure?'|escapeJavascript|noescape}';
-const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
-const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
-$("#update_all").click(function() {
-  const title_msg = "{_ 'Are you sure you want to update all extensions?'|noescape}";
-  $.confirm({
-      title: title_msg,
-      buttons: {
-        confirm: {
-          text: confirm_msg,
-          btnClass: 'btn-red',
-          action: function () {
-            updateAll();
-          }
-        },
-        cancel: {
-          text: cancel_msg
-        }
-      },
-      ...jConfirm_confirm_options
-    });
-})
-{/capture}
-{do footerScript($tmpFooterScript2)}
+{do combineScript(id: 'updates_ext', load: 'footer', require: 'jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl,common,jquery.confirm,page-data', path: 'themes/admin/default/js/updates_ext.js')}
 
 {if $isWebmaster == 1}
   <div class="autoupdate_bar">

@@ -694,66 +694,10 @@
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{capture $tmpFooterScript1}
-const title_msg = '{_ 'Are you sure you want to delete this theme?'|escapeJavascript|noescape}';
-const confirm_msg = '{='Yes, I am sure'|translate}';
-const cancel_msg = "{='No, I have changed my mind'|translate}";
-$(".delete-theme-button").each(function() {
-  let theme_name = $(this).closest(".themeBox").find(".themeName").attr("title");
-  let title = '{_ 'Are you sure you want to delete the theme "%s"?'|escapeJavascript|noescape}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title.replace("%s", theme_name),
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-{/capture}
-{do footerScript($tmpFooterScript1)}
-
-{capture $tmpFooterScript2}
-jQuery(document).ready(function() {
-  $("a.preview-box").colorbox();
-
-  $(document).mouseup(function (e) {
-    e.stopPropagation();
-    if (!$(event.target).hasClass('showInfo')) {
-      $('.showInfo-dropdown').fadeOut();
-    }
-  });
-
-});
-
-$(window).bind("load", function() {
-  $('.themeBox').each(function() {
-
-    let box = $(this);
-    box.find('.showInfo').on('click', function() {
-      let dropdown = box.find('.showInfo-dropdown');
-      $('.showInfo-dropdown').each(function() {
-        if ($(this) !== dropdown) {
-          $(this).fadeOut();
-        }
-      })
-      box.find('.showInfo-dropdown').fadeToggle();
-    });
-
-    let screenImage = $(this).find(".preview-box img");
-    let imageW = screenImage.innerWidth();
-    let imageH = screenImage.innerHeight();
-    let size = $(this).find(".preview-box").innerWidth();
-
-    if (imageW > imageH) {
-      screenImage.css('height', size+'px');
-      screenImage.css('width', (imageW * size / imageH)+'px');
-    } else {
-      screenImage.css('width', size+'px');
-      screenImage.css('heigth', (imageH * size / imageW)+'px');
-    }
-  })
-})
-
-{/capture}
-{do footerScript($tmpFooterScript2)}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Are you sure you want to delete the theme "%s"?')}
+{do combineScript(id: 'themes_installed', load: 'footer', require: 'common,jquery.confirm,jquery.colorbox,page-data', path: 'themes/admin/default/js/themes_installed.js')}
 
 <div id="themesContent">
   {var $field_name = 'null'} {* <!-- 'counter' for fieldset management --> *}

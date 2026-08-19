@@ -608,56 +608,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}","orphan_tag_names_array":"[]","total":3},"strings":{"Delete tag \"%s\"?":"Delete tag \"%s\"?","Delete tags {%s}?":"Delete tags {%s}?","Yes, delete":"Yes, delete","No, I have changed my mind":"No, I have changed my mind","Yes, rename":"Yes, rename","Tag \"%s\" succesfully deleted":"Tag \\\"%s\\\" succesfully deleted","Tags {%s} succesfully deleted":"Tags {%s} succesfully deleted","Tag \"%s\" already exists":"Tag \"%s\" already exists","Tag \"%s\" created":"Tag \"%s\" created","Tag \"%s1\" renamed in \"%s2\"":"Tag \\\"%s1\\\" renamed in \\\"%s2\\\"","Rename \"%s\"":"Rename \"%s\"","Delete orphan tags ?":"Delete orphan tags?","You have %s1 orphan : %s2":"You have %s1 orphan: %s2","Delete them":"Delete them","Keep them":"Keep them"," (copy)":" (copy)"," (copy %s)":" (copy %s)","Tag(s) {%s1} succesfully merged into \"%s2\"":"Tag(s) {%s1} succesfully merged into \"%s2\"","and %s others":"and %s others","%s other tags available...":"%s other tags available...","%d photos":"%d photos","no photo":"no photo","Select all %d tags":"Select all %d tags","Clear Selection":"Clear Selection","The %d tags on this page are selected":"The %d tags on this page are selected","\u003Cb\u003E%d\u003C\/b\u003E tag selected":"\u003Cb\u003E%d\u003C\/b\u003E tag selected","\u003Cb\u003E%d\u003C\/b\u003E tags found":"\u003Cb\u003E%d\u003C\/b\u003E tags found","\u003Cb\u003E%d\u003C\/b\u003E tag found":"\u003Cb\u003E%d\u003C\/b\u003E tag found","Yes, I am sure":"Yes, I am sure","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}","orphan_tag_names_array":"[]","total":3,"active_menu":0},"strings":{"Delete tag \"%s\"?":"Delete tag \"%s\"?","Delete tags {%s}?":"Delete tags {%s}?","Yes, delete":"Yes, delete","No, I have changed my mind":"No, I have changed my mind","Yes, rename":"Yes, rename","Tag \"%s\" succesfully deleted":"Tag \\\"%s\\\" succesfully deleted","Tags {%s} succesfully deleted":"Tags {%s} succesfully deleted","Tag \"%s\" already exists":"Tag \"%s\" already exists","Tag \"%s\" created":"Tag \"%s\" created","Tag \"%s1\" renamed in \"%s2\"":"Tag \\\"%s1\\\" renamed in \\\"%s2\\\"","Rename \"%s\"":"Rename \"%s\"","Delete orphan tags ?":"Delete orphan tags?","You have %s1 orphan : %s2":"You have %s1 orphan: %s2","Delete them":"Delete them","Keep them":"Keep them"," (copy)":" (copy)"," (copy %s)":" (copy %s)","Tag(s) {%s1} succesfully merged into \"%s2\"":"Tag(s) {%s1} succesfully merged into \"%s2\"","and %s others":"and %s others","%s other tags available...":"%s other tags available...","%d photos":"%d photos","no photo":"no photo","Select all %d tags":"Select all %d tags","Clear Selection":"Clear Selection","The %d tags on this page are selected":"The %d tags on this page are selected","\u003Cb\u003E%d\u003C\/b\u003E tag selected":"\u003Cb\u003E%d\u003C\/b\u003E tag selected","\u003Cb\u003E%d\u003C\/b\u003E tags found":"\u003Cb\u003E%d\u003C\/b\u003E tags found","\u003Cb\u003E%d\u003C\/b\u003E tag found":"\u003Cb\u003E%d\u003C\/b\u003E tag found","Yes, I am sure":"Yes, I am sure","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
-    header: 'dt',
-    content: 'dd',
-    active: 0
-  }, options);
-
-  return this.each(function() {
-    var self = jQuery(this);
-
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-    contents.not(contents[settings.active]).hide();
-
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-    });
-  });
-};
-
-$('#menubar').lightAccordion({
-  active: 0
-});
-
-/* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
-
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
-
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
-    }
-  }
-
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
-  }
-});
 jQuery('.tiptip').tipTip({
   delay: 0,
   fadeIn: 200,

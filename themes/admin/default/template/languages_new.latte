@@ -691,15 +691,7 @@
 {* END varType *}
 {do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
 
-{capture $tmpFooterScript}
-jQuery().ready(function(){
-  jQuery('.cluetip').cluetip({
-    width: 300,
-    splitTitle: '|'
-  });
-});
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.cluetip')}
+{do combineScript(id: 'languages_new', load: 'footer', require: 'jquery.cluetip', path: 'themes/admin/default/js/languages_new.js')}
 
 {if $isWebmaster == 1}
   {if !empty($languages)}

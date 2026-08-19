@@ -693,122 +693,25 @@
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{capture $tmpFooterScript}
-const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
-const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
-const no_time_elapsed = "{_ 'right now'|noescape}";
-const unit_MB = "{_ '%s MB'|noescape}"
-let selected = [];
-$(".lock-gallery-button").each(function() {
-  const gallery_tip = '{_ 'A locked gallery is only visible to administrators'|escapeJavascript|noescape}';
-  {if isset($U_MAINT_LOCK_GALLERY)}
-    let title = '{_ 'Are you sure you want to lock the gallery?'|noescape}';
-  {else}
-    let title = '{_ 'Are you sure you want to unlock the gallery?'|noescape}';
-  {/if}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('right now')}
+{do exposeString('%s MB')}
+{do exposeString('A locked gallery is only visible to administrators')}
+{do exposeString('Are you sure you want to lock the gallery?')}
+{do exposeString('Are you sure you want to unlock the gallery?')}
+{do exposeString('Yes, I want to lock the gallery')}
+{do exposeString('Keep it unlocked')}
+{do exposeString('Purge history detail')}
+{do exposeString('Purge history summary')}
+{do exposeString('Purge search history')}
+{do exposeString('Are you sure you want to delete all sizes?')}
+{do exposeData('u_maint_lock_gallery', $U_MAINT_LOCK_GALLERY)}
+{do exposeData('pwg_token', $pwg_token)}
 
-  let confirm_msg_gallery = '{_ 'Yes, I want to lock the gallery'|noescape}';
-  let cancel_msg_gallery = '{_ 'Keep it unlocked'|noescape}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
-    alert_content: gallery_tip
-  });
-});
-$(".purge-history-detail-button").each(function() {
-  const title = '{_ 'Purge history detail'|escapeJavascript|noescape}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-$(".purge-history-summary-button").each(function() {
-  const title = '{_ 'Purge history summary'|escapeJavascript|noescape}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-$(".purge-search-history-button").each(function() {
-  const title = '{_ 'Purge search history'|escapeJavascript|noescape}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-$(".delete-all-sizes-button").each(function() {
-  const title = '{_ 'Are you sure you want to delete all sizes?'|escapeJavascript|noescape}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
+{do combineScript(id: 'maintenance_actions', load: 'footer', require: 'common,jquery.confirm,page-data', path: 'themes/admin/default/js/maintenance_actions.js')}
 
-$(".delete-size-check").click(function () {
-  if ($(this).attr('data-selected') == '1') {
-    $(this).attr('data-selected', '0');
-    $(this).find("i").hide();
-  } else {
-    $(this).attr('data-selected', '1');
-    $(this).find("i").show();
-  }
-  $(this).trigger("change");
-});
-$(".delete-size-check:first").change(function() {
-  if ($(this).attr('data-selected') == '1') {
-    $(".delete-size-check").hide();
-    $(".delete-size-check").attr("data-selected", "1");
-    $(this).show();
-  } else {
-    $(".delete-size-check").show();
-    $(".delete-size-check").attr("data-selected", "0");
-  }
-})
-const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
-$(".delete-size-check").change(function() {
-  let delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + "{$pwg_token}&";
-  let types_str = '';
-  let selected = []
-  $(".delete-size-check").each(function () {
-    if ($(this).attr("data-selected") == '1') {
-      selected.push($(this).attr("name"));
-    }
-  })
-  if (selected.length == 0) {
-    $(".delete-sizes").attr("href", "");
-  } else {
-    if (selected[0] == "all") {
-      types_str = "all";
-    } else {
-      types_str = selected.join("_");
-    }
-    console.log(selected);
-    $(".delete-sizes").attr("href", delete_deriv_with_token + "type=" + types_str);
-  }
-})
-
-$(".delete-sizes").hide();
-$(".delete-size-check").click( function () {
-  let displayDeleteSizes = false;
-  $(".delete-size-check").each(function() {
-    if ($(this).attr("data-selected") == 1) {
-      displayDeleteSizes = true;
-    }
-  });
-
-  (displayDeleteSizes ? $(".delete-sizes").show() : $(".delete-sizes").hide())
-
-})
-
-{/capture}
-{do footerScript($tmpFooterScript)}
-
-{do combineScript(id: 'ajax', load: 'footer', path: 'themes/admin/default/js/maintenance.js')}
+{do combineScript(id: 'ajax', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/maintenance.js')}
 
 {if $isWebmaster == 1}
   <fieldset class="">

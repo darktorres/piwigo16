@@ -167,7 +167,7 @@
   },
   "themes/admin/default/js/maintenance.js": {
     "no-undef": {
-      "count": 5
+      "count": 2
     }
   },
   "themes/admin/default/js/photos_add_direct.js": {
@@ -210,7 +210,7 @@
       "count": 7
     },
     "no-undef": {
-      "count": 17
+      "count": 6
     },
     "no-unreachable": {
       "count": 7
@@ -221,7 +221,7 @@
       "count": 3
     },
     "no-undef": {
-      "count": 72
+      "count": 65
     }
   },
   "themes/admin/default/js/tags.js": {

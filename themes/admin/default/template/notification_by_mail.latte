@@ -690,22 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {include 'include/autosize.inc.latte'}
-{capture $tmpFooterScript}
-jQuery(document).ready(function(){
-
-  jQuery("#checkAllLink").click(function () {
-    jQuery("#notification_by_mail input[type=checkbox]").prop('checked', true);
-    return false;
-  });
-
-  jQuery("#uncheckAllLink").click(function () {
-    jQuery("#notification_by_mail input[type=checkbox]").prop('checked', false);
-    return false;
-  });
-
-});
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do combineScript(id: 'notification_by_mail', load: 'footer', path: 'themes/admin/default/js/notification_by_mail.js')}
 
 <form
   method="post"

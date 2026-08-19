@@ -690,27 +690,8 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {include 'include/colorbox.inc.latte'}
-{capture $tmpFooterScript}
-
-$(window).bind("load", function() {
-  $('.themeBox').each(function() {
-
-    let screenImage = $(this).find(".preview-box img");
-    let imageW = screenImage.innerWidth();
-    let imageH = screenImage.innerHeight();
-    let size = $(this).find(".preview-box").innerWidth();
-
-    if (imageW > imageH) {
-      screenImage.css('height', size+'px');
-      screenImage.css('width', (imageW * size / imageH)+'px');
-    } else {
-      screenImage.css('width', size+'px');
-      screenImage.css('heigth', (imageH * size / imageW)+'px');
-    }
-  })
-})
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeData('default_screenshot', $default_screenshot)}
+{do combineScript(id: 'themes_new', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/themes_new.js')}
 
 {if !empty($new_themes)}
   <div class="themeBoxes">
@@ -721,7 +702,7 @@ $(window).bind("load", function() {
           title="{$theme['name']}"
         ><img
             src="{$theme['screenshot']|noescape}"
-            onerror="this.src='{$default_screenshot|noescape}'"
+            class="themeShotImg"
           ></a></div>
       <div class="themeName" title="{$theme['name']}">{$theme['name']}</div>
       <div class="themeActions"><a

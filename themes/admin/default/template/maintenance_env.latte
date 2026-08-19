@@ -689,14 +689,11 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{do combineScript(id: 'ajax', load: 'footer', path: 'themes/admin/default/js/maintenance.js')}
+{do combineScript(id: 'ajax', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/maintenance.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)}
 {* order 10 is required, see issue 1080 *}
-{capture $tmpFooterScript}
-const no_time_elapsed = "{='right now'|translate}";
-const unit_MB = "{='%s MB'|translate}"
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeString('right now')}
+{do exposeString('%s MB')}
 
 <fieldset id="environment">
   <legend><span

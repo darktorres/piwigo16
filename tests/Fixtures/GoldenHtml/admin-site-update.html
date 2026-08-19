@@ -205,13 +205,13 @@
   </ul>
 </div>
 
-    <ul class="HelpActions">
-      <li><a
+  <ul class="HelpActions">
+    <li><a
           href="admin/popuphelp.php?page=synchronize&amp;output=content_only"
           title="Help"
           class="help-popin"
         ><span class="icon-help-circled"></span></a></li>
-    </ul>
+  </ul>
 
   <div class="eiw">
 
@@ -436,64 +436,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"active_menu":3},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-$('#syncFiles label').click(function () {
-  if ($("input[value='files']:checked").val()) {
-    $("input[value='files']").closest("li").find("ul").show();
-  } else {
-    $("input[value='files']").closest("li").find("ul").hide();
-  }
-})
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
-    header: 'dt',
-    content: 'dd',
-    active: 0
-  }, options);
-
-  return this.each(function() {
-    var self = jQuery(this);
-
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-
-    contents.not(contents[settings.active]).hide();
-
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
-    });
-  });
-};
-
-$('#menubar').lightAccordion({
-  active: 3
-});
-
-/* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
-
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
-
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
-    }
-  }
-
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
-  }
-});
-jQuery('.help-popin').colorbox({ width:"500px" });
 jQuery('.tiptip').tipTip({
   delay: 0,
   fadeIn: 200,

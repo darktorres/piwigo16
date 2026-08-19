@@ -699,6 +699,7 @@
   harmless because browsers tolerate an unclosed <dl> at end-of-document,
   not something to "fix" by trying to close it from intro.latte.
 *}
+{do combineScript(id: 'check_integrity', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/check_integrity.js')}
 <dl>
   <dt>{='Check integrity'|translate}</dt>
   <dd>
@@ -763,44 +764,15 @@
           </table>
 
           <p>
-            <script
-              type="text/javascript"
-            >
-      jQuery(document).ready(function(){
-
-        jQuery("#checkAllLink").click(function () {
-          jQuery("#c13y input[type=checkbox]").attr('checked', true);
-          return false;
-        });
-
-        jQuery("#uncheckAllLink").click(function () {
-          jQuery("#c13y input[type=checkbox]").attr('checked', false);
-          return false;
-        });
-
-      });
-      function DeselectAll( formulaire )
-      {
-        var elts = formulaire.elements;
-        for(var i=0; i <elts.length; i++)
-        {
-          if (elts[i].type=='checkbox')
-            elts[i].checked = false;
-        }
-      }
-      </script>
             {if $c13y_show_submit_ignore}
               <a href="#" id="checkAllLink">{='Check all'|translate}</a>
               / <a href="#" id="uncheckAllLink">{='Uncheck all'|translate}</a>
             {/if}
             {if isset($c13y_do_check)}
+              {do exposeData('c13y_do_check_ids', $c13y_do_check)}
               / <a
                 href="#"
-                onclick="DeselectAll(document.getElementById('c13y'));
-            {foreach $c13y_do_check as $ID}
-              document.getElementById('c13y_selection-{$ID}').checked = true;
-            {/foreach}
-            return false;"
+                id="checkAutomaticCorrectionsLink"
               >{='Check automatic corrections'|translate}</a>
             {/if}
           </p>

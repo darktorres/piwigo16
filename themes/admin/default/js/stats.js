@@ -1,3 +1,19 @@
+var str_number_page_visited = pwg_getPageString('Page Visited');
+var str_tooltip_format = {
+  "years":"YYYY",
+  "months":"MMMM YYYY",
+  "days":"DD MMM",
+  "hours":"LT"
+};
+var str_unit_format = {
+  "day":"dddd",
+  "month":"MMM YYYY"
+}
+var str_avg = pwg_getPageString('Average last 12 months');
+var str_months_tosplit = pwg_getPageData('month_labels');
+var str_months = str_months_tosplit.split('~');
+moment.locale(pwg_getPageData('lang_code'));
+
 /*-------
 Data Get
 -------*/

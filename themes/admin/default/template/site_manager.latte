@@ -689,31 +689,13 @@
 {varType array<string, mixed>|null|array<string, string>|null $watermark}
 {varType array<string, string> $watermark_files}
 {* END varType *}
-{capture $tmpFooterScript}
-jQuery(document).ready(function(){
-  jQuery("#showCreateSite a").click(function(){
-    jQuery("#showCreateSite").hide();
-    jQuery("#createSite").show();
-  });
-});
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do exposeString('Are you sure you want to delete this site?')}
+{do exposeString('Yes, I am sure')}
+{do exposeString('No, I have changed my mind')}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{capture $tmpFooterScript2}
-const title_msg = '{_ 'Are you sure you want to delete this site?'|escapeJavascript|noescape}';
-const confirm_msg = '{_ 'Yes, I am sure'|noescape}';
-const cancel_msg = "{_ 'No, I have changed my mind'|noescape}";
-$(".delete-site-button").each(function() {
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title_msg,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-{/capture}
-{do footerScript($tmpFooterScript2)}
+{do combineScript(id: 'site_manager', load: 'footer', require: 'common,jquery.confirm,page-data', path: 'themes/admin/default/js/site_manager.js')}
 
 <div n:if="!empty($remote_output)" class="remoteOutput">
   <ul>

@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\Event\BatchManagerUnitRendered;
 use Piwigo\Admin\Event\BatchManagerUnitRendering;
-use Piwigo\Admin\Projection\BatchManagerUnitPageContext;
+use Piwigo\Admin\Projection\BatchManagerUnitView;
 use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Cache\PermissionsCachePool;
@@ -17,6 +17,7 @@ use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -37,6 +38,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -76,6 +78,7 @@ final readonly class BatchManagerUnitPageRenderer
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private PermissionsCachePool $permissionsCachePool,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -207,7 +210,6 @@ final readonly class BatchManagerUnitPageRenderer
 
         $nav_bar = null;
         $element_ids_value = null;
-        $storage_category = null;
         $elements = [];
 
         if (count($cat_elements_id) > 0) {
@@ -326,10 +328,6 @@ final readonly class BatchManagerUnitPageRenderer
                           $item['uppercats'],
                           $this->urlService->getRootUrl() . 'admin.php?page=album-'
                       );
-
-                    if ($item_category_id === $storage_category_id) {
-                        $storage_category = $name;
-                    }
 
                     $related_categories[$item_category_id] = [
                         'name' => $name,
@@ -450,24 +448,25 @@ final readonly class BatchManagerUnitPageRenderer
             $element_ids_value = implode(',', $element_ids);
         }
 
-        $template->assignContext(new BatchManagerUnitPageContext(
+        $adminContent = $this->renderer->render(new BatchManagerUnitView(
             uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
             levelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
-            adminPageTitle: $this->lang->t('Batch Manager'),
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
             activePlugins: array_keys($this->loadedPlugins->get()),
             perPage: $nb_images,
             navbar: $nav_bar,
-            storageCategory: $storage_category,
             elementIds: $element_ids_value,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             elements: $elements,
         ));
 
-        $this->eventDispatcher->dispatch(new BatchManagerUnitRendered());
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Batch Manager'),
+        ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
+        $this->eventDispatcher->dispatch(new BatchManagerUnitRendered());
     }
 
     /**

@@ -13,11 +13,12 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Projection\ThemesInstalledPageContext;
+use Piwigo\Admin\Projection\ThemesInstalledView;
 use Piwigo\Admin\Request\ThemesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -30,6 +31,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
@@ -68,6 +70,7 @@ final readonly class ThemesInstalledPageRenderer
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -174,18 +177,20 @@ final readonly class ThemesInstalledPageRenderer
 
         $this->eventDispatcher->dispatch(new ThemesInstalledPageRendered());
 
-        $template->assignContext(new ThemesInstalledPageContext(
+        $adminContent = $this->renderer->render(new ThemesInstalledView(
             activateBaseUrl: $base_url . '&amp;action=activate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             deactivateBaseUrl: $base_url . '&amp;action=deactivate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             setDefaultBaseUrl: $base_url . '&amp;action=set_default&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             deleteBaseUrl: $base_url . '&amp;action=delete&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             tplThemes: $tpl_themes,
-            isWebmaster: $this->accessControl->isWebmaster(),
-            adminPageTitle: $this->lang->t('Themes'),
+            isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'themes_installed.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Themes'),
+        ));
     }
 
     /**

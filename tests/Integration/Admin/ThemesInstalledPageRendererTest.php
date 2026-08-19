@@ -22,6 +22,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -138,7 +139,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $entityManager instanceof EntityManagerInterface) {
             throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), $pluginRegistry, $themeRegistry, $entityManager);
+        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), $pluginRegistry, $themeRegistry, $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
@@ -187,23 +188,17 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render('themes');
 
-        $tplThemes = CurrentTemplateTestFactory::get()->get()->getTemplateVars('tpl_themes');
-        self::assertIsArray($tplThemes);
+        $adminContent = (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
 
-        $ids = array_map(
-            static fn (mixed $row): mixed => is_array($row) ? ($row['ID'] ?? null) : null,
-            $tplThemes
-        );
         // The real gap: a genuine non-default/standard_pages theme reaches
         // render()'s own buildTplTheme() call and appears in the output --
         // 'default' itself must NOT (the `continue` a few lines above it).
-        self::assertContains('pwgtest-extra-theme', $ids);
-        self::assertNotContains('default', $ids);
-
-        $names = array_map(
-            static fn (mixed $row): mixed => is_array($row) ? ($row['NAME'] ?? null) : null,
-            $tplThemes
-        );
-        self::assertContains('PwgTest Extra Theme', $names);
+        // themes_installed.latte prints each theme's own NAME both as a
+        // title="..." attribute and as element content, so matching on the
+        // fixture's own distinct names is precise -- the static UI copy
+        // never capitalizes "Default" the way this fixture's own theme name
+        // does.
+        self::assertStringContainsString('PwgTest Extra Theme', $adminContent);
+        self::assertStringNotContainsString('title="Default"', $adminContent);
     }
 }

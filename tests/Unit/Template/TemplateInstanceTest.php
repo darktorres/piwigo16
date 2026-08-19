@@ -1062,7 +1062,8 @@ test('concat appends to an existing string template variable and re-wraps as Htm
     $t->concat('greeting', 'World');
 
     $result = $t->getTemplateVars('greeting');
-    expect($result)->toBeInstanceOf(Html::class);
+    expect($result)
+        ->toBeInstanceOf(Html::class);
     assert($result instanceof Html);
     expect((string) $result)
         ->toBe('Hello World');
@@ -1076,7 +1077,8 @@ test('concat treats a non-string existing value as an empty prefix', function ()
     $t->concat('counter', 'suffix');
 
     $result = $t->getTemplateVars('counter');
-    expect($result)->toBeInstanceOf(Html::class);
+    expect($result)
+        ->toBeInstanceOf(Html::class);
     assert($result instanceof Html);
     expect((string) $result)
         ->toBe('suffix');
@@ -1096,7 +1098,8 @@ test('concat casts an existing Latte\Runtime\Html value to string instead of dro
     $t->concat('greeting', 'World');
 
     $result = $t->getTemplateVars('greeting');
-    expect($result)->toBeInstanceOf(Html::class);
+    expect($result)
+        ->toBeInstanceOf(Html::class);
     assert($result instanceof Html);
     expect((string) $result)
         ->toBe('Hello World');

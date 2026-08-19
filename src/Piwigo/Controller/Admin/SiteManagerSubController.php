@@ -14,6 +14,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\GetAdminsSiteLinks;
 use Piwigo\Controller\Admin\Projection\SiteManagerSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\SiteRow;
 use Piwigo\Controller\Admin\Request\SiteManagerRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -168,23 +169,16 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             $update_url .= '?page=site_update';
             $update_url .= '&amp;site=' . $id;
 
-            $tpl_var =
-              [
-                  'NAME' => $galleries_url,
-                  'TYPE' => $this->lang->t($is_remote ? 'Remote' : 'Local'),
-                  'CATEGORIES' => $sites_detail[$id_int]['nb_categories'] ?? 0,
-                  'IMAGES' => $sites_detail[$id_int]['nb_images'] ?? 0,
-                  'U_SYNCHRONIZE' => $update_url,
-              ];
-
-            if ((int) $id !== 1) {
-                $tpl_var['U_DELETE'] = $base_url . 'delete';
-            }
-
-            // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
-            $tpl_var['plugin_links'] = $this->eventDispatcher->dispatch(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
-
-            $tpl_sites[] = $tpl_var;
+            $tpl_sites[] = new SiteRow(
+                name: $galleries_url,
+                type: $this->lang->t($is_remote ? 'Remote' : 'Local'),
+                categories: $sites_detail[$id_int]['nb_categories'] ?? 0,
+                images: $sites_detail[$id_int]['nb_images'] ?? 0,
+                uSynchronize: $update_url,
+                uDelete: (int) $id !== 1 ? $base_url . 'delete' : null,
+                // plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
+                pluginLinks: $this->eventDispatcher->dispatch(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks,
+            );
         }
 
         $template->assignContext(new SiteManagerSubControllerPageContext(

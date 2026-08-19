@@ -16,6 +16,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -41,12 +42,13 @@ final readonly class AlbumsSubController implements AdminSubControllerInterface
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()
-            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer, $this->inputValidator);
+            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer, $this->inputValidator, $this->renderer);
     }
 }

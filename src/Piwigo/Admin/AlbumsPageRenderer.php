@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Admin\Projection\AlbumsPageContext;
+use Piwigo\Admin\Projection\AlbumsView;
 use Piwigo\Admin\Request\AlbumsRequest;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
@@ -15,6 +15,7 @@ use Piwigo\Common\Enum\AlbumSortOrder;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,6 +25,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlDialect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
@@ -45,7 +47,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class AlbumsPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -63,8 +65,6 @@ final class AlbumsPageRenderer
         $tabsheet->setId('albums');
         $tabsheet->select('list', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
-
-        $nb_cats = $categoryService->countAllCategories();
 
         // +-------------------------------------------------------------------+
         // |                         categories auto order                     |
@@ -238,8 +238,7 @@ final class AlbumsPageRenderer
             $nb_sub_photos[$cat_id] = $nb_photos;
         }
 
-        $template->assignContext(new AlbumsPageContext(
-            nbCats: $nb_cats,
+        $adminContent = $renderer->render(new AlbumsView(
             openCat: $open_cat_value,
             fAction: $urlService->getRootUrl() . 'admin.php?page=albums',
             delayBeforeAutoOpen: $currentConfig->albumMoveDelayBeforeAutoOpening,
@@ -248,10 +247,9 @@ final class AlbumsPageRenderer
             // new-album position, but none exists today.
             posPref: $currentConfig->newcatDefaultPosition,
             albumData: self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
-            pwgToken: $csrfService
+            csrfToken: $csrfService
                 ->getToken(),
             nbAlbums: count($allAlbum),
-            adminPageTitle: $lang->t('Albums'),
             lightAlbumManager: ($albums_counter > $currentConfig->lightAlbumManagerThreshold) ? 1 : 0,
         ));
 
@@ -259,7 +257,10 @@ final class AlbumsPageRenderer
         // |                          sending html code                        |
         // +-------------------------------------------------------------------+
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'albums.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Albums'),
+        ));
     }
 
     /**

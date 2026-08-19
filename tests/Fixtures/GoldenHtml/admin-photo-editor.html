@@ -648,7 +648,7 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"cache_key_categories":"1785639600_2","cache_key_tags":"1785553200_3","cache_key_hash":"{{TOKEN}}","root_url":"","u_delete":"admin.php?page=photo-1-properties\u0026amp;delete=1\u0026amp;pwg_token={{TOKEN}}","related_categories_ids":["1"]},"strings":{"Create":"Create","Cancel":"Cancel","Are you sure?":"Are you sure?","Yes, delete":"Yes, delete","No, I have changed my mind":"No, I have changed my mind","This photo is an orphan":"This photo is an orphan","Associate to album":"Associate to album","Yes, I am sure":"Yes, I am sure"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
@@ -659,76 +659,6 @@ jQuery(document).ready(function(){
   // Auto size and auto grow for all text area
   jQuery('textarea').autogrow();
 });
-(function(){
-var categoriesCache = new CategoriesCache({
-  serverKey: '1785639600_2',
-  serverId: '{{TOKEN}}',
-  rootUrl: ''
-});
-
-categoriesCache.selectize(jQuery('[data-selectize=categories]'));
-
-var tagsCache = new TagsCache({
-  serverKey: '1785553200_3',
-  serverId: '{{TOKEN}}',
-  rootUrl: ''
-});
-
-tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-  'Add': 'Create'
-}});
-
-jQuery(function(){ 
-  jQuery('[data-datepicker]').pwgDatepicker({
-    showTimepicker: true,
-    cancelButton: 'Cancel'
-  });
-});
-
-jQuery("a.preview-box").colorbox({
-  photo: true
-});
-
-str_are_you_sure = 'Are you sure?';
-str_yes = 'Yes, delete';
-str_no = 'No, I have changed my mind';
-url_delete = 'admin.php?page=photo-1-properties&amp;delete=1&amp;pwg_token={{TOKEN}}';
-str_orphan = 'This photo is an orphan';
-
-
-related_categories_ids = ["1"];
-
-$('#action-delete-picture').on('click', function() {
-  $.confirm({
-    title: str_are_you_sure,
-    draggable: false,
-    titleClass: "groupDeleteConfirm",
-    theme: "modern",
-    content: "",
-    animation: "zoom",
-    boxWidth: '30%',
-    useBootstrap: false,
-    type: 'red',
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
-    buttons: {
-        confirm: {
-          text: str_yes,
-          btnClass: 'btn-red',
-          action: function () {
-            window.location.href = url_delete.replaceAll('amp;', '');
-          }
-        },
-        cancel: {
-          text: str_no
-        }
-    }
-  });
-})
-
-}());
-const str_assoc_album_ab = 'Associate to album';
 const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
 const str_album_selected = "Album already selected"
 const str_already_in_related_cats = "This albums is already in related albums list";

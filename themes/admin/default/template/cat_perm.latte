@@ -695,53 +695,11 @@
 {do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
 
-{capture $tmpFooterScript}
-const cat_nav = '{$CATEGORIES_NAV|escapeJavascript|noescape}';
-(function(){
-{* <!-- GROUPS --> *}
-var groupsCache = new GroupsCache({
-  serverKey: '{$CACHE_KEYS['groups']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-groupsCache.selectize(jQuery('[data-selectize=groups]'));
-
-{* <!-- USERS --> *}
-var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS['users']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-usersCache.selectize(jQuery('[data-selectize=users]'));
-
-{* <!-- TOGGLES --> *}
-function checkStatusOptions() {
-  if (jQuery("input[name=status]:checked").val() == "private") {
-    jQuery("#privateOptions").show();
-  }
-  else {
-    jQuery("#privateOptions").hide();
-  }
-}
-
-checkStatusOptions();
-jQuery("#selectStatus").change(function() {
-  checkStatusOptions();
-});
-
-{if isset($nb_users_granted_indirect) && $nb_users_granted_indirect > 0}
-  jQuery(".toggle-indirectPermissions").click(function(e){
-    jQuery(".toggle-indirectPermissions").toggle();
-    jQuery("#indirectPermissionsDetails").toggle();
-    e.preventDefault();
-  });
-{/if}
-}());
-
-{/capture}
-{do footerScript($tmpFooterScript)}
+{do combineScript(id: 'cat_perm', load: 'footer', require: 'jquery.selectize,page-data', path: 'themes/admin/default/js/cat_perm.js')}
+{do exposeData('cache_key_groups', $CACHE_KEYS['groups'])}
+{do exposeData('cache_key_users', $CACHE_KEYS['users'])}
+{do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
+{do exposeData('root_url', $ROOT_URL)}
 
 <form action="{$F_ACTION|noescape}" method="post" id="categoryPermissions">
   <fieldset>

@@ -690,48 +690,7 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{capture $tmpFooterScript}
-
-const cat_nav = '{$CATEGORIES_NAV|escapeJavascript|noescape}';
-
-jQuery(document).ready(function() {
-  function checkOrderOptions() {
-    jQuery("#image_order_user_define_options").hide();
-    if (jQuery("input[name=image_order_choice]:checked").val() == "user_define") {
-      jQuery("#image_order_user_define_options").show();
-    }
-  }
-
-  jQuery('ul.thumbnails').sortable( {
-    revert: true, opacity: 0.7,
-    handle: jQuery('.rank-of-image').add('.rank-of-image img'),
-    update: function() {
-      jQuery(this).find('li').each(function(i) {
-        jQuery(this).find("input[name^=rank_of_image]").each(function() {
-          jQuery(this).attr('value', (i+1)*10)
-        });
-      });
-
-      jQuery('#image_order_rank').prop('checked', true);
-      checkOrderOptions();
-    }
-  });
-
-  jQuery("input[name=image_order_choice]").click(function () {
-    checkOrderOptions();
-  });
-
-  checkOrderOptions();
-});
-jQuery(document).ready(function() {
-jQuery('.thumbnail').tipTip({
-'delay' : 0,
-'fadeIn' : 200,
-'fadeOut' : 200
-});
-});
-{/capture}
-{do footerScript($tmpFooterScript, 'jquery.ui.sortable')}
+{do combineScript(id: 'element_set_ranks', load: 'footer', require: 'jquery.ui.sortable,jquery.tipTip', path: 'themes/admin/default/js/element_set_ranks.js')}
 
 <form action="{$F_ACTION|noescape}" method="post" id="element_set_ranks">
   <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">

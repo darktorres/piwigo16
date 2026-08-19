@@ -233,7 +233,6 @@
   </div> 
 
   
-
 <div class="cat-modify" id="cat-modify">
   <div class="cat-modify-header">
     <div class="cat-modify-ariane">
@@ -728,39 +727,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"cat_id":1,"parent_cat_id":0,"cat_name":"Sample Album","nb_subcats":1,"csrf_token":"{{TOKEN}}","u_delete":"admin.php?page=albums","is_visible":true},"strings":{"No, I have changed my mind":"No, I have changed my mind","Delete album":"Delete album","Delete album \"%s\" and its %d sub-albums.":"Delete album \"%s\" and its %d sub-albums.","Just now":"Just now","delete only album, not photos":"delete only album, not photos","delete album and the %d orphan photos":"delete album and the %d orphan photos","delete album and all %d photos, even the %d associated to other albums":"delete album and all %d photos, even the %d associated to other albums","Comments allowed for sub-albums":"Comments allowed for sub-albums","Comments disallowed for sub-albums":"Comments disallowed for sub-albums","New parent album":"New parent album","Yes, I am sure":"Yes, I am sure","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-const has_images_associated_outside = 'delete album and all %d photos, even the %d associated to other albums';
-const has_images_becomming_orphans = 'delete album and the %d orphan photos';
-const has_images_recursives = 'delete only album, not photos';
-const cat_nav = ' <a href=\"admin.php?page=album-1\">Sample Album<\/a>';
-const album_id = 1
-var parent_album = 0
-var default_parent_album = 0
-const album_name = "Sample Album"
-const nb_sub_albums = 1
-const pwg_token = '{{TOKEN}}'
-const u_delete = 'admin.php?page=albums'
-var is_visible = 'true'
-let related_categories_ids = ["1", "0"];
-
-const str_cancel = 'No, I have changed my mind'
-const str_delete_album = 'Delete album'
-const str_delete_album_and_his_x_subalbums = 'Delete album \"%s\" and its %d sub-albums.'
-const str_just_now = 'Just now'
-
-const str_dont_delete_photos = 'delete only album, not photos';
-const str_delete_orphans = 'delete album and the %d orphan photos';
-const str_delete_all_photos = 'delete album and all %d photos, even the %d associated to other albums';
-
-str_orphan = 'This photo is an orphan';
-str_album_comment_allow = 'Comments allowed for sub-albums';
-str_album_comment_disallow = 'Comments disallowed for sub-albums';
-const str_modal_ab = 'New parent album';
 const str_plus_albums_found = "Only the first %d albums are displayed, out of %d."
 const str_album_selected = "Album already selected"
 const str_already_in_related_cats = "This albums is already in related albums list";

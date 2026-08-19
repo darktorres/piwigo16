@@ -1,3 +1,8 @@
+var pwg_token = pwg_getPageData('csrf_token');
+var str_confirm_delete_format = pwg_getPageString('Delete %s format ?');
+var str_confirm_msg = pwg_getPageString('Yes, I am sure');
+var str_cancel_msg = pwg_getPageString('No, I have changed my mind');
+
 function fitExtensions() {
     $(".format-card-ext span").each((i, node) => {
         let size = Math.min(180 * 1/node.innerHTML.length, 45) 

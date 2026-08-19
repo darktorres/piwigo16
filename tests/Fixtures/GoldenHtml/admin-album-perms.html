@@ -234,7 +234,6 @@
   </div> 
 
   
-
 <form action="admin.php?page=album-1-permissions" method="post" id="categoryPermissions">
   <fieldset>
     <legend><span
@@ -433,50 +432,12 @@
 </style>
 
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+<script type="application/json" id="page-data">{"data":{"cache_key_groups":"1785553200_3","cache_key_users":"1785553200_4","cache_key_hash":"{{TOKEN}}","root_url":""},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
 <!-- BEGIN get_combined -->
 <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
-const cat_nav = '<a href=\"admin.php?page=album-1\">Sample Album<\/a>';
-(function(){
-var groupsCache = new GroupsCache({
-  serverKey: '1785553200_3',
-  serverId: '{{TOKEN}}',
-  rootUrl: ''
-});
-
-groupsCache.selectize(jQuery('[data-selectize=groups]'));
-
-var usersCache = new UsersCache({
-  serverKey: '1785553200_4',
-  serverId: '{{TOKEN}}',
-  rootUrl: ''
-});
-
-usersCache.selectize(jQuery('[data-selectize=users]'));
-
-function checkStatusOptions() {
-  if (jQuery("input[name=status]:checked").val() == "private") {
-    jQuery("#privateOptions").show();
-  }
-  else {
-    jQuery("#privateOptions").hide();
-  }
-}
-
-checkStatusOptions();
-jQuery("#selectStatus").change(function() {
-  checkStatusOptions();
-});
-
-jQuery(".toggle-indirectPermissions").click(function(e){
-  jQuery(".toggle-indirectPermissions").toggle();
-  jQuery("#indirectPermissionsDetails").toggle();
-  e.preventDefault();
-});
-}());
 jQuery.fn.lightAccordion = function(options) {
   var settings = $.extend({
     header: 'dt',

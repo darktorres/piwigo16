@@ -84,6 +84,41 @@ export default tseslint.config(
     },
   },
   {
+    // themes/admin/default/js/common.js -- admin theme's own shared
+    // utility file, always loaded via `combineScript(id: 'common', ...)`
+    // on real admin pages. Same reasoning as scripts.js above.
+    files: ["**/*.{js,mjs,cjs}"],
+    ignores: ["themes/admin/default/js/common.js"],
+    languageOptions: {
+      globals: {
+        sprintf: "readonly",
+        array_delete: "readonly",
+        str_repeat: "readonly",
+        getRandomInt: "readonly",
+        jConfirm_alert_options: "readonly",
+        jConfirm_confirm_options: "readonly",
+        jConfirm_warning_options: "readonly",
+        jConfirm_confirm_with_content_options: "readonly",
+      },
+    },
+  },
+  {
+    // themes/admin/default/js/LocalStorageCache.js -- the shared
+    // categories/tags/groups/users lookup-cache classes, always loaded
+    // via `combineScript(id: 'LocalStorageCache', ...)` on the real
+    // admin pages that need them. Same reasoning as scripts.js above.
+    files: ["**/*.{js,mjs,cjs}"],
+    ignores: ["themes/admin/default/js/LocalStorageCache.js"],
+    languageOptions: {
+      globals: {
+        CategoriesCache: "readonly",
+        TagsCache: "readonly",
+        GroupsCache: "readonly",
+        UsersCache: "readonly",
+      },
+    },
+  },
+  {
     files: ["**/*.ts"],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {

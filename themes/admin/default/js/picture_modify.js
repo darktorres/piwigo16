@@ -1,3 +1,77 @@
+var related_categories_ids = pwg_getPageData('related_categories_ids');
+var str_assoc_album_ab = pwg_getPageString('Associate to album');
+var str_orphan = pwg_getPageString('This photo is an orphan');
+
+(function(){
+	// <!-- CATEGORIES -->
+	var categoriesCache = new CategoriesCache({
+		serverKey: pwg_getPageData('cache_key_categories'),
+		serverId: pwg_getPageData('cache_key_hash'),
+		rootUrl: pwg_getPageData('root_url')
+	});
+
+	categoriesCache.selectize(jQuery('[data-selectize=categories]'));
+
+	// <!-- TAGS -->
+	var tagsCache = new TagsCache({
+		serverKey: pwg_getPageData('cache_key_tags'),
+		serverId: pwg_getPageData('cache_key_hash'),
+		rootUrl: pwg_getPageData('root_url')
+	});
+
+	tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
+		'Add': pwg_getPageString('Create')
+	}});
+
+	// <!-- DATEPICKER -->
+	jQuery(function(){ // onLoad needed to wait localization loads
+		jQuery('[data-datepicker]').pwgDatepicker({
+			showTimepicker: true,
+			cancelButton: pwg_getPageString('Cancel')
+		});
+	});
+
+	// <!-- THUMBNAILS -->
+	jQuery("a.preview-box").colorbox({
+		photo: true
+	});
+
+	var str_are_you_sure = pwg_getPageString('Are you sure?');
+	var str_yes = pwg_getPageString('Yes, delete');
+	var str_no = pwg_getPageString('No, I have changed my mind');
+	var url_delete = pwg_getPageData('u_delete');
+
+	$('#action-delete-picture').on('click', function() {
+		$.confirm({
+			title: str_are_you_sure,
+			draggable: false,
+			titleClass: "groupDeleteConfirm",
+			theme: "modern",
+			content: "",
+			animation: "zoom",
+			boxWidth: '30%',
+			useBootstrap: false,
+			type: 'red',
+			animateFromElement: false,
+			backgroundDismiss: true,
+			typeAnimated: false,
+			buttons: {
+				confirm: {
+					text: str_yes,
+					btnClass: 'btn-red',
+					action: function () {
+						window.location.href = url_delete.replaceAll('amp;', '');
+					}
+				},
+				cancel: {
+					text: str_no
+				}
+			}
+		});
+	})
+
+}());
+
 $(document).ready(function () {
   const ab = new AlbumSelector({
     selectedCategoriesIds: related_categories_ids,

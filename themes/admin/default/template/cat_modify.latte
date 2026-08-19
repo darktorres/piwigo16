@@ -690,42 +690,28 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'cat_modify', load: 'footer', path: 'themes/admin/default/js/cat_modify.js')}
+{do combineScript(id: 'cat_modify', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/cat_modify.js')}
+{do exposeData('cat_id', $CAT_ID)}
+{do exposeData('parent_cat_id', $PARENT_CAT_ID)}
+{do exposeData('cat_name', $CAT_NAME)}
+{do exposeData('nb_subcats', $NB_SUBCATS)}
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeData('u_delete', $U_DELETE)}
+{do exposeData('is_visible', $IS_VISIBLE)}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('Delete album')}
+{do exposeString('Delete album "%s" and its %d sub-albums.')}
+{do exposeString('Just now')}
+{do exposeString('delete only album, not photos')}
+{do exposeString('delete album and the %d orphan photos')}
+{do exposeString('delete album and all %d photos, even the %d associated to other albums')}
+{do exposeString('Comments allowed for sub-albums')}
+{do exposeString('Comments disallowed for sub-albums')}
+{do exposeString('New parent album')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 {do combineScript(id: 'jquery.tipTip', load: 'footer', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
-
-{capture $tmpFooterScript}
-const has_images_associated_outside = '{_ 'delete album and all %d photos, even the %d associated to other albums'|escapeJavascript|noescape}';
-const has_images_becomming_orphans = '{_ 'delete album and the %d orphan photos'|escapeJavascript|noescape}';
-const has_images_recursives = '{_ 'delete only album, not photos'|escapeJavascript|noescape}';
-const cat_nav = '{$CATEGORIES_NAV|escapeJavascript|noescape}';
-const album_id = {$CAT_ID}
-var parent_album = {$PARENT_CAT_ID}
-var default_parent_album = {$PARENT_CAT_ID}
-const album_name = "{$CAT_NAME}"
-const nb_sub_albums = {$NB_SUBCATS}
-const pwg_token = '{$CSRF_TOKEN}'
-const u_delete = '{$U_DELETE|noescape}'
-var is_visible = '{if $IS_VISIBLE}true{else}false{/if}'
-let related_categories_ids = ["{$CAT_ID}", "{$PARENT_CAT_ID}"];
-
-const str_cancel = '{_ 'No, I have changed my mind'|htmlspecialchars|noescape}'
-const str_delete_album = '{_ 'Delete album'|escapeJavascript|noescape}'
-const str_delete_album_and_his_x_subalbums = '{_ 'Delete album "%s" and its %d sub-albums.'|escapeJavascript|noescape}'
-const str_just_now = '{_ 'Just now'|escapeJavascript|noescape}'
-
-const str_dont_delete_photos = '{_ 'delete only album, not photos'|escapeJavascript|noescape}';
-const str_delete_orphans = '{_ 'delete album and the %d orphan photos'|escapeJavascript|noescape}';
-const str_delete_all_photos = '{_ 'delete album and all %d photos, even the %d associated to other albums'|escapeJavascript|noescape}';
-
-str_orphan = '{_ 'This photo is an orphan'|escapeJavascript|noescape}';
-str_album_comment_allow = '{_ 'Comments allowed for sub-albums'|escapeJavascript|noescape}';
-str_album_comment_disallow = '{_ 'Comments disallowed for sub-albums'|escapeJavascript|noescape}';
-const str_modal_ab = '{_ 'New parent album'|noescape}';
-{/capture}
-{do footerScript($tmpFooterScript)}
 
 <div class="cat-modify" id="cat-modify">
   <div class="cat-modify-header">

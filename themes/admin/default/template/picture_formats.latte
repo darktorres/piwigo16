@@ -690,18 +690,12 @@
 {varType array<string, string> $watermark_files}
 {* END varType *}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineScript(id: 'picture_formats', load: 'footer', path: 'themes/admin/default/js/picture_formats.js')}
+{do combineScript(id: 'picture_formats', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/picture_formats.js')}
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
-<script>
-    const nbFormats = {=count($FORMATS)}
-    const pwg_token = {$CSRF_TOKEN}
-    const str_confirm_delete_format = {='Delete %s format ?'|translate}
-    const str_confirm_msg = {='Yes, I am sure'|translate};
-    const str_cancel_msg = {='No, I have changed my mind'|translate};
-</script>
+{do exposeData('csrf_token', $CSRF_TOKEN)}
+{do exposeString('Delete %s format ?')}
 
 <div class="formats-header">
   <a

@@ -1,5 +1,26 @@
+var album_id = pwg_getPageData('cat_id');
+var parent_album = pwg_getPageData('parent_cat_id');
+var default_parent_album = pwg_getPageData('parent_cat_id');
+var album_name = pwg_getPageData('cat_name');
+var nb_sub_albums = pwg_getPageData('nb_subcats');
+var pwg_token = pwg_getPageData('csrf_token');
+var u_delete = pwg_getPageData('u_delete');
+var is_visible = pwg_getPageData('is_visible') ? 'true' : 'false';
+var related_categories_ids = [String(pwg_getPageData('cat_id')), String(pwg_getPageData('parent_cat_id'))];
+
+var str_cancel = pwg_getPageString('No, I have changed my mind');
+var str_delete_album = pwg_getPageString('Delete album');
+var str_delete_album_and_his_x_subalbums = pwg_getPageString('Delete album "%s" and its %d sub-albums.');
+var str_just_now = pwg_getPageString('Just now');
+var str_dont_delete_photos = pwg_getPageString('delete only album, not photos');
+var str_delete_orphans = pwg_getPageString('delete album and the %d orphan photos');
+var str_delete_all_photos = pwg_getPageString('delete album and all %d photos, even the %d associated to other albums');
+var str_album_comment_allow = pwg_getPageString('Comments allowed for sub-albums');
+var str_album_comment_disallow = pwg_getPageString('Comments disallowed for sub-albums');
+var str_modal_ab = pwg_getPageString('New parent album');
+
 jQuery(document).ready(function() {
-  
+
   activateCommentDropdown();
   checkAlbumLock();
   const ab = new AlbumSelector({ 

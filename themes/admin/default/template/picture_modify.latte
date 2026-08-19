@@ -701,85 +701,21 @@
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
 
-{capture $tmpFooterScript}
-(function(){
-{* <!-- CATEGORIES --> *}
-var categoriesCache = new CategoriesCache({
-  serverKey: '{$CACHE_KEYS['categories']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
+{do exposeData('cache_key_categories', $CACHE_KEYS['categories'])}
+{do exposeData('cache_key_tags', $CACHE_KEYS['tags'])}
+{do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
+{do exposeData('root_url', $ROOT_URL)}
+{do exposeData('u_delete', $U_DELETE)}
+{do exposeData('related_categories_ids', $related_categories_ids)}
+{do exposeString('Create')}
+{do exposeString('Cancel')}
+{do exposeString('Are you sure?')}
+{do exposeString('Yes, delete')}
+{do exposeString('No, I have changed my mind')}
+{do exposeString('This photo is an orphan')}
+{do exposeString('Associate to album')}
 
-categoriesCache.selectize(jQuery('[data-selectize=categories]'));
-
-{* <!-- TAGS --> *}
-var tagsCache = new TagsCache({
-  serverKey: '{$CACHE_KEYS['tags']}',
-  serverId: '{$CACHE_KEYS['_hash']}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-  'Add': '{_ 'Create'|noescape}'
-}});
-
-{* <!-- DATEPICKER --> *}
-jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker({
-    showTimepicker: true,
-    cancelButton: '{_ 'Cancel'|noescape}'
-  });
-});
-
-{* <!-- THUMBNAILS --> *}
-jQuery("a.preview-box").colorbox({
-  photo: true
-});
-
-str_are_you_sure = '{_ 'Are you sure?'|escapeJavascript|noescape}';
-str_yes = '{_ 'Yes, delete'|escapeJavascript|noescape}';
-str_no = '{_ 'No, I have changed my mind'|escapeJavascript|noescape}';
-url_delete = '{$U_DELETE|noescape}';
-str_orphan = '{_ 'This photo is an orphan'|escapeJavascript|noescape}';
-
-
-related_categories_ids = {$related_categories_ids|json_encode|noescape};
-
-$('#action-delete-picture').on('click', function() {
-  $.confirm({
-    title: str_are_you_sure,
-    draggable: false,
-    titleClass: "groupDeleteConfirm",
-    theme: "modern",
-    content: "",
-    animation: "zoom",
-    boxWidth: '30%',
-    useBootstrap: false,
-    type: 'red',
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
-    buttons: {
-        confirm: {
-          text: str_yes,
-          btnClass: 'btn-red',
-          action: function () {
-            window.location.href = url_delete.replaceAll('amp;', '');
-          }
-        },
-        cancel: {
-          text: str_no
-        }
-    }
-  });
-})
-
-}());
-const str_assoc_album_ab = '{_ 'Associate to album'|escapeJavascript|noescape}';
-{/capture}
-{do footerScript($tmpFooterScript)}
-
-{do combineScript(id: 'picture_modify', load: 'footer', path: 'themes/admin/default/js/picture_modify.js')}
+{do combineScript(id: 'picture_modify', load: 'footer', require: 'jquery.colorbox,page-data', path: 'themes/admin/default/js/picture_modify.js')}
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 <form action="{$F_ACTION|noescape}" method="post" id="pictureModify">

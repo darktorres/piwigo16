@@ -23,7 +23,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 22
+      "count": 20
     }
   },
   "themes/admin/default/js/albums.js": {
@@ -31,7 +31,7 @@
       "count": 42
     },
     "no-undef": {
-      "count": 170
+      "count": 169
     }
   },
   "themes/admin/default/js/batchManagerFilter.js": {
@@ -80,7 +80,7 @@
       "count": 5
     },
     "no-undef": {
-      "count": 50
+      "count": 5
     }
   },
   "themes/admin/default/js/cat_search.js": {
@@ -99,7 +99,7 @@
       "count": 4
     },
     "no-undef": {
-      "count": 14
+      "count": 11
     }
   },
   "themes/admin/default/js/common.js": {
@@ -124,9 +124,6 @@
   "themes/admin/default/js/doubleSlider.js": {
     "eqeqeq": {
       "count": 3
-    },
-    "no-undef": {
-      "count": 1
     }
   },
   "themes/admin/default/js/group_list.js": {
@@ -143,7 +140,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 128
+      "count": 124
     }
   },
   "themes/admin/default/js/history.js": {
@@ -157,7 +154,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 108
+      "count": 107
     }
   },
   "themes/admin/default/js/intro_tooltips.js": {
@@ -181,7 +178,7 @@
       "count": 6
     },
     "no-undef": {
-      "count": 94
+      "count": 87
     },
     "no-useless-escape": {
       "count": 64
@@ -190,9 +187,6 @@
   "themes/admin/default/js/picture_formats.js": {
     "eqeqeq": {
       "count": 1
-    },
-    "no-undef": {
-      "count": 5
     }
   },
   "themes/admin/default/js/picture_modify.js": {
@@ -200,7 +194,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 4
+      "count": 1
     }
   },
   "themes/admin/default/js/plugins_installated.js": {
@@ -211,7 +205,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 88
+      "count": 83
     }
   },
   "themes/admin/default/js/plugins_new.js": {
@@ -238,7 +232,7 @@
       "count": 32
     },
     "no-undef": {
-      "count": 151
+      "count": 146
     }
   },
   "themes/admin/default/js/user_activity.js": {
@@ -257,7 +251,7 @@
       "count": 10
     },
     "no-undef": {
-      "count": 104
+      "count": 88
     }
   },
   "themes/default/js/mcs.js": {
@@ -268,7 +262,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 511
+      "count": 505
     }
   },
   "themes/default/js/rating.js": {
@@ -314,7 +308,7 @@
       "count": 1
     },
     "no-undef": {
-      "count": 43
+      "count": 42
     }
   },
   "themes/standard_pages/js/standard_pages.js": {

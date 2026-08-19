@@ -22,12 +22,16 @@ use Piwigo\Core\TemplatePageContext;
  * already assigns a default (`'Piwigo Administration Page'`) before any
  * page-specific controller runs -- a page only needs to pass its own
  * value here when it overrides that default, matching each such page's
- * exact original behavior.
+ * exact original behavior. `$adminContent` is also optional: a
+ * multi-tab dispatcher like `Controller\Admin\MaintenanceSubController`
+ * assigns its own shared `$adminPageTitle` in a separate call, after
+ * its per-tab renderer has already assigned `$adminContent`/`$helpUrl`
+ * in its own.
  */
 final readonly class AdminContentPageContext implements TemplatePageContext
 {
     public function __construct(
-        public Html $adminContent,
+        public ?Html $adminContent = null,
         public ?string $adminPageTitle = null,
         public ?string $helpUrl = null,
     ) {}
@@ -38,9 +42,11 @@ final readonly class AdminContentPageContext implements TemplatePageContext
     #[Override]
     public function toArray(): array
     {
-        $result = [
-            'ADMIN_CONTENT' => $this->adminContent,
-        ];
+        $result = [];
+
+        if ($this->adminContent !== null) {
+            $result['ADMIN_CONTENT'] = $this->adminContent;
+        }
 
         if ($this->adminPageTitle !== null) {
             $result['ADMIN_PAGE_TITLE'] = $this->adminPageTitle;

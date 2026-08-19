@@ -16,6 +16,17 @@ test('toArray always includes ADMIN_CONTENT, omits ADMIN_PAGE_TITLE/U_HELP when 
         ]);
 });
 
+test('toArray omits ADMIN_CONTENT when null, for a title-only assign after a tab renderer already set it', function (): void {
+    $context = new AdminContentPageContext(
+        adminPageTitle: 'Maintenance',
+    );
+
+    expect($context->toArray())
+        ->toBe([
+            'ADMIN_PAGE_TITLE' => 'Maintenance',
+        ]);
+});
+
 test('toArray includes ADMIN_PAGE_TITLE/U_HELP when both are set', function (): void {
     $context = new AdminContentPageContext(
         adminContent: new Html('<p>content</p>'),

@@ -5,22 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Imagick;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\GetAdminAdvancedFeaturesLinks;
-use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
-use Piwigo\Admin\Projection\MaintenanceActionsPageContext;
+use Piwigo\Admin\Projection\MaintenanceActionsView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\AppInfo;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -29,8 +27,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -38,6 +34,7 @@ use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -82,6 +79,7 @@ final readonly class MaintenanceActionsPageRenderer
         private InputValidator $inputValidator,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
         private ?PersistentCache $persistentCache = null,
     ) {}
 
@@ -114,11 +112,6 @@ final readonly class MaintenanceActionsPageRenderer
         }
         $purge_urls[$this->lang->t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
 
-        $dbInfo = new DbInfo(DbConnection::build());
-        $php_current_timestamp = date('Y-m-d H:i:s');
-        $db_version = $dbInfo->version();
-        $db_current_date = $dbInfo->currentDateTime();
-
         // CurrentConfig::cacheSizes is a decoded CacheSizesSnapshot produced
         // by ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc);
         // lastDateCalc is the date string used for time_since().
@@ -126,39 +119,6 @@ final readonly class MaintenanceActionsPageRenderer
         $time_elapsed_since_last_calc = $cache_sizes instanceof CacheSizesSnapshot
             ? DateHelper::timeSince($cache_sizes->lastDateCalc, 'year')
             : null;
-
-        // graphics library
-        $graphics_library = null;
-        switch (ImageBackend::getLibrary()) {
-            case 'ext_imagick':
-                $library = 'External ImageMagick';
-                $ext_imagick_dir = $this->currentConfig->extImagickDir;
-                $returnarray = [];
-                // [SEC-16] see ImageBackend::isExtImagick()'s own escapeshellarg() note.
-                exec(escapeshellarg($ext_imagick_dir) . ImageBackend::getExtImagickCommand() . ' -version', $returnarray);
-                $returnarray_line0 = $returnarray[0] ?? '';
-                if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray_line0, $match)) {
-                    $library .= ' ' . $match[1];
-                }
-                $graphics_library = $library;
-                break;
-
-            case 'imagick':
-                $library = 'ImageMagick';
-                $version = Imagick::getVersion();
-                if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
-                    $library = $match[0];
-                }
-                $graphics_library = $library;
-                break;
-
-            case 'gd':
-                $gd_info = gd_info();
-                $gd_version = $gd_info['GD Version'] ?? null;
-                $gd_version = is_string($gd_version) ? $gd_version : '';
-                $graphics_library = 'GD ' . $gd_version;
-                break;
-        }
 
         $maint_unlock_gallery = null;
         $maint_lock_gallery = null;
@@ -181,7 +141,7 @@ final readonly class MaintenanceActionsPageRenderer
         // $advanced_features is array of array composed of CAPTION & URL
         $advanced_features_event = $this->eventDispatcher->dispatch(new GetAdminAdvancedFeaturesLinks([]));
 
-        $template->assignContext(new MaintenanceActionsPageContext(
+        $adminContent = $this->renderer->render(new MaintenanceActionsView(
             maintActions: $maintActions,
             maintCategories: sprintf($url_format, 'categories'),
             maintImages: sprintf($url_format, 'images'),
@@ -195,23 +155,10 @@ final readonly class MaintenanceActionsPageRenderer
             maintC13y: sprintf($url_format, 'c13y'),
             maintSearch: sprintf($url_format, 'search'),
             maintCompiledTemplates: sprintf($url_format, 'compiled-templates'),
-            maintDerivatives: sprintf($url_format, 'derivatives'),
             purgeDerivatives: $purge_urls,
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
-            phpwgUrl: AppInfo::URL,
-            pwgVersion: AppInfo::VERSION,
-            checkUpgradeUrl: sprintf($url_format, 'check_upgrade'),
-            os: PHP_OS,
-            phpVersion: PHP_VERSION,
-            dbEngine: 'MySQL',
-            dbVersion: $db_version,
-            phpinfoUrl: sprintf($url_format, 'phpinfo'),
-            phpCurrentTimestamp: $php_current_timestamp,
-            dbCurrentDate: $db_current_date,
             pwgToken: $pwg_token,
             cacheSizes: $cache_sizes,
             timeElapsedSinceLastCalc: $time_elapsed_since_last_calc,
-            graphicsLibrary: $graphics_library,
             maintUnlockGallery: $maint_unlock_gallery,
             maintLockGallery: $maint_lock_gallery,
             uEmptyLounge: $u_empty_lounge,
@@ -220,6 +167,9 @@ final readonly class MaintenanceActionsPageRenderer
             advancedFeatures: $advanced_features_event->advancedFeatures,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_actions.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
+        ));
     }
 }

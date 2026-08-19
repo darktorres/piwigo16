@@ -14,7 +14,7 @@ use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\MaintenanceSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\MaintenanceDispatchRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,6 +24,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -62,6 +63,7 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -161,12 +163,12 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager);
+                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager, $this->renderer);
         } else {
             $this->maintenanceActionsPageRenderer
                 ->render($maintActions);
         }
 
-        $template->assignContext(new MaintenanceSubControllerPageContext(adminPageTitle: $this->lang->t('Maintenance')));
+        $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Maintenance')));
     }
 }

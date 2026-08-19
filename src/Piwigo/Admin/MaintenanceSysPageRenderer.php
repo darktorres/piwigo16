@@ -7,12 +7,14 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
-use Piwigo\Admin\Projection\MaintenanceSysPageContext;
+use Piwigo\Admin\Projection\MaintenanceSysView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Renders the "sys" tab of the "maintenance" admin page (dispatched by
@@ -30,7 +32,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -47,11 +49,11 @@ final class MaintenanceSysPageRenderer
             $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
-        $template->assignContext(new MaintenanceSysPageContext(
+        $adminContent = $renderer->render(new MaintenanceSysView(
             isWebmaster: $accessControl->isWebmaster(),
             activityLogEntries: $activity_log_entries,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_sys.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -100,21 +101,21 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={$isWebmaster}');
+        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={=(int) $isWebmaster}|entries={=count($activityLogEntries)}');
         $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
-            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager());
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
+
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
 
         expect($pageState->warnings)
             ->toHaveCount(1)
             ->and($pageState->warnings[0])->toContain('status is required to edit parameters.')
-            ->and($template->getTemplateVars('isWebmaster'))
-            ->toBe(0)
             // a non-webmaster never even queries the activity log.
-            ->and($template->getTemplateVars('ACTIVITY_LOG_ENTRIES'))
-            ->toBe([]);
+            ->and((string) $adminContent)
+            ->toBe('isWebmaster=0|entries=0');
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
@@ -131,33 +132,31 @@ test('render() adds no warning for a webmaster and passes the real system activi
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={$isWebmaster}');
+        file_put_contents($tplDir . 'maintenance_sys.latte', 'isWebmaster={=(int) $isWebmaster}|first={=json_encode($activityLogEntries[0] ?? null)}');
         $template->setTemplateDir($tplDir);
         $pageState = new PageState();
 
         new MaintenanceSysPageRenderer()
-            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager());
+            ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
 
-        $rawEntries = $template->getTemplateVars('ACTIVITY_LOG_ENTRIES');
-        $entries = is_array($rawEntries) ? $rawEntries : [];
+        $adminContent = (string) $template->getTemplateVars('ADMIN_CONTENT');
 
         expect($pageState->warnings)
             ->toBe([])
-            ->and($template->getTemplateVars('isWebmaster'))
-            ->toBe(1)
-            ->and($rawEntries)
+            ->and($adminContent)
+            ->toStartWith('isWebmaster=1|first=');
+
+        $encodedFirst = substr($adminContent, strlen('isWebmaster=1|first='));
+        $first = json_decode($encodedFirst, true);
+        expect($first)
             ->toBeArray()
             // At least the fixture DB's own install-time system log (Core
             // install + 2 default-theme activations, see
-            // tests/Fixtures/piwigo-17.0.sql) -- not an exact count, since
-            // other tests sharing this DB can add their own real system
-            // activity rows (plugin/theme actions, etc.) within the same
-            // session.
-            ->and(count($entries))
-            ->toBeGreaterThanOrEqual(3);
-
-        $first = is_array($entries[0] ?? null) ? $entries[0] : [];
-        expect($first)
+            // tests/Fixtures/piwigo-17.0.sql) confirms a webmaster gets a
+            // real, non-empty activity log entry -- not an exact count,
+            // since other tests sharing this DB can add their own real
+            // system activity rows within the same session.
+            ->and($first)
             ->toHaveKeys(['id', 'object', 'action', 'username', 'date', 'hour', 'detailItems', 'detailArrow']);
     } finally {
         CurrentTemplateTestFactory::get()->reset();

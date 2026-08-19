@@ -6,19 +6,19 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Event\GetAdminAdvancedFeaturesLinks;
 use Piwigo\Admin\Extensions\PluginListBuilder;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
-use Piwigo\Admin\Projection\MaintenanceEnvPageContext;
+use Piwigo\Admin\Projection\MaintenanceEnvView;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\DateHelper;
@@ -31,13 +31,13 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -65,7 +65,6 @@ final readonly class MaintenanceEnvPageRenderer
         private SessionService $sessionService,
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
-        private ImageStdParams $imageStdParams,
         private PageState $pageState,
         private CurrentTemplate $currentTemplate,
         private DbMaintenanceRepository $dbMaintenanceRepository,
@@ -82,6 +81,7 @@ final readonly class MaintenanceEnvPageRenderer
         private Paths $paths,
         private EntityManagerInterface $entityManager,
         private PluginListBuilder $pluginListBuilder,
+        private Renderer $renderer,
         private ?PersistentCache $persistentCache = null,
     ) {}
 
@@ -94,14 +94,6 @@ final readonly class MaintenanceEnvPageRenderer
             ->dispatch($action);
 
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . $this->csrfService->getToken();
-
-        /** @var array<string, string> $purge_urls */
-        $purge_urls = [];
-        $purge_urls[$this->lang->t('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
-        foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
-            $purge_urls[$this->lang->t($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
-        }
-        $purge_urls[$this->lang->t(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
 
         $dbInfo = new DbInfo(DbConnection::build());
         $php_current_timestamp = date('Y-m-d H:i:s');
@@ -126,14 +118,6 @@ final readonly class MaintenanceEnvPageRenderer
         $graphics_library = ImageBackend::getGraphicsLibraryLabel();
         $graphics_library_value = $graphics_library !== '' ? $graphics_library : null;
 
-        $maint_unlock_gallery = null;
-        $maint_lock_gallery = null;
-        if ($this->currentConfig->galleryLocked) {
-            $maint_unlock_gallery = sprintf($url_format, 'unlock_gallery');
-        } else {
-            $maint_lock_gallery = sprintf($url_format, 'lock_gallery');
-        }
-
         $installed_on_value = null;
         $installed_since_value = null;
         $installed_on = $this->installationStats->getInstallationDate();
@@ -142,9 +126,6 @@ final readonly class MaintenanceEnvPageRenderer
             $installed_since_value = DateHelper::timeSince($installed_on, 'day');
         }
 
-        // $advanced_features is array of array composed of CAPTION & URL
-        $advanced_features_event = $this->eventDispatcher->dispatch(new GetAdminAdvancedFeaturesLinks([]));
-
         $active_plugin_names = [];
         foreach ($this->pluginListBuilder->build() as $plugin) {
             if ($plugin['state'] === 'active') {
@@ -152,44 +133,29 @@ final readonly class MaintenanceEnvPageRenderer
             }
         }
 
-        $template->assignContext(new MaintenanceEnvPageContext(
-            maintCategories: sprintf($url_format, 'categories'),
-            maintImages: sprintf($url_format, 'images'),
-            maintOrphanTags: sprintf($url_format, 'delete_orphan_tags'),
-            maintUserCache: sprintf($url_format, 'user_cache'),
-            maintHistoryDetail: sprintf($url_format, 'history_detail'),
-            maintHistorySummary: sprintf($url_format, 'history_summary'),
-            maintSessions: sprintf($url_format, 'sessions'),
-            maintFeeds: sprintf($url_format, 'feeds'),
-            maintDatabase: sprintf($url_format, 'database'),
-            maintC13y: sprintf($url_format, 'c13y'),
-            maintSearch: sprintf($url_format, 'search'),
-            maintCompiledTemplates: sprintf($url_format, 'compiled-templates'),
-            maintDerivatives: sprintf($url_format, 'derivatives'),
-            purgeDerivatives: $purge_urls,
-            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
+        $adminContent = $this->renderer->render(new MaintenanceEnvView(
             phpwgUrl: AppInfo::URL,
             pwgVersion: AppInfo::VERSION,
             checkUpgradeUrl: sprintf($url_format, 'check_upgrade'),
-            os: PHP_OS,
-            containerInfo: $container_name . ($container_version !== null && $container_version !== '' ? ' ' . $container_version : ''),
-            phpVersion: PHP_VERSION,
-            dbEngine: 'MySQL',
-            dbVersion: $db_version,
-            phpinfoUrl: sprintf($url_format, 'phpinfo'),
-            phpCurrentTimestamp: $php_current_timestamp,
-            dbCurrentDate: $db_current_date,
-            cacheSizes: $cache_sizes,
-            timeElapsedSinceLastCalc: $time_elapsed_since_last_calc,
-            graphicsLibrary: $graphics_library_value,
-            maintUnlockGallery: $maint_unlock_gallery,
-            maintLockGallery: $maint_lock_gallery,
             installedOn: $installed_on_value,
             installedSince: $installed_since_value,
-            advancedFeatures: $advanced_features_event->advancedFeatures,
+            os: PHP_OS,
+            containerInfo: $container_name . ($container_version !== null && $container_version !== '' ? ' ' . $container_version : ''),
+            phpinfoUrl: sprintf($url_format, 'phpinfo'),
+            phpVersion: PHP_VERSION,
+            phpCurrentTimestamp: $php_current_timestamp,
+            dbEngine: 'MySQL',
+            dbVersion: $db_version,
+            dbCurrentDate: $db_current_date,
+            graphicsLibrary: $graphics_library_value,
+            cacheSizes: $cache_sizes,
+            timeElapsedSinceLastCalc: $time_elapsed_since_last_calc,
             activePluginNames: $active_plugin_names,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_env.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
+        ));
     }
 }

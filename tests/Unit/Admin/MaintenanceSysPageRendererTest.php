@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -109,6 +110,9 @@ test('render() adds a warning and skips the webmaster-only content for a non-web
             ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Admin), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
 
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        if (! $adminContent instanceof Html) {
+            throw new LogicException('ADMIN_CONTENT was not rendered as Html.');
+        }
 
         expect($pageState->warnings)
             ->toHaveCount(1)
@@ -139,7 +143,11 @@ test('render() adds no warning for a webmaster and passes the real system activi
         new MaintenanceSysPageRenderer()
             ->render(LangTestFactory::get(), maintenanceSysTestAccessControl(UserStatus::Webmaster), [], $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), maintenanceSysTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
 
-        $adminContent = (string) $template->getTemplateVars('ADMIN_CONTENT');
+        $adminContentRaw = $template->getTemplateVars('ADMIN_CONTENT');
+        if (! $adminContentRaw instanceof Html) {
+            throw new LogicException('ADMIN_CONTENT was not rendered as Html.');
+        }
+        $adminContent = (string) $adminContentRaw;
 
         expect($pageState->warnings)
             ->toBe([])

@@ -165,7 +165,7 @@ final readonly class PictureController implements ControllerInterface
      * (which needs the same value for `PictureView::$uOriginal` -- see
      * that class's own docblock for why).
      *
-     * @param array{derivatives: array<string, DerivativeImage>, element_url?: string} $element_info
+     * @param array{derivatives: array<string, DerivativeImage>, element_url?: string, ...} $element_info
      */
     private function computeUOriginal(array $element_info): ?string
     {
@@ -1259,6 +1259,16 @@ final readonly class PictureController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
 
+        // $picture['current']['element_url'], when present, is always a
+        // string (assigned only from SrcImage::getUrl()/UrlServiceInterface::
+        // getElementUrl(), both string-returning) -- but that fact isn't
+        // visible to static analysis through $row's own progressive,
+        // conditional mutation inside the findByIds() loop above.
+        $current_element_url = $picture['current']['element_url'] ?? null;
+        $u_original = $this->computeUOriginal(is_string($current_element_url)
+            ? ['derivatives' => $picture['current']['derivatives'], 'element_url' => $current_element_url]
+            : ['derivatives' => $picture['current']['derivatives']]);
+
         $commonPictureViewArgs = [
             'navFirst' => $nav['first'] ?? null,
             'navPrevious' => $nav['previous'] ?? null,
@@ -1297,7 +1307,7 @@ final readonly class PictureController implements ControllerInterface
             'csrfToken' => $this->csrfService->getToken(),
             'cookiePath' => new CookieService()
                 ->cookiePath(),
-            'uOriginal' => $this->computeUOriginal($picture['current']),
+            'uOriginal' => $u_original,
             'pluginPictureButtons' => $template->pictureButtons(),
         ];
 
@@ -1382,7 +1392,14 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        $u_original = $this->computeUOriginal($element_info);
+        // $element_info['element_url'], when present, is always a string --
+        // see __invoke()'s own identical narrowing above for why static
+        // analysis can't see that through $element_info's own progressive,
+        // conditional construction.
+        $element_url = $element_info['element_url'] ?? null;
+        $u_original = $this->computeUOriginal(is_string($element_url)
+            ? ['derivatives' => $element_info['derivatives'], 'element_url' => $element_url]
+            : ['derivatives' => $element_info['derivatives']]);
 
         $pdf_viewer_filesize_threshold = null;
         if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {

@@ -372,9 +372,6 @@ parameters:
         -
             identifier: isset.offset
             path: _analysis/phpstan-latte/*
-        -
-            identifier: empty.offset
-            path: _analysis/phpstan-latte/*
 
         # Campaign B -- template-source modernization: Smarty-conversion
         # legacy in the .latte files themselves (loose ==/!=, empty(),
@@ -389,9 +386,6 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: empty.notAllowed
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: foreach.keyOverwrite
             path: _analysis/phpstan-latte/*
         -
             identifier: foreach.valueOverwrite

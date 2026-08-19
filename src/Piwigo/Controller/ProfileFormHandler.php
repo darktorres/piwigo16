@@ -400,7 +400,6 @@ final readonly class ProfileFormHandler
             languageSelection: $language_selection,
             languageOptions: $language_options,
             specialUser: $special_user,
-            inAdmin: $this->adminContext->isActive(),
             apiCurrentDate: $api_current_date,
             apiExpiration: $display_duration,
             apiSelectedExpiration: array_key_first($display_duration),

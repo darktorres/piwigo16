@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Projection\StatsPageContext;
-use Piwigo\Admin\StatsPageRenderer;
+use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\Projection\NoPhotoYetGuestPageContext;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
 
 /**
@@ -25,10 +26,10 @@ beforeEach(function (): void {
 });
 
 it('resolves an Admin renderer call site only under the admin theme', function (): void {
-    $templates = $this->result->templatesByClass[StatsPageRenderer::class] ?? [];
+    $templates = $this->result->templatesByClass[CheckIntegrity::class] ?? [];
 
     expect($templates)
-        ->toContain($this->root . '/themes/admin/default/template/stats.latte');
+        ->toContain($this->root . '/themes/admin/default/template/check_integrity.latte');
     foreach ($templates as $path) {
         expect($path)->toContain('/themes/admin/default/template/');
     }
@@ -53,8 +54,8 @@ it('resolves a frontend polymorphic call site to every reachable theme variant',
 });
 
 it('associates assignContext call sites with their context class', function (): void {
-    expect($this->result->contextsByClass[StatsPageRenderer::class] ?? [])
-        ->toContain(StatsPageContext::class);
+    expect($this->result->contextsByClass[NoPhotoYetRenderer::class] ?? [])
+        ->toContain(NoPhotoYetGuestPageContext::class);
 });
 
 it('records the cross-class context assigners the same-class association cannot cover', function (): void {

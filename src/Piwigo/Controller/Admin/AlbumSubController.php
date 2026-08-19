@@ -27,6 +27,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -65,6 +66,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]

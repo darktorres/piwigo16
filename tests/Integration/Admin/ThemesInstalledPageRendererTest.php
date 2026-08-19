@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -188,7 +189,9 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render('themes');
 
-        $adminContent = (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+        $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+        self::assertInstanceOf(Html::class, $adminContentRaw);
+        $adminContent = (string) $adminContentRaw;
 
         // The real gap: a genuine non-default/standard_pages theme reaches
         // render()'s own buildTplTheme() call and appears in the output --

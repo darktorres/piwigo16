@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Projection\DoubleSelectView;
 use Piwigo\Admin\Projection\UserPermView;
 use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\DoubleSelectView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;

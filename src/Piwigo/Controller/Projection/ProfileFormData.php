@@ -43,7 +43,6 @@ final readonly class ProfileFormData
         public ?string $languageSelection,
         public array $languageOptions,
         public bool $specialUser,
-        public bool $inAdmin,
         public string $apiCurrentDate,
         public array $apiExpiration,
         public int|string|null $apiSelectedExpiration,

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\DoubleSelectView;
 use Piwigo\Admin\Projection\GroupPermView;
 use Piwigo\Admin\Request\GroupPermSubmitRequest;
 use Piwigo\Audit\AuditService;
@@ -14,6 +13,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\DoubleSelectView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;

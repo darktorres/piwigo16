@@ -1009,14 +1009,6 @@ final readonly class ImageService
     /**
      * @return list<int>
      */
-    public function getAssociatedCategoryIds(ImageId $imageId): array
-    {
-        return $this->repo->findAssociatedCategoryIds($imageId);
-    }
-
-    /**
-     * @return list<int>
-     */
     public function getIdsByMd5sum(string $md5sum): array
     {
         return $this->repo->findIdsByMd5sum($md5sum);

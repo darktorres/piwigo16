@@ -713,12 +713,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         resizeQuality: $resize_quality,
                         ferrors: null,
                         fAction: $action,
-                        // $sizesResult is only non-null on a submitted "sizes"
-                        // form (see processSizes()'s own early-return for a
-                        // non-webmaster submitter) -- null here on every GET
-                        // request to this tab, so this can't collapse to a
-                        // plain ->saveSuccess read.
-                        saveSuccess: $sizesResult?->saveSuccess ?? $save_success,
+                        saveSuccess: ($sizesResult !== null ? $sizesResult->saveSuccess : null) ?? $save_success,
                         isWebmaster: $is_webmaster,
                         csrfToken: $pwg_token,
                     );
@@ -802,27 +797,22 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ];
                 }
 
-                // $watermarkResult is guaranteed non-null when $watermark
-                // stayed null here: $watermarkLoadedInTpl is only ever
-                // flipped true inside processWatermark()'s own
-                // validation-failure branch, which is the same branch that
-                // populates $watermarkResult->watermark.
+                // $watermarkResult and its own ->watermark field are both
+                // guaranteed non-null when $watermark stayed null here:
+                // $watermarkLoadedInTpl is only ever flipped true inside
+                // processWatermark()'s own validation-failure branch, which
+                // is the same branch that populates $watermarkResult->watermark.
                 if ($watermark === null) {
-                    assert($watermarkResult !== null);
+                    assert($watermarkResult !== null && $watermarkResult->watermark !== null);
                     $watermark = $watermarkResult->watermark;
                 }
 
                 $view = new ConfigurationWatermarkView(
                     watermarkFiles: $watermark_filemap,
                     watermark: $watermark,
-                    // $watermarkResult is only non-null on a submitted
-                    // "watermark" form (see processWatermark()'s own
-                    // early-return for a non-webmaster submitter) -- null
-                    // here on every GET request to this tab, so neither read
-                    // below can collapse to a plain -> access.
                     ferrors: $watermarkResult?->ferrors,
                     fAction: $action,
-                    saveSuccess: $watermarkResult?->saveSuccess ?? $save_success,
+                    saveSuccess: ($watermarkResult !== null ? $watermarkResult->saveSuccess : null) ?? $save_success,
                     isWebmaster: $is_webmaster,
                     csrfToken: $pwg_token,
                 );

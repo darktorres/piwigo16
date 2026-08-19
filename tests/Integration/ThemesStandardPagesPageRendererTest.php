@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
@@ -317,9 +318,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $this->renderer->render();
 
             $uploadDir = $fixtureRoot . 'logo';
+            $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+            self::assertInstanceOf(Html::class, $adminContentRaw);
             self::assertStringContainsString(
                 sprintf(LangTestFactory::get()->t('Add write access to the "%s" directory'), $uploadDir),
-                (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT')
+                (string) $adminContentRaw
             );
         } finally {
             @unlink($realPng);
@@ -368,9 +371,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             self::assertSame(2, ThemesStandardPagesLogoStreamWrapper::$opens);
 
             $uploadDir = $fixtureRoot . 'logo';
+            $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+            self::assertInstanceOf(Html::class, $adminContentRaw);
             self::assertStringContainsString(
                 "{$uploadDir}/stdpageslogo.png " . LangTestFactory::get()->t('no write access'),
-                (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT')
+                (string) $adminContentRaw
             );
 
             // confUpdateParam('standard_pages_selected_logo_path', ...)
@@ -425,7 +430,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render();
 
-        $adminContent = (string) CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+        $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
+        self::assertInstanceOf(Html::class, $adminContentRaw);
+        $adminContent = (string) $adminContentRaw;
         self::assertStringContainsString('Uses Standard Pages Theme', $adminContent);
         self::assertStringNotContainsString('Plain Theme', $adminContent);
     }

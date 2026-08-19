@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Projection\StatsPageContext;
 use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
+use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\Projection\MenubarBlocksPageContext;
 use Piwigo\Template\TemplateAdapter;
@@ -15,13 +15,10 @@ beforeEach(function (): void {
     $this->extractor = new ContextVariableExtractor();
 });
 
-it('maps StatsPageContext with docblock array types, VO ->value narrowing and native strings', function (): void {
-    $extracted = $this->extractor->extract(StatsPageContext::class);
+it('maps CategoryCatsNavbarPageContext with a nested array-shape docblock', function (): void {
+    $extracted = $this->extractor->extract(CategoryCatsNavbarPageContext::class);
 
-    expect($extracted->vars['U_HELP'])->toBe('string')
-        ->and($extracted->vars['lastYears'])->toBe('float[]|int[]')
-        ->and($extracted->vars['langCode'])->toBe('string')
-        ->and($extracted->vars['monthStats'])->toContain('month?:')
+    expect($extracted->vars['cats_navbar'])->toContain('pages?:')
         ->and($extracted->notices)
         ->toBe([]);
 });
@@ -51,11 +48,15 @@ it('collects literal keys and notices dynamic ones from variable-built toArray b
     ))->not->toBe([]);
 });
 
-it('extracts every one of the 130 real context classes without a hard failure', function (): void {
+it('extracts every one of the remaining real context classes without a hard failure', function (): void {
     $root = dirname(__DIR__, 3);
     exec('grep -rl "implements TemplatePageContext" ' . escapeshellarg($root . '/src/Piwigo') . ' --include="*.php"', $files);
+    // Was >100 (130 total) before the P40 campaign started converting
+    // context classes to typed Views; shrinks further with every landed
+    // batch, so this stays a loose "grep still found a real pool" floor,
+    // not a precise pin.
     expect(count($files))
-        ->toBeGreaterThan(100);
+        ->toBeGreaterThan(30);
 
     foreach ($files as $file) {
         $class = null;

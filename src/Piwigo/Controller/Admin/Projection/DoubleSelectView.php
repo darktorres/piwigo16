@@ -11,18 +11,24 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `double_select.latte`'s own typed view -- a two-column category
  * picker shared by four real callers: {@see
  * \Piwigo\Controller\Admin\NotificationByMailSubController::handle()}'s
- * own "subscribe" tab, and (not yet converted)
- * `Admin\CatOptionsPageRenderer`, `Admin\UserPermPageRenderer`,
- * `Admin\GroupPermPageRenderer`.
+ * own "subscribe" tab, `Admin\CatOptionsPageRenderer`,
+ * `Admin\UserPermPageRenderer`, `Admin\GroupPermPageRenderer`.
  */
 #[Template('double_select.latte')]
 final readonly class DoubleSelectView implements View
 {
     /**
-     * @param array<string, string> $categoryOptionTrue
-     * @param list<string> $categoryOptionTrueSelected
-     * @param array<string, string> $categoryOptionFalse
-     * @param list<string> $categoryOptionFalseSelected
+     * `$categoryOption{True,False}` and their `*Selected` counterparts
+     * match {@see \Piwigo\Category\Projection\CategorySelectOptions}'s own
+     * `$options`/`$selected` shape exactly -- 2 of the 4 real callers
+     * source these straight from `CategoryService::displaySelectByX()`,
+     * whose category-id-keyed options can genuinely carry `int` keys
+     * (category ids), not just `string` ones.
+     *
+     * @param array<int|string, string> $categoryOptionTrue
+     * @param array<int, mixed> $categoryOptionTrueSelected
+     * @param array<int|string, string> $categoryOptionFalse
+     * @param array<int, mixed> $categoryOptionFalseSelected
      */
     public function __construct(
         public string $lCatOptionsTrue,

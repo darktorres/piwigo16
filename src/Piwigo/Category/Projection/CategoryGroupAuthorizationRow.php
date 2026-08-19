@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use Override;
 use Piwigo\Common\Contract\HasGlobalRank;
 
 /**
@@ -22,6 +23,7 @@ final readonly class CategoryGroupAuthorizationRow implements HasGlobalRank
         public ?string $globalRank,
     ) {}
 
+    #[Override]
     public function getGlobalRank(): ?string
     {
         return $this->globalRank;

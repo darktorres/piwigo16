@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Override;
 use Piwigo\Common\Contract\HasGlobalRank;
 
 /**
@@ -33,6 +34,7 @@ final readonly class VisibleCategoryRow implements HasGlobalRank
         public ?string $globalRank,
     ) {}
 
+    #[Override]
     public function getGlobalRank(): ?string
     {
         return $this->globalRank;

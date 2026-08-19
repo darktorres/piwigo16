@@ -14,6 +14,7 @@ use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\ImageTagEntity;
 use Piwigo\Tag\Projection\ImageTagLink;
+use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
@@ -692,14 +693,8 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
     $repo = tagTestRepo();
     $tagId = $repo->insert(tagTestName(), tagTestName());
     $repo->massInsertImageTags([
-        [
-            'image_id' => 4,
-            'tag_id' => $tagId->value,
-        ],
-        [
-            'image_id' => 5,
-            'tag_id' => $tagId->value,
-        ],
+        new ImageTagPair(imageId: 4, tagId: $tagId->value),
+        new ImageTagPair(imageId: 5, tagId: $tagId->value),
     ]);
 
     try {
@@ -728,17 +723,15 @@ test('massInsertImageTags() with ignore=true silently skips a duplicate, unlike 
     // ("SAVEPOINT DOCTRINE_2 does not exist", reproduced live under
     // --parallel). A plain, unnested connection doesn't hit this.
     DbTransactionTestOverride::rollback();
-    expect(fn () => tagTestRepo()->massInsertImageTags([[
-        'image_id' => 1,
-        'tag_id' => 1,
-    ]]))
+    expect(fn () => tagTestRepo()->massInsertImageTags([
+        new ImageTagPair(imageId: 1, tagId: 1),
+    ]))
         ->toThrow(UniqueConstraintViolationException::class);
 
     tagTestRepo()
-        ->massInsertImageTags([[
-            'image_id' => 1,
-            'tag_id' => 1,
-        ]], ignore: true);
+        ->massInsertImageTags([
+            new ImageTagPair(imageId: 1, tagId: 1),
+        ], ignore: true);
 });
 
 test('massInsertImageTags() clears the identity map, so a later find() sees the real insert instead of a stale cached null', function (): void {
@@ -765,10 +758,7 @@ test('massInsertImageTags() clears the identity map, so a later find() sees the 
         expect($em->find(ImageTagEntity::class, $key))->toBeNull();
 
         $repo->massInsertImageTags([
-            [
-                'image_id' => 4,
-                'tag_id' => $tagId->value,
-            ],
+            new ImageTagPair(imageId: 4, tagId: $tagId->value),
         ]);
 
         expect($em->find(ImageTagEntity::class, $key))->not->toBeNull();

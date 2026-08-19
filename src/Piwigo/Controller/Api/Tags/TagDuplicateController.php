@@ -15,6 +15,7 @@ use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\Event\RenderTagUrl;
+use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -79,10 +80,10 @@ final readonly class TagDuplicateController implements ControllerInterface
 
         $inserts = [];
         foreach ($sourceImageIds as $imageId) {
-            $inserts[] = [
-                'tag_id' => $destinationTagId,
-                'image_id' => $imageId,
-            ];
+            $inserts[] = new ImageTagPair(
+                imageId: $imageId,
+                tagId: $destinationTagId,
+            );
             $this->activityService->record('photo', $imageId, 'edit', [
                 'add-tag' => $destinationTagId,
             ]);

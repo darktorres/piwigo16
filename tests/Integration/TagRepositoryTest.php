@@ -17,6 +17,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\Projection\ImageTagLink;
+use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
@@ -346,14 +347,8 @@ final class TagRepositoryTest extends IntegrationTestCase
         // brand-new tag id to them gives an exact, collision-proof count.
         $tagId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), 'p18-test-' . bin2hex(random_bytes(4)));
         $this->repo->massInsertImageTags([
-            [
-                'image_id' => 4,
-                'tag_id' => $tagId->value,
-            ],
-            [
-                'image_id' => 5,
-                'tag_id' => $tagId->value,
-            ],
+            new ImageTagPair(imageId: 4, tagId: $tagId->value),
+            new ImageTagPair(imageId: 5, tagId: $tagId->value),
         ]);
 
         try {

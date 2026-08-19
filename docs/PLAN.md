@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) landed, full validation pass still owed | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) landed, full validation pass still owed; Batches 4–9 scoped (picture/index.latte fragments, menubar, tabsheet, calendar, small standalone pages), not yet executed; mail domain identified as an unphased gap | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -1954,6 +1954,195 @@ each conversion this batch verified only by `php -l` plus the
 narrative-docblock grep sweep at commit time, not the full
 `lint:latte`/`analyse:phpstan`/`lint:php`/`deptrac`/`test:*` gate list.
 That full pass is still owed before this batch can be marked verified.
+
+**Batches 4–9 (scoped, not yet executed)**: the remaining 44
+`TemplatePageContext`-implementing classes, traced one by one against
+their real caller and real template body — not assumed from class
+names — to find which are genuine page-family work versus P41 shell
+territory versus something else entirely. Two corrections this pass
+found in what Batch 3's own text claimed:
+
+- **The `ADMIN_CONTENT` pool wasn't actually exhausted.**
+  `Admin\Integrity\CheckIntegrity.php:272` produces admin page content
+  via a third call shape neither swept: `Template::concat('ADMIN_CONTENT',
+  $template->parse('check_integrity.latte', true))`, not
+  `assignVarFromTemplate('ADMIN_CONTENT', …)`. Re-grepping for every
+  remaining `->parse(`/`assignVarFromTemplate(`/`->pparse(` call site
+  app-wide (not just the one `ADMIN_CONTENT` shape) is what surfaced
+  this and everything below.
+- **`themes/default/template/search.latte` and `search_rules.latte`
+  are dead code**, not conversion candidates. `SearchController`'s own
+  docblock says it only builds a `$search` descriptor and redirects,
+  never renders; a repo-wide grep for `'search.latte'`/`search_rules`
+  found zero real callers anywhere in `src/` or cross-template
+  `{include}`. Flagged for a deletion review, not folded into any
+  batch below.
+
+**Batch 4 — Picture page's remaining ambient fragments.** All 5 fold
+directly onto the existing `PictureView` as new scalar/array
+properties — no new template or nested `Renderer::render()` call
+needed, since none of them own a separate template file of their own:
+`PictureCommentsOrderPageContext` (`orderUrl`/`orderTitle`, 2 scalars),
+`PictureCommentAddPageContext` (`commentAdd`, one raw associative
+array — its own docblock already says "not a fixed structural shape
+worth minting individual properties for"), `PictureMetadataPageContext`,
+`PictureRateSummaryPageContext`, `PictureRatingFormPageContext` — each
+has exactly one caller (`PictureMetadataRenderer`/`PictureRateRenderer`
+respectively). The one real exception: `PictureCommentRenderer`'s own
+use of `comment_list.latte` (`assignVarFromTemplate('COMMENT_LIST',
+'comment_list.latte')`) should switch to the `CommentListView` class
+that **already exists** — built for `CommentsController`'s own,
+separate, already-converted use of the same template — and fold the
+rendered `Html` onto `PictureView` as a new property, deleting
+`PictureCommentListPageContext`.
+
+**Batch 5 — small, bounded, 1–2-caller fragments.**
+`check_integrity.latte` (2 callers: `IntroSubController`'s dashboard
+page, `MaintenanceActionDispatcher`) — convert to `CheckIntegrityView`,
+fold the rendered `Html` in via `Template::concat('ADMIN_CONTENT', ...)`
+the same way, just with a `Renderer::render()` call producing the
+string instead of `Template::parse()`. `no_photo_yet.latte`
+(`NoPhotoYetRenderer`, already has its own `Request`/`Event`
+scaffolding — the 2 context variants, `NoPhotoYetAdminPageContext`/
+`NoPhotoYetGuestPageContext`, merge into one `NoPhotoYetView`). The
+admin theme's own `popuphelp.latte` (`AdminPopuphelpController`,
+constructing `AdminPopuphelpPlaceholdersPageContext()` with zero
+constructor args) — the front-end `popuphelp.latte`'s own `PopuphelpView`
+is direct precedent for the shape, since Piwigo's theme-chain
+resolves the same bare filename to different physical files per theme.
+`redirect.latte` (`RedirectService`'s crash-path fallback) is a
+candidate too, but optional/lower-priority — it renders outside normal
+request flow, so treat it with the same extra care as any other
+error-path code, not folded in casually.
+
+**Batch 6 — `index.latte`'s remaining ambient contributors.**
+`thumbnails.latte` (`CategoryDefaultRenderer`, one
+`CategoryDefaultThumbnailsPageContext`), `mainpage_categories.latte`
+(`CategoryCatsRenderer`, 2 context classes:
+`CategoryCatsPageContext`/`CategoryCatsNavbarPageContext`), the search
+widget fragments (`SearchFilterPageContext`/`SearchAlbumsFoundPageContext`/
+`SearchDateFilterPageContext`/`SearchTagsFoundPageContext`, feeding
+`include/search_filters.inc.latte`, not the dead `search.latte`), and
+`SectionFavoritePageContext`. Same ambient-merge shape as Batch 2's own
+`SelectedTagsView` precedent throughout — each renderer stays a
+sibling contributor to `Template::$vars`, not folded into `IndexView`
+itself.
+
+**Batch 7 — Menubar, smaller than it first looked.** Only 2 real call
+sites construct a `BlockManager` at all (`Menu\MenubarRenderer`, the
+front-end menubar; `Admin\MenubarPageRenderer`, the admin menu editor),
+both routing through the single `BlockManager::apply()` method — that
+one method is the whole choke point, not 29 call sites to audit.
+`menubar.latte`'s own real body (past its `{varType}` prelude) is 9
+lines: `{include $block->template, block: $block, id: $id}` per block
+in a `foreach` — Latte's own native dynamic include, resolved by that
+literal string field on `DisplayBlock`, with **no** `Renderer`/
+`#[Template]`-attribute lookup involved (that reflection path only
+fires for `Renderer::render(View)` calls; a bare `{include $variable}`
+never touches it). Each of the 7 sub-block templates
+(`menubar_links.latte`, `menubar_categories.latte`,
+`menubar_related_categories.latte`, `menubar_tags.latte`,
+`menubar_specials.latte`, `menubar_menu.latte`,
+`menubar_identification.latte`) receives exactly the same 2-variable
+isolated scope — `block: DisplayBlock, id: string` — confirmed by
+grepping the actual `{include}` call, not assumed from the old
+`{varType}` prelude's corpus-wide noise. `DisplayBlock` is already a
+real typed class, not a raw array, so each sub-block's own tiny View
+is a 2-property wrapper around it. `menubar.latte` itself becomes
+`{templateType MenubarView}` with one property, `blocks: list<DisplayBlock>`
+(what `MenubarBlocksPageContext` already carries); `BlockManager::apply()`
+renders it via `Renderer::render()` and assigns the resulting `Html`
+into the same ambient `$var` (`'MENUBAR'`) it does today, so every
+already-converted page that prints `$MENUBAR` needs no change at all.
+`MenubarIdentificationPageContext` needs a follow-up check at
+implementation time: `DisplayBlock::$data` is declared `mixed` by
+design (genuinely polymorphic per block type), so confirm what shape
+it actually holds for the identification block specifically before
+assuming it folds the same simple way.
+
+**Batch 8 — Tabsheet, same shape as menubar.** `Tabsheet::assign()`
+is the single choke point (constructing `new Tabsheet(...)` happens at
+29 call sites, but they all just call `->assign($currentTemplate)` —
+none of them touch template rendering directly). `tabsheet.latte`'s
+real body needs exactly 2 variables, `$tabsheet` (list of
+`{url, caption}`) and `$tabsheet_selected` — both already lowercase,
+no further renaming needed. One wrinkle: `Tabsheet`'s own constructor
+takes a `$name` that defaults to `'TABSHEET'` but is caller
+-overridable, and `assign()` uses `$this->name` as the ambient
+`$var` it assigns into — confirm at implementation time whether any of
+the 29 call sites actually override it away from the default before
+assuming every call site's output lands in the same well-known var.
+
+**Batch 9 — Calendar.** `month_calendar.latte` is never rendered via
+`Template::parse()`/`assignVarFromTemplate()` at all —
+`CalendarRenderer` only ever passes its filename as a **string value**
+(`CalendarChronologyPageContext::$fileChronologyView`), which whatever
+consumes that ambient var (`index.latte`'s own body) turns into its
+own `{include $FILE_CHRONOLOGY_VIEW}` — the same dynamic-include-by
+-ambient-var shape as Batch 7's menubar blocks, just one level up.
+Convert the same way: `{templateType MonthCalendarView}` on the
+template, no `Renderer::render()` call needed from `CalendarRenderer`
+itself.
+
+**Resolved open question: `{templateType}` on include-only partials.**
+Last turn's scoping flagged this as unresolved for
+`navigation_bar.latte`/`picture_nav_buttons.latte`/`infos_errors.latte`.
+Checked directly: `navigation_bar.latte`'s real body only references
+`$navbar` (one array), and its 7 real call sites
+(`{include 'navigation_bar.latte', navbar: $cats_navbar}` in
+`index.latte`, `picture.latte`, `comments.latte`, and 3 admin
+templates) each pass exactly that one variable — confirming Latte's
+`{include}` here uses isolated scope, not full parent-scope
+inheritance, the same way Batch 7's `{include $block->template, block:
+..., id: ...}` does. `{templateType}` is still meaningful and worth
+doing here: the round-trip check only requires the declared class to
+implement `View` and carry a matching `#[Template]` attribute pointing
+back at the same file — nothing requires `Renderer::render()` to ever
+actually be called for it. So these become **contract-only**
+conversions: a tiny `View` class + `{templateType}` on the template,
+with zero `Renderer`/`Html`-wrapping PHP change, purely to let
+`VariableMapBuilder`'s reflection branch replace the corpus-wide
+fallback-union noise these templates currently carry (`navigation_bar.latte`'s
+own `{varType}` prelude, for instance, declares `$watermark`/
+`$watermark_files`/`$warning_tags` and dozens more names it never
+actually references). Same treatment applies to `picture_nav_buttons.latte`
+and `infos_errors.latte` once their own real call-site variables are
+confirmed the same way at implementation time.
+
+**Mail domain — a real, unphased gap, not folded into any batch
+above.** `MailService::getMailTemplate()` constructs a wholly separate
+`Template` instance per send, rooted at `template/mail/{format}` —
+14 real files under `themes/default/template/mail/text/{plain,html}/`
+(`header.latte`/`footer.latte`/`cat_group_info.latte`/
+`notification_by_mail.latte`/`notification_admin.latte`, plus
+`mail-css-{clear,dark}.latte`/`global-mail-css.latte` for the HTML
+format only), none carrying `{templateType}` yet, no shared
+header/footer-as-web-chrome concept and no `AdminShell` dispatch to
+piggyback on. The 6 remaining `TemplatePageContext` classes this
+touches (`MailHeaderPageContext`, `MailRuntimeTemplatePageContext`,
+`MailTitlePageContext`, `NbmMailContentPageContext`,
+`NbmNewsMailContext`, `NbmSubscribeActionMailContext`) all feed this
+same separate pipeline. `docs/PLAN.md`'s own P0–P54 table has no phase
+covering it. Left as an open decision for whoever picks this up next:
+fold it in as its own P40 sub-track, or give it a real phase number —
+not decided here.
+
+**Confirmed P41 (shell) scope, not new P40 work**: `header.latte`/
+`footer.latte`/`admin.latte` and their context classes
+(`PageHeaderPageContext`, `PageTailPageContext`,
+`AdminShellFramePageContext`, `AdminShellPostDispatchPageContext`,
+`AdminContentPageContext`, `AlbumSubControllerPageContext`,
+`CanonicalUrlPageContext`, `HeaderMessagesPageContext` — assigned by
+`Bootstrap\RequestBootstrap` itself, before any controller runs —
+and `PageMessagesContext`, assigned by `HtmlService` for the same
+header message banner). `install.latte` is already named in P41's own
+text below ("`InstallWizard` stop[s] echoing"), so `InstallRenderPageContext`
+is not new scope either. The 4 `BatchManager*` ambient contributors
+(`FilterPanelPageContext`, `BatchManagerFilterOptionsPageContext`,
+`BatchManagerNoSearchResultsPageContext`, `BatchManagerSearchDebugPageContext`)
+are a deliberate design choice already established in Batch 3 (ambient
+merge into the already-converted `batch_manager_{unit,global}.latte`),
+not a gap — converting them is optional future polish, not blocking.
 
 **P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
 lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's

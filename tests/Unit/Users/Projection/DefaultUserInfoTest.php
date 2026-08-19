@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\Projection\DefaultUserInfo;
 
 /**
@@ -41,7 +43,7 @@ test('fromArray narrows every column to its real type', function (): void {
     expect($info->nbImagePage)
         ->toBe(20)
         ->and($info->language)
-        ->toBe('en_US')
+        ->toEqual(LangCode::from('en_US'))
         ->and($info->expand)
         ->toBeTrue()
         ->and($info->showNbComments)
@@ -51,7 +53,7 @@ test('fromArray narrows every column to its real type', function (): void {
         ->and($info->recentPeriod)
         ->toBe(7)
         ->and($info->theme)
-        ->toBe('default')
+        ->toEqual(ThemeId::from('default'))
         ->and($info->enabledHigh)
         ->toBeTrue()
         ->and($info->level)
@@ -75,7 +77,7 @@ test('fromArray defaults absent scalar columns to their zero value', function ()
     expect($info->nbImagePage)
         ->toBe(0)
         ->and($info->language)
-        ->toBe('')
+        ->toBeNull()
         ->and($info->expand)
         ->toBeFalse()
         ->and($info->showNbComments)
@@ -85,7 +87,7 @@ test('fromArray defaults absent scalar columns to their zero value', function ()
         ->and($info->recentPeriod)
         ->toBe(0)
         ->and($info->theme)
-        ->toBe('')
+        ->toBeNull()
         ->and($info->enabledHigh)
         ->toBeFalse()
         ->and($info->level)

@@ -9,7 +9,9 @@ use InvalidArgumentException;
 use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
@@ -20,6 +22,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Sort\UserSortField;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Users\Projection\UserInfoInsertRow;
 use Piwigo\Users\Projection\UserListing;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserRepository;
@@ -141,11 +144,11 @@ final class UserRepositoryTest extends IntegrationTestCase
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
 
-        $this->repo->insertUserInfos([$id], [
-            'status' => 'normal',
-            'registration_date' => '2026-01-01 00:00:00',
-            'level' => 0,
-        ]);
+        $this->repo->insertUserInfos([$id], new UserInfoInsertRow(
+            status: 'normal',
+            registrationDate: '2026-01-01 00:00:00',
+            level: 0,
+        ));
 
         $row = $this->repo->findDefaultUserInfoRow($id);
 
@@ -160,29 +163,28 @@ final class UserRepositoryTest extends IntegrationTestCase
         // expand/show_nb_comments/show_nb_hits/
         // enabled_high/last_visit_from_history are real tinyint(1)
         // columns, and UserService::createUserInfos() hands
-        // insertUserInfos() a row straight from
-        // Projection\UserInfo::toArray() -- real PHP bool, not the old
-        // enum('true','false') string. setParameter() with no explicit
-        // type binds through mysqli as a plain string, and mysqli's own
-        // string-cast of `false` is '' (PHP's own (string) false), which
-        // STRICT_TRANS_TABLES rejects as an invalid integer -- confirmed
-        // against a real tinyint(1) column before this test was written.
-        // `false` (not `true`) is the reproducing value: `(string) true`
-        // is '1', a valid numeric string, so only the `false` case ever
-        // surfaced this.
+        // insertUserInfos() a row via UserInfoInsertRow -- real PHP bool,
+        // not the old enum('true','false') string. setParameter() with no
+        // explicit type binds through mysqli as a plain string, and
+        // mysqli's own string-cast of `false` is '' (PHP's own (string)
+        // false), which STRICT_TRANS_TABLES rejects as an invalid integer
+        // -- confirmed against a real tinyint(1) column before this test
+        // was written. `false` (not `true`) is the reproducing value:
+        // `(string) true` is '1', a valid numeric string, so only the
+        // `false` case ever surfaced this.
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
 
-        $this->repo->insertUserInfos([$id], [
-            'status' => 'normal',
-            'registration_date' => '2026-01-01 00:00:00',
-            'level' => 0,
-            'expand' => false,
-            'show_nb_comments' => false,
-            'show_nb_hits' => false,
-            'enabled_high' => true,
-            'last_visit_from_history' => false,
-        ]);
+        $this->repo->insertUserInfos([$id], new UserInfoInsertRow(
+            status: 'normal',
+            expand: false,
+            showNbComments: false,
+            showNbHits: false,
+            registrationDate: '2026-01-01 00:00:00',
+            enabledHigh: true,
+            level: 0,
+            lastVisitFromHistory: false,
+        ));
 
         $row = $this->repo->findDefaultUserInfoRow($id);
 
@@ -204,9 +206,7 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->insertUserInfos([], [
-            'status' => 'normal',
-        ]);
+        $this->repo->insertUserInfos([], new UserInfoInsertRow(status: 'normal'));
 
         $countAfter = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -354,9 +354,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // UserInfoField::dqlPropertyAndIsBoolean().
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
-        $this->repo->insertUserInfos([$id], [
-            'status' => 'normal',
-        ]);
+        $this->repo->insertUserInfos([$id], new UserInfoInsertRow(status: 'normal'));
 
         try {
             $this->repo->updateInfosForUsers([$id], [
@@ -396,10 +394,10 @@ final class UserRepositoryTest extends IntegrationTestCase
         $theme = 'p18-test-theme-' . bin2hex(random_bytes(4));
 
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
-        $this->repo->insertUserInfos([$id], [
-            'status' => 'normal',
-            'theme' => $theme,
-        ]);
+        $this->repo->insertUserInfos([$id], new UserInfoInsertRow(
+            status: 'normal',
+            theme: ThemeId::from($theme),
+        ));
 
         $counts = $this->repo->findThemeUsageCounts();
 
@@ -419,10 +417,10 @@ final class UserRepositoryTest extends IntegrationTestCase
         $language = chr(random_int(97, 122)) . chr(random_int(97, 122)) . '_' . chr(random_int(65, 90)) . chr(random_int(65, 90));
 
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
-        $this->repo->insertUserInfos([$id], [
-            'status' => 'normal',
-            'language' => $language,
-        ]);
+        $this->repo->insertUserInfos([$id], new UserInfoInsertRow(
+            status: 'normal',
+            language: LangCode::from($language),
+        ));
 
         try {
             $counts = $this->repo->findLanguageUsageCounts();

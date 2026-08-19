@@ -21,6 +21,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -63,6 +64,7 @@ use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\Projection\NotificationRecipient;
 use Piwigo\Users\Projection\RegistrationOutcome;
 use Piwigo\Users\Projection\UserInfo;
+use Piwigo\Users\Projection\UserInfoInsertRow;
 use Piwigo\Users\Projection\UsernameLookup;
 use Piwigo\Validation\InputValidator;
 use SensitiveParameter;
@@ -385,12 +387,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->groupRepo->addMembers($groupId, [$userId]);
         }
 
-        $override = [];
+        $languageOverride = null;
         if ($this->currentConfig->browserLanguage && ($language = $this->getBrowserLanguage()) !== false) {
-            $override['language'] = $language;
+            $languageOverride = LangCode::tryFrom($language);
         }
 
-        $this->createUserInfos([$userId], $override);
+        $this->createUserInfos([$userId], $languageOverride);
 
         $emailAdminOnNewUserSetting = $this->currentConfig->emailAdminOnNewUser;
         if ($notifyAdmin && $emailAdminOnNewUserSetting !== 'none') {
@@ -415,20 +417,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * @param list<UserId> $userIds
-     * @param array<string, mixed>|null $overrideValues
      */
-    public function createUserInfos(array $userIds, ?array $overrideValues = null): void
+    public function createUserInfos(array $userIds, ?LangCode $languageOverride = null): void
     {
 
         if ($userIds === []) {
             return;
         }
 
-        $defaultUser = $this->getDefaultUserInfo()?->toArray() ?? [];
-
-        if ($overrideValues !== null) {
-            $defaultUser = array_merge($defaultUser, $overrideValues);
-        }
+        $defaultUser = $this->getDefaultUserInfo();
 
         $availablePermissionLevels = $this->currentConfig->availablePermissionLevels;
         // CurrentConfig::webmasterId()/guestId()/defaultUserId() are declared
@@ -445,7 +442,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $defaultUserId = (string) $this->currentConfig->defaultUserId;
 
         foreach ($userIds as $userId) {
-            $level = $defaultUser['level'] ?? 0;
+            $level = $defaultUser->level ?? 0;
             $userIdStr = (string) $userId->value;
             if ($userIdStr === $webmasterId) {
                 $status = 'webmaster';
@@ -458,23 +455,29 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 $status = 'normal';
             }
 
-            $row = array_merge(
-                $defaultUser,
-                [
-                    'status' => $status,
-                    // Env::now() respects the frozen test-mode clock the
-                    // same way pwg_activity()'s own timestamp does --
-                    // real behavior outside test mode is unaffected.
-                    'registration_date' => Env::now()
-                        ->format('Y-m-d H:i:s'),
-                    // Otherwise relies on the schema's own DEFAULT
-                    // CURRENT_TIMESTAMP, which reads the real DB-server
-                    // clock -- invisible to Env::now()'s freeze, same
-                    // reasoning as registration_date above.
-                    'lastmodified' => Env::now()
-                        ->format('Y-m-d H:i:s'),
-                    'level' => $level,
-                ]
+            // Env::now() respects the frozen test-mode clock the same way
+            // pwg_activity()'s own timestamp does -- real behavior outside
+            // test mode is unaffected. Otherwise lastmodified relies on the
+            // schema's own DEFAULT CURRENT_TIMESTAMP, which reads the real
+            // DB-server clock -- invisible to Env::now()'s freeze.
+            $now = Env::now()->format('Y-m-d H:i:s');
+
+            $row = new UserInfoInsertRow(
+                nbImagePage: $defaultUser?->nbImagePage,
+                status: $status,
+                language: $languageOverride ?? $defaultUser?->language,
+                expand: $defaultUser?->expand,
+                showNbComments: $defaultUser?->showNbComments,
+                showNbHits: $defaultUser?->showNbHits,
+                recentPeriod: $defaultUser?->recentPeriod,
+                theme: $defaultUser?->theme,
+                registrationDate: $now,
+                enabledHigh: $defaultUser?->enabledHigh,
+                level: $level,
+                activationKey: $defaultUser?->activationKey,
+                activationKeyExpire: $defaultUser?->activationKeyExpire,
+                lastmodified: $now,
+                preferences: $defaultUser?->preferences,
             );
 
             $this->repo->insertUserInfos([$userId], $row);
@@ -909,10 +912,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getDefaultTheme(): string
     {
-        $theme = $this->getDefaultUserInfo()?->theme;
-        if ($theme === null || $theme === '' || $theme === '0') {
-            $theme = AppInfo::DEFAULT_TEMPLATE;
-        }
+        $theme = $this->getDefaultUserInfo()?->theme
+            ->value ?? AppInfo::DEFAULT_TEMPLATE;
         if (ThemeCatalog::checkThemeInstalled($theme, $this->paths, $this->currentConfig)) {
             return $theme;
         }
@@ -928,8 +929,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     #[Override]
     public function getDefaultLanguage(): string
     {
-        $language = $this->getDefaultUserInfo()?->language;
-        return ($language === null || $language === '' || $language === '0') ? AppInfo::DEFAULT_LANGUAGE : $language;
+        return $this->getDefaultUserInfo()?->language
+            ->value ?? AppInfo::DEFAULT_LANGUAGE;
     }
 
     /**

@@ -718,16 +718,7 @@
 {do combineScript(id: 'intro', load: 'footer', require: 'jquery.cluetip,page-data', path: 'themes/admin/default/js/intro.js')}
 {do combineScript(id: 'intro_tooltips', load: 'footer', path: 'themes/admin/default/js/intro_tooltips.js')}
 
-{capture $tmpHtmlStyle}
-.eiw .messages ul li {
-  list-style-type:none !important;
-}
-
-.eiw .messages .eiw-icon {
-  margin-right:10px !important;
-}
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'intro', path: 'themes/admin/default/css/pages/intro.css')}
 
 <h2>{='Piwigo Administration'|translate}</h2>
 
@@ -812,7 +803,7 @@
     > {='Activity peak in the last weeks'|translate}</div>
     <div
       class="activity-chart"
-      style="grid-template-rows: repeat({=count($ACTIVITY_CHART_DATA) + 1}, 5vw);"
+      style="--activity-chart-rows: {=count($ACTIVITY_CHART_DATA) + 1}"
     >
       {foreach $ACTIVITY_CHART_DATA as $WEEK_NUMBER => $WEEK_ACTIVITY}
         <div
@@ -822,18 +813,18 @@
         <span
           n:foreach="$WEEK_ACTIVITY as $DAY_NUMBER => $SIZE"
           class="activity_tooltips"
+          style="{if $SIZE != 0}--size-in-unit: {=$SIZE / $ACTIVITY_CHART_NUMBER_SIZES * 5 + 1}vw{/if}"
         >
           {if $SIZE != 0}
             {var $SIZE_IN_UNIT = $SIZE / $ACTIVITY_CHART_NUMBER_SIZES * 5 + 1}
             {var $OPACITY_IN_UNIT = $SIZE / $ACTIVITY_CHART_NUMBER_SIZES * 0.6 + 0.2}
             <div
               id="day{$WEEK_NUMBER}-{$DAY_NUMBER}"
-              style="height:{$SIZE_IN_UNIT}vw;width:{$SIZE_IN_UNIT}vw;"
+              class="activity-day-cell"
             ></div>
             <p
               n:if="$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]['number'] != 0"
               class="tooltip"
-              style="transform: translate(-50%,{=$SIZE_IN_UNIT / 2}vw);"
             >
               <span class="tooltip-arrow"></span>
               <span class="tooltip-header">
@@ -904,7 +895,7 @@
       <div></div>
       <div n:foreach="$DAY_LABELS as $day" class="col-legend">{$day} <div
           class="line-vertical"
-          style="height: {=count($ACTIVITY_CHART_DATA) * 100 - 50}%;"
+          style="--line-height: {=count($ACTIVITY_CHART_DATA) * 100 - 50}%"
         ></div></div>
     </div>
 
@@ -919,7 +910,7 @@
       <span
         n:foreach="$STORAGE_CHART_DATA as $type => $details"
         data-type="storage-{$type}"
-        style="width:{if $STORAGE_TOTAL > 0}{=$details['total']['filesize'] / $STORAGE_TOTAL * 100}{else}0{/if}%"
+        style="--storage-width: {if $STORAGE_TOTAL > 0}{=$details['total']['filesize'] / $STORAGE_TOTAL * 100}{else}0{/if}%"
       >
         <p>{if $STORAGE_TOTAL > 0}{=round($details['total']['filesize'] / $STORAGE_TOTAL * 100)}{else}0{/if}%</p>
       </span>

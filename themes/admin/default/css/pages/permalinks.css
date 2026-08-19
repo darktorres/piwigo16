@@ -1,0 +1,35 @@
+#showAddPermalink {
+  text-align: left;
+  margin-left: 1em;
+  margin-top: 0;
+}
+
+form fieldset p {
+  margin: 0 0 1em;
+}
+
+form fieldset p.actionButtons {
+  margin-bottom: 0;
+}
+
+[name="permalink"] {
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Beats theme.css's TABLE.table2{margin:0 auto} (higher tag+class specificity). */
+table.table2.permalinks-table {
+  margin: 0;
+}
+
+.permalink-row {
+  line-height: 1.5em;
+}
+
+.centered-cell {
+  text-align: center;
+}
+
+.hit-history-spacer {
+  width: 5px;
+}

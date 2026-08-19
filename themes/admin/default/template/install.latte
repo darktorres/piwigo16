@@ -716,107 +716,7 @@
     <!-- END get_combined_scripts -->
 
     {do combineScript(id: 'jquery', path: 'themes/default/js/jquery.min.js')}
-
-    <style
-      type="text/css"
-    >
-body {
-  font-size:12px;
-}
-
-#content {
-  width: 800px;
-  margin: auto;
-  text-align: center;
-  padding:0;
-  background-color:transparent !important;
-  border:none;
-}
-
-#theHeader {
-  display: block;
-  background:url("themes/admin/default/images/piwigo-orange.svg") no-repeat scroll center 20px transparent;
-  height:100px;
-  background-size: 300px;
-}
-
-fieldset {
-  margin-top:20px;
-  background-color:#f1f1f1;
-}
-
-legend {
-  font-weight:bold;
-  letter-spacing:2px;
-}
-
-.content h2 {
-  display:block;
-  font-size:20px;
-  text-align:center;
-  /* margin-top:5px; */
-}
-
-table.table2 {
-  width: 100%;
-  border:0;
-}
-
-table.table2 td {
-  text-align: left;
-  padding: 5px 2px;
-}
-
-table.table2 td.fieldname {
-  font-weight:normal;
-}
-
-table.table2 td.fielddesc {
-  padding-left:10px;
-  font-style:italic;
-}
-
-input[type="submit"], input[type="button"], a.bigButton {
-  font-size:14px;
-  font-weight:bold;
-  letter-spacing:2px;
-  border:none;
-  background-color:#666666;
-  color:#fff;
-  padding:5px;
-  -moz-border-radius:5px;
-  -webkit-border-radius:5px;
-  border-radius:5px;
-}
-
-input[type="submit"]:hover, input[type="button"]:hover, a.bigButton:hover {
-  background-color:#ff7700;
-  color:white;
-}
-
-input[type="text"], input[type="password"], select {
-  background-color:#ddd;
-  border:2px solid #ccc;
-  -moz-border-radius:5px;
-  -webkit-border-radius:5px;
-  border-radius:5px;
-  padding:2px;
-}
-
-input[type="text"]:focus, input[type="password"]:focus, select:focus {
-  background-color:#fff;
-  border:2px solid #ff7700;
-}
-
-.sql_content, .infos a {
-  color: #ff3363;
-}
-
-.errors {
-  padding-bottom:5px;
-}
-
-</style>
+    {do combineCss(id: 'install', path: 'themes/admin/default/css/pages/install.css')}
 
     {do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
     {do combineScript(id: 'install', load: 'footer', require: 'jquery.cluetip', path: 'themes/admin/default/js/install.js')}
@@ -850,7 +750,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
               <table class="table2">
                 <tr>
                   <td
-                    style="width: 30%"
+                    class="table2-label-col"
                   >{='Default gallery language'|translate}</td>
                   <td>
                     <select
@@ -870,8 +770,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
               <table class="table2">
                 <tr>
                   <td
-                    style="width: 30%;"
-                    class="fieldname"
+                    class="table2-label-col fieldname"
                   >{='Database type'|translate}</td>
                   <td>
                     <select
@@ -899,8 +798,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
                 </tr>
                 <tr>
                   <td
-                    style="width: 30%;"
-                    class="fieldname"
+                    class="table2-label-col fieldname"
                   >{='Host'|translate}</td>
                   <td><input
                       type="text"
@@ -966,8 +864,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
               <table class="table2">
                 <tr>
                   <td
-                    style="width: 30%;"
-                    class="fieldname"
+                    class="table2-label-col fieldname"
                   >{='Username'|translate}</td>
                   <td><input
                       type="text"
@@ -1044,7 +941,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
               </table>
             </fieldset>
 
-            <div style="text-align:center; margin:20px 0 10px 0">
+            <div class="install-submit-row">
               <input
                 class="submit"
                 type="submit"
@@ -1062,7 +959,7 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus {
           </p>
         {/if}
       </div> {* content *}
-      <div style="text-align: center">{$L_INSTALL_HELP|noescape}</div>
+      <div class="install-help-row">{$L_INSTALL_HELP|noescape}</div>
     </div> {* the_page *}
 
     <!-- BEGIN get_combined_scripts -->

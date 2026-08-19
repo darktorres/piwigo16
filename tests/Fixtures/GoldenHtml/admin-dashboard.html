@@ -25,14 +25,6 @@
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
 
-<style type="text/css">
-.eiw .messages ul li {
-  list-style-type:none !important;
-}
-
-.eiw .messages .eiw-icon {
-  margin-right:10px !important;
-}</style>
   </head>
 
   <body id="theAdminPage">
@@ -293,7 +285,7 @@
     > Activity peak in the last weeks</div>
     <div
       class="activity-chart"
-      style="grid-template-rows: repeat(5, 5vw);"
+      style="--activity-chart-rows: 5"
     >
       <div
           id="week-0-legend"
@@ -301,30 +293,37 @@
         ><div>Week 28</div></div>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <div
@@ -333,30 +332,37 @@
         ><div>Week 29</div></div>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <div
@@ -365,30 +371,37 @@
         ><div>Week 30</div></div>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <div
@@ -397,34 +410,39 @@
         ><div>Week 31</div></div>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <span
           class="activity_tooltips"
+          style="--size-in-unit: 6vw"
         >
         <div
               id="day3-6"
-              style="height:6vw;width:6vw;"
+              class="activity-day-cell"
             ></div>
         <p
               class="tooltip"
-              style="transform: translate(-50%,3vw);"
             >
           <span class="tooltip-arrow"></span>
           <span class="tooltip-header">
@@ -519,36 +537,37 @@
       </span>
       <span
           class="activity_tooltips"
+          style=""
         >
       </span>
       <div></div>
       <div class="col-legend">Mon <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
       <div class="col-legend">Tue <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
       <div class="col-legend">Wed <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
       <div class="col-legend">Thu <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
       <div class="col-legend">Fri <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
       <div class="col-legend">Sat <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
       <div class="col-legend">Sun <div
           class="line-vertical"
-          style="height: 350%;"
+          style="--line-height: 350%"
         ></div></div>
     </div>
 
@@ -562,7 +581,7 @@
     <div class="storage-chart">
       <span
         data-type="storage-Photos"
-        style="width:100%"
+        style="--storage-width: 100%"
       >
         <p>100%</p>
       </span>

@@ -697,6 +697,7 @@
 
 {do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
+{do combineCss(id: 'picture_modify', path: 'themes/admin/default/css/pages/picture_modify.css')}
 
 {do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
 {do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
@@ -760,15 +761,13 @@
     <img
       src="{$PATH}"
       alt="{='Thumbnail'|translate}"
-      class="svg-image other-image-format"
-      style="{if $FORMAT}width:100%; max-height:100%; {else}max-width:100%; height:100%;{/if} object-fit:contain;"
+      class="svg-image other-image-format {if $FORMAT}is-portrait{else}is-landscape{/if}"
     >
   {else}
     <img
       src="{$TN_SRC|noescape}"
       alt="{='Thumbnail'|translate}"
-      class="other-image-format"
-      style="{if $FORMAT}width:100%; max-height:100%;{else}max-width:100%; height:100%;{/if} object-fit:contain;"
+      class="other-image-format {if $FORMAT}is-portrait{else}is-landscape{/if}"
     >
   {/if}
   </div>
@@ -881,7 +880,7 @@
         placeholder="{='Type in a search term'|translate}"
         name="represent[]"
         multiple
-        style="width:calc(100% + 2px);"
+        class="wide-selectize-select"
       ></select>
     </p>
 
@@ -895,7 +894,7 @@
         data-create="true"
         name="tags[]"
         multiple
-        style="width:calc(100% + 2px);"
+        class="wide-selectize-select"
       ></select>
     </p>
 
@@ -954,29 +953,3 @@
 
 {include 'include/album_selector.inc.latte'}
 
-<style>
-.selectize-input  .item,
-.selectize-input .item.active {
-  background-image:none !important;
-  background-color: #ffa646 !important;
-  border-color: transparent !important;
-  color: black !important;
-
-  border-radius: 20px !important;
-}
-
-.selectize-input .item .remove,
-.selectize-input .item .remove {
-  background-color: transparent !important;
-  border-top-right-radius: 20px !important;
-  border-bottom-right-radius: 20px !important;
-  color: black !important;
-
-  border-left: 1px solid transparent !important;
-
-}
-.selectize-input .item .remove:hover,
-.selectize-input .item .remove:hover {
-  background-color: #ff7700 !important;
-}
-</style>

@@ -1,0 +1,52 @@
+.sizeEnable {
+  width: 50px;
+}
+
+.sizeEnable .icon-ok {
+  position: relative;
+  left: 2px;
+}
+
+.sizeEditForm {
+  margin: 0 0 10px 20px;
+}
+
+.sizeEdit {
+  display: none;
+}
+
+/* Beats .sizeEdit{display:none} above (equal specificity, cascade-order risk). */
+.sizeEdit.u-block {
+  display: block;
+}
+
+.multi-sizes-table {
+  margin: 0;
+}
+
+.showDetails {
+  padding: 0;
+}
+
+.sizeDetails {
+  display: none;
+  margin-left: 10px;
+}
+
+/* Beats .sizeDetails{display:none} above (equal specificity, cascade-order risk). */
+.sizeDetails.u-inline {
+  display: inline;
+}
+
+p.sizeDetails {
+  margin: 10px 0 0;
+}
+
+/* Beats .sizeDetails{display:none} above (higher specificity: tag+class). */
+p.sizeDetails.u-block {
+  display: block;
+}
+
+.sizeEditOpen {
+  margin-left: 10px;
+}

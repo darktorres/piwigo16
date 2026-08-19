@@ -257,8 +257,7 @@
   <img
       src="action.php?id=1&amp;part=e"
       alt="Thumbnail"
-      class="other-image-format"
-      style="width:100%; max-height:100%; object-fit:contain;"
+      class="other-image-format is-portrait"
     >
   </div>
   <div id='picture-content'>
@@ -361,7 +360,7 @@
         placeholder="Type in a search term"
         name="represent[]"
         multiple
-        style="width:calc(100% + 2px);"
+        class="wide-selectize-select"
       ></select>
     </p>
 
@@ -375,7 +374,7 @@
         data-create="true"
         name="tags[]"
         multiple
-        style="width:calc(100% + 2px);"
+        class="wide-selectize-select"
       ></select>
     </p>
 
@@ -540,32 +539,6 @@
   </div>
 </div>
 
-<style>
-.selectize-input  .item,
-.selectize-input .item.active {
-  background-image:none !important;
-  background-color: #ffa646 !important;
-  border-color: transparent !important;
-  color: black !important;
-
-  border-radius: 20px !important;
-}
-
-.selectize-input .item .remove,
-.selectize-input .item .remove {
-  background-color: transparent !important;
-  border-top-right-radius: 20px !important;
-  border-bottom-right-radius: 20px !important;
-  color: black !important;
-
-  border-left: 1px solid transparent !important;
-
-}
-.selectize-input .item .remove:hover,
-.selectize-input .item .remove:hover {
-  background-color: #ff7700 !important;
-}
-</style>
 
 </div>
 </div>

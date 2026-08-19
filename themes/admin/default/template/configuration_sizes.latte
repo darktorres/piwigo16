@@ -701,17 +701,7 @@
 {do exposeString('Height')}
 {do combineScript(id: 'configuration_sizes', load: 'footer', require: 'common,jquery.confirm,page-data', path: 'themes/admin/default/js/configuration_sizes.js')}
 
-{capture $tmpHtmlStyle}
-.sizeEnable { width:50px; }
-.sizeEnable .icon-ok { position:relative; left:2px; }
-.sizeEditForm { margin:0 0 10px 20px; }
-.sizeEdit { display:none; }
-#sizesConf table { margin:0; }
-.showDetails { padding:0; }
-.sizeDetails { display:none;margin-left:10px; }
-.sizeEditOpen { margin-left:10px; }
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'configuration_sizes', path: 'themes/admin/default/css/pages/configuration_sizes.css')}
 
 <form method="post" action="{$F_ACTION|noescape}" class="properties">
   <div id="configContent">
@@ -726,7 +716,7 @@
             type="checkbox"
             name="original_resize"
             disabled="disabled"
-            style="visibility: hidden"
+            class="u-invisible"
           >
           <input
             type="hidden"
@@ -833,13 +823,11 @@
         <a
           href="#"
           id="showDetails"
-          {if isset($ferrors)}
-          style="display:none"
-          {/if}
+          class="{if isset($ferrors)}u-hidden{/if}"
         >{='show details'|translate}</a>
       </div>
 
-      <table style="margin:0">
+      <table class="multi-sizes-table">
         {foreach $derivatives as $type => $d}
           <tr>
             <td>
@@ -866,19 +854,13 @@
 
             <td>
               <span
-                class="sizeDetails"
-                {if isset($ferrors)}
-                style="display:inline"
-                {/if}
+                class="sizeDetails{if isset($ferrors)} u-inline{/if}"
               >{$d['w']} x {$d['h']} {='pixels'|translate}{if $d['crop']}, {='Crop'|translate|lower}{/if}</span>
             </td>
 
             <td>
               <span
-                class="sizeDetails"
-                {if isset($ferrors) and !isset($ferrors[$type])}
-                style="display:inline"
-                {/if}
+                class="sizeDetails{if isset($ferrors) and !isset($ferrors[$type])} u-inline{/if}"
               >
                 <a
                   href="#"
@@ -891,10 +873,7 @@
 
           <tr
             id="sizeEdit-{$type}"
-            class="sizeEdit"
-            {if isset($ferrors[$type])}
-            style="display:block"
-            {/if}
+            class="sizeEdit{if isset($ferrors[$type])} u-block{/if}"
           >
             <td colspan="3">
               <table class="sizeEditForm">
@@ -985,8 +964,7 @@
       </table>
 
       <p
-        style="margin:10px 0 0 0;{if isset($ferrors)} display:block;{/if}"
-        class="sizeDetails"
+        class="sizeDetails{if isset($ferrors)} u-block{/if}"
       >
         {='Image Quality'|translate}
         <input
@@ -1006,8 +984,7 @@
         >!</span>
       </p>
       <p
-        style="margin:10px 0 0 0;{if isset($ferrors)} display:block;{/if}"
-        class="sizeDetails"
+        class="sizeDetails{if isset($ferrors)} u-block{/if}"
       >
         <a
           href="{$F_ACTION|noescape}&action=restore_settings&pwg_token={$CSRF_TOKEN}"

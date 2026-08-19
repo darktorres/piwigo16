@@ -691,27 +691,14 @@
 {* END varType *}
 {do exposeData('nb_cats', $nb_cats)}
 {do combineScript(id: 'permalinks', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/permalinks.js')}
-
-<style>
-#showAddPermalink { text-align:left;margin-left:1em;margin-top:0;}
-form fieldset p { margin:0 0 1em 0;}
-form fieldset p.actionButtons { margin-bottom:0}
-</style>
-
-{capture $tmpHtmlStyle}
-[name="permalink"] {
-  width : 100%;
-  max-width : 600px;
-}
-{/capture}
-{do htmlStyle($tmpHtmlStyle)}
+{do combineCss(id: 'permalinks', path: 'themes/admin/default/css/pages/permalinks.css')}
 
 <p id="showAddPermalink"><a
     href="#"
     id="addPermalinkOpen"
   >{='Add/delete a permalink'|translate}</a></p>
 
-<form method="post" action="" id="addPermalink" style="display:none">
+<form method="post" action="" id="addPermalink" class="u-hidden">
   <fieldset>
     <legend>{='Add/delete a permalink'|translate}</legend>
     <p>
@@ -753,7 +740,7 @@ form fieldset p.actionButtons { margin-bottom:0}
   <legend><span
       class="icon-lock icon-blue"
     ></span>{='Permalinks'|translate}</legend>
-  <table class="table2" style="margin:0">
+  <table class="table2 permalinks-table">
     <tr class="throw">
       <td>Id {$SORT_ID|noescape}</td>
       <td>{='Album'|translate} {$SORT_NAME|noescape}</td>
@@ -761,10 +748,9 @@ form fieldset p.actionButtons { margin-bottom:0}
     </tr>
     <tr
       n:foreach="$permalinks as $permalink"
-      class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
-      style="line-height:1.5em;"
+      class="permalink-row {if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
     >
-      <td style="text-align:center;">{$permalink['id']}</td>
+      <td class="centered-cell">{$permalink['id']}</td>
       <td>{$permalink['name']|noescape}</td>
       <td>{$permalink['permalink']}</td>
     </tr>
@@ -777,7 +763,7 @@ form fieldset p.actionButtons { margin-bottom:0}
     ></span>{='Permalink history'|translate} <a
       name="old_permalinks"
     ></a></legend>
-  <table class="table2" style="margin:0">
+  <table class="table2 permalinks-table">
     <tr class="throw">
       <td>Id {$SORT_OLD_CAT_ID|noescape}</td>
       <td>{='Album'|translate}</td>
@@ -785,13 +771,13 @@ form fieldset p.actionButtons { margin-bottom:0}
       <td>{='Deleted on'|translate} {$SORT_OLD_DATE_DELETED|noescape}</td>
       <td>{='Last hit'|translate} {$SORT_OLD_LAST_HIT|noescape}</td>
       <td>{='Hit'|translate} {$SORT_OLD_HIT|noescape}</td>
-      <td style="width:5px;"></td>
+      <td class="hit-history-spacer"></td>
     </tr>
     <tr
       n:foreach="$deleted_permalinks as $permalink"
-      style="line-height:1.5em;"
+      class="permalink-row"
     >
-      <td style="text-align:center;">{$permalink['cat_id']}</td>
+      <td class="centered-cell">{$permalink['cat_id']}</td>
       <td>{$permalink['name']|noescape}</td>
       <td>{$permalink['permalink']}</td>
       <td>{$permalink['date_deleted']}</td>

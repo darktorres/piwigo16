@@ -1,0 +1,33 @@
+.eiw .messages ul li {
+  list-style-type: none !important;
+}
+
+.eiw .messages .eiw-icon {
+  margin-right: 10px !important;
+}
+
+/* Beats theme.css's .activity-chart{grid-template-rows:repeat(4,5vw)} (equal specificity, cascade-order risk). */
+.intro-charts .activity-chart {
+  grid-template-rows: repeat(var(--activity-chart-rows), 5vw);
+}
+
+/* Beats theme.css's .activity-chart span div{height:0;width:0} (higher specificity: 3 classes vs 1 class + 2 tags). */
+.activity-chart .activity_tooltips .activity-day-cell {
+  height: var(--size-in-unit);
+  width: var(--size-in-unit);
+}
+
+/* Scoped to the activity chart's own tooltip only -- a bare .tooltip rule would
+   also reach the unrelated storage-chart tooltips, which don't set --size-in-unit. */
+.activity-chart .tooltip {
+  transform: translate(-50%, calc(var(--size-in-unit) / 2));
+}
+
+/* Beats theme.css's .activity-chart .col-legend .line-vertical{height:250%} (higher specificity: 4 classes vs 3). */
+.intro-charts .activity-chart .col-legend .line-vertical {
+  height: var(--line-height);
+}
+
+.storage-chart span {
+  width: var(--storage-width);
+}

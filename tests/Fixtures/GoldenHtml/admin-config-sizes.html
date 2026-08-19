@@ -25,15 +25,6 @@
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
 
-<style type="text/css">
-.sizeEnable { width:50px; }
-.sizeEnable .icon-ok { position:relative; left:2px; }
-.sizeEditForm { margin:0 0 10px 20px; }
-.sizeEdit { display:none; }
-#sizesConf table { margin:0; }
-.showDetails { padding:0; }
-.sizeDetails { display:none;margin-left:10px; }
-.sizeEditOpen { margin-left:10px; }</style>
   </head>
 
   <body id="theAdminPage">
@@ -257,7 +248,6 @@
   </div> 
 
   
-
 <form method="post" action="admin.php?page=configuration&amp;section=sizes" class="properties">
   <div id="configContent">
     <fieldset id="sizesConf">
@@ -328,11 +318,11 @@
         <a
           href="#"
           id="showDetails"
-          
+          class=""
         >show details</a>
       </div>
 
-      <table style="margin:0">
+      <table class="multi-sizes-table">
         <tr>
           <td>
             <label>
@@ -346,14 +336,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >120 x 120 pixels, crop</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -367,7 +355,6 @@
         <tr
             id="sizeEdit-square"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -415,14 +402,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >144 x 144 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -436,7 +421,6 @@
         <tr
             id="sizeEdit-thumb"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -520,14 +504,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >240 x 240 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -541,7 +523,6 @@
         <tr
             id="sizeEdit-2small"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -625,14 +606,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >432 x 324 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -646,7 +625,6 @@
         <tr
             id="sizeEdit-xsmall"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -730,14 +708,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >576 x 432 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -751,7 +727,6 @@
         <tr
             id="sizeEdit-small"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -828,14 +803,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >792 x 594 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -849,7 +822,6 @@
         <tr
             id="sizeEdit-medium"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -933,14 +905,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >1008 x 756 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -954,7 +924,6 @@
         <tr
             id="sizeEdit-large"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -1038,14 +1007,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >1224 x 918 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -1059,7 +1026,6 @@
         <tr
             id="sizeEdit-xlarge"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -1143,14 +1109,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >1656 x 1242 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -1164,7 +1128,6 @@
         <tr
             id="sizeEdit-xxlarge"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -1246,14 +1209,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >2232 x 1674 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -1267,7 +1228,6 @@
         <tr
             id="sizeEdit-3xlarge"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -1349,14 +1309,12 @@
           <td>
             <span
                 class="sizeDetails"
-                
               >3000 x 2250 pixels</span>
           </td>
 
           <td>
             <span
                 class="sizeDetails"
-                
               >
               <a
                   href="#"
@@ -1370,7 +1328,6 @@
         <tr
             id="sizeEdit-4xlarge"
             class="sizeEdit"
-            
           >
           <td colspan="3">
             <table class="sizeEditForm">
@@ -1437,7 +1394,6 @@
       </table>
 
       <p
-        style="margin:10px 0 0 0;"
         class="sizeDetails"
       >
         Image quality
@@ -1451,7 +1407,6 @@
         > %
       </p>
       <p
-        style="margin:10px 0 0 0;"
         class="sizeDetails"
       >
         <a

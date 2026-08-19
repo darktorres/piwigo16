@@ -25,11 +25,6 @@
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <!-- END get_combined -->
 
-<style type="text/css">
-[name="permalink"] {
-  width : 100%;
-  max-width : 600px;
-}</style>
   </head>
 
   <body id="theAdminPage">
@@ -225,19 +220,12 @@
   </div> 
 
   
-<style>
-#showAddPermalink { text-align:left;margin-left:1em;margin-top:0;}
-form fieldset p { margin:0 0 1em 0;}
-form fieldset p.actionButtons { margin-bottom:0}
-</style>
-
-
 <p id="showAddPermalink"><a
     href="#"
     id="addPermalinkOpen"
   >Add/delete a permalink</a></p>
 
-<form method="post" action="" id="addPermalink" style="display:none">
+<form method="post" action="" id="addPermalink" class="u-hidden">
   <fieldset>
     <legend>Add/delete a permalink</legend>
     <p>
@@ -281,7 +269,7 @@ form fieldset p.actionButtons { margin-bottom:0}
   <legend><span
       class="icon-lock icon-blue"
     ></span>Permalinks</legend>
-  <table class="table2" style="margin:0">
+  <table class="table2 permalinks-table">
     <tr class="throw">
       <td>Id <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;psf=id" title="Sort order">↓</a></td>
       <td>Album <a href="{{BASE_PATH}}/admin.php?page=permalinks" title="Sort order"><em>↓</em></a></td>
@@ -296,7 +284,7 @@ form fieldset p.actionButtons { margin-bottom:0}
     ></span>Permalinks history <a
       name="old_permalinks"
     ></a></legend>
-  <table class="table2" style="margin:0">
+  <table class="table2 permalinks-table">
     <tr class="throw">
       <td>Id <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=cat_id#old_permalinks" title="Sort order">↓</a></td>
       <td>Album</td>
@@ -304,12 +292,12 @@ form fieldset p.actionButtons { margin-bottom:0}
       <td>Deleted on <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=date_deleted#old_permalinks" title="Sort order">↓</a></td>
       <td>Last hit <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=last_hit#old_permalinks" title="Sort order">↓</a></td>
       <td>Hit <a href="{{BASE_PATH}}/admin.php?page=permalinks&amp;dpsf=hit#old_permalinks" title="Sort order">↓</a></td>
-      <td style="width:5px;"></td>
+      <td class="hit-history-spacer"></td>
     </tr>
     <tr
-      style="line-height:1.5em;"
+      class="permalink-row"
     >
-      <td style="text-align:center;">1</td>
+      <td class="centered-cell">1</td>
       <td>
 <a href="index.php?/category/1">Sample Album</a></td>
       <td>old-sample-album</td>

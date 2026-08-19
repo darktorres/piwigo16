@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\DeleteSite;
 use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\ImageOrderPreference;
@@ -205,11 +206,7 @@ test('getCategoryInfo() returns a single-level upperNames for a root category', 
     expect($info)
         ->not->toBeNull();
     expect($info?->upperNames)
-        ->toBe([[
-            'id' => 1,
-            'name' => 'Sample Album',
-            'permalink' => null,
-        ]]);
+        ->toEqual([new CategoryIdNamePermalink(id: 1, name: 'Sample Album', permalink: null)]);
 });
 
 test('getCategoryInfo() resolves upperNames for a nested category', function (): void {
@@ -224,9 +221,9 @@ test('getCategoryInfo() resolves upperNames for a nested category', function ():
     $upperNames = $info->upperNames;
     expect($upperNames)
         ->toHaveCount(2);
-    expect($upperNames[0]['name'])
+    expect($upperNames[0]->name)
         ->toBe('Sample Album')
-        ->and($upperNames[1]['name'])
+        ->and($upperNames[1]->name)
         ->toBe('Nested Sub Album');
 });
 

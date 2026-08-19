@@ -14,6 +14,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryService;
     use Piwigo\Category\Event\DeleteSite;
     use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
+    use Piwigo\Category\Projection\CategoryIdNamePermalink;
     use Piwigo\Category\Projection\ComputedCategoryRow;
     use Piwigo\Category\Projection\ImageOrderPreference;
     use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -317,11 +318,7 @@ namespace Piwigo\Tests\Integration {
             $info = $this->service->getCategoryInfo(1);
 
             self::assertNotNull($info);
-            self::assertSame([[
-                'id' => 1,
-                'name' => 'Sample Album',
-                'permalink' => null,
-            ]], $info->upperNames);
+            self::assertEquals([new CategoryIdNamePermalink(id: 1, name: 'Sample Album', permalink: null)], $info->upperNames);
         }
 
         public function testGetCategoryInfoResolvesUpperNamesForANestedCategory(): void
@@ -333,8 +330,8 @@ namespace Piwigo\Tests\Integration {
             self::assertCount(2, $upperNames);
             $first = $upperNames[0];
             $second = $upperNames[1];
-            self::assertSame('Sample Album', $first['name']);
-            self::assertSame('Nested Sub Album', $second['name']);
+            self::assertSame('Sample Album', $first->name);
+            self::assertSame('Nested Sub Album', $second->name);
         }
 
         public function testGetCategoryInfoCoercesTrueFalseStringColumnsToBool(): void

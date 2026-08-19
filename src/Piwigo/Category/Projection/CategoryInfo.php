@@ -12,7 +12,7 @@ namespace Piwigo\Category\Projection;
 final readonly class CategoryInfo
 {
     /**
-     * @param list<array{id: int, name: string, permalink: ?string}> $upperNames
+     * @param list<CategoryIdNamePermalink> $upperNames
      */
     public function __construct(
         public int $id,
@@ -64,7 +64,7 @@ final readonly class CategoryInfo
             'image_order' => $this->imageOrder,
             'permalink' => $this->permalink,
             'lastmodified' => $this->lastmodified,
-            'upper_names' => $this->upperNames,
+            'upper_names' => array_map(static fn (CategoryIdNamePermalink $row): array => $row->toArray(), $this->upperNames),
         ];
     }
 }

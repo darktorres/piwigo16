@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 
 test('toArray maps every property to its snake_case wire key', function (): void {
@@ -23,16 +24,8 @@ test('toArray maps every property to its snake_case wire key', function (): void
         permalink: 'holidays',
         lastmodified: '2026-08-01 12:00:00',
         upperNames: [
-            [
-                'id' => 1,
-                'name' => 'Root',
-                'permalink' => null,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Trips',
-                'permalink' => 'trips',
-            ],
+            new CategoryIdNamePermalink(id: 1, name: 'Root', permalink: null),
+            new CategoryIdNamePermalink(id: 2, name: 'Trips', permalink: 'trips'),
         ],
     );
 

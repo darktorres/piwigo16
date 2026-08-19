@@ -15,6 +15,7 @@ use Piwigo\Admin\Request\CatListRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
+use Piwigo\Category\Projection\CategoryChildRow;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -178,10 +179,8 @@ final readonly class CatListPageRenderer
             sortOrderChecked: array_shift($sort_orders_checked),
         ));
 
-        $categories = [];
-
+        /** @var array<int, CategoryChildRow> $categories */
         $categories = array_column($categoryService->getChildrenOfParent($parent_id), null, 'id');
-        /** @var array<int|string, array{id: int|string, name: string, permalink: ?string, dir: ?string, rank: int|string|null, status: string}> $categories */
 
         // get the categories containing images directly
         $categories_with_images = [];
@@ -218,7 +217,7 @@ final readonly class CatListPageRenderer
         $tpl_categories = [];
 
         foreach ($categories as $category) {
-            $cat_id = (int) $category['id'];
+            $cat_id = $category->id;
 
             $cat_list_url = $base_url . 'cat_list';
 
@@ -227,7 +226,7 @@ final readonly class CatListPageRenderer
                 $self_url .= '&amp;parent_id=' . $parent_id;
             }
 
-            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category->name, 'admin_cat_list'));
             $tpl_cat =
               [
                   'NAME' => $nameEvent->categoryName,
@@ -235,11 +234,11 @@ final readonly class CatListPageRenderer
                   'NB_SUB_PHOTOS' => $nb_sub_photos[$cat_id] ?? 0,
                   'NB_SUB_ALBUMS' => isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,
                   'ID' => $cat_id,
-                  'RANK' => is_numeric($category['rank']) ? ((int) $category['rank']) * 10 : 0,
+                  'RANK' => ($category->rank ?? 0) * 10,
 
                   'U_JUMPTO' => $this->urlService->makeIndexUrl(
                       [
-                          'category' => $category,
+                          'category' => $category->toArray(),
                       ]
                   ),
 
@@ -248,11 +247,11 @@ final readonly class CatListPageRenderer
                   'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $cat_id,
                   'U_MOVE' => $base_url . 'albums#cat-' . $cat_id,
 
-                  'IS_VIRTUAL' => in_array($category['dir'], [null, '', '0'], true),
+                  'IS_VIRTUAL' => in_array($category->dir, [null, '', '0'], true),
                   'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($cat_id, $this->currentUser),
               ];
 
-            if (in_array($category['dir'], [null, '', '0'], true)) {
+            if (in_array($category->dir, [null, '', '0'], true)) {
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
                 $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . $this->csrfService->getToken();
             } else {

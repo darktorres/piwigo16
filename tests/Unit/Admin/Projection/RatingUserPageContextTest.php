@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Projection\RatingUserPageContext;
+use Piwigo\Rate\Projection\ImageThumbUrl;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
     $context = new RatingUserPageContext(
@@ -18,10 +19,7 @@ test('toArray flattens every property to its real Latte template variable name',
             ],
         ],
         imageUrls: [
-            1 => [
-                'tn' => '/i.php?/1-sq.jpg',
-                'page' => '/picture.php?/1',
-            ],
+            1 => new ImageThumbUrl(tn: '/i.php?/1-sq.jpg', page: '/picture.php?/1'),
         ],
         tnWidth: 120,
         nbElements: 42,

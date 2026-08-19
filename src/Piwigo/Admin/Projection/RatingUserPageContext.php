@@ -6,24 +6,27 @@ namespace Piwigo\Admin\Projection;
 
 use Override;
 use Piwigo\Core\TemplatePageContext;
+use Piwigo\Rate\Projection\ImageThumbUrl;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Admin\RatingUserPageRenderer::render()}. `$ratings`/
- * `$imageUrls` stay loose row shapes: `$ratings` is the same genuinely
- * dynamic, incrementally-accumulated-across-3-mutation-points shape
- * documented on this file's own `avgCompare()`/`countCompare()`/etc.
- * comparators, not a fixed structural shape worth minting its own DTO
- * for here. `$orderByOptions` is always included -- `rating_user.latte`
- * reads `order_by_options` via an unguarded `{html_options}`, matching
- * the original code's own unconditional loop.
+ * {@see \Piwigo\Admin\RatingUserPageRenderer::render()}. `$ratings` stays
+ * a loose row shape -- the same genuinely dynamic,
+ * incrementally-accumulated-across-3-mutation-points shape documented on
+ * this file's own `avgCompare()`/`countCompare()`/etc. comparators, not a
+ * fixed structural shape worth minting its own DTO for here. `$imageUrls`
+ * is a clean, independently-built `{tn, page}` pair per image id -- see
+ * {@see \Piwigo\Rate\Projection\ImageThumbUrl}. `$orderByOptions` is
+ * always included -- `rating_user.latte` reads `order_by_options` via an
+ * unguarded `{html_options}`, matching the original code's own
+ * unconditional loop.
  */
 final readonly class RatingUserPageContext implements TemplatePageContext
 {
     /**
      * @param list<int> $availableRates
      * @param array<string, array<string, mixed>> $ratings
-     * @param array<int, array{tn: string, page: string}> $imageUrls
+     * @param array<int, ImageThumbUrl> $imageUrls
      * @param list<string> $orderByOptions
      */
     public function __construct(
@@ -53,7 +56,7 @@ final readonly class RatingUserPageContext implements TemplatePageContext
             'CONSENSUS_TOP_NUMBER' => $this->consensusTopNumber,
             'available_rates' => $this->availableRates,
             'ratings' => $this->ratings,
-            'image_urls' => $this->imageUrls,
+            'image_urls' => array_map(static fn (ImageThumbUrl $imageUrl): array => $imageUrl->toArray(), $this->imageUrls),
             'TN_WIDTH' => $this->tnWidth,
             'NB_ELEMENTS' => $this->nbElements,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,

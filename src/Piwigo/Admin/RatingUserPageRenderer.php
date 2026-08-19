@@ -16,6 +16,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\Projection\ImageThumbUrl;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Template\CurrentTemplate;
 
@@ -103,18 +104,18 @@ final class RatingUserPageRenderer
                 // ImageThumbInfo's own producing DQL never selects width/
                 // height at all (see RateRepository::findImageThumbInfoByIds()),
                 // matching SrcImageInfo's own "dimensions never given" state.
-                $image_urls[$thumb_row->id] = [
-                    'tn' => DerivativeImage::url($params, new SrcImageInfo(
+                $image_urls[$thumb_row->id] = new ImageThumbUrl(
+                    tn: DerivativeImage::url($params, new SrcImageInfo(
                         id: $thumb_row->id,
                         path: $thumb_row->path,
                         representativeExt: $thumb_row->representativeExt,
                         dimensionsUnavailable: true,
                     )),
-                    'page' => $urlService->makePictureUrl([
+                    page: $urlService->makePictureUrl([
                         'image_id' => $thumb_row->id,
                         'image_file' => $thumb_row->file,
                     ]),
-                ];
+                );
             }
         }
 

@@ -414,7 +414,18 @@ final class CalendarMonthly extends CalendarBase
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row
             assert($row instanceof RandomImageForDay);
-            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage(SrcImageInfo::fromRow($row->toArray())), $this->currentConfig);
+            // RandomImageForDay's own producing DQL always selects width/
+            // height (see CalendarRepository::findRandomImageForDay()), so
+            // "both non-null" is the only real "given" gate left.
+            $dimensionsGiven = $row->width !== null && $row->height !== null;
+            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage(new SrcImageInfo(
+                id: $row->id,
+                path: $row->path,
+                representativeExt: $row->representativeExt,
+                width: $dimensionsGiven ? $row->width : null,
+                height: $dimensionsGiven ? $row->height : null,
+                rotation: $row->rotation,
+            )), $this->currentConfig);
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row->file;
             $items[$day]['dow'] = $row->dow;

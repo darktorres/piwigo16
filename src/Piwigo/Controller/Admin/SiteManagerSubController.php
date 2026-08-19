@@ -13,7 +13,8 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\GetAdminsSiteLinks;
-use Piwigo\Controller\Admin\Projection\SiteManagerSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\SiteManagerView;
 use Piwigo\Controller\Admin\Request\SiteManagerRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -26,6 +27,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -66,6 +68,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
         private CsrfService $csrfService,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -187,14 +190,16 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             $tpl_sites[] = $tpl_var;
         }
 
-        $template->assignContext(new SiteManagerSubControllerPageContext(
+        $adminContent = $this->renderer->render(new SiteManagerView(
             formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
-            adminPageTitle: $this->lang->t('Synchronize'),
             sites: $tpl_sites,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'site_manager.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Synchronize'),
+        ));
     }
 }

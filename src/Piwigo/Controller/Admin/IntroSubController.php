@@ -22,7 +22,8 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\IntroPageRendered;
-use Piwigo\Controller\Admin\Projection\IntroPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\IntroView;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
@@ -41,6 +42,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
@@ -104,6 +106,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         private CsrfService $csrfService,
         private Paths $paths,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -494,7 +497,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         }
 
         // Pass data to HTML
-        $template->assignContext(new IntroPageContext(
+        $adminContent = $this->renderer->render(new IntroView(
             email: $newsletter_email,
             subscribeBaseUrl: $newsletter_subscribe_base_url,
             oldNewslettersUrl: $newsletter_old_newsletters_url,
@@ -520,7 +523,13 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             storageChartData: $data_storage,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'intro.latte');
+        // CheckIntegrity::display() below appends onto this same
+        // ADMIN_CONTENT key via Template::concat() -- must be assigned
+        // here, ambiently, before that call runs. No adminPageTitle
+        // override -- this page keeps AdminShell's own default.
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+        ));
 
         // Check integrity
         $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);

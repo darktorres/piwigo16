@@ -17,13 +17,18 @@ use Piwigo\Core\TemplatePageContext;
  * after a page's own `Renderer::render()` call, so neither field can
  * live on a page-specific `View` -- and `ADMIN_CONTENT` itself is the
  * rendered `Html` a page's own View produces, handed back to this same
- * ambient mechanism for the shell to place.
+ * ambient mechanism for the shell to place. `$adminPageTitle` is
+ * genuinely optional: `Admin\AdminShell`'s own `AdminShellFramePageContext`
+ * already assigns a default (`'Piwigo Administration Page'`) before any
+ * page-specific controller runs -- a page only needs to pass its own
+ * value here when it overrides that default, matching each such page's
+ * exact original behavior.
  */
 final readonly class AdminContentPageContext implements TemplatePageContext
 {
     public function __construct(
         public Html $adminContent,
-        public string $adminPageTitle,
+        public ?string $adminPageTitle = null,
         public ?string $helpUrl = null,
     ) {}
 
@@ -35,8 +40,11 @@ final readonly class AdminContentPageContext implements TemplatePageContext
     {
         $result = [
             'ADMIN_CONTENT' => $this->adminContent,
-            'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
         ];
+
+        if ($this->adminPageTitle !== null) {
+            $result['ADMIN_PAGE_TITLE'] = $this->adminPageTitle;
+        }
 
         if ($this->helpUrl !== null) {
             $result['U_HELP'] = $this->helpUrl;

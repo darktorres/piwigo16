@@ -78,11 +78,7 @@ test('getForUser computes and caches a real value on a cache miss', function ():
     $pool = new ArrayAdapter();
     $cache = new CategoryTreeCache(categoryTreeCacheTestService(), categoryTreeCacheTestRepo(), $pool);
 
-    $result = $cache->getForUser([
-        'id' => 999999,
-        'level' => 0,
-        'forbidden_categories' => '',
-    ]);
+    $result = $cache->getForUser(999999, 0, '');
 
     $item = $pool->getItem('tree_999999');
     expect($item->isHit())
@@ -100,11 +96,7 @@ test('getForUser returns the cached value verbatim on a cache hit, without recom
     $pool->save($item);
     $cache = new CategoryTreeCache(categoryTreeCacheTestService(), categoryTreeCacheTestRepo(), $pool);
 
-    $result = $cache->getForUser([
-        'id' => 999999,
-        'level' => 0,
-        'forbidden_categories' => '',
-    ]);
+    $result = $cache->getForUser(999999, 0, '');
 
     expect($result)
         ->toBe([

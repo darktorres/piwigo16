@@ -108,7 +108,7 @@ final readonly class CategoryCatsRenderer
         $userId = $user->id;
         $isRecentCats = $section === Section::RecentCats;
 
-        $tree = $treeCache->getForUser($user->rawAttributes);
+        $tree = $treeCache->getForUser($user->id->value, $user->level, $user->forbiddenCategories);
 
         if ($isRecentCats) {
             $recentPeriod = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;

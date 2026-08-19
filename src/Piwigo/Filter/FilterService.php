@@ -190,7 +190,7 @@ final readonly class FilterService implements FilterUpdaterInterface
                     $this->translator,
                     $accessLevelChecker,
                     new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
-                )->getComputedCategories($user->toUserArray(), $filter_recent_period);
+                )->getComputedCategories($user->id->value, $user->level, $user->forbiddenCategories, $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
                 $currentUser->set($user->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));
 

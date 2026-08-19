@@ -104,21 +104,9 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    /**
-     * @return array{id: int, level: int, forbidden_categories: string}
-     */
-    private static function userdata(string $forbiddenCategories = ''): array
-    {
-        return [
-            'id' => 1,
-            'level' => 0,
-            'forbidden_categories' => $forbiddenCategories,
-        ];
-    }
-
     public function testGetForUserMergesRollupWithNameAndPermalink(): void
     {
-        $cats = $this->cache->getForUser(self::userdata());
+        $cats = $this->cache->getForUser(1, 0, '');
 
         self::assertSame('Sample Album', $cats[1]['name']);
         self::assertArrayHasKey('permalink', $cats[1]);
@@ -129,36 +117,22 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
 
     public function testGetForUserExcludesAForbiddenCategory(): void
     {
-        $cats = $this->cache->getForUser(self::userdata('2'));
+        $cats = $this->cache->getForUser(1, 0, '2');
 
         self::assertArrayHasKey(1, $cats);
         self::assertArrayNotHasKey(2, $cats, 'a forbidden category must never appear in the merged output, including its name/permalink');
     }
 
-    public function testGetForUserDoesNotMutateTheCallerSuppliedUserdata(): void
-    {
-        $userdata = self::userdata();
-        self::assertArrayNotHasKey('last_photo_date', $userdata);
-
-        $this->cache->getForUser($userdata);
-
-        // getComputedCategories() does not mutate its $userdata argument --
-        // it returns the computed 'last_photo_date' alongside categories
-        // instead. This assertion guards against that mutation ever coming
-        // back.
-        self::assertArrayNotHasKey('last_photo_date', $userdata);
-    }
-
     public function testGetForUserServesACacheHitWithoutReflectingADbChange(): void
     {
-        $first = $this->cache->getForUser(self::userdata());
+        $first = $this->cache->getForUser(1, 0, '');
         self::assertSame('Sample Album', $first[1]['name']);
 
         $this->conn->executeStatement(
             "UPDATE categories SET name = 'Renamed' WHERE id = 1"
         );
 
-        $second = $this->cache->getForUser(self::userdata());
+        $second = $this->cache->getForUser(1, 0, '');
         self::assertSame('Sample Album', $second[1]['name'], 'a cache hit must not re-query the DB');
 
         $this->conn->executeStatement(
@@ -168,12 +142,8 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
 
     public function testGetForUserUsesASeparateCacheEntryPerUser(): void
     {
-        $this->cache->getForUser(self::userdata());
-        $forbiddenForOtherUser = $this->cache->getForUser([
-            'id' => 2,
-            'level' => 0,
-            'forbidden_categories' => '2',
-        ]);
+        $this->cache->getForUser(1, 0, '');
+        $forbiddenForOtherUser = $this->cache->getForUser(2, 0, '2');
 
         self::assertArrayNotHasKey(2, $forbiddenForOtherUser);
     }

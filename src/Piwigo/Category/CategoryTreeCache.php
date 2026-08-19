@@ -37,16 +37,11 @@ final readonly class CategoryTreeCache
     ) {}
 
     /**
-     * @param array<string, mixed> $userdata same shape getuserdata() returns
-     *   -- must at least have 'id', 'level', 'forbidden_categories'.
      * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> keyed by category id
      */
-    public function getForUser(array $userdata): array
+    public function getForUser(int $userId, int $level, string $forbiddenCategories): array
     {
-        $userId = $userdata['id'] ?? null;
-        $userIdInt = is_numeric($userId) ? (int) $userId : 0;
-
-        $item = $this->pool->getItem('tree_' . $userIdInt);
+        $item = $this->pool->getItem('tree_' . $userId);
         if ($item->isHit()) {
             $cached = $item->get();
             if (is_array($cached)) {
@@ -57,7 +52,7 @@ final readonly class CategoryTreeCache
 
         // Already keyed by cat_id -- getComputedCategories() builds its
         // $cats array that way internally.
-        $rollupByCatId = $this->service->getComputedCategories($userdata, null)['categories'];
+        $rollupByCatId = $this->service->getComputedCategories($userId, $level, $forbiddenCategories, null)['categories'];
 
         $names = $this->repo->findNamesByIds(array_keys($rollupByCatId));
 

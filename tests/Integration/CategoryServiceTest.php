@@ -440,13 +440,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetComputedCategoriesRollsUpChildCountsIntoParent(): void
         {
-            $userdata = [
-                'id' => 1,
-                'level' => 0,
-                'forbidden_categories' => '',
-            ];
-
-            $result = $this->service->getComputedCategories($userdata);
+            $result = $this->service->getComputedCategories(1, 0, '');
             $cats = $result['categories'];
 
             // category 1 (root) should count its own 3 images plus category
@@ -459,15 +453,9 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetComputedCategoriesPrunesCategoriesWithNoRecentActivity(): void
         {
-            $userdata = [
-                'id' => 1,
-                'level' => 0,
-                'forbidden_categories' => '',
-            ];
-
             // filterDays=0 against fixture dates in the past means nothing
             // qualifies as "recent" -- every category should be pruned.
-            $result = $this->service->getComputedCategories($userdata, 0);
+            $result = $this->service->getComputedCategories(1, 0, '', 0);
 
             self::assertSame([], $result['categories']);
         }
@@ -685,12 +673,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$grandchildId})");
 
             try {
-                $userdata = [
-                    'id' => 1,
-                    'level' => 0,
-                    'forbidden_categories' => '',
-                ];
-                $result = $this->service->getComputedCategories($userdata);
+                $result = $this->service->getComputedCategories(1, 0, '');
                 $cats = $result['categories'];
 
                 self::assertSame(1, $cats[$grandchildId]['count_images']);

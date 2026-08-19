@@ -347,14 +347,8 @@ test('getRandomImageInCategory() returns an image id', function (): void {
 });
 
 test('getComputedCategories() rolls up child counts into the parent', function (): void {
-    $userdata = [
-        'id' => 1,
-        'level' => 0,
-        'forbidden_categories' => '',
-    ];
-
     $result = categoryServiceTestService()
-        ->getComputedCategories($userdata);
+        ->getComputedCategories(1, 0, '');
     $cats = $result['categories'];
 
     // category 1 (root) should count its own 3 images plus category
@@ -370,16 +364,10 @@ test('getComputedCategories() rolls up child counts into the parent', function (
 });
 
 test('getComputedCategories() prunes categories with no recent activity', function (): void {
-    $userdata = [
-        'id' => 1,
-        'level' => 0,
-        'forbidden_categories' => '',
-    ];
-
     // filterDays=0 against fixture dates in the past means nothing
     // qualifies as "recent" -- every category should be pruned.
     $result = categoryServiceTestService()
-        ->getComputedCategories($userdata, 0);
+        ->getComputedCategories(1, 0, '', 0);
 
     expect($result['categories'])
         ->toBe([]);
@@ -630,13 +618,8 @@ test('getComputedCategories() walks up through more than one ancestor level', fu
         // just one.
         $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$grandchildId})");
 
-        $userdata = [
-            'id' => 1,
-            'level' => 0,
-            'forbidden_categories' => '',
-        ];
         $result = $service
-            ->getComputedCategories($userdata);
+            ->getComputedCategories(1, 0, '');
         $cats = $result['categories'];
 
         expect($cats[$grandchildId]['count_images'])

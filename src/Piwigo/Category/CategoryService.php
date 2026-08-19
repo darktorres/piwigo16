@@ -473,25 +473,11 @@ final readonly class CategoryService
     }
 
     /**
-     * @param  array<string, mixed>  $userdata
      * @return array{categories: array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string}>, lastPhotoDate: ?string}
      */
-    public function getComputedCategories(array $userdata, ?int $filterDays = null): array
+    public function getComputedCategories(int $userId, int $level, string $forbiddenCategories, ?int $filterDays = null): array
     {
-        $level = $userdata['level'];
-        $level = is_numeric($level) ? (int) $level : 0;
-
-        $forbiddenCategories = $userdata['forbidden_categories'];
-        $forbiddenCategoriesCsv = is_string($forbiddenCategories) ? $forbiddenCategories : '';
-
-        // Same is_numeric() ? (int) ... : 0 normalization as $level above --
-        // real callers pass either UserId::$value (already int) or
-        // User::$rawAttributes' own raw 'id' (numeric-string under some
-        // construction paths), never anything genuinely non-numeric.
-        $userId = $userdata['id'];
-        $userId = is_numeric($userId) ? (int) $userId : 0;
-
-        $rows = $this->repo->findComputedCategoriesRollup($level, $filterDays, $forbiddenCategoriesCsv);
+        $rows = $this->repo->findComputedCategoriesRollup($level, $filterDays, $forbiddenCategories);
 
         $lastPhotoDate = null;
         $cats = [];
@@ -787,7 +773,7 @@ final readonly class CategoryService
             $this,
             $this->repo,
             $this->categoryTreeCachePool()
-        )->getForUser($user->rawAttributes);
+        )->getForUser($user->id->value, $user->level, $user->forbiddenCategories);
 
         $userExpand = (bool) $user->rawAttributes['expand'];
         $filterEnabled = $filterState->isEnabled();

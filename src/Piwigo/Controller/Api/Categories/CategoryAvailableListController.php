@@ -106,21 +106,20 @@ final readonly class CategoryAvailableListController implements ControllerInterf
             $guestUserdata = $this->userService->getUserData(UserId::from($reprUserId));
             $guestForbiddenCategories = $guestUserdata['forbidden_categories'] ?? '0';
             $guestForbiddenCategories = is_string($guestForbiddenCategories) ? $guestForbiddenCategories : '0';
+            $guestLevel = is_numeric($guestUserdata['level'] ?? null) ? (int) $guestUserdata['level'] : 0;
             $forbiddenCategoryIds = self::csvToIntList($guestForbiddenCategories);
             $rollupByCatId = $this->categoryTreeCache()
-                ->getForUser($guestUserdata);
+                ->getForUser($reprUserId, $guestLevel, $guestForbiddenCategories);
         } elseif ($this->accessControl->isAdmin()) {
             $forbiddenCategories = new ForbiddenCategoriesCache($this->permissionService, $this->permissionsCachePool)
                 ->getForUser($userId, $currentUser->status->value);
             $forbiddenCategoryIds = self::csvToIntList($forbiddenCategories);
 
-            $adminUserdata = $currentUser->toUserArray();
-            $adminUserdata['forbidden_categories'] = $forbiddenCategories;
-            $rollupByCatId = $this->categoryService->getComputedCategories($adminUserdata, null)['categories'];
+            $rollupByCatId = $this->categoryService->getComputedCategories($userId, $currentUser->level, $forbiddenCategories, null)['categories'];
         } else {
             $forbiddenCategoryIds = self::csvToIntList($currentUser->forbiddenCategories);
             $rollupByCatId = $this->categoryTreeCache()
-                ->getForUser($currentUser->toUserArray());
+                ->getForUser($userId, $currentUser->level, $currentUser->forbiddenCategories);
         }
 
         $catIdVo = CategoryId::tryFrom($catId);

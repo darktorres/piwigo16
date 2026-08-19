@@ -105,11 +105,12 @@ final readonly class EffectiveForbiddenCategoriesCache
 
         // Called unconditionally: lastPhotoDate below is needed for every
         // user status; only the widening loop that follows is admin-gated.
-        $computedCategories = $this->categoryService->getComputedCategories([
-            'id' => $userId,
-            'level' => $level,
-            'forbidden_categories' => $structuralForbidden,
-        ], null);
+        $computedCategories = $this->categoryService->getComputedCategories(
+            $userId,
+            is_numeric($level) ? (int) $level : 0,
+            $structuralForbidden,
+            null
+        );
 
         $effectiveForbidden = $structuralForbidden;
         if (! $this->accessLevelChecker->isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)

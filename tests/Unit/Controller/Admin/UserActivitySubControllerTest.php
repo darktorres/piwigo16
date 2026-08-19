@@ -32,7 +32,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
@@ -45,6 +44,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -254,7 +254,7 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'user_activity.latte', 'users={$nb_users}');
+        file_put_contents($tplDir . 'user_activity.latte', 'users={$nbUsers}|ulist={$ulist|json_encode|noescape}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -275,16 +275,14 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
             userActivitySubControllerTestCategoryService(),
             userActivitySubControllerTestGroupService($activityService),
             HtmlServiceTestFactory::build(),
-            CurrentConfigTestFactory::get(),
-            new CsrfService(CurrentConfigTestFactory::get()),
             new InputValidator(),
             $eventDispatcher,
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -292,18 +290,20 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
             throw new LogicException('unreachable -- asserted above');
         }
 
-        expect($template->getTemplateVars('nb_users'))
-            ->toBe(4)
-            ->and($template->getTemplateVars('ulist'))
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+            ->toBe('Users');
+
+        [$usersPart, $ulistPart] = explode('|', (string) $adminContent, 2);
+        expect($usersPart)
+            ->toBe('users=4')
+            ->and(json_decode(substr($ulistPart, strlen('ulist=')), true, flags: JSON_THROW_ON_ERROR))
             ->toBe([
                 [
                     'id' => 1,
                     'username' => 'fixture_admin',
                     'nb_lines' => 17,
                 ],
-            ])
-            ->and((string) $adminContent)
-            ->toBe('users=4');
+            ]);
     } finally {
         $conn->executeStatement('DELETE FROM activity');
         foreach ($originalActivityRows as $row) {

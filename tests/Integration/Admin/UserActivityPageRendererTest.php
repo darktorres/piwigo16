@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration\Admin;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -14,13 +15,12 @@ use Piwigo\Admin\UserActivityPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -178,20 +178,23 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . HtmlService::class);
         }
 
-        $currentConfig = Kernel::container()->get(CurrentConfig::class);
-        if (! $currentConfig instanceof CurrentConfig) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
-        }
-
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
         new UserActivityPageRenderer()
-            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $currentConfig, new CsrfService($currentConfig), $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
+            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
         $template = CurrentTemplateTestFactory::get()->get();
-        self::assertSame([], $template->getTemplateVars('ulist'));
+        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
+        self::assertInstanceOf(Html::class, $adminContent);
+        // user_activity.latte's own body only ever prints a
+        // n:foreach="$ulist as $user" <option> per user, each carrying a
+        // <span class='username_filter'> -- an empty ulist leaves only the
+        // template's own static "none" option, which shares that same
+        // class, so the count staying at exactly 1 is the render-time
+        // signal that ulist ended up empty instead of erroring.
+        self::assertSame(1, substr_count((string) $adminContent, "class='username_filter'"));
     }
 }

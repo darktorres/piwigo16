@@ -31,7 +31,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
@@ -44,6 +43,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -283,7 +283,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'user_activity.latte', 'users={$nb_users}');
+        file_put_contents($tplDir . 'user_activity.latte', 'users={$nbUsers}|ulist={$ulist|json_encode|noescape}|dates={$activityDates|json_encode|noescape}|filtType={$additionalFiltType|json_encode|noescape}|filtName={$additionalFiltName|json_encode|noescape}|filtValue={$additionalFiltValue|json_encode|noescape}|actions={$actions|json_encode|noescape}');
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
@@ -307,8 +307,6 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 UrlServiceTestFactory::build(),
                 $coreTabs,
                 CurrentTemplateTestFactory::get(),
-                CurrentConfigTestFactory::get(),
-                new CsrfService(CurrentConfigTestFactory::get()),
                 $activityService,
                 userActivityTestUserService($activityService),
                 userActivityTestImageService(),
@@ -317,10 +315,10 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 HtmlServiceTestFactory::build(),
                 new InputValidator(),
                 $eventDispatcher,
+                new Renderer(CurrentTemplateTestFactory::get()),
             );
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
+        // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
         expect($adminContent)
             ->toBeInstanceOf(Html::class);
@@ -328,12 +326,21 @@ test('render() lists real activity aggregated by user and skips the additional-f
             throw new LogicException('unreachable -- asserted above');
         }
 
+        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+            ->toBe('Users');
+
+        $parts = [];
+        foreach (explode('|', (string) $adminContent) as $field) {
+            [$key, $value] = explode('=', $field, 2);
+            $parts[$key] = $value;
+        }
+
         // The real fixture's own piwigo_activity data: 17 non-system rows,
         // all performed_by user 1 (fixture_admin), all sharing the exact
         // same occured_on '2026-08-01 03:00:00'.
-        expect($template->getTemplateVars('nb_users'))
-            ->toBe(4)
-            ->and($template->getTemplateVars('ulist'))
+        expect($parts['users'])
+            ->toBe('4')
+            ->and(json_decode($parts['ulist'], true, flags: JSON_THROW_ON_ERROR))
             ->toBe([
                 [
                     'id' => 1,
@@ -341,21 +348,19 @@ test('render() lists real activity aggregated by user and skips the additional-f
                     'nb_lines' => 17,
                 ],
             ])
-            ->and($template->getTemplateVars('ACTIVITY_DATES'))
+            ->and(json_decode($parts['dates'], true, flags: JSON_THROW_ON_ERROR))
             ->toBe([
                 'min' => '2026-08-01',
                 'max' => '2026-08-01',
             ])
-            ->and($template->getTemplateVars('ADDITIONAL_FILT'))
-            ->toBe([
-                'type' => false,
-                'name' => null,
-                'value' => null,
-            ])
-            ->and((string) $adminContent)
-            ->toBe('users=4');
+            ->and(json_decode($parts['filtType'], true, flags: JSON_THROW_ON_ERROR))
+            ->toBeFalse()
+            ->and(json_decode($parts['filtName'], true, flags: JSON_THROW_ON_ERROR))
+            ->toBeNull()
+            ->and(json_decode($parts['filtValue'], true, flags: JSON_THROW_ON_ERROR))
+            ->toBeNull();
 
-        $actions = $template->getTemplateVars('ACTIONS');
+        $actions = json_decode($parts['actions'], true, flags: JSON_THROW_ON_ERROR);
         if (! is_array($actions)) {
             throw new LogicException('expected an array of actions');
         }

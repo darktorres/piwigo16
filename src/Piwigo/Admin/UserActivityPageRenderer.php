@@ -6,21 +6,21 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\Projection\ActionCount;
-use Piwigo\Admin\Projection\UserActivityPageContext;
+use Piwigo\Admin\Projection\UserActivityView;
 use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
@@ -34,7 +34,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserActivityPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -161,11 +161,7 @@ final class UserActivityPageRenderer
             $activity_service->getActionCounts($additional_filt_type !== false ? $additional_filt_type : null)
         );
 
-        $template->assignContext(new UserActivityPageContext(
-            adminPageTitle: $lang->t('Users'),
-            pwgToken: $csrfService
-                ->getToken(),
-            inherit: $currentConfig->inheritanceByDefault,
+        $adminContent = $renderer->render(new UserActivityView(
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
             ulist: $filterable_users,
             nbUsers: $nb_users,
@@ -176,6 +172,9 @@ final class UserActivityPageRenderer
             actions: $actions,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'user_activity.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $lang->t('Users'),
+        ));
     }
 }

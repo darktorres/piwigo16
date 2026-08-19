@@ -12,12 +12,13 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Projection\LanguagesNewPageContext;
+use Piwigo\Admin\Projection\LanguagesNewView;
 use Piwigo\Admin\Request\LanguagesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -30,6 +31,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
@@ -65,6 +67,7 @@ final readonly class LanguagesNewPageRenderer
         private PluginRegistry $pluginRegistry,
         private ThemeRegistry $themeRegistry,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -197,12 +200,14 @@ final readonly class LanguagesNewPageRenderer
         } else {
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
-        $template->assignContext(new LanguagesNewPageContext(
-            adminPageTitle: $this->lang->t('Languages'),
-            isWebmaster: $this->accessControl->isWebmaster(),
+        $adminContent = $this->renderer->render(new LanguagesNewView(
+            isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             languages: $tpl_languages,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'languages_new.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Languages'),
+        ));
     }
 }

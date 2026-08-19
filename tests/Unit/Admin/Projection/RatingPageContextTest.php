@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Projection\RatingPageContext;
+use Piwigo\Admin\Projection\RatingReportImageRow;
 use Piwigo\Core\Projection\Navbar;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
@@ -24,10 +25,20 @@ test('toArray flattens every property to its real Latte template variable name',
         userOptionsSelected: ['all'],
         adminPageTitle: 'Rating',
         orderByOptions: ['Rate date', 'Rating score'],
-        images: [[
-            'id' => 5,
-            'FILE' => 'photo.jpg',
-        ]],
+        images: [
+            new RatingReportImageRow(
+                id: 5,
+                uThumb: '/i.php?/5-sq.jpg',
+                uUrl: '/admin.php?page=photo-5',
+                scoreRate: 4.5,
+                avgRate: 4.5,
+                sumRate: 9.0,
+                nbRates: 2,
+                nbRatesTotal: 2,
+                file: 'photo.jpg',
+                rates: [],
+            ),
+        ],
     );
 
     expect($context->toArray())
@@ -53,7 +64,15 @@ test('toArray flattens every property to its real Latte template variable name',
             'order_by_options' => ['Rate date', 'Rating score'],
             'images' => [[
                 'id' => 5,
+                'U_THUMB' => '/i.php?/5-sq.jpg',
+                'U_URL' => '/admin.php?page=photo-5',
+                'SCORE_RATE' => 4.5,
+                'AVG_RATE' => 4.5,
+                'SUM_RATE' => 9.0,
+                'NB_RATES' => 2,
+                'NB_RATES_TOTAL' => 2,
                 'FILE' => 'photo.jpg',
+                'rates' => [],
             ]],
         ]);
 });

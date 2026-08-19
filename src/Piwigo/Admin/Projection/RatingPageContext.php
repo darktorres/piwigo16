@@ -25,7 +25,7 @@ final readonly class RatingPageContext implements TemplatePageContext
      * @param array<string, string> $userOptions
      * @param list<mixed> $userOptionsSelected
      * @param list<string> $orderByOptions
-     * @param list<array<string, mixed>> $images
+     * @param list<RatingReportImageRow> $images
      */
     public function __construct(
         public Navbar $navbar,
@@ -60,7 +60,7 @@ final readonly class RatingPageContext implements TemplatePageContext
             'user_options_selected' => $this->userOptionsSelected,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'order_by_options' => $this->orderByOptions,
-            'images' => $this->images,
+            'images' => array_map(static fn (RatingReportImageRow $image): array => $image->toArray(), $this->images),
         ];
     }
 }

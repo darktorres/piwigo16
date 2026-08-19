@@ -31,6 +31,7 @@ use Piwigo\Controller\Event\PicturePicturesData;
 use Piwigo\Controller\Event\RenderElementContent;
 use Piwigo\Controller\Projection\CanonicalUrlPageContext;
 use Piwigo\Controller\Projection\PictureContentView;
+use Piwigo\Controller\Projection\PictureHeaderPageContext;
 use Piwigo\Controller\Projection\PictureView;
 use Piwigo\Controller\Projection\SlideshowView;
 use Piwigo\Controller\Request\PictureRequest;
@@ -1228,6 +1229,17 @@ final readonly class PictureController implements ControllerInterface
         // header.latte renders this before PictureView is ever
         // constructed -- see CanonicalUrlPageContext's own docblock.
         $template->assignContext(new CanonicalUrlPageContext($u_canonical));
+        $template->assignContext(new PictureHeaderPageContext(
+            navFirst: $nav['first'] ?? null,
+            navPrevious: $nav['previous'] ?? null,
+            navNext: $nav['next'] ?? null,
+            navLast: $nav['last'] ?? null,
+            uUp: $url_up,
+            commentImg: $comment_img,
+            infoFile: $info_file,
+            uPrefetch: $u_prefetch,
+            relatedTags: $related_tags !== [] ? $related_tags : null,
+        ));
 
         $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);

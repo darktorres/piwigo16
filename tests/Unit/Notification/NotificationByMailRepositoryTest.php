@@ -7,6 +7,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Notification\Projection\UserWithoutNotificationRow;
 use Piwigo\Notification\UserMailNotificationEntity;
@@ -118,11 +119,7 @@ test('deleteByCheckKeys() removes a key containing a single quote', function ():
     $repo = nbmTestRepo();
     // user 2 (guest) has no notification row in the fixture.
     $repo->insertNotifications([
-        [
-            'user_id' => 2,
-            'check_key' => $checkKey,
-            'enabled' => 0,
-        ],
+        new NotificationInsertRow(userId: 2, checkKey: $checkKey, enabled: 0),
     ]);
     expect($repo->countByCheckKey($checkKey))
         ->toBe(1);

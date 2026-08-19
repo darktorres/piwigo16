@@ -12,6 +12,7 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Notification\Projection\UserWithoutNotificationRow;
 use Piwigo\Users\UserEntity;
@@ -244,7 +245,7 @@ final class NotificationByMailRepository extends EntityRepository implements Use
      * Controller\Admin\NotificationByMailSubController's own "add every
      * user without a notification row yet" step.
      *
-     * @param array<int, array{user_id: mixed, check_key: string, enabled: int}> $inserts
+     * @param list<NotificationInsertRow> $inserts
      */
     public function insertNotifications(array $inserts): void
     {
@@ -253,7 +254,10 @@ final class NotificationByMailRepository extends EntityRepository implements Use
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert('user_mail_notification', ['user_id', 'check_key', 'enabled'], $inserts);
+            ->massInsert('user_mail_notification', ['user_id', 'check_key', 'enabled'], array_map(
+                static fn (NotificationInsertRow $row): array => $row->toArray(),
+                $inserts
+            ));
     }
 
     /**

@@ -30,6 +30,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Mail\Event\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\NotificationByMailService;
+use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\UserMailNotificationEntity;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -406,11 +407,11 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                 $check_key_list[] = $checkKey;
 
                 // Insert new nbm_users
-                $inserts[] = [
-                    'user_id' => $nbm_user->userId,
-                    'check_key' => $checkKey,
-                    'enabled' => 0, // By default if false, set to true with specific functions
-                ];
+                $inserts[] = new NotificationInsertRow(
+                    userId: $nbm_user->userId,
+                    checkKey: $checkKey,
+                    enabled: 0, // By default if false, set to true with specific functions
+                );
 
                 $this->pageState->addInfo($lang->t(
                     'User %s [%s] added.',

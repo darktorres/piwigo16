@@ -7,10 +7,11 @@ namespace Piwigo\Admin;
 use DateInterval;
 use DateTime;
 use InvalidArgumentException;
-use Piwigo\Admin\Projection\StatsPageContext;
+use Piwigo\Admin\Projection\StatsView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -18,6 +19,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\History\HistoryService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -51,7 +53,7 @@ final class StatsPageRenderer
      * this page's own tab within the shared 'history' tabsheet group (see
      * HistoryPageRenderer, its sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, HistoryService $historyService, EventDispatcher $eventDispatcher): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, HistoryService $historyService, EventDispatcher $eventDispatcher, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -73,8 +75,6 @@ final class StatsPageRenderer
         $tabsheet->setId('history');
         $tabsheet->select($pageSlug, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
-
-        $base_url = $urlService->getRootUrl() . 'admin.php?page=history';
 
         $actual_date = Env::now();
         $actual_date->add(new DateInterval('PT1S'));
@@ -132,9 +132,7 @@ final class StatsPageRenderer
         // dead code to resurrect here.
         $stat_compare_year_displayed = $currentConfig->statCompareYearDisplayed;
 
-        $template->assignContext(new StatsPageContext(
-            helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',
-            formAction: $base_url,
+        $adminContent = $renderer->render(new StatsView(
             compareYears: self::getMonthOfLastYears($historyService, $stat_compare_year_displayed),
             monthStats: self::getMonthStats($historyService),
             lastHours: $last_hours,
@@ -142,12 +140,15 @@ final class StatsPageRenderer
             lastMonths: $last_months,
             lastYears: $last_years,
             langCode: $currentUser->get()
-                ->language,
+                ->language->value,
             monthLabels: join('~', array_filter($lang_month, is_string(...))),
-            adminPageTitle: $lang->t('History'),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'stats.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',
+            adminPageTitle: $lang->t('History'),
+        ));
     }
 
     /**

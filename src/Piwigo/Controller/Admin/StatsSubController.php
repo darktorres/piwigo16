@@ -15,6 +15,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\History\HistoryService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -41,12 +42,13 @@ final readonly class StatsSubController implements AdminSubControllerInterface
         private HistoryService $historyService,
         private CurrentConfig $currentConfig,
         private EventDispatcher $eventDispatcher,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render($this->lang, $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->historyService, $this->eventDispatcher);
+            ->render($this->lang, $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->historyService, $this->eventDispatcher, $this->renderer);
     }
 }

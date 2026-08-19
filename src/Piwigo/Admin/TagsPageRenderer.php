@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\TagsPageContext;
+use Piwigo\Admin\Projection\TagsView;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -19,6 +20,7 @@ use Piwigo\Tag\Event\GetTagAltNames;
 use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Ported from admin/tags.php (page slug "tags").
@@ -37,6 +39,7 @@ final readonly class TagsPageRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private CsrfService $csrfService,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -137,8 +140,7 @@ final readonly class TagsPageRenderer
         }
         usort($all_tags, $this->htmlRenderer->tagAlphaCompare(...));
 
-        $template->assignContext(new TagsPageContext(
-            formAction: $this->urlService->getRootUrl() . 'admin.php?page=tags',
+        $adminContent = $this->renderer->render(new TagsView(
             pwgToken: $this->csrfService
                 ->getToken(),
             orphanTagNamesArray: $orphan_tag_names_array,
@@ -148,9 +150,11 @@ final readonly class TagsPageRenderer
             data: $all_tags,
             total: count($all_tags),
             perPage: $per_page,
-            adminPageTitle: $this->lang->t('Tags'),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'tags.latte');
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+            adminPageTitle: $this->lang->t('Tags'),
+        ));
     }
 }

@@ -18,7 +18,7 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
 /**
- * Piwigo\Controller\Admin\RatingSubController -- 9 constructor deps, a
+ * Piwigo\Controller\Admin\RatingSubController -- 11 constructor deps, a
  * pure delegate to `RatingPageRenderer::render()`. Resolved via
  * `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`). No dedicated Integration/Browser spec

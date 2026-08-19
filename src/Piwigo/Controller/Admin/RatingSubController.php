@@ -12,8 +12,10 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -39,12 +41,14 @@ final readonly class RatingSubController implements AdminSubControllerInterface
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->currentTemplate, $this->currentConfig, $this->categoryService, $this->inputValidator, $this->eventDispatcher, $this->entityManager);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->currentTemplate, $this->currentConfig, $this->categoryService, $this->inputValidator, $this->eventDispatcher, $this->entityManager, $this->csrfService, $this->renderer);
     }
 }

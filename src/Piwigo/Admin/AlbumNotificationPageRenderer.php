@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Admin\Projection\AlbumNotificationPageContext;
+use Piwigo\Admin\Projection\AlbumNotificationView;
 use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
 use Piwigo\Auth\AuthService;
 use Piwigo\Category\CategoryService;
@@ -12,6 +12,7 @@ use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -28,6 +29,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
@@ -59,6 +61,7 @@ final readonly class AlbumNotificationPageRenderer
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -74,13 +77,10 @@ final readonly class AlbumNotificationPageRenderer
      */
     public function render(string $admin_album_base_url, array $category): void
     {
-        /** @var array<string, mixed> $page */
-        $page = [];
         $template = $this->currentTemplate->get();
         $save_success = null;
 
         $category_id = $category['id'];
-        $page['cat'] = $category_id;
 
         // info by email to an access granted group of category informations
         $albumNotificationSubmit = AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
@@ -214,20 +214,6 @@ final readonly class AlbumNotificationPageRenderer
             $this->urlService->unsetMakeFullUrl();
         }
 
-        // $page['cat'] was set to $category['id'] (a real int) above, in
-        // this same method scope with no intervening by-reference calls,
-        // so its narrowing is still provably int here ($page itself is
-        // array<string, mixed>).
-        $page_cat = $page['cat'];
-
-        $categories_nav = trim(
-            $this->htmlService
-                ->getCatDisplayNameFromId(
-                    $page_cat,
-                    'admin.php?page=album-'
-                )
-        );
-
         // auth_key_duration is a plain int config value (see
         // include/config_default.inc.php).
         $auth_key_duration = $this->currentConfig->authKeyDuration;
@@ -298,11 +284,10 @@ final readonly class AlbumNotificationPageRenderer
             $user_options = $this->userService->getUsernamesByIds(array_values($user_ids));
         }
 
-        $template->assignContext(new AlbumNotificationPageContext(
+        $adminContent = $this->renderer->render(new AlbumNotificationView(
             saveSuccess: $save_success,
-            categoriesNav: $categories_nav,
             fAction: $admin_album_base_url . '-notification',
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
             authKeyDuration: $auth_key_duration_value,
             noGroupInGallery: $no_group_in_gallery,
@@ -311,6 +296,6 @@ final readonly class AlbumNotificationPageRenderer
             userOptions: $user_options,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'album_notification.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

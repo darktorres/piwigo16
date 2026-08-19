@@ -25,6 +25,7 @@ final readonly class PasswordView implements View
      * @param array<string, string> $languageOptions
      */
     public function __construct(
+        public string $homeUrl,
         public ?string $key,
         public ?string $usernameOrEmail,
         public ?bool $isFirstLogin,

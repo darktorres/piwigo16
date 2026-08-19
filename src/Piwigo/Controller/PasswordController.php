@@ -286,6 +286,7 @@ final class PasswordController implements ControllerInterface
         }
 
         $passwordView = new PasswordView(
+            homeUrl: $urlService->makeIndexUrl(),
             key: $key_value,
             usernameOrEmail: $username_or_email_value,
             isFirstLogin: $is_first_login_value,

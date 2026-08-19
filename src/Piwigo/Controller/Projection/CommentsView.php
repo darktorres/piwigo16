@@ -32,6 +32,7 @@ final readonly class CommentsView implements View
      * @param array<int, mixed> $categoriesSelected
      */
     public function __construct(
+        public string $homeUrl,
         public string $fAction,
         public string $fKeyword,
         public string $fAuthor,

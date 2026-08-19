@@ -227,6 +227,7 @@ final readonly class IdentificationController implements ControllerInterface
         }
 
         $identificationView = new IdentificationView(
+            homeUrl: $urlService->makeIndexUrl(),
             redirect: $redirect_to,
             loginAction: $urlService->getRootUrl() . 'identification.php',
             authorizeRemembering: $this->currentConfig->authorizeRemembering,

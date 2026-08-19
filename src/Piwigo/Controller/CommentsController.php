@@ -645,6 +645,7 @@ final readonly class CommentsController implements ControllerInterface
             : null;
 
         $commentsView = new CommentsView(
+            homeUrl: $this->urlService->makeIndexUrl(),
             fAction: $this->urlService->getRootUrl() . 'comments.php',
             fKeyword: $keyword_param !== null ? htmlspecialchars($keyword_param) : '',
             fAuthor: $author_param !== null ? htmlspecialchars($author_param) : '',

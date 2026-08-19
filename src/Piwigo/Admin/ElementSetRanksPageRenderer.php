@@ -6,13 +6,13 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
-use Piwigo\Admin\Projection\ElementSetRanksHeaderPageContext;
-use Piwigo\Admin\Projection\ElementSetRanksSaveSuccessPageContext;
+use Piwigo\Admin\Projection\ElementSetRanksView;
 use Piwigo\Admin\Request\ElementSetRanksRequest;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -26,12 +26,14 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Renders the "sort_order" tab of the "album" admin page (dispatched by
  * AlbumSubController) -- changes the rank of images inside a category.
- * The POST handler is CSRF-protected: render() assigns CSRF_TOKEN and
- * element_set_ranks.latte carries the matching hidden input.
+ * The POST handler is CSRF-protected: render() supplies a real
+ * ElementSetRanksView::$csrfToken and element_set_ranks.latte carries
+ * the matching hidden input.
  *
  * Access control is enforced by admin.php's dispatch gate
  * (check_status(AccessLevel::Administrator)) before this renderer runs, so
@@ -55,6 +57,7 @@ final readonly class ElementSetRanksPageRenderer
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -96,6 +99,7 @@ final readonly class ElementSetRanksPageRenderer
 
         $image_order_choice = $elementSetRanksRequest->imageOrderChoice;
 
+        $save_success = null;
         if ($elementSetRanksRequest->isSubmitted) {
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -129,7 +133,7 @@ final readonly class ElementSetRanksPageRenderer
             }
             $this->categoryAdminService->saveImageOrder($category_id, $image_order, $elementSetRanksRequest->isImageOrderSubcats, $this->redirectService);
 
-            $template->assignContext(new ElementSetRanksSaveSuccessPageContext($message));
+            $save_success = $message;
         }
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
@@ -145,12 +149,6 @@ final readonly class ElementSetRanksPageRenderer
         } elseif ($category->imageOrder !== '') {
             $image_order_choice = 'user_define';
         }
-
-        // Navigation path
-        $navigation = $htmlRenderer->getCatDisplayNameCache(
-            $category->uppercats,
-            $this->urlService->getRootUrl() . 'admin.php?page=album-'
-        );
 
         $thumbnails = [];
 
@@ -187,17 +185,17 @@ final readonly class ElementSetRanksPageRenderer
             $image_order_tpl[] = $image_order[$i] ?? '';
         }
 
-        $template->assignContext(new ElementSetRanksHeaderPageContext(
-            categoriesNav: (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
+        $adminContent = $this->renderer->render(new ElementSetRanksView(
             formAction: $base_url . $this->urlService->getQueryStringDiff([]),
-            pwgToken: $this->csrfService
+            csrfToken: $this->csrfService
                 ->getToken(),
             imageOrderOptions: $sort_fields,
             imageOrderChoice: $image_order_choice,
             thumbnails: $thumbnails,
             imageOrder: $image_order_tpl,
+            saveSuccess: $save_success,
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'element_set_ranks.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

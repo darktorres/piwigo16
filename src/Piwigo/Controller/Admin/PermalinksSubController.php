@@ -10,6 +10,8 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
+use Piwigo\Controller\Admin\Projection\DeletedPermalinkRow;
+use Piwigo\Controller\Admin\Projection\PermalinkListRow;
 use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -106,10 +108,11 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
 
         $categories = [];
         foreach ($activePermalinks as $row) {
-            $categories[] = [
-                ...$row->toArray(),
-                'name' => $htmlRenderer->getCatDisplayNameCache($row->uppercats),
-            ];
+            $categories[] = new PermalinkListRow(
+                id: $row->id,
+                name: $htmlRenderer->getCatDisplayNameCache($row->uppercats),
+                permalink: $row->permalink,
+            );
         }
 
         $sortResult = $this->parseSortVariables(
@@ -129,17 +132,21 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $sortField = count($sort_by) > 0 ? OldPermalinkSortField::fromToken($sort_by[0]) : null;
         $deleted_permalinks = [];
         foreach (new PermalinkRepository($this->entityManager)->findAllOrderedBy($sortField) as $permalinkRow) {
-            $row = $permalinkRow->toArray();
-            $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
-            $row['U_DELETE'] =
-                $this->urlService->addUrlParams(
+            $deleted_permalinks[] = new DeletedPermalinkRow(
+                catId: $permalinkRow->catId->value,
+                permalink: $permalinkRow->permalink->value,
+                dateDeleted: $permalinkRow->dateDeleted,
+                lastHit: $permalinkRow->lastHit,
+                hit: $permalinkRow->hit,
+                name: $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId),
+                uDelete: $this->urlService->addUrlParams(
                     $url_del_base,
                     [
                         'delete_permanent' => $permalinkRow->permalink->value,
                         'pwg_token' => $pwg_token,
                     ]
-                );
-            $deleted_permalinks[] = $row;
+                ),
+            );
         }
 
         $template->assignContext(new PermalinksPageContext(

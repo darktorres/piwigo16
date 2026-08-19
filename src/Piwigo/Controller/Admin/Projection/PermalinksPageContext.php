@@ -17,8 +17,8 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class PermalinksPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array<string, mixed>> $permalinks
-     * @param list<array<string, mixed>> $deletedPermalinks
+     * @param list<PermalinkListRow> $permalinks
+     * @param list<DeletedPermalinkRow> $deletedPermalinks
      */
     public function __construct(
         public int $nbCats,
@@ -49,7 +49,7 @@ final readonly class PermalinksPageContext implements TemplatePageContext
             'SORT_ID' => $this->sortId,
             'SORT_NAME' => $this->sortName,
             'SORT_PERMALINK' => $this->sortPermalink,
-            'permalinks' => $this->permalinks,
+            'permalinks' => array_map(static fn (PermalinkListRow $row): array => $row->toArray(), $this->permalinks),
             'SORT_OLD_CAT_ID' => $this->sortOldCatId,
             'SORT_OLD_PERMALINK' => $this->sortOldPermalink,
             'SORT_OLD_DATE_DELETED' => $this->sortOldDateDeleted,
@@ -57,7 +57,7 @@ final readonly class PermalinksPageContext implements TemplatePageContext
             'SORT_OLD_HIT' => $this->sortOldHit,
             'CSRF_TOKEN' => $this->pwgToken,
             'U_HELP' => $this->helpUrl,
-            'deleted_permalinks' => $this->deletedPermalinks,
+            'deleted_permalinks' => array_map(static fn (DeletedPermalinkRow $row): array => $row->toArray(), $this->deletedPermalinks),
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'categories' => $this->categoriesOptions->options,
             'categories_selected' => $this->categoriesOptions->selected,

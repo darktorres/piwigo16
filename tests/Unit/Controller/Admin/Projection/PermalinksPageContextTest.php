@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Category\Projection\CategorySelectOptions;
+use Piwigo\Controller\Admin\Projection\DeletedPermalinkRow;
+use Piwigo\Controller\Admin\Projection\PermalinkListRow;
 use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
 
 test('toArray flattens every property to its real Latte template variable name', function (): void {
@@ -11,10 +13,9 @@ test('toArray flattens every property to its real Latte template variable name',
         sortId: '<a href="?psf=id">↓</a>',
         sortName: '<em>↓</em>',
         sortPermalink: '<a href="?psf=permalink">↓</a>',
-        permalinks: [[
-            'id' => 1,
-            'name' => 'Album',
-        ]],
+        permalinks: [
+            new PermalinkListRow(id: 1, name: 'Album', permalink: null),
+        ],
         sortOldCatId: '<a href="?dpsf=cat_id">↓</a>',
         sortOldPermalink: '<a href="?dpsf=permalink">↓</a>',
         sortOldDateDeleted: '<a href="?dpsf=date_deleted">↓</a>',
@@ -22,10 +23,9 @@ test('toArray flattens every property to its real Latte template variable name',
         sortOldHit: '<a href="?dpsf=hit">↓</a>',
         pwgToken: 'abc123',
         helpUrl: '/admin/popuphelp.php?page=permalinks',
-        deletedPermalinks: [[
-            'cat_id' => 2,
-            'permalink' => 'old',
-        ]],
+        deletedPermalinks: [
+            new DeletedPermalinkRow(catId: 2, permalink: 'old', dateDeleted: null, lastHit: null, hit: 0, name: 'Album', uDelete: '/admin.php?page=permalinks&delete_permanent=old'),
+        ],
         adminPageTitle: 'Albums',
         categoriesOptions: new CategorySelectOptions(options: [
             1 => 'Holidays',
@@ -41,6 +41,7 @@ test('toArray flattens every property to its real Latte template variable name',
             'permalinks' => [[
                 'id' => 1,
                 'name' => 'Album',
+                'permalink' => null,
             ]],
             'SORT_OLD_CAT_ID' => '<a href="?dpsf=cat_id">↓</a>',
             'SORT_OLD_PERMALINK' => '<a href="?dpsf=permalink">↓</a>',
@@ -52,6 +53,11 @@ test('toArray flattens every property to its real Latte template variable name',
             'deleted_permalinks' => [[
                 'cat_id' => 2,
                 'permalink' => 'old',
+                'date_deleted' => null,
+                'last_hit' => null,
+                'hit' => 0,
+                'name' => 'Album',
+                'U_DELETE' => '/admin.php?page=permalinks&delete_permanent=old',
             ]],
             'ADMIN_PAGE_TITLE' => 'Albums',
             'categories' => [

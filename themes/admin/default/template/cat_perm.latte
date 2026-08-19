@@ -696,6 +696,7 @@
 {do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
 
 {do combineScript(id: 'cat_perm', load: 'footer', require: 'jquery.selectize,page-data', path: 'themes/admin/default/js/cat_perm.js')}
+{do combineCss(id: 'cat_perm', path: 'themes/admin/default/css/pages/cat_perm.css')}
 {do exposeData('cache_key_groups', $CACHE_KEYS['groups'])}
 {do exposeData('cache_key_users', $CACHE_KEYS['users'])}
 {do exposeData('cache_key_hash', $CACHE_KEYS['_hash'])}
@@ -749,7 +750,6 @@
           placeholder="{='Type in a search term'|translate}"
           name="groups[]"
           multiple
-          style="width:600px;"
         ></select>
       {else}
         {='There is no group in this gallery.'|translate} <a
@@ -768,7 +768,6 @@
         placeholder="{='Type in a search term'|translate}"
         name="users[]"
         multiple
-        style="width:600px;"
       ></select>
     </p>
 
@@ -778,15 +777,14 @@
       {='%u users have automatic permission because they belong to a granted group.'|translate:$nb_users_granted_indirect}
       <a
         href="#"
-        class="toggle-indirectPermissions"
-        style="display:none"
+        class="toggle-indirectPermissions u-hidden"
       >{='hide details'|translate}</a>
       <a
         href="#"
         class="toggle-indirectPermissions"
       >{='show details'|translate}</a>
 
-      <ul id="indirectPermissionsDetails" style="display:none">
+      <ul id="indirectPermissionsDetails" class="u-hidden">
         <li
           n:foreach="$user_granted_indirect_groups as $group_details"
         ><strong>{$group_details['group_name']}</strong> : {$group_details['group_users']}</li>

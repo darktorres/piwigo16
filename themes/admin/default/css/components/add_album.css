@@ -1,0 +1,7 @@
+.add-album-popin-wrap {
+  display: none;
+}
+
+#categoryNameError {
+  color: #f00;
+}

@@ -279,7 +279,6 @@
           placeholder="Type in a search term"
           name="groups[]"
           multiple
-          style="width:600px;"
         ></select>
     </p>
 
@@ -292,7 +291,6 @@
         placeholder="Type in a search term"
         name="users[]"
         multiple
-        style="width:600px;"
       ></select>
     </p>
 
@@ -301,15 +299,14 @@
       3 users have automatic permission because they belong to a granted group.
       <a
         href="#"
-        class="toggle-indirectPermissions"
-        style="display:none"
+        class="toggle-indirectPermissions u-hidden"
       >hide details</a>
       <a
         href="#"
         class="toggle-indirectPermissions"
       >show details</a>
 
-      <ul id="indirectPermissionsDetails" style="display:none">
+      <ul id="indirectPermissionsDetails" class="u-hidden">
         <li
         ><strong>Editors</strong> : fixture_admin, regular_user</li>
         <li

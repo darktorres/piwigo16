@@ -1,0 +1,14 @@
+.who_option {
+  margin-top: 5px;
+}
+
+.who_option select {
+  width: 524px;
+}
+
+span.errors {
+  background-image: none;
+  padding: 2px 5px;
+  margin: 0;
+  border-radius: 5px;
+}

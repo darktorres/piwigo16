@@ -1,0 +1,4 @@
+.rank-of-image .thumbnail {
+  width: var(--tn-width);
+  height: var(--tn-height);
+}

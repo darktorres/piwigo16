@@ -691,6 +691,7 @@
 {* END varType *}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
 {do combineScript(id: 'element_set_ranks', load: 'footer', require: 'jquery.ui.sortable,jquery.tipTip', path: 'themes/admin/default/js/element_set_ranks.js')}
+{do combineCss(id: 'element_set_ranks', path: 'themes/admin/default/css/pages/element_set_ranks.css')}
 
 <form action="{$F_ACTION|noescape}" method="post" id="element_set_ranks">
   <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
@@ -707,13 +708,13 @@
             class="thumbnail"
             alt="{$thumbnail['NAME']}"
             title="{$thumbnail['NAME']}"
-            style="width:{$thumbnail['SIZE'][0]}px; height:{$thumbnail['SIZE'][1]}px; "
+            style="--tn-width:{$thumbnail['SIZE'][0]}px; --tn-height:{$thumbnail['SIZE'][1]}px;"
           >
           <input
             type="text"
             name="rank_of_image[{$thumbnail['ID']}]"
             value="{$thumbnail['RANK']}"
-            style="display:none"
+            class="u-hidden"
           >
         </li>
       </ul>

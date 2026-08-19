@@ -697,8 +697,9 @@
 {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 {do combineScript(id: 'addAlbum', load: $load_mode, path: 'themes/admin/default/js/addAlbum.js')}
+{do combineCss(id: 'add_album', path: 'themes/admin/default/css/components/add_album.css')}
 
-<div style="display:none">
+<div class="add-album-popin-wrap">
   <div id="addAlbumForm">
     <form>
       <div class="popinField addAlbumFormParent">
@@ -711,7 +712,6 @@
         <input name="category_name" type="text" maxlength="255">
         <span
           id="categoryNameError"
-          style="color:red;"
         >{='The name of an album must not be empty'|translate}</span>
       </div>
 

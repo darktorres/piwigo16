@@ -52,7 +52,7 @@ final class LintLatteCommand extends Command
             'paths',
             InputArgument::IS_ARRAY | InputArgument::OPTIONAL,
             'Directories/files to scan',
-            ['themes', 'template-extension'],
+            ['themes'],
         );
     }
 

@@ -19,8 +19,6 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Config\TemplateExtension;
-use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -42,7 +40,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Latte\PiwigoExtension;
-use Piwigo\Template\Request\TemplateExtentsRequest;
 
 /**
  * The data_dir_checked write inside __construct() goes through
@@ -87,11 +84,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     private array $vars = [];
 
     /**
-     * @var string[] - Template extents filenames for each template handle.
-     */
-    public array $extents = [];
-
-    /**
      * @var string[] - Content to add before </head> tag
      */
     public array $htmlHeadElements = [];
@@ -125,9 +117,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public array $indexButtons = [];
 
     /**
-     * The theme/template-extension directory chain, in resolution order --
-     * read by `resolveLatteTemplatePath()` to find a bare `.latte`
-     * filename's real path.
+     * The theme directory chain, in resolution order -- read by
+     * `resolveLatteTemplatePath()` to find a bare `.latte` filename's
+     * real path.
      *
      * @var list<string>
      */
@@ -156,7 +148,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function __construct(
         private readonly CurrentConfig $currentConfig,
         private readonly Lang $lang,
-        private readonly AdminContext $adminContext,
         private readonly EventDispatcher $eventDispatcher,
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
@@ -249,20 +240,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $this->lang->setLangInfo($lang_info);
         $this->assign('lang_info', $lang_info);
-
-        if (! $this->adminContext->isActive()) {
-            // setExtents() itself stays untouched -- it's also called by
-            // setExtent() with an arbitrary, genuinely-untyped $param a
-            // third-party plugin supplies, so its own polymorphic
-            // is_array()/is_string() handling is load-bearing, not legacy
-            // cruft. Unwrap back to the raw [handle, param, theme] shape it
-            // already expects here, at this one config-fed call site.
-            $rawExtents = array_map(
-                static fn (TemplateExtension $e): array => [$e->handle, $e->param, $e->theme],
-                $this->currentConfig->extentsForTemplates,
-            );
-            $this->setExtents($rawExtents, $this->paths->root . 'template-extension/', true, $theme->value ?? '');
-        }
     }
 
     /**
@@ -450,13 +427,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Resolves a bare `.latte` filename to a real, absolute filesystem
-     * path: an extents-override match (re-keyed by base filename, unlike
-     * `$this->extents`'s handle-keyed entries used by the Smarty-era
-     * `setFilenames()`/`getExtent()` path) wins if present, otherwise the
-     * first hit walking `$this->templateDirs` in order. No custom
-     * `Latte\Loader` -- this resolves to a real path before Latte's own
-     * default `FileLoader` ever sees it, same shape as the reference's
-     * `resolveLatteTemplatePath()`.
+     * path: the first hit walking `$this->templateDirs` in order. No
+     * custom `Latte\Loader` -- this resolves to a real path before
+     * Latte's own default `FileLoader` ever sees it, same shape as the
+     * reference's `resolveLatteTemplatePath()`.
      */
     private function resolveLatteTemplatePath(string $file): string
     {
@@ -469,11 +443,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // nonexistent candidate.
         if (str_starts_with($file, '/') && file_exists($file)) {
             return $file;
-        }
-
-        $baseName = basename($file);
-        if (isset($this->extents[$baseName])) {
-            return $this->extents[$baseName];
         }
 
         foreach ($this->templateDirs as $dir) {
@@ -604,72 +573,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         return is_string($value) ? $value : '';
     }
 
-    /**
-     * Sets template extention filename for handles.
-     */
-    public function setExtent(string $filename, mixed $param, string $dir = '', bool $overwrite = true, string $theme = 'N/A'): bool
-    {
-        return $this->setExtents([
-            $filename => $param,
-        ], $dir, $overwrite, $theme);
-    }
-
-    /**
-     * Sets template extentions filenames for handles.
-     *
-     * @param mixed $filename_array hashmap of handle=>filename; also called
-     *   directly with a plugin-supplied value (setExtent()'s caller),
-     *   which is not guaranteed to be an array
-     */
-    public function setExtents(mixed $filename_array, string $dir = '', bool $overwrite = true, string $theme = 'N/A'): bool
-    {
-        if (! is_array($filename_array)) {
-            return false;
-        }
-        $getKeysConcatenated = TemplateExtentsRequest::fromGlobals()->keysConcatenated;
-        foreach ($filename_array as $filename => $value) {
-            if (is_array($value)) {
-                $handle = $value[0] ?? null;
-                $param = $value[1] ?? null;
-                $thm = $value[2] ?? null;
-            } elseif (is_string($value)) {
-                $handle = $value;
-                $param = 'N/A';
-                $thm = 'N/A';
-            } else {
-                return false;
-            }
-
-            if ((! is_string($handle) && ! is_int($handle)) or ! is_scalar($param) or ! is_scalar($thm)) {
-                return false;
-            }
-
-            if ((stripos($getKeysConcatenated, '/' . (string) $param) !== false or (is_string($param) and $param === 'N/A'))
-              and ((is_string($thm) and $thm === $theme) or (is_string($thm) and $thm === 'N/A'))
-              and (! isset($this->extents[$handle]) or $overwrite)
-              and file_exists($dir . $filename)) {
-                $real_path = realpath($dir . $filename);
-                if ($real_path !== false) {
-                    $this->extents[$handle] = $real_path;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Returns template extension if exists.
-     *
-     * @param string $filename should be empty!
-     */
-    public function getExtent(string $filename = '', string $handle = ''): string
-    {
-        if (isset($this->extents[$handle])) {
-            $filename = $this->extents[$handle];
-        }
-        return $filename;
-    }
-
     #[Override]
     public function assignContext(TemplatePageContext $context): void
     {
@@ -750,10 +653,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             return true;
         }
 
-        $baseName = basename($file);
-        if (isset($this->extents[$baseName]) && file_exists($this->extents[$baseName])) {
-            return true;
-        }
         return array_any($this->templateDirs, fn (string $dir): bool => file_exists(rtrim($dir, '/') . '/' . $file));
     }
 

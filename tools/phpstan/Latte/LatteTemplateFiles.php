@@ -10,8 +10,8 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 /**
- * The real `.latte` tree's file set -- themes/ + template-extension/, every
- * `.latte` file including ones reached only via {include}. Shared by
+ * The real `.latte` tree's file set -- every `.latte` file under themes/,
+ * including ones reached only via {include}. Shared by
  * PhpStanLatteCompileCommand and PhpStanLatteSyncVarTypeCommand: both must
  * always walk the identical file set, or the compiled-docblock injection and
  * the {varType} source write-back could silently diverge on which templates
@@ -25,10 +25,8 @@ final class LatteTemplateFiles
     public static function discover(string $root): array
     {
         $templates = [];
-        foreach ([$root . '/themes', $root . '/template-extension'] as $dir) {
-            if (! is_dir($dir)) {
-                continue;
-            }
+        $dir = $root . '/themes';
+        if (is_dir($dir)) {
             $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
             foreach ($iterator as $file) {
                 /** @var SplFileInfo $file */

@@ -48,7 +48,6 @@ $wizard = new InstallWizard(
     RequestBootstrap::currentConfigService(),
     RequestBootstrap::currentConfig(),
     RequestBootstrap::inputValidator(),
-    RequestBootstrap::adminContext(),
     RequestBootstrap::eventDispatcher(),
     RequestBootstrap::pageState(),
     RequestBootstrap::errorCollector(),

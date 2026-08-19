@@ -56,7 +56,7 @@ const SCHEMA_INTEGRITY_PRIVATE_SET_LIST = [
     'representativeCacheOnSubcats', 'rssFeedAuthor', 'sendPiwigoInfosLastNotice', 'sendPiwigoInfosOriginHash', 'sendPiwigoInfosPeriod',
     'sendPiwigoInfosUpdateUrl', 'sessionGcProbability', 'sessionName', 'sessionSaveHandler', 'sessionUseCookies',
     'sessionUseOnlyCookies', 'sessionUseTransSid', 'showMobileAppBannerInAdmin', 'showMobileAppBannerInGallery', 'showNewsletterSubscription',
-    'showPiwigoLatestNews', 'showTemplateInSideMenu', 'showThumbnailCaption', 'slideshowPeriodStep', 'standardPagesSelectedLogo',
+    'showPiwigoLatestNews', 'showThumbnailCaption', 'slideshowPeriodStep', 'standardPagesSelectedLogo',
     'standardPagesSelectedLogoPath', 'standardPagesSelectedSkin', 'statCompareYearDisplayed', 'tagLettersColumnNumber', 'tagsDefaultDisplayMode',
     'templateForceCompile', 'topNumber', 'trustedProxies', 'uniquenessMode', 'updateNotifyReminderPeriod',
     'uploadFormAutomaticRotation', 'uploadFormChunkSize', 'uploadFormMaxFileSize',
@@ -72,7 +72,7 @@ const SCHEMA_INTEGRITY_PRIVATE_SET_LIST = [
 const SCHEMA_INTEGRITY_HOOKED_LIST = [
     'apiKeyDuration', 'apiKeyForbiddenMethods', 'availablePermissionLevels', 'blkMenubar',
     'chmodValue', 'combinedDir', 'defaultFiltersViews', 'derivativeDir',
-    'extentsForTemplates', 'fileExtensions', 'filterPages', 'formatExtensions',
+    'fileExtensions', 'filterPages', 'formatExtensions',
     'headerNotes', 'historySectionsCache', 'links', 'metadataKeywordSeparatorRegex',
     'pictureExtensions', 'pictureInformations', 'randomIndexRedirect', 'rateItems',
     'orderBy', 'orderByInsideCategory',

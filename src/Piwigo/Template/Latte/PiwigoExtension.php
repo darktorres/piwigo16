@@ -45,7 +45,7 @@ use Piwigo\Template\Template;
  *    wrapped function's first argument and those don't fit that shape.
  *  - **Stateful asset/page functions** -- `combineScript`/`combineCss`/
  *    `getCombinedScripts`/`getCombinedCss`/`defineDerivative`/`htmlHead`/
- *    `footerScript`/`localCssRules`/`getExtent`/`exposeData`/
+ *    `footerScript`/`localCssRules`/`exposeData`/
  *    `exposeString`/`getPageDataScript` all delegate to the owning
  *    `Template` instance's own (renamed, same-body) methods -- reusing
  *    its already-correct `ScriptLoader`/`CssLoader`/`PageState`/
@@ -203,11 +203,6 @@ final class PiwigoExtension extends Extension
             'exposeData' => $this->template->exposeData(...),
             'exposeString' => $this->template->exposeString(...),
             'getPageDataScript' => $this->template->getPageDataScript(...),
-            // Template::getExtent(string $filename, string $handle): string
-            // already has the exact (path, override-key) shape the
-            // converter's `EXPR|get_extent:ARG` -> `getExtent(EXPR, ARG)`
-            // rewrite produces -- bound directly, no wrapper needed.
-            'getExtent' => $this->template->getExtent(...),
             'htmlOptions' => self::htmlOptions(...),
             'htmlRadios' => self::htmlRadios(...),
             'math' => self::math(...),

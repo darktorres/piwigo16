@@ -10,7 +10,6 @@ use Piwigo\Controller\Admin\CatListSubController;
 use Piwigo\Controller\Admin\CatOptionsSubController;
 use Piwigo\Controller\Admin\CommentsSubController;
 use Piwigo\Controller\Admin\ConfigurationSubController;
-use Piwigo\Controller\Admin\ExtendForTemplatesSubController;
 use Piwigo\Controller\Admin\GroupListSubController;
 use Piwigo\Controller\Admin\GroupPermSubController;
 use Piwigo\Controller\Admin\HelpSubController;
@@ -59,7 +58,6 @@ return [
     'user_perm' => UserPermSubController::class,
     'user_activity' => UserActivitySubController::class,
     'configuration' => ConfigurationSubController::class,
-    'extend_for_templates' => ExtendForTemplatesSubController::class,
     'menubar' => MenubarSubController::class,
     'permalinks' => PermalinksSubController::class,
     'picture_formats' => PictureFormatsSubController::class,

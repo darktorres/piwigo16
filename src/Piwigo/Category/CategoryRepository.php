@@ -2780,26 +2780,6 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Every non-null category permalink -- Admin\ExtendForTemplatesPageRenderer's
-     * own "selective URLs keyword" list.
-     *
-     * @return list<string>
-     *
-     * Single-table, static WHERE; permalink is plain-typed.
-     */
-    public function findActivePermalinks(): array
-    {
-        return array_values(array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
-                ->select('c.permalink')
-                ->where('c.permalink IS NOT NULL')
-                ->getQuery()
-                ->getSingleColumnResult()
-        ));
-    }
-
-    /**
      * Direct children of $parentId (or every root category when null),
      * ordered by rank -- Admin\CatListPageRenderer's own album listing.
      *

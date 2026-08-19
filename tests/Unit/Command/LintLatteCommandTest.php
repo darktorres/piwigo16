@@ -142,10 +142,10 @@ test('skips a nonexistent path without failing the run', function (): void {
         ->toContain('Skip:');
 });
 
-test('defaults to scanning themes/ and template-extension/ when no paths argument is given', function (): void {
+test('defaults to scanning themes/ when no paths argument is given', function (): void {
     $command = lint_latte_command_test_build();
     $definition = $command->getDefinition();
 
     expect($definition->getArgument('paths')->getDefault())
-        ->toBe(['themes', 'template-extension']);
+        ->toBe(['themes']);
 });

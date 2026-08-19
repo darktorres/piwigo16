@@ -7,9 +7,9 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\UrlService;
 
 /**
- * AdminUiHelper::getAdminClientCacheKeys() -- the pure, file-based half of
- * this class (getExtents/pwgUrl/getActiveMenu/numberFormatHumanReadable) is
- * covered by tests/Unit/Admin/AdminUiHelperTest.php; this method needs a
+ * AdminUiHelper::getAdminClientCacheKeys() -- the pure half of this class
+ * (pwgUrl/getActiveMenu/numberFormatHumanReadable) is covered by
+ * tests/Unit/Admin/AdminUiHelperTest.php; this method needs a
  * real DB connection (a live COUNT/MAX(lastmodified) per table), so it
  * lives here instead. Each per-item value is the live-computed
  * "{unix_timestamp}_{count}" string described by the method's own

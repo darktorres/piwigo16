@@ -24,7 +24,7 @@ use Piwigo\Users\CurrentUser;
  *
  * `combineScript`/`combineCss`/`getCombinedScripts`/`getCombinedCss`/
  * `defineDerivative`/`htmlHead`/`footerScript`/
- * `localCssRules`/`getExtent`/`once` are deliberately NOT retested here
+ * `localCssRules`/`once` are deliberately NOT retested here
  * -- they're thin `$this->template->x(...)` delegates with their own
  * real coverage in TemplateInstanceTest.php; duplicating it against a
  * second, PiwigoExtension-constructed Template would just be the same

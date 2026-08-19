@@ -16,7 +16,6 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -77,9 +76,9 @@ use Symfony\Component\Mime\Email;
  * `AccessLevelChecker` has no `MailerInterface` dependency of its own, so
  * it's built directly from this class's own already-required
  * currentUser/currentConfig rather than resolved from the container.
- * `AdminContext`/`ErrorCollector`/`ProcessCache`/`CurrentConfigService` are
- * resolved lazily from the container instead, purely to pass through to
- * getMailTemplate()'s own `new Template(...)` call -- see adminContext()'s
+ * `ErrorCollector`/`ProcessCache`/`CurrentConfigService` are resolved
+ * lazily from the container instead, purely to pass through to
+ * getMailTemplate()'s own `new Template(...)` call -- see errorCollector()'s
  * own docblock for why they stay lazy.
  *
  * Implements `Piwigo\Core\MailerInterface` so L2aCoreDomain/L2bExtendedDomain
@@ -137,7 +136,7 @@ final class MailService implements MailerInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- these 4 exist
+     * Container resolve, not a constructor property -- these 3 exist
      * purely to pass through to getMailTemplate()'s own
      * `new Template(...)` call (Template's own required collaborators),
      * not read by MailService itself. Resolving `Piwigo\Auth\AccessControl`
@@ -149,16 +148,6 @@ final class MailService implements MailerInterface
      * mean every such resolution also pays that cost. Kept lazy so nothing
      * forces it outside an actual getMailTemplate() call.
      */
-    private function adminContext(): AdminContext
-    {
-        $adminContext = Kernel::container()->get(AdminContext::class);
-        if (! $adminContext instanceof AdminContext) {
-            throw new LogicException('Container returned an unexpected type for ' . AdminContext::class);
-        }
-
-        return $adminContext;
-    }
-
     private function errorCollector(): ErrorCollector
     {
         $errorCollector = Kernel::container()->get(ErrorCollector::class);
@@ -428,7 +417,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->adminContext(), $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
     }
 
     /**

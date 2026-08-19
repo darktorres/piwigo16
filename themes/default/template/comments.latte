@@ -788,7 +788,7 @@
     <p><input type="submit" value="{='Filter and display'|translate}"></p>
   </form>
 
-  {if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar')}{/if}
+  {if !empty($navbar)}{include 'navigation_bar.latte'}{/if}
 
   <div n:if="isset($COMMENT_LIST)" id="comments">
     {$COMMENT_LIST}

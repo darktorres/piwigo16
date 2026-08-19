@@ -63,8 +63,6 @@ test('compiles the full template tree with framework globals and rewritten filte
         $this->root . '/themes/default/template/page.latte',
         "{\$ROOT_URL}{='Hello'|translate}\n",
     );
-    mkdir($this->root . '/template-extension/custom', 0o777, true);
-    file_put_contents($this->root . '/template-extension/custom/extra.latte', "<p>{\$pwg->version}</p>\n");
 
     $tester = new CommandTester(phpstan_latte_compile_command_test_build(Paths::fromRoot($this->root)));
     $exit = $tester->execute([]);
@@ -72,7 +70,7 @@ test('compiles the full template tree with framework globals and rewritten filte
     expect($exit)
         ->toBe(Command::SUCCESS);
     expect($tester->getDisplay())
-        ->toContain('Compiled 2 templates');
+        ->toContain('Compiled 1 templates');
 
     $outputDir = $this->root . '/' . PhpStanLatteCompileCommand::OUTPUT_DIR;
     $page = (string) file_get_contents($outputDir . '/themes-default-template-page.latte.php');

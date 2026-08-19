@@ -37,7 +37,7 @@ use Throwable;
  * `Mail` files only under `themes/default/template/mail/`
  * (MailService::getMailTemplate() already scopes its instance there),
  * everything else is genuinely theme-polymorphic and resolves against
- * `themes/default/` + `themes/standard_pages/` + `template-extension/`.
+ * `themes/default/` + `themes/standard_pages/`.
  * A zero-match scoped lookup widens to the full tree (with a notice)
  * rather than silently resolving to nothing.
  */
@@ -186,7 +186,6 @@ final class TemplateCallSiteScanner
         if ($paths === []) {
             $paths = $this->findRealPaths($literal, [
                 $this->root . '/themes',
-                $this->root . '/template-extension',
             ]);
             if ($paths !== []) {
                 $notices[] = "fallback-widened lookup for '{$literal}' from {$class} ({$file})";
@@ -256,7 +255,6 @@ final class TemplateCallSiteScanner
         return [
             $this->root . '/themes/default/template',
             $this->root . '/themes/standard_pages/template',
-            $this->root . '/template-extension',
         ];
     }
 
@@ -306,11 +304,8 @@ final class TemplateCallSiteScanner
         }
 
         $index = [];
-        foreach ([$this->root . '/themes', $this->root . '/template-extension'] as $root) {
-            if (! is_dir($root)) {
-                continue;
-            }
-
+        $root = $this->root . '/themes';
+        if (is_dir($root)) {
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
             );

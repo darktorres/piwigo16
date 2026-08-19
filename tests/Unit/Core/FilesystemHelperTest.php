@@ -12,10 +12,12 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * getFsDirectories()/getDirs() already have full coverage through other
- * suites' real callers (e.g. admin sync flows) -- this file only closes
- * the remaining gaps: mkgetdir()'s failure/fatalError plumbing,
- * deltree()'s trash-path branches, and getCacheSizeDerivatives().
+ * getFsDirectories() already has full coverage through another suite's
+ * real caller (LocalSiteReader's admin sync flow) -- this file only
+ * closes the remaining gaps: mkgetdir()'s failure/fatalError plumbing,
+ * deltree()'s trash-path branches, getCacheSizeDerivatives(), and
+ * getDirs() (this file's own direct test below is its only coverage --
+ * it has no production caller).
  *
  * mkgetdir()'s str_replace(DIRECTORY_SEPARATOR) branch (line 83) is gated
  * behind `str_starts_with(PHP_OS, 'WIN')`; PHP_OS is a compile-time
@@ -462,16 +464,12 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
 });
 
 test('getDirs returns only real subdirectory names, excluding dot entries, .svn, and plain files', function (): void {
-    // Real gap: getDirs()'s own top-of-file docblock claims full coverage
-    // via other suites' real callers, but its only Unit-suite caller
-    // (ExtendForTemplatesPageRendererTest.php, via
-    // AdminUiHelper::getExtents() -> FilesystemHelper::getDirs($paths->
-    // themes)) only ever exercises it against an EMPTY themes/ directory
-    // -- opendir()/readdir()/closedir() all run, but readdir() only ever
-    // yields '.' and '..', both excluded before the loop body's own
-    // 3-clause `and` chain, path concatenation, or `$sub_dirs[] = $file`
-    // ever meaningfully executes. A populated directory is the only way
-    // to exercise (and kill mutations on) the real filtering logic.
+    // This file's only real, direct exercise of getDirs() -- see the
+    // top-of-file docblock for why. Populated on purpose: a populated
+    // directory is the only way to exercise (and kill mutations on) the
+    // real filtering logic (the loop body's own 3-clause `and` chain,
+    // path concatenation, and `$sub_dirs[] = $file`), not just the
+    // opendir()/readdir()/closedir() plumbing around it.
     $dir = $this->root . '/getdirs-target';
     mkdir($dir);
     mkdir($dir . '/alpha');

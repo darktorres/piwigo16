@@ -19,9 +19,10 @@ it('renders with today\'s date pre-filled and no filter applied', function (): v
 
     // START/END are hidden inputs (not "filter_ip"/"filter_image_id",
     // which don't exist as real form fields at all -- ip/image_id are
-    // only ever echoed into the "current_param" JS object, confirmed
-    // live via raw curl) -- both default to Env::now() (frozen by
-    // PIWIGO_TEST_NOW) when no filter is applied.
+    // only ever exposed into the typed page-data JSON island, read back
+    // client-side by history.js's current_param via pwg_getPageData())
+    // -- both default to Env::now() (frozen by PIWIGO_TEST_NOW) when no
+    // filter is applied.
     $today = new DateTime((string) getenv('PIWIGO_TEST_NOW'))
         ->format('Y-m-d');
     $page->assertPresent('input[name="start"][value="' . $today . '"]');
@@ -37,10 +38,11 @@ it('clears the default start date when any filter is applied', function (): void
     // today's date -- observable as the START field rendering empty
     // rather than a real date value -- confirmed live via raw curl.
     $page->assertPresent('input[name="start"][value=""]');
-    // The ip filter itself is only echoed into the "current_param" JS
-    // object (a <script> tag, not a visible/DOM-attribute value), so a
-    // raw-content check is the correct way to confirm it round-tripped.
-    expect(H::rawWebpage($page)->content())->toContain('ip: "127.0.0.1"');
+    // The ip filter is exposed via the typed page-data JSON island
+    // (PageDataPayload::toJson(), plain json_encode(), no
+    // JSON_PRETTY_PRINT) -- compact shape, so "ip":"127.0.0.1", not
+    // ip: "127.0.0.1".
+    expect(H::rawWebpage($page)->content())->toContain('"ip":"127.0.0.1"');
     $page->assertNoJavaScriptErrors();
 });
 
@@ -48,7 +50,7 @@ it('echoes a valid image_id filter back into the form', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=history&filter_image_id=42');
 
-    expect(H::rawWebpage($page)->content())->toContain('image_id: "42"');
+    expect(H::rawWebpage($page)->content())->toContain('"image_id":"42"');
 });
 
 it('resolves a real filter_user_id to its username', function (): void {

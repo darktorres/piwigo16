@@ -217,51 +217,6 @@ test('assignVarFromTemplate() renders a real .latte file and assigns the result 
     latte_engine_wiring_test_rrmdir($tplDir);
 });
 
-test('resolveLatteTemplatePath() honors a basename-keyed extents override, matching how a direct parse(\'x.latte\') call resolves', function (): void {
-    // A template only ever reached via a
-    // direct parse('x.latte') call gets overridden by keying
-    // Template::$extents under that same real basename (see
-    // ExtendForTemplatesPageRenderer's own $eligible_templates docblock).
-    $t = TemplateTestFactory::build();
-    $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
-    mkdir($tplDir, 0o777, true);
-    file_put_contents($tplDir . '/original.latte', 'original');
-    $t->setTemplateDir($tplDir);
-
-    $extDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-ext-' . bin2hex(random_bytes(8)) . '/';
-    mkdir($extDir, 0o777, true);
-    file_put_contents($extDir . 'replacer.latte', 'replaced');
-    $t->setExtent('replacer.latte', 'original.latte', $extDir);
-
-    $output = $t->parse('original.latte', true);
-
-    expect($output)
-        ->toBe('replaced');
-
-    latte_engine_wiring_test_rrmdir($tplDir);
-    latte_engine_wiring_test_rrmdir($extDir);
-});
-
-test('getExtent() honors a handle-keyed extents override, matching how a real {include getExtent(...)} template call resolves', function (): void {
-    // Every live getExtent() call site under
-    // themes/ and template-extension/ (navigation_bar.latte/
-    // picture_nav_buttons.latte's {include getExtent('x.latte', 'handle')}
-    // sites, menubar.latte's {include getExtent($block->template, $id)})
-    // hardcodes a short opaque handle string as getExtent()'s own
-    // second argument, so Template::$extents has to stay keyed by that
-    // exact string for these specific partials, not by basename.
-    $t = TemplateTestFactory::build();
-    $extDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-ext-' . bin2hex(random_bytes(8)) . '/';
-    mkdir($extDir, 0o777, true);
-    file_put_contents($extDir . 'replacer_navbar.latte', 'replaced');
-    $t->setExtent('replacer_navbar.latte', 'navbar', $extDir);
-
-    expect($t->getExtent('navigation_bar.latte', 'navbar'))
-        ->toBe(realpath($extDir . 'replacer_navbar.latte'));
-
-    latte_engine_wiring_test_rrmdir($extDir);
-});
-
 test('CurrentTemplate resolves independently of PiwigoExtension holding its owning Template directly, not via the registry', function (): void {
     // PiwigoExtension takes $template directly in its constructor rather
     // than reaching through CurrentTemplate::get() -- see LatteEngine's own

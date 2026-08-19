@@ -95,21 +95,34 @@ function extraFiltersInsertRawSearchRow(array $rules): string
 }
 
 /**
- * Extracts the raw `global_params = {...};` JS statement body
- * search_filters.inc.latte emits from `$GP` (json_encode($mySearch),
- * SearchFilterRenderer::render()'s own final template assignment) --
- * scoping a "does the removed field's key still appear" check to just
- * this blob, rather than the whole response body, avoids a false match
- * against an unrelated same-named label elsewhere on the page (e.g. a
- * photo's own "author" metadata display).
+ * Extracts `$GP` (json_encode($mySearch), SearchFilterRenderer::
+ * render()'s own final template assignment) -- scoping a "does the
+ * removed field's key still appear" check to just this blob, rather
+ * than the whole response body, avoids a false match against an
+ * unrelated same-named label elsewhere on the page (e.g. a photo's own
+ * "author" metadata display).
+ *
+ * search_filters.inc.latte exposes it as `global_params_json` into the
+ * typed page-data JSON island, read back client-side via
+ * search_filters.js's own `JSON.parse(pwg_getPageData('global_params_json'))`.
+ * $GP is itself already a JSON string, so it's double-encoded in the
+ * island ("global_params_json":"{\"cat\":...}") -- json_decode() the
+ * outer page-data envelope once to get back the real, unescaped inner
+ * JSON string, the same as the browser's own
+ * JSON.parse(pwg_getPageData(...)) does at runtime.
  */
 function extraFiltersGlobalParamsJson(string $html): string
 {
-    if (preg_match('/global_params\s*=\s*(\{.*?\});/s', $html, $matches) !== 1) {
-        throw new RuntimeException('could not find the global_params JS assignment in the response body');
+    if (preg_match('#<script type="application/json" id="page-data">(.*?)</script>#s', $html, $matches) !== 1) {
+        throw new RuntimeException('could not find the page-data JSON island in the response body');
     }
 
-    return $matches[1];
+    $payload = json_decode($matches[1], true);
+    if (! is_array($payload) || ! isset($payload['data']) || ! is_array($payload['data']) || ! is_string($payload['data']['global_params_json'] ?? null)) {
+        throw new RuntimeException('page-data JSON island did not contain a global_params_json string');
+    }
+
+    return $payload['data']['global_params_json'];
 }
 
 /**
@@ -346,14 +359,15 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         expect(extraFiltersSettledContent($page))
             ->toContain('Search Ratings Disabled Photo');
 
-        // search_filters.inc.latte emits this JS var literally from
-        // $SHOW_FILTER_RATINGS, and only renders the ratings checkbox / the
-        // whole "filter-ratings" panel when it's true -- both are only
-        // observable by reading the raw response body, not assertSee()'s
-        // visible-text check.
+        // search_filters.inc.latte exposes SHOW_FILTER_RATINGS into the
+        // typed page-data JSON island, read back client-side via
+        // pwg_getPageData('show_filter_ratings'). It only renders the
+        // ratings checkbox / the whole "filter-ratings" panel when true --
+        // both are only observable by reading the raw response body, not
+        // assertSee()'s visible-text check.
         $html = H::rawWebpage($page)->content();
         expect($html)
-            ->toContain('var show_filter_ratings = false;');
+            ->toContain('"show_filter_ratings":false');
         expect($html)
             ->not->toContain('filter-manager-controller ratings');
         // Proves searchFields['ratings'] was actually unset (not just

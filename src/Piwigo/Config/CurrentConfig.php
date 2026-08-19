@@ -1303,12 +1303,6 @@ final class CurrentConfig
      */
     public bool $showQueries = false;
 
-    // === show_template_in_side_menu ===
-    /**
-     * Show the active theme name in the gallery sidebar.
-     */
-    public private(set) bool $showTemplateInSideMenu = false;
-
     // === show_thumbnail_caption ===
     /**
      * Show the photo title below thumbnails in album index pages.
@@ -1875,39 +1869,6 @@ final class CurrentConfig
      * stalled run. Absent when no run is in progress.
      */
     public ?string $emptyLoungeRunning = null;
-
-    // === extents_for_templates ===
-    /**
-     * Per-template-file handle/URL-keyword/theme overrides applied by
-     * Template::setExtents() -- keyed by template filename.
-     * @var array<string, TemplateExtension>
-     */
-    public array $extentsForTemplates = [] {
-        /**
-         * @param array<mixed> $value
-         */
-        set(array $value) {
-            $this->extentsForTemplates = self::sanitizeExtentsForTemplates($value);
-        }
-    }
-
-    /**
-     * @param array<mixed> $value
-     * @return array<string, TemplateExtension>
-     */
-    private static function sanitizeExtentsForTemplates(array $value): array
-    {
-        $result = [];
-        foreach ($value as $key => $entry) {
-            if (is_string($key) && is_array($entry)) {
-                $extension = TemplateExtension::tryFromArray($entry);
-                if ($extension instanceof TemplateExtension) {
-                    $result[$key] = $extension;
-                }
-            }
-        }
-        return $result;
-    }
 
     // === file_ext ===
     /**

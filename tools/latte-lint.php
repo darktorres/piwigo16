@@ -25,7 +25,7 @@ if (PHP_SAPI !== 'cli') {
  * `[WARNING]`/`[DEPRECATED]` markers; any hit fails the build.
  *
  * Usage:
- *   php tools/latte-lint.php                        # scans themes/ and template-extension/
+ *   php tools/latte-lint.php                        # scans themes/
  *   php tools/latte-lint.php themes/admin/default    # scans a custom path
  *   composer lint:latte
  */

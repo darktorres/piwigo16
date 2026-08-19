@@ -187,10 +187,10 @@ final readonly class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
+            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, self::adminContext(), $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
+            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         }
 

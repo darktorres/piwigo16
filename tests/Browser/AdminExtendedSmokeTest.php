@@ -74,9 +74,8 @@ $routes = [
     'admin cat_list' => '/admin.php?page=cat_list',
     'admin album (notification tab)' => '/admin.php?page=album&cat_id=1&tab=notification',
     // Config pages: configuration is already covered by ConsoleCleanTest/
-    // VisualRegressionTest; the other 7 pages in this group have no prior
+    // VisualRegressionTest; the other 6 pages in this group have no prior
     // Browser coverage anywhere.
-    'admin extend_for_templates' => '/admin.php?page=extend_for_templates',
     'admin menubar' => '/admin.php?page=menubar',
     'admin site_manager' => '/admin.php?page=site_manager',
     'admin site_update' => '/admin.php?page=site_update&site=1',

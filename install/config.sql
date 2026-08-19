@@ -32,7 +32,6 @@ INSERT INTO config (param,value,comment) VALUES ('email_admin_on_new_user','"non
 INSERT INTO config (param,value,comment) VALUES ('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered');
 INSERT INTO config (param,value,comment) VALUES ('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation');
 INSERT INTO config (param,value,comment) VALUES ('obligatory_user_mail_address','false','Mail address is obligatory for users');
-INSERT INTO config (param,value,comment) VALUES ('extents_for_templates','[]','Actived template-extension(s)');
 INSERT INTO config (param,value,comment) VALUES ('menubar_filter_icon','false','Display filter icon');
 INSERT INTO config (param,value,comment) VALUES ('index_sort_order_input','true','Display image order selection list');
 INSERT INTO config (param,value,comment) VALUES ('index_flat_icon','false','Display flat icon');

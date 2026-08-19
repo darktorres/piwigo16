@@ -21,8 +21,8 @@ use Throwable;
 
 /**
  * The `composer analyse:phpstan` pre-step: compiles the full real
- * `.latte` tree (themes/ + template-extension/, all of it -- templates
- * reached only via another template's `{include}` are still analysed,
+ * `.latte` tree under themes/, all of it -- templates reached only via
+ * another template's `{include}` are still analysed,
  * a coverage improvement over the retired efabrica integration, which
  * only saw resolver-reached files) into `_analysis/phpstan-latte/`,
  * where the subsequent plain `phpstan analyse` run picks the generated

@@ -186,9 +186,11 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
 
         // getUserManagerView() ?? 'line' defaults to 'line' when unset ->
         // the 'line' branch's own default pagination value (5) applies;
-        // both are rendered verbatim into a JS const.
-        $page->assertSourceHas("const view_selector = 'line';");
-        $page->assertSourceHas("const pagination = '5';");
+        // both are exposed into the typed page-data JSON island
+        // (PageDataPayload::toJson(), plain json_encode()) -- pagination
+        // is int, so it renders as a bare number, not a quoted string.
+        H::assertSeeSettled($page, '"view_selector":"line"');
+        H::assertSeeSettled($page, '"pagination":5');
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {
@@ -207,8 +209,8 @@ it('switches to grid-view pagination default of 10 when the saved view preferenc
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
-        $page->assertSourceHas("const view_selector = 'tile';");
-        $page->assertSourceHas("const pagination = '10';");
+        H::assertSeeSettled($page, '"view_selector":"tile"');
+        H::assertSeeSettled($page, '"pagination":10');
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {

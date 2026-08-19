@@ -18,10 +18,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 /**
- * Walks every real `.latte` template (`themes/` and `template-extension/`
- * -- this repo's full real tree, confirmed 135 files, matching
- * `tools/latte-prettier/`'s own coverage figure) and warms the Latte
- * compile cache, catching a real syntax error as a build failure
+ * Walks every real `.latte` template under `themes/` (this repo's full
+ * real tree, confirmed 131 files, matching `tools/latte-prettier/`'s own
+ * coverage figure) and warms the Latte compile cache, catching a real
+ * syntax error as a build failure
  * (`bin/piwigo precompile:templates` / `composer precompile:templates`)
  * while also warming the production compile cache. First-class command
  * like `cache:clear`/`backup:create` -- an admin might reasonably want to
@@ -51,12 +51,8 @@ final class PrecompileTemplatesCommand extends Command
         $failed = [];
         $count = 0;
 
-        foreach ([$this->paths->themes, $this->paths->root . 'template-extension/'] as $root) {
-            if (! is_dir($root)) {
-                continue;
-            }
-
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
+        if (is_dir($this->paths->themes)) {
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->paths->themes, FilesystemIterator::SKIP_DOTS));
             foreach ($iterator as $file) {
                 /** @var SplFileInfo $file */
                 if (! $file->isFile() || $file->getExtension() !== 'latte') {

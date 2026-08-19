@@ -146,7 +146,6 @@ final class LatteAnalysisShims
         'exposeData',
         'exposeString',
         'getPageDataScript',
-        'getExtent',
         'htmlOptions',
         'htmlRadios',
         'math',
@@ -823,14 +822,6 @@ final class LatteAnalysisShims
     }
 
     public static function getPageDataScript(): \Latte\Runtime\Html
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param string $filename should be empty!
-     */
-    public static function getExtent(string $filename = '', string $handle = ''): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

@@ -48,7 +48,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ConnectedWith;
 use Piwigo\Core\ConnectedWithSession;
@@ -183,7 +182,6 @@ final class InstallWizard
         private readonly CurrentConfigService $currentConfigService,
         private readonly CurrentConfig $currentConfig,
         private readonly InputValidator $inputValidator,
-        private readonly AdminContext $adminContext,
         private readonly EventDispatcher $eventDispatcher,
         private readonly PageState $pageState,
         private readonly ErrorCollector $errorCollector,
@@ -377,7 +375,7 @@ final class InstallWizard
         // are submitted -- Template's own get_device modifier is never
         // actually invoked by install.latte, so the DB is never touched in
         // practice either.
-        $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'));
+        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'));
         $this->currentTemplate->set($template);
         $this->template = $template;
     }

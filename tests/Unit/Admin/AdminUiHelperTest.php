@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\Paths;
 
 /**
  * [Mutation] getAdminClientCacheKeys() is deliberately NOT covered here --
@@ -14,109 +12,10 @@ use Piwigo\Core\Paths;
  * tests/Integration/AdminUiHelperCacheKeysTest.php (see that file's own
  * top docblock for the full split rationale). A scoped `pest --mutate`
  * run against the Unit suite alone will list its mutations as untested
- * -- expected, not a gap; the class's other, pure/file-based methods
- * (getExtents/pwgUrl/getActiveMenu/numberFormatHumanReadable) are what
- * this file covers.
+ * -- expected, not a gap; the class's other, pure methods
+ * (pwgUrl/getActiveMenu/numberFormatHumanReadable) are what this file
+ * covers.
  */
-beforeEach(function (): void {
-    // getExtents()'s no-args default is anchored to the live, container-bound Paths->
-    // root (a real HTTP request's cwd is wherever Apache/PHP-FPM started
-    // the process, not this project's root, so a `./`-relative default
-    // silently resolved to nothing in production -- fixed at the source,
-    // see AdminUiHelper's own docblock).
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
-});
-
-afterEach(function (): void {
-    Kernel::reset();
-});
-
-test('getExtents finds every .latte file under the real template-extension directory, stripping the resolved root prefix', function (): void {
-    // No args -> real default anchored to the live, container-bound Paths->root (the
-    // repo root, same as every other test process in this suite) -- a
-    // real, committed asset, not a throwaway fixture, so this asserts its
-    // known real contents exactly.
-    $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)));
-
-    sort($result);
-    expect($result)
-        ->toBe([
-            'distributed/samples/my-picture.latte',
-            'distributed/samples/my-thumbnails.latte',
-            'distributed/samples/my-thumbnails2.latte',
-            'distributed/samples/titling_categories.latte',
-        ]);
-});
-
-test('getExtents returns an empty array when the directory does not exist', function (): void {
-    // opendir() on a genuinely missing path raises a real PHP warning even
-    // though getExtents() itself already handles the false return
-    // gracefully -- a plain @ does NOT stop PHPUnit's ErrorHandler from
-    // surfacing it regardless (@ only affects
-    // error_reporting(), not whether the handler chain runs), so a real
-    // no-op error handler for the duration of this one expected-to-warn
-    // call is the only reliable way to swallow it, matching ImageGdTest's
-    // own established pattern.
-    set_error_handler(static fn (): bool => true);
-    try {
-        expect(AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), '/definitely/does/not/exist-' . uniqid()))->toBe([]);
-    } finally {
-        restore_error_handler();
-    }
-});
-
-test('getExtents skips symlinked .latte files and non-.latte files', function (): void {
-    $dir = sys_get_temp_dir() . '/piwigo-admin-ui-helper-test-' . bin2hex(random_bytes(8));
-    mkdir($dir, 0o777, true);
-
-    try {
-        file_put_contents($dir . '/real.latte', 'real template');
-        file_put_contents($dir . '/ignored.css', 'not a template');
-        file_put_contents($dir . '/link-target.latte', 'linked template');
-        symlink($dir . '/link-target.latte', $dir . '/symlinked.latte');
-
-        // The prefix strip is relative to whatever $start was actually
-        // passed (not a hardcoded length) -- real.latte and link-target.latte
-        // (a genuine file, not itself a symlink) both survive as bare
-        // filenames; only the symlink itself (symlinked.latte) and the
-        // non-.latte file are excluded.
-        $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
-        sort($result);
-
-        expect($result)
-            ->toBe(['link-target.latte', 'real.latte']);
-    } finally {
-        unlink($dir . '/symlinked.latte');
-        unlink($dir . '/link-target.latte');
-        unlink($dir . '/ignored.css');
-        unlink($dir . '/real.latte');
-        rmdir($dir);
-    }
-});
-
-test('getExtents recurses into subdirectories', function (): void {
-    $dir = sys_get_temp_dir() . '/piwigo-admin-ui-helper-test-' . bin2hex(random_bytes(8));
-    mkdir($dir . '/nested/deeper', 0o777, true);
-
-    try {
-        file_put_contents($dir . '/top.latte', 'top');
-        file_put_contents($dir . '/nested/mid.latte', 'mid');
-        file_put_contents($dir . '/nested/deeper/bottom.latte', 'bottom');
-
-        $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
-
-        expect($result)
-            ->toHaveCount(3);
-    } finally {
-        unlink($dir . '/nested/deeper/bottom.latte');
-        unlink($dir . '/nested/mid.latte');
-        unlink($dir . '/top.latte');
-        rmdir($dir . '/nested/deeper');
-        rmdir($dir . '/nested');
-        rmdir($dir);
-    }
-});
-
 test('pwgUrl returns every known piwigo.org URL keyed by section', function (): void {
     expect(AdminUiHelper::pwgUrl())->toBe([
         'HOME' => AppInfo::URL,
@@ -161,7 +60,6 @@ test('getActiveMenu maps every known admin page to its menu section, and an unkn
         'updates' => 3,
         'configuration' => 4,
         'derivatives' => 4,
-        'extend_for_templates' => 4,
         'menubar' => 4,
         'themes' => 4,
         'theme' => 4,

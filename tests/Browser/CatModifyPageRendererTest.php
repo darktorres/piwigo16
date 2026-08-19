@@ -137,25 +137,23 @@ it('formats a multi-date info-title ("added between") when its photos span more 
     }
 });
 
-// Regression test for a real bug found+fixed alongside this test (see
-// CatModifyPageRenderer::render()'s own new comment at the
-// $category_id_uppercat call site): PARENT_CAT_ID used to always render as
-// 0 for every sub-album, because the narrowing there only accepted a
-// *string* id_uppercat (the old raw-mysqli-row assumption) while
-// Category\Projection\Category::toArray() actually hands back a real ?int.
 // Category 2's own fixture parent is category 1 (id_uppercat=1) -- this
-// asserts the real parent id reaches both cat_modify.latte JS globals that
-// read PARENT_CAT_ID (the move-album jstree widget's initial selection).
+// asserts the real parent id reaches the typed page-data JSON island
+// cat_modify.latte exposes it into (cat_id, parent_cat_id). A raw HTTP
+// GET can't observe cat_modify.js's own runtime computation of
+// related_categories_ids, so this checks the JSON island's source
+// values directly instead -- PageDataPayload::toJson() is a plain
+// json_encode(), so an int value renders as a bare number, not a
+// quoted string.
 it('assigns the real parent id to PARENT_CAT_ID for a sub-album, not 0', function (): void {
     $page = H::loginAsAdmin($this);
     $result = H::rawGet($page, '/admin.php?page=album&cat_id=2&tab=properties');
 
     expect($result['status'])->toBe(200);
-    expect($result['body'])->toContain('var parent_album = 1');
-    expect($result['body'])->toContain('related_categories_ids = ["2", "1"]');
-    // The old, buggy behavior this replaces -- guards against a partial
-    // fix that renders the right value in one JS global but not the other.
-    expect($result['body'])->not->toContain('var parent_album = 0');
+    expect($result['body'])->toContain('"cat_id":2');
+    expect($result['body'])->toContain('"parent_cat_id":1');
+    // Guards against a sub-album's parent id narrowing back to 0.
+    expect($result['body'])->not->toContain('"parent_cat_id":0');
 });
 
 // ALLOW_DELETE (the "remove current representant" action) needs BOTH

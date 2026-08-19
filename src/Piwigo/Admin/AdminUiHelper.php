@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\Paths;
-use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -20,64 +18,6 @@ use Piwigo\Db\DbInfo;
  */
 final class AdminUiHelper
 {
-    /**
-     * Returns a list of templates currently available in
-     * template-extension. Each .latte file is extracted from
-     * template-extension.
-     *
-     * @param string $start (internal use)
-     * @return string[]
-     */
-    public static function getExtents(Paths $paths, string $start = ''): array
-    {
-        if ($start === '') {
-            // Anchored to the real install root, not a `./`-relative path
-            // -- every real HTTP entry point's cwd is wherever Apache/PHP-FPM
-            // started the process (typically the document root, `public/`),
-            // NOT this project's root where `template-extension/` actually
-            // lives, so a relative default would silently resolve to a
-            // nonexistent directory (opendir() returning false) on every
-            // real request, and the "extend for templates" feature would
-            // never apply a single replacement in production.
-            $start = rtrim($paths->root, '/') . '/template-extension';
-        }
-
-        return self::collectExtents($start, strlen($start) + 1);
-    }
-
-    /**
-     * @return string[]
-     */
-    private static function collectExtents(string $start, int $prefixLen): array
-    {
-        $extents = [];
-
-        $dir = opendir($start);
-        if ($dir === false) {
-            return $extents;
-        }
-
-        while (($file = readdir($dir)) !== false) {
-            if ($file === '.' or $file === '..' or $file === '.svn') {
-                continue;
-            }
-            $path = $start . '/' . $file;
-            if (is_dir($path)) {
-                $extents = array_merge($extents, self::collectExtents($path, $prefixLen));
-            } elseif (! is_link($path) and file_exists($path)
-                    and StringHelper::getExtension($path) === 'latte') {
-                // $prefixLen is always the length of the ORIGINAL top-level
-                // $start (+1 for its trailing slash), not this recursion
-                // level's own (longer) $start -- every $path is built by
-                // concatenating down from that same top-level start, so a
-                // single fixed offset strips it correctly at any depth.
-                $extents[] = substr($path, $prefixLen);
-            }
-        }
-        closedir($dir);
-        return $extents;
-    }
-
     /**
      * Refer main Piwigo URLs (currently PHPWG_DOMAIN domain)
      *
@@ -112,7 +52,7 @@ final class AdminUiHelper
             'album', 'cat_list', 'albums', 'cat_options', 'cat_search', 'permalinks' => 1,
             'user_list', 'user_perm', 'group_list', 'group_perm', 'notification_by_mail', 'user_activity' => 2,
             'site_manager', 'site_update', 'stats', 'history', 'maintenance', 'comments', 'updates' => 3,
-            'configuration', 'derivatives', 'extend_for_templates', 'menubar', 'themes', 'theme', 'languages' => 4,
+            'configuration', 'derivatives', 'menubar', 'themes', 'theme', 'languages' => 4,
             default => -1,
         };
     }

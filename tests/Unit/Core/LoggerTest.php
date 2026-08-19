@@ -24,8 +24,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * stop PHPUnit's ErrorHandler from converting it into a thrown Warning
  * (confirmed live), so each wraps only its one risky call with a no-op
  * set_error_handler()/restore_error_handler() pair, matching the
- * established pattern in tests/Unit/Admin/AdminUiHelperTest.php's own
- * getExtents() test.
+ * established pattern in tests/Unit/Admin/Image/ImageGdTest.php.
  */
 function loggerTestRrmdir(string $dir): void
 {

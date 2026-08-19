@@ -36,13 +36,11 @@ afterEach(function (): void {
     }
 });
 
-test('compiles every real .latte file found across both themes/ and template-extension/', function (): void {
+test('compiles every real .latte file found under themes/, recursing into subdirectories', function (): void {
     mkdir($this->root . '/themes/admin', 0o777, true);
     file_put_contents($this->root . '/themes/admin/one.latte', "{='Hello'|translate}\n");
     mkdir($this->root . '/themes/admin/sub', 0o777, true);
     file_put_contents($this->root . '/themes/admin/sub/two.latte', "<p>plain</p>\n");
-    mkdir($this->root . '/template-extension/distributed', 0o777, true);
-    file_put_contents($this->root . '/template-extension/distributed/three.latte', "{if true}yes{/if}\n");
     // Non-.latte files must be ignored, not counted or attempted.
     file_put_contents($this->root . '/themes/admin/ignored.php', '<?php // not a template');
 
@@ -53,7 +51,7 @@ test('compiles every real .latte file found across both themes/ and template-ext
     expect($exitCode)
         ->toBe(Command::SUCCESS)
         ->and($tester->getDisplay())
-        ->toContain('Compiled successfully: 3 templates.');
+        ->toContain('Compiled successfully: 2 templates.');
 });
 
 test('fails with a non-zero exit and reports the offending file on a genuine syntax error', function (): void {

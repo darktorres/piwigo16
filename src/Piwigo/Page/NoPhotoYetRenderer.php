@@ -91,7 +91,7 @@ final readonly class NoPhotoYetRenderer
                 // needed here either.
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->paths->root . 'themes', $user_theme);
+                $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = NoPhotoYetRequest::fromGlobals()->action;

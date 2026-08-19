@@ -840,7 +840,7 @@
   </div>
 </div>
 
-{if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
+{if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}
 
 <div class="loading hide">
   <span class="icon-spin6 animate-spin"></span>
@@ -932,7 +932,7 @@
   </div>
 </div>
 
-{if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
+{if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}
 
 {do combineScript(id: 'jquery.geoip', load: 'async', path: 'themes/admin/default/js/jquery.geoip.js')}
 {do combineCss(id: 'history', path: 'themes/admin/default/css/pages/history.css')}

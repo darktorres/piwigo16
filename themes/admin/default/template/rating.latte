@@ -754,7 +754,7 @@
   </fieldset>
 </form>
 
-{if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
+{if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}
 
 <table width="99%">
   <tr class="throw">
@@ -802,4 +802,4 @@
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
 {do exposeData('csrf_token', $CSRF_TOKEN)}
 
-{if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar'), navbar: $navbar}{/if}
+{if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}

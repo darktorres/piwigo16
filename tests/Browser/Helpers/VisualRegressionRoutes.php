@@ -73,7 +73,6 @@ return [
     'admin-tags' => ['/admin.php?page=tags', true],
     'admin-comments' => ['/admin.php?page=comments', true],
     'admin-permalinks' => ['/admin.php?page=permalinks', true],
-    'admin-extend-templates' => ['/admin.php?page=extend_for_templates', true],
     'admin-site-manager' => ['/admin.php?page=site_manager', true],
     'admin-site-update' => ['/admin.php?page=site_update&site=1', true],
     'admin-stats' => ['/admin.php?page=stats', true],

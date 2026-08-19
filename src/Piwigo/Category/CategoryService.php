@@ -2190,14 +2190,6 @@ final readonly class CategoryService
         return $this->repo->findPrivateCategoryIdsGrantedToUser($userId, $excludeCategoryIds);
     }
 
-    /**
-     * @return list<string>
-     */
-    public function getActivePermalinks(): array
-    {
-        return $this->repo->findActivePermalinks();
-    }
-
     public function countAllCategories(): int
     {
         return $this->repo->countAllCategories();

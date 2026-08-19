@@ -348,7 +348,7 @@ final class RequestBootstrap
                 new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                     ->getAdminThemePref() ?? self::currentConfig()->adminTheme
             );
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
@@ -364,7 +364,7 @@ final class RequestBootstrap
             // before Template is constructed, so a theme's subscribedEvents()
             // are live before anything in the same request could fire them.
             self::themeRegistry($conn)->bootCurrent($theme);
-            $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
         }
 
         self::currentTemplate()->set($template);
@@ -977,13 +977,7 @@ final class RequestBootstrap
         return new AccessLevelChecker(self::currentUser(), self::currentConfig());
     }
 
-    /**
-     * Resolves the container-shared, immutable instance. Public (unlike
-     * most resolver helpers here): public/install.php's own
-     * `new InstallWizard(...)` manual construction needs this to satisfy
-     * Template's own new required collaborators.
-     */
-    public static function adminContext(): AdminContext
+    private static function adminContext(): AdminContext
     {
         $adminContext = Kernel::container()->get(AdminContext::class);
         if (! $adminContext instanceof AdminContext) {

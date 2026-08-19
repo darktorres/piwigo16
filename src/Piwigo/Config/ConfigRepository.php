@@ -8,6 +8,7 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Config\Projection\ConfigParamValue;
+use Piwigo\Config\Projection\ConfigValueUpdate;
 use Piwigo\Db\BatchWriter;
 
 /**
@@ -63,7 +64,7 @@ final class ConfigRepository extends EntityRepository
      * DQL-vs-DBAL question at all (ORM persist()/flush() writes one row
      * per entity, not a bulk statement).
      *
-     * @param list<array{param: string, value: mixed}> $updates
+     * @param list<ConfigValueUpdate> $updates
      */
     public function massUpdateValues(array $updates): void
     {
@@ -78,7 +79,7 @@ final class ConfigRepository extends EntityRepository
                     'primary' => ['param'],
                     'update' => ['value'],
                 ],
-                $updates
+                array_map(static fn (ConfigValueUpdate $update): array => $update->toArray(), $updates)
             );
     }
 

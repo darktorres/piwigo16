@@ -24,6 +24,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\Projection\ConfigValueUpdate;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
@@ -171,10 +172,10 @@ final readonly class UploadService
                     $value = false;
                 }
 
-                $updates[] = [
-                    'param' => $field,
-                    'value' => $value ? 'true' : 'false',
-                ];
+                $updates[] = new ConfigValueUpdate(
+                    param: $field,
+                    value: $value ? 'true' : 'false',
+                );
             } elseif (
                 // Every getUploadFormConfig() entry currently has
                 // can_be_null => false ('original_resize' also never
@@ -184,10 +185,10 @@ final readonly class UploadService
                 // future field that sets can_be_null => true.
                 $upload_form_config[$field]['can_be_null'] and self::isFalsy($value)
             ) {
-                $updates[] = [
-                    'param' => $field,
-                    'value' => 'false',
-                ];
+                $updates[] = new ConfigValueUpdate(
+                    param: $field,
+                    value: 'false',
+                );
             } else {
                 $min = $upload_form_config[$field]['min'];
                 $max = $upload_form_config[$field]['max'];
@@ -215,10 +216,10 @@ final readonly class UploadService
                 // left operand to bool, so removing it can't change which
                 // branch runs.
                 if ((bool) preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
-                    $updates[] = [
-                        'param' => $field,
-                        'value' => $value,
-                    ];
+                    $updates[] = new ConfigValueUpdate(
+                        param: $field,
+                        value: $value,
+                    );
                 } else {
                     $errors[] = sprintf(
                         $error_message,

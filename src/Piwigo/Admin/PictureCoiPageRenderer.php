@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Projection\CroppedDerivativeLink;
 use Piwigo\Admin\Projection\PictureCoiPageContext;
 use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
@@ -20,6 +21,7 @@ use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\DerivativeUrlStyleOverride;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\CenterOfInterest;
 use Piwigo\Image\Projection\DerivativePathInfo;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
@@ -107,22 +109,22 @@ final readonly class PictureCoiPageRenderer
         $row_coi = is_string($coi_raw) ? $coi_raw : '';
         $coi = null;
         if ($row_coi !== '' && $row_coi !== '0') {
-            $coi = [
-                'l' => DerivativeUrlCodec::charToFraction($row_coi[0]),
-                't' => DerivativeUrlCodec::charToFraction($row_coi[1]),
-                'r' => DerivativeUrlCodec::charToFraction($row_coi[2]),
-                'b' => DerivativeUrlCodec::charToFraction($row_coi[3]),
-            ];
+            $coi = new CenterOfInterest(
+                l: DerivativeUrlCodec::charToFraction($row_coi[0]),
+                t: DerivativeUrlCodec::charToFraction($row_coi[1]),
+                r: DerivativeUrlCodec::charToFraction($row_coi[2]),
+                b: DerivativeUrlCodec::charToFraction($row_coi[3]),
+            );
         }
 
         $cropped_derivatives = [];
         foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
             if ($params->sizing->max_crop !== 0.0) {
                 $derivative = new DerivativeImage($params, new SrcImage($srcImageInfo), $this->currentConfig, $urlStyleOverride);
-                $cropped_derivatives[] = [
-                    'U_IMG' => $derivative->getUrl() . $uid,
-                    'HTM_SIZE' => $derivative->getSizeHtm(),
-                ];
+                $cropped_derivatives[] = new CroppedDerivativeLink(
+                    uImg: $derivative->getUrl() . $uid,
+                    htmSize: $derivative->getSizeHtm(),
+                );
             }
         }
 

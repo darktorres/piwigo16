@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Projection;
 
 use Override;
 use Piwigo\Core\TemplatePageContext;
+use Piwigo\Image\Projection\CenterOfInterest;
 
 /**
  * The template variable set assigned by
@@ -20,14 +21,13 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class PictureCoiPageContext implements TemplatePageContext
 {
     /**
-     * @param array{l: float, t: float, r: float, b: float}|null $coi
-     * @param list<array{U_IMG: string, HTM_SIZE: string}> $croppedDerivatives
+     * @param list<CroppedDerivativeLink> $croppedDerivatives
      */
     public function __construct(
         public string $title,
         public string $alt,
         public string $imgUrl,
-        public ?array $coi,
+        public ?CenterOfInterest $coi,
         public array $croppedDerivatives,
     ) {}
 
@@ -41,10 +41,10 @@ final readonly class PictureCoiPageContext implements TemplatePageContext
             'TITLE' => $this->title,
             'ALT' => $this->alt,
             'U_IMG' => $this->imgUrl,
-            'cropped_derivatives' => $this->croppedDerivatives,
+            'cropped_derivatives' => array_map(static fn (CroppedDerivativeLink $link): array => $link->toArray(), $this->croppedDerivatives),
         ];
-        if ($this->coi !== null) {
-            $result['coi'] = $this->coi;
+        if ($this->coi instanceof CenterOfInterest) {
+            $result['coi'] = $this->coi->toArray();
         }
 
         return $result;

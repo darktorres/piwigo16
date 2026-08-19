@@ -29,7 +29,6 @@ use Piwigo\Controller\Admin\Projection\BatchManagerFilterOptionsPageContext;
 use Piwigo\Controller\Admin\Projection\BatchManagerNoSearchResultsPageContext;
 use Piwigo\Controller\Admin\Projection\BatchManagerSearchDebugPageContext;
 use Piwigo\Controller\Admin\Request\BatchManagerRequest;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
@@ -48,6 +47,7 @@ use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -86,7 +86,6 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         private Lang $lang,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private CurrentLogger $currentLogger,
         private CoreTabs $coreTabs,
         private SessionService $sessionService,
         private Translator $translator,
@@ -108,6 +107,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -173,7 +173,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

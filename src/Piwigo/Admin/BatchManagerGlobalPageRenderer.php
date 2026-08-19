@@ -10,7 +10,7 @@ use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\Event\BatchManagerGlobalRendered;
 use Piwigo\Admin\Event\BatchManagerGlobalRendering;
 use Piwigo\Admin\Event\ElementSetGlobalAction;
-use Piwigo\Admin\Projection\BatchManagerGlobalPageContext;
+use Piwigo\Admin\Projection\BatchManagerGlobalView;
 use Piwigo\Admin\Request\BatchManagerGlobalRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieEntity;
@@ -19,7 +19,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentLogger;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -40,14 +40,12 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\ImageTextField;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Metadata\MetadataRepository;
-use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
@@ -71,7 +69,6 @@ final readonly class BatchManagerGlobalPageRenderer
         private Lang $lang,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private CurrentLogger $currentLogger,
         private SessionService $sessionService,
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
@@ -89,6 +86,7 @@ final readonly class BatchManagerGlobalPageRenderer
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private Paths $paths,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -479,10 +477,6 @@ final readonly class BatchManagerGlobalPageRenderer
         // image level options
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
-        // metadata
-        $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
-        $used_metadata = implode(', ', $site_reader->getMetadataAttributes());
-
         // derivatives
         $del_deriv_map = [];
         foreach ($this->imageStdParams->getDefinedTypeMap() as $params) {
@@ -577,13 +571,12 @@ final readonly class BatchManagerGlobalPageRenderer
             }
         }
 
-        $template->assignContext(new BatchManagerGlobalPageContext(
+        $adminContent = $this->renderer->render(new BatchManagerGlobalView(
             inCaddie: $in_caddie,
             associatedTags: $associated_tags,
             dateCreation: $date_creation,
             levelOptions: $level_options,
             levelOptionsSelected: 0,
-            usedMetadata: $used_metadata,
             delDerivativesTypes: $del_deriv_map,
             generateDerivativesTypes: $gen_deriv_map,
             navbar: $nav_bar,
@@ -594,8 +587,8 @@ final readonly class BatchManagerGlobalPageRenderer
             thumbnails: $thumbnails,
         ));
 
-        $this->eventDispatcher->dispatch(new BatchManagerGlobalRendered());
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
+        $this->eventDispatcher->dispatch(new BatchManagerGlobalRendered());
     }
 }

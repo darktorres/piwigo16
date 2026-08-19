@@ -114,16 +114,34 @@ function searchServiceTestRepo(): SearchRepository
 /**
  * InnoDB's FULLTEXT index is not updated synchronously on INSERT -- new
  * words sit in an in-memory cache (`innodb_ft_cache_size`) until the
- * table is closed or optimized, so a MATCH()/AGAINST() query run
- * immediately after inserting a fresh row can miss it (confirmed via a
- * direct probe: 0 rows before OPTIMIZE TABLE, 1 row after, for the same
- * unmodified data). Only tests that insert a row and then search for it
- * by a >3-char term (qsearchGetTextTokenSearchSql()'s own FULLTEXT
- * threshold) in the same request are affected.
+ * table is closed, so a MATCH()/AGAINST() query run immediately after
+ * inserting a fresh row can miss it. Only tests that insert a row and
+ * then search for it by a >3-char term
+ * (qsearchGetTextTokenSearchSql()'s own FULLTEXT threshold) in the same
+ * request are affected.
+ *
+ * FLUSH TABLES, not OPTIMIZE TABLE -- this used to run a real
+ * `OPTIMIZE TABLE $table`, which does force the sync but, on InnoDB, is
+ * mapped internally to `ALTER TABLE ... FORCE` -- a genuine table
+ * rebuild that bumps the table's own metadata/definition version. Under
+ * --parallel, this broadly disrupted every OTHER worker's own
+ * already-prepared statement against `categories`/`tags` (both real
+ * FULLTEXT-indexed tables many other Unit test files also touch): the
+ * next execution of that stale statement throws mysqli's "Table
+ * definition has changed, please retry transaction" -- reproduced live
+ * this session (TelemetryServiceTest's own plain `COUNT(c.id) FROM
+ * categories c` query), traced via a live `information_schema.processlist`
+ * capture that caught this exact `OPTIMIZE TABLE categories` statement
+ * running mid-suite. `FLUSH TABLES $table` closes and reopens the
+ * table's cached handle -- InnoDB's own documented mechanism for
+ * syncing the FULLTEXT word cache without a schema-level rebuild -- so
+ * it achieves the identical visibility guarantee (confirmed live: all 4
+ * real call sites below, 131/131 tests, across several repeated runs)
+ * without bumping the table definition version other sessions rely on.
  */
 function searchServiceTestFlushFulltext(Connection $conn, string $table): void
 {
-    $conn->executeStatement('OPTIMIZE TABLE ' . $table);
+    $conn->executeStatement('FLUSH TABLES ' . $table);
 }
 
 function searchServiceTestFilterState(): FilterState

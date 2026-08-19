@@ -128,7 +128,7 @@ Three structural changes produced that drift:
 | P35 | Browserslist decision + IE back-compat removal | Done | 1 |
 | P36 | Asset-pipeline foundation (ViteManifest) | Done | 1 |
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
-| P38 | Inline JS extraction | Not started | 0 |
+| P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Not started | 0 |
 | P40 | Typed view objects + `Template` split | Not started | 0 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
@@ -1670,6 +1670,41 @@ scope** — verified, none outside a `{capture}` or `<script>` region. Any
 escaping or filter cleanup done before P38 is therefore discarded work,
 which is why P38 and P39 must run ahead of P40–P43 and ahead of any
 further template-content pass.
+
+**Shipped**: every real corpus site — 419 `translate()`/`{_'...'}` calls
+inside a `{capture}`/`<script>`/`on*=` region, plus the 4 real dynamic
+values (`$CATEGORIES_NAV`, `$CSRF_TOKEN`, `$ROOT_URL`, `$NB_ALBUMS`) —
+converted to `exposeData()`/`exposeString()` + a companion `.js` file,
+across 6 batches (P38-A mechanism through P38-G retirement). Two
+incidental, real behavior fixes landed as a side effect of the
+conversion rather than a deliberate goal: `themes/default/js/
+thumbnails.loader.js`'s `max_requests`/`error_icon` were always read
+before their `footerScript()` producers had rendered (a genuine ordering
+bug independent of P38), now resolved correctly via `page-data`'s
+`require:`; and `plugins_installed.latte`'s `const isWebmaster =
+{$isWebmaster};` — a raw PHP bool interpolated through Latte's
+`ENT_NOQUOTES` text escaper — produced `const isWebmaster = ;`, a real
+JS syntax error breaking the whole combined footer bundle for every
+non-webmaster admin, fixed by `exposeData()`'s real `json_encode()`.
+`PiwigoExtension::escapeJavascript()` and its filter-map entry are
+removed (P38-G), along with its 2 unit tests;
+`tools/phpstan/Latte/Generated/LatteAnalysisShims.php` regenerated.
+Two real, pre-existing test-harness gaps were found and documented
+rather than silently worked around: `themes/default/template/
+search.latte`'s advanced-search block is unreachable by any registered
+route (`SearchController` always redirects, never renders), and
+`themes/standard_pages/template/profile.latte`'s new `exposeData()`
+calls, while correct, aren't exercised by `test:golden-html` either —
+the golden test's `golden_html_test` fixture theme has no
+`themeconf.inc.php` and never actually triggers the `use_standard_pages`
+template swap, a P38-C-era gap in the test itself, not in this
+conversion. Verified: `composer lint:latte`/`lint:js`/`analyse:phpstan`
+clean on every batch; `composer test:visual` 66/66 green (including a
+newly-found, deterministic, pre-existing `admin-themes-new` VR failure —
+the same stale-cursor-triggers-a-real-hover class already fixed for
+`admin-cat-list`, extended to cover it); `composer test:golden-html`
+regenerated and reviewed for every route the conversion actually
+touches; `composer test` (Unit/Arch) green throughout.
 
 **P39 — Inline CSS extraction.** Every `<style>` block and `style="…"`
 attribute moves to a real `.css` file: 20 templates with `<style>`, 243

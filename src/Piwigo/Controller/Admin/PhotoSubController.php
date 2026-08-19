@@ -14,7 +14,7 @@ use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\PhotoSubControllerPageContext;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\PhotoDispatchRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -25,6 +25,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -57,6 +58,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         private InputValidator $inputValidator,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -85,7 +87,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
-        $template->assignContext(new PhotoSubControllerPageContext(
+        $template->assignContext(new AdminContentPageContext(
             adminPageTitle: $this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
         ));
 
@@ -97,7 +99,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($this->currentConfig->isFormatsEnabled) {
             new PictureFormatsPageRenderer()
-                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager);
+                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager, $this->renderer);
         }
     }
 }

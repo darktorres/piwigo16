@@ -22,6 +22,7 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -123,6 +124,7 @@ test('handle() delegates to PictureFormatsPageRenderer::render(), which fatal-er
             new InputValidator(),
             pictureFormatsSubControllerTestEntityManager(),
             new CsrfService(CurrentConfigTestFactory::get()),
+            new Renderer(CurrentTemplateTestFactory::get()),
         );
 
         $exception = null;

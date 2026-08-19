@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Admin\Projection\PictureFormatsPageContext;
+use Piwigo\Admin\Projection\PictureFormatsView;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -18,6 +19,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -25,7 +27,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CsrfService $csrfService, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CsrfService $csrfService, EntityManagerInterface $entityManager, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
@@ -63,7 +65,7 @@ final class PictureFormatsPageRenderer
             $formats[] = $format;
         }
 
-        $template->assignContext(new PictureFormatsPageContext(
+        $adminContent = $renderer->render(new PictureFormatsView(
             addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
             imgSquareSrc: DerivativeImage::url($imageStdParams->getByType(ImageStdParams::SQUARE), $image),
             formats: $formats,
@@ -71,6 +73,6 @@ final class PictureFormatsPageRenderer
                 ->getToken(),
         ));
 
-        $template->assignVarFromTemplate('ADMIN_CONTENT', 'picture_formats.latte');
+        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

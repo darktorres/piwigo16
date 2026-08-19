@@ -15,6 +15,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -128,7 +129,7 @@ test('render() fatal-errors when image_id is missing from the request', function
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), new CsrfService(CurrentConfigTestFactory::get()), pictureFormatsTestEntityManager());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), new CsrfService(CurrentConfigTestFactory::get()), pictureFormatsTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }
@@ -159,7 +160,7 @@ test('render() fatal-errors when image_id does not match any real image', functi
         $exception = null;
         try {
             new PictureFormatsPageRenderer()
-                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), new CsrfService(CurrentConfigTestFactory::get()), pictureFormatsTestEntityManager());
+                ->render(LangTestFactory::get(), pictureFormatsTestAccessControl(), UrlServiceTestFactory::build(), pictureFormatsTestImageStdParams(), CurrentTemplateTestFactory::get(), HtmlServiceTestFactory::build(), new InputValidator(), new CsrfService(CurrentConfigTestFactory::get()), pictureFormatsTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
         } catch (ResponseReadyException $e) {
             $exception = $e;
         }

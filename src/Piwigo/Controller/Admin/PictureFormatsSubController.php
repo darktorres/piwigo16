@@ -14,6 +14,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -34,12 +35,13 @@ final readonly class PictureFormatsSubController implements AdminSubControllerIn
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager, $this->renderer);
     }
 }

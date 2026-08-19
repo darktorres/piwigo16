@@ -11,6 +11,7 @@ use Piwigo\Category\Event\DeleteSite;
 use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
 use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
+use Piwigo\Category\Projection\CategoryRepresentantProperties;
 use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\ImageOrderPreference;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -1136,7 +1137,7 @@ test('getCategoryRepresentantProperties() throws for a missing image', function 
     // unconditionally when Kernel isn't booted -- confirmed by reading
     // its source. Kernel is already booted file-wide (see this file's
     // own top docblock for why).
-    expect(fn (): array => categoryServiceTestService()->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build(), EntityManagerFactory::build(DbConnection::build())))
+    expect(fn (): CategoryRepresentantProperties => categoryServiceTestService()->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build(), EntityManagerFactory::build(DbConnection::build())))
         ->toThrow(Exception::class, 'getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 });
 
@@ -1146,7 +1147,7 @@ test('getCategoryRepresentantProperties() returns a thumb url when size is null'
     $props = categoryServiceTestService()
         ->getCategoryRepresentantProperties(1, $urlService, EntityManagerFactory::build(DbConnection::build()));
 
-    expect($props['url'])
+    expect($props->url)
         ->toBe($urlService->getRootUrl() . 'admin.php?page=photo-1');
 });
 

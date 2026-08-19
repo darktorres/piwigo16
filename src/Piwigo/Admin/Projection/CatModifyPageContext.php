@@ -22,7 +22,6 @@ final readonly class CatModifyPageContext implements TemplatePageContext
 {
     /**
      * @param array<array-key, string> $cacheKeys
-     * @param array<string, mixed>|null $representant
      * @param list<int|string>|null $parentCategory
      */
     public function __construct(
@@ -59,7 +58,7 @@ final readonly class CatModifyPageContext implements TemplatePageContext
         public ?string $catDirName,
         public ?string $catMinDir,
         public ?string $uSync,
-        public ?array $representant,
+        public ?CategoryRepresentant $representant,
         public ?array $parentCategory,
         public string $pwgToken,
     ) {}
@@ -131,8 +130,8 @@ final readonly class CatModifyPageContext implements TemplatePageContext
             $result['U_SYNC'] = $this->uSync;
         }
 
-        if ($this->representant !== null) {
-            $result['representant'] = $this->representant;
+        if ($this->representant instanceof CategoryRepresentant) {
+            $result['representant'] = $this->representant->toArray();
         }
 
         if ($this->parentCategory !== null) {

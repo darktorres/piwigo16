@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Projection\CategoryRepresentant;
 use Piwigo\Admin\Projection\CatModifyPageContext;
 
 test('toArray flattens every fixed property, and omits every optional key when null', function (): void {
@@ -90,9 +91,7 @@ test('toArray includes every optional key when set', function (): void {
         catDirName: 'holidays',
         catMinDir: 'galleries/holidays',
         uSync: '/admin.php?page=site_update&site=1&cat_id=5',
-        representant: [
-            'ALLOW_SET_RANDOM' => true,
-        ],
+        representant: new CategoryRepresentant(picture: null, allowSetRandom: true, allowDelete: null),
         parentCategory: [3],
         pwgToken: 'abc123',
     );

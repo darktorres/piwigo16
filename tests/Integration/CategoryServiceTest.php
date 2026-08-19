@@ -1119,7 +1119,7 @@ namespace Piwigo\Tests\Integration {
 
             $props = $this->service->getCategoryRepresentantProperties(1, $urlService, EntityManagerFactory::build($this->conn));
 
-            self::assertSame($urlService->getRootUrl() . 'admin.php?page=photo-1', $props['url']);
+            self::assertSame($urlService->getRootUrl() . 'admin.php?page=photo-1', $props->url);
         }
 
         public function testUpdatePathRewritesImagePathsForStorageLinkedCategories(): void

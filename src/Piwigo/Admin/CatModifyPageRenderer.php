@@ -9,6 +9,7 @@ use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\CatModifyPageRendered;
 use Piwigo\Admin\Event\CatModifyPageRendering;
+use Piwigo\Admin\Projection\CategoryRepresentant;
 use Piwigo\Admin\Projection\CatModifyPageContext;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
@@ -260,29 +261,32 @@ final class CatModifyPageRenderer
         $category_representative_picture_id = (is_int($category_representative_picture_id_raw) || is_string($category_representative_picture_id_raw)) ? $category_representative_picture_id_raw : 0;
         $representant = null;
         if ($category['has_images'] or ! in_array($category_representative_picture_id, [0, '0', ''], true)) {
-            $tpl_representant = [];
-
             // picture to display : the identified representant or the generic random
             // representant ?
+            $tpl_picture = null;
             if (! in_array($category_representative_picture_id, [0, '0', ''], true)) {
-                $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, $entityManager, ImageStdParams::MEDIUM);
+                $tpl_picture = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, $entityManager, ImageStdParams::MEDIUM);
             }
-
-            // can the admin choose to set a new random representant ?
-            $tpl_representant['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
 
             // can the admin delete the current representant ?
             // the outer `if` above already guarantees
             // !empty($category_representative_picture_id) whenever
             // !$category['has_images'], since that's the only way its own
             // has_images-or-!empty(...) condition could be true here.
+            $tpl_allow_delete = null;
             if (
                 ($category['has_images']
                  and $currentConfig->allowRandomRepresentative)
                 or ! $category['has_images']) {
-                $tpl_representant['ALLOW_DELETE'] = true;
+                $tpl_allow_delete = true;
             }
-            $representant = $tpl_representant;
+
+            $representant = new CategoryRepresentant(
+                picture: $tpl_picture,
+                // can the admin choose to set a new random representant ?
+                allowSetRandom: $category['has_images'] ? true : false,
+                allowDelete: $tpl_allow_delete,
+            );
         }
 
         $parent_category = null;

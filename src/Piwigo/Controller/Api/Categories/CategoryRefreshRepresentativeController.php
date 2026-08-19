@@ -79,6 +79,6 @@ final readonly class CategoryRefreshRepresentativeController implements Controll
             ImageStdParams::SMALL
         );
 
-        return ResponseFactory::json($representative);
+        return ResponseFactory::json($representative->toArray());
     }
 }

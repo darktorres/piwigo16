@@ -1,10 +1,4 @@
 {templateType Piwigo\Admin\Projection\MenubarView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
-{do combineScript(id: 'menubar', load: 'footer', require: 'jquery.ui.sortable', path: 'themes/admin/default/js/menubar.js')}
-
-{do combineCss(id: 'menubar', path: 'themes/admin/default/css/pages/menubar.css')}
-
 <form id="menuOrdering" action="{$formAction|noescape}" method="post">
   <ul class="menuUl">
     <li

@@ -1,12 +1,4 @@
 {templateType Piwigo\Admin\Projection\AlbumNotificationView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
-
-{do combineScript(id: 'album_notification', load: 'footer', require: 'jquery,jquery.selectize', path: 'themes/admin/default/js/album_notification.js')}
-
-{do combineCss(id: 'album_notification', path: 'themes/admin/default/css/pages/album_notification.css')}
-
 <form action="{$fAction|noescape}" method="post" id="categoryNotify">
   <input type="hidden" name="pwg_token" value="{$csrfToken}">
 

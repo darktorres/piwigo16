@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -16,10 +20,13 @@ use Piwigo\Template\Latte\Attribute\Template;
  * truthy check, so an always-present `null` behaves identically to the
  * original conditionally-omitted key. `$saveSuccess` is also mutually
  * exclusive across its 2 original call sites (notify by users vs. by
- * group).
+ * group). `$colorscheme` is the ambient `$themeconf['colorscheme']`
+ * the template's own `combineCss(id: 'jquery.selectize', ...)` call
+ * reads -- the controller resolves it the same way `Template` itself
+ * would, via `$template->themeConf('colorscheme')`.
  */
 #[Template('album_notification.latte')]
-final readonly class AlbumNotificationView implements View
+final readonly class AlbumNotificationView implements View, HasPageAssets
 {
     /**
      * @param array<int, string>|null $groupMailOptions
@@ -34,5 +41,22 @@ final readonly class AlbumNotificationView implements View
         public ?string $permissionUrl,
         public ?array $groupMailOptions,
         public ?array $userOptions,
+        public string $colorscheme,
     ) {}
+
+    /**
+     * `album_notification.latte`'s own unconditional `{do combineScript(...)}`x3/
+     * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::script('album_notification', 'themes/admin/default/js/album_notification.js', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.selectize']),
+            AssetContribution::css('themes/admin/default/css/pages/album_notification.css', id: 'album_notification'),
+        ];
+    }
 }

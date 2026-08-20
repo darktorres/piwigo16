@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -16,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * order was just saved.
  */
 #[Template('menubar.latte')]
-final readonly class MenubarView implements View
+final readonly class MenubarView implements View, HasPageAssets
 {
     /**
      * @param list<array{pos: int|float, reg: mixed}> $blocks
@@ -27,4 +31,18 @@ final readonly class MenubarView implements View
         public array $blocks,
         public ?string $saveSuccess,
     ) {}
+
+    /**
+     * `menubar.latte`'s own unconditional `{do combineScript(...)}`x2/
+     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar', 'themes/admin/default/js/menubar.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.sortable']),
+            AssetContribution::css('themes/admin/default/css/pages/menubar.css', id: 'menubar'),
+        ];
+    }
 }

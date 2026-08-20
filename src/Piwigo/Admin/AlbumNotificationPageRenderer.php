@@ -294,6 +294,7 @@ final readonly class AlbumNotificationPageRenderer
             permissionUrl: $permission_url,
             groupMailOptions: $group_mail_options,
             userOptions: $user_options,
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

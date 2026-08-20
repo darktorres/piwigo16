@@ -65,6 +65,16 @@ final class PageAssets
     private array $css = [];
 
     /**
+     * `ScriptLoader::$inlineScripts`'s own replacement -- no id-based
+     * dedup (`addInline()`'s real behavior: every call unconditionally
+     * appends), so a plain list rather than keyed like `$scripts`/`$css`
+     * above.
+     *
+     * @var list<AssetContribution>
+     */
+    private array $inlineScripts = [];
+
+    /**
      * Path resolved by id (once), matching
      * `ScriptLoader::$known_paths` -- both sides of a dependency chain
      * (`jquery.ui.slider` requiring `jquery.ui`, `jquery.ui.datepicker`
@@ -97,13 +107,38 @@ final class PageAssets
         private readonly ViteManifest $viteManifest,
     ) {}
 
+    /**
+     * `CssLoader::clear()`'s own scope -- CSS only, not scripts: matches
+     * `Template::finalizeHtml()`'s own real, test-covered contract
+     * ("a second call does not re-emit already-flushed CSS"), which has
+     * no script-side equivalent (`Template` locks script-placeholder
+     * substitution behind its own one-shot flag instead of clearing
+     * `PageAssets`' registered scripts).
+     */
+    public function clearCss(): void
+    {
+        $this->css = [];
+    }
+
     public function add(AssetContribution $contribution): void
     {
-        if ($contribution->kind === AssetKind::Script) {
-            $this->addScript($contribution);
-        } else {
-            $this->addCss($contribution);
-        }
+        match ($contribution->kind) {
+            AssetKind::Script => $this->addScript($contribution),
+            AssetKind::Css => $this->addCss($contribution),
+            AssetKind::InlineScript => $this->addInlineScript($contribution),
+        };
+    }
+
+    /**
+     * `ScriptLoader::addInline()`'s own replacement: no dedup (plain
+     * append), but a `dependsOn` id still needs the same
+     * known-by-naming-convention auto-registration `resolveMissingDependencies()`
+     * already gives a real script's own `dependsOn` below.
+     */
+    private function addInlineScript(AssetContribution $contribution): void
+    {
+        $this->inlineScripts[] = $contribution;
+        $this->resolveMissingDependencies($contribution);
     }
 
     private function addScript(AssetContribution $contribution): void
@@ -254,6 +289,14 @@ final class PageAssets
     }
 
     /**
+     * Header, footer, inline (always footer-positioned -- see
+     * `AssetContribution::inlineScript()`'s own docblock), then async,
+     * in that fixed order -- `Template`'s own asset-tag-rendering step
+     * (P41-G, docs/PLAN.md) filters this one list by `loadMode`/
+     * `inlineCode` to build the head placeholder (header entries) and
+     * the footer placeholder (everything else) separately, rather than
+     * this method returning two separate lists.
+     *
      * @return list<ResolvedAsset>
      */
     public function resolveScripts(): array
@@ -270,13 +313,17 @@ final class PageAssets
         }
 
         $resolved = [];
-        foreach ([$byMode['header'], $byMode['footer'], $byMode['async']] as $group) {
-            foreach ($this->topologicalSort($group) as $contribution) {
-                $resolved[] = new ResolvedAsset(
-                    path: $this->resolvePath($contribution->path),
-                    loadMode: $contribution->loadMode,
-                );
-            }
+        foreach ($this->topologicalSort($byMode['header']) as $contribution) {
+            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, $contribution->version);
+        }
+        foreach ($this->topologicalSort($byMode['footer']) as $contribution) {
+            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, $contribution->version);
+        }
+        foreach ($this->inlineScripts as $inline) {
+            $resolved[] = ResolvedAsset::inline((string) $inline->code);
+        }
+        foreach ($this->topologicalSort($byMode['async']) as $contribution) {
+            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, $contribution->version);
         }
 
         return $resolved;
@@ -294,7 +341,7 @@ final class PageAssets
         $seenCssPaths = [];
         foreach ($ordered as $contribution) {
             $path = $this->resolvePath($contribution->path);
-            $resolved[] = new ResolvedAsset(path: $path, loadMode: null);
+            $resolved[] = ResolvedAsset::file($path, null, $contribution->version);
             $seenCssPaths[$path] = true;
         }
 
@@ -309,7 +356,7 @@ final class PageAssets
             }
             foreach ($entry->css as $cssPath) {
                 if (! isset($seenCssPaths[$cssPath])) {
-                    $resolved[] = new ResolvedAsset(path: $cssPath, loadMode: null);
+                    $resolved[] = ResolvedAsset::file($cssPath, null, false);
                     $seenCssPaths[$cssPath] = true;
                 }
             }
@@ -342,6 +389,19 @@ final class PageAssets
      */
     private function promoteLoadModes(): void
     {
+        // ScriptLoader::addInline()'s own real behavior: an inline
+        // script always runs after every footer-sync <script src> tag
+        // but has no guaranteed ordering against a separate <script
+        // async> tag, so a dependency it requires can't stay async.
+        foreach ($this->inlineScripts as $inline) {
+            foreach ($inline->dependsOn as $id) {
+                $dependency = $this->scripts[$id] ?? null;
+                if ($dependency !== null && ($dependency->loadMode ?? LoadMode::Header) === LoadMode::Async) {
+                    $this->scripts[$id] = self::withLoadMode($dependency, LoadMode::Footer);
+                }
+            }
+        }
+
         do {
             $changed = false;
             foreach ($this->scripts as $contribution) {

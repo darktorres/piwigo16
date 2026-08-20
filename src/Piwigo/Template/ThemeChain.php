@@ -13,7 +13,7 @@ use Piwigo\Core\ProcessCache;
 /**
  * Owns the theme parent/child chain walk and `theme.json` loading --
  * `Template` constructs one of these internally per instance (same `new
- * ScriptLoader()`/`new TemplateLocator()` shape already used in that
+ * PageAssets(...)`/`new TemplateLocator()` shape already used in that
  * constructor), not a shared/injected collaborator (P41, docs/PLAN.md's
  * `TemplateLocator`/`ThemeChain` extraction).
  *

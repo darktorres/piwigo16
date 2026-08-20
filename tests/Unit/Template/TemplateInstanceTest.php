@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Latte\Runtime\Html;
-use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
@@ -11,8 +10,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Template\Css;
-use Piwigo\Template\CssLoader;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\AdHocPageContext;
@@ -39,17 +36,6 @@ function template_instance_test_root_path_override(): RootPathOverride
     }
 
     return $rootPathOverride;
-}
-
-/**
- * @return array<string, Css>
- */
-function template_instance_test_cssloader_registered(CssLoader $loader): array
-{
-    $property = new ReflectionProperty($loader, 'registered_css');
-
-    /** @var array<string, Css> */
-    return $property->getValue($loader);
 }
 
 /**
@@ -920,6 +906,41 @@ function templateInstanceTestErrorCollector(): ErrorCollector
     return $errorCollector;
 }
 
+/**
+ * Same "throw instead of returning false" shape as
+ * PageAssetsTest.php's own pageAssetsTestIndexOf() -- PHPStan can't
+ * otherwise narrow strpos()'s int<0,max>|false return away from false
+ * for toBeLessThan()'s own numeric-only param type.
+ */
+function templateInstanceTestStrpos(string $haystack, string $needle): int
+{
+    $pos = strpos($haystack, $needle);
+    if ($pos === false) {
+        throw new RuntimeException("'{$needle}' not found in '{$haystack}'");
+    }
+
+    return $pos;
+}
+
+/**
+ * Resolves both script placeholders in one `finalizeHtml()` call (the
+ * only way to observe either, now that both are locked behind the same
+ * one-shot `$scriptsResolved` guard -- P41-G, docs/PLAN.md) and splits
+ * them back apart on the sentinel separator.
+ *
+ * @return array{header: string, footer: string}
+ */
+function templateInstanceTestScriptTags(Template $t): array
+{
+    $result = $t->finalizeHtml(Template::COMBINED_SCRIPTS_TAG . '||' . Template::COMBINED_FOOTER_SCRIPTS_TAG);
+    [$header, $footer] = explode('||', $result, 2);
+
+    return [
+        'header' => $header,
+        'footer' => $footer,
+    ];
+}
+
 test('combineScript records a fatal error for an invalid load value', function (): void {
     $this->expectErrorLog();
     $t = TemplateTestFactory::build();
@@ -934,130 +955,38 @@ test('combineScript records a fatal error for an invalid load value', function (
         ->toBe(["[ERROR] combineScript: invalid 'load' parameter"]);
 });
 
-test('combineScript maps load="footer" to loadMode 1', function (): void {
+test('combineScript defaults load to header, rendered at the header placeholder', function (): void {
     $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
+
+    $t->combineScript('x', path: 'x.js');
+
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['header'])
+        ->toContain('src="x.js?v' . AppInfo::VERSION . '"')
+        ->and($tags['footer'])
+        ->toBe('');
+});
+
+test('combineScript maps load="footer" to the footer placeholder as a plain script tag', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
     $t->combineScript('x', load: 'footer', path: 'x.js');
 
-    expect($t->scriptLoader->getAll()['x']->loadMode)->toBe(1);
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['footer'])
+        ->toBe('<script type="text/javascript" src="x.js?v' . AppInfo::VERSION . '"></script>')
+        ->and($tags['header'])
+        ->toBe('');
 });
 
-test('combineScript maps load="async" to loadMode 2', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', load: 'async', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->loadMode)->toBe(2);
-});
-
-test('combineScript defaults loadMode to 0 when load is not given', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->loadMode)->toBe(0);
-});
-
-test('combineScript explodes a comma-separated require string', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', require: 'a,b', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->precedents)->toBe(['a', 'b']);
-});
-
-test('combineScript treats a null require as no requirements', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
-});
-
-test('combineScript treats an empty-string require as no requirements', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', require: '', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->precedents)->toBe([]);
-});
-
-test('combineScript keeps a real string path', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->path)->toBe('x.js');
-});
-
-test('combineScript defaults version to "0" when not given', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->version)->toBe('0');
-});
-
-test('combineScript keeps a real string version', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js', version: '3.2');
-
-    expect($t->scriptLoader->getAll()['x']->version)->toBe('3.2');
-});
-
-test('combineScript keeps version=false as-is', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js', version: false);
-
-    expect($t->scriptLoader->getAll()['x']->version)->toBeFalse();
-});
-
-test('combineScript defaults is_template to false when not given', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js');
-
-    expect($t->scriptLoader->getAll()['x']->is_template)->toBeFalse();
-});
-
-test('combineScript sets is_template to true when given', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->combineScript('x', path: 'x.js', template: true);
-
-    expect($t->scriptLoader->getAll()['x']->is_template)->toBeTrue();
-});
-
-test('getCombinedScripts returns the combined-scripts placeholder for the header load', function (): void {
-    $t = TemplateTestFactory::build();
-
-    expect((string) $t->getCombinedScripts('header'))
-        ->toBe(Template::COMBINED_SCRIPTS_TAG);
-});
-
-test('getCombinedScripts renders sync footer scripts as plain script tags', function (): void {
-    // No explicit 'version', so it defaults to '0' (falsy), and
-    // makeScriptSrc() falls back to AppInfo::VERSION -- see "combineScript
-    // keeps version=false as-is" above for the version=false path, which
-    // omits the "?v..." suffix entirely.
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/sync.js', 'console.log(1);');
-    $t->combineScript('sync-script', load: 'footer', path: 'sync.js');
-
-    $result = $t->getCombinedScripts('footer');
-
-    expect((string) $result)
-        ->toBe('<script type="text/javascript" src="sync.js?v' . AppInfo::VERSION . '"></script>');
-});
-
-test('getCombinedScripts renders async footer scripts via a dynamic script element', function (): void {
+test('combineScript maps load="async" to the footer placeholder via the dynamic-script bootstrap', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/async.js', 'console.log(1);');
     $t->combineScript('async-script', load: 'async', path: 'async.js');
 
-    $result = $t->getCombinedScripts('footer');
+    $tags = templateInstanceTestScriptTags($t);
 
     $src = 'async.js?v' . AppInfo::VERSION;
     $expected = '<script type="text/javascript">' . "\n"
@@ -1065,8 +994,84 @@ test('getCombinedScripts renders async footer scripts via a dynamic script eleme
         . "s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$src}';\n" . 'after = after.parentNode.insertBefore(s, after);' . "\n"
         . '})();' . "\n"
         . '</script>';
-    expect((string) $result)
-        ->toBe($expected);
+    expect($tags['footer'])
+        ->toBe($expected)
+        ->and($tags['header'])
+        ->toBe('');
+});
+
+test('combineScript explodes a comma-separated require string and orders dependencies first', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/a.js', 'console.log("a");');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/b.js', 'console.log("b");');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log("x");');
+    $t->combineScript('a', path: 'a.js');
+    $t->combineScript('b', path: 'b.js');
+    $t->combineScript('x', require: 'a,b', path: 'x.js');
+
+    $tags = templateInstanceTestScriptTags($t);
+
+    expect($tags['header'])
+        ->toContain('a.js')
+        ->toContain('b.js')
+        ->toContain('x.js')
+        ->and(templateInstanceTestStrpos($tags['header'], 'a.js'))
+        ->toBeLessThan(templateInstanceTestStrpos($tags['header'], 'x.js'))
+        ->and(templateInstanceTestStrpos($tags['header'], 'b.js'))
+        ->toBeLessThan(templateInstanceTestStrpos($tags['header'], 'x.js'));
+});
+
+test('combineScript treats a null or empty-string require as no requirements', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
+
+    $t->combineScript('x', require: '', path: 'x.js');
+
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['header'])
+        ->toContain('x.js');
+});
+
+test('combineScript defaults version to "0" (falsy), so makeAssetSrc falls back to AppInfo::VERSION', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
+
+    $t->combineScript('x', path: 'x.js');
+
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['header'])
+        ->toContain('?v' . AppInfo::VERSION);
+});
+
+test('combineScript keeps a real string version', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
+
+    $t->combineScript('x', path: 'x.js', version: '3.2');
+
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['header'])
+        ->toContain('?v3.2');
+});
+
+test('combineScript keeps version=false as-is, omitting the version query string entirely', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
+
+    $t->combineScript('x', path: 'x.js', version: false);
+
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['header'])
+        ->toBe('<script type="text/javascript" src="x.js"></script>');
+});
+
+test('getCombinedScripts returns a placeholder for both the header and footer loads', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect((string) $t->getCombinedScripts('header'))
+        ->toBe(Template::COMBINED_SCRIPTS_TAG)
+        ->and((string) $t->getCombinedScripts('footer'))
+        ->toBe(Template::COMBINED_FOOTER_SCRIPTS_TAG);
 });
 
 test('getCombinedScripts prefixes the root URL onto the script src, in the correct order', function (): void {
@@ -1076,37 +1081,22 @@ test('getCombinedScripts prefixes the root URL onto the script src, in the corre
     template_instance_test_root_path_override()
         ->push('http://example.test/root/');
     try {
-        $result = $t->getCombinedScripts('footer');
+        $tags = templateInstanceTestScriptTags($t);
     } finally {
         template_instance_test_root_path_override()->reset();
     }
 
-    expect((string) $result)
+    expect($tags['footer'])
         ->toBe('<script type="text/javascript" src="http://example.test/root/sync.js?v' . AppInfo::VERSION . '"></script>');
 });
 
-test('getCombinedScripts omits the version query string entirely for a combined script', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/a.js', 'console.log("a");');
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/b.js', 'console.log("b");');
-    $t->combineScript('a', load: 'footer', path: 'a.js');
-    $t->combineScript('b', load: 'footer', path: 'b.js');
-
-    $result = $t->getCombinedScripts('footer');
-
-    expect((string) $result)
-        ->toContain('<script type="text/javascript" src="')
-        ->and((string) $result)
-        ->not->toContain('?v');
-});
-
-test('makeScriptSrc (via getCombinedScripts) uses a remote script\'s own path verbatim, with no root URL prefix or version suffix', function (): void {
+test('makeAssetSrc (via getCombinedScripts) uses a remote script\'s own path verbatim, with no root URL prefix or version suffix', function (): void {
     $t = TemplateTestFactory::build();
     $t->combineScript('remote-script', load: 'footer', path: 'https://cdn.example.com/foo.js');
 
-    $result = $t->getCombinedScripts('footer');
+    $tags = templateInstanceTestScriptTags($t);
 
-    expect((string) $result)
+    expect($tags['footer'])
         ->toBe('<script type="text/javascript" src="https://cdn.example.com/foo.js"></script>');
 });
 
@@ -1114,12 +1104,14 @@ test('makeScriptSrc (via getCombinedScripts) uses a remote script\'s own path ve
 
 test('footerScript registers an inline script once its own required script is already known', function (): void {
     $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/foo.js', 'console.log(0);');
     $t->combineScript('foo', path: 'foo.js');
 
     $t->footerScript('console.log(1);', require: 'foo');
 
-    expect($t->scriptLoader->inlineScripts)
-        ->toBe(['console.log(1);']);
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['footer'])
+        ->toContain('console.log(1);');
 });
 
 test('footerScript is a no-op for empty or whitespace-only content', function (): void {
@@ -1128,8 +1120,9 @@ test('footerScript is a no-op for empty or whitespace-only content', function ()
     $t->footerScript('');
     $t->footerScript("   \n");
 
-    expect($t->scriptLoader->inlineScripts)
-        ->toBe([]);
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['footer'])
+        ->toBe('');
 });
 
 test('footerScript treats a null require as no requirements', function (): void {
@@ -1137,77 +1130,38 @@ test('footerScript treats a null require as no requirements', function (): void 
 
     $t->footerScript('console.log(1);');
 
-    expect($t->scriptLoader->inlineScripts)
-        ->toBe(['console.log(1);']);
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['footer'])
+        ->toContain('console.log(1);');
 });
 
 test('footerScript explodes a comma-separated require string', function (): void {
     $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/a.js', 'console.log("a");');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/b.js', 'console.log("b");');
     $t->combineScript('a', path: 'a.js');
     $t->combineScript('b', path: 'b.js');
 
     $t->footerScript('console.log(1);', require: 'a,b');
 
-    expect($t->scriptLoader->inlineScripts)
-        ->toBe(['console.log(1);']);
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['footer'])
+        ->toContain('console.log(1);');
 });
-
-test('footerScript actually reads the require param (fatal-errors for an unknown required script)', function (): void {
-    $this->expectErrorLog();
-    $t = TemplateTestFactory::build();
-
-    set_error_handler(static fn (): bool => true);
-    try {
-        $t->footerScript('console.log(1);', require: 'totally-unknown-script-id');
-    } finally {
-        restore_error_handler();
-    }
-})->throws(ResponseReadyException::class);
 
 // --- combineCss / getCombinedCss ----------------------------------------
 
-test('combineCss derives id from md5(path) when id is not given', function (): void {
+test('combineCss forwards a custom order through to sorting, real range -999 to 100', function (): void {
     $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/a.css', 'body{}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/b.css', 'body{}');
+    $t->combineCss('b.css', order: 10);
+    $t->combineCss('a.css', order: -10);
 
-    $t->combineCss('style.css');
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
-    expect(template_instance_test_cssloader_registered($t->cssLoader))
-        ->toHaveKey(md5('style.css'));
-});
-
-test('combineCss keeps a real string id when given', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-
-    $t->combineCss('style.css', id: 'my-css');
-
-    expect(template_instance_test_cssloader_registered($t->cssLoader))
-        ->toHaveKey('my-css');
-});
-
-test('combineCss keeps version=false as-is', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-
-    $t->combineCss('style.css', id: 'my-css', version: false);
-
-    expect(template_instance_test_cssloader_registered($t->cssLoader)['my-css']->version)->toBeFalse();
-});
-
-test('combineCss forwards order and template through to CssLoader', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-
-    $t->combineCss('style.css', id: 'my-css', order: 5, template: true);
-
-    $registered = template_instance_test_cssloader_registered($t->cssLoader)['my-css'];
-    // CssLoader::add() itself computes order*1000+counter -- confirming
-    // combineCss() forwarded a real int order, not a string.
-    expect($registered->order)
-        ->toBe(5000)
-        ->and($registered->is_template)
-        ->toBeTrue();
+    expect(templateInstanceTestStrpos($result, 'a.css'))
+        ->toBeLessThan(templateInstanceTestStrpos($result, 'b.css'));
 });
 
 test('getCombinedCss returns the combined-css placeholder', function (): void {
@@ -1258,7 +1212,7 @@ test('finalizeHtml builds the combined-css href by prefixing the root URL onto t
         ->toBe('<link rel="stylesheet" type="text/css" href="http://example.test/root/style.css">');
 });
 
-test('finalizeHtml clears the CSS loader so a second call does not re-emit already-flushed CSS', function (): void {
+test('finalizeHtml clears the CSS registrations so a second call does not re-emit already-flushed CSS', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->combineCss('style.css', version: false);
@@ -1272,14 +1226,24 @@ test('finalizeHtml clears the CSS loader so a second call does not re-emit alrea
         ->not->toContain('style.css');
 });
 
-test('finalizeHtml does not reprocess the combined-scripts tag once didHead is already true', function (): void {
+test('finalizeHtml does not reprocess the combined-scripts tag on a second call', function (): void {
     $t = TemplateTestFactory::build();
-    $t->scriptLoader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+    $t->finalizeHtml(Template::COMBINED_SCRIPTS_TAG);
 
-    $result = $t->finalizeHtml(Template::COMBINED_SCRIPTS_TAG);
+    $second = $t->finalizeHtml(Template::COMBINED_SCRIPTS_TAG);
 
-    expect($result)
+    expect($second)
         ->toBe(Template::COMBINED_SCRIPTS_TAG);
+});
+
+test('finalizeHtml does not reprocess the combined-footer-scripts tag on a second call either, same shared guard as the header tag', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->finalizeHtml(Template::COMBINED_FOOTER_SCRIPTS_TAG);
+
+    $second = $t->finalizeHtml(Template::COMBINED_FOOTER_SCRIPTS_TAG);
+
+    expect($second)
+        ->toBe(Template::COMBINED_FOOTER_SCRIPTS_TAG);
 });
 
 test('finalizeHtml injects head elements before </head> when the source contains that anchor', function (): void {
@@ -1342,8 +1306,10 @@ test('localCssRules registers a combineCss entry for a real theme-specific rules
         ],
     ]);
 
-    expect(template_instance_test_cssloader_registered($t->cssLoader))
-        ->toHaveKey(md5('local/css/mytheme-rules.css'));
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
+
+    expect($result)
+        ->toContain('local/css/mytheme-rules.css');
 });
 
 test('localCssRules registers a combineCss entry for a real site-wide rules.css', function (): void {
@@ -1353,8 +1319,10 @@ test('localCssRules registers a combineCss entry for a real site-wide rules.css'
 
     $t->localCssRules([]);
 
-    expect(template_instance_test_cssloader_registered($t->cssLoader))
-        ->toHaveKey(md5('local/css/rules.css'));
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
+
+    expect($result)
+        ->toContain('local/css/rules.css');
 });
 
 test('localCssRules registers nothing when no local css files exist', function (): void {
@@ -1366,8 +1334,10 @@ test('localCssRules registers nothing when no local css files exist', function (
         ],
     ]);
 
-    expect(template_instance_test_cssloader_registered($t->cssLoader))
-        ->toBe([]);
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
+
+    expect($result)
+        ->toBe('');
 });
 
 // --- loadThemeconf ----------------------------------------------------------

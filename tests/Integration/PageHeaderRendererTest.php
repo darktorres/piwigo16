@@ -67,7 +67,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         // header.latte's own {get_combined_css}/{get_combined_scripts
-        // load='header'} tags reach ScriptLoader::urlService() -- unset by
+        // load='header'} tags reach Template::urlService() -- unset by
         // default, real RequestBootstrap-only wiring this test never boots.
         // header.latte's own {$lang_info['code']}/{$lang_info['direction']} reach
         // Lang::langInfo() -- unset by default, real RequestBootstrap-only

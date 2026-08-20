@@ -765,7 +765,7 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0', bool $template = false): void
+    public static function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0'): void
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -775,7 +775,7 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0, bool $template = false): void
+    public static function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0): void
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

@@ -9,7 +9,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -190,32 +189,6 @@ test('htmlRenderer resolver throws when the container returns an unexpected type
         ],
         static fn (): string => $t->parse('no-such-handle')
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
-
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->dataDirChecked = '1';
-});
-
-test('currentTemplate resolver throws when the container returns an unexpected type', function (): void {
-    $t = TemplateTestFactory::build();
-
-    // currentTemplate()'s own docblock: its only real caller is
-    // finalizeOutput()'s cssLoader->getCss() call, whose own first
-    // argument (self::urlService(), evaluated before currentTemplate())
-    // transitively resolves HtmlService -- which independently needs
-    // CurrentTemplate as a natively-typed constructor param -- so going
-    // through finalizeOutput() trips PHP's own TypeError on THAT
-    // unrelated construction first, before this method's own manual
-    // instanceof guard ever runs.
-    // Invoking the private currentTemplate() directly is the only way to
-    // reach its own guard in isolation.
-    $currentTemplateMethod = new ReflectionMethod(Template::class, 'currentTemplate');
-
-    expect(static fn (): mixed => KernelContainerOverride::with(
-        [
-            CurrentTemplate::class => new stdClass(),
-        ],
-        static fn (): mixed => $currentTemplateMethod->invoke($t)
-    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentTemplate::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentConfigTestFactory::get()->dataDirChecked = '1';

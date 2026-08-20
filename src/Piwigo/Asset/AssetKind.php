@@ -8,4 +8,5 @@ enum AssetKind
 {
     case Script;
     case Css;
+    case InlineScript;
 }

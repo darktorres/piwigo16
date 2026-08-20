@@ -77,7 +77,7 @@ final class PageTailTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
 
         // footer.latte's own {get_combined_scripts load='footer'} tag reaches
-        // ScriptLoader::urlService() -- unset by default, real
+        // Template::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 

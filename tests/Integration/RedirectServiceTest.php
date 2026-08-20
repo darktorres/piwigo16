@@ -74,7 +74,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
 
         // footer.latte's {get_combined_scripts load='footer'} tag reaches
-        // ScriptLoader::urlService() -- unset by default, real
+        // Template::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
 
         $this->currentConfig()

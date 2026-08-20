@@ -67,7 +67,7 @@ afterEach(function (): void {
 it('emits combineScript with the real signature including real default values', function (): void {
     expect($this->generated)->toContain(
         'public static function combineScript(string $id, ?string $load = null, ?string $require = null, '
-        . "?string \$path = null, string|false \$version = '0', bool \$template = false): void",
+        . "?string \$path = null, string|false \$version = '0'): void",
     );
 });
 

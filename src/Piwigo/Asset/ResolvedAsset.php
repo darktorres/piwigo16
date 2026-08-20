@@ -9,18 +9,36 @@ namespace Piwigo\Asset;
  * tag -- `PageAssets::resolveScripts()`/`resolveCss()`'s own output.
  * `$path` is relative (either `ViteManifestEntry::$file`, relative to
  * `dist/`, or the raw fallback path, relative to the app root) --
- * root-URL prefixing and version-query-string cache busting stay the
- * caller's job, since no real caller exists yet to decide those
- * (`Piwigo\Page\PageTailRenderer` builds its own URL around
- * `ViteManifest::resolve()` directly for the one real asset that
- * exists today, `vitals.js`, rather than going through this class at
- * all -- a single ungrouped asset has no ordering/dependency need for
- * the collector).
+ * root-URL prefixing stays the caller's job (`Template`'s own
+ * asset-tag-rendering step, P41-G, docs/PLAN.md), since it also needs
+ * to dispatch `Template\Event\CombinedScript` per script, a step this
+ * value object has no business knowing about.
+ *
+ * `$version` carries `AssetContribution::$version` through unchanged
+ * (`false` disables cache-busting, matching that class's own
+ * contract) -- meaningless for an inline script (`$inlineCode !==
+ * null`), which has no URL to cache-bust.
+ *
+ * `inline()` is `AssetKind::InlineScript`'s own resolved shape: no
+ * path/URL at all, just the literal code ready to print inside the
+ * footer's one wrapped `<script>` block.
  */
 final readonly class ResolvedAsset
 {
-    public function __construct(
+    private function __construct(
         public string $path,
         public ?LoadMode $loadMode,
+        public string|false $version,
+        public ?string $inlineCode,
     ) {}
+
+    public static function file(string $path, ?LoadMode $loadMode, string|false $version): self
+    {
+        return new self($path, $loadMode, $version, null);
+    }
+
+    public static function inline(string $code): self
+    {
+        return new self('', LoadMode::Footer, false, $code);
+    }
 }

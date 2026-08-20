@@ -48,7 +48,7 @@ use Piwigo\Template\Template;
  *    `footerScript`/`localCssRules`/`exposeData`/
  *    `exposeString`/`getPageDataScript` all delegate to the owning
  *    `Template` instance's own (renamed, same-body) methods -- reusing
- *    its already-correct `ScriptLoader`/`CssLoader`/`PageState`/
+ *    its already-correct `PageAssets`/`PageState`/
  *    validation logic directly rather than re-deriving it here (the
  *    last three accumulate into `PageState`, docs/PLAN.md's P37).
  *    `html_options`/

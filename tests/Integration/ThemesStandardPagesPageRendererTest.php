@@ -137,13 +137,13 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set($this->configService);
 
         // themes_standard_pages.latte's own {combine_script}/{footer_script}
-        // tags only *register* scripts (ScriptLoader::add()/add_inline(),
-        // pure storage, confirmed by direct read) -- they never call
-        // ScriptLoader's own static urlService() the way actually
-        // *combining* them for real output would, but this is set anyway
-        // for the same defensive reason PageTailRendererTest's own setUp()
-        // sets it: real RequestBootstrap-only wiring this isolated test
-        // never boots otherwise.
+        // tags only *register* scripts (PageAssets::add(), pure storage,
+        // confirmed by direct read) -- they never call Template's own
+        // static urlService() the way actually *resolving* them for real
+        // output would, but this is set anyway for the same defensive
+        // reason PageTailRendererTest's own setUp() sets it: real
+        // RequestBootstrap-only wiring this isolated test never boots
+        // otherwise.
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();

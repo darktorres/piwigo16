@@ -698,24 +698,12 @@ namespace Piwigo\Tests\Integration {
                 new PersistentFileCache(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()),
             );
 
-            // FileCombiner::clearCombinedFiles()'s own opendir() (the real
-            // combined-CSS/JS cache dir, _data/combined/, may not exist yet in
-            // this shared process -- another test may have just deleted it) is
-            // unsuppressed but already handled gracefully in production
-            // (returns early on false); PHPUnit's own ErrorHandler still
-            // surfaces the warning, matching this file's own
-            // test_derivatives_* tests' identical reasoning above.
-            set_error_handler(static fn (): bool => true);
-            try {
-                $dispatcher->dispatch('compiled-templates');
+            $dispatcher->dispatch('compiled-templates');
 
-                self::assertContains(
-                    'Purge compiled templates : action successfully performed.',
-                    PageStateTestFactory::get()->infos
-                );
-            } finally {
-                restore_error_handler();
-            }
+            self::assertContains(
+                'Purge compiled templates : action successfully performed.',
+                PageStateTestFactory::get()->infos
+            );
         }
     }
 

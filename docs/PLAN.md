@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–D landed, Batch E fully landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's + InstallWizard's + NoPhotoYetRenderer's `PageHeaderRenderer`/`PageTail` call sites, `render()`/`renderToString()`/`Template::pparse()`/`$output`/`appendOutput`/`flush`/`fetchOutput` all deleted, `parse()` simplified, `TemplateLocator`/`ThemeChain` physically extracted out of `Template.php`); Part 2 (P41-G/H, asset-pipeline swap) not started (see below) | 8 |
+| P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, not started (see below) | 8 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -674,7 +674,7 @@ batches. 157 event classes at the time; P34 (below) later pruned dead
 ones to 127, then added 2 more closing its own catalogue gap.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="130" -->
+<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="128" -->
 
 `triggerChange()`/`triggerNotify()` were originally kept as "permanent"
 for `'trigger'`, their own internal meta-notification channel, then
@@ -2841,24 +2841,67 @@ passed as-is against the new delegate-based `Template.php`.
 
 This completes P41-E and all of P41 Part 1.
 
-**Part 2 (P41-G/H) — asset-pipeline cutover.** Redirects
+**Part 2 (P41-G/H) — asset-pipeline cutover (landed).** Redirected
 `Template::combineCss()`/`combineScript()`/`footerScript()` to
 `PageAssets::add(AssetContribution)` instead of `CssLoader`/
 `ScriptLoader`, with `finalizeHtml()`'s CSS/JS half reading from
-`PageAssets::resolveCss()`/`resolveScripts()`. Four real gaps found and
-resolved during planning (not left as speculation): `combineScript()`'s
-dead `$template` param dropped outright (zero real call sites);
-`footerScript()`'s 6 real inline-script call sites need a new
-`AssetContribution` inline-code variant, since `PageAssets` becomes the
-*sole* resolver, not a "keep the old mechanism as a parallel concern"
-partial win; `ResolvedAsset` needs a new HTML-tag-rendering step (its
-own docblock already flags "no real caller exists yet"); header and
-footer scripts unify onto the same placeholder-deferred path. Zero
-`.latte` file changes expected — every `{do combineCss}`/
-`{do combineScript}`/`{do footerScript}` tag keeps compiling to the same
-`Template` method calls it always has. P41-H deletes `CssLoader`/
-`ScriptLoader` and the dead `is_template` branch once P41-G is verified
-clean.
+`PageAssets::resolveCss()`/`resolveScripts()` through a new
+`Template::makeAssetSrc()`/`renderFooterScripts()` tag-rendering pair.
+`combineScript()`'s dead `$template` param dropped outright (zero real
+call sites, confirmed via grep); `footerScript()`'s 6 real
+inline-script call sites route through a new `AssetContribution::inlineScript()`/
+`AssetKind::InlineScript` variant, since `PageAssets` is now the *sole*
+resolver; header and footer scripts unified onto the same
+placeholder-deferred path (`COMBINED_FOOTER_SCRIPTS_TAG`, new).
+`GetPageAssets` dispatches once per instance, lazily, on
+`finalizeHtml()`'s first call.
+
+One real gap the plan's own "Four real gaps" text hadn't accounted
+for, found during implementation, not planning: `CssLoader`/
+`ScriptLoader`'s real resolution routed through `FileCombiner`, which
+does more than resolve paths — it actually bundles multiple CSS/JS
+files into one cache-busted file on disk
+(`CurrentConfig::$templateCombineFiles`, default `true`, genuinely
+live in production). Per explicit user decision, this file-combining
+behavior is **intentionally dropped**, not ported into `PageAssets` —
+a real bundler (Vite) is coming once JS migrates to TS in a later
+phase, so preserving `FileCombiner`'s ad-hoc mechanism now would be
+throwaway work. Each registered CSS/JS file now renders its own
+`<link>`/`<script>` tag instead of being merged — more requests per
+page than before, accepted tradeoff. `CssLoader`/`ScriptLoader`/
+`FileCombiner`/`Combinable`/`Css`/`Script`/`Projection\FooterScripts`/
+`Event\CombinablePreparse`/`Event\CombinedCssPostfilter` all deleted
+in the same pass (P41-H folded into P41-G, matching P41-E's own
+precedent — PHPStan's dead-code detector forces it once nothing real
+calls the old classes), along with `MaintenanceActionDispatcher`'s own
+now-pointless `FileCombiner::clearCombinedFiles()` call and the 6
+already-dead `themes/{default,admin/default,standard_pages}/template/{header,footer}.latte`
+files (found via a separate adversarial check — their real call sites
+were deleted back in P41-E, but the files themselves were never
+removed; not `themes/default/template/mail/` ones, which
+`MailService`'s own separately-rooted `Template` instance still
+genuinely renders). `test:golden-html` shows real (not whitespace-only)
+diffs from the combining removal, reviewed and accepted — reduced
+`<link>`/`<script>` bundling, not a rendering bug.
+
+**Part 2 follow-up (P41-I, proposed, not started).** The
+placeholder-tag + `substr_replace()` mechanism P41-G/H built works and
+is fully tested, but isn't idiomatic Latte — Latte's own native
+`{capture $var}...{/capture}` (side effects inside still execute
+normally, only the print stream buffers) is the intended answer to
+"this printed position needs content decided later in the same linear
+render pass," confirmed viable against all 4 real templates that call
+`getCombinedCss()`/`getCombinedScripts()`. Full design, the real
+architectural tradeoff found on adversarial review (capture-based
+resolution is less general than today's whole-page-deferred
+placeholder system — fine for every current real template, but a
+future template author placing a head-targeted registration after
+`{block content}` would silently lose it), and the required
+live-spike-first step (no existing precedent for capture-then-reprint
+in this codebase, unlike the capture-as-function-argument shape
+`footerScript()` already uses) are written up in
+`/home/torres/.claude/plans/validated-hopping-hamster.md` — not
+repeated here since this batch hasn't started.
 
 **P42 — Typed contributions + plugin-owned routes.**
 

@@ -8,8 +8,8 @@ namespace Piwigo\Template;
  * Owns the per-instance theme directory chain and resolves a bare
  * `.latte` filename (or `templateExists()`'s own existence check)
  * against it, in resolution order -- `Template` constructs one of these
- * internally per instance (same `new ScriptLoader()`/`new CssLoader()`
- * shape already used in that constructor), not a shared/injected
+ * internally per instance (same `new PageAssets(...)` shape already
+ * used in that constructor), not a shared/injected
  * collaborator, since the chain itself is genuinely per-`Template`-instance
  * state (P41, docs/PLAN.md's `TemplateLocator`/`ThemeChain` extraction).
  */

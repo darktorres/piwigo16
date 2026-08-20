@@ -35,7 +35,6 @@ use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\FileCombiner;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -202,7 +201,6 @@ final readonly class MaintenanceActionDispatcher
 
                 $this->currentTemplate->get()
                     ->deleteCompiledTemplates();
-                FileCombiner::clearCombinedFiles($this->currentConfig, $this->paths);
                 if (! $this->persistentCache instanceof PersistentCache) {
                     $this->htmlRenderer
                         ->fatalError('persistent cache not initialized');

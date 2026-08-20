@@ -604,7 +604,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
         // off) leaves isActive() false on every request, where
         // hard-exiting instead of returning the real 500 page below would
         // be a genuine regression. Exiting would also bypass this
-        // codebase's test pattern (e.g. ScriptLoaderTest.php/
+        // codebase's test pattern (e.g. PageAssetsTest.php/
         // TemplateInstanceTest.php) of installing a throwaway
         // set_error_handler() around a fatalError()-reaching call and
         // asserting on what it captured -- exit() bypasses every handler

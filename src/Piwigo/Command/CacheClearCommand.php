@@ -15,9 +15,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Clears what the NEW cache infrastructure owns: the Latte compiled-template
  * cache dir and the CacheFactory-created PSR-6 pool. Deliberately does NOT
- * touch FileCombiner's own combined-files cache or the legacy
- * _data/cache/*.cache PersistentCache files -- those are owned by
- * MaintenanceActionDispatcher's 'compiled-templates' case (which also calls
+ * touch the legacy _data/cache/*.cache PersistentCache files -- those are
+ * owned by MaintenanceActionDispatcher's 'compiled-templates' case (which also calls
  * CurrentTemplate::get()->deleteCompiledTemplates() -- the SAME Latte cache
  * dir this command clears, not a separate mechanism now that Smarty is
  * gone), reachable from the admin web UI only. Originally deferred here

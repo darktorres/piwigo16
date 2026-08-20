@@ -50,12 +50,10 @@
       {do combineScript(id: "jquery", load: "header")}
     {/spaceless}
 
-    <!-- BEGIN get_combined -->
     {do localCssRules($themes)}
     {=getCombinedCss()}
 
     {=getCombinedScripts('header')}
-    <!-- END get_combined -->
 
     {if !empty($head_elements)}
       {foreach $head_elements as $elt}
@@ -79,9 +77,7 @@
     {do exposeString('Are you sure?')}
     {=getPageDataScript()}
 
-    <!-- BEGIN get_combined -->
     {=getCombinedScripts('footer')}
-    <!-- END get_combined -->
 
     <script
       n:if="isset($VITALS_SCRIPT_URL)"

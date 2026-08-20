@@ -262,7 +262,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
         '/src/Piwigo/Image/SrcImage.php',
         '/src/Piwigo/Image/DerivativeImage.php',
-        '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Page/PageHeaderRenderer.php',

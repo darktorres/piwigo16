@@ -162,10 +162,6 @@ function goldenHtmlDir(): string
  *    failing in `-2` on nothing but the path. Taken from `__DIR__`, not
  *    from config, so it holds for another checkout, another user's home,
  *    or a CI runner just the same.
- *  - `_data/combined/*.{css,js}` bundle filenames: a content hash of
- *    `FileCombiner`'s own combine step, not template output -- differs
- *    run to run whenever the combined input set's mtimes/order differ,
- *    real template-content-identical or not.
  *  - `pwg_token`/anti-bot action tokens: a fresh per-session CSRF-style
  *    value (see `Piwigo\Auth\*`), never stable across two separate
  *    logins. Matched as a bare 64-hex-char string regardless of its
@@ -212,7 +208,6 @@ function goldenHtmlDir(): string
  */
 function goldenHtmlNormalize(string $html): string
 {
-    $html = preg_replace('#(_data/combined/)[a-zA-Z0-9]+(\.(?:css|js))#', '$1{{HASH}}$2', $html) ?? $html;
     $html = preg_replace('#\b[a-f0-9]{32}(?:[a-f0-9]{32})?\b#', '{{TOKEN}}', $html) ?? $html;
     // EphemeralKeyService::generate()'s round(microtime(true), 1) drops the
     // fractional part in string context whenever it rounds to a whole

@@ -340,7 +340,7 @@ final class InstallWizardTest extends IntegrationTestCase
     /**
      * Mirrors public/install.php's own real bootstrap sequence exactly (not
      * just InstallWizard's constructor+boot()): sets
-     * Piwigo\Template\ScriptLoader's static URL service (a "pre-existing
+     * Piwigo\Template\Template's static URL service (a "pre-existing
      * gap" the entry shell's own docblock already documents: nothing inside
      * InstallWizard/InstallBootstrap does this, since install.php never runs
      * RequestBootstrap::configure(), the only other real caller).

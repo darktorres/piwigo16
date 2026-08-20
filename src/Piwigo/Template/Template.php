@@ -15,6 +15,12 @@ use Doctrine\DBAL\Exception;
 use Latte\Runtime\Html;
 use LogicException;
 use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\Event\GetPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Asset\PageAssets;
+use Piwigo\Asset\ResolvedAsset;
+use Piwigo\Asset\ViteManifest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
@@ -88,11 +94,52 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
 
-    public ScriptLoader $scriptLoader;
+    /**
+     * `getCombinedScripts('footer')`'s own placeholder, resolved
+     * alongside `COMBINED_SCRIPTS_TAG` above in `finalizeHtml()` --
+     * unified onto the same placeholder-deferred path rather than
+     * `getCombinedScripts()` resolving footer content immediately at
+     * its own template-render call site the way it used to (P41-G,
+     * docs/PLAN.md).
+     */
+    public const string COMBINED_FOOTER_SCRIPTS_TAG = '<!-- COMBINED_FOOTER_SCRIPTS -->';
 
     public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
 
-    public CssLoader $cssLoader;
+    /**
+     * Collects `{do combineCss}`/`{do combineScript}`/`{do footerScript}`
+     * registrations and resolves them into ordered, `ViteManifest`-aware
+     * `ResolvedAsset` lists -- `ScriptLoader`/`CssLoader`/`FileCombiner`'s
+     * own real replacement (P41-G, docs/PLAN.md). Constructed fresh per
+     * instance below, same shape as `$templateLocator`/`$themeChain`.
+     * File-combining itself (`FileCombiner`'s real, `templateCombineFiles`-gated
+     * multi-file-bundle-into-one-cache-file mechanism) is intentionally
+     * NOT preserved -- a real bundler (Vite) replaces the need for it
+     * once JS migrates to TS in a later phase, so porting that ad-hoc
+     * mechanism into `PageAssets` now would be throwaway work.
+     */
+    private readonly PageAssets $pageAssets;
+
+    /**
+     * `ScriptLoader::didHead()`'s own generalized replacement: guards
+     * BOTH `COMBINED_SCRIPTS_TAG` and `COMBINED_FOOTER_SCRIPTS_TAG`
+     * substitution in `finalizeHtml()` together, since both now resolve
+     * from the same single `PageAssets::resolveScripts()` call -- a
+     * second `finalizeHtml()` call on this instance leaves either
+     * placeholder tag literally unreplaced, matching `didHead()`'s own
+     * "don't reprocess" contract. CSS has no equivalent lock --
+     * `PageAssets::clearCss()` is called instead, so a second call
+     * simply sees nothing left registered.
+     */
+    private bool $scriptsResolved = false;
+
+    /**
+     * `Asset\Event\GetPageAssets`'s own one-shot dispatch guard -- fired
+     * at most once per instance, the first time `finalizeHtml()` runs,
+     * not tied to `$scriptsResolved` above since plugin-contributed CSS
+     * needs it too and CSS resolves on every call.
+     */
+    private bool $pageAssetsDispatched = false;
 
     /**
      * docs/PLAN.md's P37 -- backfilled in finalizeOutput() the same way
@@ -117,7 +164,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Owns the theme directory chain `resolveLatteTemplatePath()` walks
      * to find a bare `.latte` filename's real path -- constructed fresh
-     * per instance below, same shape as `$scriptLoader`/`$cssLoader`
+     * per instance below, same shape as `$pageAssets`
      * (P41, docs/PLAN.md's `TemplateLocator`/`ThemeChain` extraction).
      */
     private readonly TemplateLocator $templateLocator;
@@ -163,8 +210,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         ?ThemeId $theme = null,
         string $path = 'template'
     ) {
-        $this->scriptLoader = new ScriptLoader();
-        $this->cssLoader = new CssLoader();
+        $this->pageAssets = new PageAssets(new ViteManifest($this->paths));
         $this->templateLocator = new TemplateLocator();
         $this->themeChain = new ThemeChain($this->processCache, function (): void {
             $this->assign([
@@ -378,28 +424,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- the only real use
-     * in this class is CssLoader::getCss()'s one call site below. A
-     * required constructor param here would ripple to every real
-     * `new Template(...)` construction site across the app for a single
-     * caller, the same low-blast-radius reasoning as htmlRenderer()/
-     * imageStdParams() above.
-     */
-    private function currentTemplate(): CurrentTemplate
-    {
-        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
-        if (! $currentTemplate instanceof CurrentTemplate) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
-        }
-
-        return $currentTemplate;
-    }
-
-    /**
      * Lazily constructed, memoized per `Template` instance -- mirrors
-     * `imageStdParams()`/`currentTemplate()` above: nothing forces this
-     * cost (a real cache-dir mkdir, a `PiwigoExtension` construction)
-     * except a `.latte` file actually being parsed.
+     * `imageStdParams()` above: nothing forces this cost (a real
+     * cache-dir mkdir, a `PiwigoExtension` construction) except a
+     * `.latte` file actually being parsed.
      */
     private function latteEngine(): LatteEngine
     {
@@ -723,49 +751,59 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * page render (P41, docs/PLAN.md) calls this directly on its own
      * `Renderer::render(View): Html` result. `{do combineCss}`/
      * `{do combineScript}`/`{do htmlHead}` registrations land on this
-     * same `Template` instance's `$cssLoader`/`$scriptLoader`/
-     * `$htmlHeadElements` regardless of which page called this.
+     * same `Template` instance's `$pageAssets`/`$htmlHeadElements`
+     * regardless of which page called this.
      */
     public function finalizeHtml(string $html): string
     {
-        if (! $this->scriptLoader->didHead()) {
+        $this->dispatchPageAssetsOnce();
+
+        if (! $this->scriptsResolved) {
+            $this->scriptsResolved = true;
+            $scripts = $this->pageAssets->resolveScripts();
+
             $pos = strpos($html, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
-                $scripts = $this->scriptLoader->getHeadScripts($this->accessLevelChecker);
                 $content = [];
-                foreach ($scripts as $script) {
-                    $content[] =
-                        '<script type="text/javascript" src="'
-                        . $this->makeScriptSrc($script)
-                        . '"></script>';
+                foreach ($scripts as $asset) {
+                    if ($asset->loadMode === LoadMode::Header) {
+                        $content[] =
+                            '<script type="text/javascript" src="'
+                            . $this->makeAssetSrc($asset)
+                            . '"></script>';
+                    }
                 }
 
-                $html = substr_replace($html, implode("\n", $content), $pos, strlen(self::COMBINED_SCRIPTS_TAG));
+                $html = substr_replace($html, $this->indentedJoin($html, $pos, $content), $pos, strlen(self::COMBINED_SCRIPTS_TAG));
+            } // else maybe error or warning ?
+
+            $footerPos = strpos($html, self::COMBINED_FOOTER_SCRIPTS_TAG);
+            if ($footerPos !== false) {
+                $html = substr_replace($html, $this->renderFooterScripts($scripts, $this->lineIndent($html, $footerPos)), $footerPos, strlen(self::COMBINED_FOOTER_SCRIPTS_TAG));
             } // else maybe error or warning ?
         }
 
-        $css = $this->cssLoader->getCss(self::urlService(), $this->eventDispatcher, $this->currentTemplate(), $this->currentConfig, $this->paths, $this->accessLevelChecker);
+        $css = $this->pageAssets->resolveCss();
 
         $content = [];
-        foreach ($css as $combi) {
-            $href = self::urlService()->embellishUrl(self::urlService()->getRootUrl() . $combi->path);
-            if ($combi->version !== false) {
-                $href .= '?v' . ((bool) $combi->version ? $combi->version : AppInfo::VERSION);
+        foreach ($css as $asset) {
+            $href = self::urlService()->embellishUrl(self::urlService()->getRootUrl() . $asset->path);
+            if ($asset->version !== false) {
+                $href .= '?v' . ((bool) $asset->version ? $asset->version : AppInfo::VERSION);
             }
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
-        $html = str_replace(
-            self::COMBINED_CSS_TAG,
-            implode("\n", $content),
-            $html
-        );
-        $this->cssLoader->clear();
+        $cssPos = strpos($html, self::COMBINED_CSS_TAG);
+        if ($cssPos !== false) {
+            $html = substr_replace($html, $this->indentedJoin($html, $cssPos, $content), $cssPos, strlen(self::COMBINED_CSS_TAG));
+        }
+        $this->pageAssets->clearCss();
 
         // docs/PLAN.md's P37 -- same unconditional str_replace() shape as
         // COMBINED_CSS_TAG above (only one real call site,
         // footer.latte's own {=getPageDataScript()}, so nothing to
         // guard against a second resolution). PageState isn't cleared
-        // here, unlike cssLoader above -- see Template::exposeData()'s
+        // here, unlike $pageAssets' CSS registrations above -- see Template::exposeData()'s
         // own docblock and docs/PLAN.md's P37 section for why it must
         // not be: any `{do exposeData(...)}`/`{do exposeString(...)}`
         // call anywhere in the page (e.g. admin.latte's own body) has to
@@ -799,97 +837,91 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Returns clean relative URL to script file.
+     * Dispatches `Asset\Event\GetPageAssets` at most once per instance --
+     * `finalizeHtml()`'s own first call, before either script or CSS
+     * resolution reads `$this->pageAssets`, so a plugin-contributed
+     * asset participates in the exact same dedup/ordering/promotion
+     * pass as a template-registered one.
      */
-    private function makeScriptSrc(Combinable $script): string
+    private function dispatchPageAssetsOnce(): void
     {
-        $ret = '';
-        if ($script->isRemote(self::urlService())) {
-            // isRemote() can only return true via a real urlIsRemote($this
-            // ->path) call, which it early-returns false before reaching
-            // whenever $this->path is null -- so path is provably non-null
-            // here.
-            assert($script->path !== null);
-            $ret = $script->path;
+        if ($this->pageAssetsDispatched) {
+            return;
+        }
+        $this->pageAssetsDispatched = true;
+
+        $event = $this->eventDispatcher->dispatch(new GetPageAssets());
+        foreach ($event->assets as $contribution) {
+            $this->pageAssets->add($contribution);
+        }
+    }
+
+    /**
+     * Returns clean relative URL to an asset file.
+     */
+    private function makeAssetSrc(ResolvedAsset $asset): string
+    {
+        $isRemote = self::urlService()->urlIsRemote($asset->path) || str_starts_with($asset->path, '//');
+
+        if ($isRemote) {
+            $ret = $asset->path;
         } else {
-            $ret = self::urlService()->getRootUrl() . $script->path;
-            if ($script->version !== false) {
-                $ret .= '?v' . ((bool) $script->version ? $script->version : AppInfo::VERSION);
+            $ret = self::urlService()->getRootUrl() . $asset->path;
+            if ($asset->version !== false) {
+                $ret .= '?v' . ((bool) $asset->version ? $asset->version : AppInfo::VERSION);
             }
         }
         // trigger the event for eventual use of a cdn
-        $combinedScriptEvent = $this->eventDispatcher->dispatch(new CombinedScript($ret, $script));
+        $combinedScriptEvent = $this->eventDispatcher->dispatch(new CombinedScript($ret, $asset));
 
         return self::urlService()->embellishUrl($combinedScriptEvent->src);
     }
 
     /**
-     * `{do combineScript(...)}` -- registers a JS file with `ScriptLoader`.
-     * `$id` has no default, so a `.latte` template omitting it gets a real
-     * PHP `ArgumentCountError` at the call site: real, required arguments
-     * backed by PHP's own type system, not a behavior gap -- no real
-     * converted template omits it.
+     * Builds `COMBINED_FOOTER_SCRIPTS_TAG`'s own real substitution
+     * content: footer-sync `<script src>` tags, then (if any) one
+     * `<script>` block wrapping every inline registration
+     * (`{do footerScript(...)}`'s own real target) in registration
+     * order, then (if any) the async-bootstrap IIFE -- the exact same
+     * 3-phase shape `getCombinedScripts('footer')` used to build
+     * directly, now driven off `$scripts`' single resolved list instead
+     * of `ScriptLoader::getFooterScripts()`'s own 2-list `FooterScripts`
+     * projection.
+     *
+     * @param list<ResolvedAsset> $scripts
      */
-    public function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0', bool $template = false): void
+    private function renderFooterScripts(array $scripts, string $indent): string
     {
-        $loadMode = 0;
-        if ($load !== null) {
-            switch ($load) {
-                case 'header':
-                    break;
-                case 'footer':
-                    $loadMode = 1;
-                    break;
-                case 'async':
-                    $loadMode = 2;
-                    break;
-                default:
-                    $this->errorCollector->recordFatal("combineScript: invalid 'load' parameter");
+        $content = [];
+        foreach ($scripts as $asset) {
+            if ($asset->loadMode === LoadMode::Footer && $asset->inlineCode === null) {
+                $content[] =
+                  '<script type="text/javascript" src="'
+                  . $this->makeAssetSrc($asset)
+                  . '"></script>';
             }
         }
 
-        $requireList = $require !== null && $require !== '' ? explode(',', $require) : [];
-
-        $this->scriptLoader->add($id, $loadMode, $requireList, $path, $version, $template);
-    }
-
-    /**
-     * `{=getCombinedScripts(...)}` -- returns `Latte\Runtime\Html` (not a
-     * plain string), since this one (unlike `combineScript()`) prints real
-     * markup at its own call site and would otherwise be HTML-escaped by
-     * Latte's auto-escaping (see docs/PLAN.md's P31 section,
-     * "Auto-escaping").
-     */
-    public function getCombinedScripts(string $load): Html
-    {
-        if ($load === 'header') {
-            return new Html(self::COMBINED_SCRIPTS_TAG);
-        }
-
-        $content = [];
-        $scripts = $this->scriptLoader->getFooterScripts($this->accessLevelChecker);
-        foreach ($scripts->sync as $script) {
-            $content[] =
-              '<script type="text/javascript" src="'
-              . $this->makeScriptSrc($script)
-              . '"></script>';
-        }
-        if ($this->scriptLoader->inlineScripts !== []) {
+        $inline = array_values(array_filter($scripts, static fn (ResolvedAsset $asset): bool => $asset->inlineCode !== null));
+        if ($inline !== []) {
             $content[] = '<script type="text/javascript">//<![CDATA[
 ';
-            $content = array_merge($content, $this->scriptLoader->inlineScripts);
+            foreach ($inline as $asset) {
+                $content[] = (string) $asset->inlineCode;
+            }
             $content[] = '//]]></script>';
         }
 
-        if ($scripts->async !== []) {
+        $async = array_values(array_filter($scripts, static fn (ResolvedAsset $asset): bool => $asset->loadMode === LoadMode::Async));
+        if ($async !== []) {
             $content[] = '<script type="text/javascript">';
             $content[] = <<<'JS'
             (function() {
             var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
             JS;
-            foreach ($scripts->async as $script) {
+            foreach ($async as $asset) {
                 $content[] = <<<JS
-                s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->makeScriptSrc($script)}';
+                s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->makeAssetSrc($asset)}';
                 JS;
                 $content[] = 'after = after.parentNode.insertBefore(s, after);';
             }
@@ -897,17 +929,97 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $content[] = '</script>';
         }
 
-        return new Html(implode("\n", $content));
+        return implode("\n" . $indent, $content);
     }
 
     /**
-     * `{do combineCss(...)}` -- registers a CSS file with `CssLoader`.
+     * Whatever whitespace precedes $pos on its own line in $html --
+     * empty when $pos isn't alone on its line (real templates always
+     * place a placeholder tag on its own, indented line, but this
+     * still has to degrade safely rather than treat arbitrary
+     * preceding non-whitespace text as if it were indentation).
+     */
+    private function lineIndent(string $html, int $pos): string
+    {
+        $lineStart = strrpos(substr($html, 0, $pos), "\n");
+        $lineStart = $lineStart === false ? 0 : $lineStart + 1;
+        $prefix = substr($html, $lineStart, $pos - $lineStart);
+
+        return trim($prefix) === '' ? $prefix : '';
+    }
+
+    /**
+     * Joins $lines the same way every multi-line placeholder
+     * substitution below needs: every line lands at the same visual
+     * column the placeholder tag itself sat at in the source .latte
+     * file, not just the first one (`implode("\n", $lines)` alone only
+     * gets the first line "for free", since it's inserted exactly
+     * where the placeholder was -- P41-G, docs/PLAN.md: dropping
+     * `FileCombiner`'s real multi-file bundling turned what used to be
+     * a single substituted line, on most real pages, into several).
+     *
+     * @param list<string> $lines
+     */
+    private function indentedJoin(string $html, int $pos, array $lines): string
+    {
+        return implode("\n" . $this->lineIndent($html, $pos), $lines);
+    }
+
+    /**
+     * `{do combineScript(...)}` -- registers a script with `PageAssets`.
+     * `$id` has no default, so a `.latte` template omitting it gets a real
+     * PHP `ArgumentCountError` at the call site: real, required arguments
+     * backed by PHP's own type system, not a behavior gap -- no real
+     * converted template omits it.
+     */
+    public function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0'): void
+    {
+        $loadMode = LoadMode::Header;
+        if ($load !== null) {
+            $loadMode = match ($load) {
+                'header' => LoadMode::Header,
+                'footer' => LoadMode::Footer,
+                'async' => LoadMode::Async,
+                default => null,
+            };
+            if ($loadMode === null) {
+                $this->errorCollector->recordFatal("combineScript: invalid 'load' parameter");
+                $loadMode = LoadMode::Header;
+            }
+        }
+
+        $dependsOn = $require !== null && $require !== '' ? explode(',', $require) : [];
+
+        $this->pageAssets->add(AssetContribution::script(
+            id: $id,
+            path: $path ?? '',
+            loadMode: $loadMode,
+            dependsOn: $dependsOn,
+            version: $version,
+        ));
+    }
+
+    /**
+     * `{=getCombinedScripts(...)}` -- returns `Latte\Runtime\Html` (not a
+     * plain string), since this one (unlike `combineScript()`) prints real
+     * markup at its own call site and would otherwise be HTML-escaped by
+     * Latte's auto-escaping (see docs/PLAN.md's P31 section,
+     * "Auto-escaping"). Both loads return a placeholder now -- resolved
+     * together, later, in `finalizeHtml()` (P41-G, docs/PLAN.md).
+     */
+    public function getCombinedScripts(string $load): Html
+    {
+        return new Html($load === 'header' ? self::COMBINED_SCRIPTS_TAG : self::COMBINED_FOOTER_SCRIPTS_TAG);
+    }
+
+    /**
+     * `{do combineCss(...)}` -- registers a CSS file with `PageAssets`.
      * `$path` has no default, same reasoning as `combineScript()`'s `$id`
      * above.
      */
-    public function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0, bool $template = false): void
+    public function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0): void
     {
-        $this->cssLoader->add($id ?? md5($path), $path, $version, $order, $template);
+        $this->pageAssets->add(AssetContribution::css($path, id: $id, order: $order, version: $version));
     }
 
     /**
@@ -977,15 +1089,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Same `{capture}`+`{do}` composition as `htmlHead()` above, calling
-     * `ScriptLoader::addInline()`.
+     * Same `{capture}`+`{do}` composition as `htmlHead()` above, registering
+     * an `AssetKind::InlineScript` contribution with `PageAssets`.
      */
     public function footerScript(string|Html $content, ?string $require = null): void
     {
         $trimmed = trim((string) $content);
         if ($trimmed !== '') {
-            $requireList = $require !== null && $require !== '' ? explode(',', $require) : [];
-            $this->scriptLoader->addInline($trimmed, $requireList);
+            $dependsOn = $require !== null && $require !== '' ? explode(',', $require) : [];
+            $this->pageAssets->add(AssetContribution::inlineScript($trimmed, $dependsOn));
         }
     }
 
@@ -1026,7 +1138,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * `{do exposeData(...)}` -- accumulates into `PageState`, like
      * `combineScript()`/`combineCss()` above accumulate into
-     * `scriptLoader`/`cssLoader`, rather than being implemented directly
+     * `$pageAssets`, rather than being implemented directly
      * on `PiwigoExtension` the way stateless `translate()` is (see
      * docs/PLAN.md's P37 section for why the two functions below match
      * this method's own registration shape, not that one's).

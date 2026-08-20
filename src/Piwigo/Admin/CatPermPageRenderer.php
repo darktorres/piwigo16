@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\CatPermPageContext;
 use Piwigo\Admin\Request\CatPermSubmitRequest;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -46,27 +47,21 @@ final readonly class CatPermPageRenderer
     ) {}
 
     /**
-     * $category is AlbumSubController::handle()'s own
-     * {@see \Piwigo\Category\Projection\Category::toArray()} result, shared
-     * verbatim with AlbumNotificationPageRenderer/CatModifyPageRenderer's
-     * own render() calls from that same dispatch site. Unlike
-     * CatModifyPageRenderer, this method's own 'status' reassignment below
-     * stays the same string type, so the full Projection shape applies
-     * safely throughout.
-     *
-     * @param array{id: int, name: string, id_uppercat: ?int, comment: ?string,
-     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
-     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
-     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
+     * $category is AlbumSubController::handle()'s own real
+     * {@see \Piwigo\Category\Projection\Category} instance, shared verbatim
+     * with AlbumNotificationPageRenderer/CatModifyPageRenderer's own
+     * render() calls from that same dispatch site. `Category` is
+     * `readonly`, so this method's own "status changed by the submitted
+     * form" case is tracked via a local `$status` variable rather than
+     * writing back into the object (matches the original array's own
+     * `$category['status'] = $post_status` reassignment).
      */
-    public function render(string $admin_album_base_url, array $category): void
+    public function render(string $admin_album_base_url, Category $category): void
     {
-        // $page is a local scratch array for this method's own body only.
-        /** @var array<string, mixed> $page */
-        $page = [];
         $template = $this->currentTemplate->get();
 
-        $page['cat'] = $category['id'];
+        $cat_id = $category->id->value;
+        $status = $category->status;
 
         $save_success = null;
         $catPermSubmit = CatPermSubmitRequest::fromGlobals();
@@ -75,21 +70,21 @@ final readonly class CatPermPageRenderer
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             $post_status = $catPermSubmit->status;
-            $current_status = $category['status'];
+            $current_status = $status;
             $apply_on_sub = $catPermSubmit->applyOnSub;
 
             $post_groups = $catPermSubmit->groups;
             $post_users = $catPermSubmit->users;
 
-            $this->categoryAdminService->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
-            $category['status'] = $post_status;
+            $this->categoryAdminService->setCategoryPermissions($cat_id, $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
+            $status = $post_status;
 
             $save_success = $this->lang->t('Album updated successfully');
         }
 
         $categories_nav = $this->htmlService
             ->getCatDisplayNameFromId(
-                $page['cat'],
+                $cat_id,
                 'admin.php?page=album-'
             );
 
@@ -103,7 +98,6 @@ final readonly class CatPermPageRenderer
 
         // groups granted to access the category
         $permissionRepository = new PermissionRepository($this->entityManager);
-        $cat_id = $page['cat'];
         $group_granted_ids = $permissionRepository->findGrantedGroupIdsByCategory([$cat_id])[$cat_id] ?? [];
 
         // users...
@@ -162,7 +156,7 @@ final readonly class CatPermPageRenderer
             categoriesNav: $categories_nav,
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
             fAction: $admin_album_base_url . '-permissions',
-            private: ($category['status'] === 'private'),
+            private: ($status === 'private'),
             groups: $groups,
             groupsSelected: $group_granted_ids,
             users: $users,

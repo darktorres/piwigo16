@@ -9,7 +9,7 @@ use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
 use Piwigo\Auth\AuthService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
-use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
@@ -65,25 +65,17 @@ final readonly class AlbumNotificationPageRenderer
     ) {}
 
     /**
-     * $category is AlbumSubController::handle()'s own
-     * {@see \Piwigo\Category\Projection\Category::toArray()} result, shared
-     * verbatim with CatModifyPageRenderer/CatPermPageRenderer's own
-     * render() calls from that same dispatch site.
-     *
-     * @param array{id: int, name: string, id_uppercat: ?int, comment: ?string,
-     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
-     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
-     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
+     * $category is AlbumSubController::handle()'s own real
+     * {@see \Piwigo\Category\Projection\Category} instance, shared verbatim
+     * with CatModifyPageRenderer/CatPermPageRenderer's own render() calls
+     * from that same dispatch site.
      */
-    public function render(string $admin_album_base_url, array $category): void
+    public function render(string $admin_album_base_url, Category $category): void
     {
-        /** @var array<string, mixed> $page */
-        $page = [];
         $template = $this->currentTemplate->get();
         $save_success = null;
 
-        $category_id = $category['id'];
-        $page['cat'] = $category_id;
+        $category_id = $category->id->value;
 
         // info by email to an access granted group of category informations
         $albumNotificationSubmit = AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
@@ -95,20 +87,20 @@ final readonly class AlbumNotificationPageRenderer
 
             $img = [];
 
-            // Known limitation: when $category['representative_picture_id']
+            // Known limitation: when $category->representativePictureId
             // is empty, no image is shown -- there's no descendant-fallback
             // lookup ("use a child album's representative instead"), only
             // a direct-representative check. Not a defect, just a smaller
             // feature than a full recursive lookup would be.
-            if ($category['representative_picture_id'] !== null && $category['representative_picture_id'] !== 0) {
-                $element = $this->imageService->getImageRow($category['representative_picture_id']);
+            if ($category->representativePictureId !== null && $category->representativePictureId !== 0) {
+                $element = $this->imageService->getImageRow($category->representativePictureId);
                 if ($element !== null) {
                     $img = [
                         'link' => $this->urlService->makePictureUrl(
                             [
                                 'image_id' => $element['id'],
                                 'image_file' => $element['file'],
-                                'category' => $category,
+                                'category' => $category->toArray(),
                             ]
                         ),
                         'src' => DerivativeImage::url(ImageStdParams::THUMB, SrcImageInfo::fromRow($element)),
@@ -116,7 +108,7 @@ final readonly class AlbumNotificationPageRenderer
                 }
             }
 
-            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category->name, 'admin_cat_list'));
             $renderedCategoryName = $nameEvent->categoryName;
 
             $args = new MailArgs(
@@ -128,9 +120,9 @@ final readonly class AlbumNotificationPageRenderer
             $categoryLink = $this->urlService->makeIndexUrl(
                 [
                     'category' => [
-                        'id' => $category['id'],
+                        'id' => $category->id->value,
                         'name' => $renderedCategoryName,
-                        'permalink' => $category['permalink'],
+                        'permalink' => $category->permalink?->value,
                     ],
                 ]
             );
@@ -222,16 +214,10 @@ final readonly class AlbumNotificationPageRenderer
             $this->urlService->unsetMakeFullUrl();
         }
 
-        // $page['cat'] was set to $category['id'] (a real int) above, in
-        // this same method scope with no intervening by-reference calls,
-        // so its narrowing is still provably int here ($page itself is
-        // array<string, mixed>).
-        $page_cat = $page['cat'];
-
         $categories_nav = trim(
             $this->htmlService
                 ->getCatDisplayNameFromId(
-                    $page_cat,
+                    $category_id,
                     'admin.php?page=album-'
                 )
         );
@@ -261,10 +247,10 @@ final readonly class AlbumNotificationPageRenderer
         if (count($all_group_ids) === 0) {
             $no_group_in_gallery = true;
         } else {
-            if ($category['status'] === 'private') {
+            if ($category->status === 'private') {
                 $permission_url = $admin_album_base_url . '-permissions';
 
-                $group_ids = $this->categoryService->getAccessGroupIds(CategoryId::from($category_id));
+                $group_ids = $this->categoryService->getAccessGroupIds($category->id);
             } else {
                 $group_ids = $all_group_ids;
             }
@@ -279,7 +265,7 @@ final readonly class AlbumNotificationPageRenderer
         // private photos)
         $all_user_ids = $this->userService->getUserIdsExcludingStatus('guest');
 
-        if ($category['status'] === 'private') {
+        if ($category->status === 'private') {
             $user_ids_access_indirect = [];
 
             if (count($group_ids) > 0) {
@@ -291,7 +277,7 @@ final readonly class AlbumNotificationPageRenderer
 
             $user_ids_access_direct = array_map(
                 strval(...),
-                $this->categoryService->getAccessUserIds(CategoryId::from($category_id))
+                $this->categoryService->getAccessUserIds($category->id)
             );
 
             $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));

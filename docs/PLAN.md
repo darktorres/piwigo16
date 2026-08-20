@@ -3205,6 +3205,36 @@ real branch introduced (`IdentificationView`/`RegisterView`/
 branches, `PictureView`'s `uOriginal`/`rating`-gated branches,
 `PopuphelpView`'s context branch).
 
+Migrated 7 more pages/Views: `ToasterView` (2 calls, contract-only,
+one real parent confirmed via repo-wide grep) + `ProfileView` (26
+calls across the `standard_pages` physical file, 0 on the default
+physical file -- same shared-class-two-physical-files pattern as
+`PopuphelpView`, merges `ToasterView`'s `pageAssets()` in), then the
+**derivative-`isCached()` batch**: `CommentListView` (5),
+`CategoryCatsView` (4), `ThumbnailsView` (5), `PictureContentView` (3)
+-- **51 pages/Views landed so far, ~412 of 945 call sites**. The first
+3 register their `jquery.ajaxmanager`/`thumbnails.loader` pair
+unconditionally (a per-item `$pwg->derivative(...)` service call no
+DTO View can replicate; `PageAssets::add()` is dedup-safe, so this is
+a deliberate, accepted widening); `PictureContentView` is the
+exception -- its `$current['selected_derivative']` is already a real
+`DerivativeImage` sitting on the View's own constructor data, so its
+condition stayed exact, no widening. Confirmed via `git stash`: 2
+`quick_search.latte`/`search_filters.inc.latte` migration attempts
+were reverted after discovering `quick_search.latte` has a SECOND real
+parent (`batch_manager_filter.inc.latte`) still in the deferred
+colorbox-family batch -- both stay deferred together.
+
+**First full-suite `test:golden-html` sweep run this campaign**
+(previously verified only per-page) surfaced: 2 real, safe-to-close
+verification gaps from earlier commits (`slideshow`/`infos-errors`,
+closed in their own commit); 1 already-known pre-existing
+`admin-config-search` `filters_names`-ordering drift (left alone); and
+a full-suite-only "cumulative hit-count across ~78 sequential real
+page views" artifact on `random`/`calendar-posted`/`favorites`
+(individually clean, only drifts when the whole suite runs in one
+process back-to-back -- left alone, not a real baseline defect).
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

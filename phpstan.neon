@@ -394,13 +394,7 @@ parameters:
             identifier: if.alwaysTrue
             path: _analysis/phpstan-latte/*
         -
-            identifier: booleanAnd.alwaysFalse
-            path: _analysis/phpstan-latte/*
-        -
             identifier: booleanOr.rightAlwaysFalse
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: logicalOr.alwaysTrue
             path: _analysis/phpstan-latte/*
         -
             identifier: identical.alwaysFalse
@@ -444,5 +438,21 @@ services:
     # docblock.
     piwigoGessoHookMethodUsageProvider:
         class: Piwigo\Tools\PhpStan\GessoHookMethodUsageProvider
+        tags:
+            - shipmonk.deadCode.memberUsageProvider
+
+    # P40's "contract-only" View-adjacent classes (e.g.
+    # Menu\Projection\MenubarBlockView) are never Renderer::render()-ed
+    # and so never constructed by any in-tree PHP code -- their sole
+    # reader is VariableMapBuilder's own ReflectionClass(...)
+    # ->getProperties() walk over a runtime class-name string read back
+    # from a {templateType} scan, invisible to shipmonk's own built-in
+    # ReflectionUsageProvider (which only tracks a statically-known
+    # class name reaching ReflectionClass::getProperties()). See the
+    # provider's own docblock.
+    piwigoTypedViewPropertyUsageProvider:
+        class: Piwigo\Tools\PhpStan\TypedViewPropertyUsageProvider
+        arguments:
+            projectRoot: %currentWorkingDirectory%
         tags:
             - shipmonk.deadCode.memberUsageProvider

@@ -3101,6 +3101,25 @@ case), `PluginsInstalledView` (30), `TagsView` (41, one `order: 10`
 baseline regenerations; `admin-plugins-installed` stayed byte-
 identical with no leftover blank line at all).
 
+Also migrated 6 more pages/Views, ~214 of 945:
+`AlbumNotificationView` (5, new `$colorscheme`), `ConfigurationDefaultView`
+(1), `MenubarView` (3, no golden-html fixture for either of the last 2 --
+verified via `AdminConfigurationTest`'s "renders the default tab" test
+and the `Menubar*Test.php` suite instead), `CatPermView` (10, new
+`$colorscheme`/`$rootUrl`), `PictureCoiView` (5 -- its `{do htmlHead(...)}`
+call is a plain static CSS `<link>`, migrated as an ordinary
+`AssetContribution::css()` entry per the plan's own "htmlHead() fully
+migrated" design, not a `HasHeadLinks` case; its conditional `{if
+isset($coi)}{do exposeData(...)}{/if}` got a direct unit test per the
+plan's own branching-logic testing discipline, since golden-html's one
+fixture only exercises the non-null branch) -- 31 pages/Views landed so
+far. `test:golden-html` byte-identical throughout (3 pure-whitespace
+regenerations; `admin-picture-coi`'s regeneration also picked up a real,
+expected content change -- the migrated stylesheet link now goes
+through the same combining/versioning pipeline as every other asset
+instead of being spliced in raw, gaining a `?v17.0.0` query string and
+moving into sorted position).
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

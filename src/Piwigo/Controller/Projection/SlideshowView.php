@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -39,6 +40,9 @@ final readonly class SlideshowView implements View
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
+     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $commentsNavbar
+     * @param list<array<string, mixed>>|null $comments
+     * @param array<string, mixed>|null $commentAdd
      */
     public function __construct(
         public ?array $navFirst,
@@ -82,5 +86,12 @@ final readonly class SlideshowView implements View
         public ?array $metadata,
         public ?array $rateSummary,
         public ?array $rating,
+        public ?string $commentsOrderUrl,
+        public ?string $commentsOrderTitle,
+        public ?int $commentCount,
+        public ?array $commentsNavbar,
+        public ?array $comments,
+        public ?array $commentAdd,
+        public ?Html $commentList,
     ) {}
 }

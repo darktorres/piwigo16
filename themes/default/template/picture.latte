@@ -414,55 +414,55 @@
     </div>
   </div>
 
-  {if isset($COMMENT_COUNT)}
+  {if isset($commentCount)}
     <div
       id="comments"
-      {if (!isset($comment_add) && ($COMMENT_COUNT == 0))}
+      {if (!isset($commentAdd) && ($commentCount == 0))}
       class="noCommentContent"
       {else}
       class="commentContent"
       {/if}
     ><div id="commentsSwitcher"></div>
-      <h3>{$COMMENT_COUNT|translate_dec:'%d comment','%d comments'}</h3>
+      <h3>{$commentCount|translate_dec:'%d comment','%d comments'}</h3>
 
       <div id="pictureComments">
-        {if isset($comment_add)}
+        {if isset($commentAdd)}
           <div id="commentAdd">
             <h4>{='Add a comment'|translate}</h4>
             <form
               method="post"
-              action="{$comment_add['F_ACTION']|noescape}"
+              action="{$commentAdd['F_ACTION']|noescape}"
               id="addComment"
             >
-              {if $comment_add['SHOW_AUTHOR']}
+              {if $commentAdd['SHOW_AUTHOR']}
                 <p><label
                     for="author"
-                  >{='Author'|translate}{if $comment_add['AUTHOR_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
+                  >{='Author'|translate}{if $commentAdd['AUTHOR_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
                 <p><input
                     type="text"
                     name="author"
                     id="author"
-                    value="{$comment_add['AUTHOR']}"
+                    value="{$commentAdd['AUTHOR']}"
                   ></p>
               {/if}
-              {if $comment_add['SHOW_EMAIL']}
+              {if $commentAdd['SHOW_EMAIL']}
                 <p><label
                     for="email"
-                  >{='Email address'|translate}{if $comment_add['EMAIL_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
+                  >{='Email address'|translate}{if $commentAdd['EMAIL_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
                 <p><input
                     type="text"
                     name="email"
                     id="email"
-                    value="{$comment_add['EMAIL']}"
+                    value="{$commentAdd['EMAIL']}"
                   ></p>
               {/if}
-              {if $comment_add['SHOW_WEBSITE']}
+              {if $commentAdd['SHOW_WEBSITE']}
                 <p><label for="website_url">{='Website'|translate} :</label></p>
                 <p><input
                     type="text"
                     name="website_url"
                     id="website_url"
-                    value="{$comment_add['WEBSITE_URL']}"
+                    value="{$commentAdd['WEBSITE_URL']}"
                   ></p>
               {/if}
               <p><label
@@ -473,27 +473,27 @@
                   id="contentid"
                   rows="5"
                   cols="50"
-                >{$comment_add['CONTENT']}</textarea></p>
-              <p><input type="hidden" name="key" value="{$comment_add['KEY']}">
+                >{$commentAdd['CONTENT']}</textarea></p>
+              <p><input type="hidden" name="key" value="{$commentAdd['KEY']}">
                 <input type="submit" value="{='Submit'|translate}"></p>
             </form>
           </div>
         {/if}
         {if isset($comments)}
           <div id="pictureCommentList">
-            {if (($COMMENT_COUNT > 2) || !empty($navbar))}
+            {if (($commentCount > 2) || !empty($commentsNavbar))}
               <div id="pictureCommentNavBar">
-                {if $COMMENT_COUNT > 2}
+                {if $commentCount > 2}
                   <a
-                    href="{$COMMENTS_ORDER_URL|noescape}#comments"
+                    href="{$commentsOrderUrl|noescape}#comments"
                     rel="nofollow"
                     class="commentsOrder"
-                  >{$COMMENTS_ORDER_TITLE}</a>
+                  >{$commentsOrderTitle}</a>
                 {/if}
-                {if !empty($navbar)}{include 'navigation_bar.latte'}{/if}
+                {if !empty($commentsNavbar)}{include 'navigation_bar.latte', navbar: $commentsNavbar}{/if}
               </div>
             {/if}
-            {$COMMENT_LIST}
+            {$commentList}
           </div>
         {/if}
         <div class="clear-both"></div>

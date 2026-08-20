@@ -69,6 +69,7 @@ use Piwigo\Picture\Event\FilterPictureDisplayInfo;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Picture\Projection\PictureCommentsResult;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionContext;
@@ -1243,9 +1244,10 @@ final readonly class PictureController implements ControllerInterface
 
         $rateResult = $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
+        $commentsResult = PictureCommentsResult::empty();
         if ($this->currentConfig->activateComments) {
-            new PictureCommentRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->mailer, $this->htmlService, $this->entityManager);
+            $commentsResult = new PictureCommentRenderer()
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->csrfService, $this->mailer, $this->htmlService, $this->entityManager, $this->renderer);
         }
         $metadata = null;
         if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {
@@ -1330,6 +1332,13 @@ final readonly class PictureController implements ControllerInterface
             'metadata' => $metadata,
             'rateSummary' => $rateResult->rateSummary,
             'rating' => $rateResult->rating,
+            'commentsOrderUrl' => $commentsResult->commentsOrderUrl,
+            'commentsOrderTitle' => $commentsResult->commentsOrderTitle,
+            'commentCount' => $commentsResult->commentCount,
+            'commentsNavbar' => $commentsResult->commentsNavbar,
+            'comments' => $commentsResult->comments,
+            'commentAdd' => $commentsResult->commentAdd,
+            'commentList' => $commentsResult->commentList,
         ];
 
         if ($slideshow and $this->currentConfig->lightSlideshow) {

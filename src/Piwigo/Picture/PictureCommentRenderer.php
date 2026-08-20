@@ -14,6 +14,7 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\CommentListView;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -27,13 +28,11 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\Event\RenderCommentAuthor;
 use Piwigo\Picture\Event\UserCommentInsertion;
-use Piwigo\Picture\Projection\PictureCommentAddPageContext;
-use Piwigo\Picture\Projection\PictureCommentListPageContext;
-use Piwigo\Picture\Projection\PictureCommentsOrderPageContext;
+use Piwigo\Picture\Projection\PictureCommentsResult;
 use Piwigo\Picture\Request\PictureCommentSubmitRequest;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -70,10 +69,8 @@ final class PictureCommentRenderer
      *   deliberately construct a row missing the key entirely, to observe
      *   the resulting "Undefined array key" warning.
      */
-    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentConfig $currentConfig, CsrfService $csrfService, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): PictureCommentsResult
     {
-        $template = $currentTemplate->get();
-
         $commentRepository = $entityManager->getRepository(CommentEntity::class);
         $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig, $accessLevelChecker);
 
@@ -145,7 +142,7 @@ final class PictureCommentRenderer
         }
 
         if (! $showComments) {
-            return;
+            return PictureCommentsResult::empty();
         }
 
         $onlyValidated = ! $accessLevelChecker->isAdmin();
@@ -160,6 +157,8 @@ final class PictureCommentRenderer
             ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
         $comments = [];
+        $commentsOrderUrl = null;
+        $commentsOrderTitle = null;
 
         if ($nbComments > 0) {
             // comments order (get, session, conf)
@@ -169,12 +168,10 @@ final class PictureCommentRenderer
             }
             $commentsOrder = $sessionService->getCommentsOrder() ?? $currentConfig->commentsOrder;
 
-            $template->assignContext(new PictureCommentsOrderPageContext(
-                orderUrl: $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
-                    'comments_order' => ($commentsOrder === SortOrder::Asc->value ? SortOrder::Desc->value : SortOrder::Asc->value),
-                ]),
-                orderTitle: $commentsOrder === SortOrder::Asc->value ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
-            ));
+            $commentsOrderUrl = $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
+                'comments_order' => ($commentsOrder === SortOrder::Asc->value ? SortOrder::Desc->value : SortOrder::Asc->value),
+            ]);
+            $commentsOrderTitle = $commentsOrder === SortOrder::Asc->value ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first');
 
             $rows = $commentRepository->findForImage(
                 ImageId::from($imageId),
@@ -268,12 +265,6 @@ final class PictureCommentRenderer
             }
         }
 
-        $template->assignContext(new PictureCommentListPageContext(
-            commentCount: $nbComments,
-            navbar: $navigationBar,
-            comments: $comments,
-        ));
-
         $showAddCommentForm = true;
         if ($editCommentId instanceof CommentId) {
             $showAddCommentForm = false;
@@ -282,6 +273,7 @@ final class PictureCommentRenderer
             $showAddCommentForm = false;
         }
 
+        $commentAdd = null;
         if ($showAddCommentForm) {
             $key = new EphemeralKeyService($currentConfig)
                 ->generate(3, (string) $imageId);
@@ -315,8 +307,19 @@ final class PictureCommentRenderer
                     $tplVar[strtoupper($k)] = $postValue !== null ? htmlspecialchars($postValue) : '';
                 }
             }
-            $template->assignContext(new PictureCommentAddPageContext($tplVar));
+            $commentAdd = $tplVar;
         }
-        $template->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
+
+        $commentList = $renderer->render(new CommentListView(comments: $comments, commentDerivativeParams: null));
+
+        return new PictureCommentsResult(
+            commentsOrderUrl: $commentsOrderUrl,
+            commentsOrderTitle: $commentsOrderTitle,
+            commentCount: $nbComments,
+            commentsNavbar: $navigationBar,
+            comments: $comments,
+            commentAdd: $commentAdd,
+            commentList: $commentList,
+        );
     }
 }

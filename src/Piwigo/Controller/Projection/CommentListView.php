@@ -9,9 +9,16 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Template\Latte\Attribute\Template;
 
 /**
- * `comment_list.latte`'s own typed view -- rendered by {@see
- * \Piwigo\Controller\CommentsController::__invoke()} only when there is
- * at least one comment to show.
+ * `comment_list.latte`'s own typed view -- shared by two real callers:
+ * {@see \Piwigo\Controller\CommentsController::__invoke()} (only when
+ * there is at least one comment to show) and {@see
+ * \Piwigo\Picture\PictureCommentRenderer::render()} (the picture page's
+ * own single-image comment list). `$commentDerivativeParams` stays
+ * nullable: `PictureCommentRenderer`'s own comment rows never carry a
+ * `src_image` (already looking at the one photo above, no per-comment
+ * illustration needed), so the template's own `isset($commentDerivativeParams)`
+ * guard -- and the `{if isset($comment['src_image'])}` gate wrapping
+ * every real dereference of it -- is never even reached in that case.
  */
 #[Template('comment_list.latte')]
 final readonly class CommentListView implements View
@@ -21,6 +28,6 @@ final readonly class CommentListView implements View
      */
     public function __construct(
         public array $comments,
-        public DerivativeParams $commentDerivativeParams,
+        public ?DerivativeParams $commentDerivativeParams,
     ) {}
 }

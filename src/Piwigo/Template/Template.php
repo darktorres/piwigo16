@@ -829,20 +829,28 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function flush(): void
     {
-        echo $this->finalizeOutput();
+        $html = $this->output;
+        $this->output = '';
+        echo $this->finalizeHtml($html);
     }
 
     /**
-     * Same substitutions flush() sends to the browser (combined scripts,
-     * combined CSS, injected `<head>` elements/style), but returned
-     * instead of echoed -- the non-echoing sibling `fetchOutput()` uses,
-     * and what flush() itself now delegates to (behavior-identical: every
-     * existing flush()/p() caller is unaffected).
+     * Combined-scripts/combined-CSS/JSON-island/`<head>`-element
+     * substitutions against an arbitrary rendered string -- `flush()`/
+     * `fetchOutput()` are thin wrappers around this for the
+     * `Template::$output`-accumulating callers; a page rendered through
+     * `Renderer::render(View): Html` (P41's own `{layout}`-based
+     * mechanism) calls this directly on its own returned string instead.
+     * Both paths need the same substitutions, since `{do combineCss}`/
+     * `{do combineScript}`/`{do htmlHead}` registrations land on this
+     * same `Template` instance's `$cssLoader`/`$scriptLoader`/
+     * `$htmlHeadElements` regardless of which mechanism produced the
+     * surrounding HTML.
      */
-    private function finalizeOutput(): string
+    public function finalizeHtml(string $html): string
     {
         if (! $this->scriptLoader->didHead()) {
-            $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
+            $pos = strpos($html, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
                 $scripts = $this->scriptLoader->getHeadScripts($this->accessLevelChecker);
                 $content = [];
@@ -853,7 +861,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                         . '"></script>';
                 }
 
-                $this->output = substr_replace($this->output, implode("\n", $content), $pos, strlen(self::COMBINED_SCRIPTS_TAG));
+                $html = substr_replace($html, implode("\n", $content), $pos, strlen(self::COMBINED_SCRIPTS_TAG));
             } // else maybe error or warning ?
         }
 
@@ -867,10 +875,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
-        $this->output = str_replace(
+        $html = str_replace(
             self::COMBINED_CSS_TAG,
             implode("\n", $content),
-            $this->output
+            $html
         );
         $this->cssLoader->clear();
 
@@ -884,32 +892,29 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // separate PageTail::render()), and this placeholder only ever
         // lives in the second, footer-only flush.
         $pageDataPayload = new PageDataPayload(self::pageState(), self::lang());
-        $this->output = str_replace(
+        $html = str_replace(
             self::JSON_ISLAND_TAG,
             '<script type="application/json" id="page-data">' . $pageDataPayload->toJson() . '</script>',
-            $this->output
+            $html
         );
 
         if ((bool) count($this->htmlHeadElements)) {
             // `[ \t]*` tolerates the leading indentation a formatted
             // `</head>` line carries (Latte's `Feature::Dedent` isn't
             // enabled, so that indentation is literal in the rendered
-            // output) -- a bare `strpos($this->output, "\n</head>")`
-            // silently misses an indented tag and drops this content.
-            $pos = preg_match('#\n[ \t]*</head>#', $this->output, $m, PREG_OFFSET_CAPTURE) === 1
+            // output) -- a bare `strpos($html, "\n</head>")` silently
+            // misses an indented tag and drops this content.
+            $pos = preg_match('#\n[ \t]*</head>#', $html, $m, PREG_OFFSET_CAPTURE) === 1
                 ? $m[0][1]
                 : false;
             if ($pos !== false) {
                 $rep = "\n" . implode("\n", $this->htmlHeadElements);
-                $this->output = substr_replace($this->output, $rep, $pos, 0);
+                $html = substr_replace($html, $rep, $pos, 0);
             } // else maybe error or warning ?
             $this->htmlHeadElements = [];
         }
 
-        $output = $this->output;
-        $this->output = '';
-
-        return $output;
+        return $html;
     }
 
     /**
@@ -921,7 +926,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function fetchOutput(): string
     {
-        return $this->finalizeOutput();
+        $html = $this->output;
+        $this->output = '';
+
+        return $this->finalizeHtml($html);
     }
 
     /**

@@ -1247,9 +1247,10 @@ final readonly class PictureController implements ControllerInterface
             new PictureCommentRenderer()
                 ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->mailer, $this->htmlService, $this->entityManager);
         }
+        $metadata = null;
         if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {
-            new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths, $this->entityManager);
+            $metadata = new PictureMetadataRenderer()
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths, $this->entityManager);
         }
 
         // include menubar
@@ -1326,6 +1327,7 @@ final readonly class PictureController implements ControllerInterface
                 ->cookiePath(),
             'uOriginal' => $u_original,
             'pluginPictureButtons' => $template->pictureButtons(),
+            'metadata' => $metadata,
         ];
 
         if ($slideshow and $this->currentConfig->lightSlideshow) {

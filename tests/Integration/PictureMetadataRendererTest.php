@@ -216,12 +216,10 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             ]))
         );
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
-        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
-        self::assertIsArray($metadata[0]);
         self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
         self::assertSame([
             'Translated Artist' => 'Jane Photographer',
@@ -259,12 +257,10 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
-        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
-        self::assertIsArray($metadata[0]);
         self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
         self::assertSame([
             'Hauteur' => '6',
@@ -283,9 +279,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             'Artist' => 'Jane',
         ])));
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
-        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata'));
+        self::assertNull($metadata);
     }
 
     public function testRenderAppendsIptcMetadataTranslatingKnownFields(): void
@@ -317,12 +313,10 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
-        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
-        self::assertIsArray($metadata[0]);
         self::assertSame('IPTC Metadata', $metadata[0]['TITLE']);
         self::assertSame([
             'title' => 'Sunset Over The Bay',
@@ -351,13 +345,10 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplateTestFactory::get(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
-        $metadata = CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata');
         self::assertIsArray($metadata);
         self::assertCount(2, $metadata);
-        self::assertIsArray($metadata[0]);
-        self::assertIsArray($metadata[1]);
         self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
         self::assertSame('IPTC Metadata', $metadata[1]['TITLE']);
     }

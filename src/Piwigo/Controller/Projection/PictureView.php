@@ -39,6 +39,7 @@ final readonly class PictureView implements View
      * @param list<array<string, mixed>>|null $relatedTags
      * @param list<string>|null $relatedCategories
      * @param list<string> $pluginPictureButtons
+     * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      */
     public function __construct(
         public ?array $navFirst,
@@ -79,5 +80,6 @@ final readonly class PictureView implements View
         public string $cookiePath,
         public ?string $uOriginal,
         public array $pluginPictureButtons,
+        public ?array $metadata,
     ) {}
 }

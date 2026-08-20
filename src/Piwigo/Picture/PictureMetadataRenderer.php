@@ -12,10 +12,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Picture\Projection\PictureMetadataPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -29,11 +27,10 @@ final class PictureMetadataRenderer
 {
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
+     * @return list<array{TITLE: string, lines: array<string, mixed>}>|null
      */
-    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, Paths $paths, EntityManagerInterface $entityManager): void
+    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, Paths $paths, EntityManagerInterface $entityManager): ?array
     {
-        $template = $currentTemplate->get();
-
         $metadataService = new MetadataService($lang, new MetadataRepository($entityManager), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $paths);
 
         $metadata = null;
@@ -101,6 +98,6 @@ final class PictureMetadataRenderer
             }
         }
 
-        $template->assignContext(new PictureMetadataPageContext($metadata));
+        return $metadata;
     }
 }

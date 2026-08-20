@@ -95,7 +95,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
         ->showIptc = false;
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get(), picture_metadata_test_entity_manager());
+    $metadata = $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get(), picture_metadata_test_entity_manager());
 
-    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('metadata'))->toBeNull();
+    expect($metadata)->toBeNull();
 });

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -15,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * against `GET /api/v1/history/search`).
  */
 #[Template('history.latte')]
-final readonly class HistoryView implements View
+final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
 {
     public function __construct(
         public int $userId,
@@ -26,4 +31,68 @@ final readonly class HistoryView implements View
         public string $end,
         public int $guestId,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('history', 'themes/admin/default/js/history.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            // order 10 is required, see issue 1080
+            AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
+            AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
+            AssetContribution::script('jquery.geoip', 'themes/admin/default/js/jquery.geoip.js', loadMode: LoadMode::Async),
+            AssetContribution::css('themes/admin/default/css/pages/history.css', id: 'history'),
+        ];
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'user_name' => $this->userName ?? '',
+            'user_id' => $this->userId,
+            'image_id' => $this->imageId,
+            'ip' => $this->ip,
+            'guest_id' => $this->guestId,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Downloaded',
+            'Most visited',
+            'Best rated',
+            'Random photo',
+            'Your favorites',
+            'Recent albums',
+            'Recent photos',
+            'Memories',
+            'This photo no longer exists',
+            'Tags',
+            '%s MB',
+            'guest',
+            'Contact Form',
+            'Edit photo',
+            'Search for words',
+            'Post date',
+            'Album',
+            'Author',
+            'Added by',
+            'File type',
+            'and %d more',
+        ];
+    }
 }

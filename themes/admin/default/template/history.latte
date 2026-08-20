@@ -1,40 +1,6 @@
 {templateType Piwigo\Admin\Projection\HistoryView}
 {include 'include/datepicker.inc.latte'}
 
-{do exposeData('user_name', $userName ?? '')}
-{do exposeData('user_id', $userId)}
-{do exposeData('image_id', $imageId ?? '')}
-{do exposeData('ip', $ip ?? '')}
-{do exposeData('guest_id', $guestId)}
-{do exposeString('Downloaded')}
-{do exposeString('Most visited')}
-{do exposeString('Best rated')}
-{do exposeString('Random photo')}
-{do exposeString('Your favorites')}
-{do exposeString('Recent albums')}
-{do exposeString('Recent photos')}
-{do exposeString('Memories')}
-{do exposeString('This photo no longer exists')}
-{do exposeString('Tags')}
-{do exposeString('%s MB')}
-{do exposeString('guest')}
-{do exposeString('Contact Form')}
-{do exposeString('Edit photo')}
-{do exposeString('Search for words')}
-{do exposeString('Post date')}
-{do exposeString('Album')}
-{do exposeString('Author')}
-{do exposeString('Added by')}
-{do exposeString('File type')}
-{do exposeString('and %d more')}
-
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'history', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/history.js')}
-
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
-
 <form class="filter" method="post" name="filter" action="">
   <fieldset class="history-filter">
     <div class="selectable-filter">
@@ -243,6 +209,3 @@
 </div>
 
 {if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}
-
-{do combineScript(id: 'jquery.geoip', load: 'async', path: 'themes/admin/default/js/jquery.geoip.js')}
-{do combineCss(id: 'history', path: 'themes/admin/default/css/pages/history.css')}

@@ -7,7 +7,7 @@ namespace Piwigo\Category;
 use Piwigo\Category\Event\IndexThumbnailsRendered;
 use Piwigo\Category\Event\IndexThumbnailsRendering;
 use Piwigo\Category\Event\IndexThumbnailsSelected;
-use Piwigo\Category\Projection\CategoryDefaultThumbnailsPageContext;
+use Piwigo\Category\Projection\CategoryDefaultResult;
 use Piwigo\Category\Request\CategorySlideshowRequest;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
@@ -18,7 +18,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\StringHelper;
-use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetIndexDerivativeParams;
@@ -41,7 +40,6 @@ final readonly class CategoryDefaultRenderer
 {
     public function __construct(
         private HtmlRenderingInterface $htmlRenderer,
-        private TemplateInterface $template,
         private ImageRepository $imageRepo,
         private CommentCounterInterface $commentCounter,
         private UrlServiceInterface $urlService,
@@ -63,18 +61,25 @@ final readonly class CategoryDefaultRenderer
      * depend on L2b). The one real caller (GalleryController) already has
      * these values from SectionContextRegistry::current().
      *
-     * The slideshow URL is this method's return value: it's produced here
-     * for GalleryController's own later read, after SectionContext was
-     * already built, so it's out of SectionContext's own scope (see that
-     * class's docblock) -- but the two are always in the same call and
-     * don't need a shared PageState field.
+     * The slideshow URL is part of this method's return value: it's
+     * produced here for GalleryController's own later read, after
+     * SectionContext was already built, so it's out of SectionContext's
+     * own scope (see that class's docblock) -- but the two are always in
+     * the same call and don't need a shared PageState field.
+     *
+     * Returns raw thumbnail-grid data rather than rendering
+     * `thumbnails.latte` itself and returning `Html`: `Piwigo\Category\*`
+     * is L2aCoreDomain and may not depend on `Renderer`/`View`
+     * (L3Presentation) directly, same split as
+     * `Piwigo\Picture\PictureMetadataRenderer`/`PictureRateRenderer`
+     * (L3Presentation, so they can) -- the one real caller
+     * (`GalleryController`, always L3/L4) constructs the actual
+     * `ThumbnailsView` and renders it.
      *
      * @param list<int|string> $items
      */
-    public function render(array $items, int $start, int $nbImagePage, Section $section): ?string
+    public function render(array $items, int $start, int $nbImagePage, Section $section): CategoryDefaultResult
     {
-        $template = $this->template;
-
         $pictures = [];
         $slideshowUrl = null;
 
@@ -212,19 +217,20 @@ final readonly class CategoryDefaultRenderer
 
         $tplThumbnailsVar = $this->eventDispatcher->dispatch(new IndexThumbnailsRendered($tplThumbnailsVar, $pictures))
             ->tplThumbnailsVar;
-        $template->assignContext(new CategoryDefaultThumbnailsPageContext(
-            derivativeParams: $this->eventDispatcher->dispatch(new GetIndexDerivativeParams($this->imageStdParams->getByType($indexDeriv)))
-                ->params,
+        $derivativeParams = $this->eventDispatcher->dispatch(new GetIndexDerivativeParams($this->imageStdParams->getByType($indexDeriv)))
+            ->params;
+
+        $result = new CategoryDefaultResult(
+            slideshowUrl: $slideshowUrl,
+            derivativeParams: $derivativeParams,
             maxRequests: $this->currentConfig->maxRequests,
             showThumbnailCaption: $this->currentConfig->showThumbnailCaption,
             thumbnails: $tplThumbnailsVar,
-        ));
+        );
 
-        $template->assignVarFromTemplate('THUMBNAILS', 'thumbnails.latte');
         unset($pictures, $selection, $tplThumbnailsVar);
-        $template->clearAssign('thumbnails');
         TimingHelper::debug('end CategoryDefaultRenderer::render()', $this->pageState);
 
-        return $slideshowUrl;
+        return $result;
     }
 }

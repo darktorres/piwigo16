@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\Enum\Section;
@@ -22,11 +21,9 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -92,18 +89,10 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
     ));
 
     try {
-        $template = TemplateTestFactory::build();
-        CurrentTemplateTestFactory::get()->set($template);
-        $tplDir = $root . 'tpl/';
-        mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'thumbnails.latte', 'count={$thumbnails|count}');
-        $template->setTemplateDir($tplDir);
-
         $conn = DbConnection::build();
 
         $renderer = new CategoryDefaultRenderer(
             HtmlServiceTestFactory::build(),
-            $template,
             EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
             EntityManagerFactory::build($conn)->getRepository(CommentEntity::class),
             UrlServiceTestFactory::build(),
@@ -117,25 +106,13 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
             new PageState(),
         );
 
-        $slideshowUrl = $renderer->render([], 0, 10, Section::Categories);
+        $result = $renderer->render([], 0, 10, Section::Categories);
 
-        // render() explicitly clearAssign('thumbnails')s right after
-        // parsing the template -- 'thumbnails' itself is genuinely gone
-        // by the time render() returns; THUMBNAILS (the parsed output,
-        // wrapped in Html by assignVarFromTemplate()) is the real,
-        // lasting observable.
-        $thumbnailsVar = $template->getTemplateVars('THUMBNAILS');
-        expect($slideshowUrl)
+        expect($result->slideshowUrl)
             ->toBeNull()
-            ->and($thumbnailsVar)
-            ->toBeInstanceOf(Html::class);
-        if (! $thumbnailsVar instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
-        expect((string) $thumbnailsVar)
-            ->toBe('count=0');
+            ->and($result->thumbnails)
+            ->toBe([]);
     } finally {
-        CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();

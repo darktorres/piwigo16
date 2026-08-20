@@ -23,6 +23,8 @@ use Piwigo\Controller\Event\IndexRendering;
 use Piwigo\Controller\Projection\CanonicalUrlPageContext;
 use Piwigo\Controller\Projection\IndexView;
 use Piwigo\Controller\Projection\SelectedTagsView;
+use Piwigo\Controller\Projection\ThumbnailsHtmlPageContext;
+use Piwigo\Controller\Projection\ThumbnailsView;
 use Piwigo\Controller\Request\GalleryDisplayRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -37,7 +39,6 @@ use Piwigo\History\HistoryService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\MenubarRenderer;
@@ -519,7 +520,16 @@ final readonly class GalleryController implements ControllerInterface
         $image_derivatives = [];
         $slideshow_url = null;
         if ($page_items !== []) {
-            $slideshow_url = $this->categoryDefaultRenderer->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
+            $categoryDefaultResult = $this->categoryDefaultRenderer->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
+            $slideshow_url = $categoryDefaultResult->slideshowUrl;
+
+            $thumbnailsHtml = $this->renderer->render(new ThumbnailsView(
+                derivativeParams: $categoryDefaultResult->derivativeParams,
+                maxRequests: $categoryDefaultResult->maxRequests,
+                showThumbnailCaption: $categoryDefaultResult->showThumbnailCaption,
+                thumbnails: $categoryDefaultResult->thumbnails,
+            ));
+            $template->assignContext(new ThumbnailsHtmlPageContext($thumbnailsHtml));
 
             if ($this->currentConfig->indexSizesIcon) {
                 $url = $urlService->addUrlParams(
@@ -529,9 +539,7 @@ final readonly class GalleryController implements ControllerInterface
                     ]
                 );
 
-                $derivative_params_var = $template->getTemplateVars('derivative_params');
-                $selected_type = ($derivative_params_var instanceof DerivativeParams) ? $derivative_params_var->type : null;
-                $template->clearAssign('derivative_params');
+                $selected_type = $categoryDefaultResult->derivativeParams->type;
                 $type_map = $this->imageStdParams->getDefinedTypeMap();
                 unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 

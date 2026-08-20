@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Category\CategoryDefaultRenderer;
+use Piwigo\Category\Projection\CategoryDefaultResult;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\ThumbnailsView;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
@@ -21,9 +22,11 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -118,7 +121,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
+        $this->buildTemplate();
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
     }
 
     #[Override]
@@ -147,6 +151,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // themes/default/template/ directory thumbnails.latte lives in,
         // same real-root shape every real Template() construction site uses.
         $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
+        CurrentTemplateTestFactory::get()->set($this->template);
 
         return $this->template;
     }
@@ -162,16 +167,35 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         ]));
     }
 
-    private function renderedThumbnailsHtml(): string
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function thumbnailAt(CategoryDefaultResult $result, int $index): array
     {
-        // assignVarFromTemplate() wraps THUMBNAILS in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
-        $vars = $this->template->getTemplateVars('THUMBNAILS');
-        if ($vars instanceof Html) {
-            return (string) $vars;
+        $thumbnail = $result->thumbnails[$index];
+        if (! is_array($thumbnail)) {
+            throw new LogicException('unreachable -- every CategoryDefaultResult::$thumbnails entry is a shaped array');
         }
 
-        return is_string($vars) ? $vars : '';
+        return $thumbnail;
+    }
+
+    // CategoryDefaultRenderer::render() only returns raw thumbnail-grid
+    // data now (Piwigo\Category\* is L2aCoreDomain and may not depend on
+    // Renderer/View directly) -- this mirrors GalleryController's own
+    // real ThumbnailsView construction, to verify the actual Latte
+    // rendering (translate_dec pluralization, etc.), not just the PHP
+    // -side data shaping the array-based assertions below already cover.
+    private function renderedThumbnailsHtml(CategoryDefaultResult $result): string
+    {
+        $html = new Renderer(CurrentTemplateTestFactory::get())->render(new ThumbnailsView(
+            derivativeParams: $result->derivativeParams,
+            maxRequests: $result->maxRequests,
+            showThumbnailCaption: $result->showThumbnailCaption,
+            thumbnails: $result->thumbnails,
+        ));
+
+        return (string) $html;
     }
 
     public function testRenderOrdersThumbnailsByRankNotByTheIdsOwnNumericOrder(): void
@@ -181,18 +205,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // Deliberately out of numeric order: rank 0 => id 3, rank 1 => id 1,
         // rank 2 => id 2 -- a real transposition bug (e.g. sorting by id
         // instead of by rank) would produce a different order here.
-        $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
+        $result = $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
 
-        $html = $this->renderedThumbnailsHtml();
-        $posPhoto3 = strpos($html, 'Photo 3');
-        $posPhoto1 = strpos($html, 'Photo 1');
-        $posPhoto2 = strpos($html, 'Photo 2');
-
-        self::assertIsInt($posPhoto3);
-        self::assertIsInt($posPhoto1);
-        self::assertIsInt($posPhoto2);
-        self::assertTrue($posPhoto3 < $posPhoto1, 'Photo 3 (rank 0) must render before Photo 1 (rank 1)');
-        self::assertTrue($posPhoto1 < $posPhoto2, 'Photo 1 (rank 1) must render before Photo 2 (rank 2)');
+        self::assertSame([3, 1, 2], array_column($result->thumbnails, 'id'));
     }
 
     public function testRenderReturnsTheSlideshowUrlForTheFirstRankedPicture(): void
@@ -200,7 +215,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->seedUser(showNbHits: false, showNbComments: false);
         $urlService = UrlServiceTestFactory::build();
 
-        $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
+        $result = $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
 
         // The first-ranked picture after sorting is id=3 (rank 0) --
         // duplicatePictureUrl()/addUrlParams() are the same real UrlService
@@ -217,7 +232,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             ]
         );
 
-        self::assertSame($expected, $slideshowUrl);
+        self::assertSame($expected, $result->slideshowUrl);
     }
 
     public function testRenderReturnsNullAndRendersNoThumbnailsWhenTheSelectionIsEmpty(): void
@@ -226,13 +241,10 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
         // start=99 is past the end of a 1-item selection -> array_slice()
         // yields an empty selection.
-        $slideshowUrl = $this->renderer->render([3], 99, 3, Section::Categories);
+        $result = $this->renderer->render([3], 99, 3, Section::Categories);
 
-        self::assertNull($slideshowUrl);
-        $html = $this->renderedThumbnailsHtml();
-        for ($id = 1; $id <= 5; $id++) {
-            self::assertStringNotContainsString('Photo ' . $id, $html);
-        }
+        self::assertNull($result->slideshowUrl);
+        self::assertSame([], $result->thumbnails);
     }
 
     public function testRenderPrefixesTheNameWithTheRatingScoreForTheBestRatedSection(): void
@@ -240,10 +252,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->seedUser(showNbHits: false, showNbComments: false);
 
         // id=3's real fixture rating_score is 5.00 -> (string) 5.0 is '5'.
-        $this->renderer->render([3], 0, 1, Section::BestRated);
+        $result = $this->renderer->render([3], 0, 1, Section::BestRated);
 
-        $html = $this->renderedThumbnailsHtml();
-        self::assertStringContainsString('(5) Photo 3', $html);
+        self::assertSame('(5) Photo 3', $this->thumbnailAt($result, 0)['NAME']);
     }
 
     public function testRenderPrefixesTheNameWithTheHitCountForMostVisitedWhenShowNbHitsIsDisabled(): void
@@ -257,10 +268,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // must reflect that exact value, not just "not blank".
         $this->setImageHit(3, 17);
 
-        $this->renderer->render([3], 0, 1, Section::MostVisited);
+        $result = $this->renderer->render([3], 0, 1, Section::MostVisited);
 
-        $html = $this->renderedThumbnailsHtml();
-        self::assertStringContainsString('(17) Photo 3', $html);
+        self::assertSame('(17) Photo 3', $this->thumbnailAt($result, 0)['NAME']);
     }
 
     public function testRenderDoesNotPrefixTheNameForMostVisitedWhenShowNbHitsIsEnabled(): void
@@ -268,20 +278,22 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->seedUser(showNbHits: true, showNbComments: false);
         // Same distinct, nonzero hit count as the disabled-path test above,
         // so this also proves NB_HITS carries the real per-image value
-        // through to the template (via the "17 hits" assertion below), not
-        // just that some prefix is absent.
+        // through to the array (via the "17 hits" render assertion below),
+        // not just that some prefix is absent.
         $this->setImageHit(3, 17);
 
-        // show_nb_hits=true makes thumbnails.latte assign+display NB_HITS
-        // via the "translate_dec" filter (fixed bug: it used to call the
-        // deprecated $pwg->l10n_dec() method directly).
-        $this->renderer->render([3], 0, 1, Section::MostVisited);
+        $result = $this->renderer->render([3], 0, 1, Section::MostVisited);
 
-        $html = $this->renderedThumbnailsHtml();
-        self::assertStringNotContainsString('(17) Photo 3', $html);
-        self::assertStringContainsString('Photo 3', $html);
-        // Confirms NB_HITS actually reached the template with the real,
-        // distinct per-image value (not just that no prefix rendered).
+        $thumbnail = $this->thumbnailAt($result, 0);
+        self::assertSame('Photo 3', $thumbnail['NAME']);
+        self::assertSame(17, $thumbnail['NB_HITS']);
+
+        // show_nb_hits=true makes thumbnails.latte display NB_HITS via the
+        // "translate_dec" filter (fixed bug: it used to call the
+        // deprecated $pwg->l10n_dec() method directly) -- real end-to-end
+        // render, not just the raw array value above, to catch a broken
+        // filter/wiring the array check alone can't see.
+        $html = $this->renderedThumbnailsHtml($result);
         self::assertStringContainsString('17 hits', $html);
     }
 
@@ -292,12 +304,14 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // fixture: image id 3 has exactly one comment (id 3), already
         // validated -- activate_comments is 'true' in the fixture config,
         // so countValidatedByImageIds() reaches this real row.
-        $this->renderer->render([3], 0, 1, Section::Categories);
+        $result = $this->renderer->render([3], 0, 1, Section::Categories);
 
-        $html = $this->renderedThumbnailsHtml();
+        self::assertSame(1, $this->thumbnailAt($result, 0)['NB_COMMENTS']);
+
         // thumbnails.latte renders NB_COMMENTS via the "translate_dec"
         // filter -- the other of its 2 call sites (NB_HITS is covered
         // above).
+        $html = $this->renderedThumbnailsHtml($result);
         self::assertStringContainsString('1 comment', $html);
         self::assertStringNotContainsString('1 comments', $html);
     }

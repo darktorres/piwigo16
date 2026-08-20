@@ -284,6 +284,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             maxRequests: $result->maxRequests,
             categoryThumbnails: $result->categoryThumbnails,
             derivativeParams: $result->derivativeParams,
+            rootUrl: '',
+            iconDir: '',
         ));
 
         return (string) $html;

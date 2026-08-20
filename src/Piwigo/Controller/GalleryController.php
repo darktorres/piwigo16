@@ -552,6 +552,8 @@ final readonly class GalleryController implements ControllerInterface
                     maxRequests: $categoryCatsResult->maxRequests,
                     categoryThumbnails: $categoryCatsResult->categoryThumbnails,
                     derivativeParams: $categoryCatsResult->derivativeParams,
+                    rootUrl: $urlService->getRootUrl(),
+                    iconDir: $template->themeConf('icon_dir'),
                 ));
                 $template->assignContext(new CategoryCatsHtmlPageContext($categoriesHtml));
             }

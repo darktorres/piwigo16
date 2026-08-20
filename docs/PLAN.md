@@ -3120,6 +3120,15 @@ through the same combining/versioning pipeline as every other asset
 instead of being spliced in raw, gaining a `?v17.0.0` query string and
 moving into sorted position).
 
+Also migrated 3 more pages/Views, ~263 of 945: `MaintenanceActionsView`
+(22, one `order: 10` "issue 1080" CSS preserved), `RatingUserView` (15,
+new `$rootUrl`; preserves the bare `combineScript(id:
+'jquery.ui.tooltip', load: 'footer')` call with no `path:` --
+`PageAssets::fillKnownScript()` resolves it by naming convention),
+`RatingView` (12, new `$colorscheme`/`$rootUrl`) -- 34 pages/Views
+landed so far. `test:golden-html` byte-identical throughout (3
+pure-whitespace regenerations).
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

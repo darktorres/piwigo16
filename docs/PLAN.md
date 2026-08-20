@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) + Batch 4 (picture page's 6 remaining ambient fragments) + Batch 5 (check_integrity/no_photo_yet/popuphelp small fragments) landed and fully validated (phpstan/lint:latte/lint:php/golden-html/relevant integration suites all green; one real regression found and fixed); Batches 6–9 scoped (index.latte's remaining ambient contributors, menubar, tabsheet, calendar), not yet executed; mail domain identified as an unphased gap | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) + Batch 4 (picture page's 6 remaining ambient fragments) + Batch 5 (check_integrity/no_photo_yet/popuphelp small fragments) + Batch 6 (thumbnails/mainpage_categories/search_filters index.latte fragments; SectionFavoritePageContext confirmed a permanent-ambient exclusion, not a missed item) landed and fully validated (phpstan/lint:latte/lint:php/golden-html/visual-regression/relevant integration+browser suites all green; real regressions found and fixed along the way); Batches 7–9 scoped (menubar, tabsheet, calendar), not yet executed; mail domain identified as an unphased gap | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -2046,18 +2046,66 @@ test:integration` tests (`CheckIntegrity`/`C13yInternal`/
 `MaintenanceActionDispatcher`), and a full `composer test:golden-html`
 (73/73) — all green.
 
-**Batch 6 — `index.latte`'s remaining ambient contributors.**
-`thumbnails.latte` (`CategoryDefaultRenderer`, one
-`CategoryDefaultThumbnailsPageContext`), `mainpage_categories.latte`
-(`CategoryCatsRenderer`, 2 context classes:
-`CategoryCatsPageContext`/`CategoryCatsNavbarPageContext`), the search
-widget fragments (`SearchFilterPageContext`/`SearchAlbumsFoundPageContext`/
-`SearchDateFilterPageContext`/`SearchTagsFoundPageContext`, feeding
-`include/search_filters.inc.latte`, not the dead `search.latte`), and
-`SectionFavoritePageContext`. Same ambient-merge shape as Batch 2's own
-`SelectedTagsView` precedent throughout — each renderer stays a
-sibling contributor to `Template::$vars`, not folded into `IndexView`
-itself.
+**Batch 6 (landed) — `index.latte`'s remaining ambient contributors.**
+`thumbnails.latte` (`CategoryDefaultRenderer`) and `mainpage_categories.latte`
+(`CategoryCatsRenderer`) both converted to real `View`/`Renderer`
+fragments: `Piwigo\Category\*` is L2aCoreDomain and may not depend on
+`Renderer`/`View` (L3Presentation) directly, so both renderers now
+return a plain result DTO (`CategoryDefaultResult`/`CategoryCatsResult`)
+instead of rendering internally, and `GalleryController` (always L3/L4)
+constructs the real `ThumbnailsView`/`CategoryCatsView`, renders it,
+and writes the `Html` into `Template::$vars['THUMBNAILS']`/`['CATEGORIES']`
+via a new one-field `ThumbnailsHtmlPageContext`/`CategoryCatsHtmlPageContext`
+— `assignContext()` stays the sole way anything writes into the
+template, so a bare already-rendered `Html` value still needs this
+one-field wrapper, matching `CanonicalUrlPageContext`'s own established
+shape. `CategoryCatsNavbarPageContext` (the separate `cats_navbar`
+ambient var) needed no change: it's a plain `assignContext()` call
+with no rendering involved, which `TemplateInterface` already lets an
+L2a/L2b class call directly.
+
+The search widget fragments (`SearchFilterPageContext`/
+`SearchAlbumsFoundPageContext`/`SearchDateFilterPageContext`/
+`SearchTagsFoundPageContext`, feeding `include/search_filters.inc.latte`,
+not the dead `search.latte`) converted the same way — `Piwigo\Search\*`
+is L2bExtendedDomain, same constraint. `SearchFilterRenderer::render()`
+now returns a `SearchFilterResult` (the resolved search id, unrelated
+to the sidebar itself, plus a nullable `SearchFilterData` bundling all
+19 sidebar fields across what used to be 4 separate `assignContext()`
+calls from `render()` and its 3 private helpers). `index.latte`'s old
+`{if !empty($SEARCH_ID)}{include 'include/search_filters.inc.latte'}{/if}`
+pair became `{if !empty($SEARCH_FILTERS)}{$SEARCH_FILTERS}{/if}`,
+matching `CATEGORIES`/`THUMBNAILS` — kept as a 3-line `{if}\n{$var}\n{/if}`
+block rather than one line, since Latte's own tag-alone-on-its-line
+whitespace trimming shifted compiled output by a blank line when tried
+as one line (caught by golden-html, harmless but worth matching
+byte-for-byte). `index.latte`'s own separate `{elseif !empty($SEARCH_ID)}`
+"no results" branch (a distinct use of the same raw search-id string)
+needed a new `IndexView::$searchId` property, since a rendered `Html`
+blob can't expose that value back to `index.latte`'s own body the way
+ambient `Template::$vars` used to.
+
+`SectionFavoritePageContext` turned out **not to be a render
+conversion candidate at all**, on inspection: unlike the other three,
+nothing ever calls `assignVarFromTemplate()`/`parse()` for it — it's
+pure ambient data (`SectionPopulator::populate()`'s own `Section::Favorites`
+branch feeds `index.latte`'s direct `{$favorite['U_FAVORITE']}` body
+reference, already converted in Batch 2), the same permanent-ambient
+shape `CanonicalUrlPageContext` already establishes. `SectionPopulator`
+is L2bExtendedDomain and computes this value deep inside a much larger
+method with no channel back to `GalleryController` other than the
+ambient assign; folding it into `IndexView` would mean duplicating
+that computation or reshaping `SectionPopulator`'s own public contract
+for one field. Left as-is — correctly excluded from this batch, not
+a missed item.
+
+Verified end-to-end per fragment: `composer analyse:phpstan`,
+`lint:latte`, `lint:php`, the relevant `composer test:integration`/
+`composer test:browser` suites, a full `composer test` (Unit+Arch), a
+full `composer test:golden-html`, and a full `composer test:visual` —
+all green (two confirmed-unrelated single-test flakes along the way,
+both non-reproducing in isolation, matching this session's established
+flaky-test handling).
 
 **Batch 7 — Menubar, smaller than it first looked.** Only 2 real call
 sites construct a `BlockManager` at all (`Menu\MenubarRenderer`, the

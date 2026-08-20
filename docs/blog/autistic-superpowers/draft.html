@@ -243,6 +243,21 @@
   }
   .callout p:last-child { margin-bottom: 0; }
   .callout.note { border-color: var(--border); color: var(--text-secondary); }
+  .callout.incident {
+    border: 1px solid var(--status-good);
+    background: color-mix(in srgb, var(--status-good) 8%, var(--surface-1));
+  }
+  .callout.incident .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background: var(--status-good);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-bottom: 8px;
+  }
 
   /* figures */
   figure { margin: 24px 0; }
@@ -369,14 +384,29 @@
     <a href="#end-state">Part two — Where it ended up</a>
     <a href="#benchmark">Part three — The bet</a>
     <a href="#story">Part four — The story begins</a>
+    <div class="sidenav-label" style="margin-top: 18px;">The rewrite</div>
+    <a href="#epoch-a">A — Foundation</a>
+    <a href="#epoch-b">B — PSR-4 &amp; boundaries</a>
+    <a href="#epoch-c">C — Kernel &amp; HTTP</a>
+    <a href="#epoch-d">D — Config, DB &amp; lang</a>
+    <a href="#epoch-e">E — Service layer</a>
+    <a href="#epoch-f">F — Paying down debt</a>
+    <a href="#epoch-g">G — WS layer &amp; REST</a>
+    <a href="#epoch-h">H — Security hardening</a>
+    <a href="#epoch-i">I — Plugins &amp; layering</a>
+    <a href="#epoch-j1">J1 — Latte &amp; typed views</a>
+    <a href="#epoch-j2">J2 — The frontend rewrite</a>
+    <a href="#epoch-j3">J3 — New capabilities</a>
   </nav>
 
   <div class="wrap">
 
   <div class="draft-banner">
-    <strong>Draft, not published.</strong> Covers the opening hook and the origin story only
-    (through “the story begins”). Numbers marked <span class="projected-badge" style="vertical-align:1px;">projected</span>
-    are targets, not measurements — see the callouts inline. Two spots are flagged
+    <strong>Draft, not published.</strong> Covers the opening hook, the origin story, and the
+    full rewrite, P0 through P54. Numbers marked
+    <span class="projected-badge" style="vertical-align:1px;">projected</span> are targets, not
+    measurements — see the callouts inline. Green callouts mark a real bug caught and fixed
+    along the way; yellow ones are still genuinely open. A few spots are flagged
     <code>[NEEDS YOUR INPUT]</code> / <code>[NEEDS RECONCILING]</code> for a follow-up pass.
   </div>
 
@@ -592,12 +622,560 @@
     directly from that line: 14,795+ commits and counting, as of today.</p>
   </section>
 
+  <!-- ============================================================ -->
+  <section id="epoch-a">
+  <h2><span class="eyebrow">Part five</span>Foundation (P0–P4)</h2>
+  <p class="lede">Five phases, and not one line of first-party application behavior changes in
+    any of them. The entire job here is standing up the tools everything after gets held to.</p>
+
+  <p>PHP tooling first — Pest, PHPStan, Psalm, Rector, ECS, Deptrac, dependency and
+    security-advisory scanners, a microbenchmark harness — recorded as baselines, not yet
+    gating anything. Frontend tooling next, the same shape: Vite, TypeScript, ESLint, Stylelint,
+    Vitest, bundle-size and dead-export checks. Then a real test harness (an isolated
+    <code>.env.test</code>, a fixture database, browser and WS contract suites), a CI pipeline,
+    and a containerized runtime with health checks and restore drills. Additive, on purpose —
+    so phase five onward has a baseline to measure drift against instead of a guess.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">PHP tooling installed</div><div class="value">11</div></div>
+    <div class="stat-tile"><div class="label">Frontend tooling installed</div><div class="value">11</div></div>
+    <div class="stat-tile"><div class="label">CI jobs, day one</div><div class="value">32</div></div>
+    <div class="stat-tile"><div class="label">Server targets</div><div class="value">3</div></div>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-b">
+  <h2><span class="eyebrow">Part six</span>PSR-4 &amp; the architecture boundary (P5–P6)</h2>
+  <p class="lede">The largest phase by commit count, followed by the one that decides what
+    "layer" even means for the other 49.</p>
+
+  <p>A whole-codebase style fix, PHPStan's bleeding-edge rules applied file by file across the
+    still-legacy tree, and six vendored libraries replaced or dropped outright — PHPMailer for
+    Symfony Mailer, phpqrcode for a maintained package, the vendored Smarty copy for the real
+    one, phpass for native <code>password_hash()</code>, among others. Then P6: every first-party
+    class extracted out of procedural <code>include/</code> and <code>admin/include/</code>
+    files into a real <code>Piwigo\</code> namespace tree, and a six-layer architecture model
+    defined and enforced from that day forward.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Classes extracted</div><div class="value">66 <small>/ 33 files</small></div></div>
+    <div class="stat-tile"><div class="label">Architecture layers</div><div class="value">6</div></div>
+    <div class="stat-tile"><div class="label">Vendored libraries</div><div class="value">6 replaced</div></div>
+    <div class="stat-tile"><div class="label">Rector rule sets</div><div class="value">PHP 8.5 tree-wide</div></div>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 640 320" role="img" aria-label="Six-layer architecture diagram: L4 Integration at top down to L0 Data at bottom, with L2 split into Core Domain and Support Domain side by side, arrows showing each layer may only depend downward.">
+      <defs>
+        <marker id="arrow-b" viewBox="0 0 10 10" refX="5" refY="8" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L5,8 L10,0 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <g fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="320" y1="46" x2="320" y2="68" marker-end="url(#arrow-b)"></line>
+        <line x1="320" y1="106" x2="320" y2="128" marker-end="url(#arrow-b)"></line>
+        <line x1="320" y1="166" x2="320" y2="188" marker-end="url(#arrow-b)"></line>
+        <line x1="320" y1="226" x2="320" y2="248" marker-end="url(#arrow-b)"></line>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="70" y="10" width="500" height="36" rx="6"></rect>
+        <rect x="70" y="70" width="500" height="36" rx="6"></rect>
+        <rect x="70" y="130" width="238" height="36" rx="6"></rect>
+        <rect x="332" y="130" width="238" height="36" rx="6"></rect>
+        <rect x="70" y="190" width="500" height="36" rx="6"></rect>
+        <rect x="70" y="250" width="500" height="36" rx="6"></rect>
+      </g>
+      <text class="chart-label value" x="320" y="33" text-anchor="middle">L4 Integration</text>
+      <text class="chart-label value" x="320" y="93" text-anchor="middle">L3 Presentation</text>
+      <text class="chart-label value" x="189" y="153" text-anchor="middle">L2a Core Domain</text>
+      <text class="chart-label value" x="451" y="153" text-anchor="middle">L2b Support Domain</text>
+      <text class="chart-label value" x="320" y="213" text-anchor="middle">L1 Infrastructure</text>
+      <text class="chart-label value" x="320" y="273" text-anchor="middle">L0 Data</text>
+      <text class="chart-label muted" x="320" y="312" text-anchor="middle">each layer may depend only downward — 0 violations, live in CI</text>
+    </svg>
+    <figcaption>The six-layer model established at P6: dependencies only ever point down.</figcaption>
+  </figure>
+
+  <div class="callout incident">
+    <span class="tag">Caught &amp; fixed</span>
+    <p>Deptrac silently breaks its own rule resolution when a layer name contains a hyphen — the
+      original <code>L0-Data</code>-style names made every legal cross-layer dependency misreport
+      as a violation. Fixed by dropping the hyphens from every layer name. Same lesson recurred
+      twice more later in the project: when a tool's output looks structurally wrong, suspect the
+      tool's model of the code before the code itself.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-c">
+  <h2><span class="eyebrow">Part seven</span>Kernel &amp; HTTP foundation (P7–P12)</h2>
+  <p class="lede">The request lifecycle, from raw HTTP in to a real PSR-7 response out.</p>
+
+  <p>A kernel and boot skeleton, a PHP-DI container, and a PSR-15 middleware pipeline that
+    started at 7 stages and grew to 13 as later work needed real bootstrap phases instead of one
+    monolithic entry point. Alongside it: observability (Monolog, Server-Timing,
+    OpenTelemetry-first), cache pools, a session handler, a message queue for background jobs,
+    and a real CLI with backup/restore and four maintenance commands.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Middleware stages</div><div class="value">13 <small>from 7</small></div></div>
+    <div class="stat-tile"><div class="label">CLI maintenance commands</div><div class="value">4</div></div>
+    <div class="stat-tile"><div class="label">Background job classes</div><div class="value">5</div></div>
+    <div class="stat-tile"><div class="label">Named cache pools</div><div class="value">6</div></div>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 900 170" role="img" aria-label="Middleware pipeline diagram: ExceptionHandler, SecurityHeaders, Session, ServerTiming, Sentry, a six-stage bootstrap group, Routing, then ControllerInvoker, in a left-to-right flow.">
+      <defs>
+        <marker id="arrow-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="10" y="60" width="88" height="50" rx="6"></rect>
+        <rect x="118" y="60" width="88" height="50" rx="6"></rect>
+        <rect x="226" y="60" width="88" height="50" rx="6"></rect>
+        <rect x="334" y="60" width="88" height="50" rx="6"></rect>
+        <rect x="442" y="60" width="88" height="50" rx="6"></rect>
+        <rect x="550" y="45" width="130" height="80" rx="6" stroke-dasharray="4 3"></rect>
+        <rect x="700" y="60" width="88" height="50" rx="6"></rect>
+        <rect x="808" y="60" width="84" height="50" rx="6"></rect>
+      </g>
+      <g stroke="currentColor" stroke-width="2">
+        <line x1="98" y1="85" x2="116" y2="85" marker-end="url(#arrow-c)"></line>
+        <line x1="206" y1="85" x2="224" y2="85" marker-end="url(#arrow-c)"></line>
+        <line x1="314" y1="85" x2="332" y2="85" marker-end="url(#arrow-c)"></line>
+        <line x1="422" y1="85" x2="440" y2="85" marker-end="url(#arrow-c)"></line>
+        <line x1="530" y1="85" x2="548" y2="85" marker-end="url(#arrow-c)"></line>
+        <line x1="680" y1="85" x2="698" y2="85" marker-end="url(#arrow-c)"></line>
+        <line x1="788" y1="85" x2="806" y2="85" marker-end="url(#arrow-c)"></line>
+      </g>
+      <text class="chart-label" x="54" y="89" text-anchor="middle">Exceptions</text>
+      <text class="chart-label" x="162" y="89" text-anchor="middle">Sec. Headers</text>
+      <text class="chart-label" x="270" y="89" text-anchor="middle">Session</text>
+      <text class="chart-label" x="378" y="89" text-anchor="middle">Server Timing</text>
+      <text class="chart-label" x="486" y="89" text-anchor="middle">Sentry</text>
+      <text class="chart-label" x="615" y="80" text-anchor="middle">Config · Plugin</text>
+      <text class="chart-label" x="615" y="96" text-anchor="middle">User · Language</text>
+      <text class="chart-label muted" x="615" y="112" text-anchor="middle">6 bootstrap stages</text>
+      <text class="chart-label" x="744" y="89" text-anchor="middle">Routing</text>
+      <text class="chart-label" x="850" y="89" text-anchor="middle">Controller</text>
+      <text class="chart-label muted" x="450" y="20" text-anchor="middle">one HTTP request, left to right, through 13 real middleware stages</text>
+    </svg>
+    <figcaption>The PSR-15 pipeline every request runs through today, grown from 7 stages to 13.</figcaption>
+  </figure>
+
+  <div class="callout incident">
+    <span class="tag">Caught &amp; fixed</span>
+    <p><code>CsrfService</code> was still hashing tokens with <code>hash_hmac('md5', …)</code>
+      plus a plain <code>===</code> comparison long after the identical pattern had already been
+      fixed in its sibling <code>AuthService</code>/<code>EphemeralKeyService</code> — the kind
+      of drift that happens when a fix lands in one place and nobody checks for its twins. Now
+      <code>sha256</code> plus <code>hash_equals()</code>, same as the rest.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-d">
+  <h2><span class="eyebrow">Part eight</span>Config, DB &amp; language (P13–P16)</h2>
+  <p class="lede">Where a real, silently-shipped security bug got found — not by a scanner, by
+    reading why a migration had stalled.</p>
+
+  <p>A 277-entry typed config schema and loader; a Doctrine ORM layer under 38 domain
+    repositories; a full schema migration to InnoDB and utf8mb4 with real foreign-key
+    constraints and an audit log; and typed facades replacing 52 <code>define()</code>
+    constants, alongside a full <code>.po</code> language migration with real ICU
+    pluralization.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Config schema entries</div><div class="value">277</div></div>
+    <div class="stat-tile"><div class="label">Domain repositories</div><div class="value">38</div></div>
+    <div class="stat-tile"><div class="label">New tables</div><div class="value">7 <small>+ FKs</small></div></div>
+    <div class="stat-tile"><div class="label"><code>define()</code> retired</div><div class="value">52</div></div>
+  </div>
+
+  <div class="callout incident">
+    <span class="tag">Caught &amp; fixed</span>
+    <p>The <code>$conf</code> → typed-config migration had stalled at 72 files still reading the
+      legacy global — not from an incomplete migration, but because the two were provably out of
+      sync: <code>ConfigService::loadConfFromDb()</code> wrote a value into the legacy
+      <code>$conf</code> global and never into the live config object at all. The concrete,
+      shipped symptom: a CSRF service silently operating with an empty secret key. Fixed by
+      making the DB write path update both.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-e">
+  <h2><span class="eyebrow">Part nine</span>The service layer (P17–P23)</h2>
+  <p class="lede">Where the legacy tree actually goes away.</p>
+
+  <p>Around 35 domain namespaces migrated across four dependency-ordered tiers — URL, session
+    and permalink logic first, then mail, auth and tagging, then category and search, then page
+    renderers last — each legacy <code>include/</code> file deleted the moment its replacement
+    landed, not batched to the end. 37 admin sub-controllers replaced the raw legacy
+    <code>admin/*.php</code> file set; 19 of 21 planned frontend controllers were built, the two
+    absences (<code>Install</code>, <code>Upgrade</code>) both deliberate — an installer can't go
+    through a DI-resolved router before any DB exists, and there's no upgrade mechanism left in a
+    clean fork to drive one. Then the close-out: <code>include/</code> and <code>admin/</code>
+    deleted as directories, every <code>$GLOBALS</code> read and bare legacy free-function call
+    gone from <code>src/</code>, each guarded by a zero-tolerance test.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Domain namespaces</div><div class="value">~35 <small>4 tiers</small></div></div>
+    <div class="stat-tile"><div class="label">Admin sub-controllers</div><div class="value">37 <small>from 62 files</small></div></div>
+    <div class="stat-tile"><div class="label">Frontend controllers</div><div class="value">19 <small>/ 21 scoped</small></div></div>
+    <div class="stat-tile"><div class="label"><code>global $x</code> reads</div><div class="value">0</div></div>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-f">
+  <h2><span class="eyebrow">Part ten</span>Paying down what P23 couldn't finish (P24)</h2>
+  <p class="lede">One nominal phase, 373 pages of plan text, because the tidy story the previous
+    phase told about itself didn't hold.</p>
+
+  <p>P23 had promised zero <code>global $x</code> reads. The premise didn't survive contact with
+    the real tree: around 230 files carried real, live global contracts the migration discipline
+    had deliberately preserved verbatim rather than break. That debt, plus the DBAL-to-ORM
+    remediation P14 never finished and a long tail of sweeps, became the real P24 — retargeting
+    <code>$template</code>, <code>$lang</code>, <code>$user</code>, <code>$conf</code> and
+    (hardest, nine sub-batches) <code>$page</code> onto real typed objects; retargeting 240 event
+    call sites off three free functions and onto typed dispatch; a 74-commit campaign converting
+    roughly 55 static-singleton classes to constructor-injected DI, motivated by worker-mode
+    request isolation, not style; and removing the table-prefix mechanism entirely — 39 static
+    methods, ~1,670 call sites inlined from a verified mapping, then deleted.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Singleton→DI classes</div><div class="value">~55 <small>74 commits</small></div></div>
+    <div class="stat-tile"><div class="label"><code>$GLOBALS</code> batches</div><div class="value">A1–A8</div></div>
+    <div class="stat-tile"><div class="label">Event sites retargeted</div><div class="value">240</div></div>
+    <div class="stat-tile"><div class="label">Table-prefix removal</div><div class="value">62 commits</div></div>
+    <div class="stat-tile"><div class="label">Repositories on ORM</div><div class="value">all</div></div>
+    <div class="stat-tile"><div class="label">Combined test coverage</div><div class="value">65.07% <small>from ~13%</small></div></div>
+    <div class="stat-tile"><div class="label">Mutation-testing bugs</div><div class="value">7</div></div>
+    <div class="stat-tile"><div class="label">Live SQL injections found</div><div class="value">7</div></div>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 220" role="img" aria-label="Before and after diagram: five raw globals converging into shared mutable state on the left, versus five typed services constructor-injected into a class on the right.">
+      <defs>
+        <marker id="arrow-f" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <text class="chart-label muted" x="150" y="18" text-anchor="middle">before</text>
+      <text class="chart-label muted" x="570" y="18" text-anchor="middle">after</text>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="90" y="86" width="120" height="40" rx="6"></rect>
+        <rect x="470" y="86" width="120" height="40" rx="6"></rect>
+      </g>
+      <text class="chart-label value" x="150" y="110" text-anchor="middle">any function</text>
+      <text class="chart-label value" x="530" y="110" text-anchor="middle">constructor</text>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <line x1="10" y1="30" x2="88" y2="90" marker-end="url(#arrow-f)"></line>
+        <line x1="10" y1="60" x2="88" y2="98" marker-end="url(#arrow-f)"></line>
+        <line x1="10" y1="106" x2="88" y2="106" marker-end="url(#arrow-f)"></line>
+        <line x1="10" y1="152" x2="88" y2="114" marker-end="url(#arrow-f)"></line>
+        <line x1="10" y1="182" x2="88" y2="122" marker-end="url(#arrow-f)"></line>
+      </g>
+      <text class="chart-label" x="16" y="26" text-anchor="start">$template</text>
+      <text class="chart-label" x="16" y="56" text-anchor="start">$lang</text>
+      <text class="chart-label" x="16" y="110" text-anchor="start">$user</text>
+      <text class="chart-label" x="16" y="148" text-anchor="start">$conf</text>
+      <text class="chart-label" x="16" y="178" text-anchor="start">$page</text>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <line x1="590" y1="90" x2="666" y2="30" marker-end="url(#arrow-f)"></line>
+        <line x1="590" y1="98" x2="666" y2="60" marker-end="url(#arrow-f)"></line>
+        <line x1="590" y1="106" x2="666" y2="106" marker-end="url(#arrow-f)"></line>
+        <line x1="590" y1="114" x2="666" y2="152" marker-end="url(#arrow-f)"></line>
+        <line x1="590" y1="122" x2="666" y2="182" marker-end="url(#arrow-f)"></line>
+      </g>
+      <text class="chart-label" x="716" y="26" text-anchor="end">CurrentTemplate</text>
+      <text class="chart-label" x="716" y="56" text-anchor="end">Lang</text>
+      <text class="chart-label" x="716" y="110" text-anchor="end">CurrentUser</text>
+      <text class="chart-label" x="716" y="148" text-anchor="end">ConfigService</text>
+      <text class="chart-label" x="716" y="178" text-anchor="end">PageState</text>
+      <text class="chart-label muted" x="360" y="210" text-anchor="middle">same five responsibilities — shared mutable globals, then typed injected dependencies</text>
+    </svg>
+    <figcaption>Track A: five raw globals, each retargeted onto a typed, constructor-injected
+      service.</figcaption>
+  </figure>
+
+  <div class="callout incident">
+    <span class="tag">Caught &amp; fixed</span>
+    <p>A dedicated bound-parameter sweep across the codebase turned up seven real, live SQL
+      injections that had nothing to do with style: three in the image repository, one in
+      comments, one spanning history and notifications, a plugin-hook injection point, and one
+      more found in a same-day re-audit. All fixed as part of moving every raw SQL splice onto
+      bound parameters. Mutation testing separately caught seven more bugs nothing else could see
+      — a maintenance job reading the real wall clock instead of the injectable one tests can
+      freeze, a URL builder appending a stray trailing colon nobody had ever noticed, a French
+      pluralization file with a corrupted accented character sitting inside a regular expression.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-g">
+  <h2><span class="eyebrow">Part eleven</span>The WS layer &amp; REST (P25–P27)</h2>
+  <p class="lede">The old plan had this as one phase — "REST layer, WS removed" — and it sat at
+    "not started" for a long time because that framing was wrong.</p>
+
+  <p>A review found the legacy WS layer actually serves two different audiences through one
+    surface: most of its 94 methods are internal admin plumbing exposed as a public contract,
+    and only a third are the real machine surface anything external needs. That's why it split
+    into three: modernize the legacy internals first without changing one wire byte, proven by a
+    604-test contract suite that never changed either; then ship <code>/api/v1</code> — REST,
+    OpenAPI 3.2, a generated TypeScript client, a real <code>tus</code> resumable-upload protocol
+    — and delete the entire legacy WS layer in the same phase it goes live.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">WS handlers modernized</div><div class="value">94</div></div>
+    <div class="stat-tile"><div class="label">Typed param DTOs</div><div class="value">78</div></div>
+    <div class="stat-tile"><div class="label"><code>WsHelper</code> split into</div><div class="value">7 classes</div></div>
+    <div class="stat-tile"><div class="label">Contract tests, unchanged</div><div class="value">604</div></div>
+    <div class="stat-tile"><div class="label"><code>/api/v1</code> routes</div><div class="value">88 <small>11 domains</small></div></div>
+    <div class="stat-tile"><div class="label">API controller files</div><div class="value">134</div></div>
+    <div class="stat-tile"><div class="label">Upload protocol</div><div class="value">tus 1.0.0</div></div>
+    <div class="stat-tile"><div class="label">Security fixes, ship-first</div><div class="value">7</div></div>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 210" role="img" aria-label="Diagram showing WsHelper, a class combining event listener, CSRF guard, SQL builder, URL builder and tree builder duties, splitting into seven single-purpose classes.">
+      <defs>
+        <marker id="arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="20" y="35" width="180" height="140" rx="6"></rect>
+      </g>
+      <text class="chart-label value" x="110" y="55" text-anchor="middle">WsHelper</text>
+      <text class="chart-label muted" x="110" y="78" text-anchor="middle">event listener</text>
+      <text class="chart-label muted" x="110" y="96" text-anchor="middle">CSRF guard</text>
+      <text class="chart-label muted" x="110" y="114" text-anchor="middle">SQL builder</text>
+      <text class="chart-label muted" x="110" y="132" text-anchor="middle">URL builder</text>
+      <text class="chart-label muted" x="110" y="150" text-anchor="middle">tree builder</text>
+      <text class="chart-label muted" x="110" y="168" text-anchor="middle">+ more, one class</text>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <line x1="202" y1="60" x2="380" y2="26" marker-end="url(#arrow-g)"></line>
+        <line x1="202" y1="75" x2="380" y2="56" marker-end="url(#arrow-g)"></line>
+        <line x1="202" y1="90" x2="380" y2="86" marker-end="url(#arrow-g)"></line>
+        <line x1="202" y1="105" x2="380" y2="116" marker-end="url(#arrow-g)"></line>
+        <line x1="202" y1="120" x2="380" y2="146" marker-end="url(#arrow-g)"></line>
+        <line x1="202" y1="135" x2="380" y2="176" marker-end="url(#arrow-g)"></line>
+        <line x1="202" y1="150" x2="380" y2="196" marker-end="url(#arrow-g)"></line>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="390" y="14" width="310" height="24" rx="4"></rect>
+        <rect x="390" y="44" width="310" height="24" rx="4"></rect>
+        <rect x="390" y="74" width="310" height="24" rx="4"></rect>
+        <rect x="390" y="104" width="310" height="24" rx="4"></rect>
+        <rect x="390" y="134" width="310" height="24" rx="4"></rect>
+        <rect x="390" y="164" width="310" height="24" rx="4"></rect>
+        <rect x="390" y="194" width="150" height="8" rx="4" stroke-dasharray="2 2"></rect>
+      </g>
+      <text class="chart-label" x="545" y="30" text-anchor="middle">7 single-purpose classes, one job each</text>
+      <text class="chart-label muted" x="360" y="210" text-anchor="middle"></text>
+    </svg>
+    <figcaption>The registration god-method and its five-job helper class, split apart before the
+      WS layer's internals were touched further.</figcaption>
+  </figure>
+
+  <div class="callout incident">
+    <span class="tag">Caught &amp; fixed, shipped first</span>
+    <p>The P25 review found seven real security holes, fixed and shipped ahead of the
+      modernization work itself: a global <code>addslashes()</code> corrupting data on every
+      request; an API-key session that could be laundered into a full unrestricted session
+      through the upload endpoint, making every API-key-forbidden method callable; an
+      authenticated arbitrary-directory write via an unvalidated chunk-upload parameter; and WS's
+      own copy of the CSRF check still comparing tokens with <code>!==</code> instead of
+      <code>hash_equals()</code> — the same class of bug Part seven describes, just not caught by
+      that earlier fix because it lived in a second, independent copy of the same logic.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-h">
+  <h2><span class="eyebrow">Part twelve</span>Security hardening (P28)</h2>
+  <p class="lede">Not everything in this story is finished, and the honest way to show that is
+    to say so plainly rather than skip the section.</p>
+
+  <div class="callout flag">
+    <span class="tag">Not started</span>
+    <p>WebAuthn/passkeys, OIDC SSO, a nonce-based Content-Security-Policy, COOP/COEP headers, and
+      CSP violation reporting — none of it has landed. The clearest concrete marker: the
+      <code>rate_limiter</code> cache pool, the one pool <a href="#epoch-c">Part seven</a>'s
+      cache work deliberately left unbuilt specifically as this phase's own scope, still doesn't
+      exist. This is genuinely open work, not a modesty flourish.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-i">
+  <h2><span class="eyebrow">Part thirteen</span>Plugins, layering &amp; the repo restructure (P29–P30)</h2>
+  <p class="lede">A plugin contract designed from a real survey, not a guess at what plugin
+    authors might want.</p>
+
+  <p>Every real plugin in the wild — roughly 400 extensions — and every real theme — 113 files —
+    was read to ground the design in actual usage: 162 distinct legacy plugin events exist out
+    there, and 11 of the top 12 by frequency already have a shipped, typed, 1:1 replacement
+    event class. Layer decoupling closed out clean: the six-layer model from Part six enforces
+    zero violations with no escape hatch, a live ratchet that has already caught and fixed two
+    real regressions the same day they were introduced. The repository itself was restructured
+    around a plain <code>public/</code> sibling directory holding only real entry points — no
+    PHP code directly web-reachable outside it.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Real plugins surveyed</div><div class="value">~400 <small>+113 themes</small></div></div>
+    <div class="stat-tile"><div class="label">Legacy plugin events found</div><div class="value">162</div></div>
+    <div class="stat-tile"><div class="label">Architecture violations</div><div class="value">0 <small>live ratchet</small></div></div>
+    <div class="stat-tile"><div class="label">Bundled extensions ported</div><div class="value">not started</div></div>
+  </div>
+
+  <div class="callout flag">
+    <span class="tag">Open</span>
+    <p>P29.6 — porting the seven bundled extensions onto the new plugin contract — hasn't started
+      on this branch: <code>plugins/</code> holds nothing but an index file and a trash folder
+      today. Everything else P29 scoped has landed; this one piece hasn't, and P29 isn't done
+      until it does.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-j1">
+  <h2><span class="eyebrow">Part fourteen</span>Latte, and splitting the template god-object (P31–P44)</h2>
+  <p class="lede">One number carries this whole part: 78% of the entire template tree was
+    boilerplate, and it took until here to delete it.</p>
+
+  <p>Smarty→Latte migration first, 80 commits across all 139 real templates, the old engine
+    retired outright. Then lint and format tooling built from scratch — no Prettier plugin for
+    Latte existed anywhere, so one got hand-written, a real recursive-descent parser producing a
+    typed AST. Then an idiomatic-modernization pass: 451 conditional/loop conversions across 91
+    templates, 1,009 escape-suppression sites individually classified by walking the AST, not
+    grepped.</p>
+
+  <p>Then the largest single diff in the whole rewrite. <code>Template</code> — 1,370 lines, 36
+    public methods, one request-global bag every template read from — split into a
+    one-method <code>Renderer</code>, a <code>TemplateLocator</code>, a typed
+    <code>ThemeChain</code>, an asset seam, a typed contribution registry, and a trimmed
+    extension class. Every template gets its own typed view object instead of an untyped bag,
+    which deletes all 93,420 lines of repeated <code>{varType}</code> declarations along the
+    way — 78% of the entire 119,752-line template tree, gone.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Templates converted</div><div class="value">139 <small>80 commits</small></div></div>
+    <div class="stat-tile"><div class="label">Boilerplate deleted</div><div class="value">93,420 lines <small>78% of tree</small></div></div>
+    <div class="stat-tile"><div class="label"><code>Template</code> split into</div><div class="value">6 classes</div></div>
+    <div class="stat-tile"><div class="label">Loop/conditional cleanups</div><div class="value">451 <small>91 templates</small></div></div>
+    <div class="stat-tile"><div class="label">Escape sites classified</div><div class="value">1,009</div></div>
+    <div class="stat-tile"><div class="label">JSON-island call sites</div><div class="value">68</div></div>
+    <div class="stat-tile"><div class="label">Inline scripts extracted</div><div class="value">80 <small>+210 escape sites</small></div></div>
+    <div class="stat-tile"><div class="label">Dead feature deleted</div><div class="value">template-extension</div></div>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 700 190" role="img" aria-label="Diagram showing Template.php, 1,370 lines and 36 public methods, splitting into six focused classes: Renderer, TemplateLocator, ThemeChain, Assets, a contribution registry, and PiwigoExtension.">
+      <defs>
+        <marker id="arrow-j" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="20" y="65" width="170" height="60" rx="6"></rect>
+      </g>
+      <text class="chart-label value" x="105" y="90" text-anchor="middle">Template.php</text>
+      <text class="chart-label muted" x="105" y="108" text-anchor="middle">1,370 lines · 36 methods</text>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <line x1="192" y1="80" x2="370" y2="16" marker-end="url(#arrow-j)"></line>
+        <line x1="192" y1="88" x2="370" y2="46" marker-end="url(#arrow-j)"></line>
+        <line x1="192" y1="96" x2="370" y2="76" marker-end="url(#arrow-j)"></line>
+        <line x1="192" y1="104" x2="370" y2="106" marker-end="url(#arrow-j)"></line>
+        <line x1="192" y1="112" x2="370" y2="136" marker-end="url(#arrow-j)"></line>
+        <line x1="192" y1="120" x2="370" y2="166" marker-end="url(#arrow-j)"></line>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="380" y="4" width="300" height="24" rx="4"></rect>
+        <rect x="380" y="34" width="300" height="24" rx="4"></rect>
+        <rect x="380" y="64" width="300" height="24" rx="4"></rect>
+        <rect x="380" y="94" width="300" height="24" rx="4"></rect>
+        <rect x="380" y="124" width="300" height="24" rx="4"></rect>
+        <rect x="380" y="154" width="300" height="24" rx="4"></rect>
+      </g>
+      <text class="chart-label" x="530" y="20" text-anchor="middle">Renderer — render(View): Html</text>
+      <text class="chart-label" x="530" y="50" text-anchor="middle">TemplateLocator</text>
+      <text class="chart-label" x="530" y="80" text-anchor="middle">ThemeChain</text>
+      <text class="chart-label" x="530" y="110" text-anchor="middle">Assets seam</text>
+      <text class="chart-label" x="530" y="140" text-anchor="middle">Contribution registry</text>
+      <text class="chart-label" x="530" y="170" text-anchor="middle">PiwigoExtension (trimmed)</text>
+    </svg>
+    <figcaption>P40: one 1,370-line god-class becomes six classes, each with one job.</figcaption>
+  </figure>
+
+  <div class="callout incident">
+    <span class="tag">Caught &amp; fixed</span>
+    <p>Extracting inline JavaScript out of templates surfaced a real, previously-shipped bug:
+      <code>plugins_installed.latte</code> interpolated a raw PHP boolean directly into
+      <code>const isWebmaster = {$isWebmaster};</code> through a text escaper that doesn't quote
+      booleans — for a non-webmaster admin that rendered as <code>const isWebmaster = ;</code>, a
+      genuine JavaScript syntax error breaking the entire combined footer script bundle for
+      exactly that audience, invisible until the extraction forced a real
+      <code>json_encode()</code> through the new data-exposure mechanism instead.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-j2">
+  <h2><span class="eyebrow">Part fifteen</span>The frontend rewrite (P45–P51)</h2>
+  <p class="lede">Same behavior, different language — <code>.js</code> becomes <code>.ts</code>,
+    then jQuery leaves entirely.</p>
+
+  <p>A mechanical JS→TS conversion first, wiring 68 real Vite entries in place of a placeholder
+    that had sat unused since Part five. Then real typing work: the page-data reader gets typed
+    against Part fourteen's JSON island, and TypeScript's <code>any</code> escape hatch gets
+    driven to zero across all of it — not a rename, real type design. Monolithic per-page
+    scripts get broken into real ES modules. jQuery removal is a per-surface decision, not a
+    blanket sweep — the vendored bundle, three separate widget libraries, and the installer's
+    own separate copy each get evaluated and replaced independently; a small Lit component
+    catalog exists only for the handful of widgets nothing vanilla replaces cleanly. Then a CSS
+    architecture pass — container queries, cascade layers — proven against the same visual
+    baselines the whole project already trusts.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Real Vite entries wired</div><div class="value">68</div></div>
+    <div class="stat-tile"><div class="label">TypeScript <code>any</code></div><div class="value">0</div></div>
+    <div class="stat-tile"><div class="label">jQuery</div><div class="value">removed <small>not blanket</small></div></div>
+    <div class="stat-tile"><div class="label">Lit components</div><div class="value">parity-only <small>where needed</small></div></div>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="epoch-j3">
+  <h2><span class="eyebrow">Part sixteen</span>New capabilities, and closing the gates (P52–P54)</h2>
+  <p class="lede">The three phases that finally get to be about something other than paying down
+    the past.</p>
+
+  <p>A real <code>&lt;picture&gt;</code> pipeline — AVIF and WebP variants alongside the
+    original, ThumbHash blur-up placeholders while a photo loads — kept deliberately last since
+    it's new capability, not a dependency anything else needs. Dark mode next, a genuine
+    user-facing theme toggle riding on the cascade-layer work Part fifteen just finished. Then
+    the close-out: real Lighthouse performance, accessibility and best-practices thresholds
+    replacing a collect-only report that asserted nothing, and real per-entry size budgets
+    replacing a single placeholder that had outlived the phase number it was named after.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">New image formats</div><div class="value">AVIF · WebP</div></div>
+    <div class="stat-tile"><div class="label">Loading placeholder</div><div class="value">ThumbHash</div></div>
+    <div class="stat-tile"><div class="label">Dark mode</div><div class="value">theme toggle</div></div>
+    <div class="stat-tile"><div class="label">Quality gates</div><div class="value">real thresholds</div></div>
+  </div>
+  </section>
+
   <footer class="draft-footer">
-    <p><strong>Draft stops here.</strong> Not yet written: the actual rewrite work (tool
-      choices, the PSR-4/DI foundation, the phase-by-phase campaign), the "autistic
-      superpowers" personal-approach reflection the title promises, and whichever epoch-level
-      material from the existing post gets reused here in the lighter, more visual treatment.
-      Next pass, on request.</p>
+    <p><strong>Draft stops here.</strong> All 55 phases are covered now. Not yet written: the
+      "autistic superpowers" personal-approach reflection the title promises, and the real
+      benchmark numbers Part three is still waiting on. Next pass, on request.</p>
   </footer>
 
   </div>

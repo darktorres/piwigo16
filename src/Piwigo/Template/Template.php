@@ -28,6 +28,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HeadLink;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -135,9 +136,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * `Asset\Event\GetPageAssets`'s own one-shot dispatch guard -- fired
-     * at most once per instance, the first time `finalizeHtml()` runs,
-     * not tied to `$scriptsResolved` above since plugin-contributed CSS
-     * needs it too and CSS resolves on every call.
+     * at most once per instance, from `Renderer::render()`'s first call
+     * on this `Template` (docs/PLAN.md's P42; formerly `finalizeHtml()`'s
+     * own first line), not tied to `$scriptsResolved` above since
+     * plugin-contributed CSS needs it too and CSS resolves on every call.
      */
     private bool $pageAssetsDispatched = false;
 
@@ -756,8 +758,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function finalizeHtml(string $html): string
     {
-        $this->dispatchPageAssetsOnce();
-
         if (! $this->scriptsResolved) {
             $this->scriptsResolved = true;
             $scripts = $this->pageAssets->resolveScripts();
@@ -838,12 +838,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Dispatches `Asset\Event\GetPageAssets` at most once per instance --
-     * `finalizeHtml()`'s own first call, before either script or CSS
-     * resolution reads `$this->pageAssets`, so a plugin-contributed
-     * asset participates in the exact same dedup/ordering/promotion
-     * pass as a template-registered one.
+     * `Renderer::render()`'s own first call on this instance (docs/PLAN.md's
+     * P42), before that first View's own declared assets, and before
+     * either script or CSS resolution reads `$this->pageAssets`, so a
+     * plugin-contributed asset participates in the exact same
+     * dedup/ordering/promotion pass as a template-registered one. Public
+     * because `Renderer` (a different class) is the caller now, not this
+     * class's own `finalizeHtml()`.
      */
-    private function dispatchPageAssetsOnce(): void
+    public function dispatchPageAssetsOnce(): void
     {
         if ($this->pageAssetsDispatched) {
             return;
@@ -852,6 +855,21 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $event = $this->eventDispatcher->dispatch(new GetPageAssets());
         foreach ($event->assets as $contribution) {
+            $this->pageAssets->add($contribution);
+        }
+    }
+
+    /**
+     * `Renderer::render()`'s own entry point for a `HasPageAssets` View's
+     * declared contributions (docs/PLAN.md's P42) -- `$pageAssets` itself
+     * is `private`, so this small public wrapper is the only way a
+     * different class can feed it.
+     *
+     * @param list<AssetContribution> $contributions
+     */
+    public function registerPageAssets(array $contributions): void
+    {
+        foreach ($contributions as $contribution) {
             $this->pageAssets->add($contribution);
         }
     }
@@ -1086,6 +1104,30 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if ($trimmed !== '') {
             $this->htmlHeadElements[] = $trimmed;
         }
+    }
+
+    /**
+     * `Renderer::render()`'s own entry point for a `HasHeadLinks` View's
+     * declared `<link>` elements (docs/PLAN.md's P42) -- builds the same
+     * `rel`/`type`/`title`/`href` attribute order the old
+     * `{do htmlHead(...)}` call sites hand-wrote, then reuses `htmlHead()`
+     * above so both mechanisms share one placeholder/dedup path until the
+     * final P42 batch replaces it with direct resolution.
+     */
+    public function registerHeadLink(HeadLink $link): void
+    {
+        $tag = '<link rel="' . $link->rel . '"';
+        if ($link->type !== null) {
+            $tag .= ' type="' . $link->type . '"';
+        }
+
+        if ($link->title !== null) {
+            $tag .= ' title="' . $link->title . '"';
+        }
+
+        $tag .= ' href="' . $link->href . '">';
+
+        $this->htmlHead($tag);
     }
 
     /**

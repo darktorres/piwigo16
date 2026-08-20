@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 use Latte\Runtime\Html;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\Event\GetPageAssets;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\HeadLink;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
@@ -1285,6 +1288,93 @@ test('htmlHead is a no-op for empty or whitespace-only content', function (): vo
 
     expect($t->htmlHeadElements)
         ->toBe([]);
+});
+
+// --- registerHeadLink (P42) ------------------------------------------
+
+test('registerHeadLink builds the rel/type/title/href attribute order and reuses htmlHead', function (): void {
+    $t = TemplateTestFactory::build();
+
+    $t->registerHeadLink(new HeadLink(rel: 'alternate', href: '/feed.php', type: 'application/rss+xml', title: 'Complete RSS feed'));
+
+    expect($t->htmlHeadElements)
+        ->toBe(['<link rel="alternate" type="application/rss+xml" title="Complete RSS feed" href="/feed.php">']);
+});
+
+test('registerHeadLink omits type/title attributes entirely when null', function (): void {
+    $t = TemplateTestFactory::build();
+
+    $t->registerHeadLink(new HeadLink(rel: 'canonical', href: '/page.php'));
+
+    expect($t->htmlHeadElements)
+        ->toBe(['<link rel="canonical" href="/page.php">']);
+});
+
+// --- registerPageAssets (P42) -----------------------------------------
+
+test('registerPageAssets forwards every contribution in the list to PageAssets', function (): void {
+    $t = TemplateTestFactory::build();
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
+
+    $t->registerPageAssets([
+        AssetContribution::css('style.css', version: false),
+        AssetContribution::script('x', path: 'x.js'),
+    ]);
+
+    // One finalizeHtml() call, matching templateInstanceTestScriptTags()'s
+    // own reasoning: $scriptsResolved locks after the *first* call
+    // regardless of whether a script placeholder was even present in that
+    // call's $html, so CSS and scripts must be resolved together here.
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG . '||' . Template::COMBINED_SCRIPTS_TAG);
+    [$css, $header] = explode('||', $result, 2);
+
+    expect($css)
+        ->toContain('href="style.css">')
+        ->and($header)
+        ->toContain('src="x.js?v' . AppInfo::VERSION . '"');
+});
+
+test('registerPageAssets is a no-op for an empty list', function (): void {
+    $t = TemplateTestFactory::build();
+
+    $t->registerPageAssets([]);
+
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
+    expect($result)
+        ->toBe('');
+});
+
+// --- dispatchPageAssetsOnce (P42) --------------------------------------
+
+test('dispatchPageAssetsOnce dispatches GetPageAssets exactly once even when called twice', function (): void {
+    $t = TemplateTestFactory::build();
+    $calls = 0;
+    EventDispatcherTestFactory::get()->addTypedHandler(GetPageAssets::class, function (GetPageAssets $event) use (&$calls): GetPageAssets {
+        $calls++;
+
+        return $event;
+    });
+
+    $t->dispatchPageAssetsOnce();
+    $t->dispatchPageAssetsOnce();
+
+    expect($calls)
+        ->toBe(1);
+});
+
+test('dispatchPageAssetsOnce merges a plugin-contributed asset into the resolved CSS output', function (): void {
+    $t = TemplateTestFactory::build();
+    EventDispatcherTestFactory::get()->addTypedHandler(GetPageAssets::class, function (GetPageAssets $event): GetPageAssets {
+        $event->assets = [...$event->assets, AssetContribution::css('plugin.css', version: false)];
+
+        return $event;
+    });
+
+    $t->dispatchPageAssetsOnce();
+
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
+    expect($result)
+        ->toContain('href="plugin.css">');
 });
 
 // --- localCssRules ----------------------------------------------------

@@ -32,17 +32,17 @@ final class TimingHelper
     }
 
     /**
-     * append a line to PageState's accumulated debug output
+     * append a line to RequestMetrics' accumulated debug output
      */
-    public static function debug(string $string, PageState $pageState): void
+    public static function debug(string $string, RequestMetrics $requestMetrics): void
     {
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
         // microtime()'s own format ("<fraction> <seconds>", both always numeric)
         // guarantees this concatenation is always a numeric string.
         $now2_float = (float) ($now[1] . '.' . $now2[1]);
-        $time = number_format($now2_float - $pageState->requestStart, 3, '.', ' ') . ' s';
-        $count_queries = $pageState->countQueries;
-        $pageState->addDebugOutput('<p>[' . $time . ', ' . $count_queries . ' queries] : ' . $string . "</p>\n");
+        $time = number_format($now2_float - $requestMetrics->requestStart, 3, '.', ' ') . ' s';
+        $count_queries = $requestMetrics->countQueries;
+        $requestMetrics->addDebugOutput('<p>[' . $time . ', ' . $count_queries . ' queries] : ' . $string . "</p>\n");
     }
 }

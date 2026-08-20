@@ -18,7 +18,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -54,7 +54,7 @@ final readonly class TagsController implements ControllerInterface
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
-        private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private TagService $tagService,
@@ -83,7 +83,7 @@ final readonly class TagsController implements ControllerInterface
         $template = $this->currentTemplate->get();
 
         $title = $this->lang->t('Tags');
-        $this->pageState->setBodyId('theTagsPage');
+        $this->layoutState->setBodyId('theTagsPage');
 
         $default_display_mode = $this->currentConfig->tagsDefaultDisplayMode;
 
@@ -212,7 +212,7 @@ final readonly class TagsController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new TagsPageRendered());
         $this->htmlService
             ->flushPageMessages();

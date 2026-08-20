@@ -24,6 +24,7 @@ use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -66,6 +67,7 @@ final readonly class MaintenanceEnvPageRenderer
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentTemplate $currentTemplate,
         private DbMaintenanceRepository $dbMaintenanceRepository,
         private ActivityService $activityService,
@@ -90,7 +92,7 @@ final readonly class MaintenanceEnvPageRenderer
         $template = $this->currentTemplate->get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
             ->dispatch($action);
 
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . $this->csrfService->getToken();

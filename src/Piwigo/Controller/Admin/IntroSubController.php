@@ -33,6 +33,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TimingHelper;
@@ -95,6 +96,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private InstallationStats $installationStats,
@@ -527,7 +529,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
 
         // Check integrity
         $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
+        $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState);
         // add internal checks
         new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService, $this->currentConfig)
             ->registerHandlers();

@@ -20,9 +20,11 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\TemplateInterface;
@@ -77,6 +79,8 @@ final readonly class SectionPopulator
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
+        private LayoutState $layoutState,
+        private RequestMetrics $requestMetrics,
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private Translator $translator,
@@ -663,7 +667,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items']) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->imageStdParams, $this->pageState, $this->permissionService, $this->entityManager, $this->calendarNavCachePool)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->imageStdParams, $this->requestMetrics, $this->permissionService, $this->entityManager, $this->calendarNavCachePool)
                 ->render(
                     $section,
                     $page_category,
@@ -700,7 +704,7 @@ final readonly class SectionPopulator
         // add meta robots noindex, nofollow to avoid unnecesary robot crawls.
         // A not-yet-initialized FilterState is treated as disabled.
         $filter_enabled = $this->filterState->isInitialized() && $this->filterState->isEnabled();
-        $this->pageState->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
+        $this->layoutState->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
         // see if we need a redirect because of a permalink
         if ($section === Section::Categories and $page_category !== null and ! isset($page['combined_categories'])) {
@@ -782,7 +786,7 @@ final readonly class SectionPopulator
             $body_data['image_id'] = $body_image_id;
         }
 
-        $this->pageState->bodyClasses = $body_classes;
+        $this->layoutState->bodyClasses = $body_classes;
         $this->pageState->bodyData = $body_data;
 
         $this->sectionContextRegistry->set(self::buildSectionContext($page));

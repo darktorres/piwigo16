@@ -15,8 +15,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
@@ -109,7 +109,7 @@ test('render() returns a no-op result for a non-categories section with no items
             new EventDispatcher(),
             new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
             calendarRendererTestImageStdParams(),
-            new PageState(),
+            new RequestMetrics(),
             new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($conn)),
                 EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),

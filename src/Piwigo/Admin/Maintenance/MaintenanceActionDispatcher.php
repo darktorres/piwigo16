@@ -18,6 +18,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -57,6 +58,7 @@ final readonly class MaintenanceActionDispatcher
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentTemplate $currentTemplate,
         private DbMaintenanceRepository $dbMaintenanceRepository,
         private ActivityService $activityService,
@@ -178,7 +180,7 @@ final readonly class MaintenanceActionDispatcher
             case 'c13y':
 
                 $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
-                $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
+                $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState);
                 $c13y->maintenance();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Reinitialize check integrity'), $this->lang->t('action successfully performed.')));
                 break;

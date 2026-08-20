@@ -40,6 +40,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
@@ -131,6 +132,7 @@ final readonly class PictureController implements ControllerInterface
         private DeploymentPolicy $deploymentPolicy,
         private ImageStdParams $imageStdParams,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private MailerInterface $mailer,
@@ -708,7 +710,7 @@ final readonly class PictureController implements ControllerInterface
 
         if ($pictureRequest->slideshowPresent) {
             $slideshow = true;
-            $this->pageState->setMetaRobots([
+            $this->layoutState->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
@@ -765,13 +767,13 @@ final readonly class PictureController implements ControllerInterface
         ))->available;
 
         if ($pictureRequest->metadataPresent) {
-            $this->pageState->setMetaRobots([
+            $this->layoutState->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
         }
 
-        $this->pageState->setBodyId('thePicturePage');
+        $this->layoutState->setBodyId('thePicturePage');
 
         // allow plugins to change what we computed before passing data
         // to template
@@ -1269,7 +1271,7 @@ final readonly class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
         $this->eventDispatcher->dispatch(new PicturePageRendered($image_id));
         $this->htmlService
             ->flushPageMessages();

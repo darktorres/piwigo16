@@ -17,6 +17,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 
 // addAnomaly()/getHtlmLinksMoreInfo() are CheckIntegrity's own pure
@@ -38,7 +39,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
 
-    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), LayoutStateTestFactory::get());
 }
 
 test('addAnomaly records a new anomaly with is_callable computed from a real function name', function (): void {

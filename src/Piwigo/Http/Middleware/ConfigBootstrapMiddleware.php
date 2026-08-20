@@ -13,8 +13,8 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Html\HtmlService;
@@ -63,7 +63,7 @@ final readonly class ConfigBootstrapMiddleware implements MiddlewareInterface
     public function __construct(
         private ErrorCollector $errorCollector,
         private CurrentConfig $currentConfig,
-        private PageState $pageState,
+        private RequestMetrics $requestMetrics,
         private SessionService $sessionService,
         private HtmlService $htmlService,
         private Lang $lang,
@@ -93,7 +93,7 @@ final readonly class ConfigBootstrapMiddleware implements MiddlewareInterface
 
         $this->sessionBootstrap->register();
 
-        $this->pageState->executionUuid = $this->sessionService->generateKey(10);
+        $this->requestMetrics->executionUuid = $this->sessionService->generateKey(10);
 
         // Database connection. DbConnection::build() itself deliberately
         // never touches the session-level ONLY_FULL_GROUP_BY server mode.

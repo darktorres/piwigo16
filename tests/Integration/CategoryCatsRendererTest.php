@@ -43,7 +43,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\RequestMetricsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -229,7 +229,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             LangTestFactory::get(),
             $processCache,
-            PageStateTestFactory::get(),
+            RequestMetricsTestFactory::get(),
             $this->categoryTreeCachePool(),
         );
     }

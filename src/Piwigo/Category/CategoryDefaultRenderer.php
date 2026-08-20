@@ -14,9 +14,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -50,7 +50,7 @@ final readonly class CategoryDefaultRenderer
         private CurrentConfig $currentConfig,
         private Lang $lang,
         private ProcessCache $processCache,
-        private PageState $pageState,
+        private RequestMetrics $requestMetrics,
     ) {}
 
     /**
@@ -229,7 +229,7 @@ final readonly class CategoryDefaultRenderer
         );
 
         unset($pictures, $selection, $tplThumbnailsVar);
-        TimingHelper::debug('end CategoryDefaultRenderer::render()', $this->pageState);
+        TimingHelper::debug('end CategoryDefaultRenderer::render()', $this->requestMetrics);
 
         return $result;
     }

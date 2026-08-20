@@ -29,6 +29,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -214,7 +215,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         return new ThemesStandardPagesPageRenderer(
             LangTestFactory::get(),
             $this->accessControl(),
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
             UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()),

@@ -10,15 +10,6 @@ namespace Piwigo\Core;
  * Container-shared; a zero-arg public constructor needs no
  * `container.php` entry.
  *
- * `metaRobots` follows the same "computed early by one of several
- * controllers, consumed once by PageHeaderRenderer at final page-render
- * time" shape as bodyClasses/bodyData -- SectionPopulator computes it for
- * gallery/picture pages, but PictureController/PopuphelpController/
- * AdminPopuphelpController/NotificationController each set it
- * independently for their own non-gallery pages, so it belongs here
- * rather than on SectionContext, which only exists for the
- * gallery-navigation-context cluster.
- *
  * `authKeyId` is request-wide auth-method state (AuthService::
  * tryAuthKeyLogin() sets it, HistoryService::logVisit() reads it),
  * uniform across all of logVisit()'s mutually-exclusive callers -- unlike
@@ -26,8 +17,13 @@ namespace Piwigo\Core;
  * as explicit params), any of logVisit()'s callers could equally be
  * reached via an auth-keyed request, so an ambient read here is correct.
  *
- * `countQueries`/`queriesTime` are a running per-request accumulator;
- * TimingHelper/PageTailRenderer read the running total.
+ * The page-shell fields (`bodyClasses`/`bodyId`/`pageBanner`/`metaRobots`/
+ * `headerNotes`/`headerMessages`) live on `Piwigo\Core\LayoutState`, and
+ * the per-request timing/debug/correlation fields (`countQueries`/
+ * `queriesTime`/`requestStart`/`debugOutput`/`executionUuid`) live on
+ * `Piwigo\Core\RequestMetrics` -- both split out here (P41, docs/PLAN.md)
+ * since each is a self-contained cluster with its own small set of real
+ * readers/writers, unlike the rest of this class's fields.
  */
 final class PageState
 {
@@ -50,21 +46,6 @@ final class PageState
      * @var list<string>
      */
     public array $infos = [];
-
-    /**
-     * @var list<string>
-     */
-    public array $headerMessages = [];
-
-    /**
-     * @var list<string>
-     */
-    public array $headerNotes = [];
-
-    /**
-     * @var list<string>
-     */
-    public array $bodyClasses = [];
 
     /**
      * Plain unstructured key/value bag, same by-design shape as
@@ -107,50 +88,7 @@ final class PageState
      */
     public array $exposedStringKeys = [];
 
-    public string $executionUuid = '';
-
-    /**
-     * @var array<string, int>
-     */
-    public array $metaRobots = [];
-
     public ?int $authKeyId = null;
-
-    public int $countQueries = 0;
-
-    public float $queriesTime = 0.0;
-
-    /**
-     * The instant (`microtime(true)`) this request began. Captured at
-     * `include/common.inc.php`'s top-level scope, before the autoload
-     * boundary, for maximum precision, and handed off here early in
-     * `RequestBootstrap::configure()`'s body (right after its own
-     * `Kernel::boot()` call); every other consumer reads it from here.
-     */
-    public float $requestStart = 0.0;
-
-    /**
-     * Accumulated debug-mode query/timing HTML, shown in the page footer.
-     * Only populated when CurrentConfig::showQueries() is on.
-     */
-    public string $debugOutput = '';
-
-    /**
-     * The CSS id assigned to the page's `<body>` tag, set by whichever of
-     * 13 controllers handled the request (each assigns its own fixed
-     * literal, e.g. 'theCategoryPage'/'theProfilePage') and read once by
-     * PageHeaderRenderer. Ambient like metaRobots/bodyClasses -- no
-     * per-caller variation, just "whichever controller ran, set this once."
-     */
-    public string $bodyId = '';
-
-    /**
-     * Nullable (not '') so PageHeaderRenderer's `?? CurrentConfig::pageBanner()`
-     * fallback still works: AdminShell/AdminPopuphelpController set a real
-     * banner string, but PopuphelpController deliberately sets '' to mean
-     * "no banner", which must NOT fall back to the configured default.
-     */
-    public ?string $pageBanner = null;
 
     public ?int $nbPendingComments = null;
 
@@ -194,21 +132,10 @@ final class PageState
         $this->warnings = [];
         $this->messages = [];
         $this->infos = [];
-        $this->headerMessages = [];
-        $this->headerNotes = [];
-        $this->bodyClasses = [];
         $this->bodyData = [];
         $this->exposedData = [];
         $this->exposedStringKeys = [];
-        $this->executionUuid = '';
-        $this->metaRobots = [];
         $this->authKeyId = null;
-        $this->countQueries = 0;
-        $this->queriesTime = 0.0;
-        $this->requestStart = 0.0;
-        $this->debugOutput = '';
-        $this->bodyId = '';
-        $this->pageBanner = null;
         $this->nbPendingComments = null;
         $this->noMd5sumNumber = null;
         $this->nbOrphans = 0;
@@ -244,21 +171,6 @@ final class PageState
         $this->commentRejectionReasons[] = $reason;
     }
 
-    public function addHeaderMessage(string $message): void
-    {
-        $this->headerMessages[] = $message;
-    }
-
-    public function addHeaderNote(string $note): void
-    {
-        $this->headerNotes[] = $note;
-    }
-
-    public function addBodyClass(string $class): void
-    {
-        $this->bodyClasses[] = $class;
-    }
-
     public function setBodyData(string $key, mixed $value): void
     {
         $this->bodyData[$key] = $value;
@@ -290,61 +202,9 @@ final class PageState
         $this->exposedStringKeys[$translationKey] = true;
     }
 
-    /**
-     * Bulk-replaces the current meta-robots flags -- matches every real
-     * writer's own shape (SectionPopulator::computeMetaRobots()'s return
-     * value, or a plain literal `['noindex' => 1, 'nofollow' => 1]` from
-     * PictureController/PopuphelpController/AdminPopuphelpController/
-     * NotificationController).
-     *
-     * @param array<string, int> $flags
-     */
-    public function setMetaRobots(array $flags): void
-    {
-        $this->metaRobots = $flags;
-    }
-
-    /**
-     * Adds a single meta-robots flag without disturbing any already set --
-     * GalleryController's own `?display=` override and
-     * PageHeaderRenderer's own `CurrentConfig::metaRef()` gate both need this
-     * incremental shape rather than a full replace.
-     */
-    public function setMetaRobotsFlag(string $name): void
-    {
-        $this->metaRobots[$name] = 1;
-    }
-
     public function setAuthKeyId(?int $authKeyId): void
     {
         $this->authKeyId = $authKeyId;
-    }
-
-    /**
-     * Accumulates both counters together. No current call site invokes
-     * this method in production (DB access goes through
-     * `Piwigo\Db\DbConnection`), so `countQueries`/`queriesTime` stay at 0
-     * outside of tests that call it directly.
-     */
-    public function addQueryTime(float $time): void
-    {
-        $this->countQueries++;
-        $this->queriesTime += $time;
-    }
-
-    public function addDebugOutput(string $line): void
-    {
-        $this->debugOutput .= $line;
-    }
-
-    public function setBodyId(string $id): void
-    {
-        $this->bodyId = $id;
-    }
-
-    public function setPageBanner(string $banner): void
-    {
-        $this->pageBanner = $banner;
     }
 
     public function setNbPendingComments(int $count): void

@@ -17,7 +17,7 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
@@ -96,7 +96,7 @@ function redirect_service_test_user_service(): UserService
 }
 
 test('redirectHttp throws ResponseReadyException with a 302 redirect to the given URL', function (): void {
-    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service(), new EventDispatcher(), new PageState(), new Renderer(CurrentTemplateTestFactory::get()));
+    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service(), new EventDispatcher(), new LayoutState(), new Renderer(CurrentTemplateTestFactory::get()));
     $exception = null;
     try {
         $service->redirectHttp('http://example.test/target.php');
@@ -112,7 +112,7 @@ test('redirectHttp throws ResponseReadyException with a 302 redirect to the give
 });
 
 test('redirectHttp html_entity_decode()s the URL before redirecting', function (): void {
-    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service(), new EventDispatcher(), new PageState(), new Renderer(CurrentTemplateTestFactory::get()));
+    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service(), new EventDispatcher(), new LayoutState(), new Renderer(CurrentTemplateTestFactory::get()));
     $exception = null;
     try {
         $service->redirectHttp('http://example.test/target.php?a=1&amp;b=2');

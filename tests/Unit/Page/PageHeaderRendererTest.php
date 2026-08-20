@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\Paths;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -63,11 +63,11 @@ test('render() assigns the page title and gallery chrome with no refresh meta an
         file_put_contents($tplDir . 'header.latte', 'title={$PAGE_TITLE}');
         $template->setTemplateDir($tplDir);
 
-        $pageState = new PageState();
+        $layoutState = new LayoutState();
         $eventDispatcher = new EventDispatcher();
 
         new PageHeaderRenderer()
-            ->render('<b>My Gallery</b>', $eventDispatcher, $pageState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+            ->render('<b>My Gallery</b>', $eventDispatcher, $layoutState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($template->getTemplateVars('PAGE_TITLE'))
             ->toBe('My Gallery')

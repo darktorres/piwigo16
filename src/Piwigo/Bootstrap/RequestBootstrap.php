@@ -42,12 +42,14 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\UrlServiceInterface;
@@ -161,7 +163,7 @@ final class RequestBootstrap
      * time binding the trio uses: its 'boot' timer must start ticking at
      * the exact instant this method begins, before `configure()`'s own
      * `Kernel::boot()` call runs -- `$t2` below captures that instant as a
-     * plain local variable (same idea as `PageState::requestStart`'s own
+     * plain local variable (same idea as `RequestMetrics::requestStart`'s own
      * pre-autoload capture), and `configure()` seeds the container-shared
      * `ServerTiming` instance with it immediately after `Kernel::boot()`
      * returns.
@@ -255,9 +257,9 @@ final class RequestBootstrap
         // include/common.inc.php captures $requestStart = microtime(true)
         // at true top-level scope (before this class is even autoloadable)
         // for maximum precision, and passes it straight through as a
-        // parameter -- this is the one-time handoff into PageState, which
-        // every other consumer reads from instead.
-        self::pageState()->requestStart = $requestStart;
+        // parameter -- this is the one-time handoff into RequestMetrics,
+        // which every other consumer reads from instead.
+        self::requestMetrics()->requestStart = $requestStart;
 
         Env::loadEnvFile($paths->root);
 
@@ -341,7 +343,7 @@ final class RequestBootstrap
         // FinalizeBridgeMiddleware`, which calls this method as the last
         // step of that same chain, right before routing.
         $conn = DbConnection::build();
-        $pageState = self::pageState();
+        $layoutState = self::layoutState();
 
         // template instance
         if (self::adminContext()->isActive()) {// Admin template
@@ -387,17 +389,17 @@ final class RequestBootstrap
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
-            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()))
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()))
                 ->render();
         }
 
         $user_internal_status = self::currentUser()->get()->internalStatus;
         if (($user_internal_status['guest_must_be_guest'] ?? false) === true) {
-            $pageState->addHeaderMessage(self::lang()->t('Bad status for user "guest", using default status. Please notify the webmaster.'));
+            $layoutState->addHeaderMessage(self::lang()->t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
         if (self::currentConfig()->galleryLocked) {
-            $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
+            $layoutState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
                 // Throws instead of calling header()+echo+exit() directly
@@ -415,19 +417,19 @@ final class RequestBootstrap
             }
         }
 
-        if ($pageState->headerMessages !== []) {
-            $template->assignContext(new HeaderMessagesPageContext($pageState->headerMessages));
-            $pageState->headerMessages = [];
+        if ($layoutState->headerMessages !== []) {
+            $template->assignContext(new HeaderMessagesPageContext($layoutState->headerMessages));
+            $layoutState->headerMessages = [];
         }
 
         if (self::currentConfig()->filterPages !== [] and (bool) PageFilterHelper::getFilterPageValue(self::currentConfig(), 'used')) {
             new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), EntityManagerFactory::build($conn))
-                ->initializeFromRequest(self::pageState(), self::currentUser());
+                ->initializeFromRequest($layoutState, self::currentUser());
         } else {
             self::filterState()->set(false);
         }
 
-        $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes);
+        $layoutState->headerNotes = array_merge($layoutState->headerNotes, self::currentConfig()->headerNotes);
 
         // Default event handlers -- extracted into Piwigo\Listener\*
         // classes. Must stay after `Http\Middleware\
@@ -763,6 +765,38 @@ final class RequestBootstrap
     }
 
     /**
+     * Private (unlike pageState()/layoutState() above): only used
+     * internally, by configure()'s own requestStart handoff (P41,
+     * docs/PLAN.md's PageState split) -- no public/ script needs it.
+     */
+    private static function requestMetrics(): RequestMetrics
+    {
+        $requestMetrics = Kernel::container()->get(RequestMetrics::class);
+        if (! $requestMetrics instanceof RequestMetrics) {
+            throw new LogicException('Container returned an unexpected type for ' . RequestMetrics::class);
+        }
+
+        return $requestMetrics;
+    }
+
+    /**
+     * Public, same reasoning as pageState() above: public/admin.php's own
+     * legacy-style `new RedirectService(...)`/`new AdminShell(...)` manual
+     * construction needs a way to obtain the same container-shared
+     * instance every other LayoutState consumer receives via constructor
+     * injection (P41, docs/PLAN.md's PageState split).
+     */
+    public static function layoutState(): LayoutState
+    {
+        $layoutState = Kernel::container()->get(LayoutState::class);
+        if (! $layoutState instanceof LayoutState) {
+            throw new LogicException('Container returned an unexpected type for ' . LayoutState::class);
+        }
+
+        return $layoutState;
+    }
+
+    /**
      * Public (unlike most resolver helpers here): public/admin.php's own
      * legacy-style `new AdminShell(...)` manual construction needs a way to
      * obtain the same container-shared instance every other
@@ -849,6 +883,17 @@ final class RequestBootstrap
         }
 
         return $currentTemplate;
+    }
+
+    /**
+     * Public, same reasoning as currentTemplate() above: public/admin.php's
+     * and public/random.php's own legacy-style `new RedirectService(...)`
+     * manual construction needs a way to obtain a Renderer without calling
+     * Kernel::container() directly.
+     */
+    public static function templateRenderer(): Renderer
+    {
+        return new Renderer(self::currentTemplate());
     }
 
     public static function currentConfig(): CurrentConfig

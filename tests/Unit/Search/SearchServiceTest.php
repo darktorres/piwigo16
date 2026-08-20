@@ -49,7 +49,7 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Search\SearchServiceTestFatalSignalHtmlRenderer;
@@ -257,7 +257,7 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
             new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), CurrentConfigTestFactory::get())
         ),
         $htmlRenderer,
-        new RedirectService(LangTestFactory::get(), searchServiceTestUserService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
+        new RedirectService(LangTestFactory::get(), searchServiceTestUserService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
         EventDispatcherTestFactory::get(),
         CurrentUserTestFactory::get(),

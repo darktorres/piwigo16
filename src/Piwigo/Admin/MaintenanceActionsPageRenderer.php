@@ -22,6 +22,7 @@ use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -66,6 +67,7 @@ final readonly class MaintenanceActionsPageRenderer
         private EventDispatcher $eventDispatcher,
         private ImageStdParams $imageStdParams,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentTemplate $currentTemplate,
         private DbMaintenanceRepository $dbMaintenanceRepository,
         private ActivityService $activityService,
@@ -93,7 +95,7 @@ final readonly class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
             ->dispatch($action);
 
         $pwg_token = $this->csrfService

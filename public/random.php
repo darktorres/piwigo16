@@ -96,7 +96,7 @@ $types = [
 // This try/catch is this file's own catch point, same shape as
 // AdminShell::run()'s own dispatch-context catch point.
 try {
-    new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::pageState())
+    new RedirectService(RequestBootstrap::lang(), RequestBootstrap::userService(), RequestBootstrap::eventDispatcher(), RequestBootstrap::layoutState(), RequestBootstrap::templateRenderer())
         ->redirect(RequestBootstrap::urlService()->makeIndexUrl([
             'list' => array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',

@@ -24,7 +24,7 @@ use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -69,7 +69,7 @@ final readonly class IdentificationController implements ControllerInterface
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
-        private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private UserService $userService,
@@ -176,7 +176,7 @@ final readonly class IdentificationController implements ControllerInterface
         $template = $this->currentTemplate->get();
 
         $title = $this->lang->t('Identification');
-        $this->pageState->setBodyId('theIdentificationPage');
+        $this->layoutState->setBodyId('theIdentificationPage');
 
         $register = null;
         if (! $this->currentConfig->galleryLocked && $this->currentConfig->allowUserRegistration) {
@@ -240,7 +240,7 @@ final readonly class IdentificationController implements ControllerInterface
         );
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new IdentificationPageRendered());
         $this->htmlService
             ->flushPageMessages();

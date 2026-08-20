@@ -45,6 +45,7 @@ use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
@@ -153,7 +154,7 @@ function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), new ConfigService($repo, CurrentConfigTestFactory::get()), Paths::fromRoot(dirname(__DIR__, 4)), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), new ConfigService($repo, CurrentConfigTestFactory::get()), Paths::fromRoot(dirname(__DIR__, 4)), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -208,7 +209,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), new ConfigService($repo, CurrentConfigTestFactory::get()), Paths::fromRoot($root), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), new ConfigService($repo, CurrentConfigTestFactory::get()), Paths::fromRoot($root), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

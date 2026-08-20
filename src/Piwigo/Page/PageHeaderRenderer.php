@@ -8,7 +8,7 @@ use LogicException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Page\Event\PageHeaderContextFinalized;
 use Piwigo\Page\Event\PageHeaderRendered;
@@ -71,9 +71,9 @@ final class PageHeaderRenderer
      *   `{layout}`-based `Renderer::render()` one at a time; this stays
      *   until every real caller has switched (P41-E deletes it).
      */
-    public function render(string $title, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
+    public function render(string $title, EventDispatcher $eventDispatcher, LayoutState $layoutState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
     {
-        $this->prepareContext($title, $eventDispatcher, $pageState, $currentTemplate, $currentConfig, $refresh, $urlLink);
+        $this->prepareContext($title, $eventDispatcher, $layoutState, $currentTemplate, $currentConfig, $refresh, $urlLink);
 
         $currentTemplate->get()
             ->parse('header.latte');
@@ -93,7 +93,7 @@ final class PageHeaderRenderer
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
      */
-    public function prepareContext(string $title, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
+    public function prepareContext(string $title, EventDispatcher $eventDispatcher, LayoutState $layoutState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
     {
         $template = $currentTemplate->get();
 
@@ -106,24 +106,24 @@ final class PageHeaderRenderer
 
         /** @var string $conf_gallery_title */
         $conf_gallery_title = $currentConfig->galleryTitle;
-        $page_banner = $pageState->pageBanner ?? $currentConfig->pageBanner;
+        $page_banner = $layoutState->pageBanner ?? $currentConfig->pageBanner;
 
         // Header notes
-        $header_notes = $pageState->headerNotes;
+        $header_notes = $layoutState->headerNotes;
         $headerNotesValue = self::emptyValue($header_notes) ? null : $header_notes;
 
         if (! $currentConfig->metaRef) {
-            $pageState->setMetaRobotsFlag('noindex');
-            $pageState->setMetaRobotsFlag('nofollow');
+            $layoutState->setMetaRobotsFlag('noindex');
+            $layoutState->setMetaRobotsFlag('nofollow');
         }
 
         $head_elements = [];
-        if (! self::emptyValue($pageState->metaRobots)) {
+        if (! self::emptyValue($layoutState->metaRobots)) {
             $head_elements[] = '<meta name="robots" content="'
-                  . implode(',', array_keys($pageState->metaRobots))
+                  . implode(',', array_keys($layoutState->metaRobots))
                   . '">';
         }
-        $metaRef = isset($pageState->metaRobots['noindex']) ? null : 1;
+        $metaRef = isset($layoutState->metaRobots['noindex']) ? null : 1;
 
         // refresh
         $refresh_numeric = $refresh !== null && is_numeric($refresh) ? $refresh : null;
@@ -145,13 +145,13 @@ final class PageHeaderRenderer
                     $page_banner
                 )
             ))->banner,
-            bodyId: $pageState->bodyId,
+            bodyId: $layoutState->bodyId,
             contentEncoding: 'utf-8',
             pageTitle: strip_tags($title),
             homeUrl: self::urlService()->getGalleryHomeUrl(),
             levelSeparator: $currentConfig->levelSeparator,
             showMobileAppBanner: $show_mobile_app_banner,
-            bodyClasses: $pageState->bodyClasses,
+            bodyClasses: $layoutState->bodyClasses,
             headerNotes: $headerNotesValue,
             metaRef: $metaRef,
             pageRefresh: $pageRefresh,

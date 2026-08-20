@@ -77,6 +77,23 @@ parameters:
             - ecs.php
     ignoreErrors:
         -
+            # P41 (docs/PLAN.md)'s dual-method transition strategy:
+            # PageTail::render()/renderToString(), PageHeaderRenderer::render(),
+            # and PageTailRenderer::render()/renderToString() are marked
+            # @deprecated on purpose -- old callers (not yet converted to
+            # the new {layout}-based Renderer::render()/finalizeHtml() path)
+            # keep working unmigrated batch by batch (P41-B/C/D), and only
+            # P41-E deletes both the methods and this ignore together, once
+            # every real caller has switched. Every deprecated docblock in
+            # this campaign starts with this exact "P41 (docs/PLAN.md)" tag,
+            # so matching on message text (not path) covers every current
+            # and future old-style caller without a per-file list.
+            identifier: method.deprecated
+            message: '#(?s)^Call to deprecated method \S+\(\) of class Piwigo\\(Bootstrap\\PageTail|Page\\PageHeaderRenderer|Page\\PageTailRenderer):.*P41 \(docs/PLAN\.md\)#'
+        -
+            identifier: staticMethod.deprecated
+            message: '#(?s)^Call to deprecated method \S+\(\) of class Piwigo\\Bootstrap\\PageTail:.*P41 \(docs/PLAN\.md\)#'
+        -
             # Queries here target an in-memory sqlite scratch table created
             # fresh per test, never the live DB the bootstrap connects to.
             identifier: dba.syntaxError
@@ -258,6 +275,22 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: property.internalClass
+            path: _analysis/phpstan-latte/*
+        -
+            # {layout '...'} (P41, docs/PLAN.md)'s own compiled prepare()
+            # writes `$this->parentName = '...'` -- Latte's own codegen for
+            # its own {extends}/{layout} tag, assigning Latte\Runtime\
+            # Template's own @internal $parentName property. Confirmed by
+            # reading the generated
+            # _analysis/phpstan-latte/themes-default-template-redirect.latte.php
+            # directly: the flagged line is `$this->parentName =
+            # 'layout.latte';` inside prepare(), never written by hand.
+            # Ignore-path matching runs against the real scanned file (this
+            # dir), same as every other entry in this block -- the *.latte
+            # path PHPStan displays the error under is only a
+            # position-remapped label for humans. Every current and future
+            # {layout}-using template compiles to the identical pattern.
+            identifier: property.internal
             path: _analysis/phpstan-latte/*
         -
             # Latte's compiled {block} methods: its own codegen declares

@@ -11,7 +11,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\PopuphelpController;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -102,7 +102,7 @@ test('__invoke returns a 400 "Request rejected" response for a page value with d
             LangTestFactory::get(),
             popuphelpTestAccessControl(),
             new EventDispatcher(),
-            new PageState(),
+            new LayoutState(),
             CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
             new Renderer(CurrentTemplateTestFactory::get()),

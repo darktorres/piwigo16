@@ -19,6 +19,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -52,6 +53,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private Paths $paths,
@@ -99,7 +101,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
 
         new UserBootstrap(
             $this->accessLevelChecker,
-            new RedirectService($this->lang, $this->userService, $this->eventDispatcher, $this->pageState, $this->renderer),
+            new RedirectService($this->lang, $this->userService, $this->eventDispatcher, $this->layoutState, $this->renderer),
             $this->urlService,
             $this->deploymentPolicy,
             new ConnectedWithSession(),

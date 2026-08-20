@@ -24,6 +24,7 @@ use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
@@ -99,6 +100,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         CurrentTemplateTestFactory::get()->reset();
         EventDispatcherTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
+        LayoutStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -172,9 +174,9 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         RequestBootstrap::finalize();
 
-        // finalize() itself flushes PageStateTestFactory::get()->headerMessages
+        // finalize() itself flushes LayoutStateTestFactory::get()->headerMessages
         // into the template's own 'header_msgs' var and resets the
-        // PageState-side list back to [] in the same method body -- the
+        // LayoutState-side list back to [] in the same method body -- the
         // template var is the only place left to observe it afterwards.
         self::assertSame(
             [LangTestFactory::get()->t('Bad status for user "guest", using default status. Please notify the webmaster.')],

@@ -51,7 +51,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Tests\Support\PageStateTestFactory;
+    use Piwigo\Tests\Support\LayoutStateTestFactory;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Users\PreferencesService;
     use Piwigo\Users\User;
@@ -372,7 +372,7 @@ namespace Piwigo\Tests\Integration {
                     new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
                 ),
                 HtmlServiceTestFactory::build(),
-                new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
+                new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 CurrentUserTestFactory::get(),
@@ -474,7 +474,7 @@ namespace Piwigo\Tests\Integration {
                     new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
                 ),
                 $htmlRenderer,
-                new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
+                new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 CurrentUserTestFactory::get(),

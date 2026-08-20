@@ -16,7 +16,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
@@ -54,7 +54,7 @@ final readonly class NotificationController implements ControllerInterface
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
-        private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private HtmlService $htmlService,
@@ -95,8 +95,8 @@ final readonly class NotificationController implements ControllerInterface
         }
 
         $title = $this->lang->t('Notification');
-        $this->pageState->setBodyId('theNotificationPage');
-        $this->pageState->setMetaRobots([
+        $this->layoutState->setBodyId('theNotificationPage');
+        $this->layoutState->setMetaRobots([
             'noindex' => 1,
             'nofollow' => 1,
         ]);
@@ -114,7 +114,7 @@ final readonly class NotificationController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
         $template->appendOutput($this->renderer->render($notificationView));

@@ -66,7 +66,9 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\RequestMetricsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -170,7 +172,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
         }
         $imageService = new ImageService($em->getRepository(ImageEntity::class), new ActivityService($em->getRepository(ActivityEntity::class)), $this->sessionService, new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $this->categoryService);
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new SortRenderer($this->conn), $this->tagService, $imageService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()), $searchResultsCachePool);
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new SortRenderer($this->conn), $this->tagService, $imageService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()), $searchResultsCachePool);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger([
@@ -202,6 +204,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         CurrentUserTestFactory::get()->reset();
         CurrentTemplateTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
+        LayoutStateTestFactory::get()->reset();
+        RequestMetricsTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -237,7 +241,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->tagService,
             $this->searchService,
             $this->userService,
-            new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
+            new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
             UrlServiceTestFactory::build(),
             $this->filterState,
             $this->currentLogger,
@@ -246,6 +250,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->sessionService,
             new EventDispatcher(),
             PageStateTestFactory::get(),
+            LayoutStateTestFactory::get(),
+            RequestMetricsTestFactory::get(),
             CurrentUserTestFactory::get(),
             CurrentConfigTestFactory::get(),
             TranslatorTestFactory::get(),

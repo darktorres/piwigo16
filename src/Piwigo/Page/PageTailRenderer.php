@@ -10,7 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DeviceHelper;
-use Piwigo\Core\PageState;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -50,7 +50,7 @@ final readonly class PageTailRenderer
         private TelemetrySenderInterface $telemetrySender,
         private UrlServiceInterface $urlService,
         private EventDispatcher $eventDispatcher,
-        private PageState $pageState,
+        private RequestMetrics $requestMetrics,
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
         private SessionService $sessionService,
@@ -117,13 +117,13 @@ final readonly class PageTailRenderer
 
         if ($this->currentConfig->showQueries) {
             $debug_vars = array_merge($debug_vars, [
-                'QUERIES_LIST' => $this->pageState->debugOutput,
+                'QUERIES_LIST' => $this->requestMetrics->debugOutput,
             ]);
         }
 
         if ($this->currentConfig->showGt) {
-            $count_queries = $this->pageState->countQueries;
-            $queries_time = $this->pageState->queriesTime;
+            $count_queries = $this->requestMetrics->countQueries;
+            $queries_time = $this->requestMetrics->queriesTime;
 
             $time = TimingHelper::getElapsedTime($startTime, TimingHelper::getMoment());
 

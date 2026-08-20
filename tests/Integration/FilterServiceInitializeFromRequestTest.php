@@ -23,7 +23,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -95,7 +95,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         ]));
 
         $_SESSION = [];
-        PageStateTestFactory::get()->reset();
+        LayoutStateTestFactory::get()->reset();
         $this->filterState = new FilterState();
         $this->sessionService = new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
         $this->translator = new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
@@ -107,7 +107,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         $_SESSION = [];
         unset($_GET['filter']);
         CurrentUserTestFactory::get()->reset();
-        PageStateTestFactory::get()->reset();
+        LayoutStateTestFactory::get()->reset();
         parent::tearDown();
     }
 
@@ -142,7 +142,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         $_GET['filter'] = 'start-recent-30';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertTrue($this->filterState->isEnabled());
         $categories = $this->filterState->categories();
@@ -157,7 +157,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
 
         self::assertSame(
             ['Photos posted within the last 30 days.'],
-            PageStateTestFactory::get()->headerNotes
+            LayoutStateTestFactory::get()->headerNotes
         );
 
         // Session persistence -- the exact shape read back by a later call.
@@ -176,7 +176,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     public function testInitializeReadsCachedCategoriesFromTheSessionWithoutRecomputingWhenNotStale(): void
     {
         $_GET['filter'] = 'start-recent-14';
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
         self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
 
         // A brand-new, real "recent" image inserted into category 2 -- a
@@ -195,7 +195,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         try {
             unset($_GET['filter']);
             $this->filterState->reset();
-            new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+            new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
             self::assertTrue($this->filterState->isEnabled());
             self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
@@ -214,7 +214,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             'date' => date('Ymd'),
         ];
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed (not left at the stale/absent cached value) -- the
@@ -239,7 +239,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             'date' => date('Ymd'),
         ];
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertTrue($this->filterState->isEnabled());
         // Same reason as the sibling test above: assert the recomputed
@@ -253,7 +253,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     public function testInitializeDisablesAndClearsTheSessionWhenThePageFilterIsCancelled(): void
     {
         $_GET['filter'] = 'start-recent-7';
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
         self::assertTrue($_SESSION['pwg_filter_enabled']);
 
         unset($_GET['filter']);
@@ -270,7 +270,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         ];
         $this->filterState->reset();
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertFalse($this->filterState->isEnabled());
         self::assertArrayNotHasKey('pwg_filter_enabled', $_SESSION);
@@ -284,7 +284,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         // Never touched $_GET['filter'] or $_SESSION at all -- the plain
         // "nothing ever enabled this" default path.
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertFalse($this->filterState->isEnabled());
     }
@@ -293,7 +293,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     {
         $_GET['filter'] = 'not-a-real-filter-token';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertFalse($this->filterState->isEnabled());
     }
@@ -311,7 +311,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // rather than one this method itself could ever have written.
         $_SESSION['pwg_filter_check_key'] = 'not-an-array';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed from the fallback default (time=0 unconditionally
@@ -344,7 +344,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         ]));
         $_GET['filter'] = 'start-recent-30';
 
-        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
+        new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertTrue($this->filterState->isEnabled());
         self::assertSame([], $this->filterState->categories());

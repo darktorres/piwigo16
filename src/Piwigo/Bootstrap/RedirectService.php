@@ -16,7 +16,7 @@ use Piwigo\Core\AdminContext;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
@@ -65,7 +65,7 @@ final readonly class RedirectService implements RedirectServiceInterface
         private Lang $lang,
         private UserService $userService,
         private EventDispatcher $eventDispatcher,
-        private PageState $pageState,
+        private LayoutState $layoutState,
         private Renderer $renderer,
     ) {}
 
@@ -215,7 +215,7 @@ final readonly class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->prepareContext($title, $this->eventDispatcher, $this->pageState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
         PageTail::prepareContext();
 

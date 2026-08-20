@@ -26,6 +26,7 @@ use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -80,6 +81,7 @@ final readonly class ProfileController implements ControllerInterface
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private EntityManagerInterface $entityManager,
@@ -183,7 +185,7 @@ final readonly class ProfileController implements ControllerInterface
         $profileFormHandler->saveFromPost($userdata, $page_errors);
         $this->pageState->errors = array_values($page_errors);
 
-        $this->pageState->setBodyId('theProfilePage');
+        $this->layoutState->setBodyId('theProfilePage');
         $formData = $profileFormHandler->loadIntoTemplate(
             $this->urlService->getRootUrl() . 'profile.php', // action
             $this->urlService->makeIndexUrl(), // for redirect
@@ -229,7 +231,7 @@ final readonly class ProfileController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
 
         // Get list of languages
         $language_options = [];

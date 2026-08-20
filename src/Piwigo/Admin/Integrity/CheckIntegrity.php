@@ -20,6 +20,7 @@ use Piwigo\Admin\Integrity\Request\C13yTreatmentRequest;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -70,6 +71,7 @@ final class CheckIntegrity
         private readonly Translator $translator,
         private readonly EventDispatcher $eventDispatcher,
         private readonly PageState $pageState,
+        private readonly LayoutState $layoutState,
     ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -95,7 +97,7 @@ final class CheckIntegrity
 
         // Information
         if (count($this->retrieve_list) > 0) {
-            $this->pageState->addHeaderNote($this->translator->plural(
+            $this->layoutState->addHeaderNote($this->translator->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 count($this->retrieve_list)

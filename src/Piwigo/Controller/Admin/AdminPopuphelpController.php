@@ -13,7 +13,7 @@ use Piwigo\Controller\Event\GetPopupHelpContent;
 use Piwigo\Controller\Projection\PopuphelpView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
+use Piwigo\Core\LayoutState;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -48,7 +48,7 @@ final readonly class AdminPopuphelpController implements ControllerInterface
         private Lang $lang,
         private AccessControl $accessControl,
         private EventDispatcher $eventDispatcher,
-        private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
         private Renderer $renderer,
@@ -69,10 +69,10 @@ final readonly class AdminPopuphelpController implements ControllerInterface
         $template = $this->currentTemplate->get();
 
         if ($output !== 'content_only') {
-            $this->pageState->setBodyId('thePopuphelpPage');
+            $this->layoutState->setBodyId('thePopuphelpPage');
             $title = $this->lang->t('Piwigo Help');
-            $this->pageState->setPageBanner('<h1>' . $title . '</h1>');
-            $this->pageState->setMetaRobots([
+            $this->layoutState->setPageBanner('<h1>' . $title . '</h1>');
+            $this->layoutState->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
@@ -81,7 +81,7 @@ final readonly class AdminPopuphelpController implements ControllerInterface
             $template->assignContext(new AdminPopuphelpPlaceholdersPageContext());
 
             new PageHeaderRenderer()
-                ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+                ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         }
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {

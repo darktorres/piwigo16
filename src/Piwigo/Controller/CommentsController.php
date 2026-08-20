@@ -27,6 +27,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
@@ -82,6 +83,7 @@ final readonly class CommentsController implements ControllerInterface
         private DeploymentPolicy $deploymentPolicy,
         private ImageStdParams $imageStdParams,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private PermissionService $permissionService,
@@ -436,7 +438,7 @@ final readonly class CommentsController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
 
         $title = $this->lang->t('User comments');
-        $this->pageState->setBodyId('theCommentsPage');
+        $this->layoutState->setBodyId('theCommentsPage');
 
         $keyword_param = $commentsRequest->keywordDisplay;
         $author_param = $commentsRequest->authorDisplay;
@@ -636,7 +638,7 @@ final readonly class CommentsController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new CommentsPageRendered());
         $this->htmlService
             ->flushPageMessages();

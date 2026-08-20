@@ -10,9 +10,9 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
@@ -103,7 +103,7 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
             CurrentConfigTestFactory::get(),
             LangTestFactory::get(),
             new ProcessCache(),
-            new PageState(),
+            new RequestMetrics(),
         );
 
         $result = $renderer->render([], 0, 10, Section::Categories);

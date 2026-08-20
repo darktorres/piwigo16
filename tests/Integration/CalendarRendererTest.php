@@ -32,7 +32,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\ImageStdParamsTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Tests\Support\PageStateTestFactory;
+    use Piwigo\Tests\Support\RequestMetricsTestFactory;
     use Piwigo\Tests\Support\TemplateTestFactory;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Users\User;
@@ -150,7 +150,7 @@ namespace Piwigo\Tests\Integration {
 
         private function makeRenderer(): CalendarRenderer
         {
-            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
+            return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), RequestMetricsTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
         }
 
         /**
@@ -282,7 +282,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderGroupsMultipleYearsAndMonthsForTheDefaultMonthlyCalendarView(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), RequestMetricsTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
 
             $result = $renderer->render(
                 section: Section::ListView,
@@ -328,7 +328,7 @@ namespace Piwigo\Tests\Integration {
         public function testRenderNormalizesChronologyDateToIntsAndNextPrevNavigationStillWorks(): void
         {
             $template = TemplateTestFactory::build();
-            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
+            $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), ImageStdParamsTestFactory::get(), RequestMetricsTestFactory::get(), $this->permissionService(), EntityManagerFactory::build($this->conn), new CalendarNavCachePool(CacheFactory::create(namespace: 'piwigo.calendar_nav', defaultLifetime: 30)));
 
             $result = $renderer->render(
                 section: Section::ListView,

@@ -13,8 +13,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageFilterHelper;
-use Piwigo\Core\PageState;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Filter\Request\RecentFilterRequest;
@@ -86,7 +86,7 @@ final readonly class FilterService implements FilterUpdaterInterface
      *  List of visible categories (count(visible) < count(forbidden) more often)
      * $filter['visible_images']: List of visible images
      */
-    public function initializeFromRequest(PageState $pageState, CurrentUser $currentUser): void
+    public function initializeFromRequest(LayoutState $layoutState, CurrentUser $currentUser): void
     {
         // $filter is a local scratch array for this method's own body only
         // -- the final computed values are published once, at each of this
@@ -233,7 +233,7 @@ final readonly class FilterService implements FilterUpdaterInterface
             }
             unset($filter_key);
             if ((bool) PageFilterHelper::getFilterPageValue($this->currentConfig, 'add_notes')) {
-                $pageState->addHeaderNote($this->translator->plural(
+                $layoutState->addHeaderNote($this->translator->plural(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',
                     $filter_recent_period

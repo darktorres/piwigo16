@@ -16,6 +16,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -54,6 +55,7 @@ final readonly class NbmController implements ControllerInterface
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private HtmlService $htmlService,
@@ -104,7 +106,7 @@ final readonly class NbmController implements ControllerInterface
         }
 
         $title = $this->lang->t('Notification');
-        $this->pageState->setBodyId('theNBMPage');
+        $this->layoutState->setBodyId('theNBMPage');
 
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -115,7 +117,7 @@ final readonly class NbmController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
         $template->appendOutput($this->renderer->render(new NbmView()));

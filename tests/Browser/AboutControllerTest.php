@@ -31,7 +31,7 @@ it('sets the About page title and body id', function (): void {
     // Lang::t('About Piwigo') is passed straight into PageHeaderRenderer's
     // <title> (header.latte renders "{$PAGE_TITLE} | {$GALLERY_TITLE}" --
     // assert the page-specific part only, not the configurable gallery
-    // title suffix); $this->pageState->setBodyId('theAboutPage') is
+    // title suffix); $this->layoutState->setBodyId('theAboutPage') is
     // rendered onto <body id="...">.
     $page->assertTitleContains('About Piwigo');
     $page->assertPresent('body#theAboutPage');

@@ -387,7 +387,7 @@ it('admin popuphelp content_only output returns the bare help fragment with no p
         // (the real raw response is the bare fragment with no
         // <html>/<body> at all). 'thePopuphelpPage' is the real,
         // source-level distinguishing signal instead: the controller only
-        // sets that body id -- via $this->pageState->setBodyId(...)
+        // sets that body id -- via $this->layoutState->setBodyId(...)
         // ahead of the full PageHeaderRenderer/PageTail chrome -- on the
         // non-content_only branch, so its absence here proves the "no
         // page chrome" claim this test is actually named for.

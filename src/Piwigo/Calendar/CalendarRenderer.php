@@ -22,7 +22,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
-use Piwigo\Core\PageState;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -63,7 +63,7 @@ final readonly class CalendarRenderer
         private EventDispatcher $eventDispatcher,
         private Translator $translator,
         private ImageStdParams $imageStdParams,
-        private PageState $pageState,
+        private RequestMetrics $requestMetrics,
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
         private CalendarNavCachePool $calendarNavCachePool,
@@ -118,7 +118,7 @@ final readonly class CalendarRenderer
             }
         }
 
-        TimingHelper::debug('start initialize_calendar', $this->pageState);
+        TimingHelper::debug('start initialize_calendar', $this->requestMetrics);
 
         $fields = [
             // Created
@@ -334,7 +334,7 @@ final readonly class CalendarRenderer
                 }
             }
         }
-        TimingHelper::debug('end initialize_calendar', $this->pageState);
+        TimingHelper::debug('end initialize_calendar', $this->requestMetrics);
 
         return new CalendarRenderResult($items, $comment, $page_chronology_date, $chronology_style, $chronology_view);
     }

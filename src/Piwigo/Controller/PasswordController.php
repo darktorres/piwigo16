@@ -28,6 +28,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -73,6 +74,7 @@ final class PasswordController implements ControllerInterface
         private readonly EventDispatcher $eventDispatcher,
         private readonly DeploymentPolicy $deploymentPolicy,
         private readonly PageState $pageState,
+        private readonly LayoutState $layoutState,
         private readonly CurrentUser $currentUser,
         private readonly CurrentTemplate $currentTemplate,
         private readonly ActivityService $activityService,
@@ -249,7 +251,7 @@ final class PasswordController implements ControllerInterface
             $is_first_login_value = true;
         }
 
-        $this->pageState->setBodyId('thePasswordPage');
+        $this->layoutState->setBodyId('thePasswordPage');
 
         $themeconf = $template->getTemplateVars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -304,7 +306,7 @@ final class PasswordController implements ControllerInterface
         );
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new PasswordPageRendered());
         $this->htmlService
             ->flushPageMessages();

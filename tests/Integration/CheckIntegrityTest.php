@@ -27,6 +27,7 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
@@ -145,17 +146,17 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get());
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), LayoutStateTestFactory::get());
     }
 
     public function testCheckReportsNoHeaderNoteWhenZeroAnomaliesAreFound(): void
     {
-        $before = count(PageStateTestFactory::get()->headerNotes);
+        $before = count(LayoutStateTestFactory::get()->headerNotes);
 
         $this->newCheckIntegrity()
             ->check();
 
-        self::assertCount($before, PageStateTestFactory::get()->headerNotes);
+        self::assertCount($before, LayoutStateTestFactory::get()->headerNotes);
     }
 
     public function testCheckReportsASingularHeaderNoteForExactlyOneAnomaly(): void
@@ -172,7 +173,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $this->newCheckIntegrity()
             ->check();
 
-        self::assertContains('1 anomaly has been detected.', PageStateTestFactory::get()->headerNotes);
+        self::assertContains('1 anomaly has been detected.', LayoutStateTestFactory::get()->headerNotes);
     }
 
     public function testCheckReportsAPluralHeaderNoteForMultipleAnomalies(): void
@@ -195,7 +196,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $this->newCheckIntegrity()
             ->check();
 
-        self::assertContains('2 anomalies have been detected.', PageStateTestFactory::get()->headerNotes);
+        self::assertContains('2 anomalies have been detected.', LayoutStateTestFactory::get()->headerNotes);
     }
 
     public function testCheckCorrectionModeReportsTheCorrectedCountForASuccessfulFix(): void

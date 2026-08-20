@@ -16,8 +16,10 @@ use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageService;
@@ -43,8 +45,8 @@ use Piwigo\Users\UserService;
  * orchestration — same reasoning as UserBootstrap.
  *
  * Callers reach this via PageTail::render(); the request-start instant is
- * read here from PageState, so call sites need no bootstrap variable of
- * their own.
+ * read here from RequestMetrics, so call sites need no bootstrap variable
+ * of their own.
  */
 final class PageTail
 {
@@ -60,7 +62,7 @@ final class PageTail
     {
         self::checkForUpdates();
         self::renderer()
-            ->render(self::pageState()->requestStart);
+            ->render(self::requestMetrics()->requestStart);
     }
 
     /**
@@ -76,7 +78,7 @@ final class PageTail
         self::checkForUpdates();
 
         return self::renderer()
-            ->renderToString(self::pageState()->requestStart);
+            ->renderToString(self::requestMetrics()->requestStart);
     }
 
     /**
@@ -92,7 +94,7 @@ final class PageTail
     {
         self::checkForUpdates();
         self::renderer()
-            ->prepareContext(self::pageState()->requestStart);
+            ->prepareContext(self::requestMetrics()->requestStart);
     }
 
     /**
@@ -105,7 +107,7 @@ final class PageTail
      */
     private static function renderer(): PageTailRenderer
     {
-        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest());
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::requestMetrics(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest());
     }
 
     /**
@@ -167,10 +169,9 @@ final class PageTail
     }
 
     /**
-     * Same reasoning as currentLogger()/imageStdParams() above -- PageState
-     * is only read here for its requestStart property, outside `Bootstrap/`'s
-     * own manual-construction call sites, so this is called from here
-     * rather than resolving `Kernel::container()` directly.
+     * Same reasoning as currentLogger()/imageStdParams() above --
+     * CoreUpdateService is constructed manually below, outside
+     * `Bootstrap/`'s own manual-construction call sites.
      */
     private static function pageState(): PageState
     {
@@ -180,6 +181,39 @@ final class PageTail
         }
 
         return $pageState;
+    }
+
+    /**
+     * Same reasoning as pageState() above -- PageTailRenderer is
+     * constructed manually below, outside `Bootstrap/`'s own
+     * manual-construction call sites, and reads requestStart/
+     * countQueries/queriesTime/debugOutput (P41, docs/PLAN.md's
+     * PageState split).
+     */
+    private static function requestMetrics(): RequestMetrics
+    {
+        $requestMetrics = Kernel::container()->get(RequestMetrics::class);
+        if (! $requestMetrics instanceof RequestMetrics) {
+            throw new LogicException('Container returned an unexpected type for ' . RequestMetrics::class);
+        }
+
+        return $requestMetrics;
+    }
+
+    /**
+     * Same reasoning as pageState()/requestMetrics() above -- RedirectService
+     * is constructed manually below, outside `Bootstrap/`'s own
+     * manual-construction call sites, and needs a LayoutState (P41,
+     * docs/PLAN.md's PageState split) for its own header-context build.
+     */
+    private static function layoutState(): LayoutState
+    {
+        $layoutState = Kernel::container()->get(LayoutState::class);
+        if (! $layoutState instanceof LayoutState) {
+            throw new LogicException('Container returned an unexpected type for ' . LayoutState::class);
+        }
+
+        return $layoutState;
     }
 
     /**
@@ -341,7 +375,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins(self::currentLogger()->get(), 'check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState(), self::templateRenderer()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig(), self::extensionUpdateCachePool())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), self::templateRenderer()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig(), self::extensionUpdateCachePool())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends(self::currentLogger()->get(), 'check_for_updates');

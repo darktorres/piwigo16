@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Core\TimingHelper;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\RequestMetricsTestFactory;
 
 /**
  * Piwigo\Core\TimingHelper -- had zero dedicated coverage.
@@ -82,21 +82,21 @@ test('microSeconds puts the real timestamp first and the real leading 6 fraction
  * Confirmed-equivalent: line 52's RemoveDoubleCast (`$now2_float =
  * $now[1] . '.' . $now2[1];` instead of wrapping it in `(float)`). The
  * un-cast value is only ever used in `number_format($now2_float -
- * PageStateTestFactory::get()->requestStart, ...)` -- PHP's own `-` operator
+ * RequestMetricsTestFactory::get()->requestStart, ...)` -- PHP's own `-` operator
  * already coerces a numeric string operand to a number identically to
  * an explicit cast (the same cast-redundant-with-implicit-operator-
  * coercion pattern already established elsewhere in this test suite).
  * Confirmed live: every test in this file passes identically with the
  * cast removed.
  */
-test('debug appends a formatted line with elapsed time and query count to PageState\'s debug output', function (): void {
-    PageStateTestFactory::get()->requestStart = microtime(true);
-    PageStateTestFactory::get()->countQueries = 5;
-    $before = PageStateTestFactory::get()->debugOutput;
+test('debug appends a formatted line with elapsed time and query count to RequestMetrics\'s debug output', function (): void {
+    RequestMetricsTestFactory::get()->requestStart = microtime(true);
+    RequestMetricsTestFactory::get()->countQueries = 5;
+    $before = RequestMetricsTestFactory::get()->debugOutput;
 
-    TimingHelper::debug('hello world', PageStateTestFactory::get());
+    TimingHelper::debug('hello world', RequestMetricsTestFactory::get());
 
-    $appended = substr(PageStateTestFactory::get()->debugOutput, strlen($before));
+    $appended = substr(RequestMetricsTestFactory::get()->debugOutput, strlen($before));
     expect($appended)
         ->toMatch('/^<p>\[\d+\.\d{3} s, 5 queries\] : hello world<\/p>\n$/');
 });

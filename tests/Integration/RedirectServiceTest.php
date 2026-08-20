@@ -21,7 +21,7 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\UserService;
 
@@ -147,7 +147,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirectHtml('http://example.test/target.php', 'A custom redirect message');
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirectHtml('http://example.test/target.php', 'A custom redirect message');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();
@@ -188,7 +188,7 @@ final class RedirectServiceTest extends IntegrationTestCase
 
         $body = null;
         try {
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirectHtml('http://example.test/other.php', '');
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirectHtml('http://example.test/other.php', '');
         } catch (ResponseReadyException $e) {
             $body = (string) $e->response()
                 ->getBody();
@@ -222,7 +222,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $status = null;
         $body = null;
         try {
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();

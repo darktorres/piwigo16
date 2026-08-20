@@ -33,6 +33,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -140,7 +141,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $entityManager instanceof EntityManagerInterface) {
             throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), $pluginRegistry, $themeRegistry, $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
+        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), $pluginRegistry, $themeRegistry, $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

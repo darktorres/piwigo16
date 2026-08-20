@@ -24,8 +24,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\MailerInterface;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -69,7 +69,7 @@ final readonly class RegisterController implements ControllerInterface
         private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
-        private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private UserService $userService,
@@ -244,7 +244,7 @@ final readonly class RegisterController implements ControllerInterface
         $template = $this->currentTemplate->get();
 
         $title = $this->lang->t('Registration');
-        $this->pageState->setBodyId('theRegisterPage');
+        $this->layoutState->setBodyId('theRegisterPage');
 
         $themeconf = $template->getTemplateVars('themeconf');
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
@@ -297,7 +297,7 @@ final readonly class RegisterController implements ControllerInterface
         );
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new RegisterPageRendered());
         $this->htmlService
             ->flushPageMessages();

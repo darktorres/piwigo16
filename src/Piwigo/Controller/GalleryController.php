@@ -34,6 +34,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\RedirectServiceInterface;
@@ -89,6 +90,7 @@ final readonly class GalleryController implements ControllerInterface
         private DeploymentPolicy $deploymentPolicy,
         private ImageStdParams $imageStdParams,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private SectionPopulator $sectionPopulator,
@@ -175,7 +177,7 @@ final readonly class GalleryController implements ControllerInterface
             );
         }
         if ($galleryDisplay->hasDisplayParam) {
-            $this->pageState->setMetaRobotsFlag('noindex');
+            $this->layoutState->setMetaRobotsFlag('noindex');
             if ($galleryDisplay->display !== null && array_key_exists($galleryDisplay->display, $this->imageStdParams->getDefinedTypeMap())) {
                 $this->sessionService->setSessionVar('index_deriv', $galleryDisplay->display);
             }
@@ -217,7 +219,7 @@ final readonly class GalleryController implements ControllerInterface
         $categoryCountCategories = new MenubarRenderer()
             ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger, $this->permissionService, $this->entityManager, $this->renderer);
 
-        $this->pageState->setBodyId('theCategoryPage');
+        $this->layoutState->setBodyId('theCategoryPage');
 
         $u_mode_normal = null;
         if ($section_context->flat or $section_context->chronologyField !== null) {
@@ -631,7 +633,7 @@ final readonly class GalleryController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $single_category = $section_context->section === Section::Categories ? $section_context->category : null;
         $single_category_id = is_numeric($single_category['id'] ?? null) ? (int) $single_category['id'] : null;
         $single_category_name = is_string($single_category['name'] ?? null) ? $single_category['name'] : null;

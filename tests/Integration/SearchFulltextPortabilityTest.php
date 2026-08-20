@@ -51,7 +51,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
@@ -126,7 +126,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             $permissionService,
             $categoryService,
             HtmlServiceTestFactory::build(),
-            new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
+            new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),

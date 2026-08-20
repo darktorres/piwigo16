@@ -379,29 +379,29 @@ final class Logger
      * required constructor param), and Logger itself is constructed
      * before Kernel::boot() in some contexts (CurrentLogger's own
      * pre-boot fallback), so this can't assume the container exists
-     * either. PageState's constructor is a genuinely trivial no-arg
+     * either. RequestMetrics' constructor is a genuinely trivial no-arg
      * `public function __construct() {}` (unlike ImageStdParams, which
      * eagerly queries the DB) -- a fresh, unmemoized fallback instance is
-     * safe here, only ever degrading formatMessage()'s own
-     * executionUuid/[…] correlation fields to their empty defaults.
+     * safe here, only ever degrading formatMessage()'s own executionUuid
+     * correlation field to its empty default.
      */
-    private function pageState(): PageState
+    private function requestMetrics(): RequestMetrics
     {
         if (Kernel::isBooted()) {
-            $pageState = Kernel::container()->get(PageState::class);
-            if (! $pageState instanceof PageState) {
-                throw new LogicException('Container returned an unexpected type for ' . PageState::class);
+            $requestMetrics = Kernel::container()->get(RequestMetrics::class);
+            if (! $requestMetrics instanceof RequestMetrics) {
+                throw new LogicException('Container returned an unexpected type for ' . RequestMetrics::class);
             }
 
-            return $pageState;
+            return $requestMetrics;
         }
 
-        return new PageState();
+        return new RequestMetrics();
     }
 
     /**
      * Same "container resolve, not a constructor property" reasoning as
-     * pageState() above -- used only inside open()'s own mkgetdir() call
+     * requestMetrics() above -- used only inside open()'s own mkgetdir() call
      * below. Constructing a CurrentConfig does no DB read, so a fresh,
      * unmemoized instance here is safe.
      */
@@ -433,7 +433,7 @@ final class Logger
         if ($context !== []) {
             $message .= "\n" . $this->indent($this->contextToString($context));
         }
-        $executionUuid = $this->pageState()
+        $executionUuid = $this->requestMetrics()
             ->executionUuid;
         $executionUuid = $executionUuid !== '' ? $executionUuid : 'unkonwn';
         $line = '[' . $this->getTimestamp() . '][exec=' . $executionUuid . "]\t[" . self::levelToCode($level) . "]\t";

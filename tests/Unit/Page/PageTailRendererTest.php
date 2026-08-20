@@ -11,8 +11,8 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Page\PageTailRenderer;
@@ -98,7 +98,7 @@ test('renderToString() returns the parsed footer output and always sends telemet
             $telemetrySender,
             UrlServiceTestFactory::build(),
             new EventDispatcher(),
-            new PageState(),
+            new RequestMetrics(),
             CurrentTemplateTestFactory::get(),
             $currentConfig,
             new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),

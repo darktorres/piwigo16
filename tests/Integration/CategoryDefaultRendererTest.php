@@ -32,7 +32,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\RequestMetricsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\RootPathOverride;
@@ -122,7 +122,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         }
 
         $this->buildTemplate();
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, RequestMetricsTestFactory::get());
     }
 
     #[Override]

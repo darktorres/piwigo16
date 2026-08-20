@@ -24,10 +24,10 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
+use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -80,7 +80,7 @@ final readonly class CategoryCatsRenderer
         private CurrentConfig $currentConfig,
         private Lang $lang,
         private ProcessCache $processCache,
-        private PageState $pageState,
+        private RequestMetrics $requestMetrics,
         private CategoryTreeCachePool $categoryTreeCachePool,
     ) {}
 
@@ -461,7 +461,7 @@ final readonly class CategoryCatsRenderer
             $template->assignContext(new CategoryCatsNavbarPageContext($catsNavigationBar));
         }
 
-        TimingHelper::debug('end CategoryCatsRenderer::render()', $this->pageState);
+        TimingHelper::debug('end CategoryCatsRenderer::render()', $this->requestMetrics);
 
         return $result;
     }

@@ -33,6 +33,7 @@ use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -61,9 +62,11 @@ use Piwigo\Validation\InputValidator;
  * sub-controller dispatch, and final page render -- a thin bootstrap
  * shell matching index.php's own final form.
  *
- * $this->pageState carries page_banner/body_id/nb_pending_comments/
- * no_md5sum_number/nb_orphans/nb_photos_total, consumed by
- * IntroSubController/PageHeaderRenderer/FilterPanelRenderer/SiteUpdateSubController.
+ * $this->pageState carries nb_pending_comments/no_md5sum_number/
+ * nb_orphans/nb_photos_total, consumed by IntroSubController/
+ * FilterPanelRenderer/SiteUpdateSubController. $this->layoutState carries
+ * page_banner/body_id (P41, docs/PLAN.md's PageState split), consumed by
+ * PageHeaderRenderer.
  */
 final readonly class AdminShell
 {
@@ -80,6 +83,7 @@ final readonly class AdminShell
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
         private PageState $pageState,
+        private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private CommentService $commentService,
@@ -258,8 +262,8 @@ final readonly class AdminShell
             ->validate('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         $title = $this->lang->t('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
-        $this->pageState->setPageBanner('<h1>' . $this->lang->t('Piwigo Administration') . '</h1>');
-        $this->pageState->setBodyId('theAdminPage');
+        $this->layoutState->setPageBanner('<h1>' . $this->lang->t('Piwigo Administration') . '</h1>');
+        $this->layoutState->setBodyId('theAdminPage');
 
         $u_updates = null;
         if ($this->currentConfig->enableCoreUpdate) {
@@ -467,7 +471,7 @@ final readonly class AdminShell
         ));
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
+            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
 
         $this->eventDispatcher->dispatch(new AdminShellRendered());
 

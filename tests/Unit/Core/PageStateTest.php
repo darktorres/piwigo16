@@ -29,9 +29,6 @@ test('add* methods accumulate on the instance', function (): void {
     $state->addWarning('careful');
     $state->addMessage('saved');
     $state->addInfo('fyi');
-    $state->addHeaderMessage('header msg');
-    $state->addHeaderNote('header note');
-    $state->addBodyClass('section-categories');
     $state->setBodyData('category_id', 5);
 
     expect($state->errors)
@@ -42,56 +39,12 @@ test('add* methods accumulate on the instance', function (): void {
         ->toBe(['saved'])
         ->and($state->infos)
         ->toBe(['fyi'])
-        ->and($state->headerMessages)
-        ->toBe(['header msg'])
-        ->and($state->headerNotes)
-        ->toBe(['header note'])
-        ->and($state->bodyClasses)
-        ->toBe(['section-categories'])
         ->and($state->bodyData)
         ->toBe([
             'category_id' => 5,
         ])
         ->and($state->hasErrors())
         ->toBeTrue();
-});
-
-test('addDebugOutput appends to prior debug output rather than replacing it', function (): void {
-    // Kills line 308's ConcatEqualToEqual (`=` instead of `.=`): a
-    // single call can't distinguish append from overwrite (both start
-    // from the same empty string) -- a second call is needed to prove
-    // the first line survives.
-    $state = new PageState();
-    $state->addDebugOutput('first line');
-    $state->addDebugOutput('second line');
-
-    expect($state->debugOutput)
-        ->toBe('first linesecond line');
-});
-
-test('setMetaRobots replaces the whole map, setMetaRobotsFlag adds to it', function (): void {
-    $state = new PageState();
-    $state->setMetaRobots([
-        'noindex' => 1,
-    ]);
-    $state->setMetaRobotsFlag('nofollow');
-
-    expect($state->metaRobots)
-        ->toBe([
-            'noindex' => 1,
-            'nofollow' => 1,
-        ]);
-
-    $state->setMetaRobots([
-        'noindex' => 1,
-        'nofollow' => 1,
-    ]);
-
-    expect($state->metaRobots)
-        ->toBe([
-            'noindex' => 1,
-            'nofollow' => 1,
-        ]);
 });
 
 test('setAuthKeyId sets and clears the current auth key id', function (): void {
@@ -109,17 +62,6 @@ test('setAuthKeyId sets and clears the current auth key id', function (): void {
 
     expect($state->authKeyId)
         ->toBeNull();
-});
-
-test('addQueryTime accumulates count and time', function (): void {
-    $state = new PageState();
-    $state->addQueryTime(0.5);
-    $state->addQueryTime(0.25);
-
-    expect($state->countQueries)
-        ->toBe(2)
-        ->and($state->queriesTime)
-        ->toBe(0.75);
 });
 
 test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', function (): void {
@@ -166,22 +108,10 @@ test('reset clears every property back to its constructed default', function ():
     $state->addWarning('careful');
     $state->addMessage('saved');
     $state->addInfo('fyi');
-    $state->addHeaderMessage('header msg');
-    $state->addHeaderNote('header note');
-    $state->addBodyClass('section-categories');
     $state->setBodyData('category_id', 5);
     $state->exposeData('csrf_token', 'abc123');
     $state->exposeString('Loading');
-    $state->executionUuid = 'some-uuid';
-    $state->setMetaRobots([
-        'noindex' => 1,
-    ]);
     $state->setAuthKeyId(42);
-    $state->addQueryTime(0.5);
-    $state->requestStart = 123.456;
-    $state->addDebugOutput('debug line');
-    $state->setBodyId('theBody');
-    $state->setPageBanner('My Gallery');
     $state->setNbPendingComments(3);
     $state->setNoMd5sumNumber(2);
     $state->setNbOrphans(1);
@@ -207,36 +137,14 @@ test('reset clears every property back to its constructed default', function ():
         ->toBe($fresh->messages)
         ->and($state->infos)
         ->toBe($fresh->infos)
-        ->and($state->headerMessages)
-        ->toBe($fresh->headerMessages)
-        ->and($state->headerNotes)
-        ->toBe($fresh->headerNotes)
-        ->and($state->bodyClasses)
-        ->toBe($fresh->bodyClasses)
         ->and($state->bodyData)
         ->toBe($fresh->bodyData)
         ->and($state->exposedData)
         ->toBe($fresh->exposedData)
         ->and($state->exposedStringKeys)
         ->toBe($fresh->exposedStringKeys)
-        ->and($state->executionUuid)
-        ->toBe($fresh->executionUuid)
-        ->and($state->metaRobots)
-        ->toBe($fresh->metaRobots)
         ->and($state->authKeyId)
         ->toBe($fresh->authKeyId)
-        ->and($state->countQueries)
-        ->toBe($fresh->countQueries)
-        ->and($state->queriesTime)
-        ->toBe($fresh->queriesTime)
-        ->and($state->requestStart)
-        ->toBe($fresh->requestStart)
-        ->and($state->debugOutput)
-        ->toBe($fresh->debugOutput)
-        ->and($state->bodyId)
-        ->toBe($fresh->bodyId)
-        ->and($state->pageBanner)
-        ->toBe($fresh->pageBanner)
         ->and($state->nbPendingComments)
         ->toBe($fresh->nbPendingComments)
         ->and($state->noMd5sumNumber)

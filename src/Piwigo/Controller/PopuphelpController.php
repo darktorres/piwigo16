@@ -29,14 +29,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * runs before any render logic, since it throws ResponseReadyException
  * directly on failure, the same pattern every controller here uses.
  *
- * Nothing in this chain echoes directly: PageHeaderRenderer only calls
- * assign()/parse($handle, false) internally, and
- * `$template->appendOutput($this->renderer->render(...))` accumulates
- * into Template's own $output buffer, which PageTail::renderToString()
- * drains as one string at the end. Because nothing has been echoed to
- * the Response body before that point, the `?page=` validation below
- * can throw ResponseReadyException on an invalid value with a clean 400
- * response -- there is no partial HTML to preserve.
+ * Nothing in this chain echoes directly: PageHeaderRenderer::prepareContext()
+ * only calls assignContext() internally, and
+ * `$this->renderer->render(...)` renders the whole page (header + help
+ * content + tail) in one shot, since popuphelp.latte declares
+ * {layout 'layout.latte'} (P41, docs/PLAN.md). Because nothing is
+ * rendered before that point, the `?page=` validation below can throw
+ * ResponseReadyException on an invalid value with a clean 400 response
+ * -- there is no partial HTML to preserve.
  */
 final readonly class PopuphelpController implements ControllerInterface
 {
@@ -79,7 +79,7 @@ final readonly class PopuphelpController implements ControllerInterface
             'nofollow' => 1,
         ]);
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
             throw new ResponseReadyException(ResponseFactory::text('Request rejected: invalid page parameter', 400));
@@ -95,9 +95,10 @@ final readonly class PopuphelpController implements ControllerInterface
         $help_content = $this->eventDispatcher->dispatch(new GetPopupHelpContent($help_content, $rawPage))
             ->content;
 
-        $template->appendOutput($this->renderer->render(new PopuphelpView(helpContent: $help_content)));
+        PageTail::prepareContext();
 
-        $body = PageTail::renderToString();
+        $html = $this->renderer->render(new PopuphelpView(helpContent: $help_content));
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

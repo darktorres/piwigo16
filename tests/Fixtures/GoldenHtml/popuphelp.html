@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
+
+
+    <title>Piwigo help | Fixture Gallery</title>
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="themes/default/icon/favicon.ico"
+    >
+
+    <link rel="start" title="Home" href="{{BASE_PATH}}/">
+    <link
+      rel="search"
+      title="Search"
+      href="search.php"
+    >
+
+
+
+
+
+    <!-- BEGIN get_combined -->
+    <link rel="stylesheet" type="text/css" href="_data/combined/{{HASH}}.css">
+
+    
+    <!-- END get_combined -->
+
+    <meta name="robots" content="noindex,nofollow">
+  </head>
+
+  <body
+    id="thePopuphelpPage"
+    class=""
+  >
+    <div id="the_page">
+
+      <div id="theHeader"></div>
+
+
+<div id="content" class="content">
+<div class="titrePage">
+  <ul class="categoryActions">
+    <li><a
+          href="#"
+          onclick="window.close();"
+          title="Close this window"
+          class="pwg-state-default pwg-button"
+        >
+        <span class="pwg-icon pwg-icon-close">&nbsp;</span><span
+            class="pwg-button-text"
+          >exit</span>
+      </a></li>
+  </ul>
+  <h2><span id="homeLink"><a
+          href="{{BASE_PATH}}/"
+        >Home</a> / </span>Piwigo help</h2>
+</div>
+
+<h2>Maintenance</h2>
+
+<p>To optimise page generation time Piwigo uses cached information. For example, instead of counting the number of photos contained in each album at each page reload this information is stored in the database. In theory this information should always be correct but sometimes an error can occur and cached information becomes out of date.</p>
+
+<p>Some information becomes less useful as time goes by.  Deleting this useless information from the database will save you some disk space.</p>
+
+<ul>
+	<li><strong>Delete orphan tags</strong></li>
+</ul>
+<ul>
+  <li><strong>Update albums informations:</strong> For each album, the following information is checked, and updated if necessary : list of parent albums, number of photos, last photo date, position among brother albums, position among all albums. This action also checks the representative photos consistency.</li>
+  <li><strong>Update photos information:</strong> For each photo, information updated is : full path to file, average rate. <em>Warning</em>, do not mix up: metadata information must be synchronised from <span class="pwgScreen">Administration &raquo; Tools &raquo; synchronise</span>, or on the modification screen of a single photo (through <span class="pwgScreen">Photo</span> for example).</li>
+</ul>
+<ul>
+  <li><strong>Repair and optimise the database:</strong>Perform re-order, repair and optimise operations on each table of the database.</li>
+  <li><strong>Reinitialize integrity check</strong></li>
+</ul>
+
+<ul>
+  <li><strong>Purge history details:</strong> Delete all lines from the history table. Screen <span class="pwgScreen">Administration &raquo; Tools &raquo; History</span> will not longer show information for the past history. <em>Warning:</em> all data will be lost, without any way to get them back.</li>
+  <li><strong>Purge history summary:</strong> Delete all the summary information about visit history. This summary is calculated from the history details.</li>
+  <li><strong>Purge sessions:</strong> Delete expired user sessions.</li>
+  <li><strong>Purge never used notification feeds</strong></li>
+  <li><strong>Purge searches history</strong></li>
+  <li><strong>Purge compiled templates</strong></li>  
+</ul>
+
+<p id="closeLink" class="u-hidden">
+  <a href="#" onclick="window.close();">Close this window</a>
+</p>
+
+</div> <!-- content -->
+
+      <div id="copyright">
+
+        Powered by <a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
+        
+
+      </div>    </div>    <script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+
+    <!-- BEGIN get_combined -->
+    <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
+    <!-- END get_combined -->
+
+    <script
+      type="module"
+      src="dist/vitals.js"
+    ></script>
+
+
+  </body>
+</html>

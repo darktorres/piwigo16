@@ -306,14 +306,17 @@ final class PasswordController implements ControllerInterface
         );
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new PasswordPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($formErrors);
-        $template->appendOutput($this->renderer->render($passwordView));
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($passwordView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

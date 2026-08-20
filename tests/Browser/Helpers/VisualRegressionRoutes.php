@@ -26,6 +26,7 @@ return [
     'category-2' => ['/index.php?/category/2', false],
     'random' => ['/random.php', false],
     'calendar-posted' => ['/index.php?/category/1/posted-monthly-list', false],
+    'popuphelp' => ['/popuphelp.php?page=maintenance', false],
 
     // ── Gallery (auth required) ──────────────────────────────────────────
     'favorites' => ['/index.php?/favorites', true],

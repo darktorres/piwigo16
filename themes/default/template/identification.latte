@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\IdentificationView}
+{layout 'layout.latte'}
+{block content}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
@@ -100,3 +102,4 @@
   {do combineScript(id: 'core.scripts', load: 'footer', path: 'themes/default/js/scripts.js')}
   {do footerScript("pwg_tryFocus('username');")}
 </div> <!-- content -->
+{/block}

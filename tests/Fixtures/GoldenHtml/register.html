@@ -128,115 +128,112 @@
 </div><div id="menuSwitcher"></div>
 
 <div id="registerPage">
-  <div id="content" class="content contentWithMenu">
-    <div class="titrePage">
-      <ul class="categoryActions"></ul>
-      <h2><a
+<div id="content" class="content contentWithMenu">
+  <div class="titrePage">
+    <ul class="categoryActions"></ul>
+    <h2><a
           href="{{BASE_PATH}}/"
         >Home</a> / Registration</h2>
-    </div>
+  </div>
 
 
 
-    <form
+  <form
       method="post"
       action="register.php"
       class="properties"
       name="register_form"
     >
-      <fieldset>
-        <legend>Enter your personal data</legend>
+    <fieldset>
+      <legend>Enter your personal data</legend>
 
-        <ul>
-          <li>
-            <span class="property">
-              <label for="login">* Username</label>
-            </span>
-            <input type="text" name="login" id="login" value="">
-          </li>
-          <li>
-            <span class="property">
-              <label for="password">* Password</label>
-            </span>
-            <input type="password" name="password" id="password">
-          </li>
-          <li>
-            <span class="property">
-              <label
+      <ul>
+        <li>
+          <span class="property">
+            <label for="login">* Username</label>
+          </span>
+          <input type="text" name="login" id="login" value="">
+        </li>
+        <li>
+          <span class="property">
+            <label for="password">* Password</label>
+          </span>
+          <input type="password" name="password" id="password">
+        </li>
+        <li>
+          <span class="property">
+            <label
                 for="password_conf"
               >* Confirm Password</label>
-            </span>
-            <input type="password" name="password_conf" id="password_conf">
-          </li>
-          <li>
-            <span class="property">
-              <label
+          </span>
+          <input type="password" name="password_conf" id="password_conf">
+        </li>
+        <li>
+          <span class="property">
+            <label
                 for="mail_address"
               >Email address</label>
-            </span>
-            <input
+          </span>
+          <input
               type="text"
               name="mail_address"
               id="mail_address"
               value=""
             >
-            (useful in case password is forgotten)
-          </li>
-          <li>
-            <span class="property">
-              <label
+          (useful in case password is forgotten)
+        </li>
+        <li>
+          <span class="property">
+            <label
                 for="send_password_by_mail"
               >Send my connection settings by email</label>
-            </span>
-            <input
+          </span>
+          <input
               type="checkbox"
               name="send_password_by_mail"
               id="send_password_by_mail"
               value="1"
               checked="checked"
             >
-          </li>
-        </ul>
-      </fieldset>
+        </li>
+      </ul>
+    </fieldset>
 
-      <p class="bottomButtons">
-        <input type="hidden" name="key" value="{{ANTIBOT_KEY}}">
-        <input
+    <p class="bottomButtons">
+      <input type="hidden" name="key" value="{{ANTIBOT_KEY}}">
+      <input
           class="submit"
           type="submit"
           name="submit"
           value="Register"
         >
-        <input class="submit" type="reset" value="Reset">
-      </p>
-    </form>
+      <input class="submit" type="reset" value="Reset">
+    </p>
+  </form>
 
-  </div> <!-- content -->
+</div> <!-- content -->
 </div> <!-- registerPage -->
-<div id="copyright">
 
-  Powered by <a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
-  
+      <div id="copyright">
 
-</div>
+        Powered by <a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
+        
 
-</div>
+      </div>    </div>    <script type="application/json" id="page-data">{"data":[],"strings":{"Quick search":"Quick search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
-<script type="application/json" id="page-data">{"data":[],"strings":{"Quick search":"Quick search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
-
-<!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
+    <!-- BEGIN get_combined -->
+    <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 pwg_tryFocus('login');
 //]]></script>
-<!-- END get_combined -->
+    <!-- END get_combined -->
 
-<script
-  type="module"
-  src="dist/vitals.js"
-></script>
+    <script
+      type="module"
+      src="dist/vitals.js"
+    ></script>
 
 
-</body>
+  </body>
 </html>

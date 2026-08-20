@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\ProfileView}
+{layout 'layout.latte'}
+{block content}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
@@ -12,3 +14,4 @@
 
   {$profileContent}
 </div> <!-- content -->
+{/block}

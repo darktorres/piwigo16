@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\CommentsView}
+{layout 'layout.latte'}
+{block content}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
@@ -104,3 +106,4 @@
     {$commentList}
   </div>
 </div> <!-- content -->
+{/block}

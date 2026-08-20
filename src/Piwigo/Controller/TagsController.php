@@ -212,12 +212,15 @@ final readonly class TagsController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new TagsPageRendered());
         $this->htmlService
             ->flushPageMessages();
-        $template->appendOutput($this->renderer->render($tagsView));
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($tagsView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

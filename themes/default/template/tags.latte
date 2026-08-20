@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\TagsView}
+{layout 'layout.latte'}
+{block content}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
@@ -64,3 +66,4 @@
     </tr>
   </table>
 </div> <!-- content -->
+{/block}

@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | In progress — Batch A landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`); Batches B–E + Part 2 (P41-G/H) not started (see below) | 4 |
+| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–B landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end `PageHeaderRenderer`/`PageTail` call sites); Batches C–E + Part 2 (P41-G/H) not started (see below) | 5 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -2544,11 +2544,55 @@ own manual `RedirectService` construction, and a stale
 `vendor/composer/autoload_classmap.php` entry for a class deleted in the
 same batch.
 
-**Remaining batches.** P41-B converts the 12 remaining front-end
-`PageHeaderRenderer`/`PageTail` call sites (`GalleryController` through
-`PopuphelpController`) — each already renders its own body through a
-P40-converted `View`, only the final render sequence changes.
-P41-C converts `admin.latte` itself (merging `AdminShellFramePageContext`+
+**Batch P41-B (landed)** — the 12 remaining front-end
+`PageHeaderRenderer`/`PageTail` call sites: `GalleryController`,
+`PictureController`, `CommentsController`, `TagsController`,
+`AboutController`, `IdentificationController`, `RegisterController`,
+`PasswordController`, `ProfileController`, `NotificationController`,
+`NbmController`, `PopuphelpController` (front-end). Each already
+rendered its own body through a P40-converted `View`; only the final
+render sequence changed — `PageHeaderRenderer::render()` →
+`prepareContext()`, and the old `$template->appendOutput($this->renderer
+->render($view)); $body = PageTail::renderToString();` tail →
+`PageTail::prepareContext(); $html = $this->renderer->render($view);
+$body = $template->finalizeHtml((string) $html);` — with every ambient
+side-effect call (`eventDispatcher->dispatch()`, `flushPageMessages()`,
+`flushKeyedErrors()`, `historyService->logVisit()`) kept in its original
+relative order, now running before `PageTail::prepareContext()` instead
+of before the old `PageTail::renderToString()`. Nested fragment renders
+that feed into an outer page View as a property (`ProfileFormView` →
+`ProfileView::$profileContent`, `CommentListView` →
+`CommentsView::$commentList`) stayed plain, non-`{layout}` renders —
+only the outermost page-level render per controller converts.
+`identification`/`password`/`register`/`profile` each have a real
+`themes/standard_pages/` template variant (that theme's own real 200
+alternative, not a fallback) — both variants converted independently.
+Every corresponding `.latte` file got `{layout 'layout.latte'}` added
+right after its `{templateType}` line and its whole body wrapped in
+`{block content}…{/block}`. `PictureController` additionally renders
+`SlideshowView`/`slideshow.latte` (the `lightSlideshow` config branch),
+also converted. Added `popuphelp` to
+`tests/Browser/Helpers/VisualRegressionRoutes.php` (closes that gap for
+this batch, per the plan's own Verification note). `picture` was
+considered and deliberately **not** added there: `picture.php`'s route
+already has real golden-html/VR coverage via each suite's own dedicated
+`picture-1`/`slideshow` test, kept outside the shared route array
+specifically because viewing a photo increments `images.hit` and the
+shared loop has no per-route hit-freeze — adding a second `picture`
+entry to that array would have double-counted the same state-mutating
+route non-deterministically.
+23 existing golden-html baselines changed shape (pure `{layout}`-driven
+whitespace/indentation differences — verified line-by-line: no content,
+URL, or attribute text differs anywhere) and were regenerated with
+`GOLDEN_HTML_UPDATE=1`, then reverified stable on a clean rerun; a new
+`popuphelp` baseline was captured. Full verification green: `lint:latte`
+(131 templates), `phpstan-latte:compile` + full `analyse:phpstan`,
+`deptrac analyse` (0 violations), `lint:php`, `composer test`
+(Unit+Arch, 5533 passing), `test:golden-html` (74 passing, reverified
+stable), `test:visual` (66 passing), and a scoped `test:browser` run
+across all 12 controllers' own test files (151 passing).
+
+**Remaining batches.** P41-C converts `admin.latte` itself (merging `AdminShellFramePageContext`+
 `AdminShellPostDispatchPageContext`'s nav-chrome fields into a real
 View; `AdminContentPageContext` stays ambient, written by whichever
 sub-controller ran) plus `AdminPopuphelpController`. P41-D converts

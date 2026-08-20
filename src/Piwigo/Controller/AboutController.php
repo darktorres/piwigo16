@@ -38,13 +38,13 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Renders the about page: no POST handling, no redirects.
  *
- * Nothing in this render chain echoes -- PageHeaderRenderer/MenubarRenderer
- * only ever call $template->assignContext()/parse($file, true) internally,
- * $template->appendOutput($this->renderer->render($aboutView)) accumulates
- * into Template's own $output buffer, and PageTail::renderToString() drains
- * that whole buffer (header + about content + tail) as one string. See
- * Template::fetchOutput()'s own docblock for the accumulator mechanics
- * this relies on.
+ * Nothing in this render chain echoes -- PageHeaderRenderer::prepareContext()/
+ * MenubarRenderer::render() only ever call $template->assignContext()
+ * internally; $this->renderer->render($aboutView) renders the whole page
+ * (header + about content + tail) in one shot, since about.latte declares
+ * {layout 'layout.latte'} (P41, docs/PLAN.md), and
+ * $template->finalizeHtml() runs the combined-CSS/JS/JSON-island
+ * substitution pass over the result.
  *
  * accessControl->checkStatus() throws ResponseReadyException on failure
  * (via HtmlService::accessDenied()/RedirectService::redirectHttp()/
@@ -114,11 +114,14 @@ final readonly class AboutController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->htmlService
             ->flushPageMessages();
-        $template->appendOutput($this->renderer->render($aboutView));
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($aboutView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

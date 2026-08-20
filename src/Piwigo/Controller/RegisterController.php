@@ -53,9 +53,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces register.php -- the user self-registration form + POST handler.
  * page_forbidden()/redirect() both happen before any rendering starts.
  *
- * Builds its response body via PageTail::renderToString(), the same
- * accumulator pattern AboutController uses -- see that class's own
- * docblock for the mechanics.
+ * Builds its response body via Renderer::render()+Template::finalizeHtml(),
+ * the same {layout}-based pattern AboutController uses (P41, docs/PLAN.md)
+ * -- see that class's own docblock for the mechanics.
  */
 final readonly class RegisterController implements ControllerInterface
 {
@@ -297,14 +297,17 @@ final readonly class RegisterController implements ControllerInterface
         );
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new RegisterPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($errors);
-        $template->appendOutput($this->renderer->render($registerView));
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($registerView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body, $status);
     }

@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\IndexView}
+{layout 'layout.latte'}
+{block content}
 {do combineScript(id: 'core.switchbox', load: 'async', require: 'jquery', path: 'themes/default/js/switchbox.js')}
 {do combineScript(id: 'index', load: 'footer', path: 'themes/default/js/index.js')}
 {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
@@ -324,3 +326,4 @@
   {if !empty($PLUGIN_INDEX_CONTENT_END)}{$PLUGIN_INDEX_CONTENT_END|noescape}{/if}
 </div>{* <!-- content --> *}
 {if !empty($PLUGIN_INDEX_CONTENT_AFTER)}{$PLUGIN_INDEX_CONTENT_AFTER|noescape}{/if}
+{/block}

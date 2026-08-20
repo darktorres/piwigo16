@@ -240,14 +240,17 @@ final readonly class IdentificationController implements ControllerInterface
         );
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new IdentificationPageRendered());
         $this->htmlService
             ->flushPageMessages();
         $this->htmlService
             ->flushKeyedErrors($errors);
-        $template->appendOutput($this->renderer->render($identificationView));
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($identificationView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

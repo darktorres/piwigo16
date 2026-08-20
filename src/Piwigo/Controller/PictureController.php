@@ -104,9 +104,11 @@ use RuntimeException;
  * from within this body) throw ResponseReadyException.
  *
  * The render body is flat code directly in this method: it renders a
- * `PictureView`/`SlideshowView` via `Renderer::render()` and appends the
- * result onto `Template::$output`, which `PageTail::renderToString()`
- * then drains as one string -- the same mechanism
+ * `PictureView`/`SlideshowView` via `Renderer::render()` in one shot --
+ * `picture.latte`/`slideshow.latte` both declare `{layout 'layout.latte'}`,
+ * so `PageHeaderRenderer::prepareContext()`/`PageTail::prepareContext()`
+ * only prepare ambient context, and `Template::finalizeHtml()` produces
+ * the final string -- the same mechanism
  * Controller\AboutController/PopuphelpController use.
  * $urlService/$configService keep their own local aliases, referenced
  * throughout the body, rather than $this->urlService/$this->configService
@@ -1271,7 +1273,7 @@ final readonly class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
         $this->eventDispatcher->dispatch(new PicturePageRendered($image_id));
         $this->htmlService
             ->flushPageMessages();
@@ -1343,11 +1345,6 @@ final readonly class PictureController implements ControllerInterface
             'commentList' => $commentsResult->commentList,
         ];
 
-        if ($slideshow and $this->currentConfig->lightSlideshow) {
-            $template->appendOutput($this->renderer->render(new SlideshowView(...$commonPictureViewArgs)));
-        } else {
-            $template->appendOutput($this->renderer->render(new PictureView(...$commonPictureViewArgs)));
-        }
         $current_image_id = $picture['current']['id'];
         $this->historyService
             ->logVisit(
@@ -1358,7 +1355,14 @@ final readonly class PictureController implements ControllerInterface
                 tagIds: $section_context->tagIds,
             );
 
-        $body = PageTail::renderToString();
+        PageTail::prepareContext();
+
+        if ($slideshow and $this->currentConfig->lightSlideshow) {
+            $html = $this->renderer->render(new SlideshowView(...$commonPictureViewArgs));
+        } else {
+            $html = $this->renderer->render(new PictureView(...$commonPictureViewArgs));
+        }
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

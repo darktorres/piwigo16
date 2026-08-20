@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\PictureView}
+{layout 'layout.latte'}
+{block content}
 {do combineScript(id: 'core.switchbox', load: 'async', require: 'jquery', path: 'themes/default/js/switchbox.js')}
 {do combineCss(id: 'picture', path: 'themes/default/css/pages/picture.css')}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
@@ -503,3 +505,4 @@
 
   {if !empty($PLUGIN_PICTURE_AFTER)}{$PLUGIN_PICTURE_AFTER|noescape}{/if}
 </div>
+{/block}

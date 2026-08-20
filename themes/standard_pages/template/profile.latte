@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\ProfileView}
+{layout 'layout.latte'}
+{block content}
 {do combineCss(id: 'standard_pages_css', path: "themes/standard_pages/skins/" . $STD_PGS_SELECTED_SKIN . ".css", order: 100)}
 {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 {do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -11)}
@@ -614,3 +616,4 @@
   </section>
   {include 'toaster.latte'}
 </container>
+{/block}

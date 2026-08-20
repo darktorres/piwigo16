@@ -633,7 +633,7 @@ final readonly class GalleryController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $single_category = $section_context->section === Section::Categories ? $section_context->category : null;
         $single_category_id = is_numeric($single_category['id'] ?? null) ? (int) $single_category['id'] : null;
         $single_category_name = is_string($single_category['name'] ?? null) ? $single_category['name'] : null;
@@ -673,7 +673,6 @@ final readonly class GalleryController implements ControllerInterface
             pluginIndexButtons: $template->indexButtons(),
             searchId: $searchFilterResult->data?->searchId,
         );
-        $template->appendOutput($this->renderer->render($indexView));
 
         $this->historyService
             ->logVisit(
@@ -682,7 +681,11 @@ final readonly class GalleryController implements ControllerInterface
                 tagIds: $section_context->tagIds,
                 searchId: $resolved_search_id,
             );
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($indexView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

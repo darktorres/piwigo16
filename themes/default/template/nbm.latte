@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\NbmView}
+{layout 'layout.latte'}
+{block content}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" class="content">
   <div class="titrePage">
@@ -10,3 +12,4 @@
 
   {include 'infos_errors.latte'}
 </div>
+{/block}

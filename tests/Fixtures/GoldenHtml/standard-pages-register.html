@@ -27,85 +27,86 @@
   >
     <div id="the_page">
 
+
 <container id="mode" class="light">
-  <section id="header-options">
-    <div>
-      <i
+<section id="header-options">
+  <div>
+    <i
         class="gallery-icon-moon toggle-mode"
         id="toggle_mode_light"
       ></i>
-      <i
+    <i
         class="gallery-icon-sun toggle-mode"
         id="toggle_mode_dark"
       ></i>
-    </div>
-    <div>
-      <a href="https://upstream.example.invalid/help/" target="_blank">Help</a>
-    </section>
+  </div>
+  <div>
+    <a href="https://upstream.example.invalid/help/" target="_blank">Help</a>
+  </section>
 
-  <section id="logo-section">
-    <img
+<section id="logo-section">
+  <img
         id="piwigo-logo"
         src="themes/standard_pages/images/piwigo_logo.svg"
         data-logo-light="themes/standard_pages/images/piwigo_logo.svg"
         data-logo-dark="themes/standard_pages/images/piwigo_logo_dark.svg"
       >
-  </section>
+</section>
 
-  <section id="register-form">
-    <div class="">
-      <h1 class="">
-        Create an account
-      </h1>
+<section id="register-form">
+  <div class="">
+    <h1 class="">
+      Create an account
+    </h1>
 
-      <form
+    <form
         class="properties"
         method="post"
         action="register.php"
         name="register_form"
         autocomplete="off"
       >
-        <div class="column-flex">
-          <label
+      <div class="column-flex">
+        <label
             for="mail_address"
           >Email address (useful in case password is forgotten)</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-user-2"></i>
-            <input
+        <div class="row-flex input-container">
+          <i class="gallery-icon-user-2"></i>
+          <input
               type="email"
               name="mail_address"
               id="login"
               value=""
               
             >
-          </div>
-          <p class="error-message"><i
+        </div>
+        <p class="error-message"><i
               class="gallery-icon-attention-circled"
             ></i> must not be empty</p>
-        </div>
+      </div>
 
-        <div class="column-flex">
-          <label for="username">Username</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-user-2"></i>
-            <input
+      <div class="column-flex">
+        <label for="username">Username</label>
+        <div class="row-flex input-container">
+          <i class="gallery-icon-user-2"></i>
+          <input
               type="text"
               name="login"
               id="login"
               value=""
               data-required="true"
             >
-          </div>
-          <p class="error-message"><i
+        </div>
+        <p class="error-message"><i
               class="gallery-icon-attention-circled"
             ></i> must not be empty</p>
-        </div>
+      </div>
 
-        <div class="column-flex">
-          <label for="password">Password</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
+      <div class="column-flex">
+        <label for="password">Password</label>
+        <div class="row-flex input-container">
+          <i class="gallery-icon-lock"></i>
+          <input
               type="password"
               class=""
               name="password"
@@ -113,18 +114,18 @@
               size="25"
               data-required="true"
             >
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
+          <i class="gallery-icon-eye togglePassword"></i>
+        </div>
+        <p class="error-message"><i
               class="gallery-icon-attention-circled"
             ></i> must not be empty</p>
-        </div>
+      </div>
 
-        <div class="column-flex">
-          <label for="password">Confirm Password</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
+      <div class="column-flex">
+        <label for="password">Confirm Password</label>
+        <div class="row-flex input-container">
+          <i class="gallery-icon-lock"></i>
+          <input
               type="password"
               class=""
               name="password_conf"
@@ -132,43 +133,43 @@
               size="25"
               data-required="true"
             >
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
+          <i class="gallery-icon-eye togglePassword"></i>
+        </div>
+        <p class="error-message"><i
               class="gallery-icon-attention-circled"
             ></i> must not be empty</p>
-        </div>
+      </div>
 
-        <div class="column-flex">
-          <input type="hidden" name="key" value="{{ANTIBOT_KEY}}">
-          <input
+      <div class="column-flex">
+        <input type="hidden" name="key" value="{{ANTIBOT_KEY}}">
+        <input
             tabindex="4"
             type="submit"
             name="submit"
             value="Register"
             class="btn btn-main "
           >
-        </div>
-      </form>
+      </div>
+    </form>
 
-      <div class="secondary-links">
-        <p>Already have an account? <a
+    <div class="secondary-links">
+      <p>Already have an account? <a
             href="identification.php"
             title="Sign in"
           >Sign in</a></p>
-      </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <a href="index.php" id="return-to-gallery"><i
+<a href="index.php" id="return-to-gallery"><i
       class="gallery-icon-left"
     ></i> Return to the gallery</a>
 
 </container>
-<script type="application/json" id="page-data">{"data":[],"strings":{"Quick search":"Quick search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+    <script type="application/json" id="page-data">{"data":[],"strings":{"Quick search":"Quick search","Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
-<!-- BEGIN get_combined -->
-<script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
+    <!-- BEGIN get_combined -->
+    <script type="text/javascript" src="_data/combined/{{HASH}}.js"></script>
 <script type="text/javascript">
 (function() {
 var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
@@ -176,12 +177,12 @@ s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.sr
 after = after.parentNode.insertBefore(s, after);
 })();
 </script>
-<!-- END get_combined -->
+    <!-- END get_combined -->
 
-<script
-  type="module"
-  src="dist/vitals.js"
-></script>
+    <script
+      type="module"
+      src="dist/vitals.js"
+    ></script>
 
-</body>
+  </body>
 </html>

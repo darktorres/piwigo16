@@ -638,7 +638,7 @@ final readonly class CommentsController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatch(new CommentsPageRendered());
         $this->htmlService
             ->flushPageMessages();
@@ -665,8 +665,11 @@ final readonly class CommentsController implements ControllerInterface
             categoriesSelected: $categoriesOptions->selected,
             commentList: $commentList,
         );
-        $template->appendOutput($this->renderer->render($commentsView));
-        $body = PageTail::renderToString();
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($commentsView);
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

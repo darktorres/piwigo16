@@ -1,4 +1,6 @@
 {templateType Piwigo\Controller\Projection\RegisterView}
+{layout 'layout.latte'}
+{block content}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="registerPage">
   <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
@@ -90,3 +92,4 @@
     {do footerScript("pwg_tryFocus('login');")}
   </div> <!-- content -->
 </div> <!-- registerPage -->
+{/block}

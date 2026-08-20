@@ -231,7 +231,7 @@ final readonly class ProfileController implements ControllerInterface
         }
 
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
 
         // Get list of languages
         $language_options = [];
@@ -249,7 +249,10 @@ final readonly class ProfileController implements ControllerInterface
         $this->eventDispatcher->dispatch(new ProfilePageRendered());
         $this->htmlService
             ->flushPageMessages();
-        $template->appendOutput($this->renderer->render(new ProfileView(
+
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render(new ProfileView(
             profileContent: $profileContent,
             username: $formData->username,
             email: $formData->email?->value,
@@ -274,8 +277,8 @@ final readonly class ProfileController implements ControllerInterface
             apiExpiration: $formData->apiExpiration,
             apiCurrentDate: $formData->apiCurrentDate,
             apiEmailInfos: $formData->apiEmailInfos,
-        )));
-        $body = PageTail::renderToString();
+        ));
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

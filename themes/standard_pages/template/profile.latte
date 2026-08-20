@@ -1,34 +1,6 @@
 {templateType Piwigo\Controller\Projection\ProfileView}
 {layout 'layout.latte'}
 {block content}
-{do combineCss(id: 'standard_pages_css', path: "themes/standard_pages/skins/" . $STD_PGS_SELECTED_SKIN . ".css", order: 100)}
-{do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
-{do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -11)}
-{do combineCss(id: 'profile', path: 'themes/standard_pages/css/pages/profile.css')}
-
-{do combineScript(id: 'standard_pages_js', load: 'async', require: 'jquery', path: 'themes/standard_pages/js/standard_pages.js')}
-{do combineScript(id: 'standard_profile_js', load: 'footer', require: 'jquery,page-data', path: 'themes/standard_pages/js/profile.js')}
-{do combineScript(id: 'common', load: 'footer', require: 'jquery', path: 'themes/admin/default/js/common.js')}
-{do exposeData('username', $username)}
-{do exposeData('email', $email)}
-{do exposeData('allow_user_customization', $allowUserCustomization)}
-{do exposeData('can_update_password', !$specialUser)}
-{do exposeData('default_user_values', $defaultUserValues)}
-{do exposeData('selected_date', (string) $apiSelectedExpiration)}
-{do exposeData('api_can_manage', $apiCanManage)}
-{do exposeString('ID copied.')}
-{do exposeString('Secret copied. Keep it in a safe place.')}
-{do exposeString('Impossible to copy automatically. Please copy manually.')}
-{do exposeString('The api key has been successfully created.')}
-{do exposeString('Show expired keys')}
-{do exposeString('Hide expired keys')}
-{do exposeString('An error has occured')}
-{do exposeString('Your changes have been applied.')}
-{do exposeString('Do you really want to revoke the "%s" API key?')}
-{do exposeString('API Key has been successfully revoked.')}
-{do exposeString('API Key has been successfully edited.')}
-{do exposeString('right now')}
-
 <container id="mode" class="light">
   <section id="header-options">
     <div>

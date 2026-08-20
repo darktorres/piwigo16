@@ -277,6 +277,8 @@ final readonly class ProfileController implements ControllerInterface
             apiExpiration: $formData->apiExpiration,
             apiCurrentDate: $formData->apiCurrentDate,
             apiEmailInfos: $formData->apiEmailInfos,
+            isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
+            standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
         ));
         $body = $template->finalizeHtml((string) $html);
 

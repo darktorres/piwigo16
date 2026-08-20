@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Latte\Runtime\Html;
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
+use Piwigo\Template\Projection\ToasterView;
 
 /**
  * `profile.latte`'s own typed view, constructed by {@see
@@ -23,9 +29,12 @@ use Piwigo\Template\Latte\Attribute\Template;
  * ProfileFormView}'s own form-submission-scoped ones -- the two renders
  * genuinely use different data, matching what each template's own body
  * has always reflected at its own distinct point in the request.
+ * `$isStandardPagesTheme`/`$standardPagesSelectedSkin` disambiguate
+ * `pageAssets()` the same way `IdentificationView`'s own do -- the
+ * default theme's own template has zero registration calls of its own.
  */
 #[Template('profile.latte')]
-final readonly class ProfileView implements View
+final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, mixed> $defaultUserValues
@@ -57,5 +66,80 @@ final readonly class ProfileView implements View
         public array $apiExpiration,
         public string $apiCurrentDate,
         public string $apiEmailInfos,
+        public bool $isStandardPagesTheme,
+        public string $standardPagesSelectedSkin,
     ) {}
+
+    /**
+     * `standard_pages/profile.latte`'s own unconditional
+     * `{do combineCss(...)}`x4/`{do combineScript(...)}`x3, plus
+     * `{include 'toaster.latte'}`'s own contract-only `ToasterView`
+     * merged in -- the default theme's own template has zero
+     * registration calls of its own (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        if (! $this->isStandardPagesTheme) {
+            return [];
+        }
+
+        return [
+            AssetContribution::css('themes/standard_pages/skins/' . $this->standardPagesSelectedSkin . '.css', id: 'standard_pages_css', order: 100),
+            AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
+            AssetContribution::css('themes/admin/default/fontello/css/fontello.css', order: -11),
+            AssetContribution::css('themes/standard_pages/css/pages/profile.css', id: 'profile'),
+            AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('standard_profile_js', 'themes/standard_pages/js/profile.js', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            ...new ToasterView()
+                ->pageAssets(),
+        ];
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        if (! $this->isStandardPagesTheme) {
+            return [];
+        }
+
+        return [
+            'username' => $this->username,
+            'email' => $this->email,
+            'allow_user_customization' => $this->allowUserCustomization,
+            'can_update_password' => ! $this->specialUser,
+            'default_user_values' => $this->defaultUserValues,
+            'selected_date' => (string) $this->apiSelectedExpiration,
+            'api_can_manage' => $this->apiCanManage,
+        ];
+    }
+
+    /**
+     * `standard_pages/profile.latte`'s own unconditional
+     * `{do exposeString(...)}`x12 -- the default theme's own template
+     * has zero registration calls of its own (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        if (! $this->isStandardPagesTheme) {
+            return [];
+        }
+
+        return [
+            'ID copied.',
+            'Secret copied. Keep it in a safe place.',
+            'Impossible to copy automatically. Please copy manually.',
+            'The api key has been successfully created.',
+            'Show expired keys',
+            'Hide expired keys',
+            'An error has occured',
+            'Your changes have been applied.',
+            'Do you really want to revoke the "%s" API key?',
+            'API Key has been successfully revoked.',
+            'API Key has been successfully edited.',
+            'right now',
+        ];
+    }
 }

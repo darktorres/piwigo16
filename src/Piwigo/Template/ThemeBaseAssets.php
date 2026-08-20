@@ -27,6 +27,33 @@ use Piwigo\Asset\LoadMode;
  * `header`). One class with 3 named methods, not a false single shared
  * shape forced across all 3 -- matches this campaign's own "don't bundle
  * genuinely independent concerns" reasoning elsewhere.
+ *
+ * The `page-data` script registration (P42-B) is identical, static,
+ * and unconditional across all 3 real `layout.latte` files, but is
+ * deliberately NOT folded in here -- unlike every other entry, its
+ * original imperative call sat at the very tail of each
+ * `layout.latte` (right before `{=getPageDataScript()}`), executing
+ * only after every nested partial (menubar, thumbnails, ...) already
+ * registered its own same-priority scripts. Registering it here, at
+ * theme-init time, would insert it *first* among same-priority ties
+ * instead of last, reordering `PageAssets::resolveScripts()`'s stable
+ * tie-break (`docs/PLAN.md`'s P42 "real ordering risk" section) and
+ * breaking golden-html byte-identity. `Template::finalizeHtml()`
+ * registers `page-data` itself, immediately before the one real
+ * `resolveScripts()` call, which is the correct last-insertion
+ * point -- see that method's own comment. `admin`'s own
+ * `jquery.tipTip`/`footer` registrations sat at that identical tail
+ * position too, so they're pulled into `lateAdminScripts()` below
+ * instead of `forAdminLayout()` -- same reasoning, same fix, not
+ * folded in eagerly. Its 2 `exposeData()` calls
+ * (`whats_new_major_version`/`show_whats_new`) sat there as well
+ * (right alongside `jquery.tipTip`) -- also moved to a late call,
+ * from `AdminShell::runDispatch()` itself (after
+ * `Renderer::render()` returns, before `finalizeHtml()`), since
+ * they're genuinely per-request data with no page-level View to
+ * attach `ExposesPageData` to (the shell layout itself is never a
+ * `Renderer::render()` target) and only `AdminShell` has the real
+ * values to expose.
  */
 final readonly class ThemeBaseAssets
 {
@@ -61,6 +88,25 @@ final readonly class ThemeBaseAssets
         $assets[] = AssetContribution::script('jquery', 'themes/default/js/jquery.min.js');
 
         return $assets;
+    }
+
+    /**
+     * `jquery.tipTip`/`footer` -- admin-only, and, like `page-data`
+     * above, deliberately excluded from `forAdminLayout()`'s own eager
+     * theme-init registration for the identical reason: both sat at
+     * the very tail of `layout.latte` originally, after every
+     * page-specific script already registered. `Template::finalizeHtml()`
+     * calls this alongside its own `page-data` registration, for admin
+     * layouts only, at that same last-insertion point.
+     *
+     * @return list<AssetContribution>
+     */
+    public static function lateAdminScripts(): array
+    {
+        return [
+            AssetContribution::script('jquery.tipTip', 'themes/default/js/plugins/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('footer', 'themes/admin/default/js/footer.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.tipTip', 'page-data']),
+        ];
     }
 
     /**

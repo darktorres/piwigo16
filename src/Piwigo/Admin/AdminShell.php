@@ -509,6 +509,19 @@ final readonly class AdminShell
         PageTail::prepareContext();
 
         $html = $this->renderer->render($adminShellView);
+
+        // Genuinely per-request shell data with no page-level View to
+        // attach ExposesPageData to (layout.latte is never a
+        // Renderer::render() target) -- a narrow, explicitly-documented
+        // exception (docs/PLAN.md's P42-B, ThemeBaseAssets's own
+        // docblock). Registered here, after render() and right before
+        // finalizeHtml()'s own JSON-island build, matching the original
+        // imperative calls' tail position in layout.latte -- registering
+        // earlier would insert these 2 keys first in the JSON island's
+        // `data` object instead of last.
+        $template->exposeData('whats_new_major_version', $whats_new_major_version);
+        $template->exposeData('show_whats_new', $show_whats_new);
+
         $body = $template->finalizeHtml((string) $html);
 
         echo $body;

@@ -3235,6 +3235,59 @@ page views" artifact on `random`/`calendar-posted`/`favorites`
 (individually clean, only drifts when the whole suite runs in one
 process back-to-back -- left alone, not a real baseline defect).
 
+Migrated `UserListView` (`themes/admin/default/template/user_list.latte`,
+81 call sites -- 12 `pageAssets()` entries, 13 `exposedPageData()`
+passthroughs, 53 `exposedStrings()` literals verified byte-for-byte
+against the original via a programmatic extract-and-diff, catching and
+fixing one curly-quote transcription error) -- **52 pages/Views landed
+so far, ~493 of 945 call sites**. The captured `{capture
+$tmpFooterScript}...{do footerScript(...)}` block (100% static JS, zero
+interpolation) moved verbatim into the tail of
+`themes/admin/default/js/user_list.js`, the file the page's own
+`combineScript(id: 'user_list', ...)` call already registers, rather
+than becoming page data.
+
+**Layout-shells batch**: the 3 real `layout.latte` files' own
+remaining unconditional tail calls -- `page-data` (all 3, 1 call
+site each) plus admin's own `jquery.tipTip`/2 `exposeData()`
+(`whats_new_major_version`/`show_whats_new`)/`footer` (4 more call
+sites, admin only) -- **7 call sites, ~500 of 945 total**. None of
+these have a page-level View to attach to (`layout.latte` is never a
+`Renderer::render()` target), so none add to the pages/Views count.
+Resolved as 2 pieces: `ThemeBaseAssets::lateAdminScripts()` (new
+method, admin-only `jquery.tipTip`/`footer`) plus `page-data` itself,
+both registered from `Template::finalizeHtml()` -- deliberately *not*
+folded into `ThemeBaseAssets`'s own eager theme-init dispatch, despite
+being static and theme-wide like everything else there. Every one of
+these 4 originally sat at `layout.latte`'s own tail, executing only
+after every page-specific and nested-partial script had already
+registered; eager theme-init registration inserted them *first*
+instead, reordering `PageAssets::resolveScripts()`'s same-priority
+tie-break (this section's own "real ordering risk" concern, hit for
+real, not just theoretically) -- caught via a first-ever full-suite
+`test:golden-html` run showing 62 failures, root-caused to this
+insertion-order swap rather than accepted-and-regenerated blindly.
+`AdminShell::runDispatch()`'s 2 `exposeData()` calls moved the same
+way, from before `Renderer::render()` to right after it (before
+`finalizeHtml()`), to preserve the JSON island's original key order.
+A second real bug caught during the same investigation:
+`InstallWizard`'s separately-rooted `Template` never calls
+`setTheme()`'s theme-base path at all (`$path !== 'template'`) and
+never wanted `page-data.js` loaded -- an unconditional
+`finalizeHtml()` registration would have added it anyway. Fixed via a
+new `$themeBaseApplied` guard flag, set only when
+`applyThemeBaseAssets()` actually runs past its own early return.
+Full-suite `test:golden-html` re-run confirmed clean afterward (74/74
+pass); 3 further real, pre-existing baseline gaps unrelated to this
+batch (`random`/`calendar-posted`/`favorites` missing the
+`CommentListView`/`ThumbnailsView` widening from an earlier commit,
+confirmed via `git stash` to reproduce with this batch's changes
+removed too) were closed in the same regeneration pass;
+`admin-dashboard`'s non-deterministic activity/login counts and the
+already-documented `admin-config-search` `filters_names` drift were
+deliberately left untouched (`git checkout --` on just those 2
+baseline files after the batch regeneration).
+
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign
 (124 commits, 614 files, `$array['field']` access converted to typed

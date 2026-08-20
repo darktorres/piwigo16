@@ -155,6 +155,28 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     private bool $localHeadResolved = false;
 
     /**
+     * Set by `applyThemeBaseAssets()` (docs/PLAN.md's P42) -- lets
+     * `finalizeHtml()` know whether to also register
+     * `ThemeBaseAssets::lateAdminScripts()` alongside its own `page-data`
+     * registration; both sat at `layout.latte`'s own tail originally,
+     * admin-only, so this flag scopes that lazy registration correctly
+     * instead of adding admin-only scripts on every theme family.
+     */
+    private bool $isAdminLayout = false;
+
+    /**
+     * Set by `applyThemeBaseAssets()` -- true only when this instance is
+     * rendering one of the 3 real `layout.latte` families (that method's
+     * own `$path !== 'template'` early return skips it otherwise, e.g.
+     * `InstallWizard`'s separately-rooted `Template`, which has no
+     * `{=getPageDataScript()}`/`page-data` script call at all). Gates
+     * `finalizeHtml()`'s own lazy `page-data` registration below --
+     * unconditional there would add `page-data.js` to a page family
+     * that never wanted it.
+     */
+    private bool $themeBaseApplied = false;
+
+    /**
      * docs/PLAN.md's P37 -- backfilled in finalizeOutput() the same way
      * as COMBINED_SCRIPTS_TAG/COMBINED_CSS_TAG above, but via a plain
      * `str_replace()` (CSS's own shape, not scripts' `didHead()`-guarded
@@ -544,8 +566,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             return;
         }
 
+        $this->themeBaseApplied = true;
+
         $isAdmin = str_ends_with($root, 'themes/admin');
         $isStandardPages = ! $isAdmin && $themes !== [] && ($themes[array_key_last($themes)]['id'] ?? null) === 'standard_pages';
+        $this->isAdminLayout = $isAdmin;
 
         if ($isAdmin) {
             $assets = ThemeBaseAssets::forAdminLayout($themes);
@@ -819,6 +844,26 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     {
         if (! $this->scriptsResolved) {
             $this->scriptsResolved = true;
+
+            // Registered here, not in `ThemeBaseAssets` (docs/PLAN.md's
+            // P42), so both insert *last* among same-priority scripts --
+            // matching every real `layout.latte`'s own original
+            // imperative call order, right before this same resolution --
+            // see `ThemeBaseAssets`'s own class docblock for why theme-
+            // init timing would reorder same-priority ties instead.
+            // `jquery.tipTip` before `page-data`: admin's own original
+            // tail literally called `combineScript('jquery.tipTip', ...)`
+            // before `combineScript('page-data', ...)`, and same-rank
+            // ties break by insertion order.
+            if ($this->themeBaseApplied) {
+                if ($this->isAdminLayout) {
+                    foreach (ThemeBaseAssets::lateAdminScripts() as $lateAsset) {
+                        $this->pageAssets->add($lateAsset);
+                    }
+                }
+                $this->pageAssets->add(AssetContribution::script('page-data', 'themes/default/js/page-data.js', loadMode: LoadMode::Footer));
+            }
+
             $scripts = $this->pageAssets->resolveScripts();
 
             $pos = strpos($html, self::COMBINED_SCRIPTS_TAG);

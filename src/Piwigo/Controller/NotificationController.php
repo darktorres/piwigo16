@@ -104,6 +104,8 @@ final readonly class NotificationController implements ControllerInterface
         $notificationView = new NotificationView(
             feedUrl: $feed_url,
             feedImageOnlyUrl: $feed_image_only_url,
+            feedImageOnlyTitle: $this->lang->t('Photos only RSS feed'),
+            feedTitle: $this->lang->t('Complete RSS feed (photos, comments)'),
         );
 
         $themeconf = $template->getTemplateVars('themeconf');

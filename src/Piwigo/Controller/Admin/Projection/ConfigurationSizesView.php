@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -20,7 +25,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * template's own body never references it.
  */
 #[Template('configuration_sizes.latte')]
-final readonly class ConfigurationSizesView implements View
+final readonly class ConfigurationSizesView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, mixed>|null $sizes
@@ -38,4 +43,46 @@ final readonly class ConfigurationSizesView implements View
         public int $isWebmaster,
         public string $csrfToken,
     ) {}
+
+    /**
+     * `configuration_sizes.latte`'s own unconditional
+     * `{do combineScript(...)}`x2/`{do combineCss(...)}`x2 (docs/PLAN.md's
+     * P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('configuration_sizes', 'themes/admin/default/js/configuration_sizes.js', loadMode: LoadMode::Footer, dependsOn: ['common', 'jquery.confirm', 'page-data']),
+            AssetContribution::css('themes/admin/default/css/pages/configuration_sizes.css', id: 'configuration_sizes'),
+        ];
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * `configuration_sizes.latte`'s own unconditional `{do exposeString(...)}`x7
+     * (docs/PLAN.md's P42-B) -- `'Yes, I am sure'`/`'No, I have changed
+     * my mind'` are dropped outright, not ported here: 2 of the 3
+     * theme-base confirm-dialog strings `ThemeBaseAssets` already
+     * registers unconditionally for every page.
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Are you sure you want to restore to default settings?',
+            'Maximum width',
+            'Width',
+            'Maximum height',
+            'Height',
+        ];
+    }
 }

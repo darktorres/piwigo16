@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -16,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * either).
  */
 #[Template('cat_list.latte')]
-final readonly class CatListView implements View
+final readonly class CatListView implements View, HasPageAssets
 {
     /**
      * @param list<array<string, mixed>> $categories
@@ -27,4 +31,19 @@ final readonly class CatListView implements View
         public string $csrfToken,
         public array $categories,
     ) {}
+
+    /**
+     * `cat_list.latte`'s own unconditional `{do combineScript(...)}`x3/
+     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('alternativeView', 'themes/admin/default/js/cat_list.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.cookie', 'themes/default/js/jquery.cookie.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/admin/default/css/pages/cat_list.css', id: 'cat_list'),
+        ];
+    }
 }

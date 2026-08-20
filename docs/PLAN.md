@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) + Batch 4 (picture page's 6 remaining ambient fragments) + Batch 5 (check_integrity/no_photo_yet/popuphelp small fragments) + Batch 6 (thumbnails/mainpage_categories/search_filters index.latte fragments; SectionFavoritePageContext confirmed a permanent-ambient exclusion, not a missed item) landed and fully validated (phpstan/lint:latte/lint:php/golden-html/visual-regression/relevant integration+browser suites all green; real regressions found and fixed along the way); Batches 7–9 scoped (menubar, tabsheet, calendar), not yet executed; mail domain identified as an unphased gap | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batches 1–6 landed and fully validated (see below); Batches 7–9 (menubar, tabsheet, calendar) + the 3 include-only-partials contract-only conversions (navigation_bar/picture_nav_buttons/infos_errors) also landed, verified with `php -l`/`phpstan-latte:compile`/scoped `composer analyse:phpstan` (0 errors throughout) but the full `composer test`/`test:golden-html`/`test:visual` suite is still an owed checkpoint for this span; mail domain identified as an unphased gap | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -2107,7 +2107,76 @@ all green (two confirmed-unrelated single-test flakes along the way,
 both non-reproducing in isolation, matching this session's established
 flaky-test handling).
 
-**Batch 7 — Menubar, smaller than it first looked.** Only 2 real call
+**Batches 7–9 and the include-only-partials open question (landed).**
+All four landed in the same "keep pushing, no validation" push: full
+`composer test`/`test:golden-html`/`test:visual` validation is a
+still-owed checkpoint for this whole span (Batches 7–9 + the 3
+contract-only conversions), same as Batch 4's own precedent of
+deferring the expensive suite while iterating fast on `php -l` +
+scoped `composer analyse:phpstan` + `phpstan-latte:compile` per
+change.
+
+- **Batch 7 (Menubar)**: `Piwigo\Menu\*` is L3Presentation (may depend
+  on `Renderer`/`View` directly, unlike the L2a/L2b split Batch 6
+  needed) — `BlockManager::apply()` renders `menubar.latte` itself via
+  a new `MenubarView`, dropping its now-meaningless `$var`/`$file`
+  params (exactly 1 real caller, `MenubarRenderer::render()`, always
+  `'MENUBAR'`/`'menubar.latte'`). The 7 real sub-block templates
+  (`menubar_links.latte`, etc.) are contract-only conversions sharing
+  one `MenubarBlockView` (`block: DisplayBlock, id: string`) — reached
+  only via `menubar.latte`'s own native `{include $block->template,
+  block: ..., id: ...}`, never `Renderer::render()`. `BlockManager`'s
+  new `Renderer` dependency threaded through `MenubarRenderer::render()`
+  (11 real Controller call sites) and `MenubarPageRenderer::render()`.
+  Deleted the now-dead `MenubarBlocksPageContext` + its test.
+- **Batch 8 (Tabsheet)**: same L4Integration-may-depend-on-L3 shape —
+  `Tabsheet::assign()` renders `tabsheet.latte` via a new
+  `TabsheetView`, writing the `Html` into `Template::$vars` under
+  `Tabsheet::$name`'s own genuinely-dynamic ambient key (kept dynamic,
+  not hardcoded, even though all 29 real `new Tabsheet(...)` call
+  sites use the bare no-args constructor — same judgment
+  `TabsheetPageContext` already made for `$titlename`, the one field
+  it still carries). Threading the new `Renderer` param through all 29
+  call sites caught a real bug: a first mechanical pass wired 4 sites
+  (`CatListPageRenderer`/`CatOptionsPageRenderer`/
+  `GroupListPageRenderer`/`TagsPageRenderer`) with a bare `$renderer`
+  instead of their own `$this->renderer` property — an
+  undefined-variable error PHPStan caught before it ever ran.
+  `TemplateCallSiteScannerTest`'s admin-scoping test lost its last
+  real fixture (P40's admin sweep across Batches 3/5/7/8 converted
+  every real `Piwigo\Admin\*` `assignVarFromTemplate()`/`parse()` call
+  site in the repository) — rebuilt synthetically, matching the same
+  test file's own "widens to the full tree" precedent.
+- **Batch 9 (Calendar)**: `month_calendar.latte` is never rendered via
+  `Renderer::render()` at all — `CalendarRenderer` only passes its
+  filename as a string (`CalendarChronologyPageContext::
+  $fileChronologyView`), which `index.latte`'s own body turns into a
+  bare `{include $FILE_CHRONOLOGY_VIEW}` (full parent-scope
+  inheritance). Contract-only `MonthCalendarView`, with a real
+  wrinkle: its property names stay **snake_case**
+  (`chronology_calendar`, `chronology_navigation_bars`), matching the
+  actual ambient `Template::$vars` keys verbatim — inherited-scope
+  names can't be renamed without touching the classes that assign
+  them, unlike a real View's `get_object_vars()` merge.
+- **Include-only partials** (the prior turn's own open question,
+  resolved and landed): `navigation_bar.latte` (both theme variants,
+  one shared `NavigationBarView` — 11 real call sites, 10 pass
+  `navbar: $x` explicitly, `comments.latte`'s own one bare `{include}`
+  relies on inherited scope from `CommentsView::$navbar` instead, same
+  single dependency either way), `picture_nav_buttons.latte`
+  (`PictureNavButtonsView`, all 7 fields already on both
+  `PictureView`/`SlideshowView`), `infos_errors.latte`
+  (`InfosErrorsView`, fed by the cross-cutting ambient
+  `PageMessagesContext`, not tied to any one page's View). All 3 are
+  contract-only, same shape as `MenubarBlockView`.
+
+Every one of these ~10 new/touched View-adjacent classes was verified
+with `php -l`, a full `phpstan-latte:compile`, and a scoped `composer
+analyse:phpstan` on every touched PHP file — 0 errors throughout. The
+full `composer test`/`test:golden-html`/`test:visual` suite is the one
+piece still owed before this span can be called fully closed out.
+
+**Batch 7 (landed) — Menubar, smaller than it first looked.** Only 2 real call
 sites construct a `BlockManager` at all (`Menu\MenubarRenderer`, the
 front-end menubar; `Admin\MenubarPageRenderer`, the admin menu editor),
 both routing through the single `BlockManager::apply()` method — that
@@ -2139,7 +2208,7 @@ design (genuinely polymorphic per block type), so confirm what shape
 it actually holds for the identification block specifically before
 assuming it folds the same simple way.
 
-**Batch 8 — Tabsheet, same shape as menubar.** `Tabsheet::assign()`
+**Batch 8 (landed) — Tabsheet, same shape as menubar.** `Tabsheet::assign()`
 is the single choke point (constructing `new Tabsheet(...)` happens at
 29 call sites, but they all just call `->assign($currentTemplate)` —
 none of them touch template rendering directly). `tabsheet.latte`'s
@@ -2152,7 +2221,7 @@ takes a `$name` that defaults to `'TABSHEET'` but is caller
 the 29 call sites actually override it away from the default before
 assuming every call site's output lands in the same well-known var.
 
-**Batch 9 — Calendar.** `month_calendar.latte` is never rendered via
+**Batch 9 (landed) — Calendar.** `month_calendar.latte` is never rendered via
 `Template::parse()`/`assignVarFromTemplate()` at all —
 `CalendarRenderer` only ever passes its filename as a **string value**
 (`CalendarChronologyPageContext::$fileChronologyView`), which whatever
@@ -2163,7 +2232,7 @@ Convert the same way: `{templateType MonthCalendarView}` on the
 template, no `Renderer::render()` call needed from `CalendarRenderer`
 itself.
 
-**Resolved open question: `{templateType}` on include-only partials.**
+**Resolved open question (landed): `{templateType}` on include-only partials.**
 Last turn's scoping flagged this as unresolved for
 `navigation_bar.latte`/`picture_nav_buttons.latte`/`infos_errors.latte`.
 Checked directly: `navigation_bar.latte`'s real body only references

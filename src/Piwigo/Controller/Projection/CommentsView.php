@@ -16,8 +16,9 @@ use Piwigo\Template\Latte\Attribute\Template;
  * unwrapped here rather than kept as a nested object -- `comments.latte`
  * reads both as plain arrays via `htmlOptions(...)`. `$commentList`
  * stays nullable: the template guards it with `isset()`, and the
- * controller only ever renders a real `CommentListView` when there is at
- * least one comment.
+ * controller only ever renders a real {@see
+ * \Piwigo\Picture\Projection\CommentListView} when there is at least
+ * one comment.
  */
 #[Template('comments.latte')]
 final readonly class CommentsView implements View

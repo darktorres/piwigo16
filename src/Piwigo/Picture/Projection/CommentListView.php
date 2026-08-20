@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Controller\Projection;
+namespace Piwigo\Picture\Projection;
 
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
@@ -13,7 +13,12 @@ use Piwigo\Template\Latte\Attribute\Template;
  * {@see \Piwigo\Controller\CommentsController::__invoke()} (only when
  * there is at least one comment to show) and {@see
  * \Piwigo\Picture\PictureCommentRenderer::render()} (the picture page's
- * own single-image comment list). `$commentDerivativeParams` stays
+ * own single-image comment list). Lives under `Piwigo\Picture\Projection`
+ * (L3Presentation, not `Piwigo\Controller\Projection`, L4Integration)
+ * because `PictureCommentRenderer` itself constructs and renders it
+ * directly -- deptrac's ruleset forbids L3 from depending upward on
+ * L4, and `CommentsController` (L4) depending on this (L3) is the
+ * always-allowed direction either way. `$commentDerivativeParams` stays
  * nullable: `PictureCommentRenderer`'s own comment rows never carry a
  * `src_image` (already looking at the one photo above, no per-comment
  * illustration needed), so the template's own `isset($commentDerivativeParams)`

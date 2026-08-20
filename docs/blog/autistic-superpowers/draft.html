@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draft — How I used my autistic superpowers to rewrite a legacy PHP codebase</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:            #f9f9f7;
+    --surface-1:       #fcfcfb;
+    --text-primary:    #0b0b0b;
+    --text-secondary:  #52514e;
+    --text-muted:      #898781;
+    --gridline:        #e1e0d9;
+    --baseline:        #c3c2b7;
+    --series-1:        #2a78d6;
+    --status-warning:  #fab219;
+    --status-good:     #0ca30c;
+    --border:          rgba(11,11,11,0.10);
+    --border-strong:   rgba(11,11,11,0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:            #0d0d0d;
+      --surface-1:       #1a1a19;
+      --text-primary:    #ffffff;
+      --text-secondary:  #c3c2b7;
+      --text-muted:      #898781;
+      --gridline:        #2c2c2a;
+      --baseline:        #383835;
+      --series-1:        #3987e5;
+      --status-warning:  #fab219;
+      --status-good:     #0ca30c;
+      --border:          rgba(255,255,255,0.10);
+      --border-strong:   rgba(255,255,255,0.18);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:            #0d0d0d;
+    --surface-1:       #1a1a19;
+    --text-primary:    #ffffff;
+    --text-secondary:  #c3c2b7;
+    --text-muted:      #898781;
+    --gridline:        #2c2c2a;
+    --baseline:        #383835;
+    --series-1:        #3987e5;
+    --status-warning:  #fab219;
+    --status-good:     #0ca30c;
+    --border:          rgba(255,255,255,0.10);
+    --border-strong:   rgba(255,255,255,0.18);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+  .layout {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 180px minmax(0, 760px);
+    justify-content: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: start;
+  }
+  .wrap { padding: 56px 0 120px; }
+
+  /* ---------- Side navigation ---------- */
+  .sidenav {
+    position: sticky;
+    top: 24px;
+    padding-top: 56px;
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .sidenav-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .sidenav a {
+    display: block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 6px 0 6px 12px;
+    border-left: 2px solid transparent;
+    margin-bottom: 2px;
+  }
+  .sidenav a:hover { color: var(--text-primary); border-left-color: var(--border-strong); }
+  .sidenav a:focus-visible { outline: 2px solid var(--series-1); outline-offset: -2px; }
+  .sidenav a.active {
+    color: var(--text-primary);
+    border-left-color: var(--series-1);
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 760px); }
+    .sidenav { display: none; }
+  }
+
+  .draft-banner {
+    background: color-mix(in srgb, var(--status-warning) 16%, var(--surface-1));
+    border: 1px dashed var(--status-warning);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+  .draft-banner strong { color: var(--text-primary); }
+
+  h1 {
+    font-size: 34px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+  .byline {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0 0 40px;
+  }
+
+  h2 {
+    font-size: 22px;
+    margin: 64px 0 8px;
+    letter-spacing: -0.005em;
+  }
+  h2 .eyebrow {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  h3 { font-size: 16px; margin: 28px 0 10px; }
+  p { margin: 0 0 16px; color: var(--text-primary); }
+  p.lede { font-size: 17px; color: var(--text-secondary); }
+
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--gridline);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+  }
+
+  /* stat tiles */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px 0 28px;
+  }
+  @media (max-width: 560px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    h1, h2 { padding-right: 50px; }
+  }
+  .stat-tile {
+    background: var(--surface-1);
+    padding: 16px 18px;
+  }
+  .stat-tile .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .stat-tile .value {
+    font-size: 24px;
+    font-weight: 600;
+    font-variant-numeric: proportional-nums;
+  }
+  .stat-tile .value small {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  /* headline number */
+  .hero-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 8px 0 24px;
+    flex-wrap: wrap;
+  }
+  .hero-figure .num {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--series-1);
+  }
+  .hero-figure .cap {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 30ch;
+  }
+
+  /* callouts */
+  .callout {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    margin: 18px 0;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+  }
+  .callout.flag {
+    border: 1px dashed var(--status-warning);
+    background: color-mix(in srgb, var(--status-warning) 10%, var(--surface-1));
+  }
+  .callout.flag .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #8a5a00;
+    background: var(--status-warning);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-bottom: 8px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout.note { border-color: var(--border); color: var(--text-secondary); }
+
+  /* figures */
+  figure { margin: 24px 0; }
+  figure svg { display: block; width: 100%; height: auto; max-width: 100%; }
+  figcaption {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 10px;
+  }
+  .chart-label { fill: var(--text-secondary); font-size: 12px; }
+  .chart-label.muted { fill: var(--text-muted); }
+  .chart-label.value { fill: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .chart-bar { fill: var(--series-1); }
+  .chart-axis { stroke: var(--baseline); stroke-width: 1; }
+
+  /* benchmark pair */
+  .bench-pair {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 18px;
+    margin: 20px 0 8px;
+  }
+  .bench-tile {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 20px;
+    text-align: center;
+  }
+  .bench-tile .bench-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .bench-tile .bench-value {
+    font-size: 34px;
+    font-weight: 700;
+  }
+  .bench-tile.legacy .bench-value { color: var(--text-secondary); }
+  .bench-tile.worker .bench-value { color: var(--series-1); }
+  .bench-tile .bench-unit { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+  .bench-tile .projected-badge {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #8a5a00;
+    background: var(--status-warning);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+  .bench-multiplier {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  ul.plain { padding-left: 20px; margin: 0 0 16px; }
+  ul.plain li { margin-bottom: 6px; }
+
+  footer.draft-footer {
+    margin-top: 72px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 10;
+  }
+  .theme-toggle:hover { color: var(--text-primary); border-color: var(--border-strong); }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: none; }
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: block; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark theme">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4"></circle>
+    <line x1="12" y1="2" x2="12" y2="4"></line>
+    <line x1="12" y1="20" x2="12" y2="22"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="2" y1="12" x2="4" y2="12"></line>
+    <line x1="20" y1="12" x2="22" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+</button>
+<div class="layout">
+
+  <nav class="sidenav" aria-label="Table of contents">
+    <div class="sidenav-label">Contents</div>
+    <a href="#numbers">Part one — Numbers</a>
+    <a href="#end-state">Part two — Where it ended up</a>
+    <a href="#benchmark">Part three — The bet</a>
+    <a href="#story">Part four — The story begins</a>
+  </nav>
+
+  <div class="wrap">
+
+  <div class="draft-banner">
+    <strong>Draft, not published.</strong> Covers the opening hook and the origin story only
+    (through “the story begins”). Numbers marked <span class="projected-badge" style="vertical-align:1px;">projected</span>
+    are targets, not measurements — see the callouts inline. Two spots are flagged
+    <code>[NEEDS YOUR INPUT]</code> / <code>[NEEDS RECONCILING]</code> for a follow-up pass.
+  </div>
+
+  <h1>How I used my autistic superpowers to rewrite a legacy PHP codebase, 100k&nbsp;LOC</h1>
+  <p class="byline">A first-person account of taking Piwigo from PHP&nbsp;5.x and MySQL MyISAM
+    to PHP&nbsp;8.5, InnoDB, PostgreSQL and SQLite — told in numbers and pictures first,
+    story second.</p>
+
+  <!-- ============================================================ -->
+  <section id="numbers">
+  <h2><span class="eyebrow">Part one</span>The numbers, before the story</h2>
+  <p class="lede">Piwigo started life in 2002. By the time I opened the codebase seriously, it
+    had accreted 22 years of contributions from dozens of people, in an era of PHP that no
+    longer exists.</p>
+
+  <div class="hero-figure">
+    <span class="num">115,997</span>
+    <span class="cap">lines of real application PHP — <code>include/</code> +
+      <code>admin/</code> — before a single line of the rewrite touched it.</span>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">PHP language</div><div class="value">5.x</div></div>
+    <div class="stat-tile"><div class="label">Database engine</div><div class="value">MyISAM</div></div>
+    <div class="stat-tile"><div class="label">Package manager</div><div class="value">none</div></div>
+    <div class="stat-tile"><div class="label">Automated tests</div><div class="value">0</div></div>
+    <div class="stat-tile"><div class="label">Static analysis</div><div class="value">none</div></div>
+    <div class="stat-tile"><div class="label">Frontend</div><div class="value">jQuery</div></div>
+    <div class="stat-tile"><div class="label">Bundled themes</div><div class="value">3</div></div>
+    <div class="stat-tile"><div class="label">Bundled plugins</div><div class="value">1</div></div>
+  </div>
+
+  <p>The 115,997-line figure is <code>include/</code> (the engine — 83,060 lines) plus
+    <code>admin/</code> (the admin panel — 32,937 lines): the actual logic a rewrite has to
+    reckon with. It leaves out two things that inflate the total but aren't really "code" in
+    the same sense — a one-time installer (9,486 lines) and, the single biggest directory in
+    the whole tree, <code>language/</code>: 101,463 lines of translated strings sitting in PHP
+    arrays.</p>
+
+  <figure>
+    <svg viewBox="0 0 680 250" role="img" aria-label="Bar chart of PHP lines of code by directory: language 101,463, include 83,060, admin 32,937, install 9,486, tools 2,441">
+      <line class="chart-axis" x1="118" y1="14" x2="118" y2="234"></line>
+      <!-- rows: y centers at 34,78,122,166,210; bar thickness 22 -->
+      <!-- scale: 101463 -> 480px max bar width, from x=118 -->
+      <!-- language 101463 -->
+      <rect class="chart-bar" x="118" y="23" width="480" height="22" rx="4"></rect>
+      <text class="chart-label" x="110" y="38" text-anchor="end">language/</text>
+      <text class="chart-label value" x="606" y="38" text-anchor="start">101,463</text>
+      <!-- include 83060 : 480*83060/101463 = 392.9 -->
+      <rect class="chart-bar" x="118" y="67" width="393" height="22" rx="4"></rect>
+      <text class="chart-label" x="110" y="82" text-anchor="end">include/</text>
+      <text class="chart-label value" x="519" y="82" text-anchor="start">83,060</text>
+      <!-- admin 32937 : 480*32937/101463 = 155.9 -->
+      <rect class="chart-bar" x="118" y="111" width="156" height="22" rx="4"></rect>
+      <text class="chart-label" x="110" y="126" text-anchor="end">admin/</text>
+      <text class="chart-label value" x="282" y="126" text-anchor="start">32,937</text>
+      <!-- install 9486 : 480*9486/101463 = 44.9 -->
+      <rect class="chart-bar" x="118" y="155" width="45" height="22" rx="4"></rect>
+      <text class="chart-label" x="110" y="170" text-anchor="end">install/</text>
+      <text class="chart-label value" x="171" y="170" text-anchor="start">9,486</text>
+      <!-- tools 2441 : 480*2441/101463 = 11.5 -->
+      <rect class="chart-bar" x="118" y="199" width="12" height="22" rx="4"></rect>
+      <text class="chart-label" x="110" y="214" text-anchor="end">tools/</text>
+      <text class="chart-label value" x="138" y="214" text-anchor="start">2,441</text>
+      <text class="chart-label muted" x="118" y="248" text-anchor="start">lines of PHP, at the exact commit the rewrite forked from (54bdc4e21, excluding vendor/)</text>
+    </svg>
+    <figcaption>PHP lines of code by top-level directory, legacy Piwigo, day zero. One series,
+      so no legend — the bars and axis carry it.</figcaption>
+  </figure>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="end-state">
+  <h2><span class="eyebrow">Part two</span>Where it ended up</h2>
+  <p class="lede">Before the story of how, the payoff: what the codebase looks like today, so
+    you know what you're reading toward.</p>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Tests</div><div class="value">9,246</div></div>
+    <div class="stat-tile"><div class="label">Static analysis</div><div class="value">level 10 · 0 errors</div></div>
+    <div class="stat-tile"><div class="label">Architecture violations</div><div class="value">0 <small>/ 53 namespaces</small></div></div>
+    <div class="stat-tile"><div class="label">CI jobs / push</div><div class="value">34</div></div>
+    <div class="stat-tile"><div class="label">Database matrix</div><div class="value">MySQL · MariaDB · Postgres</div></div>
+    <div class="stat-tile"><div class="label">Typed value objects</div><div class="value">19</div></div>
+    <div class="stat-tile"><div class="label">Translated locales</div><div class="value">73 <small>.po files</small></div></div>
+    <div class="stat-tile"><div class="label">Frontend</div><div class="value">jQuery removed <small>· TS <code>any</code> 0</small></div></div>
+  </div>
+
+  <div class="callout flag">
+    <span class="tag">Needs reconciling</span>
+    <p>The existing "Piwigo in Modern PHP" post cites <strong>4,579 commits</strong> for the
+      whole rewrite; this session's own <code>git log</code> on the live <code>17.x-rewrite</code>
+      lineage shows <strong>14,795+</strong> as of today. Likely different things being counted
+      (that post's figure may predate months of continued work, or count squashed history) —
+      pick the right one and reconcile before this number goes in the draft for real.</p>
+  </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="benchmark">
+  <h2><span class="eyebrow">Part three</span>The bet that isn't proven yet</h2>
+  <p class="lede">The single number most likely to make someone keep reading: what running
+    under a worker instead of a fresh process per request is expected to do to throughput.</p>
+
+  <div class="bench-pair">
+    <div class="bench-tile legacy">
+      <div class="bench-label">Legacy · mod_php, per-request</div>
+      <div class="bench-value">~500</div>
+      <div class="bench-unit">req/s</div>
+    </div>
+    <div class="bench-multiplier">≈120×</div>
+    <div class="bench-tile worker">
+      <div class="bench-label">Worker mode · FrankenPHP</div>
+      <div class="bench-value">~60,000</div>
+      <div class="bench-unit">req/s</div>
+      <div class="projected-badge">projected</div>
+    </div>
+  </div>
+
+  <div class="callout flag">
+    <span class="tag">Not measured yet</span>
+    <p>Both numbers above are targets, not results — the same honesty rule the existing blog
+      post's own "Benchmarks" section already follows (its harness exists; the numbers don't,
+      yet). ~500 req/s is roughly what classic per-request PHP tops out at under
+      <code>mod_php</code>/php-fpm for a dynamic app like this; ~60,000 req/s is in line with
+      FrankenPHP's own published worker-mode numbers for comparable PHP applications — not a
+      number this project has produced with its own load test. <code>k6-load</code> is already
+      wired into CI (scaffolded since P3) but currently runs a stand-in step. Real numbers
+      replace this whole section once that's real.</p>
+  </div>
+
+  <p>Why the gap should be that large, independent of the measured number: classic per-request
+    PHP tears down and rebuilds the entire application — container, routes, config, DB
+    connections — on every single request. A worker keeps all of that warm in memory between
+    requests and only re-runs the actual handler. The second half of the bet is the image
+    pipeline: swapping GD for libvips, which streams image data instead of decoding a whole
+    bitmap into memory, so derivative generation is expected to land both faster and
+    meaningfully lighter on RAM per conversion — no benchmark for that yet either, same rule
+    applies.</p>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="story">
+  <h2><span class="eyebrow">Part four</span>The story begins</h2>
+  <p class="lede">Day zero: the exact commit the rewrite forked from, and the fork-in-the-road
+    that almost went a different way.</p>
+
+  <p>Commit <code>54bdc4e21</code>, April 26, 2026 — a routine security fix
+    (<code>GHSA-jhp4-7f82-8f6q</code>, validating <code>image_order</code> against an allowlist)
+    — turned out to be the last commit before any rewrite work touched this codebase. Phase 0
+    scaffolding started the same day.</p>
+
+  <figure>
+    <svg viewBox="0 0 900 280" role="img" aria-label="Timeline diagram: from day zero, two branches fork — 16.x-rewrite continues through a version bump to 17.0.0 and on to today as 17.x-rewrite; 16.x-v2 forks the same day in May, runs for about 33 hours, and is abandoned.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <g stroke="currentColor" fill="none">
+        <!-- day zero marker -->
+        <circle cx="40" cy="150" r="5" fill="currentColor" stroke="none"></circle>
+        <!-- fork lines -->
+        <path d="M40,150 C90,150 90,70 150,70" stroke-width="2"></path>
+        <path d="M40,150 C90,150 90,190 150,190" stroke-width="2"></path>
+        <!-- surviving path: 16.x-rewrite -> version bump -> today -->
+        <path d="M150,70 L860,70" stroke-width="2" marker-end="url(#arrow)"></path>
+        <circle cx="470" cy="70" r="4" fill="currentColor" stroke="none"></circle>
+        <!-- abandoned path: 16.x-v2, stops -->
+        <path d="M150,190 L400,190" stroke-width="2"></path>
+        <line x1="400" y1="180" x2="400" y2="200" stroke-width="2"></line>
+      </g>
+      <text class="chart-label" x="40" y="130" text-anchor="middle">day zero</text>
+      <text class="chart-label muted" x="40" y="176" text-anchor="middle">Apr 26</text>
+
+      <text class="chart-label" x="160" y="55" text-anchor="start" font-weight="600">16.x-rewrite → 17.x-rewrite</text>
+      <text class="chart-label muted" x="160" y="97" text-anchor="start">this branch, still active</text>
+
+      <text class="chart-label" x="470" y="55" text-anchor="middle">v17.0.0 version bump</text>
+      <text class="chart-label muted" x="470" y="97" text-anchor="middle">May 10 — breaks all PEM extensions</text>
+
+      <text class="chart-label value" x="860" y="55" text-anchor="end">today</text>
+      <text class="chart-label muted" x="860" y="97" text-anchor="end">14,795+ commits</text>
+
+      <text class="chart-label" x="160" y="175" text-anchor="start" font-weight="600">16.x-v2</text>
+      <text class="chart-label muted" x="160" y="217" text-anchor="start">own Phase 0, May 25</text>
+      <text class="chart-label value" x="400" y="175" text-anchor="end">abandoned</text>
+      <text class="chart-label muted" x="400" y="240" text-anchor="end">86 commits, ~33h — May 26</text>
+    </svg>
+    <figcaption>Both branches fork from the same day-zero commit. Only one continues to what
+      this codebase is today.</figcaption>
+  </figure>
+
+  <p>Three weeks into the <code>16.x-rewrite</code> effort, a second attempt started from the
+    exact same baseline: <code>16.x-v2</code>, with its own from-scratch Phase&nbsp;0 —
+    Composer, PHPStan, Psalm, Rector and Pint baselines; Vite, Vitest, ESLint and Stylelint —
+    built independently rather than branched from the work already three weeks in. It ran for
+    about 33 hours, ending with a run of commits fixing PHP&nbsp;8 deprecation warnings and
+    runtime errors the test suite surfaced, then stopped. 86 commits, never touched again.</p>
+
+  <div class="callout flag">
+    <span class="tag">Needs your input</span>
+    <p>The commit history shows <em>that</em> <code>16.x-v2</code> was abandoned in favor of
+      continuing <code>16.x-rewrite</code>, but not <em>why</em> — that call isn't in any commit
+      message. This is the most human beat in the whole timeline (two approaches running in
+      parallel, one survives after about a day) and it needs your own memory of that decision
+      before this section is real.</p>
+  </div>
+
+  <p>On May 10, the surviving lineage bumped its own version string to 17.0.0 — a deliberate
+    marker that every existing plugin and theme extension was about to be incompatible, not an
+    accident of versioning. What's now this worktree, <code>17.x-rewrite-2</code>, descends
+    directly from that line: 14,795+ commits and counting, as of today.</p>
+  </section>
+
+  <footer class="draft-footer">
+    <p><strong>Draft stops here.</strong> Not yet written: the actual rewrite work (tool
+      choices, the PSR-4/DI foundation, the phase-by-phase campaign), the "autistic
+      superpowers" personal-approach reflection the title promises, and whichever epoch-level
+      material from the existing post gets reused here in the lighter, more visual treatment.
+      Next pass, on request.</p>
+  </footer>
+
+  </div>
+
+</div>
+<script>
+(function () {
+  var root = document.documentElement;
+  var stored = localStorage.getItem('theme');
+  if (stored === 'light' || stored === 'dark') root.setAttribute('data-theme', stored);
+
+  document.getElementById('theme-toggle').addEventListener('click', function () {
+    var current = root.getAttribute('data-theme');
+    if (!current) {
+      current = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    var next = current === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+})();
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.sidenav a[href^="#"]'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var targets = Array.prototype.slice.call(document.querySelectorAll('section[id]'));
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      var link = byId[entry.target.id];
+      if (!link) return;
+      links.forEach(function (a) { a.classList.remove('active'); });
+      link.classList.add('active');
+    });
+  }, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+  targets.forEach(function (t) { observer.observe(t); });
+})();
+</script>
+</body>
+</html>

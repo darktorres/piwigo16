@@ -3019,7 +3019,20 @@ hadn't been run since. Fixed by rendering a tiny fixture file
 extending `layout.latte` instead of the deleted standalone files.
 
 This closes P42-A in full (11-partial conversion + theme-base pieces).
-**P42-B (the 945-call-site page-by-page migration) can now begin.**
+**P42-B (the 945-call-site page-by-page migration) — in progress.**
+6 real pages/Views landed so far, ~17 of 945 call sites: `HelpView`
+(1, sub-content-fragment shape confirmed working through the P42
+mechanism unchanged), `MaintenanceSysView` (2, `$isWebmaster`-gated),
+`PermalinksView` (3, unconditional), `LanguagesInstalledView` (4, one
+duplicate confirm-dialog pair dropped outright per the theme-base
+design), `ConfigurationDisplayView` (2, unconditional),
+`CheckIntegrityView` (2, one genuinely `null`-vs-absent-key-sensitive).
+Every migrated View's new interface methods carry `#[Override]`
+(`StructuralTest`'s own project-wide requirement, applies to every
+future migration in this campaign too). `test:golden-html`
+byte-identical throughout; one pre-existing, unrelated
+`admin-dashboard` activity-count drift found and confirmed
+(via `git stash`) to predate this campaign, left alone.
 
 **P43 — Typed contributions + plugin-owned routes.**
 

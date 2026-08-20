@@ -295,8 +295,8 @@
     {include 'navigation_bar.latte', navbar: $cats_navbar}
   {/if}
 
-  {if !empty($SEARCH_ID)}
-    {include 'include/search_filters.inc.latte'}
+  {if !empty($SEARCH_FILTERS)}
+    {$SEARCH_FILTERS}
   {/if}
 
   {if !empty($THUMBNAILS)}
@@ -307,7 +307,7 @@
     <ul class="thumbnails" id="thumbnails">
       {$THUMBNAILS}
     </ul>
-  {elseif !empty($SEARCH_ID)}
+  {elseif !empty($searchId)}
     <div class="mcs-no-result">
       <div class="text">
         <span class="top">{='No results are available.'|translate}</span>

@@ -24,6 +24,8 @@ use Piwigo\Controller\Projection\CanonicalUrlPageContext;
 use Piwigo\Controller\Projection\CategoryCatsHtmlPageContext;
 use Piwigo\Controller\Projection\CategoryCatsView;
 use Piwigo\Controller\Projection\IndexView;
+use Piwigo\Controller\Projection\SearchFiltersHtmlPageContext;
+use Piwigo\Controller\Projection\SearchFiltersView;
 use Piwigo\Controller\Projection\SelectedTagsView;
 use Piwigo\Controller\Projection\ThumbnailsHtmlPageContext;
 use Piwigo\Controller\Projection\ThumbnailsView;
@@ -270,7 +272,33 @@ final readonly class GalleryController implements ControllerInterface
             }
         }
 
-        $resolved_search_id = $this->searchFilterRenderer->render($section_context);
+        $searchFilterResult = $this->searchFilterRenderer->render($section_context);
+        $resolved_search_id = $searchFilterResult->resolvedSearchId;
+        if ($searchFilterResult->data !== null) {
+            $searchFiltersHtml = $this->renderer->render(new SearchFiltersView(
+                displayFilter: $searchFilterResult->data->displayFilter,
+                showFilterRatings: $searchFilterResult->data->showFilterRatings,
+                gp: $searchFilterResult->data->gp,
+                searchId: $searchFilterResult->data->searchId,
+                tags: $searchFilterResult->data->tags,
+                authors: $searchFilterResult->data->authors,
+                addedBy: $searchFilterResult->data->addedBy,
+                fullnameOf: $searchFilterResult->data->fullnameOf,
+                filetypes: $searchFilterResult->data->filetypes,
+                rating: $searchFilterResult->data->rating,
+                filesize: $searchFilterResult->data->filesize,
+                ratios: $searchFilterResult->data->ratios,
+                height: $searchFilterResult->data->height,
+                width: $searchFilterResult->data->width,
+                albumsFound: $searchFilterResult->data->albumsFound,
+                tagsFound: $searchFilterResult->data->tagsFound,
+                listDatePosted: $searchFilterResult->data->listDatePosted,
+                datePosted: $searchFilterResult->data->datePosted,
+                listDateCreated: $searchFilterResult->data->listDateCreated,
+                dateCreated: $searchFilterResult->data->dateCreated,
+            ));
+            $template->assignContext(new SearchFiltersHtmlPageContext($searchFiltersHtml));
+        }
 
         $search_in_set_button = null;
         $search_in_set_action = null;
@@ -641,6 +669,7 @@ final readonly class GalleryController implements ControllerInterface
             imageDerivatives: $image_derivatives,
             selectedTagsTemplate: $selected_tags_template,
             pluginIndexButtons: $template->indexButtons(),
+            searchId: $searchFilterResult->data?->searchId,
         );
         $template->appendOutput($this->renderer->render($indexView));
 

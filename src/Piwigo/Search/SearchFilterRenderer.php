@@ -17,16 +17,13 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
-use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Search\Projection\SearchAlbumsFoundPageContext;
-use Piwigo\Search\Projection\SearchDateFilterPageContext;
-use Piwigo\Search\Projection\SearchFilterPageContext;
-use Piwigo\Search\Projection\SearchTagsFoundPageContext;
+use Piwigo\Search\Projection\SearchFilterData;
+use Piwigo\Search\Projection\SearchFilterResult;
 use Piwigo\Section\SectionContext;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -54,7 +51,6 @@ final readonly class SearchFilterRenderer
         private Lang $lang,
         private AccessControl $accessControl,
         private HtmlRenderingInterface $htmlRenderer,
-        private TemplateInterface $template,
         private SearchRepository $repo,
         private SearchService $searchService,
         private TagService $tagService,
@@ -89,12 +85,17 @@ final readonly class SearchFilterRenderer
      * ('search_details') by this method and every private helper it
      * calls, and not visible outside this call.
      *
-     * Returns the search id resolved by
-     * SearchService::getValidatedSearchArray() (null when this page isn't
-     * a search results page) -- the one real caller (GalleryController)
-     * passes it straight into its own HistoryService::logVisit() call.
+     * Returns a {@see SearchFilterResult}: `$resolvedSearchId` alone (null
+     * when this page isn't a search results page) is what the one real
+     * caller (GalleryController) passes straight into its own
+     * HistoryService::logVisit() call; `$data` is the full filter-sidebar
+     * payload GalleryController threads into its own {@see
+     * \Piwigo\Controller\Projection\SearchFiltersView} construction --
+     * `Piwigo\Search\*` is L2bExtendedDomain and may not depend on
+     * `Renderer`/`View` (L3Presentation) directly, same split as
+     * `Piwigo\Category\CategoryDefaultRenderer`/`CategoryCatsRenderer`.
      */
-    public function render(SectionContext $sectionContext): ?int
+    public function render(SectionContext $sectionContext): SearchFilterResult
     {
         $page = [
             'section' => $sectionContext->section,
@@ -104,7 +105,6 @@ final readonly class SearchFilterRenderer
             'start' => $sectionContext->start,
             'chronology_field' => $sectionContext->chronologyField,
         ];
-        $template = $this->template;
 
         $tagService = $this->tagService;
 
@@ -126,7 +126,7 @@ final readonly class SearchFilterRenderer
         // Piwigo 14 will still be able to show an old quicksearch
         // result, we must check this condition too.
         if ($page['section'] !== Section::Search || $page['search_details'] === []) {
-            return null;
+            return new SearchFilterResult(resolvedSearchId: null, data: null);
         }
 
         $displayFilters = $filtersViews;
@@ -155,6 +155,10 @@ final readonly class SearchFilterRenderer
         $ratios = null;
         $height = null;
         $width = null;
+        $listDatePosted = null;
+        $datePosted = null;
+        $listDateCreated = null;
+        $dateCreated = null;
 
         $langMonth = $this->lang->months();
 
@@ -332,7 +336,7 @@ final readonly class SearchFilterRenderer
         }
 
         if (isset($searchFields['date_posted']) and (bool) $displayFilters['post_date']['access']) {
-            $this->renderDateFilter(
+            $dateFilterResult = $this->renderDateFilter(
                 $langMonth,
                 $userId,
                 'date_posted',
@@ -344,17 +348,16 @@ final readonly class SearchFilterRenderer
                     '3m' => $this->lang->t('last 3 months'),
                     '6m' => $this->lang->t('last 6 months'),
                 ],
-                'LIST_DATE_POSTED',
-                'DATE_POSTED',
-                $template,
                 $page
             );
+            $listDatePosted = $dateFilterResult['listOfDates'];
+            $datePosted = $dateFilterResult['counters'];
         } elseif (isset($searchFields['date_posted'])) {
             unset($searchFields['date_posted']);
         }
 
         if (isset($searchFields['date_created']) and (bool) $displayFilters['creation_date']['access']) {
-            $this->renderDateFilter(
+            $dateFilterResult = $this->renderDateFilter(
                 $langMonth,
                 $userId,
                 'date_created',
@@ -366,11 +369,10 @@ final readonly class SearchFilterRenderer
                     '6m' => $this->lang->t('last 6 months'),
                     '12m' => $this->lang->t('last 12 months'),
                 ],
-                'LIST_DATE_CREATED',
-                'DATE_CREATED',
-                $template,
                 $page
             );
+            $listDateCreated = $dateFilterResult['listOfDates'];
+            $dateCreated = $dateFilterResult['counters'];
         } elseif (isset($searchFields['date_created'])) {
             unset($searchFields['date_created']);
         }
@@ -825,31 +827,41 @@ final readonly class SearchFilterRenderer
         $search_id = $page['search'] ?? null;
         $search_id = is_string($search_id) ? $search_id : null;
 
-        $template->assignContext(new SearchFilterPageContext(
-            displayFilter: $filtersViews,
-            tags: $tags,
-            authors: $authors,
-            addedBy: $addedBy,
-            fullnameOf: $fullname_of_json,
-            filetypes: $filetypes,
-            showFilterRatings: $show_filter_ratings,
-            rating: $rating,
-            filesize: $filesize,
-            ratios: $ratios,
-            height: $height,
-            width: $width,
-            gp: json_encode($mySearch),
-            searchId: $search_id,
-        ));
+        $albumsFound = null;
+        $tagsFound = null;
 
         // $page['search_details'] is already known array here (guarded above).
         $pageStart = $page['start'] ?? null;
         if ((is_numeric($pageStart) ? (int) $pageStart : 0) === 0 and ! isset($page['chronology_field'])) {
-            $this->renderAlbumsFound($page, $userId, $template);
-            $this->renderTagsFound($page, $template);
+            $albumsFound = $this->renderAlbumsFound($page, $userId);
+            $tagsFound = $this->renderTagsFound($page);
         }
 
-        return $resolvedSearchId;
+        return new SearchFilterResult(
+            resolvedSearchId: $resolvedSearchId,
+            data: new SearchFilterData(
+                displayFilter: $filtersViews,
+                showFilterRatings: $show_filter_ratings,
+                gp: json_encode($mySearch),
+                searchId: $search_id,
+                tags: $tags,
+                authors: $authors,
+                addedBy: $addedBy,
+                fullnameOf: $fullname_of_json,
+                filetypes: $filetypes,
+                rating: $rating,
+                filesize: $filesize,
+                ratios: $ratios,
+                height: $height,
+                width: $width,
+                albumsFound: $albumsFound,
+                tagsFound: $tagsFound,
+                listDatePosted: $listDatePosted,
+                datePosted: $datePosted,
+                listDateCreated: $listDateCreated,
+                dateCreated: $dateCreated,
+            ),
+        );
     }
 
     /**
@@ -863,13 +875,14 @@ final readonly class SearchFilterRenderer
      * This permission filter is real and load-bearing, not redundant.
      *
      * @param array<string, mixed> $page
+     * @return list<string>|null
      */
-    private function renderAlbumsFound(array $page, string $userId, TemplateInterface $template): void
+    private function renderAlbumsFound(array $page, string $userId): ?array
     {
         $searchDetails = $page['search_details'] ?? null;
         $matchingCatIds = is_array($searchDetails) ? ($searchDetails['matching_cat_ids'] ?? null) : null;
         if (! is_array($matchingCatIds)) {
-            return;
+            return null;
         }
 
         // shape from SearchService::getRegularSearchResults(): list<int>
@@ -883,7 +896,7 @@ final readonly class SearchFilterRenderer
         $catIds = array_map(static fn (mixed $v): int => (int) $v, $catIds);
 
         if ($catIds === []) {
-            return;
+            return null;
         }
 
         $allowedCatIds = self::filterAccessibleCategoryIds(
@@ -892,7 +905,7 @@ final readonly class SearchFilterRenderer
                 ->forbiddenCategories
         );
         if ($allowedCatIds === []) {
-            return;
+            return null;
         }
 
         // CategoryRepository::findFullCategoriesByIds() returns typed
@@ -917,9 +930,7 @@ final readonly class SearchFilterRenderer
             );
         }
 
-        if (count($albumsFound) > 0) {
-            $template->assignContext(new SearchAlbumsFoundPageContext($albumsFound));
-        }
+        return count($albumsFound) > 0 ? $albumsFound : null;
     }
 
     /**
@@ -943,13 +954,14 @@ final readonly class SearchFilterRenderer
 
     /**
      * @param array<string, mixed> $page
+     * @return list<string>|null
      */
-    private function renderTagsFound(array $page, TemplateInterface $template): void
+    private function renderTagsFound(array $page): ?array
     {
         $searchDetails = $page['search_details'] ?? null;
         $matchingTagIds = is_array($searchDetails) ? ($searchDetails['matching_tag_ids'] ?? null) : null;
         if (! is_array($matchingTagIds)) {
-            return;
+            return null;
         }
 
         // shape from SearchService::getRegularSearchResults(): list<int> --
@@ -961,7 +973,7 @@ final readonly class SearchFilterRenderer
         ));
 
         if (count($tagIds) === 0) {
-            return;
+            return null;
         }
 
         $tags = $this->tagService->getAvailableTags($tagIds);
@@ -976,25 +988,27 @@ final readonly class SearchFilterRenderer
             $tagsFound[] = sprintf('<a href="%s">%s</a>', $url, $tag['name']);
         }
 
-        if (count($tagsFound) > 0) {
-            $template->assignContext(new SearchTagsFoundPageContext($tagsFound));
-        }
+        return count($tagsFound) > 0 ? $tagsFound : null;
     }
 
     /**
      * Shared logic for the date_posted/date_created filter blocks -- same
      * shape (thresholds → per-image bucket counters → year/month/day tree),
-     * differing only in which date column, threshold set, and template
-     * variable names they use.
+     * differing only in which date column and threshold set they use.
+     * Returns the pair instead of assigning it directly (unlike the
+     * original, single-caller-shaped `$listTemplateVar`/`$counterTemplateVar`
+     * dynamic keys) -- render() itself picks which of its own
+     * listDatePosted/datePosted vs. listDateCreated/dateCreated pair of
+     * {@see SearchFilterData} fields each of this method's 2 real call
+     * sites feeds.
      *
      * @param array<int, string> $langMonth
      * @param string $dqlField DQL property path (`i.dateAvailable`/
      *   `i.dateCreation`)
      * @param array<string, string> $labelForThreshold keyed by threshold id
      *   (e.g. '24h', '7d'), in display order
-     * @param 'LIST_DATE_POSTED'|'LIST_DATE_CREATED' $listTemplateVar
-     * @param 'DATE_POSTED'|'DATE_CREATED' $counterTemplateVar
      * @param array<string, mixed> $page see render()'s own docblock
+     * @return array{listOfDates: array<array-key, mixed>, counters: array<string, array{label: string, counter: mixed}>}
      */
     private function renderDateFilter(
         array $langMonth,
@@ -1002,11 +1016,8 @@ final readonly class SearchFilterRenderer
         string $filterName,
         string $dqlField,
         array $labelForThreshold,
-        string $listTemplateVar,
-        string $counterTemplateVar,
-        TemplateInterface $template,
         array $page
-    ): void {
+    ): array {
         $filterClause = $this->getClauseForFilter($filterName, $page);
         $filterCondition = $filterClause->condition;
         $cacheKey = 'filter_' . $filterName . '_' . $userId;
@@ -1127,12 +1138,10 @@ final readonly class SearchFilterRenderer
         }
         krsort($listOfDates);
 
-        $template->assignContext(new SearchDateFilterPageContext(
-            listKey: $listTemplateVar,
-            counterKey: $counterTemplateVar,
-            listOfDates: $listOfDates,
-            counters: $counters,
-        ));
+        return [
+            'listOfDates' => $listOfDates,
+            'counters' => $counters,
+        ];
     }
 
     private function intervalForThreshold(string $threshold): string

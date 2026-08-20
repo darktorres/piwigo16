@@ -22,7 +22,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `$useStandardPages` are NOT here: `use_standard_pages` has no real
  * template reader anywhere in the app (corpus-wide-fallback noise), and
  * `U_CANONICAL` is needed by `header.latte` before this view is ever
- * constructed -- see {@see CanonicalUrlPageContext}.
+ * constructed -- see {@see CanonicalUrlPageContext}. `$searchId` IS here
+ * (unlike `SearchFiltersView`'s own, separately-rendered `$searchId`
+ * property) because `index.latte`'s own body reads it directly too --
+ * the `{elseif !empty($searchId)}` "no results" branch when `$THUMBNAILS`
+ * is empty on a search page, not just `SearchFiltersView`'s sidebar.
  */
 #[Template('index.latte')]
 final readonly class IndexView implements View
@@ -63,5 +67,6 @@ final readonly class IndexView implements View
         public array $imageDerivatives,
         public Html $selectedTagsTemplate,
         public array $pluginIndexButtons,
+        public ?string $searchId,
     ) {}
 }

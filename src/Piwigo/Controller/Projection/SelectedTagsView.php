@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -14,7 +17,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * this render's `Html` result.
  */
 #[Template('include/selected_tags.inc.latte')]
-final readonly class SelectedTagsView implements View
+final readonly class SelectedTagsView implements View, HasPageAssets
 {
     /**
      * @param array<array-key, mixed>|null $selectRelatedTags
@@ -22,4 +25,16 @@ final readonly class SelectedTagsView implements View
     public function __construct(
         public ?array $selectRelatedTags,
     ) {}
+
+    /**
+     * `include/selected_tags.inc.latte`'s own unconditional
+     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::css('themes/default/css/components/selected_tags.css', id: 'selected_tags'),
+        ];
+    }
 }

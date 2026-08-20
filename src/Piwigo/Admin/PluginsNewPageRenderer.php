@@ -302,6 +302,7 @@ final readonly class PluginsNewPageRenderer
             betaUrl: $beta_url,
             betaTest: $beta_test,
             plugins: $tpl_plugins,
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(

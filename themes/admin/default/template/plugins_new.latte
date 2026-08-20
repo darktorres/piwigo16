@@ -1,32 +1,4 @@
 {templateType Piwigo\Admin\Projection\PluginsNewView}
-{do combineScript(id: 'jquery.sort', load: 'footer', path: 'themes/default/js/plugins/jquery.sort.js')}
-
-{do combineScript(id: 'jquery.ui.slider', require: 'jquery.ui', load: 'header', path: 'themes/default/js/ui/minified/jquery.ui.slider.min.js')}
-{do combineCss(path: "themes/default/js/ui/theme/jquery.ui.slider.css")}
-{do combineCss(id: 'plugins_new', path: 'themes/admin/default/css/pages/plugins_new.css')}
-
-{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
-
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineScript(id: 'pluginsNew', load: 'footer', require: 'jquery.ui.effect-blind,jquery.sort,page-data', path: 'themes/admin/default/js/plugins_new.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-
-{do exposeString('Yes, I am sure')}
-{do exposeString('No, I have changed my mind')}
-{do exposeString('Are you sure you want to install the plugin "%s"?')}
-{do exposeString('This plugin is incompatible with your version')}
-{do exposeString('This plugin have no update since 3 years ! It may be outdated')}
-{do exposeString('This plugin has no recent update')}
-{do exposeString('This plugin was updated less than 6 months ago')}
-{do exposeString('This plugin have been updated recently')}
-{do exposeString('%d month')}
-{do exposeString('%d months')}
-{do exposeString('%d year')}
-{do exposeString('%d years')}
-{do exposeString('since the beginning')}
-
 <div class="titrePage">
   <div class="sort">
     <div class="sort-actions">

@@ -1,38 +1,4 @@
 {templateType Piwigo\Admin\Projection\PluginsInstalledView}
-{do combineScript(id: 'jquery.ajaxmanager', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.ajaxmanager.js')}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.cookie', path: 'themes/default/js/jquery.cookie.js', load: 'footer')}
-
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineScript(id: 'tiptip', load: 'header', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
-
-{do combineScript(id: 'pluginInstallated', load: 'footer', require: 'jquery.ajaxmanager', path: 'themes/admin/default/js/plugins_installated.js')}
-
-{do exposeString('WARNING! This plugin does not seem to be compatible with this version of Piwigo.')}
-{do exposeString('Do you want to activate anyway?')}
-{do exposeString('Deactivate all')}
-{do exposeData('csrf_token', $csrfToken)}
-{do exposeData('count_types_plugins', $countTypesPlugins)}
-{do exposeString('Yes, I am sure')}
-{do exposeString('No, I have changed my mind')}
-{do exposeString('Are you sure you want to delete the plugin "%s"?')}
-{do exposeString('Plugin "%s" deleted!')}
-{do exposeString('Are you sure you want to restore the plugin "%s"?')}
-{do exposeString('Are you sure you want to uninstall the plugin "%s"?')}
-{do exposeString('Activated')}
-{do exposeString('Deactivated')}
-{do exposeString('Restored')}
-{do exposeString('an error happened')}
-{do exposeString('Webmaster status required')}
-{do exposeString('No plugins found')}
-{do exposeString('%s plugins found')}
-{do exposeString('%s plugin found')}
-{do exposeData('is_webmaster', $isWebmaster)}
-{do exposeString('While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset')}
-{do exposeData('show_details', $showDetails)}
-{do combineScript(id: 'plugins_installed_config', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/plugins_installed_config.js')}
-
 {if isset($plugins)}
   {var $field_name = 'null'} {* <!-- 'counter' for fieldset management --> *}
 

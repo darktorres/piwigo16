@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -18,7 +23,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `plugins_installed_config.js`'s `pwg_getPageData()` reads.
  */
 #[Template('plugins_installed.latte')]
-final readonly class PluginsInstalledView implements View
+final readonly class PluginsInstalledView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<array<string, mixed>> $plugins
@@ -36,4 +41,64 @@ final readonly class PluginsInstalledView implements View
         public string $viewSelector,
         public bool $enableExtensionsInstall,
     ) {}
+
+    /**
+     * `plugins_installed.latte`'s own unconditional `{do combineScript(...)}`x6/
+     * `{do combineCss(...)}`x1 (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('jquery.ajaxmanager', 'themes/default/js/plugins/jquery.ajaxmanager.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.cookie', 'themes/default/js/jquery.cookie.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('tiptip', 'themes/default/js/plugins/jquery.tipTip.minified.js'),
+            AssetContribution::script('pluginInstallated', 'themes/admin/default/js/plugins_installated.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
+            AssetContribution::script('plugins_installed_config', 'themes/admin/default/js/plugins_installed_config.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+        ];
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'csrf_token' => $this->csrfToken,
+            'count_types_plugins' => $this->countTypesPlugins,
+            'is_webmaster' => $this->isWebmaster,
+            'show_details' => $this->showDetails,
+        ];
+    }
+
+    /**
+     * `plugins_installed.latte`'s own unconditional `{do exposeString(...)}`x18
+     * (docs/PLAN.md's P42-B) -- `'Yes, I am sure'`/`'No, I have changed
+     * my mind'` are dropped outright, not ported here: 2 of the 3
+     * theme-base confirm-dialog strings `ThemeBaseAssets` already
+     * registers unconditionally for every page.
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'WARNING! This plugin does not seem to be compatible with this version of Piwigo.',
+            'Do you want to activate anyway?',
+            'Deactivate all',
+            'Are you sure you want to delete the plugin "%s"?',
+            'Plugin "%s" deleted!',
+            'Are you sure you want to restore the plugin "%s"?',
+            'Are you sure you want to uninstall the plugin "%s"?',
+            'Activated',
+            'Deactivated',
+            'Restored',
+            'an error happened',
+            'Webmaster status required',
+            'No plugins found',
+            '%s plugins found',
+            '%s plugin found',
+            'While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset',
+        ];
+    }
 }

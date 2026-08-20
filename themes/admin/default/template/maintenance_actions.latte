@@ -1,29 +1,4 @@
 {templateType Piwigo\Admin\Projection\MaintenanceActionsView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineCss(id: 'maintenance_actions', path: 'themes/admin/default/css/pages/maintenance_actions.css')}
-{do exposeString('Yes, I am sure')}
-{do exposeString('No, I have changed my mind')}
-{do exposeString('right now')}
-{do exposeString('%s MB')}
-{do exposeString('A locked gallery is only visible to administrators')}
-{do exposeString('Are you sure you want to lock the gallery?')}
-{do exposeString('Are you sure you want to unlock the gallery?')}
-{do exposeString('Yes, I want to lock the gallery')}
-{do exposeString('Keep it unlocked')}
-{do exposeString('Purge history detail')}
-{do exposeString('Purge history summary')}
-{do exposeString('Purge search history')}
-{do exposeString('Are you sure you want to delete all sizes?')}
-{do exposeData('u_maint_lock_gallery', $maintLockGallery)}
-{do exposeData('pwg_token', $pwgToken)}
-
-{do combineScript(id: 'maintenance_actions', load: 'footer', require: 'common,jquery.confirm,page-data', path: 'themes/admin/default/js/maintenance_actions.js')}
-
-{do combineScript(id: 'ajax', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/maintenance.js')}
-
 {if $isWebmaster == 1}
   <fieldset class="">
     <legend><span

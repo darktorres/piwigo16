@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Config\CacheSizesSnapshot;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -26,7 +31,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * exclusive (gallery lock state).
  */
 #[Template('maintenance_actions.latte')]
-final readonly class MaintenanceActionsView implements View
+final readonly class MaintenanceActionsView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
@@ -58,4 +63,57 @@ final readonly class MaintenanceActionsView implements View
         public int $isWebmaster,
         public array $advancedFeatures,
     ) {}
+
+    /**
+     * `maintenance_actions.latte`'s own unconditional `{do combineScript(...)}`x4/
+     * `{do combineCss(...)}`x3 (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            // order: 10 is required, see issue 1080.
+            AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
+            AssetContribution::css('themes/admin/default/css/pages/maintenance_actions.css', id: 'maintenance_actions'),
+            AssetContribution::script('maintenance_actions', 'themes/admin/default/js/maintenance_actions.js', loadMode: LoadMode::Footer, dependsOn: ['common', 'jquery.confirm', 'page-data']),
+            AssetContribution::script('ajax', 'themes/admin/default/js/maintenance.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+        ];
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'u_maint_lock_gallery' => $this->maintLockGallery,
+            'pwg_token' => $this->pwgToken,
+        ];
+    }
+
+    /**
+     * `maintenance_actions.latte`'s own unconditional `{do exposeString(...)}`x13
+     * (docs/PLAN.md's P42-B) -- `'Yes, I am sure'`/`'No, I have changed
+     * my mind'` are dropped outright, not ported here: 2 of the 3
+     * theme-base confirm-dialog strings `ThemeBaseAssets` already
+     * registers unconditionally for every page.
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'right now',
+            '%s MB',
+            'A locked gallery is only visible to administrators',
+            'Are you sure you want to lock the gallery?',
+            'Are you sure you want to unlock the gallery?',
+            'Yes, I want to lock the gallery',
+            'Keep it unlocked',
+            'Purge history detail',
+            'Purge history summary',
+            'Purge search history',
+            'Are you sure you want to delete all sizes?',
+        ];
+    }
 }

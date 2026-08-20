@@ -10,6 +10,7 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
+use Piwigo\Session\Projection\FilterCheckKey;
 
 final readonly class SessionService
 {
@@ -211,26 +212,18 @@ final readonly class SessionService
 
     /**
      * `filter_check_key` -- Filter\FilterService's own cache-validity
-     * marker (`user`/`recent_period`/`time`/`date`). Null for anything
-     * that isn't a real array carrying all 4 keys, replacing that same
-     * `is_array() + isset() on all 4 keys` guard the one real caller used
-     * to duplicate itself.
-     *
-     * @return array{user: mixed, recent_period: mixed, time: mixed, date: mixed}|null
+     * marker. Null for anything that isn't a real array carrying all 4
+     * keys, replacing that same `is_array() + isset() on all 4 keys` guard
+     * the one real caller used to duplicate itself.
      */
-    public function getFilterCheckKey(): ?array
+    public function getFilterCheckKey(): ?FilterCheckKey
     {
         $value = $_SESSION['pwg_filter_check_key'] ?? null;
-        if (! is_array($value) || ! isset($value['user'], $value['recent_period'], $value['time'], $value['date'])) {
+        if (! is_array($value)) {
             return null;
         }
 
-        return [
-            'user' => $value['user'],
-            'recent_period' => $value['recent_period'],
-            'time' => $value['time'],
-            'date' => $value['date'],
-        ];
+        return FilterCheckKey::fromArray($value);
     }
 
     /**

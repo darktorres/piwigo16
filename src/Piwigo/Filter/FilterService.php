@@ -25,6 +25,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\Projection\FilterCheckKey;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -125,12 +126,12 @@ final readonly class FilterService implements FilterUpdaterInterface
             // but guard against a missing/corrupted session value
             // defensively -- getFilterCheckKey() itself returns null for
             // anything that isn't a real array carrying all 4 keys.
-            $filter_key = $this->sessionService->getFilterCheckKey() ?? [
-                'user' => 0,
-                'recent_period' => -1,
-                'time' => 0,
-                'date' => '',
-            ];
+            $filter_key = $this->sessionService->getFilterCheckKey() ?? new FilterCheckKey(
+                user: 0,
+                recentPeriod: -1,
+                time: 0,
+                date: '',
+            );
 
             // $filter['matches'] was populated by preg_match()'s by-reference
             // $matches parameter above -- that call re-widens PHPStan's prior
@@ -143,15 +144,13 @@ final readonly class FilterService implements FilterUpdaterInterface
                 // populates both matches[0] and matches[1].
                 $filter['recent_period'] = $filter_matches[1] ?? null;
             } else {
-                $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $user->rawAttributes['recent_period'];
+                $filter['recent_period'] = $filter_key->recentPeriod > 0 ? $filter_key->recentPeriod : $user->rawAttributes['recent_period'];
             }
 
             // $filter['recent_period'] above comes from an untyped regex capture,
             // the cached session value, or $user['recent_period'] -- all of unknown
             // origin -- narrow once to a definite int for every numeric use below.
             $filter_recent_period = is_numeric($filter['recent_period']) ? (int) $filter['recent_period'] : 0;
-
-            $filter_key_time = is_numeric($filter_key['time']) ? (int) $filter_key['time'] : 0;
 
             if (
                 // New filter
@@ -161,19 +160,19 @@ final readonly class FilterService implements FilterUpdaterInterface
                 // recomputing on every request, short enough that a
                 // permission change becomes visible well within one user
                 // session.
-                time() - $filter_key_time >= 30 or
+                time() - $filter_key->time >= 30 or
                 // Date, period, user are changed
-                $filter_key['user'] !== $user->id->value or
-                (is_numeric($filter_key['recent_period']) ? (int) $filter_key['recent_period'] : 0) !== $filter_recent_period or
-                (is_string($filter_key['date']) ? $filter_key['date'] : '') !== date('Ymd')
+                $filter_key->user !== $user->id->value or
+                $filter_key->recentPeriod !== $filter_recent_period or
+                $filter_key->date !== date('Ymd')
             ) {
                 // Need to compute dats
-                $filter_key = [
-                    'user' => $user->id->value,
-                    'recent_period' => $filter_recent_period,
-                    'time' => time(),
-                    'date' => date('Ymd'),
-                ];
+                $filter_key = new FilterCheckKey(
+                    user: $user->id->value,
+                    recentPeriod: $filter_recent_period,
+                    time: time(),
+                    date: date('Ymd'),
+                );
 
                 // getComputedCategories() does not mutate its $userdata
                 // argument -- it returns the computed 'last_photo_date'
@@ -228,7 +227,7 @@ final readonly class FilterService implements FilterUpdaterInterface
 
                 // Save filter data on session
                 $this->sessionService->setSessionVar('filter_enabled', $filter['enabled']);
-                $this->sessionService->setSessionVar('filter_check_key', $filter_key);
+                $this->sessionService->setSessionVar('filter_check_key', $filter_key->toArray());
                 $this->sessionService->setSessionVar('filter_categories', serialize($filter['categories']));
                 $this->sessionService->setSessionVar('filter_visible_categories', $filter['visible_categories']);
                 $this->sessionService->setSessionVar('filter_visible_images', $filter['visible_images']);

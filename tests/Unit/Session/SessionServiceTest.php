@@ -7,6 +7,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Session\Projection\FilterCheckKey;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -435,15 +436,29 @@ test('getFilterCheckKey returns null when unset or missing a required key, and t
         'user' => 1,
         'recent_period' => 2,
         'time' => 3,
-        'date' => 4,
+        'date' => '20260101',
     ];
     expect($service->getFilterCheckKey())
-        ->toBe([
-            'user' => 1,
-            'recent_period' => 2,
-            'time' => 3,
-            'date' => 4,
-        ]);
+        ->toEqual(new FilterCheckKey(user: 1, recentPeriod: 2, time: 3, date: '20260101'));
+});
+
+test('getFilterCheckKey coerces a wrong-typed field to FilterCheckKey::fromArray()s own safe fallback, still returning a non-null instance', function (): void {
+    // All 4 keys are present (isset() passes), but 'date' holds a non-string
+    // value -- FilterCheckKey::fromArray() coerces it to '' rather than
+    // rejecting the whole value, matching FilterService's own downstream
+    // is_string()-else-'' fallback it used to duplicate at its own read
+    // site before this class existed.
+    $service = makeSessionService();
+    $_SESSION = [];
+    $_SESSION['pwg_filter_check_key'] = [
+        'user' => 1,
+        'recent_period' => 2,
+        'time' => 3,
+        'date' => 4,
+    ];
+
+    expect($service->getFilterCheckKey())
+        ->toEqual(new FilterCheckKey(user: 1, recentPeriod: 2, time: 3, date: ''));
 });
 
 test('getFilterCategoriesSerialized returns null when unset or non-string, and the string when set', function (): void {

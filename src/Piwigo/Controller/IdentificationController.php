@@ -237,6 +237,8 @@ final readonly class IdentificationController implements ControllerInterface
             currentLanguage: $this->currentUser->get()
                 ->language->value,
             helpLink: $help_link,
+            isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
+            standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
         );
 
         new PageHeaderRenderer()

@@ -377,7 +377,17 @@ final class InstallWizard
         // are submitted -- Template's own get_device modifier is never
         // actually invoked by install.latte, so the DB is never touched in
         // practice either.
-        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'));
+        //
+        // applyThemeBase: false -- install.latte is the one real top-level
+        // page in the whole app that doesn't extend layout.latte (confirmed
+        // via grep: it's the only *.latte file besides the 3 real
+        // layout.latte's own themselves with its own <!DOCTYPE html>), a
+        // deliberately minimal standalone <head> since the full admin
+        // chrome (fontello icons, utilities.css, component styles) isn't
+        // wanted this early. The theme-base "unconditional admin-layout
+        // assets" piece (docs/PLAN.md's P42-A) would otherwise register
+        // them regardless, a real regression caught via golden-html.
+        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
         $this->currentTemplate->set($template);
         $this->template = $template;
     }

@@ -48,6 +48,11 @@ use ReflectionClass;
  * `CurrentTemplate::set()`s it before its own `render()` call) -- the
  * dispatch correctly fires on whichever `Template` is current at call
  * time.
+ *
+ * `Template::resolveLocalHeadOnce()` (the theme-base "local-head
+ * resolver" piece) is the same one-shot shape, right after the plugin
+ * dispatch above -- both resolve theme/plugin-scoped content once,
+ * before the first page-specific View's own data is applied.
  */
 final readonly class Renderer
 {
@@ -59,6 +64,7 @@ final readonly class Renderer
     {
         $template = $this->currentTemplate->get();
         $template->dispatchPageAssetsOnce();
+        $template->resolveLocalHeadOnce();
 
         if ($view instanceof HasPageAssets) {
             $template->registerPageAssets($view->pageAssets());

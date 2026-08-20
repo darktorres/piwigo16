@@ -35,24 +35,10 @@
       href="{$ROOT_URL}themes/admin/default/fonts/open-sans/open-sans.css"
     >
 
-    {spaceless}
-      {do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -10)}
-      {do combineCss(path: "themes/admin/default/css/utilities.css", order: -5)}
-      {var $theme_id = ""}
-      {foreach $themes as $theme}
-        {var $theme_id = $theme['id']}
-
-        {if $theme['load_css']}
-          {do combineCss(path: "themes/admin/" . $theme['id'] . "/theme.css", order: -10)}
-          {do combineCss(path: "themes/admin/" . $theme['id'] . "/css/components/general.css", order: -9)}
-        {/if}
-        {if !empty($theme['local_head'])}
-          {include $theme['local_head'], load_css: $theme['load_css']}
-        {/if}
-      {/foreach}
-
-      {do combineScript(id: 'jquery', path: 'themes/default/js/jquery.min.js')}
-    {/spaceless}
+    {var $theme_id = ""}
+    {foreach $themes as $theme}
+      {var $theme_id = $theme['id']}
+    {/foreach}
 
     {=getCombinedCss()}
 
@@ -215,9 +201,6 @@
     {do combineScript(id: 'footer', load: 'footer', require: 'jquery.tipTip,page-data', path: 'themes/admin/default/js/footer.js')}
 
     {do combineScript(id: 'page-data', load: 'footer', path: 'themes/default/js/page-data.js')}
-    {do exposeString('Yes, I am sure')}
-    {do exposeString('No, I have changed my mind')}
-    {do exposeString('Are you sure?')}
     {=getPageDataScript()}
 
     {=getCombinedScripts('footer')}

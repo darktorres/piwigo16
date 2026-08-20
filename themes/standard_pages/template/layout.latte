@@ -36,21 +36,6 @@
       href="{$ROOT_URL}{$themeconf['icon_dir']}/favicon.ico"
     >
 
-    {spaceless}
-      {foreach $themes as $theme}
-        {if $theme['load_css']}
-          {do combineCss(path: "themes/" . $theme['id'] . "/theme.css", order: -10)}
-        {/if}
-        {if !empty($theme['local_head'])}
-          {include $theme['local_head'], load_css: $theme['load_css']}
-        {/if}
-      {/foreach}
-      {do combineCss(path: "themes/standard_pages/css/utilities.css", order: -5)}
-
-      {do combineScript(id: "jquery", load: "header")}
-    {/spaceless}
-
-    {do localCssRules($themes)}
     {=getCombinedCss()}
 
     {=getCombinedScripts('header')}
@@ -72,9 +57,6 @@
        file's own docblock. *}
 
     {do combineScript(id: 'page-data', load: 'footer', path: 'themes/default/js/page-data.js')}
-    {do exposeString('Yes, I am sure')}
-    {do exposeString('No, I have changed my mind')}
-    {do exposeString('Are you sure?')}
     {=getPageDataScript()}
 
     {=getCombinedScripts('footer')}

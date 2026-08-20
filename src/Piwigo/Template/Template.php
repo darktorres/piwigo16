@@ -47,6 +47,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Latte\PiwigoExtension;
+use Piwigo\Template\Projection\LocalHeadView;
 
 /**
  * The data_dir_checked write inside __construct() goes through
@@ -144,6 +145,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     private bool $pageAssetsDispatched = false;
 
     /**
+     * The theme-base "local-head resolver" piece's own one-shot guard
+     * (docs/PLAN.md's P42) -- fired from `Renderer::render()`'s first
+     * call on this instance, same timing as `$pageAssetsDispatched`
+     * above, but a separate flag since the two resolve genuinely
+     * different things (plugin-contributed assets vs. a theme's own
+     * `local_head.latte`-equivalent partial).
+     */
+    private bool $localHeadResolved = false;
+
+    /**
      * docs/PLAN.md's P37 -- backfilled in finalizeOutput() the same way
      * as COMBINED_SCRIPTS_TAG/COMBINED_CSS_TAG above, but via a plain
      * `str_replace()` (CSS's own shape, not scripts' `didHead()`-guarded
@@ -210,7 +221,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly SessionService $sessionService,
         string $root = '.',
         ?ThemeId $theme = null,
-        string $path = 'template'
+        string $path = 'template',
+        bool $applyThemeBase = true,
     ) {
         $this->pageAssets = new PageAssets(new ViteManifest($this->paths));
         $this->templateLocator = new TemplateLocator();
@@ -284,7 +296,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->assign('pwg', new TemplateAdapter($this->currentConfig));
 
         if ($theme instanceof ThemeId) {
-            $this->setTheme($root, $theme, $path);
+            $this->setTheme($root, $theme, $path, applyThemeBase: $applyThemeBase);
         } else {
             $this->setTemplateDir($root);
         }
@@ -495,7 +507,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * constructor -- so there's no pre-existing value an `assign()` here
      * could ever clobber).
      */
-    public function setTheme(string $root, ThemeId $theme, string $path, bool $load_css = true, bool $load_local_head = true, string $colorscheme = 'dark'): void
+    public function setTheme(string $root, ThemeId $theme, string $path, bool $load_css = true, bool $load_local_head = true, string $colorscheme = 'dark', bool $applyThemeBase = true): void
     {
         $resolution = $this->themeChain->resolve($root, $theme, $path, $this->currentConfig, $load_css, $load_local_head, $colorscheme);
 
@@ -505,6 +517,53 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $this->assign('themes', $resolution->themes);
         $this->assign('themeconf', $resolution->themeconf);
+
+        if ($applyThemeBase) {
+            $this->applyThemeBaseAssets($root, $path, $resolution->themes);
+        }
+    }
+
+    /**
+     * The theme-base pieces (docs/PLAN.md's P42-A) -- the plain
+     * unconditional `combineCss`/`combineScript` calls every real
+     * `layout.latte` used to make imperatively, `localCssRules()`'s own
+     * call site (for the 2 real layout families that have it), and the
+     * confirm-dialog base-strings registration all 3 real `layout.latte`
+     * files register unconditionally. Skipped entirely for Mail's own
+     * separately-rooted `Template` instances (`$path` is always
+     * `'template/mail/' . $emailFormat` there, never the bare
+     * `'template'` every real gallery/admin/standard_pages construction
+     * uses) -- those never render `layout.latte` at all, so none of this
+     * applies.
+     *
+     * @param list<array<string, mixed>> $themes
+     */
+    private function applyThemeBaseAssets(string $root, string $path, array $themes): void
+    {
+        if ($path !== 'template') {
+            return;
+        }
+
+        $isAdmin = str_ends_with($root, 'themes/admin');
+        $isStandardPages = ! $isAdmin && $themes !== [] && ($themes[array_key_last($themes)]['id'] ?? null) === 'standard_pages';
+
+        if ($isAdmin) {
+            $assets = ThemeBaseAssets::forAdminLayout($themes);
+        } elseif ($isStandardPages) {
+            $assets = ThemeBaseAssets::forStandardPagesLayout($themes);
+            $this->localCssRules($themes);
+        } else {
+            $assets = ThemeBaseAssets::forDefaultLayout($themes);
+            $this->localCssRules($themes);
+        }
+
+        foreach ($assets as $asset) {
+            $this->pageAssets->add($asset);
+        }
+
+        $this->exposeString('Yes, I am sure');
+        $this->exposeString('No, I have changed my mind');
+        $this->exposeString('Are you sure?');
     }
 
     /**
@@ -856,6 +915,54 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $event = $this->eventDispatcher->dispatch(new GetPageAssets());
         foreach ($event->assets as $contribution) {
             $this->pageAssets->add($contribution);
+        }
+    }
+
+    /**
+     * The theme-base "local-head resolver" piece (docs/PLAN.md's P42) --
+     * fired from `Renderer::render()`'s first call on this instance, same
+     * timing as `dispatchPageAssetsOnce()` above. Renders
+     * `LocalHeadView` directly via `renderView()` (not a recursive
+     * `Renderer::render()` call -- nothing this piece renders needs
+     * `Renderer`'s own View-capability hook) purely for its side effect
+     * on `$this->pageAssets`; the returned markup string itself is
+     * discarded, matching `local_head.latte`'s own real content (a
+     * conditional `{do combineCss(...)}`, nothing that prints).
+     *
+     * Narrowly scoped to the one real instance that exists today
+     * (`themes/default/local_head.latte`) by comparing each resolved
+     * theme's own `local_head` path against that exact file, not by
+     * theme id alone -- `themes/admin/default/` is also a real theme
+     * literally named "default", with no `localHead` of its own, but
+     * matching by id alone would still be a coincidence worth not
+     * relying on. A second theme adding its own `localHead` file needs
+     * its own dedicated View plus its own branch here, not a change to
+     * this comparison.
+     */
+    public function resolveLocalHeadOnce(): void
+    {
+        if ($this->localHeadResolved) {
+            return;
+        }
+        $this->localHeadResolved = true;
+
+        $expected = realpath($this->paths->root . 'themes/default/local_head.latte');
+        if ($expected === false) {
+            return;
+        }
+
+        $themes = $this->getTemplateVars('themes');
+        if (! is_array($themes)) {
+            return;
+        }
+
+        foreach ($themes as $theme) {
+            $localHead = is_array($theme) ? ($theme['local_head'] ?? null) : null;
+            if (! is_string($localHead) || $localHead !== $expected) {
+                continue;
+            }
+
+            $this->renderView('themes/default/local_head.latte', new LocalHeadView(load_css: (bool) ($theme['load_css'] ?? true)));
         }
     }
 

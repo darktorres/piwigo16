@@ -21,7 +21,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -146,7 +145,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get());
     }
 
     public function testCheckReportsNoHeaderNoteWhenZeroAnomaliesAreFound(): void
@@ -339,7 +338,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_ignore_msg']);
         self::assertFalse($list[0]['can_select']);
         self::assertFalse($result->showSubmitIgnore);
@@ -386,7 +384,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_success_fct']);
         self::assertFalse($list[0]['can_select']);
     }
@@ -410,7 +407,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertIsArray($list[0]);
         self::assertFalse($list[0]['show_correction_success_fct']);
         self::assertFalse($list[0]['can_select']);
         self::assertIsString($list[0]['correction_error_fct']);
@@ -436,7 +432,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_fct']);
         self::assertTrue($list[0]['can_select']);
         self::assertTrue($result->showSubmitAutomaticCorrection);
@@ -464,7 +459,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_bad_fct']);
         self::assertTrue($list[0]['can_select']);
     }
@@ -487,7 +481,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertIsArray($list[0]);
         self::assertTrue($list[0]['can_select']);
         self::assertSame('please fix this by hand', $list[0]['correction_msg']);
     }

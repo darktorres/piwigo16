@@ -86,6 +86,8 @@ final readonly class GroupListPageRenderer
                 ->getToken(),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             groups: $tpl_groups,
+            rootUrl: $this->urlService->getRootUrl(),
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(

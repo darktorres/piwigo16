@@ -1,40 +1,5 @@
 {templateType Piwigo\Admin\Projection\GroupListView}
 {include 'include/colorbox.inc.latte'}
-{do exposeData('cache_key_users', $cacheKeys['users'])}
-{do exposeData('cache_key_hash', $cacheKeys['_hash'])}
-{do exposeData('root_url', $ROOT_URL)}
-{do exposeData('csrf_token', $pwgToken)}
-{do exposeString('member')}
-{do exposeString('members')}
-{do exposeString('Group added')}
-{do exposeString('Group renamed')}
-{do exposeString('Name is already taken')}
-{do exposeString('Name field must not be empty')}
-{do exposeString('Group "%s" succesfully deleted')}
-{do exposeString('Groups {%s} succesfully deleted')}
-{do exposeString('Set as group for new users')}
-{do exposeString('Unset as group for new users')}
-{do exposeString('Are you sure you want to delete group "%s"?')}
-{do exposeString('Yes, delete')}
-{do exposeString('User associated')}
-{do exposeString('Dissociate user from this group')}
-{do exposeString('User "%s" dissociated from this group')}
-{do exposeString('Manage the members')}
-{do exposeString('Group(s) {%s1} succesfully merged into "%s2"')}
-{do exposeString(' (copy)')}
-{do exposeString(' (copy %s)')}
-
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
-
-{do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
-
-{do combineScript(id: 'group_list', load: 'footer', require: 'jquery.selectize,page-data,LocalStorageCache', path: 'themes/admin/default/js/group_list.js')}
-
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 {* Define template function for the content of Groups*}
 {define groupContent}

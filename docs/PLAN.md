@@ -3089,6 +3089,18 @@ byte-identical (2 pure-whitespace baseline regenerations,
 `admin-album-sort`/`admin-stats`, same deleted-blank-line shape as
 every prior batch).
 
+Also migrated 4 more pages/Views, ~190 of 945: `UpdatesExtView` (17,
+shared by 4 real callers -- updates/ext + languages/themes/plugins
+update tabs), `PluginsNewView` (23, new `$colorscheme` property
+resolving the ambient `$themeconf['colorscheme']` reference via
+`$template->themeConf('colorscheme')` in `PluginsNewPageRenderer` --
+the first real instance of the plan's own documented ambient-value
+case), `PluginsInstalledView` (30), `TagsView` (41, one `order: 10`
+"issue 1080" CSS preserved) -- 26 pages/Views landed so far.
+`test:golden-html` byte-identical throughout (6 pure-whitespace
+baseline regenerations; `admin-plugins-installed` stayed byte-
+identical with no leftover blank line at all).
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

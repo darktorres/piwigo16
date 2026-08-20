@@ -13,6 +13,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Rate\Projection\RateSummaryForElement;
+use Piwigo\Rate\Projection\RatingScoreSummary;
+use Piwigo\Rate\Projection\RatingScoreUpdate;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -54,9 +56,8 @@ final readonly class RateService
      * @param int|string|null $rate raw $_POST value (string) from
      *   picture.php, an int from `Controller\Api\Images\
      *   ImageRateController`'s JSON body, or null when absent
-     * @return array{score: float|null, average: float|null, count: int}|false
      */
-    public function rate(int $imageId, int|string|null $rate, EntityManagerInterface $entityManager): array|false
+    public function rate(int $imageId, int|string|null $rate, EntityManagerInterface $entityManager): RatingScoreSummary|false
     {
 
         $rateItems = $this->currentConfig->rateItems;
@@ -133,10 +134,10 @@ final readonly class RateService
      * them can't leave some images with a freshly-recomputed score and
      * others still carrying a stale one from before this run.
      *
-     * @return array{score: float|null, average: float|null, count: int} values
-     *   are null/0 if $elementId is false or has no rates of its own
+     * @return RatingScoreSummary values are null/0 if $elementId is false or
+     *   has no rates of its own
      */
-    public function updateRatingScore(EntityManagerInterface $entityManager, int|false $elementId = false): array
+    public function updateRatingScore(EntityManagerInterface $entityManager, int|false $elementId = false): RatingScoreSummary
     {
         $byItem = $this->repo->findRateSummaries();
 
@@ -159,17 +160,14 @@ final readonly class RateService
             $score = ($itemRatecountAvg * $allRatesAvg + $summary->rsum) / ($itemRatecountAvg + (float) $summary->rcount);
             $score = round($score, 2);
             if ($id === $elementId) {
-                $return = [
-                    'score' => $score,
-                    'average' => round($summary->rsum / (float) $summary->rcount, 2),
-                    'count' => $summary->rcount,
-                ];
+                $return = new RatingScoreSummary(
+                    score: $score,
+                    average: round($summary->rsum / (float) $summary->rcount, 2),
+                    count: $summary->rcount,
+                );
             }
 
-            $updates[] = [
-                'id' => $id,
-                'ratingScore' => $score,
-            ];
+            $updates[] = new RatingScoreUpdate(id: $id, ratingScore: $score);
         }
 
         // set to null every image with no rate at all
@@ -184,11 +182,7 @@ final readonly class RateService
                 }
             });
 
-        return $return ?? [
-            'score' => null,
-            'average' => null,
-            'count' => 0,
-        ];
+        return $return ?? new RatingScoreSummary(score: null, average: null, count: 0);
     }
 
     /**

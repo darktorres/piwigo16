@@ -54,9 +54,9 @@ final readonly class ImageRateController implements ControllerInterface
         }
 
         return ResponseFactory::json([
-            'score' => $result['score'],
-            'average' => $result['average'],
-            'count' => $result['count'],
+            'score' => $result->score,
+            'average' => $result->average,
+            'count' => $result->count,
         ]);
     }
 }

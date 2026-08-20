@@ -23,6 +23,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -118,6 +119,7 @@ test('render skips every real DB-backed block when no listener has registered an
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         $permissionService = Kernel::container()->get(PermissionService::class);
         $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+        $rendererService = Kernel::container()->get(Renderer::class);
 
         if (! $lang instanceof Lang
             || ! $accessLevelChecker instanceof AccessLevelChecker
@@ -134,6 +136,7 @@ test('render skips every real DB-backed block when no listener has registered an
             || ! $currentLogger instanceof CurrentLogger
             || ! $permissionService instanceof PermissionService
             || ! $entityManager instanceof EntityManagerInterface
+            || ! $rendererService instanceof Renderer
         ) {
             throw new LogicException('Container returned an unexpected type for one of render()\'s method params.');
         }
@@ -154,9 +157,10 @@ test('render skips every real DB-backed block when no listener has registered an
             $currentLogger,
             $permissionService,
             $entityManager,
+            $rendererService,
         );
 
-        // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
+        // BlockManager::apply()'s Renderer::render() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.
         $menubar = $template->getTemplateVars('MENUBAR');
         expect($menubar)

@@ -40,6 +40,8 @@ final readonly class PictureView implements View
      * @param list<string>|null $relatedCategories
      * @param list<string> $pluginPictureButtons
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
+     * @param array<string, mixed>|null $rateSummary
+     * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
      */
     public function __construct(
         public ?array $navFirst,
@@ -81,5 +83,7 @@ final readonly class PictureView implements View
         public ?string $uOriginal,
         public array $pluginPictureButtons,
         public ?array $metadata,
+        public ?array $rateSummary,
+        public ?array $rating,
     ) {}
 }

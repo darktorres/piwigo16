@@ -10,10 +10,8 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Picture\Projection\PictureRateSummaryPageContext;
-use Piwigo\Picture\Projection\PictureRatingFormPageContext;
+use Piwigo\Picture\Projection\PictureRateResult;
 use Piwigo\Rate\RateRepository;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -29,7 +27,6 @@ final readonly class PictureRateRenderer
         private AccessControl $accessControl,
         private RateRepository $repo,
         private CurrentUser $currentUser,
-        private CurrentTemplate $currentTemplate,
         private CurrentConfig $currentConfig,
     ) {}
 
@@ -49,12 +46,10 @@ final readonly class PictureRateRenderer
      *
      * @param array<string, array<string, mixed>> $picture
      */
-    public function render(int $imageId, UrlServiceInterface $urlService, array $picture, string $url_self): void
+    public function render(int $imageId, UrlServiceInterface $urlService, array $picture, string $url_self): PictureRateResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->currentConfig->rateEnabled) {
-            return;
+            return new PictureRateResult(rateSummary: null, rating: null);
         }
 
         $rate_summary = [
@@ -72,7 +67,6 @@ final readonly class PictureRateRenderer
             $rate_summary['count'] = $summary->count;
             $rate_summary['average'] = $summary->average;
         }
-        $template->assignContext(new PictureRateSummaryPageContext($rate_summary));
 
         $user_rate = null;
         if ($this->currentConfig->rateAnonymous or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
@@ -94,16 +88,21 @@ final readonly class PictureRateRenderer
                 $user_rate = $this->repo->findUserRate($rate_image_id, $rate_user_id, $anonymous_id);
             }
 
-            $template->assignContext(new PictureRatingFormPageContext(
-                formAction: $urlService->addUrlParams(
-                    $url_self,
-                    [
-                        'action' => 'rate',
-                    ]
-                ),
-                userRate: $user_rate,
-                marks: $this->currentConfig->rateItems,
-            ));
+            return new PictureRateResult(
+                rateSummary: $rate_summary,
+                rating: [
+                    'F_ACTION' => $urlService->addUrlParams(
+                        $url_self,
+                        [
+                            'action' => 'rate',
+                        ]
+                    ),
+                    'USER_RATE' => $user_rate,
+                    'marks' => $this->currentConfig->rateItems,
+                ],
+            );
         }
+
+        return new PictureRateResult(rateSummary: $rate_summary, rating: null);
     }
 }

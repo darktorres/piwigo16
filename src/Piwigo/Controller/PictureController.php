@@ -1241,7 +1241,7 @@ final readonly class PictureController implements ControllerInterface
             relatedTags: $related_tags !== [] ? $related_tags : null,
         ));
 
-        $this->pictureRateRenderer
+        $rateResult = $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
         if ($this->currentConfig->activateComments) {
             new PictureCommentRenderer()
@@ -1328,6 +1328,8 @@ final readonly class PictureController implements ControllerInterface
             'uOriginal' => $u_original,
             'pluginPictureButtons' => $template->pictureButtons(),
             'metadata' => $metadata,
+            'rateSummary' => $rateResult->rateSummary,
+            'rating' => $rateResult->rating,
         ];
 
         if ($slideshow and $this->currentConfig->lightSlideshow) {

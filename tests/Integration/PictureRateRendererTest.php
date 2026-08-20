@@ -87,7 +87,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
     }
 
     #[Override]
@@ -132,21 +132,19 @@ final class PictureRateRendererTest extends IntegrationTestCase
             enabledHigh: false,
         ));
 
-        $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
+        $result = $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rate_summary');
         self::assertSame([
             'count' => 3,
             'score' => 87.5,
             'average' => 4.0,
-        ], $rateSummary);
+        ], $result->rateSummary);
 
-        $rating = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating');
-        self::assertIsArray($rating);
+        self::assertIsArray($result->rating);
         // Classic user (not anonymous) -- user_id=3's own vote (3), matched
         // with a null anonymous_id (isAuthorizeStatus(Classic) skips the
         // trimmed-IP computation entirely).
-        self::assertSame(3, $rating['USER_RATE']);
+        self::assertSame(3, $result->rating['USER_RATE']);
     }
 
     public function testRenderComputesTheCurrentAnonymousGuestsOwnRateFromTheTrimmedIp(): void
@@ -174,11 +172,10 @@ final class PictureRateRendererTest extends IntegrationTestCase
         ));
 
         try {
-            $this->renderer->render(1, $this->urlService(), $this->picture(1, 90.0), '/picture.php?/1');
+            $result = $this->renderer->render(1, $this->urlService(), $this->picture(1, 90.0), '/picture.php?/1');
 
-            $rating = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating');
-            self::assertIsArray($rating);
-            self::assertSame(5, $rating['USER_RATE']);
+            self::assertIsArray($result->rating);
+            self::assertSame(5, $result->rating['USER_RATE']);
         } finally {
             unset($_SERVER['REMOTE_ADDR']);
         }
@@ -197,18 +194,16 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // rows (tearDown() clears element_id=1's rate rows, and this test
         // inserts none), so count=0/average=null come from real aggregate
         // SQL semantics, not the method's own `$row === false` fallback.
-        $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
+        $result = $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rate_summary');
         self::assertSame([
             'count' => 0,
             'score' => 0.0,
             'average' => null,
-        ], $rateSummary);
+        ], $result->rateSummary);
 
-        $rating = CurrentTemplateTestFactory::get()->get()->getTemplateVars('rating');
-        self::assertIsArray($rating);
+        self::assertIsArray($result->rating);
         // count === 0 -- findUserRate() is never even called.
-        self::assertNull($rating['USER_RATE']);
+        self::assertNull($result->rating['USER_RATE']);
     }
 }

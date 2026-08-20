@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) + Batch 4 (picture page's 6 remaining ambient fragments) landed, full validation pass still owed; Batches 5–9 scoped (index.latte fragments, menubar, tabsheet, calendar, small standalone pages), not yet executed; mail domain identified as an unphased gap | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) + Batch 4 (picture page's 6 remaining ambient fragments) + Batch 5 (check_integrity/no_photo_yet/popuphelp small fragments) landed and fully validated (phpstan/lint:latte/lint:php/golden-html/relevant integration suites all green; one real regression found and fixed); Batches 6–9 scoped (index.latte's remaining ambient contributors, menubar, tabsheet, calendar), not yet executed; mail domain identified as an unphased gap | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -2008,27 +2008,43 @@ call site of that template. Verified end-to-end each commit: `php -l`
 + `composer analyse:phpstan` + `lint:latte` + `picture-1`/`slideshow`
 golden-html unchanged for the first (Metadata) commit; `php -l` +
 `lint:latte` only for Rate/Comments per this session's "skip
-validation" direction — the full deferred pass (phpstan/golden-html/
-test suite) across all of Batch 4 is still owed.
+validation" direction at the time. **The deferred full pass has since
+run**: a full `composer test:golden-html` caught one real regression
+from the Rate commit — `picture.latte`'s "Average" rating-score block
+(`{if $displayInfo['rating_score'] and isset($rate_summary)}` and its
+two `$rate_summary[...]` reads inside) was left on the pre-conversion
+snake_case name instead of the renamed `$rateSummary` property, so
+`isset()` was always false and the block silently stopped rendering.
+Fixed in a standalone commit (`0dd8d9008c`); full suite green
+afterward (73/73 golden-html).
 
-**Batch 5 — small, bounded, 1–2-caller fragments.**
+**Batch 5 (landed) — small, bounded, 1–2-caller fragments.**
 `check_integrity.latte` (2 callers: `IntroSubController`'s dashboard
-page, `MaintenanceActionDispatcher`) — convert to `CheckIntegrityView`,
-fold the rendered `Html` in via `Template::concat('ADMIN_CONTENT', ...)`
-the same way, just with a `Renderer::render()` call producing the
-string instead of `Template::parse()`. `no_photo_yet.latte`
+page, `MaintenanceActionDispatcher`) converted to `CheckIntegrityView`
+— `CheckIntegrity::display()` now returns a plain `CheckIntegrityResult`
+DTO (same data-returning-method split as `PictureMetadataRenderer`/
+`PictureRateRenderer`, needed because `CheckIntegrityTest` inspects raw
+pre-render anomaly data, not `Html`); `IntroSubController` constructs
+`CheckIntegrityView` and renders it, combining the `Html` with the
+existing admin content before assigning `AdminContentPageContext`.
+`MaintenanceActionDispatcher`'s own `CheckIntegrity` construction
+(calls `maintenance()`, never `display()`) dropped its now-stale
+`CurrentTemplate` arg. `no_photo_yet.latte`
 (`NoPhotoYetRenderer`, already has its own `Request`/`Event`
 scaffolding — the 2 context variants, `NoPhotoYetAdminPageContext`/
-`NoPhotoYetGuestPageContext`, merge into one `NoPhotoYetView`). The
-admin theme's own `popuphelp.latte` (`AdminPopuphelpController`,
-constructing `AdminPopuphelpPlaceholdersPageContext()` with zero
-constructor args) — the front-end `popuphelp.latte`'s own `PopuphelpView`
-is direct precedent for the shape, since Piwigo's theme-chain
-resolves the same bare filename to different physical files per theme.
-`redirect.latte` (`RedirectService`'s crash-path fallback) is a
-candidate too, but optional/lower-priority — it renders outside normal
-request flow, so treat it with the same extra care as any other
-error-path code, not folded in casually.
+`NoPhotoYetGuestPageContext`, merged into one `NoPhotoYetView`) also
+landed. The admin theme's own `popuphelp.latte` turned out to be
+**already converted** — `AdminPopuphelpController` already renders a
+shared `PopuphelpView` (theme-chain-resolved, same class the front-end
+`PopuphelpController` uses), landed earlier this session in commit
+`5cef717009`, before this batch's scoping text was written; no new
+work needed there. `redirect.latte` stays deferred/optional per this
+batch's original note (crash-path code, out of scope here). Verified
+end-to-end: `php -l`, scoped `composer analyse:phpstan`, `composer
+lint:latte`, `composer lint:php`, the 34 relevant `composer
+test:integration` tests (`CheckIntegrity`/`C13yInternal`/
+`MaintenanceActionDispatcher`), and a full `composer test:golden-html`
+(73/73) — all green.
 
 **Batch 6 — `index.latte`'s remaining ambient contributors.**
 `thumbnails.latte` (`CategoryDefaultRenderer`, one

@@ -25,7 +25,6 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
@@ -71,12 +70,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 {
     /**
      * Plain-array replacement for Smarty's own `Data::$tpl_vars` --
-     * `assign()`/`append()`/`getTemplateVars()`/`clearAssign()` below
-     * replicate Smarty's own semantics exactly (matching
-     * `vendor/smarty/smarty/src/Data.php`), since
-     * `setTheme()`'s parent/child theme accumulation (a plain-list
-     * `append()` for `themes`, a key-merging `append(..., true)` for
-     * `themeconf`) depends on getting that precisely right.
+     * `assign()`/`getTemplateVars()`/`clearAssign()` below replicate
+     * Smarty's own semantics exactly (matching
+     * `vendor/smarty/smarty/src/Data.php`). `setTheme()`'s own
+     * `themes`/`themeconf` ambient vars are computed by `$this->themeChain`
+     * (P41, docs/PLAN.md) and assigned here in one shot, not accumulated
+     * via a merging `append()` anymore.
      *
      * @var array<string, mixed>
      */
@@ -116,13 +115,19 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public array $indexButtons = [];
 
     /**
-     * The theme directory chain, in resolution order -- read by
-     * `resolveLatteTemplatePath()` to find a bare `.latte` filename's
-     * real path.
-     *
-     * @var list<string>
+     * Owns the theme directory chain `resolveLatteTemplatePath()` walks
+     * to find a bare `.latte` filename's real path -- constructed fresh
+     * per instance below, same shape as `$scriptLoader`/`$cssLoader`
+     * (P41, docs/PLAN.md's `TemplateLocator`/`ThemeChain` extraction).
      */
-    private array $templateDirs = [];
+    private readonly TemplateLocator $templateLocator;
+
+    /**
+     * Owns the theme parent/child chain walk `setTheme()` delegates to
+     * -- constructed fresh per instance below, same reasoning as
+     * `$templateLocator` above.
+     */
+    private readonly ThemeChain $themeChain;
 
     private ?LatteEngine $latteEngineInstance = null;
 
@@ -160,6 +165,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     ) {
         $this->scriptLoader = new ScriptLoader();
         $this->cssLoader = new CssLoader();
+        $this->templateLocator = new TemplateLocator();
+        $this->themeChain = new ThemeChain($this->processCache, function (): void {
+            $this->assign([
+                'STD_PGS_SELECTED_SKIN' => $this->currentConfig->standardPagesSelectedSkin,
+                'STD_PGS_SELECTED_LOGO' => $this->currentConfig->standardPagesSelectedLogo,
+                'GALLERY_TITLE' => $this->currentConfig->galleryTitle,
+            ]);
+        });
 
         $conf_data_location = $this->currentConfig->dataLocation;
 
@@ -426,43 +439,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     /**
      * Resolves a bare `.latte` filename to a real, absolute filesystem
-     * path: the first hit walking `$this->templateDirs` in order. No
-     * custom `Latte\Loader` -- this resolves to a real path before
-     * Latte's own default `FileLoader` ever sees it, same shape as the
-     * reference's `resolveLatteTemplatePath()`.
+     * path via `$this->templateLocator`. No custom `Latte\Loader` --
+     * this resolves to a real path before Latte's own default
+     * `FileLoader` ever sees it, same shape as the reference's
+     * `resolveLatteTemplatePath()`.
      */
     private function resolveLatteTemplatePath(string $file): string
     {
-        // Already a real, absolute filesystem path -- FileCombiner's own
-        // "template=true" combinable rendering (CSS/JS files rendered
-        // through the template engine before being combined) resolves
-        // $combinable->path to a real path via realpath() itself, before
-        // ever reaching here; walking $this->templateDirs against an
-        // already-absolute path below would double-prefix it into a
-        // nonexistent candidate.
-        if (str_starts_with($file, '/') && file_exists($file)) {
-            return $file;
-        }
-
-        foreach ($this->templateDirs as $dir) {
-            $candidate = rtrim($dir, '/') . '/' . $file;
-            if (file_exists($candidate)) {
-                return $candidate;
-            }
-        }
-
-        // Real, live case: search_filters.inc.latte's own {include
-        // $ROOT_PATH . 'themes/admin/default/template/include/album_selector.inc.latte'}
-        // -- a full, project-root-relative path reaching across into a
-        // different theme entirely, not resolvable against this instance's
-        // own (single-theme) $templateDirs chain. Smarty resolves this the
-        // same way: a file= path not found via any registered
-        // template_dir falls back to being treated as relative to the
-        // current working directory, which for every real entry point in
-        // this app is $this->paths->root.
-        $rootCandidate = rtrim($this->paths->root, '/') . '/' . $file;
-        if (file_exists($rootCandidate)) {
-            return $rootCandidate;
+        $resolved = $this->templateLocator->resolve($file, $this->paths->root);
+        if ($resolved !== null) {
+            return $resolved;
         }
 
         $this->htmlRenderer()
@@ -470,55 +456,25 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Loads theme's parameters.
+     * Loads theme's parameters -- delegates the actual parent/child
+     * chain walk to `$this->themeChain` (P41, docs/PLAN.md), then
+     * applies its result: each resolved directory added to
+     * `$this->templateLocator`, and the merged `themes`/`themeconf`
+     * ambient vars assigned once (`setTheme()` itself is only ever
+     * called once per real `Template` instance -- from this class's own
+     * constructor -- so there's no pre-existing value an `assign()` here
+     * could ever clobber).
      */
     public function setTheme(string $root, ThemeId $theme, string $path, bool $load_css = true, bool $load_local_head = true, string $colorscheme = 'dark'): void
     {
-        // we need themeconf before std_pgs to see what themes use_standard_pages
-        $themeconf = $this->loadThemeconf($root . '/' . $theme->value);
+        $resolution = $this->themeChain->resolve($root, $theme, $path, $this->currentConfig, $load_css, $load_local_head, $colorscheme);
 
-        // We loop over the theme and the parent theme, so if we exclude default,
-        // standard pages can't get the header to load the html header
-        if (
-            $theme->value !== 'default'
-            and in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['identification', 'register', 'password', 'profile'], true)
-            and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages)
-        ) {
-            $theme = ThemeId::from('standard_pages');
-            $themeconf = $this->loadThemeconf($root . '/' . $theme->value);
+        foreach ($resolution->dirs as $dir) {
+            $this->setTemplateDir($dir);
         }
 
-        $this->setTemplateDir($root . '/' . $theme->value . '/' . $path);
-
-        $parentTheme = isset($themeconf['parent']) ? ThemeId::tryFrom($themeconf['parent']) : null;
-        if ($parentTheme instanceof ThemeId and $parentTheme->value !== $theme->value) {
-            $load_parent_css = $themeconf['load_parent_css'] ?? $load_css;
-            $load_parent_local_head = $themeconf['load_parent_local_head'] ?? $load_local_head;
-            $this->setTheme(
-                $root,
-                $parentTheme,
-                $path,
-                is_bool($load_parent_css) ? $load_parent_css : $load_css,
-                is_bool($load_parent_local_head) ? $load_parent_local_head : $load_local_head,
-                $colorscheme
-            );
-        }
-
-        $tpl_var = [
-            'id' => $theme->value,
-            'load_css' => $load_css,
-        ];
-        if (! in_array($themeconf['local_head'] ?? null, [null, false, 0, '0', '', []], true) and $load_local_head and is_string($themeconf['local_head'])) {
-            $tpl_var['local_head'] = realpath($root . '/' . $theme->value . '/' . $themeconf['local_head']);
-        }
-        $themeconf['id'] = $theme->value;
-
-        if (! isset($themeconf['colorscheme'])) {
-            $themeconf['colorscheme'] = $colorscheme;
-        }
-
-        $this->append('themes', $tpl_var);
-        $this->append('themeconf', $themeconf, true);
+        $this->assign('themes', $resolution->themes);
+        $this->assign('themeconf', $resolution->themeconf);
     }
 
     /**
@@ -526,7 +482,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function setTemplateDir(string $dir): void
     {
-        $this->templateDirs[] = $dir;
+        $this->templateLocator->addDir($dir);
     }
 
     /**
@@ -534,7 +490,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function getTemplateDir(): string
     {
-        return $this->templateDirs[0] ?? '';
+        return $this->templateLocator->firstDir();
     }
 
     /**
@@ -612,46 +568,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Appends a value onto an existing template variable -- mirrors
-     * Smarty's own `Data::append()`: the current value (defaulting to `[]`
-     * when unset, cast to a one-element array when scalar) either gets
-     * `$value` appended as a new list element, or -- when `$merge` is true
-     * and `$value` is itself an array -- has `$value`'s own keys merged in
-     * directly. `setTheme()`'s parent/child theme accumulation depends on
-     * this exact distinction: a plain list for `themes` (each theme in the
-     * chain is its own entry), a key-merged single array for `themeconf`
-     * (child keys must win over parent keys assigned earlier).
-     */
-    private function append(string $var, mixed $value, bool $merge = false): void
-    {
-        $newValue = $this->vars[$var] ?? [];
-        if (! is_array($newValue)) {
-            $newValue = (array) $newValue;
-        }
-
-        if ($merge && is_array($value)) {
-            foreach ($value as $key => $val) {
-                $newValue[$key] = $val;
-            }
-        } else {
-            $newValue[] = $value;
-        }
-
-        $this->vars[$var] = $newValue;
-    }
-
-    /**
      * Whether `$file` resolves against the Latte template-directory chain.
      * Direct replacement for the legacy `$tpl->smarty->templateExists()`
      * check used by mail rendering (`MailService`'s 3 direct call sites).
      */
     public function templateExists(string $file): bool
     {
-        if (file_exists($file)) {
-            return true;
-        }
-
-        return array_any($this->templateDirs, fn (string $dir): bool => file_exists(rtrim($dir, '/') . '/' . $file));
+        return $this->templateLocator->exists($file);
     }
 
     /**
@@ -1137,7 +1060,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Loads the configuration file from a theme directory and returns it.
+     * Loads the configuration file from a theme directory and returns
+     * it -- a thin public delegate to `$this->themeChain` (P41,
+     * docs/PLAN.md), kept for this method's own existing direct test
+     * coverage. `setTheme()`'s own recursive walk is the one other real
+     * caller, reached through `$this->themeChain` directly rather than
+     * through this method.
      *
      * No legacy `themeconf.inc.php` support -- every theme in this
      * codebase is `theme.json`-only, by design: full legacy-file
@@ -1147,135 +1075,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function loadThemeconf(string $dir): array
     {
-        $real_dir = realpath($dir);
-        if ($real_dir === false) {
-            // Theme directory doesn't actually exist on disk -- don't cache
-            // under a coerced-to-0 array key (every broken $dir would
-            // collide on the same cache slot).
-            return [];
-        }
-        $dir = $real_dir;
-        $cache_key = 'themeconf:' . $dir;
-        if (! $this->processCache->has($cache_key)) {
-            $themeconf = $this->loadThemeJson($dir);
-            // Put themeconf in cache
-            $this->processCache->set($cache_key, $themeconf);
-
-            // Return the just-computed value directly rather than falling
-            // through to the get() read below -- purely to skip a redundant
-            // array lookup, not for correctness (unlike the old *Static()
-            // shim, $this->processCache is a real, always-present
-            // constructor property now, so there's no not-booted-fallback
-            // edge case to worry about here anymore).
-            return $themeconf;
-        }
-
-        /** @var array<string, mixed> $cached */
-        $cached = $this->processCache->get($cache_key);
-
-        return $cached;
-    }
-
-    /**
-     * Reads `theme.json`, mapped onto the same `$themeconf` shape
-     * `setTheme()` already reads (`use_standard_pages`/`parent`/
-     * `load_parent_css`/`load_parent_local_head`/`local_head`/
-     * `colorscheme`/`icon_dir`/`admin_icon_dir`/`img_dir`/`mime_icon_dir`) -- a plain file read
-     * + `json_decode()`, not `PluginConfig\ThemeManifest`/`ThemeRegistry`:
-     * those are the same L3Presentation layer as this class but pull in
-     * DB/EntityManager dependencies this purely-file-based lookup has no
-     * reason to need. A malformed/missing `theme.json` degrades to `[]`,
-     * not a thrown exception.
-     *
-     * `icon_dir`/`admin_icon_dir`/`img_dir`/`mime_icon_dir`
-     * (`ThemeManifest::$iconDir`/`$adminIconDir`/`$imgDir`/`$mimeIconDir`)
-     * are real, live-read fields (Html\HtmlService reads `icon_dir` via
-     * `themeConf()`, Image\SrcImage reads `mime_icon_dir`, admin's own
-     * `permalinks`/`popuphelp`/`menubar` templates read `admin_icon_dir`
-     * directly) but deliberately have **no** convention-based default
-     * computed here -- unset when the manifest doesn't declare them,
-     * exactly like `parent`/`local_head`/`colorscheme` above, so a child
-     * theme with no icon assets of its own correctly inherits its
-     * parent's value via `setTheme()`'s parent-then-child merge
-     * (`themes/admin/roma` relies on this for `themes/admin/default`'s
-     * own explicit `admin_icon_dir` -- a hardcoded `'themes/<id>/icon'`
-     * default here would silently break that inheritance). `icon_dir`
-     * and `admin_icon_dir` are deliberately separate: admin themes set
-     * `icon_dir` to the gallery theme's own icon path (shared favicon,
-     * see `themes/admin/default/theme.json`) while `admin_icon_dir`
-     * points at the admin theme's own icon set (delete/exit/drag
-     * button icons) -- the same split as legacy piwigo16's
-     * `admin/themes/<id>/themeconf.inc.php`.
-     *
-     * `standard_pages` gets one hardcoded exception: its own
-     * `STD_PGS_SELECTED_SKIN`/`STD_PGS_SELECTED_LOGO`/`GALLERY_TITLE`
-     * template vars are genuinely dynamic (live `CurrentConfig` reads at
-     * request time), not expressible as static `theme.json` data --
-     * `standard_pages` is Piwigo-core internal infrastructure, not a
-     * real plugin-author extensibility surface (`setTheme()` already
-     * hardcodes substituting it in for `identification`/`register`/
-     * `password`/`profile` pages), so a small special case here matches
-     * that same already-established precedent rather than inventing a
-     * new dynamic-config mechanism for a single, non-extensible caller.
-     *
-     * @return array<string, mixed>
-     */
-    private function loadThemeJson(string $dir): array
-    {
-        if (! file_exists($dir . '/theme.json')) {
-            return [];
-        }
-
-        $contents = file_get_contents($dir . '/theme.json');
-        if ($contents === false) {
-            return [];
-        }
-
-        $data = json_decode($contents, true);
-        if (! is_array($data)) {
-            return [];
-        }
-
-        $themeId = basename($dir);
-
-        $themeconf = [
-            'use_standard_pages' => is_bool($data['useStandardPages'] ?? null) ? $data['useStandardPages'] : false,
-            'load_parent_css' => is_bool($data['loadParentCss'] ?? null) ? $data['loadParentCss'] : false,
-        ];
-        if (is_string($data['parent'] ?? null)) {
-            $themeconf['parent'] = $data['parent'];
-        }
-        if (is_string($data['localHead'] ?? null)) {
-            $themeconf['local_head'] = $data['localHead'];
-        }
-        if (is_string($data['colorscheme'] ?? null)) {
-            $themeconf['colorscheme'] = $data['colorscheme'];
-        }
-        if (is_string($data['iconDir'] ?? null)) {
-            $themeconf['icon_dir'] = $data['iconDir'];
-        }
-        if (is_string($data['adminIconDir'] ?? null)) {
-            $themeconf['admin_icon_dir'] = $data['adminIconDir'];
-        }
-        if (is_string($data['imgDir'] ?? null)) {
-            $themeconf['img_dir'] = $data['imgDir'];
-        }
-        if (is_string($data['mimeIconDir'] ?? null)) {
-            $themeconf['mime_icon_dir'] = $data['mimeIconDir'];
-        }
-        if (is_bool($data['loadParentLocalHead'] ?? null)) {
-            $themeconf['load_parent_local_head'] = $data['loadParentLocalHead'];
-        }
-
-        if ($themeId === 'standard_pages') {
-            $this->assign([
-                'STD_PGS_SELECTED_SKIN' => $this->currentConfig->standardPagesSelectedSkin,
-                'STD_PGS_SELECTED_LOGO' => $this->currentConfig->standardPagesSelectedLogo,
-                'GALLERY_TITLE' => $this->currentConfig->galleryTitle,
-            ]);
-        }
-
-        return $themeconf;
+        return $this->themeChain->loadThemeconf($dir);
     }
 
     /**

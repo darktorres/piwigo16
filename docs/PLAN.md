@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–D landed, Batch E's cutover-completion half landed too (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's + InstallWizard's + NoPhotoYetRenderer's `PageHeaderRenderer`/`PageTail` call sites, `render()`/`renderToString()`/`Template::pparse()`/`$output`/`appendOutput`/`flush`/`fetchOutput` all deleted, `parse()` simplified); Batch E's `TemplateLocator`/`ThemeChain` extraction + Part 2 (P41-G/H) not started (see below) | 8 |
+| P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–D landed, Batch E fully landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's + InstallWizard's + NoPhotoYetRenderer's `PageHeaderRenderer`/`PageTail` call sites, `render()`/`renderToString()`/`Template::pparse()`/`$output`/`appendOutput`/`flush`/`fetchOutput` all deleted, `parse()` simplified, `TemplateLocator`/`ThemeChain` physically extracted out of `Template.php`); Part 2 (P41-G/H, asset-pipeline swap) not started (see below) | 8 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -2775,8 +2775,71 @@ directly-touched rendering class (`MailService`, `NoPhotoYetRenderer`,
 — 68 passing), and `MailGoldenHtmlSnapshotTest` (Mail's own real
 `parse()` pipeline, 1 passing).
 
-**Remaining work.** P41-E's other half: physically extract
-`TemplateLocator`/`ThemeChain` out of `Template.php`.
+**P41-E's other half (landed)** — physically extracted
+`TemplateLocator`/`ThemeChain` out of `Template.php` into their own
+classes (`src/Piwigo/Template/TemplateLocator.php`,
+`src/Piwigo/Template/ThemeChain.php`,
+`src/Piwigo/Template/ThemeChainResolution.php`), matching the same
+"constructed internally in `Template`'s own constructor" shape already
+used for `$this->scriptLoader = new ScriptLoader()`/`$this->cssLoader
+= new CssLoader()` — not a shared/injected collaborator, so none of the
+7 real `new Template(...)` construction sites or `TemplateTestFactory::build()`
+needed to change.
+
+`TemplateLocator` owns the per-instance theme directory chain
+(`addDir()`/`firstDir()`/`resolve()`/`exists()`) —
+`resolveLatteTemplatePath()` now delegates to `resolve()`, returning
+`null` on a genuine miss instead of calling `fatalError()` directly (the
+one real caller converts that back into its own fatal-error path).
+`ThemeChain` owns the recursive parent/child theme walk
+(`resolve(): ThemeChainResolution`) and `theme.json` loading/caching
+(`loadThemeconf()`, kept public on both `ThemeChain` and as a thin
+`Template` delegate specifically to preserve `TemplateInstanceTest.php`'s
+own ~8 existing direct unit tests unmodified).
+
+The one real design tension: `setTheme()`'s original recursive
+algorithm mutated `Template::$vars` directly via a private `append()`
+helper (plain list-append for `themes`, key-merge-child-wins for
+`themeconf`) at every recursion level. Replaced with a single
+`ThemeChainResolution` value object (`dirs`/`themes`/`themeconf`)
+`ThemeChain::resolve()` returns in one shot, which `setTheme()` applies
+via 3 direct `assign()` calls — safe as a substitute for the old
+accumulate-via-recursion approach only because `setTheme()`'s OUTER
+call is confirmed (full-repo grep, real + test callers) to fire exactly
+once per `Template` instance, always from the constructor, so there's
+never pre-existing `$vars['themes']`/`$vars['themeconf']` content an
+`assign()` overwrite could clobber. `Template::append()` deleted
+outright (zero remaining callers after this rewrite).
+
+The one genuine remaining side effect `ThemeChain` can't compute
+purely — `loadThemeJson()` assigning `STD_PGS_SELECTED_SKIN`/
+`STD_PGS_SELECTED_LOGO`/`GALLERY_TITLE` the moment a `theme.json`
+literally named `standard_pages` loads (real, test-covered in
+`TemplateInstanceTest.php`) — threaded through as a constructor-injected
+`Closure $onStandardPagesThemeLoaded`, invoked from the exact same
+`loadThemeJson()` call site, since `ThemeChain` has no access to
+`Template`'s own private `assign()`.
+
+Full verification green: full `analyse:phpstan` (0 errors), `deptrac
+analyse` (0 violations), `ecs check` (clean), `composer test`
+(Unit+Arch, 5528 passing — 1 unrelated `CategoryRepositoryTest`
+DeadlockException, confirmed flaky via isolated rerun, all 105 passing
+alone), `test:golden-html` (74/74, zero baseline changes),
+`test:visual` (65/66 — the 1 failure, `admin-themes-new`, is the
+already-documented pre-existing hover-zoom race on the theme-preview
+grid described in `VisualRegressionTest.php`'s own comments, confirmed
+via direct screenshot inspection and a clean pass on a 3rd isolated
+rerun), and a scoped `TemplateInstanceTest.php`/`TemplateTest.php`/
+`LatteEngineWiringTest.php` run (100 passing, 150 assertions) covering
+every pre-existing `setTheme()`/`loadThemeconf()`/`parse()`/
+`finalizeHtml()` edge case (parent-theme `load_parent_css`/
+`load_parent_local_head` inheritance, non-string parent themeconf,
+`standard_pages` side-effect timing, `loadThemeconf()`'s own cache-key
+collision avoidance) against the new extracted classes unchanged. No
+test file needed modification for this piece — every existing test
+passed as-is against the new delegate-based `Template.php`.
+
+This completes P41-E and all of P41 Part 1.
 
 **Part 2 (P41-G/H) — asset-pipeline cutover.** Redirects
 `Template::combineCss()`/`combineScript()`/`footerScript()` to

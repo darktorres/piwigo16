@@ -2255,10 +2255,10 @@ never touches it). Each of the 7 sub-block templates
 (`menubar_links.latte`, `menubar_categories.latte`,
 `menubar_related_categories.latte`, `menubar_tags.latte`,
 `menubar_specials.latte`, `menubar_menu.latte`,
-`menubar_identification.latte`) receives exactly the same 2-variable
-isolated scope — `block: DisplayBlock, id: string` — confirmed by
-grepping the actual `{include}` call, not assumed from the old
-`{varType}` prelude's corpus-wide noise. `DisplayBlock` is already a
+`menubar_identification.latte`) receives the same explicit 2-arg
+`block: DisplayBlock, id: string` include call — but **not actually
+isolated scope**, a correction to this section's own earlier claim
+(see the follow-up resolution below). `DisplayBlock` is already a
 real typed class, not a raw array, so each sub-block's own tiny View
 is a 2-property wrapper around it. `menubar.latte` itself becomes
 `{templateType MenubarView}` with one property, `blocks: list<DisplayBlock>`
@@ -2266,11 +2266,48 @@ is a 2-property wrapper around it. `menubar.latte` itself becomes
 renders it via `Renderer::render()` and assigns the resulting `Html`
 into the same ambient `$var` (`'MENUBAR'`) it does today, so every
 already-converted page that prints `$MENUBAR` needs no change at all.
-`MenubarIdentificationPageContext` needs a follow-up check at
-implementation time: `DisplayBlock::$data` is declared `mixed` by
-design (genuinely polymorphic per block type), so confirm what shape
-it actually holds for the identification block specifically before
-assuming it folds the same simple way.
+
+**`MenubarIdentificationPageContext` follow-up (resolved, 2026-08-20):**
+this section originally flagged two open questions — whether
+`{include $block->template, block: ..., id: ...}` is truly isolated
+scope, and what shape `DisplayBlock::$data` holds for the
+identification block. Both traced directly against the real code:
+
+- **Latte's `{include}` is never actually isolated.**
+  `IncludeFileNode::print()` (`vendor/latte/latte/src/Latte/Essential/
+  Nodes/IncludeFileNode.php:57`) compiles every `{include file, args...}`
+  to `$this->createTemplate($file, $args + $this->params, $mode)` —
+  the explicit `$args` are PHP-array-unioned (`+`) with `$this->params`,
+  the *current* template's own full variable set, with `$args` only
+  winning on key collision. So `{include $block->template, block: ...,
+  id: ...}` hands the sub-template `block`/`id` **plus every other
+  ambient var already in `Template::$vars` at that point** — not a
+  fresh isolated scope. This corrects both this section's own earlier
+  "isolated scope" claim and the near-identical claim in the
+  include-only-partials section below; those conclusions happened to
+  be harmless (the templates in question only ever read the explicitly
+  -passed names), but the "isolated vs. full parent-scope" framing
+  itself was wrong throughout.
+- **`DisplayBlock::$data` is simply never set for the identification
+  block.** `MenubarRenderer::render()` only sets
+  `$block->template = 'menubar_identification.latte'`
+  (`src/Piwigo/Menu/MenubarRenderer.php:392`) — no `$block->data =
+  ...` line anywhere for this block. Every real field the template
+  needs (`$USERNAME`, `$U_LOGIN`, `$U_LOST_PASSWORD`,
+  `$AUTHORIZE_REMEMBERING`, `$U_REGISTER`, `$U_PROFILE`, `$U_LOGOUT`,
+  `$U_ADMIN`, plus `menubar_categories.latte`'s own `$U_START_FILTER`/
+  `$U_STOP_FILTER`) reaches the template purely through the ambient
+  ↔`+ $this->params` merge above, sourced entirely from
+  `MenubarIdentificationPageContext`'s own `assignContext()` call
+  (`MenubarRenderer.php:395`).
+
+Net finding: `MenubarIdentificationPageContext` is **not a render
+-conversion candidate at all** — nothing ever calls
+`assignVarFromTemplate()`/`parse()` for it, the same permanent
+-ambient shape `CanonicalUrlPageContext`/`SectionFavoritePageContext`/
+`CategoryCatsNavbarPageContext`/`CalendarChronologyPageContext`
+already establish. No code change needed; this closes the open
+follow-up.
 
 **Batch 8 (landed) — Tabsheet, same shape as menubar.** `Tabsheet::assign()`
 is the single choke point (constructing `new Tabsheet(...)` happens at
@@ -2303,10 +2340,16 @@ Checked directly: `navigation_bar.latte`'s real body only references
 `$navbar` (one array), and its 7 real call sites
 (`{include 'navigation_bar.latte', navbar: $cats_navbar}` in
 `index.latte`, `picture.latte`, `comments.latte`, and 3 admin
-templates) each pass exactly that one variable — confirming Latte's
-`{include}` here uses isolated scope, not full parent-scope
-inheritance, the same way Batch 7's `{include $block->template, block:
-..., id: ...}` does. `{templateType}` is still meaningful and worth
+templates) each pass exactly that one variable — so `{templateType
+NavigationBarView}`'s single `navbar` property is a complete, accurate
+contract for this template's real reads. (Correction, 2026-08-20: this
+was originally described as Latte's `{include}` using "isolated
+scope" here — it doesn't; `{include}` always merges the explicit args
+with the current template's own full variable set, per
+`IncludeFileNode::print()`, see the Batch 7 follow-up resolution
+above. The conclusion still holds because `navigation_bar.latte`
+simply never reads anything beyond `$navbar`, not because the scope
+was ever actually isolated.) `{templateType}` is still meaningful and worth
 doing here: the round-trip check only requires the declared class to
 implement `View` and carry a matching `#[Template]` attribute pointing
 back at the same file — nothing requires `Renderer::render()` to ever

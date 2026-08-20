@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Category\Projection\CategorySelectOptions;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -15,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `categories`/`categories_selected` pair.
  */
 #[Template('permalinks.latte')]
-final readonly class PermalinksView implements View
+final readonly class PermalinksView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<array<string, mixed>> $permalinks
@@ -36,4 +41,35 @@ final readonly class PermalinksView implements View
         public array $deletedPermalinks,
         public CategorySelectOptions $categoriesOptions,
     ) {}
+
+    /**
+     * `permalinks.latte`'s own unconditional `{do combineScript(...)}`/
+     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('permalinks', 'themes/admin/default/js/permalinks.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::css('themes/admin/default/css/pages/permalinks.css', id: 'permalinks'),
+        ];
+    }
+
+    /**
+     * `permalinks.latte`'s own unconditional `{do exposeData('nb_cats', ...)}`
+     * (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'nb_cats' => $this->nbCats,
+        ];
+    }
+
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [];
+    }
 }

@@ -1,23 +1,4 @@
 {templateType Piwigo\Admin\Projection\UpdatesExtView}
-{do combineScript(id: 'jquery.ajaxmanager', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.ajaxmanager.js')}
-{do combineScript(id: 'jquery.jgrowl', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.jgrowl_minimized.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery.jgrowl.css")}
-{do combineCss(id: 'updates_ext', path: 'themes/admin/default/css/pages/updates_ext.css')}
-
-{do exposeData('csrf_token', $pwgToken)}
-{do exposeData('ext_type', $extType)}
-{do exposeString('ERROR')}
-{do exposeString('Update Complete')}
-{do exposeString('an error happened')}
-{do exposeString('Reset ignored updates')}
-{do exposeString('Yes, I am sure')}
-{do exposeString('No, I have changed my mind')}
-{do exposeString('Are you sure you want to update all extensions?')}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineScript(id: 'updates_ext', load: 'footer', require: 'jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl,common,jquery.confirm,page-data', path: 'themes/admin/default/js/updates_ext.js')}
-
 {if $isWebmaster == 1}
   <div class="autoupdate_bar">
     <div

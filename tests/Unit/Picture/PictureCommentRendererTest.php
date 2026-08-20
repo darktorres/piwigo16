@@ -156,8 +156,10 @@ test('render does nothing when no related category is commentable', function ():
         ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
 
-    expect($result->comments)->toBeNull()
-        ->and($result->commentAdd)->toBeNull();
+    expect($result->comments)
+        ->toBeNull()
+        ->and($result->commentAdd)
+        ->toBeNull();
 });
 
 // A mutation-testing sweep found `(bool) $category['commentable']` inside
@@ -338,7 +340,8 @@ test('render lets a guest post a comment when comments_forall is on', function (
         ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build(), pictureCommentRendererTestEntityManager(), new Renderer(CurrentTemplateTestFactory::get()));
 
-    expect($result->comments)->toBeNull();
+    expect($result->comments)
+        ->toBeNull();
 });
 
 test('render does not reject a logged-in (non-guest) user\'s posted comment even when comments_forall is off (`and`, not `or`)', function (): void {
@@ -393,5 +396,6 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
 
     expect((string) $result->commentList)
         ->toBe('STATIC-COMMENT-LIST-CONTENT')
-        ->and($result->comments)->toBe([]);
+        ->and($result->comments)
+        ->toBe([]);
 });

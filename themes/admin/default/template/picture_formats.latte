@@ -1,13 +1,4 @@
 {templateType Piwigo\Admin\Projection\PictureFormatsView}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineCss(id: 'picture_formats', path: 'themes/admin/default/css/pages/picture_formats.css')}
-{do combineScript(id: 'picture_formats', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/picture_formats.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do exposeData('csrf_token', $pwgToken)}
-{do exposeString('Delete %s format ?')}
-
 <div class="formats-header">
   <a
     class="{if count($formats) != 0}head-button-1{else}head-button-2{/if} icon-plus-circled"

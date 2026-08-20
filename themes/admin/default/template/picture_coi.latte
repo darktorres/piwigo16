@@ -1,11 +1,4 @@
 {templateType Piwigo\Admin\Projection\PictureCoiView}
-{capture $tmpHtmlHead}
-<link rel="stylesheet" type="text/css" href="themes/default/js/plugins/jquery.Jcrop.css" />
-{/capture}
-{do htmlHead($tmpHtmlHead)}
-{do combineScript(id: 'jquery.jcrop', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery.Jcrop.min.js')}
-{do combineCss(id: 'picture_coi', path: 'themes/admin/default/css/pages/picture_coi.css')}
-
 <form method="post">
   <fieldset>
     <legend>{='Photo sizes with crop'|translate}</legend>
@@ -57,6 +50,3 @@
     </p>
   </fieldset>
 </form>
-
-{do combineScript(id: 'picture_coi', load: 'footer', require: 'jquery.jcrop,page-data', path: 'themes/admin/default/js/picture_coi.js')}
-{if isset($coi)}{do exposeData('coi', $coi)}{/if}

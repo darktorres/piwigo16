@@ -6,6 +6,7 @@ namespace Piwigo\Admin\BatchManager;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\Event\GetBatchManagerPrefilters;
+use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -62,6 +63,10 @@ final class FilterPanelRenderer
 
         /** @var array<string, mixed> $bulk_manager_filter */
         $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+        // $bulk_manager_filter itself stays raw array below -- FilterPanelPageContext::$filter
+        // is a confirmed boundary (batch_manager_filter.inc.latte drives checkbox/selected
+        // state off raw isset($filter['xxx']) key-presence checks for nearly every field).
+        $filter = BulkManagerFilter::fromArray($bulk_manager_filter);
 
         $prefilters = [
             [
@@ -134,18 +139,15 @@ final class FilterPanelRenderer
                 $level_options[$level] = $lang->t('Everybody');
             }
         }
-        $filter_level_options_selected_raw = $bulk_manager_filter['level'] ?? 0;
-        $filter_level_options_selected = is_int($filter_level_options_selected_raw) ? $filter_level_options_selected_raw : 0;
+        $filter_level_options_selected = $filter->level ?? 0;
 
         // tags
         $filter_tags = [];
 
-        if (is_array($bulk_manager_filter['tags'] ?? null) && count($bulk_manager_filter['tags']) > 0) {
-            $filter_tags_ids = array_filter($bulk_manager_filter['tags'], is_scalar(...));
-
+        if ($filter->tags !== []) {
             $filter_tags = $tagService
                 ->getTagListByIds(
-                    array_map(intval(...), array_values($filter_tags_ids)),
+                    $filter->tags,
                     $htmlService,
                 );
         }
@@ -154,8 +156,8 @@ final class FilterPanelRenderer
         $selected_category = null;
         $selected_category_name = '';
 
-        if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])) {
-            $selected_category = intval($bulk_manager_filter['category']);
+        if ($filter->category !== null) {
+            $selected_category = $filter->category;
             $selected_category_name = $htmlService
                 ->getCatDisplayNameFromId($selected_category);
         }

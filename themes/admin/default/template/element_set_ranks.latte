@@ -1,8 +1,4 @@
 {templateType Piwigo\Admin\Projection\ElementSetRanksView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'element_set_ranks', load: 'footer', require: 'jquery.ui.sortable,jquery.tipTip', path: 'themes/admin/default/js/element_set_ranks.js')}
-{do combineCss(id: 'element_set_ranks', path: 'themes/admin/default/css/pages/element_set_ranks.css')}
-
 <form action="{$formAction|noescape}" method="post" id="element_set_ranks">
   <input type="hidden" name="pwg_token" value="{$csrfToken}">
   <fieldset n:if="!empty($thumbnails)">

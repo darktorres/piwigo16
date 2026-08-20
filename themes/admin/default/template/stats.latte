@@ -1,16 +1,4 @@
 {templateType Piwigo\Admin\Projection\StatsView}
-{do exposeString('Page Visited')}
-{do exposeString('Average last 12 months')}
-{do exposeData('month_labels', $monthLabels)}
-{do exposeData('lang_code', $langCode)}
-
-{do combineScript(id: 'chart.js', load: 'footer', path: 'themes/default/js/plugins/Chart.min.js')}
-{do combineCss(path: "themes/default/js/plugins/Chart.min.css")}
-
-{do combineScript(id: 'moment-with-locales.js', path: 'themes/default/js/plugins/moment-with-locales.min.js')}
-
-{do combineScript(id: 'stats', load: 'footer', require: 'chart.js,moment-with-locales.js,page-data', path: 'themes/admin/default/js/stats.js')}
-
 <div class="stat-compare-mode">
   <label class="switch">
     <input type="checkbox" id="toggleCompareMode">

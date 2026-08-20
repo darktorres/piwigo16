@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -15,7 +18,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `Admin\UserPermPageRenderer`, `Admin\GroupPermPageRenderer`.
  */
 #[Template('double_select.latte')]
-final readonly class DoubleSelectView implements View
+final readonly class DoubleSelectView implements View, HasPageAssets
 {
     /**
      * `$categoryOption{True,False}` and their `*Selected` counterparts
@@ -38,4 +41,16 @@ final readonly class DoubleSelectView implements View
         public array $categoryOptionFalse,
         public array $categoryOptionFalseSelected,
     ) {}
+
+    /**
+     * `double_select.latte`'s own unconditional `{do combineCss(...)}`
+     * (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::css('themes/admin/default/css/pages/double_select.css', id: 'double_select'),
+        ];
+    }
 }

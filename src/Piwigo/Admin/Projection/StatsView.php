@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -16,7 +21,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * separately from this page's own body, via `AdminContentPageContext`).
  */
 #[Template('stats.latte')]
-final readonly class StatsView implements View
+final readonly class StatsView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param float[]|int[] $compareYears
@@ -36,4 +41,41 @@ final readonly class StatsView implements View
         public string $langCode,
         public string $monthLabels,
     ) {}
+
+    /**
+     * `stats.latte`'s own unconditional `{do combineScript(...)}`x3/
+     * `{do combineCss(...)}`x1 (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('chart.js', 'themes/default/js/plugins/Chart.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/default/js/plugins/Chart.min.css'),
+            AssetContribution::script('moment-with-locales.js', 'themes/default/js/plugins/moment-with-locales.min.js'),
+            AssetContribution::script('stats', 'themes/admin/default/js/stats.js', loadMode: LoadMode::Footer, dependsOn: ['chart.js', 'moment-with-locales.js', 'page-data']),
+        ];
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'month_labels' => $this->monthLabels,
+            'lang_code' => $this->langCode,
+        ];
+    }
+
+    /**
+     * `stats.latte`'s own unconditional `{do exposeString(...)}`x2
+     * (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Page Visited',
+            'Average last 12 months',
+        ];
+    }
 }

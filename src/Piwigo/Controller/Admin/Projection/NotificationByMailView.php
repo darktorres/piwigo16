@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin\Projection;
 
 use Latte\Runtime\Html;
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -17,7 +21,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * two. `$doubleSelect` is only set when `$subscribeActive` is true.
  */
 #[Template('notification_by_mail.latte')]
-final readonly class NotificationByMailView implements View
+final readonly class NotificationByMailView implements View, HasPageAssets
 {
     /**
      * @param array{SEND_HTML_MAIL: bool, SEND_MAIL_AS: string, SEND_DETAILED_CONTENT: bool, COMPLEMENTARY_MAIL_CONTENT: string, SEND_RECENT_POST_DATES: bool}|null $param
@@ -34,4 +38,15 @@ final readonly class NotificationByMailView implements View
         public string $formAction,
         public ?string $repostSubmitName,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notification_by_mail.js', loadMode: LoadMode::Footer),
+        ];
+    }
 }

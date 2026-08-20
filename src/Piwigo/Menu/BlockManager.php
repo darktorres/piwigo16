@@ -15,9 +15,11 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Menu\Event\BlockManagerApply;
 use Piwigo\Menu\Event\BlockManagerPrepareDisplay;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
-use Piwigo\Menu\Projection\MenubarBlocksPageContext;
+use Piwigo\Menu\Projection\MenubarHtmlPageContext;
+use Piwigo\Menu\Projection\MenubarView;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
@@ -39,6 +41,7 @@ final class BlockManager
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentConfig $currentConfig,
+        private readonly Renderer $renderer,
     ) {}
 
     /**
@@ -153,9 +156,14 @@ final class BlockManager
     }
 
     /**
-     * Parse the menu and assign the result in a template variable.
+     * Renders `menubar.latte` and assigns the result into the ambient
+     * `MENUBAR` template variable. `$var`/`$file` used to be free
+     * parameters, but `apply()` has exactly one real caller
+     * (`MenubarRenderer::render()`, always `'MENUBAR'`/`'menubar.latte'`)
+     * -- and `MenubarView`'s own `#[Template]` attribute fixes the file
+     * regardless, so a passable `$file` no longer means anything.
      */
-    public function apply(string $var, string $file): void
+    public function apply(): void
     {
         $template = $this->currentTemplate->get();
 
@@ -167,7 +175,7 @@ final class BlockManager
             }
         }
         $this->sortBlocks();
-        $template->assignContext(new MenubarBlocksPageContext($this->display_blocks));
-        $template->assignVarFromTemplate($var, $file);
+        $menubarHtml = $this->renderer->render(new MenubarView($this->display_blocks));
+        $template->assignContext(new MenubarHtmlPageContext($menubarHtml));
     }
 }

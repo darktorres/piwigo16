@@ -23,6 +23,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -183,7 +184,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             ],
         ));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->getTemplateVars('QUERY_SEARCH'));
     }
@@ -192,7 +193,7 @@ final class MenubarRendererTest extends IntegrationTestCase
     {
         $this->sectionContextRegistry->set(new SectionContext(section: Section::Categories));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         self::assertNull($this->template->getTemplateVars('QUERY_SEARCH'));
     }
@@ -207,7 +208,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         ];
         $this->filterState->set(true, '', '', []);
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
             'filter' => 'stop',
@@ -227,7 +228,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->filterState->set(false, '', '', []);
         CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withRawAttribute('recent_period', 7));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
             'filter' => 'start-recent-7',
@@ -259,7 +260,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             combinedCategories: null,
         ));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.
@@ -296,7 +297,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             ]],
         ));
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         // BlockManager::apply()'s assignVarFromTemplate() wraps MENUBAR in
         // Latte\Runtime\Html, not a plain string.
@@ -331,7 +332,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             },
         );
 
-        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager);
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
         self::assertFalse($userExpand);
         self::assertFalse($filterEnabled);

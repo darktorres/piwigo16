@@ -5,11 +5,37 @@ declare(strict_types=1);
 use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
+use Piwigo\Core\TemplatePageContext;
 use Piwigo\Menu\DisplayBlock;
-use Piwigo\Menu\Projection\MenubarBlocksPageContext;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tools\PhpStan\Latte\ContextVariableExtractor;
 use Piwigo\Tools\PhpStan\Latte\VariableMapBuilder;
+
+// Throwaway fixture, not a real production class -- P40 converted every
+// real TemplatePageContext with a DisplayBlock-typed array param
+// (MenubarBlocksPageContext) to a typed View, leaving no remaining real
+// class shaped this way to exercise the "FQCN-expands use-imported
+// classes in docblock types" test below.
+final readonly class ContextVariableExtractorTestDisplayBlocksFixture implements TemplatePageContext
+{
+    /**
+     * @param array<int|string, DisplayBlock> $blocks
+     */
+    public function __construct(
+        public array $blocks,
+    ) {}
+
+    /**
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function toArray(): array
+    {
+        return [
+            'blocks' => $this->blocks,
+        ];
+    }
+}
 
 beforeEach(function (): void {
     $this->extractor = new ContextVariableExtractor();
@@ -24,7 +50,7 @@ it('maps CategoryCatsNavbarPageContext with a nested array-shape docblock', func
 });
 
 it('FQCN-expands use-imported classes in docblock types', function (): void {
-    $extracted = $this->extractor->extract(MenubarBlocksPageContext::class);
+    $extracted = $this->extractor->extract(ContextVariableExtractorTestDisplayBlocksFixture::class);
 
     $withDisplayBlock = array_filter(
         $extracted->vars,

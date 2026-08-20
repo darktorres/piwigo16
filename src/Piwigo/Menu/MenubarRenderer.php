@@ -37,6 +37,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 
@@ -74,7 +75,7 @@ final class MenubarRenderer
      * (see that method's own docblock); every caller but GalleryController
      * ignores the return value.
      */
-    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger, PermissionService $permissionService, EntityManagerInterface $entityManager): ?int
+    public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, UrlServiceInterface $urlService, FilterState $filterState, SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, DeploymentPolicy $deploymentPolicy, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, Translator $translator, CurrentLogger $currentLogger, PermissionService $permissionService, EntityManagerInterface $entityManager, Renderer $renderer): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
@@ -91,7 +92,7 @@ final class MenubarRenderer
         $imageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $sessionService, $eventDispatcher, $currentConfig, $menubarPaths, $categoryService);
         $tagService = new TagService($lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $imageService);
 
-        $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
+        $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig, $renderer);
 
         // if guest_access is disabled, we only display the menus if the user is identified
         if ($currentConfig->guestAccess or ! $accessLevelChecker->isAGuest()) {
@@ -405,7 +406,7 @@ final class MenubarRenderer
             uAdmin: $u_admin,
         ));
 
-        $menu->apply('MENUBAR', 'menubar.latte');
+        $menu->apply();
 
         return $categoryCountCategories;
     }

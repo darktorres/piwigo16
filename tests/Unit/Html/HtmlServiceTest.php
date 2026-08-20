@@ -30,6 +30,7 @@ use Piwigo\Picture\Event\GetElementUrl;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -1630,7 +1631,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $menu = new BlockManager('sidebar', new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $menu = new BlockManager('sidebar', new EventDispatcher(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 

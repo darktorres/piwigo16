@@ -6,6 +6,7 @@ use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\Event\BlockManagerPrepareDisplay;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -64,7 +65,7 @@ test('DisplayBlock getBlock returns the exact registered block it was constructe
 });
 
 test('registerBlock accepts the first registration and rejects a duplicate id', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
     $block = new RegisteredBlock('cat', 'Categories', 'core');
 
     expect($manager->registerBlock($block))
@@ -78,7 +79,7 @@ test('registerBlock accepts the first registration and rejects a duplicate id', 
 });
 
 test('prepareDisplay assigns positions in registration order (idx*50) with no config override', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('first', 'First', 'core'));
     $manager->registerBlock(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -103,7 +104,7 @@ test('prepareDisplay honors an explicit position from blk_menubar config', funct
         'cat' => 5,
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepareDisplay();
 
@@ -122,7 +123,7 @@ test('prepareDisplay hides a block whose configured position is 0 or negative', 
         'tags' => -10,
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->registerBlock(new RegisteredBlock('tags', 'Tags', 'core'));
     $manager->prepareDisplay();
@@ -142,7 +143,7 @@ test('prepareDisplay sorts display blocks by resolved position, independent of r
         'first' => 20,
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('first', 'First', 'core'));
     $manager->registerBlock(new RegisteredBlock('second', 'Second', 'core'));
     $manager->prepareDisplay();
@@ -171,7 +172,7 @@ test('prepareDisplay falls back to idx*50 positioning when a block\'s config val
         'first' => 'not-a-number',
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('first', 'First', 'core'));
     $manager->registerBlock(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -198,7 +199,7 @@ test('prepareDisplay casts a numeric-string config position to a real int', func
         'cat' => '5',
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepareDisplay();
 
@@ -220,7 +221,7 @@ test('prepareDisplay treats a resolved position of exactly 1 as visible', functi
         'cat' => 1,
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepareDisplay();
 
@@ -241,7 +242,7 @@ test('prepareDisplay sorts display blocks before firing blockmanager_prepare_dis
         'first' => 20,
     ];
 
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig);
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), $currentConfig, new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('first', 'First', 'core'));
     $manager->registerBlock(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -280,7 +281,7 @@ test('prepareDisplay sorts display blocks before firing blockmanager_prepare_dis
 });
 
 test('prepareDisplay re-sorts after blockmanager_prepare_display handlers change block positions', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('first', 'First', 'core'));
     $manager->registerBlock(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -321,7 +322,7 @@ test('prepareDisplay re-sorts after blockmanager_prepare_display handlers change
 });
 
 test('hideBlock removes a previously visible block', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepareDisplay();
 
@@ -333,7 +334,7 @@ test('hideBlock removes a previously visible block', function (): void {
 });
 
 test('setBlockPosition updates the position of a visible block, and is a no-op for an unknown/hidden one', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
     $manager->registerBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepareDisplay();
 
@@ -350,7 +351,7 @@ test('setBlockPosition updates the position of a visible block, and is a no-op f
 });
 
 test('getId returns the manager\'s own id', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+    $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
     expect($manager->getId())
         ->toBe('menubar');

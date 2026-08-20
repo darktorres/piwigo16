@@ -132,7 +132,7 @@ Three structural changes produced that drift:
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
-| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism landed; P42-A's 11-partial conversion landed, theme-base pieces still open; P42-B (945-call-site migration) not started (see below) | 4 |
+| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) not started (see below) | 6 |
 | P43 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
@@ -2976,13 +2976,50 @@ reaching one of these files (including all 7 of
 analyse:phpstan`/`deptrac analyse`/`ecs check`/`lint:latte` clean, full
 `composer test --testsuite=Unit,Arch` green (5386 tests).
 
-**P42-A remaining work**: the 4 theme-base pieces
-(`ThemeBaseAssets::forTheme()`, the local-head resolver, the
-confirm-dialog base-strings registration, relocating
-`Template::localCssRules()`'s call site) — not started yet. P42-B
-(the 945-call-site migration itself) can't begin until these land,
-since its own per-page batches assume the confirm-dialog triplet is
-"already covered by `ThemeBaseAssets`."
+**P42-A (fully landed) — the 4 theme-base pieces.** `ThemeBaseAssets`
+(3 named factory methods, not `forTheme(ThemeId)` as originally
+sketched — the 3 real layout families genuinely differ in their own
+unconditional assets, confirmed by reading all 3 real `layout.latte`
+files in full: `admin` loads 2 extra stylesheets with a hardcoded
+`admin/default/` path regardless of active sub-theme, registers
+`jquery` with an explicit path and no `load:`, and never calls
+`localCssRules()`), the local-head resolver
+(`Template::resolveLocalHeadOnce()`, fired from `Renderer::render()`'s
+hook alongside `dispatchPageAssetsOnce()`, narrowly scoped to the one
+real `local_head.latte` instance by comparing resolved paths, not
+theme id alone — `themes/admin/default/` is also a real theme
+literally named "default"), `localCssRules()`'s relocated call site,
+and the confirm-dialog registration all wire into
+`Template::setTheme()`, replacing the 3 real `layout.latte` files' own
+imperative equivalents.
+
+A new `Template::__construct()`/`setTheme()` `applyThemeBase` flag
+(default `true`) was needed — `install.latte` is the one real
+top-level page in the whole app that doesn't extend `layout.latte`
+(confirmed via grep: no other `.latte` file besides the 3 real
+`layout.latte`'s own has its own `<!DOCTYPE html>`), so
+`InstallWizard` opts out explicitly rather than gaining admin chrome
+it never wanted — found via a real golden-html regression during
+verification, not assumed. Every CSS/script-tag and JSON-island-key
+reordering in the resulting golden-html diffs (49 pages) was confirmed
+pure reordering (same tag sets, same JSON content) via a scripted
+line/JSON-aware diff check before accepting new baselines. Two
+pre-existing stale visual-regression baselines (`admin-config-search`,
+`admin-themes-new`) were also found and fixed in the same pass, both
+confirmed unrelated to this work.
+
+Also found and fixed, while investigating an Integration-suite run for
+this commit: `PageHeaderRendererTest`/`PageTailRendererTest`/
+`PageTailTest` each called `Template::parse('header.latte'/
+'footer.latte')` directly — both files were deleted in this session's
+earlier P41-G/H commit (`00fd301ac5`), a real pre-existing gap
+(confirmed via `git stash` against the tree without this commit, not a
+P42-A regression) that had gone uncaught because Integration tests
+hadn't been run since. Fixed by rendering a tiny fixture file
+extending `layout.latte` instead of the deleted standalone files.
+
+This closes P42-A in full (11-partial conversion + theme-base pieces).
+**P42-B (the 945-call-site page-by-page migration) can now begin.**
 
 **P43 — Typed contributions + plugin-owned routes.**
 

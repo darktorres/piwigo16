@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Config\CacheSizesSnapshot;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -19,7 +24,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * MaintenanceActionsView}), not this one.
  */
 #[Template('maintenance_env.latte')]
-final readonly class MaintenanceEnvView implements View
+final readonly class MaintenanceEnvView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<string> $activePluginNames
@@ -43,4 +48,37 @@ final readonly class MaintenanceEnvView implements View
         public ?string $timeElapsedSinceLastCalc,
         public array $activePluginNames,
     ) {}
+
+    /**
+     * `maintenance_env.latte`'s own unconditional `{do combineScript(...)}`/
+     * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('ajax', 'themes/admin/default/js/maintenance.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
+            AssetContribution::css('themes/admin/default/css/pages/maintenance_env.css', id: 'maintenance_env'),
+        ];
+    }
+
+    /**
+     * `maintenance_env.latte`'s own unconditional `{do exposeString(...)}`x2
+     * (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'right now',
+            '%s MB',
+        ];
+    }
 }

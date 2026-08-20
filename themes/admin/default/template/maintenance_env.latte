@@ -1,11 +1,4 @@
 {templateType Piwigo\Admin\Projection\MaintenanceEnvView}
-{do combineScript(id: 'ajax', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/maintenance.js')}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)}
-{do combineCss(id: 'maintenance_env', path: 'themes/admin/default/css/pages/maintenance_env.css')}
-{* order 10 is required, see issue 1080 *}
-{do exposeString('right now')}
-{do exposeString('%s MB')}
-
 <fieldset id="environment">
   <legend><span
       class="icon-television icon-red"

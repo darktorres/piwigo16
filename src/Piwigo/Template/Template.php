@@ -815,16 +815,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Loads the template file of the handle, compiles it and appends the result to the output,
-     * then sends the output to the browser.
-     */
-    public function pparse(string $handle): void
-    {
-        $this->parse($handle, false);
-        $this->flush();
-    }
-
-    /**
      * Load and compile JS & CSS into the template and sends the output to the browser.
      */
     public function flush(): void
@@ -892,9 +882,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // call anywhere in the page (e.g. admin.latte's own body) has to
         // survive until this substitution runs against footer.latte's
         // own placeholder, regardless of how many separate
-        // Template::finalizeHtml()/flush() calls the request makes along
-        // the way (install.latte's own single-flush pparse() call is the
-        // one remaining example of that -- P41, docs/PLAN.md).
+        // Template::finalizeHtml() calls the request makes along the way.
         $pageDataPayload = new PageDataPayload(self::pageState(), self::lang());
         $html = str_replace(
             self::JSON_ISLAND_TAG,

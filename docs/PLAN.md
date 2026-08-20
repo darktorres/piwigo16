@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–C landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's `PageHeaderRenderer`/`PageTail` call sites, `PageTail::render()`/`PageTailRenderer::render()` deleted); Batches D–E + Part 2 (P41-G/H) not started (see below) | 6 |
+| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–D landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's + InstallWizard's `PageHeaderRenderer`/`PageTail` call sites, `PageTail::render()`/`PageTailRenderer::render()`/`Template::pparse()` deleted); Batch E + Part 2 (P41-G/H) not started (see below) | 7 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -2669,14 +2669,70 @@ by an isolated rerun, unrelated to this batch — plus a regenerated
 (`AdminShellTest.php`, 12 passing), and scoped `test:integration`
 (`PageTailRendererTest.php`/`PageTailTest.php`, 6 passing).
 
-**Remaining batches.** P41-D converts
-`InstallWizard`/`install.latte` (no `{layout}` needed — it's a
-genuinely self-contained document). P41-E is the cutover completion:
-once every real caller has switched, delete the deprecated
-`parse()`-calling halves, `Template::$output`/`pparse`/`flush`/
-`finalizeOutput`/`fetchOutput` (keep `finalizeHtml()`/`parse()` itself —
-`MailService` still legitimately uses it), and physically extract
-`TemplateLocator`/`ThemeChain` out of `Template.php`.
+**Batch P41-D (landed)** — `InstallWizard`/`install.latte` converted to
+a real `Piwigo\Admin\Install\Projection\InstallView`. No `{layout}`
+needed, confirmed: `install.latte` is a genuinely self-contained
+`<!DOCTYPE html>` document (its own `<head>`/inline
+`{=getCombinedCss()}`/`{=getCombinedScripts('header')}` calls, both of
+which already return the same `COMBINED_CSS_TAG`/`COMBINED_SCRIPTS_TAG`
+placeholders every other page's `{do combineCss}`/`{do combineScript}`
+resolves to, so `Template::finalizeHtml()` needed zero changes to
+handle it), not something that parses against a shared admin
+header/footer at all. All 18 of `InstallRenderPageContext`'s own fields
+mapped 1:1 onto the new View's properties (confirmed via a real
+per-field grep of `install.latte`'s own body, past its 665-line
+`{varType}` header) — genuinely self-contained, unlike `admin.latte`'s
+own P41-C conversion; `$lang_info`/`$ROOT_URL`/`$themeconf`/`$themes`
+stay ambient, same `IndexView`-doesn't-declare-`$ROOT_URL` pattern as
+every other page. `InstallRenderPageContext` deleted outright (0
+remaining callers). `InstallWizard::render()` stays `void`/echoing
+(matches `AdminShell::runDispatch()`'s own shape, not a PSR-7
+controller) — `echo $template->finalizeHtml((string) $html);` in place
+of the old `assignContext()`+`pparse()` pair.
+
+Also deleted `Template::pparse()` itself in this same batch, ahead of
+P41-E's own formal schedule: `InstallWizard.php` was its last real
+caller (confirmed via full-repo grep — `parse()`/`flush()` both still
+have other real callers and stay), and PHPStan's dead-method detector
+flags it the same unsuppressable way it flagged `PageTail::render()`
+in P41-C. Fixed two stale docblocks this deletion left behind
+(`Http\ResponseFactory::html()`'s own "not pparse()'s echo" contrast,
+now "not flush()'s echo"; a P41-C-authored `Template::finalizeHtml()`
+comment that named install.latte's own pparse() call as the "one
+remaining multi-flush example" — no longer true now that every real
+page renders through a single `finalizeHtml()` call).
+
+Found and fixed one real pre-existing test/mechanism mismatch during
+verification: `tests/Integration/InstallWizardTest.php`'s own
+`testRenderAssignsTheCollectedValidationErrorsToTheTemplate()`
+asserted `Template::getTemplateVars('errors')` matched the wizard's
+own `$errors` array — a real assertion against the *old* ambient
+`assignContext()` mechanism, which a real typed View (never written
+into `Template::$vars`) can no longer satisfy. Fixed by dropping that
+assertion and keeping the test's own already-present, still-real
+behavioral check (`install.latte`'s rendered output actually contains
+the error text) — the same "verify against real call sites, not
+internal mechanism" call this session's own established discipline
+already applies elsewhere.
+
+Full verification green: `lint:latte` (131 templates),
+`phpstan-latte:compile` + full `analyse:phpstan` (0 errors, including
+the `pparse()` dead-method check), `deptrac analyse` (0 violations),
+`lint:php`, `composer test` (Unit+Arch, 5530 passing — 2 fewer than
+P41-C's count, `InstallRenderPageContextTest.php` deleted alongside its
+subject), scoped `test:integration` (`InstallWizardTest.php`, 16
+passing), and the real end-to-end `test:install` browser flow (1
+passing) — a genuine HTTP-level confirmation, not just Integration-test
+internals. No `test:golden-html`/`test:visual` coverage exists for
+install (per the plan's own Verification section), so `test:install`'s
+real browser walk-through is this batch's actual regression net.
+
+**Remaining batches.** P41-E is the cutover completion: once every
+real caller has switched, delete the deprecated `parse()`-calling
+halves, `Template::$output`/`flush`/`finalizeOutput`/`fetchOutput`
+(keep `finalizeHtml()`/`parse()` itself — `MailService` still
+legitimately uses it), and physically extract `TemplateLocator`/
+`ThemeChain` out of `Template.php`.
 
 **Part 2 (P41-G/H) — asset-pipeline cutover.** Redirects
 `Template::combineCss()`/`combineScript()`/`footerScript()` to

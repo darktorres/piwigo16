@@ -50,7 +50,7 @@ final class ResponseFactory
 
     /**
      * Legacy Template rendering accumulates into Template's own internal
-     * buffer (Template::parse('file.latte', false), not pparse()'s echo)
+     * buffer (Template::parse('file.latte', false), not flush()'s echo)
      * instead of retrofitting every renderer to return a string
      * directly, drained via Piwigo\Bootstrap\PageTail::renderToString()
      * into this Response body.

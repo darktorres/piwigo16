@@ -26,7 +26,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Template\Template;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -364,8 +364,9 @@ final class InstallWizardTest extends IntegrationTestCase
         unset($_SERVER['HTTPS']);
 
         $dbCredentials = DbCredentialsTestFactory::get();
+        $currentTemplate = new CurrentTemplate();
 
-        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get(), new ConnectedWithSession());
+        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), $currentTemplate, CurrentUserTestFactory::get(), new ConnectedWithSession(), new Renderer($currentTemplate));
         $wizard->boot();
 
         return $wizard;
@@ -511,11 +512,14 @@ final class InstallWizardTest extends IntegrationTestCase
      * other render() test in this file either has zero errors (a fresh
      * step-1 form) or asserts hasErrors() is false before ever calling
      * render(), so this is the first one to reach render() with real,
-     * analyzeForm()-collected errors still present. Verified both via the
-     * template's own assigned var directly (matching the config-write-
-     * fallback test's own use of getTemplateVars() elsewhere in this
-     * file) and via install.latte's real `{if isset($errors)}` HTML
-     * rendering of it.
+     * analyzeForm()-collected errors still present. Verified via
+     * install.latte's real `{if isset($errors)}` HTML rendering of it --
+     * unlike the old ambient `assignContext()`-based mechanism (still
+     * checkable via `Template::getTemplateVars()` for the classes that
+     * still use it), a real typed `InstallView` property is never
+     * written into `Template::$vars`, so the rendered output itself is
+     * the only real behavioral assertion available here (P41-D,
+     * docs/PLAN.md).
      */
     public function testRenderAssignsTheCollectedValidationErrorsToTheTemplate(): void
     {
@@ -543,10 +547,6 @@ final class InstallWizardTest extends IntegrationTestCase
         $wizard->render();
         $output = ob_get_clean();
         self::assertIsString($output);
-
-        $template = $this->reflectPrivate($wizard, 'template');
-        self::assertInstanceOf(Template::class, $template);
-        self::assertSame($this->reflectPrivate($wizard, 'errors'), $template->getTemplateVars('errors'));
 
         self::assertStringContainsString('please enter the webmaster username', $output);
     }

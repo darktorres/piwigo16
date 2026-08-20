@@ -23,7 +23,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Admin\Install\Projection\InstallRenderPageContext;
+use Piwigo\Admin\Install\Projection\InstallView;
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
@@ -79,6 +79,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -190,6 +191,7 @@ final class InstallWizard
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentUser $currentUser,
         private readonly ConnectedWithSession $connectedWithSession,
+        private readonly Renderer $renderer,
     ) {}
 
     /**
@@ -649,9 +651,12 @@ final class InstallWizard
     }
 
     /**
-     * Former install.php "start template output" through final pparse():
+     * Former install.php "start template output" through final render:
      * form rendering on step 1, or the post-install session/login/
-     * newsletter/mail sequence on step 2.
+     * newsletter/mail sequence on step 2. `install.latte` is a genuinely
+     * self-contained document (P41, docs/PLAN.md) -- no `{layout}`
+     * needed, just `Renderer::render()` + `Template::finalizeHtml()` in
+     * place of the old `assignContext()`/`pparse()` pair.
      */
     public function render(): void
     {
@@ -796,7 +801,7 @@ final class InstallWizard
                     );
             }
         }
-        $template->assignContext(new InstallRenderPageContext(
+        $installView = new InstallView(
             languageSelection: $language_selection,
             languageOptions: $languages_options,
             tContentEncoding: 'utf-8',
@@ -815,9 +820,12 @@ final class InstallWizard
             install: $install_value,
             errors: count($this->errors) !== 0 ? $this->errors : null,
             infos: count($this->infos) !== 0 ? $this->infos : null,
-        ));
+        );
 
         // ------------------------------------------------- html code display
-        $template->pparse('install.latte');
+        $html = $this->renderer->render($installView);
+        $body = $template->finalizeHtml((string) $html);
+
+        echo $body;
     }
 }

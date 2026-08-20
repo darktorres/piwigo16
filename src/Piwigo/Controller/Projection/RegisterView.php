@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -17,9 +21,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `string` rather than the `LangCode` the controller reads it from: the
  * default theme's own template never references it, only
  * `standard_pages`'s does, as an array key into `$languageOptions`.
+ * `$isStandardPagesTheme`/`$standardPagesSelectedSkin` disambiguate
+ * `pageAssets()` the same way `IdentificationView`'s own do.
  */
 #[Template('register.latte')]
-final readonly class RegisterView implements View
+final readonly class RegisterView implements View, HasPageAssets
 {
     /**
      * @param array<string, string> $languageOptions
@@ -34,5 +40,31 @@ final readonly class RegisterView implements View
         public array $languageOptions,
         public string $currentLanguage,
         public string $helpLink,
+        public bool $isStandardPagesTheme,
+        public string $standardPagesSelectedSkin,
     ) {}
+
+    /**
+     * `register.latte`'s own unconditional `{do combineScript(...)}`/
+     * `{do footerScript(...)}` (default theme) or
+     * `{do combineCss(...)}`x2/`{do combineScript(...)}`
+     * (`standard_pages` theme) -- mutually exclusive, only one physical
+     * file ever actually renders per request (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        if ($this->isStandardPagesTheme) {
+            return [
+                AssetContribution::css('themes/standard_pages/skins/' . $this->standardPagesSelectedSkin . '.css', id: 'standard_pages_css', order: 100),
+                AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
+                AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            ];
+        }
+
+        return [
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::inlineScript("pwg_tryFocus('login');"),
+        ];
+    }
 }

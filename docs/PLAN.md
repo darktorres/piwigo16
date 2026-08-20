@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper — the physical `Renderer`/`TemplateLocator`/`ThemeChain` class split stays deferred to P41's own one-time cutover by design | 2 |
+| P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |

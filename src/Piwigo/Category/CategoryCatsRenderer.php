@@ -12,7 +12,7 @@ use Piwigo\Category\Event\RenderCategoryDescription;
 use Piwigo\Category\Event\RenderCategoryLiteralDescription;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
-use Piwigo\Category\Projection\CategoryCatsPageContext;
+use Piwigo\Category\Projection\CategoryCatsResult;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -92,9 +92,19 @@ final readonly class CategoryCatsRenderer
      * depend on L2b). The one real caller (GalleryController) already has
      * these values from SectionContextRegistry::current().
      *
+     * Returns raw category-thumbnail-grid data rather than rendering
+     * `mainpage_categories.latte` itself and returning `Html`:
+     * `Piwigo\Category\*` is L2aCoreDomain and may not depend on
+     * `Renderer`/`View` (L3Presentation) directly, same split as
+     * `CategoryDefaultRenderer`/`Piwigo\Picture\PictureMetadataRenderer`.
+     * The `cats_navbar` ambient assign stays inside this method unchanged
+     * -- it's a plain `assignContext()` call (no render involved), which
+     * `TemplateInterface` (L1Infrastructure) already allows an L2a class
+     * to call directly.
+     *
      * @param array<string, mixed>|null $category
      */
-    public function render(Section $section, ?array $category, int $startcat): void
+    public function render(Section $section, ?array $category, int $startcat): ?CategoryCatsResult
     {
         $logger = $this->currentLogger->get();
         $template = $this->template;
@@ -332,6 +342,8 @@ final readonly class CategoryCatsRenderer
             $this->setCachedRepresentative($reprPool, $userId, $updateCatId, is_string($updateImageId) ? $updateImageId : null);
         }
 
+        $result = null;
+
         if (count($categories) > 0) {
             // Update filtered data
             $this->filterUpdater->updateCatsWithFilteredData($categories);
@@ -430,13 +442,11 @@ final readonly class CategoryCatsRenderer
             $derivativeParams = $this->imageStdParams->getByType(ImageStdParams::THUMB);
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatch(new IndexCategoryThumbnailsRendered($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
-            $template->assignContext(new CategoryCatsPageContext(
+            $result = new CategoryCatsResult(
                 maxRequests: $this->currentConfig->maxRequests,
                 categoryThumbnails: $tplThumbnailsVarSelection,
                 derivativeParams: $derivativeParams,
-            ));
-
-            $template->assignVarFromTemplate('CATEGORIES', 'mainpage_categories.latte');
+            );
 
             // navigation bar
             $catsNavigationBar = [];
@@ -452,6 +462,8 @@ final readonly class CategoryCatsRenderer
         }
 
         TimingHelper::debug('end CategoryCatsRenderer::render()', $this->pageState);
+
+        return $result;
     }
 
     private function getCachedRepresentative(CacheItemPoolInterface $pool, UserId $userId, int $catId): ?string

@@ -9,9 +9,11 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The 'cats_navbar' template variable assigned by
- * {@see \Piwigo\Category\CategoryCatsRenderer::render()}, after
- * {@see CategoryCatsPageContext} has already been assigned and the
- * 'index_category_thumbnails' template already parsed.
+ * {@see \Piwigo\Category\CategoryCatsRenderer::render()}, after its own
+ * {@see \Piwigo\Category\Projection\CategoryCatsResult} has already been
+ * returned and rendered by the caller. Stays a plain `assignContext()`
+ * call, unlike the `mainpage_categories.latte` render itself -- no
+ * `Renderer`/`View` dependency to route around here.
  */
 final readonly class CategoryCatsNavbarPageContext implements TemplatePageContext
 {

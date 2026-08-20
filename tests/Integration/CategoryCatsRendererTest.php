@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -13,10 +12,12 @@ use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryCatsResult;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\CategoryCatsView;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
@@ -32,9 +33,11 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -198,6 +201,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->filterUpdater = new CategoryCatsRendererFakeFilterUpdater();
 
         $this->template = TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default');
+        CurrentTemplateTestFactory::get()->set($this->template);
 
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger([
@@ -266,22 +270,32 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         return $categoryTreeCachePool;
     }
 
-    private function renderedCategoriesHtml(): string
+    // CategoryCatsRenderer::render() only returns raw category-thumbnail
+    // -grid data now (Piwigo\Category\* is L2aCoreDomain and may not
+    // depend on Renderer/View directly) -- this mirrors
+    // GalleryController's own real CategoryCatsView construction.
+    private function renderedCategoriesHtml(?CategoryCatsResult $result): string
     {
-        // assignVarFromTemplate() wraps CATEGORIES in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
-        $vars = $this->template->getTemplateVars('CATEGORIES');
+        if ($result === null) {
+            return '';
+        }
 
-        return $vars instanceof Html ? (string) $vars : '';
+        $html = new Renderer(CurrentTemplateTestFactory::get())->render(new CategoryCatsView(
+            maxRequests: $result->maxRequests,
+            categoryThumbnails: $result->categoryThumbnails,
+            derivativeParams: $result->derivativeParams,
+        ));
+
+        return (string) $html;
     }
 
     public function testRenderRendersTheRootCategoriesWithTheirOwnRepresentativePicture(): void
     {
         $this->seedUser();
 
-        $this->renderer->render(Section::Categories, null, 0);
+        $result = $this->renderer->render(Section::Categories, null, 0);
 
-        $html = $this->renderedCategoriesHtml();
+        $html = $this->renderedCategoriesHtml($result);
         self::assertStringContainsString('Sample Album', $html);
         self::assertStringNotContainsString('Nested Sub Album', $html);
     }
@@ -299,9 +313,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             // isRecentCategory() ever runs, so this proves the category
             // never reaches the recency check at all, regardless of
             // whether cat 1/2 themselves qualify as "recent".
-            $this->renderer->render(Section::RecentCats, null, 0);
+            $result = $this->renderer->render(Section::RecentCats, null, 0);
 
-            $html = $this->renderedCategoriesHtml();
+            $html = $this->renderedCategoriesHtml($result);
             self::assertStringNotContainsString('Empty Recent Test', $html);
         } finally {
             $this->conn->executeStatement('DELETE FROM categories WHERE id = ' . $newId);
@@ -348,8 +362,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             // Primes CategoryTreeCachePool's per-user 'tree_*' entry
             // (300s TTL, not cleared again until this test's own tearDown)
             // with a snapshot that includes the new category.
-            $this->renderer->render(Section::Categories, null, 0);
-            self::assertStringContainsString('Toctou Probe Album', $this->renderedCategoriesHtml());
+            $result = $this->renderer->render(Section::Categories, null, 0);
+            self::assertStringContainsString('Toctou Probe Album', $this->renderedCategoriesHtml($result));
 
             // Deleted from the live DB *without* touching the cache --
             // simulates the real race: the next render() call's own $tree
@@ -360,8 +374,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
             // Must not throw/warn, and the real, still-existing category
             // must still render normally around the now-vanished one.
-            $this->renderer->render(Section::Categories, null, 0);
-            $html = $this->renderedCategoriesHtml();
+            $result = $this->renderer->render(Section::Categories, null, 0);
+            $html = $this->renderedCategoriesHtml($result);
             self::assertStringNotContainsString('Toctou Probe Album', $html);
             self::assertStringContainsString('Sample Album', $html);
         } finally {
@@ -425,11 +439,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE categories SET representative_picture_id = NULL WHERE id = 2');
 
         try {
-            $this->renderer->render(Section::Categories, [
+            $result = $this->renderer->render(Section::Categories, [
                 'id' => 1,
             ], 0);
 
-            $html = $this->renderedCategoriesHtml();
+            $html = $this->renderedCategoriesHtml($result);
             self::assertStringNotContainsString('Nested Sub Album', $html);
         } finally {
             $this->conn->executeStatement('UPDATE categories SET representative_picture_id = 4 WHERE id = 2');
@@ -450,10 +464,10 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE images SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
 
         try {
-            $this->renderer->render(Section::Categories, null, 0);
+            $result = $this->renderer->render(Section::Categories, null, 0);
 
             $expected = DateHelper::formatFromto('2021-03-10 08:00:00', '2021-03-10 08:00:00');
-            $html = $this->renderedCategoriesHtml();
+            $html = $this->renderedCategoriesHtml($result);
             self::assertStringContainsString($expected, $html);
         } finally {
             $this->conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id = 1');
@@ -521,9 +535,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // category 1's images post-rollup.
         $this->filterUpdater->forceCountImagesZeroFor[] = 1;
 
-        $this->renderer->render(Section::Categories, null, 0);
+        $result = $this->renderer->render(Section::Categories, null, 0);
 
-        $html = $this->renderedCategoriesHtml();
+        $html = $this->renderedCategoriesHtml($result);
         self::assertStringNotContainsString('Sample Album', $html);
     }
 }

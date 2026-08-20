@@ -21,6 +21,8 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\IndexRendered;
 use Piwigo\Controller\Event\IndexRendering;
 use Piwigo\Controller\Projection\CanonicalUrlPageContext;
+use Piwigo\Controller\Projection\CategoryCatsHtmlPageContext;
+use Piwigo\Controller\Projection\CategoryCatsView;
 use Piwigo\Controller\Projection\IndexView;
 use Piwigo\Controller\Projection\SelectedTagsView;
 use Piwigo\Controller\Projection\ThumbnailsHtmlPageContext;
@@ -514,7 +516,15 @@ final readonly class GalleryController implements ControllerInterface
           and ($section_context->section === Section::RecentCats or $section_context->section === Section::Categories)
           and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
         ) {
-            $this->categoryCatsRenderer->render($section_context->section, $section_context->category, $section_context->startcat);
+            $categoryCatsResult = $this->categoryCatsRenderer->render($section_context->section, $section_context->category, $section_context->startcat);
+            if ($categoryCatsResult !== null) {
+                $categoriesHtml = $this->renderer->render(new CategoryCatsView(
+                    maxRequests: $categoryCatsResult->maxRequests,
+                    categoryThumbnails: $categoryCatsResult->categoryThumbnails,
+                    derivativeParams: $categoryCatsResult->derivativeParams,
+                ));
+                $template->assignContext(new CategoryCatsHtmlPageContext($categoriesHtml));
+            }
         }
 
         $image_derivatives = [];

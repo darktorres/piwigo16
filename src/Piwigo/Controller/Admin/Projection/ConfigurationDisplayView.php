@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -14,7 +18,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `configuration_*.latte` tab needs -- see {@see ConfigurationMainView}.
  */
 #[Template('configuration_display.latte')]
-final readonly class ConfigurationDisplayView implements View
+final readonly class ConfigurationDisplayView implements View, HasPageAssets
 {
     /**
      * @param array<string, mixed> $display
@@ -26,4 +30,18 @@ final readonly class ConfigurationDisplayView implements View
         public int $isWebmaster,
         public string $csrfToken,
     ) {}
+
+    /**
+     * `configuration_display.latte`'s own unconditional
+     * `{do combineScript(...)}`/`{do combineCss(...)}` (docs/PLAN.md's
+     * P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/admin/default/css/pages/configuration_display.css', id: 'configuration_display'),
+        ];
+    }
 }

@@ -178,7 +178,7 @@ final readonly class MaintenanceActionDispatcher
             case 'c13y':
 
                 $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
-                $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+                $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
                 $c13y->maintenance();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Reinitialize check integrity'), $this->lang->t('action successfully performed.')));
                 break;

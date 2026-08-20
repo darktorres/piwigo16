@@ -15,7 +15,7 @@ use Closure;
 use LogicException;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
-use Piwigo\Admin\Integrity\Projection\CheckIntegrityPageContext;
+use Piwigo\Admin\Integrity\Projection\CheckIntegrityResult;
 use Piwigo\Admin\Integrity\Request\C13yTreatmentRequest;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
@@ -23,7 +23,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use ReflectionFunction;
 
 final class CheckIntegrity
@@ -71,7 +70,6 @@ final class CheckIntegrity
         private readonly Translator $translator,
         private readonly EventDispatcher $eventDispatcher,
         private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
     ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -197,10 +195,8 @@ final class CheckIntegrity
     /**
      * Display anomalies list
      */
-    public function display(): void
+    public function display(): ?CheckIntegrityResult
     {
-        $template = $this->currentTemplate->get();
-
         $check_automatic_correction = false;
         $submit_automatic_correction = false;
         $submit_ignore = false;
@@ -262,16 +258,15 @@ final class CheckIntegrity
                 $c13y_list[] = $c13y_display;
             }
 
-            $template->assignContext(new CheckIntegrityPageContext(
+            return new CheckIntegrityResult(
                 showSubmitAutomaticCorrection: $submit_automatic_correction,
                 showSubmitIgnore: $submit_ignore,
                 c13yList: $c13y_list,
                 c13yDoCheck: $c13y_do_check,
-            ));
-
-            $template->concat('ADMIN_CONTENT', $template->parse('check_integrity.latte', true));
-
+            );
         }
+
+        return null;
     }
 
     /**

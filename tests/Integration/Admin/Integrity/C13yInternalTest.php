@@ -17,7 +17,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
@@ -27,7 +26,7 @@ function c13yInternalTestCheckIntegrity(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
 
-    return new CheckIntegrity(LangTestFactory::get(), $repo, new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
+    return new CheckIntegrity(LangTestFactory::get(), $repo, new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get());
 }
 
 function c13yInternalTestSessionService(): SessionService

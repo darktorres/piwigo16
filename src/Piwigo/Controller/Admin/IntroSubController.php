@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
@@ -14,6 +15,7 @@ use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\Projection\CheckIntegrityView;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Tabsheet;
@@ -523,23 +525,30 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             storageChartData: $data_storage,
         ));
 
-        // CheckIntegrity::display() below appends onto this same
-        // ADMIN_CONTENT key via Template::concat() -- must be assigned
-        // here, ambiently, before that call runs. No adminPageTitle
-        // override -- this page keeps AdminShell's own default.
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-        ));
-
         // Check integrity
         $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+        $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
         // add internal checks
         new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService, $this->currentConfig)
             ->registerHandlers();
         // check and display
         $c13y->check();
-        $c13y->display();
+        $c13yResult = $c13y->display();
+        if ($c13yResult !== null) {
+            $c13yHtml = $this->renderer->render(new CheckIntegrityView(
+                showSubmitAutomaticCorrection: $c13yResult->showSubmitAutomaticCorrection,
+                showSubmitIgnore: $c13yResult->showSubmitIgnore,
+                c13yList: $c13yResult->c13yList,
+                c13yDoCheck: $c13yResult->c13yDoCheck,
+            ));
+            $adminContent = new Html((string) $adminContent . (string) $c13yHtml);
+        }
+
+        // No adminPageTitle override -- this page keeps AdminShell's own
+        // default.
+        $template->assignContext(new AdminContentPageContext(
+            adminContent: $adminContent,
+        ));
     }
 
     /**

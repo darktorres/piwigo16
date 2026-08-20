@@ -21,6 +21,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -36,13 +37,15 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * CheckIntegrityAddAnomalyTest.php, relocated from tests/Unit/ once
  * CheckIntegrity's constructor started needing a real
  * IntegrityIgnoredAnomalyRepository) already covers addAnomaly()/
- * getHtlmLinksMoreInfo() directly (pure logic, no event/template
- * dependency of their own); check()/display() genuinely need a real
- * IntegrityIgnoredAnomalyRepository (updateConf()'s own persistence) and
- * a real rendered check_integrity.latte (themes/admin/default/template/), so
- * this suite boots Kernel + a real admin Template directly, the same
- * shape as PictureCommentRendererTest's own gallery-theme Template
- * construction.
+ * getHtlmLinksMoreInfo() directly (pure logic, no event dependency of
+ * their own); check()/display() genuinely need a real
+ * IntegrityIgnoredAnomalyRepository (updateConf()'s own persistence),
+ * so this suite boots Kernel + a real admin Template directly, the
+ * same shape as PictureCommentRendererTest's own gallery-theme
+ * Template construction -- display() itself no longer touches
+ * Template at all (it returns a plain CheckIntegrityResult; its own
+ * caller, IntroSubController, does the real Renderer::render() call),
+ * but Kernel::boot() is still needed here for container/DB access.
  *
  * check() overwrites $this->retrieve_list from the 'list_check_integrity'
  * event on every call (there is no other way to populate it) -- this
@@ -143,7 +146,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get());
+        return new CheckIntegrity(LangTestFactory::get(), $this->buildIntegrityRepo(), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
     }
 
     public function testCheckReportsNoHeaderNoteWhenZeroAnomaliesAreFound(): void
@@ -332,16 +335,15 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ],
         ];
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        $template = CurrentTemplateTestFactory::get()->get();
-        $list = $template->getTemplateVars('c13y_list');
-        self::assertIsArray($list);
+        self::assertNotNull($result);
+        $list = $result->c13yList;
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_ignore_msg']);
         self::assertFalse($list[0]['can_select']);
-        self::assertFalse((bool) $template->getTemplateVars('c13y_show_submit_ignore'));
-        self::assertFalse((bool) $template->getTemplateVars('c13y_show_submit_automatic_correction'));
+        self::assertFalse($result->showSubmitIgnore);
+        self::assertFalse($result->showSubmitAutomaticCorrection);
     }
 
     public function testDisplayThrowsWhenAnAnomalyIsMarkedIgnoredFalse(): void
@@ -380,10 +382,10 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ],
         ];
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
-        self::assertIsArray($list);
+        self::assertNotNull($result);
+        $list = $result->c13yList;
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_success_fct']);
         self::assertFalse($list[0]['can_select']);
@@ -404,10 +406,10 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ],
         ];
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
-        self::assertIsArray($list);
+        self::assertNotNull($result);
+        $list = $result->c13yList;
         self::assertIsArray($list[0]);
         self::assertFalse($list[0]['show_correction_success_fct']);
         self::assertFalse($list[0]['can_select']);
@@ -430,17 +432,16 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ],
         ];
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        $template = CurrentTemplateTestFactory::get()->get();
-        $list = $template->getTemplateVars('c13y_list');
-        self::assertIsArray($list);
+        self::assertNotNull($result);
+        $list = $result->c13yList;
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_fct']);
         self::assertTrue($list[0]['can_select']);
-        self::assertTrue((bool) $template->getTemplateVars('c13y_show_submit_automatic_correction'));
-        self::assertTrue((bool) $template->getTemplateVars('c13y_show_submit_ignore'));
-        $doCheck = $template->getTemplateVars('c13y_do_check');
+        self::assertTrue($result->showSubmitAutomaticCorrection);
+        self::assertTrue($result->showSubmitIgnore);
+        $doCheck = $result->c13yDoCheck;
         self::assertIsArray($doCheck);
         self::assertContains('selectable-1', $doCheck);
     }
@@ -459,10 +460,10 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ],
         ];
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
-        self::assertIsArray($list);
+        self::assertNotNull($result);
+        $list = $result->c13yList;
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_bad_fct']);
         self::assertTrue($list[0]['can_select']);
@@ -482,10 +483,10 @@ final class CheckIntegrityTest extends IntegrationTestCase
             ],
         ];
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        $list = CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_list');
-        self::assertIsArray($list);
+        self::assertNotNull($result);
+        $list = $result->c13yList;
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['can_select']);
         self::assertSame('please fix this by hand', $list[0]['correction_msg']);
@@ -495,11 +496,9 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
 
-        $c13y->display();
+        $result = $c13y->display();
 
-        // display()'s own no-anomalies guard means
-        // parse('check_integrity.latte', true) never runs --
-        // getTemplateVars() for a var nothing ever assigned stays null.
-        self::assertNull(CurrentTemplateTestFactory::get()->get()->getTemplateVars('c13y_show_submit_ignore'));
+        // display()'s own no-anomalies guard returns null directly.
+        self::assertNull($result);
     }
 }

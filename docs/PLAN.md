@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batches 1–9 + the 3 include-only-partials contract-only conversions landed and fully validated, including the full `composer test`/`test:golden-html`/`test:visual`/`test:browser`/`test:integration` sweep (see below); mail domain identified as an unphased gap | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper — the physical `Renderer`/`TemplateLocator`/`ThemeChain` class split stays deferred to P41's own one-time cutover by design | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -2377,23 +2377,76 @@ actually references). Same treatment applies to `picture_nav_buttons.latte`
 and `infos_errors.latte` once their own real call-site variables are
 confirmed the same way at implementation time.
 
-**Mail domain — a real, unphased gap, not folded into any batch
-above.** `MailService::getMailTemplate()` constructs a wholly separate
-`Template` instance per send, rooted at `template/mail/{format}` —
-14 real files under `themes/default/template/mail/text/{plain,html}/`
+**Mail domain (landed, 2026-08-20) — folded into P40 as its own
+batch.** `MailService::getMailTemplate()` constructs a wholly separate
+`Template` instance per send, rooted at `template/mail/{format}` — 13
+real files under `themes/default/template/mail/text/{plain,html}/`
 (`header.latte`/`footer.latte`/`cat_group_info.latte`/
 `notification_by_mail.latte`/`notification_admin.latte`, plus
 `mail-css-{clear,dark}.latte`/`global-mail-css.latte` for the HTML
-format only), none carrying `{templateType}` yet, no shared
-header/footer-as-web-chrome concept and no `AdminShell` dispatch to
-piggyback on. The 6 remaining `TemplatePageContext` classes this
-touches (`MailHeaderPageContext`, `MailRuntimeTemplatePageContext`,
-`MailTitlePageContext`, `NbmMailContentPageContext`,
-`NbmNewsMailContext`, `NbmSubscribeActionMailContext`) all feed this
-same separate pipeline. `docs/PLAN.md`'s own P0–P54 table has no phase
-covering it. Left as an open decision for whoever picks this up next:
-fold it in as its own P40 sub-track, or give it a real phase number —
-not decided here.
+format only — 14 was this section's own original count, off by one
+against the real tree), no shared header/footer-as-web-chrome concept
+and no `AdminShell` dispatch to piggyback on.
+
+Scope decision: convert only the 3 real render-triggering CONTENT
+templates (`notification_by_mail.latte`, `notification_admin.latte`,
+`cat_group_info.latte`) to `View`/`Renderer` — `header.latte`/
+`footer.latte`/the CSS fragments stay on ambient `assignContext()`,
+the same P40/P41 shell boundary already established for the web
+header/footer. New `Piwigo\Mail\Projection\NotificationByMailView`/
+`NotificationAdminView`/`CatGroupInfoView` (merging
+`NbmMailContentPageContext`+`NbmSubscribeActionMailContext`+
+`NbmNewsMailContext` into the first, `MailRuntimeTemplatePageContext`
+into the other two — all 4 deleted).
+
+Mechanism wrinkle: mail's own `Template` instance is per-call, not the
+ambient `CurrentTemplate` `Renderer::render()` binds to, so these 3
+Views render via `Template::renderView()` directly with an explicit
+bare filename — `Renderer::render()`'s own `#[Template]`-attribute
+resolution never runs for them. Each `#[Template]` instead points at
+the file's path relative to `themes/default/template/` (e.g.
+`'mail/text/html/cat_group_info.latte'`), which satisfies
+`ViewTemplateTypeRoundTripTest`'s own prefix-based resolution and
+disambiguates from an unrelated same-basename file elsewhere in the
+tree (`notification_by_mail.latte` also names the admin UI page, a
+different, already-converted class). One class serves both a
+template's html and plain variant (identical property shape) since
+the attribute is read only by the round-trip test/`VariableMapBuilder`
+here, never at runtime by `Renderer`.
+
+`MailService::mail()`'s own generic `$tpl['filename']`/`'assign'`
+runtime-template mechanism (used by `mailNotificationAdmins()`,
+`Admin\Extensions\CoreUpdateService`, `Admin\AlbumNotificationPageRenderer`)
+now resolves through a new `buildRuntimeTemplateView()`, a `match()`
+on the exactly 2 real in-tree filenames (confirmed via exhaustive
+`grep -rn "'filename' =>"`) instead of a file-existence lookup +
+untyped `assignContext()` — the public `mail()`/`mailAdmins()`/
+`mailGroup()` `$tpl` contract itself is otherwise unchanged, so
+`AlbumNotificationPageRenderer`/`CoreUpdateService` needed zero
+changes. Also dropped the fully-unused `'dirname'` key from that same
+`$tpl` contract (zero real callers ever set it) across
+`MailerInterface`/`MailService`/`SendNotificationEmailJob`/
+`ExtensionContext`.
+
+`NotificationByMailSender`'s own 2 direct `parse()` call sites
+(subscribe/unsubscribe and news) now construct `NotificationByMailView`
+directly; `assignVarsNbmMailContent()` (void, ambient-writing) became
+`nbmMailContentFields()` (private, pure, Reflection-tested the same
+way `MailService::resolveMailTheme()` already is).
+
+Full-suite validation: `composer analyse:phpstan`/`deptrac analyse`/
+`lint:latte`/`lint:php` all clean; full `composer test` (5524 passed);
+`composer test:integration -- --filter=Mail` (128 passed, including
+`MailGoldenHtmlSnapshotTest`'s byte-exact comparison against all 13
+real mail template files' committed baselines — confirms
+byte-identical output pre/post conversion); `composer test:browser --
+--filter="NotificationByMailSubControllerTest|AlbumNotificationPageRendererTest"`
+(20 passed). Two now-stale test fixtures found and fixed via the full
+suite: `TemplateCallSiteScannerTest`'s Mail-scoping test (`Notification
+ByMailSender`'s own `parse()` call sites went extinct converting to
+`renderView()`; `MailService::mail()`'s own header/footer `parse()`
+calls are the real remaining fixture) and `ContextVariableExtractorTest`'s
+loose "real context class pool" floor (30 exactly now, was `>30`).
 
 **Confirmed P41 (shell) scope, not new P40 work**: `header.latte`/
 `footer.latte`/`admin.latte` and their context classes

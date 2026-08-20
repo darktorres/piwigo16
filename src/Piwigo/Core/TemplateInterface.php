@@ -37,8 +37,4 @@ interface TemplateInterface
      * needs to guard against.
      */
     public function assignContext(TemplatePageContext $context): void;
-
-    public function assignVarFromTemplate(string $varname, string $file): void;
-
-    public function clearAssign(string $tpl_var): void;
 }

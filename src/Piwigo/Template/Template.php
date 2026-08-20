@@ -586,7 +586,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * it propagates through Latte's auto-escape unmolested at every
      * `{$var}` print site downstream.
      */
-    #[Override]
     public function assignVarFromTemplate(string $varname, string $file): void
     {
         $rendered = $this->parse($file, true);
@@ -716,7 +715,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Removes an assigned template variable.
      */
-    #[Override]
     public function clearAssign(string $tpl_var): void
     {
         unset($this->vars[$tpl_var]);

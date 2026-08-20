@@ -176,6 +176,8 @@ final class RatingPageRenderer
             orderByOptions: $order_by_options,
             images: $tpl_images,
             csrfToken: $csrfService->getToken(),
+            colorscheme: $template->themeConf('colorscheme'),
+            rootUrl: $urlService->getRootUrl(),
         ));
 
         $template->assignContext(new AdminContentPageContext(

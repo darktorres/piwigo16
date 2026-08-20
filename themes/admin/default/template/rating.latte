@@ -1,18 +1,4 @@
 {templateType Piwigo\Admin\Projection\RatingView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
-
-{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
-{do combineCss(id: 'rating', path: 'themes/admin/default/css/pages/rating.css')}
-
-{do exposeData('cache_key_categories', $cacheKeys['categories'])}
-{do exposeData('cache_key_hash', $cacheKeys['_hash'])}
-{do exposeData('root_url', $ROOT_URL)}
-{do exposeData('nb_elements', $nbElements)}
-
-{do combineScript(id: 'rating', load: 'footer', require: 'jquery.selectize,page-data,LocalStorageCache', path: 'themes/admin/default/js/rating.js')}
-
 <form action="{$fAction|noescape}" method="GET" class="filter">
   <fieldset>
     <legend><span
@@ -109,7 +95,5 @@
     </td>
   </tr>{* images *}
 </table>
-{do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
-{do exposeData('csrf_token', $csrfToken)}
 
 {if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}

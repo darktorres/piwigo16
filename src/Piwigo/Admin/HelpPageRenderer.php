@@ -8,6 +8,7 @@ use Piwigo\Admin\Event\HelpPageRendered;
 use Piwigo\Admin\Projection\HelpView;
 use Piwigo\Admin\Request\HelpSectionRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -23,7 +24,7 @@ use Piwigo\Users\CurrentUser;
  */
 final class HelpPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, Renderer $renderer, CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
 
@@ -52,6 +53,7 @@ final class HelpPageRenderer
         $adminContent = $renderer->render(new HelpView(
             helpContent: is_string($help_content_raw) ? $help_content_raw : '',
             helpSectionTitle: $tabsheet->sheets[$tabsheet->selected]->caption,
+            enableSynchronization: $currentConfig->enableSynchronization,
         ));
 
         $user_language = $currentUser->get()

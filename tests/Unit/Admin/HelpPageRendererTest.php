@@ -106,7 +106,8 @@ test('render() shows the English documentation message for an en_ user and defau
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
-        $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
+        $currentConfig = new CurrentConfig();
+        $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), $currentConfig);
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
         $pageState = new PageState();
@@ -122,7 +123,7 @@ test('render() shows the English documentation message for an en_ user and defau
         ));
 
         new HelpPageRenderer()
-            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
+            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()), $currentConfig);
 
         // Renderer::render() wraps its result in Latte\Runtime\Html.
         $adminContent = $template->getTemplateVars('ADMIN_CONTENT');

@@ -109,7 +109,8 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
         file_put_contents($tplDir . 'tabsheet.latte', 'tabsheet');
         $template->setTemplateDir($tplDir);
 
-        $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), new CurrentConfig());
+        $currentConfig = new CurrentConfig();
+        $coreTabs = new CoreTabs(LangTestFactory::get(), UrlServiceTestFactory::build(), $currentConfig);
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
@@ -123,6 +124,7 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             CurrentUserTestFactory::get(),
             CurrentTemplateTestFactory::get(),
             new Renderer(CurrentTemplateTestFactory::get()),
+            $currentConfig,
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));

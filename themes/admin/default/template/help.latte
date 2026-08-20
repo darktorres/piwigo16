@@ -1,8 +1,4 @@
 {templateType Piwigo\Admin\Projection\HelpView}
-{if !$ENABLE_SYNCHRONIZATION}
-  {do combineCss(id: 'help', path: 'themes/admin/default/css/pages/help.css')}
-{/if}
-
 <h2>{='Help'|translate} &raquo; {$helpSectionTitle|noescape}</h2>
 
 <div id="helpContent">

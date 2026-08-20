@@ -1,16 +1,8 @@
 {templateType Piwigo\Admin\Projection\RatingUserView}
-{do combineScript(id: 'jquery.dataTables', load: 'footer', path: 'themes/default/js/plugins/jquery.dataTables.js')}
-{do combineCss(id: 'rating_user', path: 'themes/admin/default/css/pages/rating_user.css')}
 {* .ui-tooltip is appended to <body> by jquery.ui.tooltip.js, outside #rateTable's
    subtree, so its max-width can't be inherited from an element-scoped custom
    property -- :root is the only DOM-reachable common ancestor available here. *}
 <style>:root { --rating-tooltip-max-width: {=3 * $tnWidth}px; }</style>
-{do exposeData('nb_elements', $nbElements)}
-{do exposeData('csrf_token', $csrfToken)}
-{do exposeData('root_url', $ROOT_URL)}
-{do exposeString('Are you sure you want to delete the ratings of the user "%s"?')}
-{do exposeString('Yes, I am sure')}
-{do exposeString('No, I have changed my mind')}
 
 <form action="{$formAction|noescape}" method="GET">
   <fieldset>
@@ -44,11 +36,6 @@
     <input type="hidden" name="page" value="rating_user">
   </fieldset>
 </form>
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
-{do combineScript(id: 'jquery.geoip', load: 'async', path: 'themes/admin/default/js/jquery.geoip.js')}
 <table id="rateTable">
   <thead>
     <tr class="throw">
@@ -90,6 +77,3 @@
       {/spaceless}
     {/foreach}
 </table>
-
-{do combineScript(id: 'jquery.ui.tooltip', load: 'footer')}
-{do combineScript(id: 'rating_user', load: 'footer', require: 'jquery.dataTables,jquery.ui.tooltip,page-data', path: 'themes/admin/default/js/rating_user.js')}

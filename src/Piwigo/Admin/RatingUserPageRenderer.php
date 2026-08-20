@@ -210,6 +210,7 @@ final class RatingUserPageRenderer
             orderByOptions: $order_by_options,
             csrfToken: $csrfService
                 ->getToken(),
+            rootUrl: $urlService->getRootUrl(),
         ));
 
         $template->assignContext(new AdminContentPageContext(

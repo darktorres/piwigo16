@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batches 1–6 landed and fully validated (see below); Batches 7–9 (menubar, tabsheet, calendar) + the 3 include-only-partials contract-only conversions (navigation_bar/picture_nav_buttons/infos_errors) also landed, verified with `php -l`/`phpstan-latte:compile`/scoped `composer analyse:phpstan` (0 errors throughout) but the full `composer test`/`test:golden-html`/`test:visual` suite is still an owed checkpoint for this span; mail domain identified as an unphased gap | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batches 1–9 + the 3 include-only-partials contract-only conversions landed and fully validated, including the full `composer test`/`test:golden-html`/`test:visual`/`test:browser`/`test:integration` sweep (see below); mail domain identified as an unphased gap | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -2172,9 +2172,73 @@ change.
 
 Every one of these ~10 new/touched View-adjacent classes was verified
 with `php -l`, a full `phpstan-latte:compile`, and a scoped `composer
-analyse:phpstan` on every touched PHP file — 0 errors throughout. The
-full `composer test`/`test:golden-html`/`test:visual` suite is the one
-piece still owed before this span can be called fully closed out.
+analyse:phpstan` on every touched PHP file — 0 errors throughout.
+
+**Post-Batch-9 sweep (landed): full-suite validation + 5 real bugs found.**
+Running the deferred full `composer analyse:phpstan` (project-wide, not
+scoped) surfaced findings scoped per-file checks structurally can't
+catch, since `shipmonk/dead-code-detector`'s dead-property/dead-method
+analysis needs the whole call graph:
+
+- **5 contract-only View classes read only via reflection.**
+  `MenubarBlockView`/`MonthCalendarView`/`NavigationBarView`/
+  `PictureNavButtonsView`/`InfosErrorsView` are never
+  `Renderer::render()`-ed or constructed by any in-tree PHP — their
+  sole reader is `VariableMapBuilder`'s own `ReflectionClass(...)
+  ->getProperties()` walk, invisible to shipmonk's built-in
+  `ReflectionUsageProvider` (which only tracks a statically-known
+  class name, not a runtime string read back from a `{templateType}`
+  scan). Rather than a blanket path-based `ignoreErrors` suppression,
+  built `tools/phpstan/TypedViewPropertyUsageProvider.php`, a
+  `ReflectionBasedMemberUsageProvider` mirroring the existing
+  `GessoHookMethodUsageProvider` pattern — recognizes any class that
+  appears as a `{templateType}` target across the whole `.latte` tree
+  as having every public property "read," while still catching a
+  genuinely dead property on any other class.
+- **`TemplateInterface` shrunk to `assignContext()` only** —
+  `assignVarFromTemplate()`/`clearAssign()` had zero remaining
+  L1/L2a/L2b callers once Batches 7–9 finished; both stay as concrete
+  `Template` methods (still used internally and by L3/L4), only the
+  interface contract and their now-inapplicable `#[Override]`
+  attributes dropped.
+- **`CheckIntegrityTest`'s stale extra constructor arg** — a leftover
+  6th `Renderer` arg (constructor only takes 5) that PHP silently
+  tolerated (extra positional args are not a runtime error, unlike too
+  few) — invisible to every test run, only caught by PHPStan's
+  `arguments.count`.
+- **A real deptrac violation**: `CommentListView` lived in
+  `Piwigo\Controller\Projection` (L4Integration), but
+  `PictureCommentRenderer` (L3Presentation) constructs and renders it
+  directly — L3 can't depend upward on L4. Fixed by relocating the
+  View to `Piwigo\Picture\Projection` (L3), the same layer as its L3
+  caller, rather than reclassifying the layer boundary — including
+  updating `comment_list.latte`'s own `{templateType}` declaration to
+  match (a real "moving a View class needs both the PHP namespace and
+  every referencing `.latte` file's `{templateType}` line updated"
+  gotcha, only caught by a subsequent full-suite run flagging
+  `ViewTemplateTypeRoundTripTest`).
+- **`MenubarRendererTest` (Unit)** missed Batch 7's own call-site grep
+  because it resolves `MenubarRenderer::render()`'s params from the
+  container rather than a literal `new MenubarRenderer(...)` call —
+  only surfaced via a full `composer test` run ("too few arguments").
+
+Also fixed two narrower type/assertion issues caught by the full
+PHPStan run (`PictureCommentRendererTest::renderedComments()`'s
+docblock was `array<string, mixed>|null`, should have been
+`list<array<string, mixed>>|null`, making its `array_values()` call
+masking-not-fixing the wrong type; a few now-redundant
+`assertIsArray()`/`assertIsString()` calls PHPStan had already
+narrowed away) and rebuilt `ContextVariableExtractorTest`'s "dynamic
+array-dim assignment" fixture (`TabsheetPageContext` lost that exact
+AST shape when Batch 8 shrank it, leaving no real production class
+exercising the test).
+
+Full validation now green end-to-end: `composer analyse:phpstan` (0
+errors), `lint:latte`, `lint:php`, `vendor/bin/deptrac analyse` (0
+violations), `composer test` (5532 Unit+Arch), `composer test:golden-html`
+(73/73), `composer test:visual` (65/65), plus the relevant
+`test:browser`/`test:integration` suites — this whole span (Batches
+7–9 + include-only partials + this sweep) is fully closed out.
 
 **Batch 7 (landed) — Menubar, smaller than it first looked.** Only 2 real call
 sites construct a `BlockManager` at all (`Menu\MenubarRenderer`, the

@@ -570,6 +570,8 @@ final readonly class GalleryController implements ControllerInterface
                 maxRequests: $categoryDefaultResult->maxRequests,
                 showThumbnailCaption: $categoryDefaultResult->showThumbnailCaption,
                 thumbnails: $categoryDefaultResult->thumbnails,
+                rootUrl: $urlService->getRootUrl(),
+                iconDir: $template->themeConf('icon_dir'),
             ));
             $template->assignContext(new ThumbnailsHtmlPageContext($thumbnailsHtml));
 

@@ -1,7 +1,6 @@
 {templateType Piwigo\Controller\Projection\ThumbnailsView}
 {if !empty($thumbnails)}{spaceless}
     {* define_derivative name='derivative_params' width=160 height=90 crop=true *}
-    {do combineCss(id: 'thumbnails', path: 'themes/default/css/pages/thumbnails.css')}
     {*
       The .thumbnails/#thumbnails wrapper this page CSS targets is rendered by
       index.latte, not by this template -- thumbnails.latte only renders the
@@ -14,14 +13,8 @@
       --thumb-height: {$derivativeParams->maxHeight() + 3}px;
       --thumb-legend-font-size: {if $derivativeParams->maxWidth() > 600}130%{elseif $derivativeParams->maxWidth() > 400}110%{else}90%{/if};
     }</style>
-    {do exposeData('error_icon', $ROOT_URL . $themeconf['icon_dir'] . '/errors_small.png')}
-    {do exposeData('max_requests', $maxRequests)}
     {foreach $thumbnails as $thumbnail}
       {var $derivative = $pwg->derivative($derivativeParams, $thumbnail['src_image'])}
-      {if !$derivative->isCached()}
-        {do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
-        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager,page-data', load: 'footer')}
-      {/if}
       <li>
         <span class="wrap1">
           <span class="wrap2">

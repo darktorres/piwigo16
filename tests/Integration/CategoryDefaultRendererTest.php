@@ -193,6 +193,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             maxRequests: $result->maxRequests,
             showThumbnailCaption: $result->showThumbnailCaption,
             thumbnails: $result->thumbnails,
+            rootUrl: '',
+            iconDir: '',
         ));
 
         return (string) $html;

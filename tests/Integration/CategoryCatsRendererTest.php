@@ -33,6 +33,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Template;
+use Piwigo\Tests\Support\CategoryInfoTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -380,9 +381,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE categories SET representative_picture_id = NULL WHERE id = 2');
 
         try {
-            $this->renderer->render(Section::Categories, [
-                'id' => 1,
-            ], 0);
+            $this->renderer->render(Section::Categories, CategoryInfoTestFactory::build(id: 1), 0);
 
             $item = $this->categoryTreeCachePool()
 
@@ -425,9 +424,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE categories SET representative_picture_id = NULL WHERE id = 2');
 
         try {
-            $this->renderer->render(Section::Categories, [
-                'id' => 1,
-            ], 0);
+            $this->renderer->render(Section::Categories, CategoryInfoTestFactory::build(id: 1), 0);
 
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Nested Sub Album', $html);
@@ -474,9 +471,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE images SET level = 5 WHERE id = 4');
 
         try {
-            $this->renderer->render(Section::Categories, [
-                'id' => 1,
-            ], 0);
+            $this->renderer->render(Section::Categories, CategoryInfoTestFactory::build(id: 1), 0);
 
             // category 2's real representative (4) is too high-level;
             // image 5 (also directly in category 2, not excluded) is the
@@ -500,9 +495,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE images SET level = 5 WHERE id = 4');
 
         try {
-            $this->renderer->render(Section::Categories, [
-                'id' => 1,
-            ], 0);
+            $this->renderer->render(Section::Categories, CategoryInfoTestFactory::build(id: 1), 0);
 
             $item = $this->categoryTreeCachePool()
 

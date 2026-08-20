@@ -12,6 +12,8 @@ use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryDescription;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\TagId;
@@ -246,34 +248,30 @@ final readonly class SectionPopulator
             $permissionCriteria->maxLevelCondition('i.level'),
         );
 
-        // parse_section_url()'s own return type is the generic array<string, mixed>
-        // (functions_url.inc.php), so $page['category'] loses the more precise
-        // shape that CategoryService::getCategoryInfo() actually returns;
-        // re-narrow it once here, unconditionally, so it stays defined (and
-        // PHPStan-visible) for every later use in this method, not just inside
-        // the 'categories' section branch below.
-        $page_category = null;
-        if (isset($page['category']) and is_array($page['category'])) {
-            // same cross-file $page[...] false-narrowing as the tag_ids block below
-            // -- PHPStan infers list<string> for $page['category'] from an
-            // unrelated write elsewhere in the codebase, but
-            // CategoryService::getCategoryInfo() (this key's real, original
-            // source) returns the shape below, which is what every downstream
-            // $page_category['...'] read in this method relies on (see the
-            // class-level comment above).
-            /** @var array{id: int, name: string, id_uppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool, representative_picture_id: ?int, uppercats: string, commentable: bool, global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string, upper_names: list<array{id: int, name: string, permalink: ?string}>} $page_category */
-            $page_category = $page['category'];
-        }
+        // $page['category'] already holds the real CategoryInfo object
+        // UrlService::parseSectionUrl() built via CategoryService::
+        // getCategoryInfo() -- narrowed once here (a real instanceof check,
+        // not a trust-me @var) so it stays defined for every later use in
+        // this method, not just inside the 'categories' section branch
+        // below.
+        $page_category = $page['category'] ?? null;
+        $page_category = $page_category instanceof CategoryInfo ? $page_category : null;
 
         if ($section === Section::Categories) {
             if (isset($page['combined_categories'])) {
-                /** @var list<array<string, mixed>> $combined_categories_for_title */
-                $combined_categories_for_title = is_array($page['combined_categories']) ? array_values(array_filter($page['combined_categories'], is_array(...))) : [];
-                $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle($page_category, $combined_categories_for_title);
+                $combined_categories_raw = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
+                $combined_categories_for_title = array_map(
+                    static fn (CategoryInfo $category): array => $category->toArray(),
+                    array_values(array_filter($combined_categories_raw, static fn (mixed $v): bool => $v instanceof CategoryInfo))
+                );
+                $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle($page_category?->toArray(), $combined_categories_for_title);
             } elseif ($page_category !== null) {
-                $upper_names = $page_category['upper_names'];
+                $upper_names = array_map(
+                    static fn (CategoryIdNamePermalink $name): array => $name->toArray(),
+                    $page_category->upperNames
+                );
 
-                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription($page_category['comment'], 'main_page_category_description'));
+                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription($page_category->comment, 'main_page_category_description'));
 
                 $page = array_merge(
                     $page,
@@ -291,12 +289,11 @@ final readonly class SectionPopulator
                 // combined_categories is only ever set (by parse_section_url() in
                 // functions_url.inc.php) after category has already been set
                 assert($page_category !== null);
-                $cat_ids = [$page_category['id']];
+                $cat_ids = [$page_category->id];
                 $combined_categories_raw = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
                 foreach ($combined_categories_raw as $category) {
-                    $combined_id = is_array($category) ? ($category['id'] ?? null) : null;
-                    if (is_numeric($combined_id)) {
-                        $cat_ids[] = (int) $combined_id;
+                    if ($category instanceof CategoryInfo) {
+                        $cat_ids[] = $category->id;
                     }
                 }
 
@@ -313,8 +310,8 @@ final readonly class SectionPopulator
                 )
             ) {
                 if ($page_category !== null) {
-                    $image_order_raw = $page_category['image_order'];
-                    $image_order_is_set = is_string($image_order_raw) && $image_order_raw !== '' && $image_order_raw !== '0';
+                    $image_order_raw = $page_category->imageOrder;
+                    $image_order_is_set = $image_order_raw !== null && $image_order_raw !== '' && $image_order_raw !== '0';
                     if ($image_order_is_set and ! isset($page['super_order_by'])) {
                         $order_by = ' ORDER BY ' . $image_order_raw;
                     }
@@ -336,7 +333,7 @@ final readonly class SectionPopulator
                 if (isset($page['flat'])) {
                     // get all allowed sub-categories
                     if ($page_category !== null) {
-                        $uppercats = $page_category['uppercats'];
+                        $uppercats = $page_category->uppercats;
                         $subcatsCriteria = $this->permissionService->getPermissionCriteria();
                         $subcatsCondition = SqlCondition::combine(
                             'AND',
@@ -345,7 +342,7 @@ final readonly class SectionPopulator
                         );
                         $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds($uppercats, $subcatsCondition);
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
-                        $subcat_ids[] = (string) $page_category['id'];
+                        $subcat_ids[] = (string) $page_category->id;
                         $where_sql = 'category_id IN (:subcatIds)';
                         $where_params['subcatIds'] = array_map(intval(...), $subcat_ids);
                         $where_types['subcatIds'] = ArrayParameterType::INTEGER;
@@ -391,9 +388,9 @@ final readonly class SectionPopulator
                     // must be the one that's set
                     assert($page_category !== null);
                     $where_sql = 'category_id = :categoryId';
-                    $where_params['categoryId'] = $page_category['id'];
+                    $where_params['categoryId'] = $page_category->id;
                     $dqlWhere = SqlCondition::fromRawSql('ic.category = :categoryId', [
-                        'categoryId' => $page_category['id'],
+                        'categoryId' => $page_category->id,
                     ]);
                     $dqlImageCategoryAlias = 'ic';
                 }
@@ -710,12 +707,12 @@ final readonly class SectionPopulator
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
             $category_url_style = $this->currentConfig->categoryUrlStyle;
-            $category_permalink = is_string($page_category['permalink']) ? $page_category['permalink'] : null;
-            $category_name = $page_category['name'];
+            $category_permalink = $page_category->permalink;
+            $category_name = $page_category->name;
             $expected_cat_url_name = StringHelper::str2url($category_name);
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
-                $this->categoryService->checkRestrictions($page_category['id'], $this->htmlRenderer, $this->redirectService, $this->currentUser);
+                $this->categoryService->checkRestrictions($page_category->id, $this->htmlRenderer, $this->redirectService, $this->currentUser);
                 // duplicateIndexUrl()/duplicatePictureUrl() read the
                 // current section's params from SectionContextRegistry,
                 // which this method otherwise only populates at its very
@@ -745,7 +742,7 @@ final readonly class SectionPopulator
         $body_data['section'] = $section->value;
 
         if ($section === Section::Categories && $page_category !== null) {
-            $body_category_id = (string) $page_category['id'];
+            $body_category_id = (string) $page_category->id;
             array_push($body_classes, 'category-' . $body_category_id);
             $body_data['category_id'] = $body_category_id;
 
@@ -753,8 +750,7 @@ final readonly class SectionPopulator
                 $combined_category_ids = [];
                 $combined_categories_for_body = is_array($page['combined_categories']) ? $page['combined_categories'] : [];
                 foreach ($combined_categories_for_body as $combined_category) {
-                    $combined_body_id = is_array($combined_category) ? ($combined_category['id'] ?? null) : null;
-                    $combined_body_id = is_scalar($combined_body_id) ? (string) $combined_body_id : '';
+                    $combined_body_id = $combined_category instanceof CategoryInfo ? (string) $combined_category->id : '';
                     array_push($body_classes, 'category-' . $combined_body_id);
                     $combined_category_ids[] = $combined_body_id;
                 }
@@ -804,21 +800,15 @@ final readonly class SectionPopulator
         $section = $page['section'] ?? null;
         $section = $section instanceof Section ? $section : Section::Categories;
 
-        $category = null;
-        if (isset($page['category']) and is_array($page['category'])) {
-            // Rows here always come from get_cat_info()'s own array<string, mixed>
-            // shape (see the identical $page_category narrowing earlier in
-            // populate()); array_filter(..., is_array(...)) below can only prove
-            // "is an array", not the string-keyed row shape, hence the same
-            // @var override this file already uses for $upper_names above.
-            /** @var array<string, mixed> $category */
-            $category = $page['category'];
-        }
+        $category = $page['category'] ?? null;
+        $category = $category instanceof CategoryInfo ? $category : null;
 
         $combinedCategories = null;
         if (is_array($page['combined_categories'] ?? null)) {
-            /** @var list<array<string, mixed>> $combinedCategories */
-            $combinedCategories = array_values(array_filter($page['combined_categories'], is_array(...)));
+            $combinedCategories = array_values(array_filter(
+                $page['combined_categories'],
+                static fn (mixed $v): bool => $v instanceof CategoryInfo
+            ));
         }
 
         $items = is_array($page['items'] ?? null) ? array_values(array_filter($page['items'], static fn (mixed $v): bool => is_int($v) || is_string($v))) : [];

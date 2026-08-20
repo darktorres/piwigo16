@@ -129,8 +129,8 @@ final readonly class GalleryController implements ControllerInterface
         $page_nb_image_page = $section_context->nbImagePage;
 
         // access authorization check
-        if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            $this->categoryService->checkRestrictions((int) $section_context->category['id'], $this->htmlService, $this->redirectService, $this->currentUser);
+        if ($section_context->category !== null) {
+            $this->categoryService->checkRestrictions($section_context->category->id, $this->htmlService, $this->redirectService, $this->currentUser);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             $this->htmlService
@@ -274,7 +274,7 @@ final readonly class GalleryController implements ControllerInterface
         if ($section_context->section === Section::Categories and $section_context->category !== null and $section_context->combinedCategories === null) {
             $search_in_set_button = $this->currentConfig->indexSearchInSetButton;
             $search_in_set_action = $this->currentConfig->indexSearchInSetAction;
-            $search_in_set_url = $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0);
+            $search_in_set_url = $urlService->getRootUrl() . 'search.php?cat_id=' . $section_context->category->id;
         }
 
         $bodyData = $this->pageState->bodyData;
@@ -396,7 +396,7 @@ final readonly class GalleryController implements ControllerInterface
 
         $u_edit = null;
         if ($section_context->category !== null and $this->accessControl->isAdmin() and $this->currentConfig->indexEditIcon) {
-            $u_edit = $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0);
+            $u_edit = $urlService->getRootUrl() . 'admin.php?page=album-' . $section_context->category->id;
         }
 
         $u_caddie = null;
@@ -618,13 +618,10 @@ final readonly class GalleryController implements ControllerInterface
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $single_category = $section_context->section === Section::Categories ? $section_context->category : null;
-        $single_category_id = is_numeric($single_category['id'] ?? null) ? (int) $single_category['id'] : null;
-        $single_category_name = is_string($single_category['name'] ?? null) ? $single_category['name'] : null;
-        $single_category_comment = is_string($single_category['comment'] ?? null) ? $single_category['comment'] : null;
         $this->eventDispatcher->dispatch(new IndexRendered(
-            categoryId: $single_category_id,
-            categoryName: $single_category_name,
-            categoryComment: $single_category_comment,
+            categoryId: $single_category?->id,
+            categoryName: $single_category?->name,
+            categoryComment: $single_category?->comment,
         ));
         $this->htmlService
             ->flushPageMessages();
@@ -634,7 +631,7 @@ final readonly class GalleryController implements ControllerInterface
         $this->historyService
             ->logVisit(
                 section: $section_context->section->value,
-                category: $section_context->category,
+                categoryId: $section_context->category?->id,
                 tagIds: $section_context->tagIds,
                 searchId: $resolved_search_id,
             );

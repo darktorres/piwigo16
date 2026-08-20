@@ -13,6 +13,7 @@ use Piwigo\Category\Event\RenderCategoryLiteralDescription;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Category\Projection\CategoryCatsPageContext;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
@@ -94,10 +95,8 @@ final readonly class CategoryCatsRenderer
      * `deptrac analyse` DependsOnDisallowedLayer violation (L2a may not
      * depend on L2b). The one real caller (GalleryController) already has
      * these values from SectionContextRegistry::current().
-     *
-     * @param array<string, mixed>|null $category
      */
-    public function render(Section $section, ?array $category, int $startcat): void
+    public function render(Section $section, ?CategoryInfo $category, int $startcat): void
     {
         $logger = $this->currentLogger->get();
         $template = $this->template;
@@ -126,11 +125,7 @@ final readonly class CategoryCatsRenderer
                 return CategoryService::isRecentCategory($row->dateLast, $recentPeriod, $lastPhotoDate, $now);
             });
         } else {
-            $pageCategory = $category;
-            $targetId = null;
-            if (is_array($pageCategory) && is_numeric($pageCategory['id'] ?? null)) {
-                $targetId = (int) $pageCategory['id'];
-            }
+            $targetId = $category?->id;
 
             $filtered = array_filter($tree, static function (ComputedCategoryRow $row) use ($targetId): bool {
                 if ($row->countImages <= 0) {

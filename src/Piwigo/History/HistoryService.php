@@ -68,8 +68,11 @@ final readonly class HistoryService
     /**
      * Logs the visit into the history table.
      *
-     * $section/$category/$tagIds are the caller's own gallery-navigation
-     * context; $searchId is resolved by SearchFilterRenderer
+     * $section/$categoryId/$tagIds are the caller's own gallery-navigation
+     * context ($categoryId narrowed to the only field this method ever
+     * reads -- SectionContext::$category's own id -- rather than threading
+     * the whole CategoryInfo object/array through); $searchId is resolved
+     * by SearchFilterRenderer
      * (via SearchService::getValidatedSearchArray()) while rendering the
      * "search" section, only ever non-null for the GalleryController
      * caller. All 4 params are threaded explicitly because this method
@@ -85,7 +88,6 @@ final readonly class HistoryService
      * values above, it's equally possible for any of the 3 callers to
      * have been reached via an auth-keyed request.
      *
-     * @param array<string, mixed>|null $category
      * @param list<int>|null $tagIds
      */
     public function logVisit(
@@ -93,7 +95,7 @@ final readonly class HistoryService
         ?string $imageType = null,
         int|string|null $formatId = null,
         ?string $section = null,
-        ?array $category = null,
+        ?int $categoryId = null,
         ?array $tagIds = null,
         ?int $searchId = null,
     ): bool {
@@ -189,12 +191,6 @@ final readonly class HistoryService
             }
         }
 
-        // $user['id'] is read from a loosely-typed global bag fed by DB rows
-        // (string|null); narrow to the scalar the column actually stores
-        // before splicing into SQL.
-        $categoryForQuery = $category ?? [];
-        $categoryId = $categoryForQuery['id'] ?? null;
-        $categoryId = is_numeric($categoryId) ? (int) $categoryId : null;
         $authKeyId = $this->pageState->authKeyId;
 
         $historyId = $this->repo->insert([

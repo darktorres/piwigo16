@@ -726,7 +726,12 @@ final readonly class UrlService implements UrlServiceInterface
      * with it.
      *
      * Depending on section, other parameters are returned (category/tags/
-     * list/...).
+     * list/...). 'category' is a real CategoryInfo object, 'combined_categories'
+     * a list<CategoryInfo> -- CategoryService::getCategoryInfo()'s own real
+     * result, not unboxed to array here; SectionContext::toUrlParams() is
+     * the one real place that later needs the array shape (UrlService's own
+     * make*Url() $params stay a generic array by design), and converts via
+     * CategoryInfo::toArray() right at that boundary.
      *
      * @param string[] $tokens of url tokens to parse
      * @param int $nextToken the index in the array of url tokens; in/out
@@ -831,7 +836,7 @@ final readonly class UrlService implements UrlServiceInterface
                 if (! $result instanceof CategoryInfo) {
                     $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                 }
-                $page['category'] = $result->toArray();
+                $page['category'] = $result;
             }
 
             if ($combined_category_ids !== []) {
@@ -843,7 +848,7 @@ final readonly class UrlService implements UrlServiceInterface
                         $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                     }
 
-                    $combined_categories[] = $result->toArray();
+                    $combined_categories[] = $result;
                 }
 
                 $page['combined_categories'] = $combined_categories;

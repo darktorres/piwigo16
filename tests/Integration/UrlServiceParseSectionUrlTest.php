@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
@@ -221,8 +222,8 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
             ->parseSectionUrl(['category', '1'], $i, $this->redirect());
 
         self::assertSame(Section::Categories, $page['section']);
-        self::assertIsArray($page['category']);
-        self::assertSame(1, $page['category']['id']);
+        self::assertInstanceOf(CategoryInfo::class, $page['category']);
+        self::assertSame(1, $page['category']->id);
         self::assertSame(2, $i);
     }
 
@@ -248,13 +249,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $page = $this->service()
             ->parseSectionUrl(['category', '1', '2'], $i, $this->redirect());
 
-        self::assertIsArray($page['category']);
-        self::assertSame(1, $page['category']['id']);
+        self::assertInstanceOf(CategoryInfo::class, $page['category']);
+        self::assertSame(1, $page['category']->id);
         self::assertIsArray($page['combined_categories']);
         self::assertCount(1, $page['combined_categories']);
         $combined0 = $page['combined_categories'][0];
-        self::assertIsArray($combined0);
-        self::assertSame(2, $combined0['id']);
+        self::assertInstanceOf(CategoryInfo::class, $combined0);
+        self::assertSame(2, $combined0->id);
         self::assertSame(3, $i);
     }
 
@@ -280,8 +281,8 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $page = $this->service()
             ->parseSectionUrl(['category', 'sub-album'], $i, $this->redirect());
 
-        self::assertIsArray($page['category']);
-        self::assertSame(2, $page['category']['id']);
+        self::assertInstanceOf(CategoryInfo::class, $page['category']);
+        self::assertSame(2, $page['category']->id);
         self::assertSame([
             'cat_permalink' => 'sub-album',
         ], $page['hit_by']);
@@ -303,8 +304,8 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $page = $this->service()
             ->parseSectionUrl(['category', 'parent-word', 'child-word'], $i, $this->redirect());
 
-        self::assertIsArray($page['category']);
-        self::assertSame(2, $page['category']['id']);
+        self::assertInstanceOf(CategoryInfo::class, $page['category']);
+        self::assertSame(2, $page['category']->id);
         self::assertSame([
             'cat_permalink' => 'parent-word/child-word',
         ], $page['hit_by']);
@@ -326,13 +327,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $page = $this->service()
             ->parseSectionUrl(['category', '1', 'sub-album'], $i, $this->redirect());
 
-        self::assertIsArray($page['category']);
-        self::assertSame(1, $page['category']['id']);
+        self::assertInstanceOf(CategoryInfo::class, $page['category']);
+        self::assertSame(1, $page['category']->id);
         self::assertIsArray($page['combined_categories']);
         self::assertCount(1, $page['combined_categories']);
         $combined0 = $page['combined_categories'][0];
-        self::assertIsArray($combined0);
-        self::assertSame(2, $combined0['id']);
+        self::assertInstanceOf(CategoryInfo::class, $combined0);
+        self::assertSame(2, $combined0->id);
         // Only the primary category's own permalink hit is ever recorded
         // into hit_by (see the "$category === null" branch just above
         // this one in the source) -- a combined category resolved via

@@ -35,9 +35,13 @@ final readonly class CategoryInfo
     ) {}
 
     /**
-     * {@see \Piwigo\Url\UrlService::parseSectionUrl()} splices this into a
-     * much bigger, genuinely heterogeneous `$page` array -- unbox to array
-     * at that mutation boundary.
+     * {@see \Piwigo\Section\SectionContext::toUrlParams()} is the real
+     * boundary that needs this -- {@see \Piwigo\Url\UrlService}'s own
+     * make*Url() `$params['category']`/`$params['combined_categories']`
+     * stay a generic array by design (a widely-callable public API taking
+     * arbitrary caller-composed redefinition arrays, not just this class's
+     * own instances). `SectionPopulator`/`SectionContext` themselves carry
+     * this object directly, unboxed nowhere else.
      *
      * @return array{id: int, name: string, id_uppercat: ?int, comment: ?string,
      *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,

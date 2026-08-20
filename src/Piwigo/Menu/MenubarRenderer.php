@@ -11,6 +11,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Comment\AvailableCommentsCounter;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
@@ -176,24 +177,33 @@ final class MenubarRenderer
         ) {
             $exclude_cat_ids = [];
             $page_category = $section_context->category;
-            $page_category_id = $page_category['id'] ?? null;
             $combined_categories = $section_context->combinedCategories;
-            if (is_int($page_category_id) or is_string($page_category_id)) {
-                $exclude_cat_ids = [$page_category_id];
+            if ($page_category !== null) {
+                $exclude_cat_ids = [$page_category->id];
                 if ($combined_categories !== null) {
                     foreach ($combined_categories as $cat) {
-                        $cat_id = $cat['id'] ?? null;
-                        if (is_int($cat_id) or is_string($cat_id)) {
-                            $exclude_cat_ids[] = $cat_id;
-                        }
+                        $exclude_cat_ids[] = $cat->id;
                     }
                 }
             }
 
             $related_items = $page_items;
 
+            // getRelatedCategoriesMenuWithUrls() itself stays array-shaped
+            // (cluster 4's own SectionContext/UrlService territory, not
+            // this pass's scope -- its internal dynamic-$parentIdx mutation
+            // loop defeats PHPStan's shape tracking regardless of the
+            // written value's own type) -- convert at this one boundary.
             $block->data = [
-                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls($related_items, $urlService, $exclude_cat_ids, $page_category, $combined_categories),
+                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls(
+                    $related_items,
+                    $urlService,
+                    $exclude_cat_ids,
+                    $page_category?->toArray(),
+                    $combined_categories !== null
+                        ? array_map(static fn (CategoryInfo $category): array => $category->toArray(), $combined_categories)
+                        : null,
+                ),
             ];
 
             if (! self::emptyValue($block->data['MENU_CATEGORIES'])) {

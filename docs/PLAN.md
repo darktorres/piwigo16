@@ -132,7 +132,7 @@ Three structural changes produced that drift:
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
-| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism landing (see below) | 1 |
+| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism landed; P42-A's 11-partial conversion landed, theme-base pieces still open; P42-B (945-call-site migration) not started (see below) | 4 |
 | P43 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
@@ -2938,8 +2938,51 @@ written up in
 `Renderer::render()` pre-population/dispatch-relocation hook, with
 `Template::registerPageAssets()`/`registerHeadLink()` as the small
 public wrappers `Renderer` needs (`$pageAssets` itself stays private).
-No real View has migrated yet — that starts with the 11-partial
-prerequisite batch.
+
+**P42-A (landed) — the 11 leftover pre-P40 partials.** 9 real
+**contract-only** `{templateType}` conversions, same shape as the
+pre-existing `Piwigo\Controller\Projection\NavigationBarView`
+precedent (P40's own "include-only partials" resolution): a small
+`View` class + `{templateType}` on the template, zero controller/
+call-site changes, since none of these 9 are ever reached via
+`Renderer::render()` — only plain `{include}`, which already merges
+loose ambient vars with the current scope. `local_head.latte` is the
+one real exception (full `View`, not contract-only) — the theme-base
+"local-head resolver" piece (below) renders it directly.
+
+Also found and deleted 2 files the plan's own list carried as real
+conversions but that turned out to be genuinely dead:
+`themes/default/template/include/{colorbox,autosize}.inc.latte` had
+zero real callers anywhere in the app — both real usages are
+admin-only, resolving against the admin theme's own same-path copies,
+confirmed via exhaustive grep rather than assumed from the file list.
+Converting them would have been pointless.
+
+`batch_manager_filter.inc.latte` (the largest, 607 real lines) turned
+up a real pattern the plan's own Design section hadn't anticipated:
+its real property set is sourced entirely from several *ambient*
+`TemplatePageContext` classes assigned upstream by other rendering
+steps (`FilterPanelPageContext` and 3 others), not from this
+template's own `{include}` args — `{templateType}` doesn't care about
+provenance, only what the body actually reads, confirmed by reading
+the full 607-line body rather than assuming from the 2 real call
+sites. Those 2 call sites also both pass `title`/`searchPlaceholder`
+args the body never reads at all — a real, pre-existing dead-parameter
+waste, left alone as out of scope for this batch.
+
+Verification: `test:golden-html` byte-identical across every real page
+reaching one of these files (including all 7 of
+`album_selector.inc.latte`'s own real parents), full `composer
+analyse:phpstan`/`deptrac analyse`/`ecs check`/`lint:latte` clean, full
+`composer test --testsuite=Unit,Arch` green (5386 tests).
+
+**P42-A remaining work**: the 4 theme-base pieces
+(`ThemeBaseAssets::forTheme()`, the local-head resolver, the
+confirm-dialog base-strings registration, relocating
+`Template::localCssRules()`'s call site) — not started yet. P42-B
+(the 945-call-site migration itself) can't begin until these land,
+since its own per-page batches assume the confirm-dialog triplet is
+"already covered by `ThemeBaseAssets`."
 
 **P43 — Typed contributions + plugin-owned routes.**
 

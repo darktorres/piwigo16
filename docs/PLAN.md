@@ -1971,12 +1971,25 @@ found in what Batch 3's own text claimed:
   app-wide (not just the one `ADMIN_CONTENT` shape) is what surfaced
   this and everything below.
 - **`themes/default/template/search.latte` and `search_rules.latte`
-  are dead code**, not conversion candidates. `SearchController`'s own
+  were dead code**, not conversion candidates. `SearchController`'s own
   docblock says it only builds a `$search` descriptor and redirects,
   never renders; a repo-wide grep for `'search.latte'`/`search_rules`
   found zero real callers anywhere in `src/` or cross-template
-  `{include}`. Flagged for a deletion review, not folded into any
-  batch below.
+  `{include}`. **Deletion review resolved (2026-08-20): deleted both
+  files.** Re-confirmed before deleting: `SearchController::__invoke()`
+  always calls `$this->redirectService->redirect($search_url)` and
+  never renders; the golden-html/VR `'search'` fixture
+  (`VisualRegressionRoutes.php`) hits `/search.php` with
+  `CURLOPT_FOLLOWLOCATION` on, so it was always capturing the
+  redirect's landing page, never `search.latte` itself; `search.latte`
+  doesn't even `{include}` `search_rules.latte` — both were separate,
+  independently-unreachable standalone pages. `search_filters.inc.latte`
+  (the live sidebar search widget, already converted in Batch 6) is
+  unrelated despite the similar name. Verified after deletion: `php
+  bin/piwigo phpstan-latte:compile` (2 stale outputs pruned, 128
+  templates, 0 errors), `composer lint:latte` (128 files, 0 errors),
+  full `composer analyse:phpstan`, `vendor/bin/deptrac analyse` (0
+  violations), `composer lint:php` — all clean.
 
 **Batch 4 (landed) — Picture page's remaining ambient fragments.** All
 6 context classes (`PictureCommentsOrderPageContext`,

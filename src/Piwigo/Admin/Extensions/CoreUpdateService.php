@@ -37,7 +37,8 @@ use Piwigo\Users\UserService;
  * PemCatalog to keep that class's "one generic PEM-communication concern,
  * parameterized by ExtensionType" shape clean.
  *
- * Real callers: `Bootstrap\PageTail::render()` constructs it directly;
+ * Real callers: `Bootstrap\PageTail::checkForUpdates()` (called from both
+ * `renderToString()` and `prepareContext()`) constructs it directly;
  * `Admin\UpdatesPwgPageRenderer` and `Controller\Api\Extensions\
  * CheckUpdatesController` both take it via constructor injection.
  */

@@ -13,8 +13,9 @@ namespace Piwigo\Core;
  * Lives in `Piwigo\Core` (L1Infrastructure, same direction as
  * `MailerInterface`/`HtmlRenderingInterface`) so PageTailRenderer can
  * depend downward on this instead. `PiwigoInfosSender implements` it,
- * bound in config/container.php; `Piwigo\Bootstrap\PageTail::render()`
- * passes the concrete instance into PageTailRenderer's constructor.
+ * bound in config/container.php; `Piwigo\Bootstrap\PageTail::renderToString()`/
+ * `prepareContext()` pass the concrete instance into PageTailRenderer's own
+ * constructor, as its own required argument.
  */
 interface TelemetrySenderInterface
 {

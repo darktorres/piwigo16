@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–B landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end `PageHeaderRenderer`/`PageTail` call sites); Batches C–E + Part 2 (P41-G/H) not started (see below) | 5 |
+| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–C landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's `PageHeaderRenderer`/`PageTail` call sites, `PageTail::render()`/`PageTailRenderer::render()` deleted); Batches D–E + Part 2 (P41-G/H) not started (see below) | 6 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -2592,10 +2592,84 @@ URL, or attribute text differs anywhere) and were regenerated with
 stable), `test:visual` (66 passing), and a scoped `test:browser` run
 across all 12 controllers' own test files (151 passing).
 
-**Remaining batches.** P41-C converts `admin.latte` itself (merging `AdminShellFramePageContext`+
-`AdminShellPostDispatchPageContext`'s nav-chrome fields into a real
-View; `AdminContentPageContext` stays ambient, written by whichever
-sub-controller ran) plus `AdminPopuphelpController`. P41-D converts
+**Batch P41-C (landed)** — `admin.latte` converted to a real
+`Piwigo\Admin\Projection\AdminShellView` (`{templateType}`/`{layout}`,
+replacing its 665-line auto-generated `{varType}` header entirely):
+holds the `<div id="menubar">` sidebar-nav fields the shell's own body
+actually reads (29 properties — `activeMenu` plus a subset of
+`AdminShellFramePageContext`'s own fields: `enableSynchronization`,
+`uHistoryStat`, `uMaintenance`, `uNotificationByMail`, 4×
+`uConfig{General,Menubar,Languages,Themes}`, `uAlbums`, `uCatOptions`,
+`uCatUpdate`, `uRating`, `uRecentSet`, `uBatch`, `uTags`, `uUsers`,
+`uGroups`, `uAdmin`, `uPlugins`, `uAddPhotos`, `showRating`, `uUpdates`,
+`uComments`, `nbPendingComments`, `nbPhotosInCaddie`, `uCaddie`,
+`nbOrphans`, `uOrphans`) — confirmed via a real per-field grep across
+every admin template's own body (past its `{varType}` header, which is
+theme-wide boilerplate, not per-file usage) rather than assumed from
+the two old context classes' own field lists. `AdminShellFramePageContext`
+itself keeps being assigned ambiently, unchanged, at the same
+pre-dispatch point: 4 other real admin templates (`intro.latte`,
+`help.latte`, `photos_add_ftp.latte`,
+`include/batch_manager_filter.inc.latte`) read a subset of its same
+fields ambiently during `AdminDispatcher::dispatch()`, before this View
+is ever constructed — confirmed the same way. `adminPageTitle`/
+`adminPageObjectId` stay ambient too (via `AdminContentPageContext`,
+unchanged): `admin.latte`'s own `<h1>` needs whichever a sub-controller
+most recently overrode, so neither can pin to a fixed View property.
+`AdminShellPostDispatchPageContext` (`activeMenu`+`pwgmenu`) is deleted
+outright rather than kept alongside the new View: `activeMenu` moved
+onto `AdminShellView`, and `pwgmenu` — confirmed dead via the same
+exhaustive per-field grep, assigned but never read by any real
+template — dropped rather than carried forward as an unused property.
+
+`AdminPopuphelpController` converted the same way, sharing
+`Piwigo\Controller\Projection\PopuphelpView` with the front-end
+`PopuphelpController` (P41-B) — its `themes/admin/default/template/popuphelp.latte`
+also lost its own 665-line `{varType}` header. This conversion also
+fixed a real, pre-existing bug found by the batch's own golden-html
+verification: the old admin `popuphelp.latte` read `{$HELP_CONTENT}`
+(uppercase, ambient), but `AdminPopuphelpController` already rendered
+through `PopuphelpView`/`Renderer::render()` (real `get_object_vars()`-based
+camelCase properties, no `toArray()`) *before this batch started* —
+nothing had ever written an uppercase `HELP_CONTENT` key into
+`Template::$vars`, so every real admin help-popup page had been
+silently rendering with empty content. Fixed by reading `{$helpContent}`
+(the real property) instead — confirmed via the regenerated
+`admin-popuphelp` golden-html baseline, which now shows the real help
+article body instead of an empty `<div id="content" class="content"></div>`.
+
+Also deleted `Piwigo\Bootstrap\PageTail::render()` and
+`Piwigo\Page\PageTailRenderer::render()` (the void/echoing variants) in
+this same batch, ahead of P41-E's own formal schedule: `AdminShell.php`
+was their last real caller (confirmed via full-repo grep, including
+test files — `renderToString()` stays, since dedicated Unit/Integration
+tests still call it directly), and PHPStan's own dead-method detector
+flags a zero-caller method as an unsuppressable error per this
+project's own PHPStan instructions ("do not add baseline entries to
+suppress"). `renderToString()`/`prepareContext()`/`Template::$output`/
+`pparse()`/`flush()`/`finalizeOutput()`/`fetchOutput()` all stay for
+P41-E, since `InstallWizard.php`'s own `pparse('install.latte')` (P41-D,
+not yet converted) is still a real caller.
+
+Full verification green: `lint:latte` (131 templates),
+`phpstan-latte:compile` + full `analyse:phpstan` (0 errors, including
+the dead-method check above), `deptrac analyse` (0 violations),
+`lint:php`, `composer test` (Unit+Arch, 5532 passing — one fewer than
+P41-B's count, `AdminShellPostDispatchPageContextTest.php` deleted
+alongside its subject), `test:golden-html` (74 passing, reverified
+stable — 48 admin baselines regenerated for the same `{layout}`-driven
+whitespace/indentation reshape as P41-B, individually verified
+whitespace-only via full-file comparison against git HEAD, not just the
+diff hunks — a hunk-only comparison silently drops shared context lines
+from both sides and can't be trusted for this; the one genuine content
+change, `admin-popuphelp.html`, is the bug fix above), `test:visual` (65
+passing + 1 known pre-existing flaky test — `admin-themes-new`, confirmed
+by an isolated rerun, unrelated to this batch — plus a regenerated
+`admin-popuphelp` screenshot baseline), scoped `test:browser`
+(`AdminShellTest.php`, 12 passing), and scoped `test:integration`
+(`PageTailRendererTest.php`/`PageTailTest.php`, 6 passing).
+
+**Remaining batches.** P41-D converts
 `InstallWizard`/`install.latte` (no `{layout}` needed — it's a
 genuinely self-contained document). P41-E is the cutover completion:
 once every real caller has switched, delete the deprecated

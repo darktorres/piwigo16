@@ -35,12 +35,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * `IN_ADMIN` is read elsewhere (Piwigo\Page\PageHeaderRenderer), set by
  * the bootstrap file the same way admin.php itself sets it.
  *
- * `$template->appendOutput($this->renderer->render(...))` accumulates
- * into Template's own buffer; PageTail::renderToString() drains it as
- * one string. The `?page=` validation throws ResponseReadyException
- * rather than dying mid-render. The `output=content_only` branch
- * returns $help_content directly since by that point it is already
- * fully computed.
+ * `popuphelp.latte` declares `{layout 'layout.latte'}`, so
+ * `PageHeaderRenderer::prepareContext()`/`PageTail::prepareContext()`
+ * only prepare ambient context and `$this->renderer->render(...)` +
+ * `Template::finalizeHtml()` produce the final string in one shot. The
+ * `?page=` validation throws ResponseReadyException rather than dying
+ * mid-render. The `output=content_only` branch returns $help_content
+ * directly since by that point it is already fully computed -- that
+ * branch never reaches PageTail, and skips PageHeaderRenderer too (the
+ * `$output !== 'content_only'` guard above).
  */
 final readonly class AdminPopuphelpController implements ControllerInterface
 {
@@ -64,8 +67,8 @@ final readonly class AdminPopuphelpController implements ControllerInterface
         $output = $queryParams['output'] ?? null;
 
         // $title is set and read entirely within this method (passed
-        // straight into PageHeaderRenderer::render() below) -- no
-        // other file reads $GLOBALS['title']. Plain local, not global.
+        // straight into PageHeaderRenderer::prepareContext() below) --
+        // no other file reads $GLOBALS['title']. Plain local, not global.
         $template = $this->currentTemplate->get();
 
         if ($output !== 'content_only') {
@@ -81,7 +84,7 @@ final readonly class AdminPopuphelpController implements ControllerInterface
             $template->assignContext(new AdminPopuphelpPlaceholdersPageContext());
 
             new PageHeaderRenderer()
-                ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+                ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
         }
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
@@ -107,9 +110,10 @@ final readonly class AdminPopuphelpController implements ControllerInterface
             return ResponseFactory::html($help_content);
         }
 
-        $template->appendOutput($this->renderer->render(new PopuphelpView(helpContent: $help_content)));
+        PageTail::prepareContext();
 
-        $body = PageTail::renderToString();
+        $html = $this->renderer->render(new PopuphelpView(helpContent: $help_content));
+        $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);
     }

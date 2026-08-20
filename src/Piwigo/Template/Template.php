@@ -888,9 +888,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // guard against a second resolution). PageState isn't cleared
         // here, unlike cssLoader above -- see Template::exposeData()'s
         // own docblock and docs/PLAN.md's P37 section for why it must
-        // not be: admin pages flush twice (pparse('admin.latte') then a
-        // separate PageTail::render()), and this placeholder only ever
-        // lives in the second, footer-only flush.
+        // not be: any `{do exposeData(...)}`/`{do exposeString(...)}`
+        // call anywhere in the page (e.g. admin.latte's own body) has to
+        // survive until this substitution runs against footer.latte's
+        // own placeholder, regardless of how many separate
+        // Template::finalizeHtml()/flush() calls the request makes along
+        // the way (install.latte's own single-flush pparse() call is the
+        // one remaining example of that -- P41, docs/PLAN.md).
         $pageDataPayload = new PageDataPayload(self::pageState(), self::lang());
         $html = str_replace(
             self::JSON_ISLAND_TAG,

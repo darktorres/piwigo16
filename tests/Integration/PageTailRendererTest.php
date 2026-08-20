@@ -36,8 +36,9 @@ use Piwigo\Users\User;
  * VITALS_SCRIPT_URL assignment, the webmaster-contact branch,
  * telemetrySender->send()) is already exercised indirectly by every
  * Browser suite page-load test (every real Controller reaches
- * Bootstrap\PageTail::render()/renderToString(), which constructs this
- * class), same reasoning as PageTailTest's own docblock for its sibling
+ * Bootstrap\PageTail::renderToString()/prepareContext(), which
+ * constructs this class), same reasoning as PageTailTest's own docblock
+ * for its sibling
  * Bootstrap\PageTail. CurrentUser is left at the default guest status
  * here specifically to skip the webmaster-contact DB lookup branch,
  * already covered that way elsewhere.

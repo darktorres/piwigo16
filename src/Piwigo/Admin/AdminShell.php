@@ -18,7 +18,7 @@ use Piwigo\Admin\Event\AdminShellRendered;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Projection\AdminShellFramePageContext;
-use Piwigo\Admin\Projection\AdminShellPostDispatchPageContext;
+use Piwigo\Admin\Projection\AdminShellView;
 use Piwigo\Admin\Request\AdminShellRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\AdminDispatcher;
@@ -50,6 +50,7 @@ use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
@@ -94,6 +95,7 @@ final readonly class AdminShell
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -464,22 +466,51 @@ final readonly class AdminShell
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
         AdminDispatcher::dispatch($page_slug, RequestFactory::fromGlobals());
 
-        // Add the Piwigo Official menu
-        $template->assignContext(new AdminShellPostDispatchPageContext(
-            activeMenu: AdminUiHelper::getActiveMenu($page_slug),
-            pwgmenu: AdminUiHelper::pwgUrl(),
-        ));
-
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
+            ->prepareContext($title, $this->eventDispatcher, $this->layoutState, $this->currentTemplate, $this->currentConfig);
 
         $this->eventDispatcher->dispatch(new AdminShellRendered());
 
         $this->htmlService
             ->flushPageMessages();
 
-        $template->pparse('admin.latte');
+        $adminShellView = new AdminShellView(
+            activeMenu: AdminUiHelper::getActiveMenu($page_slug),
+            enableSynchronization: $this->currentConfig->enableSynchronization,
+            uHistoryStat: $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
+            uMaintenance: $link_start . 'maintenance',
+            uNotificationByMail: $link_start . 'notification_by_mail',
+            uConfigGeneral: $link_start . 'configuration',
+            uConfigMenubar: $link_start . 'menubar',
+            uConfigLanguages: $link_start . 'languages',
+            uConfigThemes: $link_start . 'themes',
+            uAlbums: $link_start . 'albums',
+            uCatOptions: $link_start . 'cat_options',
+            uCatUpdate: $link_start . 'site_update&amp;site=1',
+            uRating: $link_start . 'rating',
+            uRecentSet: $link_start . 'batch_manager&amp;filter=prefilter-last_import',
+            uBatch: $link_start . 'batch_manager',
+            uTags: $link_start . 'tags',
+            uUsers: $link_start . 'user_list',
+            uGroups: $link_start . 'group_list',
+            uAdmin: $this->urlService->getRootUrl() . 'admin.php',
+            uPlugins: $link_start . 'plugins',
+            uAddPhotos: $link_start . 'photos_add',
+            showRating: $this->currentConfig->rateEnabled,
+            uUpdates: $u_updates,
+            uComments: $u_comments,
+            nbPendingComments: $nb_pending_comments,
+            nbPhotosInCaddie: $nb_photos_in_caddie,
+            uCaddie: $u_caddie,
+            nbOrphans: $nb_orphans,
+            uOrphans: $u_orphans,
+        );
 
-        PageTail::render();
+        PageTail::prepareContext();
+
+        $html = $this->renderer->render($adminShellView);
+        $body = $template->finalizeHtml((string) $html);
+
+        echo $body;
     }
 }

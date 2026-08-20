@@ -44,34 +44,25 @@ use Piwigo\Users\UserService;
  * Admin/Controller, so this is the violation-free home for the whole
  * orchestration — same reasoning as UserBootstrap.
  *
- * Callers reach this via PageTail::render(); the request-start instant is
- * read here from RequestMetrics, so call sites need no bootstrap variable
- * of their own.
+ * Callers reach this via PageTail::prepareContext() (or the still-deprecated
+ * renderToString(), for callers not yet converted); the request-start
+ * instant is read here from RequestMetrics, so call sites need no
+ * bootstrap variable of their own.
  */
 final class PageTail
 {
     /**
-     * @deprecated P41 (docs/PLAN.md): calls the update-check
-     *   orchestration then `PageTailRenderer`'s own deprecated
-     *   `render()`. Real callers switch to `prepareContext()` + the new
-     *   `{layout}`-based `Renderer::render()`/`Template::finalizeHtml()`
-     *   one at a time; this stays until every real caller has switched
-     *   (P41-E deletes it).
-     */
-    public static function render(): void
-    {
-        self::checkForUpdates();
-        self::renderer()
-            ->render(self::requestMetrics()->requestStart);
-    }
-
-    /**
-     * The non-echoing sibling of render() -- same update-check
-     * orchestration, but returns the fully rendered page instead of
-     * sending it to the browser. For controllers returning a real PSR-7
-     * Response instead of echoing directly.
+     * The non-echoing sibling of prepareContext()'s own final render step
+     * -- same update-check orchestration, but returns the fully rendered
+     * page instead of sending it to the browser. For controllers
+     * returning a real PSR-7 Response instead of echoing directly.
      *
-     * @deprecated P41 (docs/PLAN.md): see render()'s own docblock.
+     * @deprecated P41 (docs/PLAN.md): calls prepareContext() then the old
+     *   `Template::parse('footer.latte')`/`fetchOutput()` path. Real
+     *   callers switch to `prepareContext()` + the new `{layout}`-based
+     *   `Renderer::render()`/`Template::finalizeHtml()` one at a time;
+     *   this stays until every real caller has switched (P41-E deletes
+     *   it).
      */
     public static function renderToString(): string
     {
@@ -82,13 +73,12 @@ final class PageTail
     }
 
     /**
-     * The context-building half of render()/renderToString() -- the
-     * update-check orchestration plus `PageTailRenderer::prepareContext()`,
-     * without the final `parse('footer.latte')`/`flush()`/`fetchOutput()`
-     * call. For a `{layout}`-based caller (P41) building the same ambient
-     * footer context before rendering its own page-specific `View`
-     * through `Renderer::render()` and `Template::finalizeHtml()` in one
-     * shot.
+     * The context-building half of renderToString() -- the update-check
+     * orchestration plus `PageTailRenderer::prepareContext()`, without
+     * the final `parse('footer.latte')`/`fetchOutput()` call. For a
+     * `{layout}`-based caller (P41) building the same ambient footer
+     * context before rendering its own page-specific `View` through
+     * `Renderer::render()` and `Template::finalizeHtml()` in one shot.
      */
     public static function prepareContext(): void
     {

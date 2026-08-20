@@ -3235,6 +3235,19 @@ page views" artifact on `random`/`calendar-posted`/`favorites`
 (individually clean, only drifts when the whole suite runs in one
 process back-to-back -- left alone, not a real baseline defect).
 
+**Final step of P42, once every batch above lands**: reimplement the
+`17.x-rewrite-3` worktree's own independent array-to-object campaign
+(124 commits, 614 files, `$array['field']` access converted to typed
+`$object->field` access, plus a loose-union signature-narrowing sweep)
+on top of `17.x-rewrite`. That branch diverged from this one at
+`0c71fa6c55` and the two have drifted too far apart for a clean
+merge/rebase/cherry-pick of the whole range -- reimplement the
+*pattern* file-by-file instead, using
+`/home/torres/piwigo17-rewrite-3/HANDOFF-array-to-object-campaign.md`
+as the theme-by-theme index (every cited commit hash is directly
+`git show`-able from this worktree too, since both share the same
+`.git` object database -- no fetch needed). Not started.
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

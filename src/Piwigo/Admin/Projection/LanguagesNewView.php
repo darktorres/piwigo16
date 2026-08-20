@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -14,7 +18,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `{if !empty($languages)}`, not `isset()`.
  */
 #[Template('languages_new.latte')]
-final readonly class LanguagesNewView implements View
+final readonly class LanguagesNewView implements View, HasPageAssets
 {
     /**
      * @param list<array<string, mixed>> $languages
@@ -23,4 +27,18 @@ final readonly class LanguagesNewView implements View
         public int $isWebmaster,
         public array $languages,
     ) {}
+
+    /**
+     * `languages_new.latte`'s own unconditional `{do combineScript(...)}`x2/
+     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('languages_new', 'themes/admin/default/js/languages_new.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
+            AssetContribution::css('themes/admin/default/css/pages/languages_new.css', id: 'languages_new'),
+        ];
+    }
 }

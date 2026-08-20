@@ -1,9 +1,4 @@
 {templateType Piwigo\Admin\Projection\LanguagesNewView}
-{do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
-
-{do combineScript(id: 'languages_new', load: 'footer', require: 'jquery.cluetip', path: 'themes/admin/default/js/languages_new.js')}
-{do combineCss(id: 'languages_new', path: 'themes/admin/default/css/pages/languages_new.css')}
-
 {if $isWebmaster == 1}
   {if !empty($languages)}
     <table class="table2 languages">

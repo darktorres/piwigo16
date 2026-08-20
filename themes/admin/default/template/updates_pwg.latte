@@ -1,7 +1,4 @@
 {templateType Piwigo\Admin\Projection\UpdatesPwgView}
-{do exposeString('Are you sure?')}
-{do combineScript(id: 'updates_pwg', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/updates_pwg.js')}
-{do combineCss(id: 'updates_pwg', path: 'themes/admin/default/css/pages/updates_pwg.css')}
 
 <div
   n:if="isset($minorReleasePhpRequired) and isset($majorReleasePhpRequired)"

@@ -643,7 +643,7 @@ final readonly class CommentsController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
         $commentList = count($comments) > 0
-            ? $this->renderer->render(new CommentListView(comments: $tpl_comments, commentDerivativeParams: $derivative_params))
+            ? $this->renderer->render(new CommentListView(comments: $tpl_comments, commentDerivativeParams: $derivative_params, rootUrl: $this->urlService->getRootUrl(), iconDir: $template->themeConf('icon_dir')))
             : null;
 
         $commentsView = new CommentsView(

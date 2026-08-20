@@ -310,7 +310,7 @@ final class PictureCommentRenderer
             $commentAdd = $tplVar;
         }
 
-        $commentList = $renderer->render(new CommentListView(comments: $comments, commentDerivativeParams: null));
+        $commentList = $renderer->render(new CommentListView(comments: $comments, commentDerivativeParams: null, rootUrl: $urlService->getRootUrl(), iconDir: ''));
 
         return new PictureCommentsResult(
             commentsOrderUrl: $commentsOrderUrl,

@@ -1,7 +1,5 @@
 {templateType Piwigo\Picture\Projection\CommentListView}
-{do combineCss(id: 'comment_list', path: 'themes/default/css/pages/comment_list.css')}
 {if isset($commentDerivativeParams)}
-  {do exposeData('error_icon', $ROOT_URL . $themeconf['icon_dir'] . '/errors_small.png')}
   <div class="loader"><img
       src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
     ></div>
@@ -19,10 +17,6 @@
         {var $derivative = $pwg->derivative($commentDerivativeParams, $comment['src_image'])}
       {else}
         {var $derivative = $pwg->derivative($derivative_params, $comment['src_image'])}
-      {/if}
-      {if !$derivative->isCached()}
-        {do combineScript(id: 'jquery.ajaxmanager', path: 'themes/default/js/plugins/jquery.ajaxmanager.js', load: 'footer')}
-        {do combineScript(id: 'thumbnails.loader', path: 'themes/default/js/thumbnails.loader.js', require: 'jquery.ajaxmanager,page-data', load: 'footer')}
       {/if}
       <div class="illustration">
         <a href="{$comment['U_PICTURE']|noescape}">
@@ -44,7 +38,6 @@
         class="actions"
       >
         {if isset($comment['U_DELETE'])}
-          {do combineScript(id: 'core.scripts', load: 'footer', require: 'page-data', path: 'themes/default/js/scripts.js')}
           <a
             href="{$comment['U_DELETE']|noescape}"
             data-confirm

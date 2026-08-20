@@ -167,6 +167,8 @@ final readonly class CatPermPageRenderer
             saveSuccess: $save_success,
             csrfToken: $this->csrfService
                 ->getToken(),
+            colorscheme: $template->themeConf('colorscheme'),
+            rootUrl: $this->urlService->getRootUrl(),
         ));
 
         $template->assignContext(new AdminContentPageContext(

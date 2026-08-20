@@ -1360,7 +1360,7 @@ final readonly class PictureController implements ControllerInterface
         if ($slideshow and $this->currentConfig->lightSlideshow) {
             $html = $this->renderer->render(new SlideshowView(...$commonPictureViewArgs));
         } else {
-            $html = $this->renderer->render(new PictureView(...$commonPictureViewArgs));
+            $html = $this->renderer->render(new PictureView(...$commonPictureViewArgs, rootUrl: $this->urlService->getRootUrl()));
         }
         $body = $template->finalizeHtml((string) $html);
 

@@ -141,13 +141,3 @@
 {/if}{/spaceless}-->*}
   {/if}
 </div>
-{spaceless}
-  {do combineScript(id: 'picture_nav_buttons', load: 'footer', require: 'page-data', path: 'themes/default/js/picture_nav_buttons.js')}
-  {if isset($navNext)}{do exposeData('nav_next_url', $navNext['U_IMG'])}{/if}
-  {if isset($navPrevious)}{do exposeData('nav_previous_url', $navPrevious['U_IMG'])}{/if}
-  {if isset($navFirst)}{do exposeData('nav_first_url', $navFirst['U_IMG'])}{/if}
-  {if isset($navLast)}{do exposeData('nav_last_url', $navLast['U_IMG'])}{/if}
-  {if isset($uUp) and !isset($slideshowNav)}{do exposeData('nav_up_url', $uUp)}{/if}
-  {if isset($slideshowNav['U_START_PLAY'])}{do exposeData('nav_slideshow_start_url', $slideshowNav['U_START_PLAY'])}{/if}
-  {if isset($slideshowNav['U_STOP_PLAY'])}{do exposeData('nav_slideshow_stop_url', $slideshowNav['U_STOP_PLAY'])}{/if}
-{/spaceless}

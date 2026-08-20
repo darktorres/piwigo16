@@ -1,8 +1,6 @@
 {templateType Piwigo\Controller\Projection\PictureView}
 {layout 'layout.latte'}
 {block content}
-{do combineScript(id: 'core.switchbox', load: 'async', require: 'jquery', path: 'themes/default/js/switchbox.js')}
-{do combineCss(id: 'picture', path: 'themes/default/css/pages/picture.css')}
 {if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
 <div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
   {if isset($errors) or !empty($infos)}
@@ -10,15 +8,6 @@
   {/if}
 
   {if !empty($PLUGIN_PICTURE_BEFORE)}{$PLUGIN_PICTURE_BEFORE|noescape}{/if}
-
-  {do combineScript(id: 'picture', load: 'footer', require: 'jquery,page-data', path: 'themes/default/js/picture.js')}
-  {do exposeData('cookie_path', $cookiePath)}
-  {do exposeData('root_url', $ROOT_URL)}
-  {do exposeData('image_id', $navCurrent['id'])}
-  {do exposeData('csrf_token', $csrfToken)}
-  {do exposeString('Update your rating')}
-  {do exposeString('%d rate')}
-  {do exposeString('%d rates')}
 
   <div id="imageHeaderBar">
     <div class="browsePath">
@@ -63,7 +52,6 @@
               </a><br>
             {/foreach}
             {if isset($uOriginal)}
-              {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
               <a
                 id="originalLink"
                 href="#"
@@ -389,9 +377,6 @@
                         >
                       {/if}
                     {/foreach}
-                    {spaceless}{do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
-                      {do combineScript(id: 'rating', load: 'async', require: 'core.scripts', path: 'themes/default/js/rating.js')}
-                    {/spaceless}
                   </div>
                 </form>
               </dd>

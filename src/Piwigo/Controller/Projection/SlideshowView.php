@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Latte\Runtime\Html;
+use Override;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -20,10 +23,13 @@ use Piwigo\Template\Latte\Attribute\Template;
  * and reads several more (`$displayNavButtons`/`$slideshowNav`/`$uUp`/
  * `$navFirst`/`$navPrevious`/`$navNext`/`$navLast`) -- so this carries
  * the same full field set as `PictureView` rather than a hand-trimmed
- * subset.
+ * subset. `pageAssets()`/`exposedPageData()` exist solely to merge in
+ * `picture_nav_buttons.latte`'s own contract-only
+ * `PictureNavButtonsView` contribution -- `slideshow.latte` itself has
+ * zero registration calls of its own (docs/PLAN.md's P42-B).
  */
 #[Template('slideshow.latte')]
-final readonly class SlideshowView implements View
+final readonly class SlideshowView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, mixed>|null $navFirst
@@ -94,4 +100,37 @@ final readonly class SlideshowView implements View
         public ?array $commentAdd,
         public ?Html $commentList,
     ) {}
+
+    #[Override]
+    public function pageAssets(): array
+    {
+        return $this->pictureNavButtonsView()
+            ->pageAssets();
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return $this->pictureNavButtonsView()
+            ->exposedPageData();
+    }
+
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [];
+    }
+
+    private function pictureNavButtonsView(): PictureNavButtonsView
+    {
+        return new PictureNavButtonsView(
+            navFirst: $this->navFirst,
+            navPrevious: $this->navPrevious,
+            navNext: $this->navNext,
+            navLast: $this->navLast,
+            uUp: $this->uUp,
+            displayNavButtons: $this->displayNavButtons,
+            slideshowNav: $this->slideshowNav,
+        );
+    }
 }

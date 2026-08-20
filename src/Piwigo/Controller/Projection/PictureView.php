@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Latte\Runtime\Html;
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -23,10 +28,14 @@ use Piwigo\Template\Latte\Attribute\Template;
  * its own `PictureContentView` -- a `Renderer::render()` call never
  * mutates `Template::$vars`, so a `View` only ever sees the properties
  * it declares itself, nothing implicitly carried over from a sibling
- * render.
+ * render. `$rootUrl` is the ambient `$ROOT_URL` the template's own
+ * `exposeData` call reads -- resolved by the controller via
+ * `$urlService->getRootUrl()`, kept off `SlideshowView`'s own shared
+ * `$commonPictureViewArgs` spread since `slideshow.latte` never
+ * references it.
  */
 #[Template('picture.latte')]
-final readonly class PictureView implements View
+final readonly class PictureView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, mixed>|null $navFirst
@@ -96,5 +105,76 @@ final readonly class PictureView implements View
         public ?array $comments,
         public ?array $commentAdd,
         public ?Html $commentList,
+        public string $rootUrl,
     ) {}
+
+    /**
+     * `picture.latte`'s own unconditional `{do combineScript(...)}`x2/
+     * `{do combineCss(...)}`, its two conditional `{if isset($uOriginal)}`/
+     * `{if isset($rating)}` `combineScript('core.scripts', ...)` blocks,
+     * and its `{include 'picture_nav_buttons.latte'}`'s own contract-only
+     * `PictureNavButtonsView::pageAssets()`, manually merged in since
+     * `Renderer::render()` never runs for an `{include}`-only partial
+     * (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        $assets = [
+            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
+            AssetContribution::script('picture', 'themes/default/js/picture.js', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
+        ];
+
+        if ($this->uOriginal !== null) {
+            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async);
+        }
+
+        if ($this->rating !== null) {
+            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async);
+            $assets[] = AssetContribution::script('rating', 'themes/default/js/rating.js', loadMode: LoadMode::Async, dependsOn: ['core.scripts']);
+        }
+
+        return [...$assets, ...$this->pictureNavButtonsView()->pageAssets()];
+    }
+
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'cookie_path' => $this->cookiePath,
+            'root_url' => $this->rootUrl,
+            'image_id' => is_string($this->navCurrent['id'] ?? null) || is_int($this->navCurrent['id'] ?? null) ? $this->navCurrent['id'] : '',
+            'csrf_token' => $this->csrfToken,
+            ...$this->pictureNavButtonsView()
+                ->exposedPageData(),
+        ];
+    }
+
+    /**
+     * `picture.latte`'s own unconditional `{do exposeString(...)}`x3
+     * (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Update your rating',
+            '%d rate',
+            '%d rates',
+        ];
+    }
+
+    private function pictureNavButtonsView(): PictureNavButtonsView
+    {
+        return new PictureNavButtonsView(
+            navFirst: $this->navFirst,
+            navPrevious: $this->navPrevious,
+            navNext: $this->navNext,
+            navLast: $this->navLast,
+            uUp: $this->uUp,
+            displayNavButtons: $this->displayNavButtons,
+            slideshowNav: $this->slideshowNav,
+        );
+    }
 }

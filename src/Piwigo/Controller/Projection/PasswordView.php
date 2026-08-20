@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -16,10 +20,12 @@ use Piwigo\Template\Latte\Attribute\Template;
  * asymmetry `RegisterView`'s own docblock explains.
  * `$key`/`$usernameOrEmail`/`$isFirstLogin` stay nullable: both
  * templates guard them with `isset()`, which treats an explicit `null`
- * identically to "never assigned".
+ * identically to "never assigned". `$isStandardPagesTheme`/
+ * `$standardPagesSelectedSkin` disambiguate `pageAssets()` the same way
+ * `IdentificationView`'s own do.
  */
 #[Template('password.latte')]
-final readonly class PasswordView implements View
+final readonly class PasswordView implements View, HasPageAssets
 {
     /**
      * @param array<string, string> $languageOptions
@@ -37,5 +43,45 @@ final readonly class PasswordView implements View
         public array $languageOptions,
         public string $currentLanguage,
         public string $helpLink,
+        public bool $isStandardPagesTheme,
+        public string $standardPagesSelectedSkin,
     ) {}
+
+    /**
+     * `password.latte`'s own unconditional `{do combineScript(...)}`
+     * plus a 3-way `{if $action == 'lost'}{elseif ...}{elseif ...}{/if}`
+     * `{do footerScript(...)}` (default theme) or
+     * `{do combineCss(...)}`x3/`{do combineScript(...)}`
+     * (`standard_pages` theme) -- mutually exclusive, only one physical
+     * file ever actually renders per request (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        if ($this->isStandardPagesTheme) {
+            return [
+                AssetContribution::css('themes/standard_pages/skins/' . $this->standardPagesSelectedSkin . '.css', id: 'standard_pages_css', order: 100),
+                AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
+                AssetContribution::css('themes/standard_pages/css/pages/password.css', id: 'password'),
+                AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            ];
+        }
+
+        $assets = [
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+        ];
+
+        $focusScript = match ($this->action) {
+            'lost' => "pwg_tryFocus('username_or_email');",
+            'reset' => "pwg_tryFocus('use_new_pwd');",
+            'lost_code' => "pwg_tryFocus('user_code');",
+            default => null,
+        };
+
+        if ($focusScript !== null) {
+            $assets[] = AssetContribution::inlineScript($focusScript);
+        }
+
+        return $assets;
+    }
 }

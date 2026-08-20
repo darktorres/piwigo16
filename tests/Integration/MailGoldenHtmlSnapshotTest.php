@@ -14,8 +14,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\MailService;
-use Piwigo\Mail\Projection\NbmMailContentPageContext;
-use Piwigo\Mail\Projection\NbmSubscribeActionMailContext;
+use Piwigo\Mail\Projection\NotificationByMailView;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\MailServiceTestSpyTransport;
@@ -59,7 +58,7 @@ use Symfony\Component\Mime\Email;
  *     real caller shape (fixture's mail_theme config is 'clear', already
  *     closed by #1, so no theme collision).
  *  3. notification_by_mail -- NotificationByMailSender's own real shape:
- *     the caller pre-renders via MailService::getMailTemplate()->parse(),
+ *     the caller pre-renders via MailService::getMailTemplate()->renderView(),
  *     then passes the string as args['content'] with no tpl filename at
  *     all (replicated here directly rather than driving the full
  *     subscribe/unsubscribe orchestration, which needs NBM-specific
@@ -170,7 +169,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
      *
      * @param string|array<int|string, mixed> $to
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
+     * @param array{filename?: string, assign?: array<string, mixed>} $tpl
      */
     private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): Email
     {
@@ -242,23 +241,29 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         // .tpl" convention every other real caller here goes through.
         $mailTemplate = $this->mailer->getMailTemplate('text/html');
         // Real production callers (NotificationByMailSender::
-        // doSubscribeUnsubscribeNotificationByMail()) always assign
-        // NbmMailContentPageContext (USERNAME/SEND_AS_NAME/etc.) before
-        // NbmSubscribeActionMailContext -- notification_by_mail.latte's
-        // own {$USERNAME} read needs the first context too, not just the
-        // second one this test originally assigned alone.
-        $mailTemplate->assignContext(new NbmMailContentPageContext(
+        // doSubscribeUnsubscribeNotificationByMail()) always build the
+        // shared NotificationByMailView field set (username/sendAsName/
+        // etc.) alongside the subscribe/unsubscribe-specific fields --
+        // notification_by_mail.latte's own {$username} read needs the
+        // first half too, not just the branch-specific one.
+        $notificationView = new NotificationByMailView(
             username: 'Fixture Recipient',
             sendAsName: 'Fixture Gallery',
             unsubscribeLink: $this->rootUrl . 'nbm.php?unsubscribe=fixture-check-key',
             subscribeLink: $this->rootUrl . 'nbm.php?subscribe=fixture-check-key',
             contactEmail: 'fixture_admin@example.test',
-        ));
-        $mailTemplate->assignContext(new NbmSubscribeActionMailContext(
-            sectionActionBy: 'subscribe_by_himself',
-            galleryTitle: 'Fixture Gallery',
-            galleryUrl: $this->rootUrl,
-        ));
+            subscribeByAdmin: false,
+            subscribeByHimself: true,
+            unsubscribeByAdmin: false,
+            unsubscribeByHimself: false,
+            contentNewElementsBetween: null,
+            contentNewElementsSingle: null,
+            globalNewLines: null,
+            customMailContent: null,
+            gotoGalleryTitle: 'Fixture Gallery',
+            gotoGalleryUrl: $this->rootUrl,
+            recentPosts: [],
+        );
         $emails['notification-by-mail'] = $this->mailCaptureBeforeSend(
             [
                 'name' => 'Fixture Recipient',
@@ -267,7 +272,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
             [
                 'subject' => '[Fixture Gallery] Subscribe to notification by mail',
                 'email_format' => 'text/html',
-                'content' => $mailTemplate->parse('notification_by_mail.latte', true),
+                'content' => $mailTemplate->renderView('notification_by_mail.latte', $notificationView),
                 'content_format' => 'text/html',
             ]
         );

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
@@ -68,7 +68,14 @@ it('resolves an Admin renderer call site only under the admin theme', function (
 });
 
 it('resolves a Mail call site only under the mail template dir', function (): void {
-    $templates = $this->result->templatesByClass[NotificationByMailSender::class] ?? [];
+    // NotificationByMailSender's own former fixture shape (2 real
+    // ->parse('notification_by_mail.latte', true) call sites) went
+    // extinct once P40's Mail batch converted both to
+    // ->renderView(), which this scanner doesn't recognize at all (by
+    // design -- see TemplateTypeScanner). MailService::mail() itself
+    // still calls ->parse() for the mail shell (header.latte/
+    // footer.latte), so it's the real remaining fixture for this rule.
+    $templates = $this->result->templatesByClass[MailService::class] ?? [];
 
     expect($templates)
         ->not->toBe([]);

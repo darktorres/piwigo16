@@ -16,9 +16,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Event\NbmRenderGlobalCustomizeMailContent;
-use Piwigo\Mail\Projection\NbmMailContentPageContext;
-use Piwigo\Mail\Projection\NbmNewsMailContext;
-use Piwigo\Mail\Projection\NbmSubscribeActionMailContext;
+use Piwigo\Mail\Projection\NotificationByMailView;
 use Piwigo\Notification\Event\NbmRenderUserCustomizeMailContent;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
@@ -282,30 +280,36 @@ final class NotificationByMailSender
         }
     }
 
-    public function assignVarsNbmMailContent(UserMailNotification $nbmUser): void
+    /**
+     * The 5 `NotificationByMailView` fields shared by both real render
+     * sites (subscribe/unsubscribe and news) -- previously assigned
+     * ambiently via `NbmMailContentPageContext`, now returned so each
+     * call site can merge them into its own branch-specific
+     * `NotificationByMailView` construction.
+     *
+     * @return array{username: string, sendAsName: ?string, unsubscribeLink: string, subscribeLink: string, contactEmail: ?string}
+     */
+    private function nbmMailContentFields(UserMailNotification $nbmUser): array
     {
         $this->urlService->setMakeFullUrl();
 
         $galleryHomeUrlStr = $this->urlService->getGalleryHomeUrl();
 
-        $emailFormat = $this->emailFormat ?? $this->mailer
-            ->getStrEmailFormat(false);
-        $mailTemplate = $this->mailTemplate ?? $this->mailer
-            ->getMailTemplate($emailFormat);
-
-        $mailTemplate->assignContext(new NbmMailContentPageContext(
-            username: $nbmUser->username,
-            sendAsName: $this->sendAsName,
-            unsubscribeLink: $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
+        $fields = [
+            'username' => $nbmUser->username,
+            'sendAsName' => $this->sendAsName,
+            'unsubscribeLink' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
                 'unsubscribe' => $nbmUser->checkKey,
             ]),
-            subscribeLink: $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
+            'subscribeLink' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
                 'subscribe' => $nbmUser->checkKey,
             ]),
-            contactEmail: $this->sendAsMailAddress,
-        ));
+            'contactEmail' => $this->sendAsMailAddress,
+        ];
 
         $this->urlService->unsetMakeFullUrl();
+
+        return $fields;
     }
 
     /**
@@ -359,21 +363,31 @@ final class NotificationByMailSender
 
                     $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? $this->lang->t('Subscribe to notification by mail') : $this->lang->t('Unsubscribe from notification by mail'));
 
-                    $this->assignVarsNbmMailContent($nbmUser);
-
-                    $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_');
-                    $sectionActionBy .= ($isAdminRequest ? 'admin' : 'himself');
+                    $mailContentFields = $this->nbmMailContentFields($nbmUser);
 
                     $emailFormat = $this->emailFormat ?? $this->mailer
                         ->getStrEmailFormat(false);
                     $mailTemplate = $this->mailTemplate ?? $this->mailer
                         ->getMailTemplate($emailFormat);
 
-                    $mailTemplate->assignContext(new NbmSubscribeActionMailContext(
-                        sectionActionBy: $sectionActionBy,
-                        galleryTitle: $galleryTitle,
-                        galleryUrl: $this->urlService->getGalleryHomeUrl(),
-                    ));
+                    $notificationView = new NotificationByMailView(
+                        username: $mailContentFields['username'],
+                        sendAsName: $mailContentFields['sendAsName'],
+                        unsubscribeLink: $mailContentFields['unsubscribeLink'],
+                        subscribeLink: $mailContentFields['subscribeLink'],
+                        contactEmail: $mailContentFields['contactEmail'],
+                        subscribeByAdmin: $isSubscribe && $isAdminRequest,
+                        subscribeByHimself: $isSubscribe && ! $isAdminRequest,
+                        unsubscribeByAdmin: ! $isSubscribe && $isAdminRequest,
+                        unsubscribeByHimself: ! $isSubscribe && ! $isAdminRequest,
+                        contentNewElementsBetween: null,
+                        contentNewElementsSingle: null,
+                        globalNewLines: null,
+                        customMailContent: null,
+                        gotoGalleryTitle: $galleryTitle,
+                        gotoGalleryUrl: $this->urlService->getGalleryHomeUrl(),
+                        recentPosts: [],
+                    );
 
                     $sendAsMailFormatted = $this->sendAsMailFormatted ?? '';
 
@@ -387,7 +401,7 @@ final class NotificationByMailSender
                                 'from' => $sendAsMailFormatted,
                                 'subject' => $subject,
                                 'email_format' => $emailFormat,
-                                'content' => $mailTemplate->parse('notification_by_mail.latte', true),
+                                'content' => $mailTemplate->renderView('notification_by_mail.latte', $notificationView),
                                 'content_format' => $emailFormat,
                             ]
                         );
@@ -556,7 +570,7 @@ final class NotificationByMailSender
                                     ->getMailTemplate($mailEmailFormat);
 
                                 // Assign current var for nbm mail
-                                $this->assignVarsNbmMailContent($nbmUser);
+                                $mailContentFields = $this->nbmMailContentFields($nbmUser);
 
                                 $content_new_elements_between = null;
                                 $content_new_elements_single = null;
@@ -604,22 +618,30 @@ final class NotificationByMailSender
                                 }
 
                                 $galleryHomeUrl = $this->urlService->getGalleryHomeUrl();
-                                $mailTemplate->assignContext(new NbmNewsMailContext(
+                                $notificationView = new NotificationByMailView(
+                                    username: $mailContentFields['username'],
+                                    sendAsName: $mailContentFields['sendAsName'],
+                                    unsubscribeLink: $mailContentFields['unsubscribeLink'],
+                                    subscribeLink: $mailContentFields['subscribeLink'],
+                                    contactEmail: $mailContentFields['contactEmail'],
+                                    subscribeByAdmin: false,
+                                    subscribeByHimself: false,
+                                    unsubscribeByAdmin: false,
+                                    unsubscribeByHimself: false,
                                     contentNewElementsBetween: $content_new_elements_between,
                                     contentNewElementsSingle: $content_new_elements_single,
                                     globalNewLines: $global_new_lines,
                                     customMailContent: $custom_mail_content,
-                                    galleryTitle: $galleryTitle,
-                                    galleryUrl: $this->urlService->addUrlParams($galleryHomeUrl, $addUrlParams),
-                                    sendAsName: $this->sendAsName,
+                                    gotoGalleryTitle: $galleryTitle,
+                                    gotoGalleryUrl: $this->urlService->addUrlParams($galleryHomeUrl, $addUrlParams),
                                     recentPosts: $recent_posts,
-                                ));
+                                );
 
                                 $mailArgs = [
                                     'from' => $this->sendAsMailFormatted ?? '',
                                     'subject' => $subject,
                                     'email_format' => $mailEmailFormat,
-                                    'content' => $mailTemplate->parse('notification_by_mail.latte', true),
+                                    'content' => $mailTemplate->renderView('notification_by_mail.latte', $notificationView),
                                     'content_format' => $mailEmailFormat,
                                 ];
                                 if (is_string($auth)) {

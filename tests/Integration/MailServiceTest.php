@@ -266,7 +266,7 @@ final class MailServiceTest extends IntegrationTestCase
      *
      * @param string|array<int|string, mixed> $to
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
+     * @param array{filename?: string, assign?: array<string, mixed>} $tpl
      * @return array{email: Email}
      */
     private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): array
@@ -760,14 +760,13 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertFalse($result);
     }
 
-    public function testMailSetsACustomTemplateDirThenFallsBackToRawContentWhenTheFilenameDoesNotExist(): void
+    public function testMailFallsBackToRawContentWhenTheFilenameIsUnrecognised(): void
     {
-        // 'dirname' set (any value -- Template::setTemplateDir() appends
-        // rather than validates/replaces, so this alone can't hide the
-        // real theme's own templates) exercises setTemplateDir() being
-        // called at all; the genuinely nonexistent 'filename' is what
-        // actually forces templateExists() to return false, independent
-        // of dirname.
+        // buildRuntimeTemplateView() only recognises 'notification_admin'/
+        // 'cat_group_info' (the 2 real in-tree $tpl['filename'] values,
+        // confirmed by an exhaustive grep) -- any other value returns
+        // null, and mail() falls back to appending $mailContent plain,
+        // same as when no 'filename' is set at all.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
         $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
@@ -780,7 +779,6 @@ final class MailServiceTest extends IntegrationTestCase
             ],
             [
                 'filename' => 'this_template_does_not_exist',
-                'dirname' => '_data/mail_templates_extra',
                 'assign' => [],
             ]
         ));

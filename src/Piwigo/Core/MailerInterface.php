@@ -31,7 +31,7 @@ interface MailerInterface
      *
      * @param string|array<int|string, mixed> $to
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl
+     * @param array{filename?: string, assign?: array<string, mixed>} $tpl
      */
     public function mail(string|array $to, array $args = [], array $tpl = []): bool;
 

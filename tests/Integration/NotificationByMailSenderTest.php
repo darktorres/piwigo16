@@ -23,10 +23,11 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
+use ReflectionMethod;
 
 /**
  * Piwigo\Mail\NotificationByMailSender::incMailSentSuccess()/
- * incMailSentFailed()/displayCounterInfo()/assignVarsNbmMailContent()/
+ * incMailSentFailed()/displayCounterInfo()/nbmMailContentFields()/
  * sendMailNotifications()/doSubscribeUnsubscribeNotificationByMail() --
  * all reachable directly (no need to drive a full subscribe/send admin-page
  * POST). Resolved through the real DI container (PresentationAccessor),
@@ -329,22 +330,27 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->infos);
     }
 
-    public function testAssignVarsNbmMailContentBuildsARealMailTemplateWithoutError(): void
+    public function testNbmMailContentFieldsBuildsTheSharedViewFieldSet(): void
     {
-        // No fatal/exception is the real assertion here: this exercises the
-        // full UrlService full-url toggling + MailService::getMailTemplate()
-        // chain end to end. The built Template instance is a throwaway local
-        // inside the method (never written back to $this->mailTemplate for
-        // a single isolated call), so there's no further state to inspect
-        // from outside without changing production code.
-        //
-        // Not expectNotToPerformAssertions(): this file's own setUp()
-        // already performs real assertions (assertInstanceOf/assertIsArray
-        // type-narrowing guards), which PHPUnit counts against *every*
-        // test in the class -- that combination is what PHPUnit's
-        // risky-test detector flags ("not expected to perform assertions
-        // but performed N").
-        $this->sender->assignVarsNbmMailContent($this->fakeUser());
+        // nbmMailContentFields() is private (Renderer/View conversion
+        // turned it from an ambient assignContext() write into a pure,
+        // Reflection-testable return value -- same established pattern
+        // as MailService::resolveMailTheme()/emptyValue()) -- this
+        // exercises the full UrlService full-url toggling +
+        // addUrlParams() chain end to end and asserts the real returned
+        // values, not just "no fatal."
+        $method = new ReflectionMethod(NotificationByMailSender::class, 'nbmMailContentFields');
+
+        /** @var array{username: string, sendAsName: ?string, unsubscribeLink: string, subscribeLink: string, contactEmail: ?string} $fields */
+        $fields = $method->invoke($this->sender, $this->fakeUser());
+
+        self::assertSame('fixture_admin', $fields['username']);
+        // beginUsersEnv() was never called here, so sendAsName/contactEmail
+        // stay at their un-initialised null default.
+        self::assertNull($fields['sendAsName']);
+        self::assertNull($fields['contactEmail']);
+        self::assertStringContainsString('unsubscribe=ck12345', $fields['unsubscribeLink']);
+        self::assertStringContainsString('subscribe=ck12345', $fields['subscribeLink']);
     }
 
     public function testSendMailNotificationsReturnsAnEmptyListForAnUnrecognisedAction(): void
@@ -488,12 +494,11 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // sendAsName has no public getter, and MailService::mail() is
         // never actually reached here -- this exercises nbm_send_mail_as's
         // own ternary true branch (an admin-configured override) rather
-        // than falling through to MailService::getMailSenderName(),
-        // matching assignVarsNbmMailContent()'s own established "no fatal
-        // is the real assertion" pattern above for a private, otherwise
-        // unobservable field. Not expectNotToPerformAssertions(): see that
-        // test's own comment -- this file's setUp() already performs real
-        // assertions, which PHPUnit counts against every test in the class.
+        // than falling through to MailService::getMailSenderName(), for a
+        // private, otherwise unobservable field. Not
+        // expectNotToPerformAssertions(): this file's own setUp() already
+        // performs real assertions, which PHPUnit counts against every
+        // test in the class.
         CurrentConfigTestFactory::get()->nbmSendMailAs = 'Custom Notifier';
 
         $this->sender->beginUsersEnv(true);

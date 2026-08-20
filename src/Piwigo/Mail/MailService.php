@@ -6,6 +6,7 @@ namespace Piwigo\Mail;
 
 use Exception;
 use InvalidArgumentException;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Pelago\Emogrifier\CssInliner;
@@ -25,17 +26,19 @@ use Piwigo\Core\MailerInterface;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\View;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Event\BeforeParseMailTemplate;
 use Piwigo\Mail\Event\RenderLostPasswordMailContent;
+use Piwigo\Mail\Projection\CatGroupInfoView;
 use Piwigo\Mail\Projection\EmailRecipient;
 use Piwigo\Mail\Projection\MailContent;
 use Piwigo\Mail\Projection\MailHeaderPageContext;
 use Piwigo\Mail\Projection\MailRecipient;
-use Piwigo\Mail\Projection\MailRuntimeTemplatePageContext;
 use Piwigo\Mail\Projection\MailTitlePageContext;
+use Piwigo\Mail\Projection\NotificationAdminView;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -422,11 +425,14 @@ final class MailService implements MailerInterface
 
     /**
      * Resolves a mail template base name (no extension) to whichever real
-     * file actually exists in $template's current directory chain.
-     * Prefers .latte, matching the migration's own end-state; still
-     * checks .tpl so a not-yet-converted plugin-provided runtime template
-     * (the $tpl['filename'] mechanism in mail()/mailAdmins()/mailGroup())
-     * keeps working unchanged.
+     * file actually exists in $template's current directory chain --
+     * the CSS-fragment lookups (`global-mail-css`, `mail-css-{theme}`)
+     * are its only remaining real callers now that the runtime
+     * content-template mechanism resolves through
+     * `buildRuntimeTemplateView()` instead (see that method's own
+     * docblock). Prefers .latte, matching the migration's own
+     * end-state; still checks .tpl for parity with a not-yet-converted
+     * plugin-provided CSS fragment.
      */
     private function resolveMailTemplateFilename(Template $template, string $baseName): ?string
     {
@@ -439,6 +445,75 @@ final class MailService implements MailerInterface
         }
 
         return null;
+    }
+
+    /**
+     * Resolves `mail()`'s own `$tpl['filename']`/`$tpl['assign']` runtime
+     * -template mechanism to a typed `View` -- exactly 2 real in-tree
+     * values are ever passed (`'notification_admin'`, from
+     * `mailNotificationAdmins()` and `Admin\Extensions\
+     * CoreUpdateService::notifyAdminsOfNewVersion()`; `'cat_group_info'`,
+     * from `Admin\AlbumNotificationPageRenderer`), confirmed by an
+     * exhaustive grep for `'filename' =>` across `src/Piwigo`. `$assign`
+     * stays a loose `mixed` bag at this boundary -- it's still `mail()`'s
+     * own public, generically-typed `$tpl['assign']` parameter, read
+     * back here with the same defensive narrowing every other untyped
+     * -input boundary in this class uses -- but the actual render call
+     * downstream gets a real typed `View`, not a raw array. Returns
+     * `null` for any other filename (no real caller passes one), which
+     * the caller falls back to appending `$mailContent` plain, matching
+     * `resolveMailTemplateFilename()` returning null before this method
+     * existed.
+     *
+     * @param array<string, mixed> $assign
+     */
+    private static function buildRuntimeTemplateView(string $filename, array $assign, string $mailContent): ?View
+    {
+        return match ($filename) {
+            'notification_admin' => new NotificationAdminView(
+                content: new Html($mailContent),
+                technical: is_array($assign['TECHNICAL'] ?? null) ? self::technicalDetailsShape($assign['TECHNICAL']) : null,
+            ),
+            'cat_group_info' => new CatGroupInfoView(
+                img: is_array($assign['IMG'] ?? null) ? self::catGroupImgShape($assign['IMG']) : [],
+                catName: is_string($assign['CAT_NAME'] ?? null) ? $assign['CAT_NAME'] : '',
+                link: is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '',
+                cplContent: is_string($assign['CPL_CONTENT'] ?? null) ? $assign['CPL_CONTENT'] : '',
+            ),
+            default => null,
+        };
+    }
+
+    /**
+     * @param array<array-key, mixed> $technical
+     * @return array{username: string, ip: string, user_agent: string}
+     */
+    private static function technicalDetailsShape(array $technical): array
+    {
+        return [
+            'username' => is_string($technical['username'] ?? null) ? $technical['username'] : '',
+            'ip' => is_string($technical['ip'] ?? null) ? $technical['ip'] : '',
+            'user_agent' => is_string($technical['user_agent'] ?? null) ? $technical['user_agent'] : '',
+        ];
+    }
+
+    /**
+     * @param array<array-key, mixed> $img
+     * @return array{link?: string, src?: string}
+     */
+    private static function catGroupImgShape(array $img): array
+    {
+        $result = [];
+
+        if (is_string($img['link'] ?? null)) {
+            $result['link'] = $img['link'];
+        }
+
+        if (is_string($img['src'] ?? null)) {
+            $result['src'] = $img['src'];
+        }
+
+        return $result;
     }
 
     public function getStrEmailFormat(bool $isHtml): string
@@ -606,7 +681,7 @@ final class MailService implements MailerInterface
      * excluded.
      *
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl as in mail()
+     * @param array{filename?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
     public function mailAdmins(array $args = [], array $tpl = [], bool $excludeCurrentUser = true, bool $onlyWebmasters = false, int|string|null $groupId = null): bool
     {
@@ -649,7 +724,7 @@ final class MailService implements MailerInterface
      * Sends an email to a group.
      *
      * @param array{language_selected?: string, from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail() -- language_selected filters users of the group by language
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl as in mail()
+     * @param array{filename?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
     public function mailGroup(int $groupId, array $args = [], array $tpl = []): bool
     {
@@ -749,7 +824,7 @@ final class MailService implements MailerInterface
      *        theme: theme to use
      *        mail_title/mail_subtitle: header title/subtitle
      *        auth_key: authentication key to add on the footer link
-     * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl custom content template
+     * @param array{filename?: string, assign?: array<string, mixed>} $tpl custom content template
      */
     #[Override]
     public function mail(string|array $to, array $args = [], array $tpl = []): bool
@@ -930,19 +1005,11 @@ final class MailService implements MailerInterface
 
                 // Runtime template.
                 if (isset($tpl['filename'])) {
-                    if (isset($tpl['dirname'])) {
-                        $template->setTemplateDir($tpl['dirname'] . '/' . $contentType);
-                    }
-                    $runtimeTemplateFilename = $this->resolveMailTemplateFilename($template, $tpl['filename']);
-                    if ($runtimeTemplateFilename !== null) {
-                        $template->assignContext(new MailRuntimeTemplatePageContext(
-                            extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
-                            content: $mailContent,
-                        ));
-                        $contents[$contentType] .= $template->parse($runtimeTemplateFilename, true);
-                    } else {
-                        $contents[$contentType] .= $mailContent;
-                    }
+                    $assign = (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [];
+                    $runtimeView = self::buildRuntimeTemplateView($tpl['filename'], $assign, $mailContent);
+                    $contents[$contentType] .= $runtimeView instanceof View
+                        ? $template->renderView($tpl['filename'] . '.latte', $runtimeView)
+                        : $mailContent;
                 } else {
                     $contents[$contentType] .= $mailContent;
                 }

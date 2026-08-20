@@ -110,11 +110,14 @@ it('extracts every one of the remaining real context classes without a hard fail
     $root = dirname(__DIR__, 3);
     exec('grep -rl "implements TemplatePageContext" ' . escapeshellarg($root . '/src/Piwigo') . ' --include="*.php"', $files);
     // Was >100 (130 total) before the P40 campaign started converting
-    // context classes to typed Views; shrinks further with every landed
+    // context classes to typed Views; down to exactly 30 after the Mail
+    // batch (4 more deleted: NbmMailContentPageContext,
+    // NbmSubscribeActionMailContext, NbmNewsMailContext,
+    // MailRuntimeTemplatePageContext). Shrinks further with every landed
     // batch, so this stays a loose "grep still found a real pool" floor,
     // not a precise pin.
     expect(count($files))
-        ->toBeGreaterThan(30);
+        ->toBeGreaterThan(20);
 
     foreach ($files as $file) {
         $class = null;

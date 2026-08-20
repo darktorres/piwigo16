@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Core\TemplatePageContext;
@@ -37,6 +36,39 @@ final readonly class ContextVariableExtractorTestDisplayBlocksFixture implements
     }
 }
 
+// Throwaway fixture, not a real production class -- P40 converted
+// every real TemplatePageContext whose toArray() built its result via
+// a dynamic array-dim assignment ($result[$dynamicKey] = $value;, as
+// opposed to a dynamic-keyed array literal like
+// NbmSubscribeActionMailContext's own [$this->sectionActionBy => true, ...]),
+// leaving no remaining real class shaped this way to exercise the
+// "collects literal keys and notices dynamic ones" test below.
+final readonly class ContextVariableExtractorTestDynamicDimFixture implements TemplatePageContext
+{
+    public function __construct(
+        public ?string $dynamicKey,
+        public ?string $dynamicValue,
+    ) {}
+
+    /**
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function toArray(): array
+    {
+        $result = [
+            'literal_one' => 'a',
+            'literal_two' => 'b',
+        ];
+
+        if ($this->dynamicKey !== null) {
+            $result[$this->dynamicKey] = $this->dynamicValue;
+        }
+
+        return $result;
+    }
+}
+
 beforeEach(function (): void {
     $this->extractor = new ContextVariableExtractor();
 });
@@ -63,11 +95,11 @@ it('FQCN-expands use-imported classes in docblock types', function (): void {
 });
 
 it('collects literal keys and notices dynamic ones from variable-built toArray bodies', function (): void {
-    $extracted = $this->extractor->extract(TabsheetPageContext::class);
+    $extracted = $this->extractor->extract(ContextVariableExtractorTestDynamicDimFixture::class);
 
     expect($extracted->vars)
-        ->toHaveKey('tabsheet')
-        ->toHaveKey('tabsheet_selected');
+        ->toHaveKey('literal_one')
+        ->toHaveKey('literal_two');
     expect(array_filter(
         $extracted->notices,
         static fn (string $n): bool => str_contains($n, 'dynamic array-dim assignment'),

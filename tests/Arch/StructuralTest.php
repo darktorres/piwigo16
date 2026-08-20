@@ -1034,8 +1034,9 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         'Bootstrap/RequestBootstrap.php' => 1,
 
         // Full legacy template render + exit(), matching the
-        // include-then-die() page shape: a raw $template->pparse()+exit()
-        // reached from Bootstrap\RequestBootstrap::finalize().
+        // include-then-die() page shape: a one-shot
+        // Renderer::render()/Template::finalizeHtml()+exit() reached
+        // from Bootstrap\RequestBootstrap::finalize().
         'Page/NoPhotoYetRenderer.php' => 1,
 
         // Controller/ImageDerivativeController.php (i.php): every real

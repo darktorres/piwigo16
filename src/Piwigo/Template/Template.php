@@ -69,8 +69,6 @@ use Piwigo\Template\Latte\PiwigoExtension;
  */
 final class Template implements ThemeConfProviderInterface, TemplateInterface
 {
-    public string $output = '';
-
     /**
      * Plain-array replacement for Smarty's own `Data::$tpl_vars` --
      * `assign()`/`append()`/`getTemplateVars()`/`clearAssign()` below
@@ -588,7 +586,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function assignVarFromTemplate(string $varname, string $file): void
     {
-        $rendered = $this->parse($file, true);
+        $rendered = $this->parse($file);
         $this->assign($varname, new Html($rendered));
     }
 
@@ -734,12 +732,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Renders `$file` (a real filename, e.g. `'header.latte'`) and appends
-     * the result to the output (or returns it if `$return` is true).
-     *
-     * @phpstan-return ($return is true ? string : null)
+     * Renders `$file` (a real filename, e.g. `'header.latte'`) and
+     * returns the result. Every real caller by this point in the P41
+     * cutover (`MailService`'s own shell, `FileCombiner`,
+     * `assignVarFromTemplate()` below) already wants the string back --
+     * the old accumulate-into-`$output` mode (P41, docs/PLAN.md) is
+     * gone, along with `$output`/`flush()`/`fetchOutput()` themselves.
      */
-    public function parse(string $file, bool $return = false): ?string
+    public function parse(string $file): string
     {
         // Resolve first, before touching urlService()/Lang/etc. below --
         // a genuinely unresolvable $file has to fail here (TemplateTest.php's
@@ -754,15 +754,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // above is request-relative and wrong for file_exists().
         $this->assign('ROOT_PATH', $this->paths->root);
 
-        $v = $this->latteEngine()
+        return $this->latteEngine()
             ->render($path, $this->vars);
-
-        if ($return) {
-            return $v;
-        }
-        $this->output .= $v;
-
-        return null;
     }
 
     /**
@@ -790,19 +783,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Appends an already-rendered `View` (via `Renderer::render()`) onto
-     * the accumulated output -- the `View`-based sibling of `parse()`'s
-     * own internal `$this->output .= $v;`. `$output` is mutated only from
-     * inside this class everywhere else in the app; this preserves that
-     * invariant instead of making `Renderer` the first external caller to
-     * append directly.
-     */
-    public function appendOutput(Html $html): void
-    {
-        $this->output .= (string) $html;
-    }
-
-    /**
      * Compiles `$file` into the Latte cache without rendering it -- unlike
      * `parse()`, no `ROOT_URL`/`ROOT_PATH` var assignment, since compiling
      * doesn't execute the template.
@@ -815,27 +795,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Load and compile JS & CSS into the template and sends the output to the browser.
-     */
-    public function flush(): void
-    {
-        $html = $this->output;
-        $this->output = '';
-        echo $this->finalizeHtml($html);
-    }
-
-    /**
      * Combined-scripts/combined-CSS/JSON-island/`<head>`-element
-     * substitutions against an arbitrary rendered string -- `flush()`/
-     * `fetchOutput()` are thin wrappers around this for the
-     * `Template::$output`-accumulating callers; a page rendered through
-     * `Renderer::render(View): Html` (P41's own `{layout}`-based
-     * mechanism) calls this directly on its own returned string instead.
-     * Both paths need the same substitutions, since `{do combineCss}`/
+     * substitutions against an arbitrary rendered string -- every real
+     * page render (P41, docs/PLAN.md) calls this directly on its own
+     * `Renderer::render(View): Html` result. `{do combineCss}`/
      * `{do combineScript}`/`{do htmlHead}` registrations land on this
      * same `Template` instance's `$cssLoader`/`$scriptLoader`/
-     * `$htmlHeadElements` regardless of which mechanism produced the
-     * surrounding HTML.
+     * `$htmlHeadElements` regardless of which page called this.
      */
     public function finalizeHtml(string $html): string
     {
@@ -907,21 +873,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         return $html;
-    }
-
-    /**
-     * The non-echoing sibling of flush()/p() -- same combined-script/CSS/
-     * head-element substitutions, returned as a string instead of sent to
-     * the browser. For callers that need the fully rendered page as a
-     * value (controllers returning a real PSR-7 Response instead of
-     * echoing directly) rather than as a side effect.
-     */
-    public function fetchOutput(): string
-    {
-        $html = $this->output;
-        $this->output = '';
-
-        return $this->finalizeHtml($html);
     }
 
     /**

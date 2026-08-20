@@ -28,14 +28,13 @@ use Piwigo\Users\UserRepository;
  * The "check for Piwigo updates" block is not rendered here: layering
  * rules disallow this class's layer (L3 Presentation) from depending on
  * Admin (L4 Integration). That block lives in
- * Piwigo\Bootstrap\PageTail::renderToString()/prepareContext(), which
- * both run it right before constructing this renderer.
+ * Piwigo\Bootstrap\PageTail::prepareContext(), which runs it right
+ * before constructing this renderer.
  *
  * The telemetry send has the same layering constraint, so it's injected
  * as Piwigo\Core\TelemetrySenderInterface rather than called directly;
- * both of this class's construction sites (Bootstrap\PageTail::renderToString()
- * and Bootstrap\PageTail::prepareContext()) pass the concrete
- * Piwigo\Admin\PiwigoInfosSender.
+ * this class's own construction site (Bootstrap\PageTail::prepareContext())
+ * passes the concrete Piwigo\Admin\PiwigoInfosSender.
  *
  * UrlServiceInterface is also real constructor injection here, unlike
  * Html\HtmlService/Mail\MailService/Users\UserService/Template\Template/
@@ -59,34 +58,11 @@ final readonly class PageTailRenderer
     ) {}
 
     /**
-     * Same orchestration as prepareContext(), but also runs the actual
-     * `footer.latte` template render and returns the fully rendered page
-     * (everything accumulated in $template->output so far,
-     * header/content/tail together, see Template::fetchOutput()'s own
-     * docblock) instead of sending it to the browser. For controllers
-     * returning a real PSR-7 Response instead of echoing directly.
-     *
-     * @deprecated P41 (docs/PLAN.md): calls prepareContext() then the
-     *   old `Template::parse('footer.latte')`/`fetchOutput()` path. Real
-     *   callers switch to `prepareContext()` + the new `{layout}`-based
-     *   `Renderer::render()`/`finalizeHtml()` one at a time; this stays
-     *   until every real caller has switched (P41-E deletes it).
-     */
-    public function renderToString(float $startTime): string
-    {
-        $this->prepareContext($startTime);
-        $template = $this->currentTemplate->get();
-        $template->parse('footer.latte');
-        return $template->fetchOutput();
-    }
-
-    /**
-     * The context-building half of renderToString() -- everything up to
-     * (not including) the actual template render, so a `{layout}`-based
-     * caller (P41) can build this exact same ambient context, then render
-     * its own page-specific `View` through `Renderer::render()` and
-     * `Template::finalizeHtml()` in one shot instead of a separate
-     * `parse('footer.latte')`/`fetchOutput()` call.
+     * The context-building half of the old parse()-calling
+     * renderToString() (deleted, P41-E, docs/PLAN.md) -- everything a
+     * `{layout}`-based caller needs before rendering its own
+     * page-specific `View` through `Renderer::render()` and
+     * `Template::finalizeHtml()` in one shot.
      */
     public function prepareContext(float $startTime): void
     {

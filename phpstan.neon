@@ -77,23 +77,6 @@ parameters:
             - ecs.php
     ignoreErrors:
         -
-            # P41 (docs/PLAN.md)'s dual-method transition strategy:
-            # PageTail::render()/renderToString(), PageHeaderRenderer::render(),
-            # and PageTailRenderer::render()/renderToString() are marked
-            # @deprecated on purpose -- old callers (not yet converted to
-            # the new {layout}-based Renderer::render()/finalizeHtml() path)
-            # keep working unmigrated batch by batch (P41-B/C/D), and only
-            # P41-E deletes both the methods and this ignore together, once
-            # every real caller has switched. Every deprecated docblock in
-            # this campaign starts with this exact "P41 (docs/PLAN.md)" tag,
-            # so matching on message text (not path) covers every current
-            # and future old-style caller without a per-file list.
-            identifier: method.deprecated
-            message: '#(?s)^Call to deprecated method \S+\(\) of class Piwigo\\(Bootstrap\\PageTail|Page\\PageHeaderRenderer|Page\\PageTailRenderer):.*P41 \(docs/PLAN\.md\)#'
-        -
-            identifier: staticMethod.deprecated
-            message: '#(?s)^Call to deprecated method \S+\(\) of class Piwigo\\Bootstrap\\PageTail:.*P41 \(docs/PLAN\.md\)#'
-        -
             # Queries here target an in-memory sqlite scratch table created
             # fresh per test, never the live DB the bootstrap connects to.
             identifier: dba.syntaxError

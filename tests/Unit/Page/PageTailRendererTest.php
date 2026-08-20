@@ -40,6 +40,11 @@ use Piwigo\Users\UserStatus;
  * (mobilTheme()/showQueries()/showGt() all default falsy) -- the
  * cheapest real happy path, matching this campaign's established
  * scoping.
+ *
+ * Calls prepareContext()+parse('footer.latte') directly (not the
+ * deleted renderToString(), P41-E, docs/PLAN.md) -- the fake footer.latte
+ * fixture below has no combined-CSS/JS placeholders, so no
+ * finalizeHtml() substitution is needed to get the same real output.
  */
 function pageTailTestRoot(): string
 {
@@ -68,7 +73,7 @@ function pageTailTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-test('renderToString() returns the parsed footer output and always sends telemetry for a guest, skipping the webmaster-mail DB lookup', function (): void {
+test('prepareContext() prepares the parsed footer output and always sends telemetry for a guest, skipping the webmaster-mail DB lookup', function (): void {
     $root = pageTailTestRoot();
 
     try {
@@ -106,7 +111,8 @@ test('renderToString() returns the parsed footer output and always sends telemet
             new ViteManifest(Paths::fromRoot($root)),
         );
 
-        $output = $renderer->renderToString(microtime(true));
+        $renderer->prepareContext(microtime(true));
+        $output = $template->parse('footer.latte');
 
         expect($telemetrySender->sendWasCalled)
             ->toBeTrue()

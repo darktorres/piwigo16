@@ -53,12 +53,13 @@ namespace Piwigo\Tests\Integration {
      * deactivate" sub-branch (NoPhotoYetRenderer.php's own real body, roughly
      * lines 76-111: the header() call, both isAdmin()
      * template->assign() arms, the loc_end_no_photo_yet EventDispatcher
-     * notify, and finally $template->pparse() + a bare exit()) stays
-     * genuinely untested from here, for 2 independent reasons:
+     * notify, and finally `Renderer::render()` + `Template::finalizeHtml()`
+     * + a bare exit()) stays genuinely untested from here, for 2
+     * independent reasons:
      *
      *  1. That exit() is a real, uncatchable process termination -- unlike
      *     redirect(), it isn't routed through anything interceptable (see
-     *     NoPhotoYetRenderer's own class docblock), and $template->pparse()
+     *     NoPhotoYetRenderer's own class docblock), and rendering
      *     against the real themes/default/template/no_photo_yet.latte (which
      *     does exist in this repo) has no reason to throw first, so calling
      *     render() this way from this shared PHPUnit/Pest CLI process would
@@ -232,7 +233,8 @@ namespace Piwigo\Tests\Integration {
         // established pattern as MaintenanceActionDispatcherTest. The
         // remaining "neither browse nor deactivate" sub-branch (roughly
         // NoPhotoYetRenderer.php lines 76-111) still ends in a real,
-        // uncatchable exit() after $template->pparse() and stays untested --
+        // uncatchable exit() after Renderer::render()/Template::finalizeHtml()
+        // and stays untested --
         // see this class's own docblock above for the full reasoning (both
         // the uncatchable-exit() half and the separate "would require
         // destructively emptying the shared images table" half).

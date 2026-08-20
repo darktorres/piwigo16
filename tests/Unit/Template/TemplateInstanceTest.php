@@ -788,7 +788,7 @@ test('parse assigns ROOT_URL and ROOT_PATH before rendering', function (): void 
     file_put_contents($tplDir . 'x.latte', 'x');
     $t->setTemplateDir($tplDir);
 
-    $t->parse('x.latte', true);
+    $t->parse('x.latte');
 
     expect($t->getTemplateVars('ROOT_PATH'))
         ->toBe(CurrentPathsTestFactory::get()->root)
@@ -1217,42 +1217,39 @@ test('getCombinedCss returns the combined-css placeholder', function (): void {
         ->toBe(Template::COMBINED_CSS_TAG);
 });
 
-// --- finalizeOutput (via fetchOutput) -----------------------------------
+// --- finalizeHtml ---------------------------------------------------------
 
-test('finalizeOutput appends a version query string for a truthy combined_css version', function (): void {
+test('finalizeHtml appends a version query string for a truthy combined_css version', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->combineCss('style.css', version: '7');
-    $t->output = Template::COMBINED_CSS_TAG;
 
-    $result = $t->fetchOutput();
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
     expect($result)
         ->toBe('<link rel="stylesheet" type="text/css" href="style.css?v7">');
 });
 
-test('finalizeOutput does not append a version query string when combined_css version is exactly false', function (): void {
+test('finalizeHtml does not append a version query string when combined_css version is exactly false', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->combineCss('style.css', version: false);
-    $t->output = Template::COMBINED_CSS_TAG;
 
-    $result = $t->fetchOutput();
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
     expect($result)
         ->toBe('<link rel="stylesheet" type="text/css" href="style.css">');
 });
 
-test('finalizeOutput builds the combined-css href by prefixing the root URL onto the combi path', function (): void {
+test('finalizeHtml builds the combined-css href by prefixing the root URL onto the combi path', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     template_instance_test_root_path_override()
         ->push('http://example.test/root/');
     try {
         $t->combineCss('style.css', version: false);
-        $t->output = Template::COMBINED_CSS_TAG;
 
-        $result = $t->fetchOutput();
+        $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
     } finally {
         template_instance_test_root_path_override()->reset();
     }
@@ -1261,15 +1258,13 @@ test('finalizeOutput builds the combined-css href by prefixing the root URL onto
         ->toBe('<link rel="stylesheet" type="text/css" href="http://example.test/root/style.css">');
 });
 
-test('finalizeOutput clears the CSS loader so a second call does not re-emit already-flushed CSS', function (): void {
+test('finalizeHtml clears the CSS loader so a second call does not re-emit already-flushed CSS', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
     $t->combineCss('style.css', version: false);
-    $t->output = Template::COMBINED_CSS_TAG;
-    $first = $t->fetchOutput();
+    $first = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
-    $t->output = Template::COMBINED_CSS_TAG;
-    $second = $t->fetchOutput();
+    $second = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
     expect($first)
         ->toContain('style.css')
@@ -1277,57 +1272,43 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
         ->not->toContain('style.css');
 });
 
-test('finalizeOutput does not reprocess the combined-scripts tag once didHead is already true', function (): void {
+test('finalizeHtml does not reprocess the combined-scripts tag once didHead is already true', function (): void {
     $t = TemplateTestFactory::build();
     $t->scriptLoader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
-    $t->output = Template::COMBINED_SCRIPTS_TAG;
 
-    $result = $t->fetchOutput();
+    $result = $t->finalizeHtml(Template::COMBINED_SCRIPTS_TAG);
 
     expect($result)
         ->toBe(Template::COMBINED_SCRIPTS_TAG);
 });
 
-test('finalizeOutput injects head elements before </head> when the source contains that anchor', function (): void {
+test('finalizeHtml injects head elements before </head> when the source contains that anchor', function (): void {
     $t = TemplateTestFactory::build();
     $t->htmlHead('<meta a>');
-    $t->output = "<head>\n</head>\nbody";
 
-    $result = $t->fetchOutput();
+    $result = $t->finalizeHtml("<head>\n</head>\nbody");
 
     expect($result)
         ->toBe("<head>\n<meta a>\n</head>\nbody");
 });
 
-test('finalizeOutput does not touch </head> when no head elements were registered', function (): void {
+test('finalizeHtml does not touch </head> when no head elements were registered', function (): void {
     $t = TemplateTestFactory::build();
-    $t->output = "<head>\n</head>\nbody";
 
-    $result = $t->fetchOutput();
+    $result = $t->finalizeHtml("<head>\n</head>\nbody");
 
     expect($result)
         ->toBe("<head>\n</head>\nbody");
 });
 
-test('finalizeOutput does not inject head elements when the source has no </head> anchor', function (): void {
+test('finalizeHtml does not inject head elements when the source has no </head> anchor', function (): void {
     $t = TemplateTestFactory::build();
     $t->htmlHead('<meta a>');
-    $t->output = 'no head tag here';
 
-    $result = $t->fetchOutput();
+    $result = $t->finalizeHtml('no head tag here');
 
     expect($result)
         ->toBe('no head tag here');
-});
-
-test('finalizeOutput resets the output buffer to an empty string after flushing', function (): void {
-    $t = TemplateTestFactory::build();
-    $t->output = 'hello';
-
-    $t->fetchOutput();
-
-    expect($t->output)
-        ->toBe('');
 });
 
 // --- htmlHead ---------------------------------------------------------

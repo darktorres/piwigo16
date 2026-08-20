@@ -30,9 +30,9 @@ use Piwigo\Users\UserStatus;
  * Piwigo\Controller\PopuphelpController -- 6 constructor deps, no
  * dedicated Integration/Browser spec of its own.
  *
- * Only the invalid-?page= 400 branch is covered -- PageHeaderRenderer::render()
+ * Only the invalid-?page= 400 branch is covered -- PageHeaderRenderer::prepareContext()
  * (already independently covered, cheap) runs unconditionally first, but
- * the real happy path continues into Bootstrap\PageTail::renderToString(),
+ * the real happy path continues into Bootstrap\PageTail::prepareContext(),
  * which builds a real PiwigoInfosSender (13 further constructor deps,
  * several container-resolved statics needing a fully-wired admin
  * bootstrap) -- the same class of wall this campaign already hit and

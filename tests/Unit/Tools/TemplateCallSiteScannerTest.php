@@ -6,7 +6,6 @@ use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
 
 /**
@@ -28,6 +27,17 @@ use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
  * against. The rule itself still matters for whichever future admin
  * class might reintroduce a real `parse()`/`assignVarFromTemplate()`
  * call site, so it stays covered here, just synthetically now.
+ *
+ * The frontend-polymorphic test below became the same kind of synthetic
+ * fixture for the same underlying reason: `PageHeaderRenderer::render()`/
+ * `PageTailRenderer::renderToString()` (this rule's former real
+ * `header.latte`/`footer.latte` call sites) were both deleted once P41's
+ * own shell-last-rendering cutover converted every real caller onto
+ * `Renderer::render()` instead (P41-E, docs/PLAN.md) -- `MailService`'s
+ * own real `parse('header.latte')`/`parse('footer.latte')` call sites
+ * are the one remaining real fixture, but those are Mail-scoped (only
+ * `themes/default/template/mail/`), not genuinely theme-polymorphic, so
+ * they already cover the separate Mail-scoping test below instead.
  */
 beforeEach(function (): void {
     $this->root = dirname(__DIR__, 3);
@@ -85,11 +95,34 @@ it('resolves a Mail call site only under the mail template dir', function (): vo
 });
 
 it('resolves a frontend polymorphic call site to every reachable theme variant', function (): void {
-    $templates = $this->result->templatesByClass[PageHeaderRenderer::class] ?? [];
+    $root = sys_get_temp_dir() . '/piwigo-scanner-frontend-scope-' . bin2hex(random_bytes(8));
+    mkdir($root . '/src/Piwigo/Controller', 0o777, true);
+    mkdir($root . '/themes/default/template', 0o777, true);
+    mkdir($root . '/themes/standard_pages/template', 0o777, true);
+    file_put_contents($root . '/themes/default/template/only_frontend_polymorphic.latte', '{$x}');
+    file_put_contents($root . '/themes/standard_pages/template/only_frontend_polymorphic.latte', '{$x}');
+    file_put_contents($root . '/src/Piwigo/Controller/SomeFrontendRenderer.php', <<<'PHP'
+        <?php
+        namespace Piwigo\Controller;
+        class SomeFrontendRenderer {
+            public function render($template): void {
+                $template->parse('only_frontend_polymorphic.latte');
+            }
+        }
+        PHP);
 
-    expect($templates)
-        ->toContain($this->root . '/themes/default/template/header.latte')
-        ->toContain($this->root . '/themes/standard_pages/template/header.latte');
+    try {
+        $result = new TemplateCallSiteScanner($root)
+            ->scan();
+
+        $templates = $result->templatesByClass['Piwigo\\Controller\\SomeFrontendRenderer'] ?? [];
+
+        expect($templates)
+            ->toContain(realpath($root . '/themes/default/template/only_frontend_polymorphic.latte'))
+            ->toContain(realpath($root . '/themes/standard_pages/template/only_frontend_polymorphic.latte'));
+    } finally {
+        exec('rm -rf ' . escapeshellarg($root));
+    }
 });
 
 it('associates assignContext call sites with their context class', function (): void {

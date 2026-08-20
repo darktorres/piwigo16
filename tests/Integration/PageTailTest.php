@@ -24,9 +24,9 @@ use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
- * Piwigo\Bootstrap\PageTail -- renderToString()/render() themselves are
- * exercised indirectly by every Browser suite page-load test (every real
- * Controller calls one of them), so the only red line is inside
+ * Piwigo\Bootstrap\PageTail -- prepareContext() itself is exercised
+ * indirectly by every Browser suite page-load test (every real
+ * Controller calls it), so the only red line is inside
  * checkForUpdates()'s own "the last check is old enough to recheck" branch
  * (`$check_for_updates = true;` reached through the non-null
  * `$update_notify_last_check` path, as opposed to the adjacent null-check
@@ -40,7 +40,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * UniqueExecLockTest::test_begins_fails_when_a_different_connection_already_holds_the_lock()
  * already proves the mechanism works: winning the real 'check_for_updates'
  * `GET_LOCK()` on a *separate* connection before calling
- * PageTail::renderToString() makes checkForUpdates()'s own
+ * PageTail::prepareContext() makes checkForUpdates()'s own
  * UniqueExecLock::begins() call (its own cached, request-scoped
  * connection) lose the race and return early, never reaching
  * CoreUpdateService at all. Must be a genuinely separate connection. not
@@ -106,7 +106,7 @@ final class PageTailTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testRenderToStringSkipsTheUpdateCheckWhenAnotherExecAlreadyHoldsTheFreshLock(): void
+    public function testPrepareContextSkipsTheUpdateCheckWhenAnotherExecAlreadyHoldsTheFreshLock(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -130,13 +130,15 @@ final class PageTailTest extends IntegrationTestCase
         self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
 
         try {
-            $output = PageTail::renderToString();
+            PageTail::prepareContext();
+            $template = CurrentTemplateTestFactory::get()->get();
+            $output = $template->finalizeHtml($template->parse('footer.latte'));
 
-            // Proves renderToString() completed the whole real render (not
-            // just the update-check branch) without ever touching the
-            // network: AppInfo::URL is the footer.latte "Powered by" link
-            // href, only present once Latte has actually rendered the real
-            // theme template end to end.
+            // Proves prepareContext()+parse() completed the whole real
+            // render (not just the update-check branch) without ever
+            // touching the network: AppInfo::URL is the footer.latte
+            // "Powered by" link href, only present once Latte has
+            // actually rendered the real theme template end to end.
             self::assertStringContainsString('href="' . AppInfo::URL . '"', $output);
             self::assertStringContainsString(AppInfo::VERSION, $output);
 

@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–D landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's + InstallWizard's `PageHeaderRenderer`/`PageTail` call sites, `PageTail::render()`/`PageTailRenderer::render()`/`Template::pparse()` deleted); Batch E + Part 2 (P41-G/H) not started (see below) | 7 |
+| P41 | Shell-last rendering + `PageState` split | In progress — Batches A–D landed, Batch E's cutover-completion half landed too (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`, all 12 front-end + the admin shell's + InstallWizard's + NoPhotoYetRenderer's `PageHeaderRenderer`/`PageTail` call sites, `render()`/`renderToString()`/`Template::pparse()`/`$output`/`appendOutput`/`flush`/`fetchOutput` all deleted, `parse()` simplified); Batch E's `TemplateLocator`/`ThemeChain` extraction + Part 2 (P41-G/H) not started (see below) | 8 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -2727,12 +2727,56 @@ internals. No `test:golden-html`/`test:visual` coverage exists for
 install (per the plan's own Verification section), so `test:install`'s
 real browser walk-through is this batch's actual regression net.
 
-**Remaining batches.** P41-E is the cutover completion: once every
-real caller has switched, delete the deprecated `parse()`-calling
-halves, `Template::$output`/`flush`/`finalizeOutput`/`fetchOutput`
-(keep `finalizeHtml()`/`parse()` itself — `MailService` still
-legitimately uses it), and physically extract `TemplateLocator`/
-`ThemeChain` out of `Template.php`.
+**Batch P41-E, cutover completion (landed)** — deleted
+`PageHeaderRenderer::render()`, `PageTailRenderer::renderToString()`,
+and `PageTail::renderToString()` (their `render()`/void siblings were
+already gone, P41-C) — every real caller had already switched to
+`prepareContext()` (confirmed via full-repo grep). Deleted
+`Template::$output`, `appendOutput()`, `flush()`, `fetchOutput()`
+alongside them, which forced `parse()` itself to simplify: its old
+`bool $return = false` accumulate-into-`$output` mode had zero
+remaining real callers once the two methods above were gone (every
+survivor already passed `true`), so `parse(string $file): string`
+now always returns the rendered string — `MailService`'s own shell
+render and `assignVarFromTemplate()` (both already `true`-mode) are
+unaffected.
+
+Found and fixed one real pre-existing gap during investigation, before
+touching any of the above: `Page\NoPhotoYetRenderer` was never covered
+by any P41-A–D batch, but was still the last real production caller of
+`appendOutput()`/`flush()` — converted to the same one-shot
+`Renderer::render()`/`finalizeHtml()`/echo pattern as every other P41
+page (`no_photo_yet.latte` is self-contained like `install.latte`, no
+`{layout}` needed).
+
+Also fixed a real, structural test consequence of deleting
+`PageHeaderRenderer`'s only `parse('header.latte')` call site:
+`TemplateCallSiteScannerTest.php`'s own "frontend polymorphic call
+site" test relied on that real call site as its fixture (resolving
+`header.latte` to both `themes/default/` and `themes/standard_pages/`)
+— rebuilt as a synthetic fixture, the same pattern the file's own
+Admin-scoping test already established for the identical reason
+(P40's admin sweep retired ITS real fixture first). `MailService`'s
+own `parse('header.latte')`/`parse('footer.latte')` calls remain real
+but Mail-scoped (`themes/default/template/mail/` only), so they don't
+cover the theme-polymorphic case.
+
+Removed the now-permanently-unmatched `phpstan.neon` ignore rules for
+the `@deprecated P41` methods just deleted (the ignore comment's own
+text: "only P41-E deletes both the methods and this ignore together").
+
+Full verification green: full `analyse:phpstan` (0 errors), `deptrac
+analyse` (0 violations), `lint:php`, `lint:latte`, `composer test`
+(Unit+Arch, 5529 passing), `test:golden-html` (74 passing, **zero**
+baseline changes — confirms the refactor is purely internal),
+`test:visual` (66 passing), scoped Integration tests for every
+directly-touched rendering class (`MailService`, `NoPhotoYetRenderer`,
+`PageHeaderRenderer`, `PageTailRenderer`, `PageTail`, `InstallWizard`
+— 68 passing), and `MailGoldenHtmlSnapshotTest` (Mail's own real
+`parse()` pipeline, 1 passing).
+
+**Remaining work.** P41-E's other half: physically extract
+`TemplateLocator`/`ThemeChain` out of `Template.php`.
 
 **Part 2 (P41-G/H) — asset-pipeline cutover.** Redirects
 `Template::combineCss()`/`combineScript()`/`footerScript()` to

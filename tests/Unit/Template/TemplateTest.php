@@ -162,7 +162,7 @@ test('urlService resolver throws when the container returns an unexpected type',
         [
             UrlServiceInterface::class => new stdClass(),
         ],
-        static fn (): ?string => $t->parse(__FILE__)
+        static fn (): string => $t->parse(__FILE__)
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . UrlServiceInterface::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
@@ -188,7 +188,7 @@ test('htmlRenderer resolver throws when the container returns an unexpected type
         [
             HtmlRenderingInterface::class => new stdClass(),
         ],
-        static fn (): ?string => $t->parse('no-such-handle')
+        static fn (): string => $t->parse('no-such-handle')
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));

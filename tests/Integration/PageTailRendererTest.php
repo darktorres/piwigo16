@@ -42,6 +42,11 @@ use Piwigo\Users\User;
  * Bootstrap\PageTail. CurrentUser is left at the default guest status
  * here specifically to skip the webmaster-contact DB lookup branch,
  * already covered that way elsewhere.
+ *
+ * renderFooter() below recreates the deleted renderToString()'s own
+ * prepareContext()+parse('footer.latte')+finalizeHtml() sequence
+ * (P41-E, docs/PLAN.md) -- a real footer.latte render, not just the
+ * ambient context prepareContext() assigns.
  */
 final class PageTailRendererTest extends IntegrationTestCase
 {
@@ -115,13 +120,22 @@ final class PageTailRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    private function renderFooter(float $startTime): string
+    {
+        $this->renderer->prepareContext($startTime);
+
+        $template = CurrentTemplateTestFactory::get()->get();
+
+        return $template->finalizeHtml($template->parse('footer.latte'));
+    }
+
     public function testRenderToStringIncludesTheQueryDebugListWhenShowQueriesIsEnabled(): void
     {
         CurrentConfigTestFactory::get()->showQueries = true;
         CurrentConfigTestFactory::get()->showGt = false;
         RequestMetricsTestFactory::get()->debugOutput = '<li>SELECT 1 -- pagetailrenderer test query</li>';
 
-        $output = $this->renderer->renderToString(microtime(true));
+        $output = $this->renderFooter(microtime(true));
 
         self::assertStringContainsString('<div id="debug">', $output);
         self::assertStringContainsString('SELECT 1 -- pagetailrenderer test query', $output);
@@ -133,7 +147,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->showGt = false;
         RequestMetricsTestFactory::get()->debugOutput = '<li>should-not-appear</li>';
 
-        $output = $this->renderer->renderToString(microtime(true));
+        $output = $this->renderFooter(microtime(true));
 
         self::assertStringNotContainsString('id="debug"', $output);
         self::assertStringNotContainsString('should-not-appear', $output);
@@ -146,7 +160,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         RequestMetricsTestFactory::get()->countQueries = 7;
         RequestMetricsTestFactory::get()->queriesTime = 1.234567;
 
-        $output = $this->renderer->renderToString(microtime(true) - 2.0);
+        $output = $this->renderFooter(microtime(true) - 2.0);
 
         self::assertStringContainsString('Page generated in', $output);
         // "(7 SQL queries in 1.235 s)" -- footer.latte's own literal template
@@ -163,7 +177,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         $_SERVER['REQUEST_URI'] = '/test/mobile-toggle-path';
 
         try {
-            $output = $this->renderer->renderToString(microtime(true));
+            $output = $this->renderFooter(microtime(true));
 
             // DeviceHelper::mobileTheme() is true here, so the toggle link
             // flips it to 'false' -- addUrlParams() appends it as the
@@ -178,7 +192,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->mobileTheme = '';
 
-        $output = $this->renderer->renderToString(microtime(true));
+        $output = $this->renderFooter(microtime(true));
 
         self::assertStringNotContainsString('mobile=', $output);
     }

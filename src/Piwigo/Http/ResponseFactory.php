@@ -48,13 +48,6 @@ final class ResponseFactory
         ], $body);
     }
 
-    /**
-     * Legacy Template rendering accumulates into Template's own internal
-     * buffer (Template::parse('file.latte', false), not flush()'s echo)
-     * instead of retrofitting every renderer to return a string
-     * directly, drained via Piwigo\Bootstrap\PageTail::renderToString()
-     * into this Response body.
-     */
     public static function html(string $body, int $status = 200): ResponseInterface
     {
         return new Response($status, [

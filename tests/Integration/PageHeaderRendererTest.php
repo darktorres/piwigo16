@@ -28,10 +28,15 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * own "Photos posted within the last N days" note is the one real
  * production populator, per its own docblock) and the metaRef()-disabled
  * noindex/nofollow branch (metaRef defaults to true everywhere else).
- * Every other line render() touches is already covered indirectly by
- * every real page-load test that reaches this class (Bootstrap\
- * RedirectService::redirectHtml()'s own early-crash fallback, every
- * Browser Controller test, ...).
+ * Every other line prepareContext() touches is already covered
+ * indirectly by every real page-load test that reaches this class
+ * (Bootstrap\RedirectService::redirectHtml()'s own early-crash
+ * fallback, every Browser Controller test, ...).
+ *
+ * renderHeader() below recreates the deleted render()'s own
+ * prepareContext()+parse('header.latte')+finalizeHtml() sequence
+ * (P41-E, docs/PLAN.md) -- a real header.latte render, not just the
+ * ambient context prepareContext() assigns.
  */
 final class PageHeaderRendererTest extends IntegrationTestCase
 {
@@ -85,21 +90,34 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    /**
+     * Recreates the deleted render()'s own
+     * prepareContext()+parse('header.latte')+finalizeHtml()
+     * sequence (P41-E, docs/PLAN.md) -- a real header.latte render
+     * against the ambient context prepareContext() assigns.
+     */
+    private function renderHeader(string $title): string
+    {
+        $this->renderer->prepareContext($title, new EventDispatcher(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+
+        $template = CurrentTemplateTestFactory::get()->get();
+
+        return $template->finalizeHtml($template->parse('header.latte'));
+    }
+
     public function testRenderIncludesTheHeaderNotesWhenLayoutStateHasAny(): void
     {
         LayoutStateTestFactory::get()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test', new EventDispatcher(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+        $output = $this->renderHeader('Header Notes Test');
 
-        $output = CurrentTemplateTestFactory::get()->get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
     }
 
     public function testRenderOmitsTheHeaderNotesContainerWhenLayoutStateHasNone(): void
     {
-        $this->renderer->render('No Header Notes Test', new EventDispatcher(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+        $output = $this->renderHeader('No Header Notes Test');
 
-        $output = CurrentTemplateTestFactory::get()->get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
     }
 
@@ -111,14 +129,13 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         }
         $currentConfig->metaRef = false;
 
-        $this->renderer->render('Meta Robots Test', new EventDispatcher(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+        $output = $this->renderHeader('Meta Robots Test');
 
         self::assertSame([
             'noindex' => 1,
             'nofollow' => 1,
         ], LayoutStateTestFactory::get()->metaRobots);
 
-        $output = CurrentTemplateTestFactory::get()->get()->fetchOutput();
         self::assertStringContainsString('<meta name="robots" content="noindex,nofollow">', $output);
     }
 
@@ -130,7 +147,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         }
         $currentConfig->metaRef = true;
 
-        $this->renderer->render('Meta Ref Enabled Test', new EventDispatcher(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+        $this->renderHeader('Meta Ref Enabled Test');
 
         self::assertSame([], LayoutStateTestFactory::get()->metaRobots);
     }

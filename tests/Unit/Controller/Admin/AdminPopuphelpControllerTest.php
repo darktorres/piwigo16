@@ -32,11 +32,11 @@ use Piwigo\Users\UserStatus;
  *
  * Covers 2 branches:
  * - `?output=content_only` with a valid page: skips both
- *   PageHeaderRenderer::render() AND Bootstrap\PageTail::renderToString()
+ *   PageHeaderRenderer::prepareContext() AND Bootstrap\PageTail::prepareContext()
  *   entirely (returns $help_content directly, before the view is ever
  *   rendered) -- the cheapest real path through this controller.
  * - An invalid `?page=` value with the default (non-content_only)
- *   output: needs PageHeaderRenderer::render() first (already
+ *   output: needs PageHeaderRenderer::prepareContext() first (already
  *   independently covered, cheap), then throws before ever reaching
  *   PageTail.
  * The default-output, valid-page happy path is not covered -- it

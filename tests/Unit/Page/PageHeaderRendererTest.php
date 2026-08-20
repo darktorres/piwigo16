@@ -24,6 +24,11 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * admin-context mobile-banner override both need Kernel::boot() with a
  * real AdminContext, a materially bigger unit of setup for 2 more
  * boolean branches.
+ *
+ * Calls prepareContext() directly (not the deleted render(), P41-E,
+ * docs/PLAN.md) -- this test only asserts the ambient context
+ * prepareContext() itself assigns via getTemplateVars(), never a real
+ * header.latte render, so no template-dir fixture is needed either.
  */
 function pageHeaderTestRoot(): string
 {
@@ -52,22 +57,18 @@ function pageHeaderTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-test('render() assigns the page title and gallery chrome with no refresh meta and no header notes', function (): void {
+test('prepareContext() assigns the page title and gallery chrome with no refresh meta and no header notes', function (): void {
     $root = pageHeaderTestRoot();
 
     try {
         $template = TemplateTestFactory::build();
         CurrentTemplateTestFactory::get()->set($template);
-        $tplDir = $root . 'tpl/';
-        mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'header.latte', 'title={$PAGE_TITLE}');
-        $template->setTemplateDir($tplDir);
 
         $layoutState = new LayoutState();
         $eventDispatcher = new EventDispatcher();
 
         new PageHeaderRenderer()
-            ->render('<b>My Gallery</b>', $eventDispatcher, $layoutState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
+            ->prepareContext('<b>My Gallery</b>', $eventDispatcher, $layoutState, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($template->getTemplateVars('PAGE_TITLE'))
             ->toBe('My Gallery')

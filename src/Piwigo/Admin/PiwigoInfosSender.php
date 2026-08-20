@@ -45,8 +45,8 @@ use Piwigo\Users\UserService;
  * config/container.php). Its one real caller, Piwigo\Page\PageTailRenderer
  * (L3Presentation, which cannot depend on this L4 class directly),
  * constructor-injects that interface instead; Piwigo\Bootstrap\
- * PageTail::renderToString()/prepareContext() pass the concrete
- * instance. See TelemetrySenderInterface's own docblock.
+ * PageTail::prepareContext() passes the concrete instance. See
+ * TelemetrySenderInterface's own docblock.
  */
 final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 {

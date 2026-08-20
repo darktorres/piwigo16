@@ -137,8 +137,8 @@ final readonly class NoPhotoYetRenderer
 
                 $this->eventDispatcher->dispatch(new NoPhotoYetRendered());
 
-                $template->appendOutput($this->renderer->render($view));
-                $template->flush();
+                $html = $this->renderer->render($view);
+                echo $template->finalizeHtml((string) $html);
                 exit();
             } else {
                 $this->configService->confUpdateParam('no_photo_yet', 'false');

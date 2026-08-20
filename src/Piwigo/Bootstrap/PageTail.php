@@ -44,41 +44,18 @@ use Piwigo\Users\UserService;
  * Admin/Controller, so this is the violation-free home for the whole
  * orchestration — same reasoning as UserBootstrap.
  *
- * Callers reach this via PageTail::prepareContext() (or the still-deprecated
- * renderToString(), for callers not yet converted); the request-start
+ * Callers reach this via PageTail::prepareContext(); the request-start
  * instant is read here from RequestMetrics, so call sites need no
  * bootstrap variable of their own.
  */
 final class PageTail
 {
     /**
-     * The non-echoing sibling of prepareContext()'s own final render step
-     * -- same update-check orchestration, but returns the fully rendered
-     * page instead of sending it to the browser. For controllers
-     * returning a real PSR-7 Response instead of echoing directly.
-     *
-     * @deprecated P41 (docs/PLAN.md): calls prepareContext() then the old
-     *   `Template::parse('footer.latte')`/`fetchOutput()` path. Real
-     *   callers switch to `prepareContext()` + the new `{layout}`-based
-     *   `Renderer::render()`/`Template::finalizeHtml()` one at a time;
-     *   this stays until every real caller has switched (P41-E deletes
-     *   it).
-     */
-    public static function renderToString(): string
-    {
-        self::checkForUpdates();
-
-        return self::renderer()
-            ->renderToString(self::requestMetrics()->requestStart);
-    }
-
-    /**
-     * The context-building half of renderToString() -- the update-check
-     * orchestration plus `PageTailRenderer::prepareContext()`, without
-     * the final `parse('footer.latte')`/`fetchOutput()` call. For a
-     * `{layout}`-based caller (P41) building the same ambient footer
-     * context before rendering its own page-specific `View` through
-     * `Renderer::render()` and `Template::finalizeHtml()` in one shot.
+     * The update-check orchestration plus `PageTailRenderer::prepareContext()`.
+     * Every real caller (P41, docs/PLAN.md) builds the same ambient
+     * footer context this returns before rendering its own page-specific
+     * `View` through `Renderer::render()` and `Template::finalizeHtml()`
+     * in one shot.
      */
     public static function prepareContext(): void
     {

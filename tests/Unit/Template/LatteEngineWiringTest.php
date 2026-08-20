@@ -79,7 +79,7 @@ test('parse() renders a real .latte file through Latte, exercising a filter, the
         'name' => 'world',
     ]));
 
-    $output = $t->parse('fixture.latte', true);
+    $output = $t->parse('fixture.latte');
 
     expect($output)
         ->toContain('<p>World</p>')
@@ -107,7 +107,7 @@ test('{_...} and {translate ...} tags compile to the same translate() call as th
         'name' => 'World',
     ]));
 
-    $output = $t->parse('fixture.latte', true);
+    $output = $t->parse('fixture.latte');
 
     expect($output)
         ->toContain('<p>hello world</p>')
@@ -130,7 +130,7 @@ test('{_...} auto-escapes by default and honors |noescape, exactly like the |tra
     );
     $t->setTemplateDir($tplDir);
 
-    $output = $t->parse('fixture.latte', true);
+    $output = $t->parse('fixture.latte');
 
     expect($output)
         ->toContain('<p>&lt;b&gt;escaped&lt;/b&gt;</p>')
@@ -166,7 +166,7 @@ test('{$X|number} formats locale-aware once the current user language is known, 
         'N' => 1234.5,
     ]));
 
-    $output = $t->parse('fixture.latte', true);
+    $output = $t->parse('fixture.latte');
 
     expect($output)
         ->not->toBe(number_format(1234.5))
@@ -238,7 +238,7 @@ test('CurrentTemplate resolves independently of PiwigoExtension holding its owni
     file_put_contents($tplDir . '/throwaway.latte', '{do htmlHead("x")}rendered');
     $t->setTemplateDir($tplDir);
 
-    $output = $t->parse('throwaway.latte', true);
+    $output = $t->parse('throwaway.latte');
 
     expect($output)
         ->toBe('rendered')

@@ -28,7 +28,7 @@ use Piwigo\Users\UserStatus;
  * PageTailRenderer render itself). No dedicated Integration/Browser
  * spec of its own.
  *
- * `renderToString()`'s own `checkForUpdates()` call is made a safe
+ * `prepareContext()`'s own `checkForUpdates()` call is made a safe
  * no-op via `updateNotifyCheckPeriod(0)` (its own first guard) --
  * without it, a fresh (never-checked) install reaches a real
  * `UniqueExecLock::begins()` + `CoreUpdateService::
@@ -41,6 +41,11 @@ use Piwigo\Users\UserStatus;
  * campaign. A guest `CurrentUser` (container-shared, same pattern as
  * `PageTailRendererTest.php`) skips `PageTailRenderer`'s own real
  * webmaster-mail DB lookup.
+ *
+ * Calls prepareContext()+parse('footer.latte') directly (not the
+ * deleted renderToString(), P41-E, docs/PLAN.md) -- the fake
+ * footer.latte fixture below has no combined-CSS/JS placeholders, so no
+ * finalizeHtml() substitution is needed to get the same real output.
  */
 function pageTailBootstrapTestRrmdir(string $dir): void
 {
@@ -58,7 +63,7 @@ function pageTailBootstrapTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-test('renderToString returns the real parsed footer output, with update-check and telemetry both safely no-op\'d', function (): void {
+test('prepareContext prepares the real parsed footer output, with update-check and telemetry both safely no-op\'d', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-page-tail-bootstrap-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -100,7 +105,8 @@ test('renderToString returns the real parsed footer output, with update-check an
         file_put_contents($tplDir . 'footer.latte', 'version={$VERSION}');
         $template->setTemplateDir($tplDir);
 
-        $output = PageTail::renderToString();
+        PageTail::prepareContext();
+        $output = $template->parse('footer.latte');
 
         expect($output)
             ->toContain('version=');

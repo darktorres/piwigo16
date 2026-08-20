@@ -978,7 +978,7 @@ final class MailService implements MailerInterface
                 ));
 
                 // Header.
-                $contents[$contentType] = $template->parse('header.latte', true);
+                $contents[$contentType] = $template->parse('header.latte');
 
                 // Content -- stored in a temp variable; if a content template is
                 // used it's assigned to CONTENT, otherwise appended to the mail.
@@ -1015,7 +1015,7 @@ final class MailService implements MailerInterface
                 }
 
                 // Footer.
-                $contents[$contentType] .= $template->parse('footer.latte', true);
+                $contents[$contentType] .= $template->parse('footer.latte');
             }
         } finally {
             // Undo compute-root_path -- always, even if an exception was

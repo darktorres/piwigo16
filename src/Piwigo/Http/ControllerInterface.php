@@ -15,12 +15,11 @@ use Psr\Http\Message\ServerRequestInterface;
  * middleware-chain handler, since a frontend controller is always the
  * pipeline's terminal step, never itself passed a next handler to
  * delegate to, returning a real ResponseInterface instead of mutating
- * $template/$page. A controller whose render body still goes through
- * Template calls Template::parse('file.latte', false) (accumulates into
- * Template's own internal buffer instead of echoing) and drains it via
- * Piwigo\Bootstrap\PageTail::renderToString() into a real Response body,
- * rather than leaving rendering as a side effect for something else to
- * emit.
+ * $template/$page. A controller's own render body calls
+ * `Renderer::render(View): Html` and `Template::finalizeHtml()` on the
+ * result (P41, docs/PLAN.md), wrapping the finished string into a real
+ * Response via `Http\ResponseFactory::html()`, rather than leaving
+ * rendering as a side effect for something else to emit.
  *
  * Lives in Piwigo\Http (L3Presentation), not Piwigo\Controller
  * (L4Integration) despite the name -- deptrac.yaml only allows

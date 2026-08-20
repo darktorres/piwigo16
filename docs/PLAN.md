@@ -3129,6 +3129,82 @@ new `$rootUrl`; preserves the bare `combineScript(id:
 landed so far. `test:golden-html` byte-identical throughout (3
 pure-whitespace regenerations).
 
+**Ran an 8-agent parallel survey** (Workflow) of every remaining
+template with imperative calls across all 3 theme trees, to map real
+dependency order and gotchas before continuing. Findings:
+
+- **A real infrastructure bug, not yet fixed**: `themes/default/
+  local_head.latte`'s `LocalHeadView` is dispatched via `Template::
+  resolveLocalHeadOnce()` calling `Template::renderView()` directly,
+  bypassing `Renderer::render()` entirely -- so even a correct
+  `pageAssets()` on `LocalHeadView` would never actually fire. Needs
+  `resolveLocalHeadOnce()` itself updated (call
+  `registerPageAssets()`/etc. before its `renderView()` call, mirroring
+  what `Renderer::render()` does) before that one template migrates.
+- **A real, confirmed regression caught and fixed**: `PopuphelpView` is
+  shared by two callers resolving DIFFERENT physical `.latte` files
+  (front-end vs. admin-context, same bare `#[Template('popuphelp.
+  latte')]` name) -- the admin variant has zero calls of its own. Since
+  `pageAssets()` lives on the shared class, a naive migration
+  registered `popuphelp.js` on both renders; a new `$isAdminContext`
+  flag (set by each real caller) restores the original per-physical-
+  file behavior, confirmed via golden-html regeneration (a spurious
+  `<script>` tag appeared, then disappeared once fixed). The exact same
+  shared-class-two-physical-files pattern recurred for `Identification
+  View`/`RegisterView`/`PasswordView` (default theme vs. `standard_
+  pages` theme, same `Template::setTheme()` substitution) -- resolved
+  identically each time via a new `$isStandardPagesTheme` flag
+  (`$template->themeConf('id') === 'standard_pages'`).
+- **`MenubarBlockView` (shared by all 7 `menubar_*.latte` sub-block
+  templates via one generic `{include $block->template, ...}` call) and
+  `MonthCalendarView`/`index.latte`'s own `{include
+  $FILE_CHRONOLOGY_VIEW}` are genuinely unresolved design gaps**,
+  distinct from the already-solved `PictureNavButtonsView` case below:
+  neither class is ever a real `Renderer::render()` target NOR does any
+  real caller hold enough of the right data in the right place to do a
+  clean construct-and-merge the way `PictureView`/`SlideshowView` do --
+  `month_calendar.latte`'s own data flows through a parallel `Template::
+  assignContext()` path (`SectionPopulator`→`CalendarRenderer`) that
+  never intersects `GalleryController`'s own `IndexView` construction
+  at all. Deferred, same as the colorbox-family sub-task above --
+  `index.latte`/`month_calendar.latte` and the 3 `menubar_*.latte`
+  templates need their own dedicated design batch.
+- The admin `layout.latte` shell has 2 `exposeData()` calls
+  (`WHATS_NEW_MAJOR_VERSION`/`SHOW_WHATS_NEW`, genuinely per-request
+  data with no page-level View to attach to) that need a narrow,
+  explicitly-documented exception -- a direct `Template::exposeData()`
+  call from `AdminShell::runDispatch()`, not a fake View. All 3 layout
+  files' static `page-data` script registration folds cleanly into
+  `ThemeBaseAssets` with no question. Not yet done.
+- 4 templates (`comment_list.latte`/`mainpage_categories.latte`/
+  `thumbnails.latte`/`picture_content.latte`) gate a couple of script
+  registrations on `$derivative->isCached()`, a per-item service call
+  no DTO View can replicate -- decided to register those scripts
+  unconditionally (`PageAssets::add()` is dedup-safe; an unused
+  `<script>` tag isn't a functional regression). Not yet done.
+
+Migrated 10 more pages/Views since the survey: `RedirectView` (1),
+`PopuphelpView` (1, `$isAdminContext` fix above), `SelectedTagsView`
+(1), `IdentificationView` (2+3 across 2 physical files,
+`$isStandardPagesTheme` fix above), `RegisterView` (2+3 across 2
+physical files), `PasswordView` (4+4 across 2 physical files, plus a
+3-way `$action`-gated `footerScript` `match()`), `NotificationView`
+(the campaign's first real `HasHeadLinks` migration -- 2 RSS-discovery
+`<link>` tags), `PictureNavButtonsView` (8 calls, contract-only, shared
+by `picture.latte` AND `slideshow.latte` -- both real parents construct
+an instance and merge in, landed together in one commit to avoid
+silently regressing `slideshow.latte`), `PictureView` (13 calls, new
+`$rootUrl`), `SlideshowView` (0 own calls, merge-only) -- **44 pages/
+Views landed so far, ~366 of 945 call sites**. `test:golden-html`
+byte-identical throughout (mix of pure-whitespace and fully-clean
+regenerations); `picture-1`'s regeneration confirmed every merged
+JSON-island key matched byte-for-byte. New unit tests added for every
+real branch introduced (`IdentificationView`/`RegisterView`/
+`PasswordView`'s theme branch, `PasswordView`'s 3-way action match,
+`PictureNavButtonsView`'s 7 independently-nullable exposedPageData
+branches, `PictureView`'s `uOriginal`/`rating`-gated branches,
+`PopuphelpView`'s context branch).
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

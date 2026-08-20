@@ -1,45 +1,4 @@
 {templateType Piwigo\Admin\Projection\TagsView}
-{do exposeData('csrf_token', $pwgToken)}
-{do exposeData('orphan_tag_names_array', $orphanTagNamesArray)}
-{do exposeData('total', $total)}
-{do exposeString('Delete tag "%s"?')}
-{do exposeString('Delete tags {%s}?')}
-{do exposeString('Yes, delete')}
-{do exposeString('No, I have changed my mind')}
-{do exposeString('Yes, rename')}
-{do exposeString('Tag "%s" succesfully deleted')}
-{do exposeString('Tags {%s} succesfully deleted')}
-{do exposeString('Tag "%s" already exists')}
-{do exposeString('Tag "%s" created')}
-{do exposeString('Tag "%s1" renamed in "%s2"')}
-{do exposeString('Rename "%s"')}
-{do exposeString('Delete orphan tags ?')}
-{do exposeString('You have %s1 orphan : %s2')}
-{do exposeString('Delete them')}
-{do exposeString('Keep them')}
-{do exposeString(' (copy)')}
-{do exposeString(' (copy %s)')}
-{do exposeString('Tag(s) {%s1} succesfully merged into "%s2"')}
-{do exposeString('and %s others')}
-{do exposeString('%s other tags available...')}
-{do exposeString('%d photos')}
-{do exposeString('no photo')}
-{do exposeString('Select all %d tags')}
-{do exposeString('Clear Selection')}
-{do exposeString('The %d tags on this page are selected')}
-{do exposeString('<b>%d</b> tag selected')}
-{do exposeString('<b>%d</b> tags found')}
-{do exposeString('<b>%d</b> tag found')}
-
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineCss(id: 'tags', path: 'themes/admin/default/css/pages/tags.css')}
-{do combineScript(id: 'tiptip', load: 'header', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
-{do combineScript(id: 'tags', load: 'footer', require: 'page-data,jquery.cookie', path: 'themes/admin/default/js/tags.js')}
-{do combineScript(id: 'jquery.cookie', path: 'themes/default/js/jquery.cookie.js', load: 'footer')}
-
 <meta http-equiv='cache-control' content='no-cache'>
 <meta http-equiv='expires' content='0'>
 <meta http-equiv='pragma' content='no-cache'>

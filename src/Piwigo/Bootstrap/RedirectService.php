@@ -7,7 +7,7 @@ namespace Piwigo\Bootstrap;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Bootstrap\Projection\RedirectHtmlPageContext;
+use Piwigo\Bootstrap\Projection\RedirectView;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -27,6 +27,7 @@ use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -34,7 +35,7 @@ use Piwigo\Users\UserService;
 
 /**
  * Lives in `Bootstrap` (L4Integration): `redirectHtml()`'s body calls
- * `PageTail::renderToString()`, itself L4Integration -- see
+ * `PageTail::prepareContext()`, itself L4Integration -- see
  * `Piwigo\Core\RedirectServiceInterface`'s own docblock.
  *
  * `UserService` is a constructor-injected dependency. `currentUser()`/
@@ -46,13 +47,17 @@ use Piwigo\Users\UserService;
  *
  * redirectHttp()/redirectHtml() throw `Piwigo\Http\ResponseReadyException`
  * instead of calling header()/echo/exit() directly -- see that exception
- * class's own docblock for why and where it's caught. Neither
- * `PageHeaderRenderer::render()` nor `Template::parse($handle, false)`
- * (the default) echoes -- both accumulate into Template's own internal
- * buffer (see `Template::fetchOutput()`'s docblock), the same mechanism
- * `Controller\AboutController` relies on. `PageTail::renderToString()`
- * drains that same buffer as a string instead of echoing it, feeding the
- * thrown exception's Response body.
+ * class's own docblock for why and where it's caught.
+ * `redirectHtml()` is P41's (docs/PLAN.md) own first real cutover: it
+ * builds the same ambient header/footer context
+ * `PageHeaderRenderer`/`PageTail` always did
+ * (`prepareContext()`/`prepareContext()`, the context-only halves), then
+ * renders `RedirectView` through `Renderer::render()` in one shot --
+ * `redirect.latte` itself now declares `{layout 'layout.latte'}`, so
+ * that one call produces the whole page -- and finishes with
+ * `Template::finalizeHtml()` (the combined-CSS/JS/JSON-island
+ * substitution pass `flush()`/`fetchOutput()` also delegate to) instead
+ * of the old `parse()`+`fetchOutput()` pair.
  */
 final readonly class RedirectService implements RedirectServiceInterface
 {
@@ -61,6 +66,7 @@ final readonly class RedirectService implements RedirectServiceInterface
         private UserService $userService,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
+        private Renderer $renderer,
     ) {}
 
     private static function currentUser(): CurrentUser
@@ -209,13 +215,13 @@ final readonly class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
+            ->prepareContext($title, $this->eventDispatcher, $this->pageState, self::currentTemplate(), self::currentConfig(), $refresh_str, $url_link);
 
-        $template->assignContext(new RedirectHtmlPageContext(redirectMsg: $msg));
+        PageTail::prepareContext();
 
-        $template->parse('redirect.latte');
+        $html = $this->renderer->render(new RedirectView(redirectMsg: $msg));
+        $body = $template->finalizeHtml((string) $html);
 
-        $body = PageTail::renderToString();
         throw new ResponseReadyException(ResponseFactory::html($body, $status));
     }
 

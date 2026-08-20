@@ -17,8 +17,10 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -127,7 +129,7 @@ final class UserBootstrapTest extends IntegrationTestCase
 
     private function bootstrap(?DeploymentPolicy $deploymentPolicy = null): UserBootstrap
     {
-        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), $deploymentPolicy ?? new DeploymentPolicy(), new ConnectedWithSession());
+        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), $deploymentPolicy ?? new DeploymentPolicy(), new ConnectedWithSession());
     }
 
     public function testInitializeAutoRegistersANewLocalAccountForAnUnknownApacheRemoteUser(): void

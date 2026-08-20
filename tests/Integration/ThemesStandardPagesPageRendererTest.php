@@ -214,7 +214,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         return new ThemesStandardPagesPageRenderer(
             LangTestFactory::get(),
             $this->accessControl(),
-            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
             UrlServiceTestFactory::build(),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()),

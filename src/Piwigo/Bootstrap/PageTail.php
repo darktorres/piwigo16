@@ -26,6 +26,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\UserService;
 
 /**
@@ -47,16 +48,18 @@ use Piwigo\Users\UserService;
  */
 final class PageTail
 {
+    /**
+     * @deprecated P41 (docs/PLAN.md): calls the update-check
+     *   orchestration then `PageTailRenderer`'s own deprecated
+     *   `render()`. Real callers switch to `prepareContext()` + the new
+     *   `{layout}`-based `Renderer::render()`/`Template::finalizeHtml()`
+     *   one at a time; this stays until every real caller has switched
+     *   (P41-E deletes it).
+     */
     public static function render(): void
     {
         self::checkForUpdates();
-
-        // PageTailRenderer (L3) receives the telemetry sender through
-        // Piwigo\Core\TelemetrySenderInterface -- this class (L4) is the
-        // one place the concrete L4 implementation gets constructed.
-        // UrlServiceInterface is wired the same way; see
-        // PageTailRenderer's own docblock.
-        new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest())
+        self::renderer()
             ->render(self::pageState()->requestStart);
     }
 
@@ -65,13 +68,44 @@ final class PageTail
      * orchestration, but returns the fully rendered page instead of
      * sending it to the browser. For controllers returning a real PSR-7
      * Response instead of echoing directly.
+     *
+     * @deprecated P41 (docs/PLAN.md): see render()'s own docblock.
      */
     public static function renderToString(): string
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest())
+        return self::renderer()
             ->renderToString(self::pageState()->requestStart);
+    }
+
+    /**
+     * The context-building half of render()/renderToString() -- the
+     * update-check orchestration plus `PageTailRenderer::prepareContext()`,
+     * without the final `parse('footer.latte')`/`flush()`/`fetchOutput()`
+     * call. For a `{layout}`-based caller (P41) building the same ambient
+     * footer context before rendering its own page-specific `View`
+     * through `Renderer::render()` and `Template::finalizeHtml()` in one
+     * shot.
+     */
+    public static function prepareContext(): void
+    {
+        self::checkForUpdates();
+        self::renderer()
+            ->prepareContext(self::pageState()->requestStart);
+    }
+
+    /**
+     * PageTailRenderer (L3) receives the telemetry sender through
+     * Piwigo\Core\TelemetrySenderInterface -- this class (L4) is the one
+     * place the concrete L4 implementation gets constructed.
+     * UrlServiceInterface is wired the same way; see PageTailRenderer's
+     * own docblock. A fresh instance every call (never cached) -- matches
+     * this class's own pre-existing per-call construction shape.
+     */
+    private static function renderer(): PageTailRenderer
+    {
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest());
     }
 
     /**
@@ -161,6 +195,22 @@ final class PageTail
         }
 
         return $currentTemplate;
+    }
+
+    /**
+     * Same reasoning as currentTemplate() above -- RedirectService is
+     * constructed manually below, outside `Bootstrap/`'s own
+     * manual-construction call sites, and needs a real `Renderer` (P41,
+     * docs/PLAN.md) for its own `redirectHtml()` cutover.
+     */
+    private static function templateRenderer(): Renderer
+    {
+        $renderer = Kernel::container()->get(Renderer::class);
+        if (! $renderer instanceof Renderer) {
+            throw new LogicException('Container returned an unexpected type for ' . Renderer::class);
+        }
+
+        return $renderer;
     }
 
     private static function currentConfigService(): CurrentConfigService
@@ -291,7 +341,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins(self::currentLogger()->get(), 'check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig(), self::extensionUpdateCachePool())
+                    new CoreUpdateService(RequestBootstrap::lang(), new ZipExtractor(), new RedirectService(RequestBootstrap::lang(), self::userService(), self::eventDispatcher(), self::pageState(), self::templateRenderer()), self::urlService(), self::currentConfigService()->get(), self::paths(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService(), RequestBootstrap::currentConfig(), self::extensionUpdateCachePool())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends(self::currentLogger()->get(), 'check_for_updates');

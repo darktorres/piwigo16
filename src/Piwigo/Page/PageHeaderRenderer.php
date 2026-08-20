@@ -64,8 +64,36 @@ final class PageHeaderRenderer
      *   only applied together with $urlLink, matching the original
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
+     *
+     * @deprecated P41 (docs/PLAN.md): calls prepareContext() then the
+     *   old `Template::parse('header.latte')`/`$output`-accumulating
+     *   path. Real callers switch to `prepareContext()` + the new
+     *   `{layout}`-based `Renderer::render()` one at a time; this stays
+     *   until every real caller has switched (P41-E deletes it).
      */
     public function render(string $title, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
+    {
+        $this->prepareContext($title, $eventDispatcher, $pageState, $currentTemplate, $currentConfig, $refresh, $urlLink);
+
+        $currentTemplate->get()
+            ->parse('header.latte');
+    }
+
+    /**
+     * The context-building half of render() -- everything up to (not
+     * including) the actual template render, so a `{layout}`-based
+     * caller (P41) can build this exact same ambient context, then
+     * render its own page-specific `View` through `Renderer::render()`
+     * in one shot instead of a separate `parse('header.latte')` call.
+     *
+     * @param string $title set by the including page script, right before
+     *   the original page_header.php include.
+     * @param string|null $refresh optional meta-refresh delay in seconds;
+     *   only applied together with $urlLink, matching the original
+     *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
+     *   is the one real caller that sets both today.
+     */
+    public function prepareContext(string $title, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, ?string $refresh = null, ?string $urlLink = null): void
     {
         $template = $currentTemplate->get();
 
@@ -133,7 +161,6 @@ final class PageHeaderRenderer
         $eventDispatcher->dispatch(new PageHeaderContextFinalized());
 
         header('Content-Type: text/html; charset=utf-8');
-        $template->parse('header.latte');
 
         $eventDispatcher->dispatch(new PageHeaderRendered());
     }

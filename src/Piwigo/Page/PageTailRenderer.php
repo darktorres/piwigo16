@@ -58,11 +58,19 @@ final readonly class PageTailRenderer
         private ViteManifest $viteManifest,
     ) {}
 
+    /**
+     * @deprecated P41 (docs/PLAN.md): calls prepareContext() then the
+     *   old `Template::parse('footer.latte')`/`flush()` path. Real
+     *   callers switch to `prepareContext()` + the new `{layout}`-based
+     *   `Renderer::render()`/`finalizeHtml()` one at a time; this stays
+     *   until every real caller has switched (P41-E deletes it).
+     */
     public function render(float $startTime): void
     {
-        $this->prepareTail($startTime);
-        $this->currentTemplate->get()
-            ->flush();
+        $this->prepareContext($startTime);
+        $template = $this->currentTemplate->get();
+        $template->parse('footer.latte');
+        $template->flush();
     }
 
     /**
@@ -72,15 +80,26 @@ final readonly class PageTailRenderer
      * Template::fetchOutput()'s own docblock) instead of sending it to
      * the browser. For controllers returning a real PSR-7 Response
      * instead of echoing directly.
+     *
+     * @deprecated P41 (docs/PLAN.md): see render()'s own docblock.
      */
     public function renderToString(float $startTime): string
     {
-        $this->prepareTail($startTime);
-        return $this->currentTemplate->get()
-            ->fetchOutput();
+        $this->prepareContext($startTime);
+        $template = $this->currentTemplate->get();
+        $template->parse('footer.latte');
+        return $template->fetchOutput();
     }
 
-    private function prepareTail(float $startTime): void
+    /**
+     * The context-building half of render()/renderToString() --
+     * everything up to (not including) the actual template render, so a
+     * `{layout}`-based caller (P41) can build this exact same ambient
+     * context, then render its own page-specific `View` through
+     * `Renderer::render()` and `Template::finalizeHtml()` in one shot
+     * instead of a separate `parse('footer.latte')`/`flush()` call.
+     */
+    public function prepareContext(float $startTime): void
     {
         $template = $this->currentTemplate->get();
 
@@ -149,10 +168,6 @@ final readonly class PageTailRenderer
         ));
 
         $this->eventDispatcher->dispatch(new PageTailRendered());
-        //
-        // Generate the page
-        //
-        $template->parse('footer.latte');
     }
 
     /**

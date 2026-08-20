@@ -37,7 +37,9 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -148,7 +150,7 @@ test('__invoke redirects to search.php with the given q parameter', function ():
     $root = qSearchTestRoot();
 
     try {
-        $redirectService = new RedirectService(qSearchTestLang(), qSearchTestUserService(), new EventDispatcher(), new PageState());
+        $redirectService = new RedirectService(qSearchTestLang(), qSearchTestUserService(), new EventDispatcher(), new PageState(), new Renderer(CurrentTemplateTestFactory::get()));
         $controller = new QSearchController(qSearchTestAccessControl(), $redirectService, UrlServiceTestFactory::build());
         $request = new ServerRequest('GET', '/qsearch.php?q=nature');
 
@@ -180,7 +182,7 @@ test('__invoke redirects with an empty q when the query param is missing', funct
     $root = qSearchTestRoot();
 
     try {
-        $redirectService = new RedirectService(qSearchTestLang(), qSearchTestUserService(), new EventDispatcher(), new PageState());
+        $redirectService = new RedirectService(qSearchTestLang(), qSearchTestUserService(), new EventDispatcher(), new PageState(), new Renderer(CurrentTemplateTestFactory::get()));
         $controller = new QSearchController(qSearchTestAccessControl(), $redirectService, UrlServiceTestFactory::build());
         $request = new ServerRequest('GET', '/qsearch.php');
 

@@ -28,6 +28,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Listener\AuthListener;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
@@ -59,6 +60,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
         private UserService $userService,
         private UrlServiceInterface $urlService,
         private DeploymentPolicy $deploymentPolicy,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -97,7 +99,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
 
         new UserBootstrap(
             $this->accessLevelChecker,
-            new RedirectService($this->lang, $this->userService, $this->eventDispatcher, $this->pageState),
+            new RedirectService($this->lang, $this->userService, $this->eventDispatcher, $this->pageState, $this->renderer),
             $this->urlService,
             $this->deploymentPolicy,
             new ConnectedWithSession(),

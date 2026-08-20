@@ -671,11 +671,11 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $dimensions = [];
 
         // get all width, height and ratios
-        foreach ($this->imageService->getDistinctDimensions() as $row) {
-            if ($row['width'] > 0 && $row['height'] > 0) {
-                $widths[] = $row['width'];
-                $heights[] = $row['height'];
-                $ratios[] = floor($row['width'] / $row['height'] * 100.0) / 100.0;
+        foreach ($this->imageService->getDistinctDimensions() as $dims) {
+            if ($dims->width > 0 && $dims->height > 0) {
+                $widths[] = $dims->width;
+                $heights[] = $dims->height;
+                $ratios[] = floor($dims->width / $dims->height * 100.0) / 100.0;
             }
         }
         if ($widths === []) { // arbitrary values, only used when no photos on the gallery

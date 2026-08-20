@@ -1888,9 +1888,8 @@ final class ImageRepository extends EntityRepository
      * -- Controller\Admin\BatchManagerSubController's own dimension-filter
      * option aggregation.
      *
-     * @return list<array{width: int, height: int}> -- the WHERE clause
-     *   below guarantees both are non-null (ImageEntity::$width/$height are
-     *   otherwise nullable columns)
+     * @return list<Dimensions> -- the WHERE clause below guarantees both are
+     *   non-null (ImageEntity::$width/$height are otherwise nullable columns)
      */
     public function findDistinctDimensions(): array
     {
@@ -1902,10 +1901,7 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getArrayResult() as $row) {
             if (is_array($row) && is_int($row['width'] ?? null) && is_int($row['height'] ?? null)) {
-                $result[] = [
-                    'width' => $row['width'],
-                    'height' => $row['height'],
-                ];
+                $result[] = new Dimensions($row['width'], $row['height']);
             }
         }
 

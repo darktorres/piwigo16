@@ -635,7 +635,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{width: int, height: int}>
+     * @return list<Dimensions>
      */
     public function getDistinctDimensions(): array
     {

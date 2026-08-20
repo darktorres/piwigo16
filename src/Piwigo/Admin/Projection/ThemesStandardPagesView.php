@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -16,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * ThemesStandardPagesSubmitRequest::fromGlobals()).
  */
 #[Template('themes_standard_pages.latte')]
-final readonly class ThemesStandardPagesView implements View
+final readonly class ThemesStandardPagesView implements View, HasPageAssets
 {
     /**
      * @param list<string> $stdPgsSkinOptions
@@ -34,4 +38,17 @@ final readonly class ThemesStandardPagesView implements View
         public int $isWebmaster,
         public ?string $saveError,
     ) {}
+
+    /**
+     * `themes_standard_pages.latte`'s own unconditional
+     * `{do combineScript(...)}`x2 (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('themes_standard_pages', 'themes/admin/default/js/themes_standard_pages.js', loadMode: LoadMode::Footer),
+        ];
+    }
 }

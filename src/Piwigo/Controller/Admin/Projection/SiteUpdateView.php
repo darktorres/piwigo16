@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -20,7 +24,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `category_options`/`category_options_selected` pair.
  */
 #[Template('site_update.latte')]
-final readonly class SiteUpdateView implements View
+final readonly class SiteUpdateView implements View, HasPageAssets
 {
     /**
      * @param array{NB_NEW_CATEGORIES: int, NB_DEL_CATEGORIES: int, NB_NEW_ELEMENTS: int, NB_DEL_ELEMENTS: int, NB_UPD_ELEMENTS: int, NB_ERRORS: int}|null $updateResult
@@ -47,4 +51,17 @@ final readonly class SiteUpdateView implements View
         public ?string $saveError,
         public ?array $footerElements,
     ) {}
+
+    /**
+     * `site_update.latte`'s own unconditional `{do combineScript(...)}`/
+     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('site_update', 'themes/admin/default/js/site_update.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/admin/default/css/pages/site_update.css', id: 'site_update'),
+        ];
+    }
 }

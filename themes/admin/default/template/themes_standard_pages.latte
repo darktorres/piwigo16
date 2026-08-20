@@ -1,6 +1,4 @@
 {templateType Piwigo\Admin\Projection\ThemesStandardPagesView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
 <section class="std_pgs">
   {* NOTE: $F_ACTION is never actually assigned by
      ThemesStandardPagesPageRenderer/ThemesStandardPagesSubController --
@@ -210,5 +208,3 @@
     </div>
   </form>
 </section>
-
-{do combineScript(id: 'themes_standard_pages', load: 'footer', path: 'themes/admin/default/js/themes_standard_pages.js')}

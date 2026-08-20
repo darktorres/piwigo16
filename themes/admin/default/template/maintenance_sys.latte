@@ -1,7 +1,5 @@
 {templateType Piwigo\Admin\Projection\MaintenanceSysView}
 {if $isWebmaster}
-  {do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-  {do combineCss(id: 'maintenance_sys', path: 'themes/admin/default/css/pages/maintenance_sys.css')}
   <fieldset id="activities-system">
     <div class="tab-header">
       <div class="tab-object">

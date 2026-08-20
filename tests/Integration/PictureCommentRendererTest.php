@@ -561,10 +561,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         try {
             $this->seedUser(1, UserStatus::Admin);
-            $adminCount = $this->renderCommentsResult($imageId)->commentCount;
+            $adminCount = $this->renderCommentsResult($imageId)
+                ->commentCount;
 
             $this->seedUser(3, UserStatus::Normal);
-            $normalCount = $this->renderCommentsResult($imageId)->commentCount;
+            $normalCount = $this->renderCommentsResult($imageId)
+                ->commentCount;
 
             self::assertSame(2, $adminCount);
             self::assertSame(1, $normalCount);
@@ -637,7 +639,6 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $navbar = $result->commentsNavbar;
             self::assertIsArray($navbar);
             self::assertArrayHasKey('URL_NEXT', $navbar);
-            self::assertIsString($navbar['URL_NEXT']);
             // cleanUrl=true (real 5th arg) -- '/start-N', not '?start=N'.
             self::assertStringContainsString('/start-', $navbar['URL_NEXT']);
             // The stale start=42 from the current section context must
@@ -668,7 +669,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // non-guest).
         $this->seedUser(3, UserStatus::Normal);
 
-        $commentAdd = $this->renderCommentsResult($imageId)->commentAdd;
+        $commentAdd = $this->renderCommentsResult($imageId)
+            ->commentAdd;
         self::assertIsArray($commentAdd);
         self::assertArrayHasKey('KEY', $commentAdd);
         self::assertIsString($commentAdd['KEY']);
@@ -727,7 +729,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $imageId = 3;
         $this->seedUser(3, UserStatus::Normal, 'real-email-check@example.test');
 
-        $commentAdd = $this->renderCommentsResult($imageId)->commentAdd;
+        $commentAdd = $this->renderCommentsResult($imageId)
+            ->commentAdd;
         self::assertIsArray($commentAdd);
         self::assertFalse($commentAdd['SHOW_EMAIL']);
     }
@@ -742,7 +745,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // hides the form for.
         $this->seedUser(3, UserStatus::Generic, 'generic-email-check@example.test');
 
-        $commentAdd = $this->renderCommentsResult($imageId)->commentAdd;
+        $commentAdd = $this->renderCommentsResult($imageId)
+            ->commentAdd;
         self::assertIsArray($commentAdd);
         self::assertTrue($commentAdd['SHOW_AUTHOR']);
         self::assertTrue($commentAdd['SHOW_EMAIL']);
@@ -1088,12 +1092,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     }
 
     /**
-     * @param array<string, mixed>|null $comments
+     * @param list<array<string, mixed>>|null $comments
      * @return list<mixed>
      */
     private function renderedComments(?array $comments): array
     {
-        return $comments !== null ? array_values($comments) : [];
+        return $comments ?? [];
     }
 
     /**

@@ -811,6 +811,9 @@ final class InstallWizard
                     );
             }
         }
+        $rawThemes = $this->template->getTemplateVars('themes');
+        $themes = is_array($rawThemes) ? array_values($rawThemes) : [];
+
         $installView = new InstallView(
             languageSelection: $language_selection,
             languageOptions: $languages_options,
@@ -830,6 +833,7 @@ final class InstallWizard
             install: $install_value,
             errors: count($this->errors) !== 0 ? $this->errors : null,
             infos: count($this->infos) !== 0 ? $this->infos : null,
+            themes: $themes,
         );
 
         // ------------------------------------------------- html code display

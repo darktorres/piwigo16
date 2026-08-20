@@ -15,19 +15,8 @@
     >
 
     {=getCombinedCss()}
-    {foreach $themes as $theme}
-      {if $theme['load_css']}
-        {do combineCss(path: "themes/admin/{$theme['id']}/theme.css", order: -10)}
-      {/if}
-    {/foreach}
 
     {=getCombinedScripts('header')}
-
-    {do combineScript(id: 'jquery', path: 'themes/default/js/jquery.min.js')}
-    {do combineCss(id: 'install', path: 'themes/admin/default/css/pages/install.css')}
-
-    {do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
-    {do combineScript(id: 'install', load: 'footer', require: 'jquery.cluetip', path: 'themes/admin/default/js/install.js')}
 
     <title>Piwigo {$release} - {='Installation'|translate}</title>
   </head>

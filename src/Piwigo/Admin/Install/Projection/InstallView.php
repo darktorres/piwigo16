@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -18,15 +22,20 @@ use Piwigo\Template\Latte\Attribute\Template;
  * keys under their own runtime condition; `install.latte`'s own body
  * gates on `isset()` for each, which still works correctly against a
  * real nullable property holding `null` the same way it did against an
- * absent array key.
+ * absent array key. `$themes` is the ambient theme-chain `themes`
+ * template var `Template::setTheme()` always assigns (regardless of
+ * `applyThemeBase`) -- the controller reads it back via
+ * `$template->getTemplateVars('themes')`, the same ambient-value
+ * pattern every other P42-B ambient case uses.
  */
 #[Template('install.latte')]
-final readonly class InstallView implements View
+final readonly class InstallView implements View, HasPageAssets
 {
     /**
      * @param array<string, string> $languageOptions
      * @param array<int, string>|null $errors
      * @param array<int, string>|null $infos
+     * @param list<mixed> $themes
      */
     public function __construct(
         public ?string $languageSelection,
@@ -47,5 +56,42 @@ final readonly class InstallView implements View
         public ?bool $install,
         public ?array $errors,
         public ?array $infos,
+        public array $themes,
     ) {}
+
+    /**
+     * `install.latte`'s own `{foreach $themes as $theme}{if
+     * $theme['load_css']}{do combineCss(...)}{/if}{/foreach}` (a real
+     * loop+conditional, not a fixed literal list) plus 4 unconditional
+     * `{do combineScript(...)}`x3/`{do combineCss(...)}`x1
+     * (docs/PLAN.md's P42-B). Deliberately narrower than
+     * `ThemeBaseAssets::forAdminLayout()` -- this page never went
+     * through the automatic theme-base wiring (`applyThemeBase: false`,
+     * see `InstallWizard::boot()`'s own docblock), and never registered
+     * `fontello.css`/`utilities.css`/`general.css` even before this
+     * migration, only each theme's own `theme.css`.
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        $assets = [];
+
+        foreach ($this->themes as $theme) {
+            if (! is_array($theme)) {
+                continue;
+            }
+
+            $id = $theme['id'] ?? null;
+            if (($theme['load_css'] ?? false) === true && is_string($id)) {
+                $assets[] = AssetContribution::css('themes/admin/' . $id . '/theme.css', order: -10);
+            }
+        }
+
+        $assets[] = AssetContribution::script('jquery', 'themes/default/js/jquery.min.js');
+        $assets[] = AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install');
+        $assets[] = AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']);
+        $assets[] = AssetContribution::script('install', 'themes/admin/default/js/install.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']);
+
+        return $assets;
+    }
 }

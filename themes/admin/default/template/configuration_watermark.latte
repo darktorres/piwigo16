@@ -1,10 +1,4 @@
 {templateType Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
-{do exposeData('root_url', $ROOT_URL)}
-{do combineScript(id: 'configuration_watermark', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/configuration_watermark.js')}
-{do combineCss(id: 'configuration_watermark', path: 'themes/admin/default/css/pages/configuration_watermark.css')}
-
 <form
   method="post"
   action="{$fAction|noescape}"

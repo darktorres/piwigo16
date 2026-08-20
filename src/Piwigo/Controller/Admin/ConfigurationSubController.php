@@ -815,6 +815,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     saveSuccess: ($watermarkResult !== null ? $watermarkResult->saveSuccess : null) ?? $save_success,
                     isWebmaster: $is_webmaster,
                     csrfToken: $pwg_token,
+                    rootUrl: $this->urlService->getRootUrl(),
                 );
 
                 break;

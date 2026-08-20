@@ -170,6 +170,8 @@ final class UserActivityPageRenderer
             additionalFiltName: $additional_filt_name,
             additionalFiltValue: $additional_filt_value,
             actions: $actions,
+            rootUrl: $urlService->getRootUrl(),
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(

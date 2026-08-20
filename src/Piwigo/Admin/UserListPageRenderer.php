@@ -48,7 +48,7 @@ final class UserListPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('users');
         $tabsheet->select('user_list', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $groups = [];
         $groups_for_filter = [];

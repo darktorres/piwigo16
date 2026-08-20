@@ -80,7 +80,7 @@ final readonly class CatOptionsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('cat_options');
         $tabsheet->select($section, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         // for each section, categories in the multiselect field can be :
         //

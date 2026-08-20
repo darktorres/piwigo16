@@ -95,7 +95,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
         // Matches CoreTabs::addCoreTabs()'s own 'site_maager' key -- see
         // this class's own docblock.
         $tabsheet->select('site_maager', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($siteManagerRequest->newSiteGalleriesUrl !== null) {
             $galleries_url_input = $siteManagerRequest->newSiteGalleriesUrl;

@@ -37,7 +37,7 @@ final class HelpPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('help');
         $tabsheet->select($selected, $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $eventDispatcher->dispatch(new HelpPageRendered());
 

@@ -64,7 +64,7 @@ final class AlbumsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('albums');
         $tabsheet->select('list', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         // +-------------------------------------------------------------------+
         // |                         categories auto order                     |

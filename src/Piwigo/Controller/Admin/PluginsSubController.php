@@ -94,7 +94,7 @@ final readonly class PluginsSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('plugins');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()

@@ -202,7 +202,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         $tabsheet = new Tabsheet();
         $tabsheet->setId('site_update');
         $tabsheet->select('synchronization', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         // $post is a local working copy of the submitted form data. The
         // quick_sync shortcut below sets 8 keys directly on this array to

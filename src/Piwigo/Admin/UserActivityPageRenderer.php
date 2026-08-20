@@ -47,7 +47,7 @@ final class UserActivityPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('users');
         $tabsheet->select('user_activity', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $activity_service = $activityService;
 

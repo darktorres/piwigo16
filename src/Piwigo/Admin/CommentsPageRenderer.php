@@ -35,7 +35,7 @@ final class CommentsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('comments');
         $tabsheet->select('', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $adminContent = $renderer->render(new CommentsView(
             csrfToken: $csrfService

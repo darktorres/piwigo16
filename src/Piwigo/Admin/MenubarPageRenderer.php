@@ -43,7 +43,7 @@ final class MenubarPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('menus');
         $tabsheet->select('', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig, $renderer);
         $menu->loadRegisteredBlocks();

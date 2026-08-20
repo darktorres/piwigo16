@@ -12,6 +12,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
@@ -35,11 +36,11 @@ function tabsheetTestRrmdir(string $dir): void
 // compile directory under CurrentPathsTestFactory::get()->root -- same
 // "point CurrentPaths at a fresh temp root, clean it up after" shape as
 // PictureCommentRendererTest's own makePictureCommentTestTemplate().
-// Tabsheet::assign()'s own assignVarFromTemplate() call actually parses
-// a real 'tabsheet.latte' through Latte (theme='' -> template_dir is the
+// Tabsheet::assign()'s own Renderer::render() call actually parses a
+// real 'tabsheet.latte' through Latte (theme='' -> template_dir is the
 // $root passed to the constructor), so a trivial real file is seeded at
-// that same root -- its rendered content is never asserted on, only the
-// other template vars assign() also sets.
+// that same root -- its rendered content is never asserted on except
+// where a test overwrites it with its own minimal fixture body.
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-tabsheet-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
@@ -283,16 +284,15 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
 });
 
 test('assign makes the sheets array available to the tabsheet.latte template before rendering', function (): void {
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'CAPTION:{$tabsheet[\'general\'][\'caption\']}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'CAPTION:{$sheets[\'general\'][\'caption\']}');
 
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general');
 
-    $tabsheet->assign(CurrentTemplateTestFactory::get());
+    $tabsheet->assign(CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
     $template = CurrentTemplateTestFactory::get()->get();
-    // assignVarFromTemplate() wraps the result in Latte\Runtime\Html (see
-    // that method's own docblock), not a plain string.
+    // Renderer::render() wraps the result in Latte\Runtime\Html.
     $tabsheetVar = $template->getTemplateVars('MY_TABSHEET');
     expect($tabsheetVar)
         ->toBeInstanceOf(Html::class);
@@ -301,17 +301,6 @@ test('assign makes the sheets array available to the tabsheet.latte template bef
     }
     expect((string) $tabsheetVar)
         ->toBe('CAPTION:General Settings');
-});
-
-test('assign clears the temporary tabsheet template var after compiling it', function (): void {
-    $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
-    $tabsheet->add('general', 'General', '/general');
-
-    $tabsheet->assign(CurrentTemplateTestFactory::get());
-
-    $template = CurrentTemplateTestFactory::get()->get();
-    expect($template->getTemplateVars('tabsheet'))
-        ->toBeNull();
 });
 
 test('setTitlename overwrites titlename and returns the new value', function (): void {
@@ -326,28 +315,44 @@ test('setTitlename overwrites titlename and returns the new value', function ():
 });
 
 test('assign writes the sheets, the selected key, and the bracketed selected caption into the template', function (): void {
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'SELECTED:{$selected}');
+
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general', true);
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->assign(CurrentTemplateTestFactory::get());
+    $tabsheet->assign(CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
     $template = CurrentTemplateTestFactory::get()->get();
-    expect($template->getTemplateVars('tabsheet_selected'))
-        ->toBe('general');
+    $tabsheetVar = $template->getTemplateVars('MY_TABSHEET');
+    expect($tabsheetVar)
+        ->toBeInstanceOf(Html::class);
+    if (! $tabsheetVar instanceof Html) {
+        throw new LogicException('unreachable -- asserted above');
+    }
+    expect((string) $tabsheetVar)
+        ->toBe('SELECTED:general');
     expect($template->getTemplateVars('MY_TITLE'))
         ->toBe('[General Settings]');
 });
 
 test('assign does not set the titlename var when nothing is selected', function (): void {
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'SELECTED:{$selected}');
+
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General', '/general');
 
-    $tabsheet->assign(CurrentTemplateTestFactory::get());
+    $tabsheet->assign(CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
     $template = CurrentTemplateTestFactory::get()->get();
-    expect($template->getTemplateVars('tabsheet_selected'))
-        ->toBe('');
+    $tabsheetVar = $template->getTemplateVars('MY_TABSHEET');
+    expect($tabsheetVar)
+        ->toBeInstanceOf(Html::class);
+    if (! $tabsheetVar instanceof Html) {
+        throw new LogicException('unreachable -- asserted above');
+    }
+    expect((string) $tabsheetVar)
+        ->toBe('SELECTED:');
     expect($template->getTemplateVars('MY_TITLE'))
         ->toBeNull();
 });

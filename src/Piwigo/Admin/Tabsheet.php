@@ -13,9 +13,12 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\Projection\TabSheetEntry;
+use Piwigo\Admin\Projection\TabsheetHtmlPageContext;
 use Piwigo\Admin\Projection\TabsheetPageContext;
+use Piwigo\Admin\Projection\TabsheetView;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 
 final class Tabsheet
 {
@@ -146,20 +149,21 @@ final class Tabsheet
      * Fill $this->$name {default value = TABSHEET} with HTML code for tabsheet
      * Fill $this->titlename {default value = TABSHEET_TITLE} with formated caption of the selected tab
      */
-    public function assign(CurrentTemplate $currentTemplate): void
+    public function assign(CurrentTemplate $currentTemplate, Renderer $renderer): void
     {
         $template = $currentTemplate->get();
 
         $selected_tab = $this->getSelected();
 
         $template->assignContext(new TabsheetPageContext(
-            sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),
-            selected: $this->selected,
             titlenameKey: isset($selected_tab) ? $this->titlename : null,
             titlenameValue: isset($selected_tab) ? '[' . $selected_tab->caption . ']' : null,
         ));
 
-        $template->assignVarFromTemplate($this->name, 'tabsheet.latte');
-        $template->clearAssign('tabsheet');
+        $tabsheetHtml = $renderer->render(new TabsheetView(
+            sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),
+            selected: $this->selected,
+        ));
+        $template->assignContext(new TabsheetHtmlPageContext($this->name, $tabsheetHtml));
     }
 }

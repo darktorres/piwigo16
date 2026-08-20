@@ -41,7 +41,7 @@ final class RatingUserPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
         $tabsheet->select('rating_user', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $ratingFilter = RatingUserFilterRequest::fromGlobals($currentConfig->topNumber);
         $filter_min_rates = $ratingFilter->minRates;

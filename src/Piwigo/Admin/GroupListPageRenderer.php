@@ -49,7 +49,7 @@ final readonly class GroupListPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('groups');
         $tabsheet->select('group_list', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 

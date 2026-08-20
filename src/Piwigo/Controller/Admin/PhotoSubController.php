@@ -85,7 +85,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('photo');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $template->assignContext(new AdminContentPageContext(
             adminPageTitle: $this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',

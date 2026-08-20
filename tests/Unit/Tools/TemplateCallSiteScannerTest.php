@@ -10,13 +10,24 @@ use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
 
 /**
- * Runs against the real repository tree, not fixtures -- the scanner's
+ * Runs against the real repository tree, not fixtures, wherever a real
+ * call site of the shape under test still exists -- the scanner's
  * whole job is resolving real call sites against the real template
  * tree, and the assertions below pin the exact namespace-scoping
  * behavior the retired PiwigoLatteEngineResolver established: Admin
  * call sites resolve only under themes/admin/, Mail only under
  * themes/default/template/mail/, frontend call sites resolve every
- * genuinely-reachable theme variant.
+ * genuinely-reachable theme variant. The Admin-scoping test is the one
+ * exception, and is synthetic (matching the "widens to the full tree"
+ * test's own established fixture shape below): P40's admin `ADMIN_CONTENT`
+ * sweep (Batches 3/5/7/8) converted every real `Piwigo\Admin\*`
+ * `assignVarFromTemplate()`/`->parse()` call site to `Renderer::render()`,
+ * which this scanner doesn't recognize at all (by design -- see
+ * TemplateTypeScanner) -- there is no longer a real admin-scoped
+ * fixture left in the repository to test the namespace-scoping rule
+ * against. The rule itself still matters for whichever future admin
+ * class might reintroduce a real `parse()`/`assignVarFromTemplate()`
+ * call site, so it stays covered here, just synthetically now.
  */
 beforeEach(function (): void {
     $this->root = dirname(__DIR__, 3);
@@ -25,12 +36,34 @@ beforeEach(function (): void {
 });
 
 it('resolves an Admin renderer call site only under the admin theme', function (): void {
-    $templates = $this->result->templatesByClass[Tabsheet::class] ?? [];
+    $root = sys_get_temp_dir() . '/piwigo-scanner-admin-scope-' . bin2hex(random_bytes(8));
+    mkdir($root . '/src/Piwigo/Admin', 0o777, true);
+    mkdir($root . '/themes/admin/default/template', 0o777, true);
+    mkdir($root . '/themes/default/template', 0o777, true);
+    file_put_contents($root . '/themes/admin/default/template/only_admin.latte', '{$x}');
+    file_put_contents($root . '/src/Piwigo/Admin/SomeAdminRenderer.php', <<<'PHP'
+        <?php
+        namespace Piwigo\Admin;
+        class SomeAdminRenderer {
+            public function render($template): void {
+                $template->parse('only_admin.latte');
+            }
+        }
+        PHP);
 
-    expect($templates)
-        ->toContain($this->root . '/themes/admin/default/template/tabsheet.latte');
-    foreach ($templates as $path) {
-        expect($path)->toContain('/themes/admin/default/template/');
+    try {
+        $result = new TemplateCallSiteScanner($root)
+            ->scan();
+
+        $templates = $result->templatesByClass['Piwigo\\Admin\\SomeAdminRenderer'] ?? [];
+
+        expect($templates)
+            ->toContain(realpath($root . '/themes/admin/default/template/only_admin.latte'));
+        foreach ($templates as $path) {
+            expect($path)->toContain('/themes/admin/default/template/');
+        }
+    } finally {
+        exec('rm -rf ' . escapeshellarg($root));
     }
 });
 

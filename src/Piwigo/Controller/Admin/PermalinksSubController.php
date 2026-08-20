@@ -79,7 +79,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $tabsheet = new Tabsheet();
         $tabsheet->setId('albums');
         $tabsheet->select('permalinks', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $nb_cats = $this->categoryService->countAllCategories();
 

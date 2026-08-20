@@ -162,7 +162,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $tabsheet = new Tabsheet();
         $tabsheet->setId('batch_manager');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $template->assignContext(new BatchManagerFilterOptionsPageContext(
             dimensions: $this->computeDimensionOptions($bulk_filter),

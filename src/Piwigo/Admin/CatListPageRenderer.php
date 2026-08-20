@@ -94,7 +94,7 @@ final readonly class CatListPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('albums');
         $tabsheet->select('list', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         // request to delete a virtual category
         if ($catListRequest->deleteId !== null) {

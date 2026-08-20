@@ -156,7 +156,7 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
         $tabsheet = new Tabsheet();
         $tabsheet->setId('maintenance');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'env') {
             $this->maintenanceEnvPageRenderer

@@ -82,7 +82,7 @@ final readonly class LanguagesSubController implements AdminSubControllerInterfa
         $tabsheet = new Tabsheet();
         $tabsheet->setId('languages');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()

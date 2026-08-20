@@ -131,7 +131,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('admin_home');
         $tabsheet->select('', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $nb_pending_comments = $this->pageState->nbPendingComments;
         if ($nb_pending_comments !== null) {

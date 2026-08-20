@@ -87,7 +87,7 @@ final readonly class ThemesSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('themes');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()

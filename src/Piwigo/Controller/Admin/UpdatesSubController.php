@@ -90,7 +90,7 @@ final readonly class UpdatesSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('updates');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()

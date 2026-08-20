@@ -95,7 +95,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('album');
         $tabsheet->select($tab, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));
         $category_name = $nameEvent->categoryName;

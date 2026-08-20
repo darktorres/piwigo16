@@ -50,7 +50,7 @@ final class HistoryPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('history');
         $tabsheet->select($pageSlug, $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $form = [];
 

@@ -46,7 +46,7 @@ final class RatingPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
         $tabsheet->select('rating', $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $start = $ratingRequest->start;
         $elements_per_page = $ratingRequest->elementsPerPage;

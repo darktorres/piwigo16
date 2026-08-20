@@ -52,7 +52,7 @@ final readonly class TagsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('tags');
         $tabsheet->select('', $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $tagService = $this->tagService;
 

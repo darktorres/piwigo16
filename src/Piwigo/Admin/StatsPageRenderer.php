@@ -74,7 +74,7 @@ final class StatsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->setId('history');
         $tabsheet->select($pageSlug, $eventDispatcher);
-        $tabsheet->assign($currentTemplate);
+        $tabsheet->assign($currentTemplate, $renderer);
 
         $actual_date = Env::now();
         $actual_date->add(new DateInterval('PT1S'));

@@ -519,7 +519,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->setId('configuration');
         $tabsheet->select($page_section, $this->eventDispatcher);
-        $tabsheet->assign($this->currentTemplate);
+        $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $action = $this->urlService->getRootUrl() . 'admin.php?page=configuration';
         $action .= '&amp;section=' . $page_section;

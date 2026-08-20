@@ -196,7 +196,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
             $tabsheet = new Tabsheet();
             $tabsheet->setId('nbm');
             $tabsheet->select($page_mode, $this->eventDispatcher);
-            $tabsheet->assign($this->currentTemplate);
+            $tabsheet->assign($this->currentTemplate, $this->renderer);
         }
 
         $repost_submit_name_value = null;

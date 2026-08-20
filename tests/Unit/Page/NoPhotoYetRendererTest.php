@@ -23,6 +23,7 @@ use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -96,6 +97,7 @@ function noPhotoYetTestRenderer(AdminContext $adminContext, ApiContext $apiConte
         new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
         new ProcessCache(),
         CurrentConfigServiceTestFactory::get(),
+        new Renderer(CurrentTemplateTestFactory::get()),
     );
 }
 

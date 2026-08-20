@@ -19,12 +19,12 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Page\Event\NoPhotoYetRendered;
-use Piwigo\Page\Projection\NoPhotoYetAdminPageContext;
-use Piwigo\Page\Projection\NoPhotoYetGuestPageContext;
+use Piwigo\Page\Projection\NoPhotoYetView;
 use Piwigo\Page\Request\NoPhotoYetRequest;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 
@@ -62,6 +62,7 @@ final readonly class NoPhotoYetRenderer
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
+        private readonly Renderer $renderer,
     ) {}
 
     public function render(): void
@@ -113,8 +114,9 @@ final readonly class NoPhotoYetRenderer
                         $url = $this->urlService->getRootUrl() . $url;
                     }
 
-                    $template->assignContext(new NoPhotoYetAdminPageContext(
+                    $view = new NoPhotoYetView(
                         step: 2,
+                        loginUrl: null,
                         intro: $this->lang->t(
                             'Hello %s, your Piwigo photo gallery is empty!',
                             $this->currentUser->get()
@@ -122,18 +124,21 @@ final readonly class NoPhotoYetRenderer
                         ),
                         nextStepUrl: $url,
                         deactivateUrl: $this->urlService->getRootUrl() . '?no_photo_yet=deactivate',
-                    ));
+                    );
                 } else {
-                    $template->assignContext(new NoPhotoYetGuestPageContext(
+                    $view = new NoPhotoYetView(
                         step: 1,
                         loginUrl: 'identification.php',
+                        intro: null,
+                        nextStepUrl: null,
                         deactivateUrl: $this->urlService->getRootUrl() . '?no_photo_yet=browse',
-                    ));
+                    );
                 }
 
                 $this->eventDispatcher->dispatch(new NoPhotoYetRendered());
 
-                $template->pparse('no_photo_yet.latte');
+                $template->appendOutput($this->renderer->render($view));
+                $template->flush();
                 exit();
             } else {
                 $this->configService->confUpdateParam('no_photo_yet', 'false');

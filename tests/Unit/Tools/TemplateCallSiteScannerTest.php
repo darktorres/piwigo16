@@ -3,11 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\Projection\CheckIntegrityPageContext;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Page\PageHeaderRenderer;
-use Piwigo\Page\Projection\NoPhotoYetGuestPageContext;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
 
 /**
@@ -54,8 +53,8 @@ it('resolves a frontend polymorphic call site to every reachable theme variant',
 });
 
 it('associates assignContext call sites with their context class', function (): void {
-    expect($this->result->contextsByClass[NoPhotoYetRenderer::class] ?? [])
-        ->toContain(NoPhotoYetGuestPageContext::class);
+    expect($this->result->contextsByClass[CheckIntegrity::class] ?? [])
+        ->toContain(CheckIntegrityPageContext::class);
 });
 
 it('records the cross-class context assigners the same-class association cannot cover', function (): void {

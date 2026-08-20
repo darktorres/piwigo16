@@ -84,6 +84,7 @@ use Piwigo\Site\SiteEntity;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -386,7 +387,7 @@ final class RequestBootstrap
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
-            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService())
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::pageState()), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()))
                 ->render();
         }
 

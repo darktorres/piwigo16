@@ -558,10 +558,10 @@ it("captures no-photo-yet-guest's and no-photo-yet-admin's golden HTML", functio
     // unconditional COUNT(*) -- is 0, except inside admin context or on
     // identification/password/popuphelp (which stay reachable on
     // purpose). It renders two different content variants depending on
-    // the viewer: NoPhotoYetAdminPageContext (step 2, deactivate options)
+    // the viewer: NoPhotoYetView's own step-2 branch (deactivate options)
     // for a logged-in admin browsing the *gallery* (not admin.php --
-    // adminContext()->isActive() excludes that entirely), or
-    // NoPhotoYetGuestPageContext (step 1, a login link) for a guest.
+    // adminContext()->isActive() excludes that entirely), or its step-1
+    // branch (a login link) for a guest.
     // Both captured from the same plain gallery-home route
     // (index.php), once anonymously and once via
     // goldenHtmlLoginAsAdmin()'s session.

@@ -18,7 +18,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\TimingHelper;
@@ -51,7 +50,6 @@ use Piwigo\Users\UserService;
 final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 {
     public function __construct(
-        private Lang $lang,
         private CurrentLogger $currentLogger,
         private ImageStdParams $imageStdParams,
         private ConfigService $configService,
@@ -236,7 +234,7 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 
         $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
+            ->scanPlugins($this->paths, $this->currentUser, $this->currentConfig);
         $dbPluginsById = new ExtensionRepository($this->entityManager)
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
@@ -255,8 +253,8 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 
                 $eid = null;
                 if (isset($fsPlugins[$pluginId])) {
-                    $uri = $fsPlugins[$pluginId]['uri'] ?? null;
-                    if (is_string($uri) and (bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
+                    $uri = $fsPlugins[$pluginId]->uri;
+                    if ((bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
                         if (isset($pemExtensions[$matches[1]])) {
                             $eid = $matches[1];
                         }
@@ -289,7 +287,7 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
         $fsThemes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
+            ->scanThemes($urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager);
         $dbThemesById = new ExtensionRepository($this->entityManager)
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
@@ -309,8 +307,8 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 
             $eid = null;
             if (isset($fsThemes[$themeId])) {
-                $uri = $fsThemes[$themeId]['uri'] ?? null;
-                if (is_string($uri) and (bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
+                $uri = $fsThemes[$themeId]->uri;
+                if ((bool) preg_match('/eid=(\d+)/', $uri, $matches)) {
                     if (isset($pemExtensions[$matches[1]])) {
                         $eid = $matches[1];
                     }

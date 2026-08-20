@@ -91,7 +91,7 @@ final readonly class LanguagesInstalledPageRenderer
         $extension_scanner = new ExtensionScanner();
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry, $this->entityManager);
 
-        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
+        $fs_languages = $extension_scanner->scanLanguages($this->paths, $this->currentConfig, $this->entityManager);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions
@@ -115,35 +115,43 @@ final readonly class LanguagesInstalledPageRenderer
         $tpl_languages = [];
 
         foreach ($fs_languages as $language_id => $language) {
-            $language['u_action'] = $this->urlService->addUrlParams($base_url, [
+            $tpl_language = [
+                'name' => $language->name,
+                'code' => $language->code,
+                'version' => $language->version,
+                'uri' => $language->uri,
+                'author' => $language->author,
+            ];
+
+            $tpl_language['u_action'] = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
                 'pwg_token' => $this->csrfService
                     ->getToken(),
             ]);
 
             if (in_array($language_id, array_keys($db_languages), true)) {
-                $language['state'] = 'active';
-                $language['deactivable'] = true;
+                $tpl_language['state'] = 'active';
+                $tpl_language['deactivable'] = true;
 
                 if (count($db_languages) <= 1) {
-                    $language['deactivable'] = false;
-                    $language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, you need at least one language.');
+                    $tpl_language['deactivable'] = false;
+                    $tpl_language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, you need at least one language.');
                 }
 
                 if ($language_id === $default_language) {
-                    $language['deactivable'] = false;
-                    $language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, first set another language as default.');
+                    $tpl_language['deactivable'] = false;
+                    $tpl_language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, first set another language as default.');
                 }
             } else {
-                $language['state'] = 'inactive';
+                $tpl_language['state'] = 'inactive';
             }
 
             if ($language_id === $default_language) {
-                $language['is_default'] = true;
-                array_unshift($tpl_languages, $language);
+                $tpl_language['is_default'] = true;
+                array_unshift($tpl_languages, $tpl_language);
             } else {
-                $language['is_default'] = false;
-                $tpl_languages[] = $language;
+                $tpl_language['is_default'] = false;
+                $tpl_languages[] = $tpl_language;
             }
         }
 

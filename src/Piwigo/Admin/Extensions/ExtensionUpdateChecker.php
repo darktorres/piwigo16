@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Cache\ExtensionUpdateCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -83,7 +86,7 @@ final readonly class ExtensionUpdateChecker
      * entry from PemCatalog::getServerExtensions()'s own genuinely
      * arbitrary (unserialize()'d remote PEM response) row.
      *
-     * @return array<string, array{fs: array<string, mixed>, server: array<string, mixed>}>|null
+     * @return array<string, array{fs: PluginScanRow|ThemeScanRow|LanguageScanRow, server: array<string, mixed>}>|null
      */
     public function getPendingUpdates(ExtensionType $type, string $version = AppInfo::VERSION): ?array
     {
@@ -91,9 +94,8 @@ final readonly class ExtensionUpdateChecker
 
         $fsExtensionIds = [];
         foreach ($fsExtensions as $fsExtension) {
-            $extension = $fsExtension['extension'] ?? null;
-            if (is_scalar($extension)) {
-                $fsExtensionIds[] = (string) $extension;
+            if ($fsExtension->extension !== null) {
+                $fsExtensionIds[] = $fsExtension->extension;
             }
         }
 
@@ -104,16 +106,15 @@ final readonly class ExtensionUpdateChecker
 
         $pending = [];
         foreach ($fsExtensions as $extId => $fsExt) {
-            $extensionKey = $fsExt['extension'] ?? null;
-            if (! is_string($extensionKey) && ! is_int($extensionKey)) {
+            $extensionKey = $fsExt->extension;
+            if ($extensionKey === null) {
                 continue;
             }
             if (! isset($serverExtensions[$extensionKey])) {
                 continue;
             }
 
-            $fsVersionRaw = $fsExt['version'] ?? null;
-            $fsVersion = is_string($fsVersionRaw) ? $fsVersionRaw : '';
+            $fsVersion = $fsExt->version;
             if ($fsVersion === 'auto') {
                 // In dev mode, do not show update actions.
                 continue;
@@ -213,8 +214,7 @@ final readonly class ExtensionUpdateChecker
             $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
             foreach ($fsExtensions as $extId => $fsExt) {
                 $neededVersion = $typeUpdatesRaw[$extId] ?? null;
-                $fsVersionRaw = $fsExt['version'] ?? null;
-                $fsVersion = is_string($fsVersionRaw) ? $fsVersionRaw : '';
+                $fsVersion = $fsExt->version;
 
                 if (is_string($neededVersion) and (bool) VersionHelper::safeVersionCompare($fsVersion, $neededVersion, '>=')) {
                     $this->checkExtensions();
@@ -263,7 +263,7 @@ final readonly class ExtensionUpdateChecker
      * Each entry is one row from ExtensionScanner::scan()'s own by-design
      * generic dispatch shape -- see getPendingUpdates()'s own docblock.
      *
-     * @return array<string, list<array<string, mixed>>> keyed by
+     * @return array<string, list<PluginScanRow|ThemeScanRow|LanguageScanRow>> keyed by
      *   ExtensionType::value
      */
     public function getMissingExtensions(string $version): array
@@ -276,9 +276,8 @@ final readonly class ExtensionUpdateChecker
 
             $fsExtensionIds = [];
             foreach ($fsExtensions as $fsExtension) {
-                $extension = $fsExtension['extension'] ?? null;
-                if (is_scalar($extension)) {
-                    $fsExtensionIds[] = (string) $extension;
+                if ($fsExtension->extension !== null) {
+                    $fsExtensionIds[] = $fsExtension->extension;
                 }
             }
             if ($fsExtensionIds === []) {
@@ -288,11 +287,10 @@ final readonly class ExtensionUpdateChecker
             $serverExtensions = $this->pemCatalog->getServerExtensions($type, $fsExtensionIds, false, false, $version) ?? [];
 
             foreach ($fsExtensions as $extId => $fsExt) {
-                $extension = $fsExt['extension'] ?? null;
-                if (! is_scalar($extension)) {
+                $extensionKey = $fsExt->extension;
+                if ($extensionKey === null) {
                     continue;
                 }
-                $extensionKey = (string) $extension;
 
                 if (! isset($serverExtensions[$extensionKey])
                   and ! in_array($extId, $type->defaultIds(), true)

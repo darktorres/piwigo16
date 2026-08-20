@@ -109,11 +109,11 @@ final readonly class ThemesNewPageRenderer
                     $this->pageState->addInfo($this->lang->t('Theme has been successfully installed'));
 
                     $installed_theme_id = $themesNewInstall->installedThemeId;
-                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$installed_theme_id] ?? null) : null;
+                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
                         $this->activityService->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
-                            'version' => $installed_fs_theme['version'],
+                            'version' => $installed_fs_theme->version,
                         ]);
                     }
                     break;
@@ -141,10 +141,9 @@ final readonly class ThemesNewPageRenderer
         }
 
         $fs_theme_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_theme) {
-            $extension = $fs_theme['extension'] ?? null;
-            if (is_scalar($extension)) {
-                $fs_theme_ids[] = (string) $extension;
+        foreach ($extension_scanner->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager) as $fs_theme) {
+            if ($fs_theme->extension !== null) {
+                $fs_theme_ids[] = $fs_theme->extension;
             }
         }
         $server_themes = $pem_catalog->getServerExtensions(ExtensionType::Theme, $fs_theme_ids, true);

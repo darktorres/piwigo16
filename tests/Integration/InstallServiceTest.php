@@ -390,7 +390,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // even a directory with real scannable plugins would still insert
         // nothing; a truly empty scan directory is the simplest honest way
         // to exercise the same real "no-op by design" behavior.
-        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+        InstallService::activateCorePlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM plugins'));
         self::assertSame($before, $after);

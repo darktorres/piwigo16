@@ -109,8 +109,7 @@ final class UpdatesExtPageRenderer
                 $fs_ext = $data['fs'];
                 $ext_info = $data['server'];
 
-                $fs_version_raw = $fs_ext['version'] ?? null;
-                $fs_version = is_string($fs_version_raw) ? $fs_version_raw : '';
+                $fs_version = $fs_ext->version;
 
                 $revision_name_raw = $ext_info['revision_name'] ?? null;
                 $revision_name = is_string($revision_name_raw) ? $revision_name_raw : '';
@@ -126,7 +125,7 @@ final class UpdatesExtPageRenderer
                     'ID' => $extension_id,
                     'REVISION_ID' => $ext_info['revision_id'],
                     'EXT_ID' => $ext_id,
-                    'EXT_NAME' => $fs_ext['name'],
+                    'EXT_NAME' => $fs_ext->name,
                     'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id . '#changelog',
                     'REV_DESC' => trim($revision_description, " \n\r"),
                     'CURRENT_VERSION' => $fs_version,

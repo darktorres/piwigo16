@@ -13,6 +13,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\ExtensionRepository;
     use Piwigo\Admin\Extensions\ExtensionType;
     use Piwigo\Admin\Extensions\PemCatalog;
+    use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
+    use Piwigo\Admin\Extensions\Projection\PluginScanRow;
+    use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
     use Piwigo\Admin\Extensions\ZipExtractor;
     use Piwigo\Admin\PluginLoader;
     use Piwigo\Config\ConfigLoader;
@@ -188,9 +191,14 @@ namespace Piwigo\Tests\Integration {
         public function testPluginInstallCreatesAnInactiveRow(): void
         {
             $id = $this->pluginId();
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -203,13 +211,23 @@ namespace Piwigo\Tests\Integration {
         public function testPluginInstallWhenAlreadyInstalledIsANoop(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
-                'version' => '2.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, new PluginScanRow(
+                name: '',
+                version: '2.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -223,9 +241,14 @@ namespace Piwigo\Tests\Integration {
         {
             $id = $this->pluginId();
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -236,13 +259,23 @@ namespace Piwigo\Tests\Integration {
         public function testPluginActivateWhenAlreadyActiveIsANoop(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
         }
@@ -250,13 +283,23 @@ namespace Piwigo\Tests\Integration {
         public function testPluginDeactivateFlipsStateBackToInactive(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -278,13 +321,23 @@ namespace Piwigo\Tests\Integration {
         public function testPluginUninstallRemovesTheRow(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
@@ -306,13 +359,23 @@ namespace Piwigo\Tests\Integration {
             // composite (plugin_id, version) PK -- must upsert cleanly, not
             // throw a duplicate-key error.
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'restore', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'restore', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -324,9 +387,14 @@ namespace Piwigo\Tests\Integration {
         public function testPluginDeleteWithNoFilesystemEntryOnlyUninstalls(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, null);
 
@@ -343,13 +411,23 @@ namespace Piwigo\Tests\Integration {
             // on-disk id (see this class's own docblock), so deltree()'s
             // own `if (is_dir($path))` guard makes this a real, safe no-op.
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, [
-                'version' => '1.0',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
@@ -393,10 +471,16 @@ namespace Piwigo\Tests\Integration {
 
         public function testThemeActivateDefaultIsASilentNoop(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', 'default', [
-                'version' => '1.0',
-                'name' => 'Default',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', 'default', new ThemeScanRow(
+                id: 'default',
+                name: 'Default',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Theme, 'default'));
@@ -406,11 +490,17 @@ namespace Piwigo\Tests\Integration {
         {
             $id = $this->themeId();
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, [
-                'version' => '1.0',
-                'name' => 'Test theme',
-                'parent' => 'totally-fake-nonexistent-theme-xyz',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, new ThemeScanRow(
+                id: $id,
+                name: 'Test theme',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+                parent: 'totally-fake-nonexistent-theme-xyz',
+            ));
 
             self::assertCount(1, $errors);
             self::assertStringContainsString('totally-fake-nonexistent-theme-xyz', $errors[0]);
@@ -421,11 +511,17 @@ namespace Piwigo\Tests\Integration {
         {
             $id = $this->themeId();
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, [
-                'version' => '1.0',
-                'name' => 'Test theme',
-                'parent' => 'default',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, new ThemeScanRow(
+                id: $id,
+                name: 'Test theme',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+                parent: 'default',
+            ));
 
             self::assertSame([], $errors);
             self::assertNotNull($this->repo->find(ExtensionType::Theme, $id));
@@ -444,22 +540,32 @@ namespace Piwigo\Tests\Integration {
             // request" state directly rather than asserting a same-process
             // guard the code never provides.
             $first = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $first, [
-                'version' => '1.0',
-                'name' => 'Mobile One',
-                'mobile' => true,
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $first, new ThemeScanRow(
+                id: $first,
+                name: 'Mobile One',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: true,
+                screenshot: '',
+            ));
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
             $currentConfig->mobileTheme = $first;
 
             $second = $this->themeId();
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $second, [
-                'version' => '1.0',
-                'name' => 'Mobile Two',
-                'mobile' => true,
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $second, new ThemeScanRow(
+                id: $second,
+                name: 'Mobile Two',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: true,
+                screenshot: '',
+            ));
 
             self::assertNotSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Theme, $second));
@@ -468,15 +574,27 @@ namespace Piwigo\Tests\Integration {
         public function testThemeDeactivateRefusesToRemoveTheLastTheme(): void
         {
             $id = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, [
-                'version' => '1.0',
-                'name' => 'Only Theme',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, new ThemeScanRow(
+                id: $id,
+                name: 'Only Theme',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $id, [
-                'version' => '1.0',
-                'name' => 'Only Theme',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $id, new ThemeScanRow(
+                id: $id,
+                name: 'Only Theme',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
             self::assertNotSame([], $errors);
             self::assertNotNull($this->repo->find(ExtensionType::Theme, $id));
@@ -485,20 +603,38 @@ namespace Piwigo\Tests\Integration {
         public function testThemeDeactivateOfANonDefaultThemeSucceedsWhenAnotherThemeExists(): void
         {
             $keep = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, [
-                'version' => '1.0',
-                'name' => 'Keep',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, new ThemeScanRow(
+                id: $keep,
+                name: 'Keep',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
             $remove = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $remove, [
-                'version' => '1.0',
-                'name' => 'Remove',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $remove, new ThemeScanRow(
+                id: $remove,
+                name: 'Remove',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $remove, [
-                'version' => '1.0',
-                'name' => 'Remove',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $remove, new ThemeScanRow(
+                id: $remove,
+                name: 'Remove',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Theme, $remove));
@@ -508,15 +644,27 @@ namespace Piwigo\Tests\Integration {
         public function testThemeDeleteIsBlockedWhileInstalled(): void
         {
             $id = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, [
-                'version' => '1.0',
-                'name' => 'Installed',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, new ThemeScanRow(
+                id: $id,
+                name: 'Installed',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $id, [
-                'version' => '1.0',
-                'name' => 'Installed',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $id, new ThemeScanRow(
+                id: $id,
+                name: 'Installed',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
             self::assertSame(['CANNOT DELETE - THEME IS INSTALLED'], $errors);
         }
@@ -526,10 +674,13 @@ namespace Piwigo\Tests\Integration {
         public function testLanguageActivateCreatesARow(): void
         {
             $id = 'xx_YY';
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', $id, [
-                'version' => '1.0',
-                'name' => 'Test Lang',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', $id, new LanguageScanRow(
+                name: 'Test Lang',
+                code: $id,
+                version: '1.0',
+                uri: '',
+                author: '',
+            ));
 
             self::assertSame([], $errors);
             self::assertNotNull($this->repo->find(ExtensionType::Language, $id));
@@ -539,10 +690,13 @@ namespace Piwigo\Tests\Integration {
 
         public function testLanguageActivateWhenAlreadyActiveReturnsTheExactLegacyMessage(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'en_UK', [
-                'version' => 'auto',
-                'name' => 'English [UK]',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'en_UK', new LanguageScanRow(
+                name: 'English [UK]',
+                code: 'en_UK',
+                version: 'auto',
+                uri: '',
+                author: '',
+            ));
 
             self::assertSame(['CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED'], $errors);
         }
@@ -570,10 +724,13 @@ namespace Piwigo\Tests\Integration {
 
         public function testLanguageDeleteWhileActiveIsRejected(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'delete', 'en_UK', [
-                'version' => 'auto',
-                'name' => 'English [UK]',
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'delete', 'en_UK', new LanguageScanRow(
+                name: 'English [UK]',
+                code: 'en_UK',
+                version: 'auto',
+                uri: '',
+                author: '',
+            ));
 
             self::assertSame(['CANNOT DELETE - LANGUAGE IS ACTIVATED'], $errors);
         }
@@ -589,10 +746,13 @@ namespace Piwigo\Tests\Integration {
         {
             $before = $this->countActivityRows();
 
-            $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'xx_ZZ', [
-                'version' => '1.0',
-                'name' => 'Test',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'xx_ZZ', new LanguageScanRow(
+                name: 'Test',
+                code: 'xx_ZZ',
+                version: '1.0',
+                uri: '',
+                author: '',
+            ));
             $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'xx_ZZ', null);
 
             self::assertSame($before, $this->countActivityRows());
@@ -602,9 +762,14 @@ namespace Piwigo\Tests\Integration {
         {
             $before = $this->countActivityRows();
 
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $this->pluginId(), [
-                'version' => '1.0',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $this->pluginId(), new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ));
 
             self::assertGreaterThan($before, $this->countActivityRows());
         }
@@ -891,9 +1056,14 @@ namespace Piwigo\Tests\Integration {
             $this->expectException(LogicException::class);
             $this->expectExceptionMessageIsOrContains("performPluginAction('update'): missing 'revision' option");
 
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), [
-                'version' => '1.0',
-            ], []);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+            ), []);
         }
 
         public function testPluginUpdateWithAnUnreachablePemServerMarksActivityAsError(): void
@@ -940,9 +1110,14 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->alternativePemUrl = 'https://127.0.0.1/pem-unreachable';
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), [
-                    'version' => '1.0',
-                ], [
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), new PluginScanRow(
+                    name: '',
+                    version: '1.0',
+                    uri: '',
+                    description: '',
+                    author: '',
+                    hasSettings: false,
+                ), [
                     'revision' => '42',
                 ]);
 
@@ -973,9 +1148,14 @@ namespace Piwigo\Tests\Integration {
             $this->createdPluginIds[] = $id;
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
-                    'version' => '1.0',
-                ]);
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, new PluginScanRow(
+                    name: '',
+                    version: '1.0',
+                    uri: '',
+                    description: '',
+                    author: '',
+                    hasSettings: false,
+                ));
 
                 self::assertCount(1, $errors);
                 self::assertStringContainsString('does not exist', $errors[0]);
@@ -1009,9 +1189,14 @@ namespace Piwigo\Tests\Integration {
             ]);
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
-                    'version' => '1.0',
-                ]);
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, new PluginScanRow(
+                    name: '',
+                    version: '1.0',
+                    uri: '',
+                    description: '',
+                    author: '',
+                    hasSettings: false,
+                ));
 
                 self::assertCount(1, $errors);
                 self::assertStringContainsString('does not exist', $errors[0]);
@@ -1055,10 +1240,16 @@ namespace Piwigo\Tests\Integration {
                     ExtensionType::Theme,
                     'delete',
                     $parent,
-                    [
-                        'version' => '1.0',
-                        'name' => 'Parent Theme',
-                    ],
+                    new ThemeScanRow(
+                        id: $parent,
+                        name: 'Parent Theme',
+                        version: '1.0',
+                        uri: '',
+                        description: '',
+                        author: '',
+                        mobile: false,
+                        screenshot: '',
+                    ),
                 );
 
                 self::assertCount(1, $errors);
@@ -1089,10 +1280,16 @@ namespace Piwigo\Tests\Integration {
                     ExtensionType::Theme,
                     'delete',
                     $id,
-                    [
-                        'version' => '1.0',
-                        'name' => 'On Disk Theme',
-                    ],
+                    new ThemeScanRow(
+                        id: $id,
+                        name: 'On Disk Theme',
+                        version: '1.0',
+                        uri: '',
+                        description: '',
+                        author: '',
+                        mobile: false,
+                        screenshot: '',
+                    ),
                 );
 
                 self::assertSame([], $errors);
@@ -1143,9 +1340,17 @@ namespace Piwigo\Tests\Integration {
             ]);
 
             try {
-                $result = $this->lifecycle->missingParentTheme('leaf-theme-never-on-disk', [
-                    'parent' => $middle,
-                ]);
+                $result = $this->lifecycle->missingParentTheme('leaf-theme-never-on-disk', new ThemeScanRow(
+                    id: 'leaf-theme-never-on-disk',
+                    name: '',
+                    version: '1.0',
+                    uri: '',
+                    description: '',
+                    author: '',
+                    mobile: false,
+                    screenshot: '',
+                    parent: $middle,
+                ));
 
                 self::assertSame('totally-missing-ancestor-xyz', $result);
             } finally {
@@ -1157,25 +1362,41 @@ namespace Piwigo\Tests\Integration {
         {
             $mobile = $this->themeId();
             $other = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, [
-                'version' => '1.0',
-                'name' => 'Mobile',
-                'mobile' => true,
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, new ThemeScanRow(
+                id: $mobile,
+                name: 'Mobile',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: true,
+                screenshot: '',
+            ));
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
             $currentConfig->mobileTheme = $mobile;
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, [
-                'version' => '1.0',
-                'name' => 'Other',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, new ThemeScanRow(
+                id: $other,
+                name: 'Other',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, [
-                'version' => '1.0',
-                'name' => 'Mobile',
-                'mobile' => true,
-            ]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, new ThemeScanRow(
+                id: $mobile,
+                name: 'Mobile',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: true,
+                screenshot: '',
+            ));
 
             self::assertSame([], $errors);
             $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'mobile_theme'");
@@ -1223,24 +1444,42 @@ namespace Piwigo\Tests\Integration {
             $this->writeThemeConf($default, [
                 'name' => 'Real Default',
             ]);
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $default, [
-                'version' => '1.0',
-                'name' => 'Real Default',
-            ]);
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, [
-                'version' => '1.0',
-                'name' => 'Other',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $default, new ThemeScanRow(
+                id: $default,
+                name: 'Real Default',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, new ThemeScanRow(
+                id: $other,
+                name: 'Other',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
             $defaultUserId = $currentConfig->defaultUserId;
             $before = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = ?', [$defaultUserId]);
             $this->conn->executeStatement('UPDATE user_infos SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $default, [
-                    'version' => '1.0',
-                    'name' => 'Real Default',
-                ]);
+                $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $default, new ThemeScanRow(
+                    id: $default,
+                    name: 'Real Default',
+                    version: '1.0',
+                    uri: '',
+                    description: '',
+                    author: '',
+                    mobile: false,
+                    screenshot: '',
+                ));
 
                 self::assertSame([], $errors);
                 self::assertNull($this->repo->find(ExtensionType::Theme, $default));
@@ -1267,14 +1506,26 @@ namespace Piwigo\Tests\Integration {
         {
             $keep = $this->themeId();
             $exclude = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, [
-                'version' => '1.0',
-                'name' => 'Keep',
-            ]);
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $exclude, [
-                'version' => '1.0',
-                'name' => 'Exclude',
-            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, new ThemeScanRow(
+                id: $keep,
+                name: 'Keep',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $exclude, new ThemeScanRow(
+                id: $exclude,
+                name: 'Exclude',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                mobile: false,
+                screenshot: '',
+            ));
 
             $method = new ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
             $result = $method->invoke($this->lifecycle, $exclude);
@@ -1335,10 +1586,13 @@ namespace Piwigo\Tests\Integration {
                 ExtensionType::Language,
                 'delete',
                 'never-activated-on-disk-xyz',
-                [
-                    'version' => '1.0',
-                    'name' => 'On Disk Lang',
-                ],
+                new LanguageScanRow(
+                    name: 'On Disk Lang',
+                    code: 'never-activated-on-disk-xyz',
+                    version: '1.0',
+                    uri: '',
+                    author: '',
+                ),
             );
 
             self::assertSame([], $errors);

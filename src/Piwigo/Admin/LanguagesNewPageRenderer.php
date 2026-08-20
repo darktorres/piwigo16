@@ -116,7 +116,7 @@ final readonly class LanguagesNewPageRenderer
                 // PemCatalog::extractArchive() only extracts, it doesn't know about
                 // the lifecycle state machine.
                 if ($install_status === 'ok' && $extraction->id !== null) {
-                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$extraction->id] ?? null;
+                    $fs_language_entry = $extension_scanner->scanLanguages($this->paths, $this->currentConfig, $this->entityManager)[$extraction->id] ?? null;
                     $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction->id, $fs_language_entry);
                 }
 
@@ -137,10 +137,9 @@ final readonly class LanguagesNewPageRenderer
         }
 
         $fs_language_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_language) {
-            $extension = $fs_language['extension'] ?? null;
-            if (is_scalar($extension)) {
-                $fs_language_ids[] = (string) $extension;
+        foreach ($extension_scanner->scanLanguages($this->paths, $this->currentConfig, $this->entityManager) as $fs_language) {
+            if ($fs_language->extension !== null) {
+                $fs_language_ids[] = $fs_language->extension;
             }
         }
         $server_languages = $pem_catalog->getServerExtensions(ExtensionType::Language, $fs_language_ids, true);

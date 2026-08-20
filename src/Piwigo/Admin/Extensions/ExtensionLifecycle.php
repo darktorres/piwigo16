@@ -7,6 +7,9 @@ namespace Piwigo\Admin\Extensions;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -77,19 +80,6 @@ use RuntimeException;
  * actions fail loudly instead of quietly no-op'ing is the intentional,
  * accepted consequence, not a bug to route around.
  */
-/**
- * `$fsEntry` throughout this class is `array<string, mixed>|null` even
- * though {@see ExtensionScanner}'s own scanPlugin()/scanTheme()/
- * scanLanguage() each return a real, precise, per-type array shape --
- * {@see ExtensionScanner::scan()} (the only real producer reachable from
- * here) deliberately returns the generic `array<string, array<string,
- * mixed>>` dispatch shape rather than a 3-way conditional return type (see
- * that method's own docblock), and this class's own `performAction()`
- * dispatches on the SAME `ExtensionType` to 3 sibling methods that each
- * only ever receive their own type's real entry. Every real read below
- * already narrows defensively (`?? null` + an is_*() check or
- * stringOrDefault()).
- */
 final readonly class ExtensionLifecycle
 {
     public function __construct(
@@ -111,8 +101,14 @@ final readonly class ExtensionLifecycle
     ) {}
 
     /**
-     * @param array<string, mixed>|null $fsEntry ExtensionScanner's scanned
-     *   entry for $id, or null if not present on disk
+     * $fsEntry is ExtensionScanner's own scanned entry for $id (null if
+     * not present on disk) -- callers pass whichever of
+     * PluginScanRow/ThemeScanRow/LanguageScanRow matches $type; the
+     * `instanceof` narrowing below is a pure safety net (every real
+     * caller already passes the matching pair, same as `ExtensionScanner::
+     * scan()`'s own `match ($type)` dispatch), not a real branch any
+     * caller exercises.
+     *
      * @param array{revision?: string} $options
      * @return list<string> errors
      */
@@ -120,7 +116,7 @@ final readonly class ExtensionLifecycle
         ExtensionType $type,
         string $action,
         string $id,
-        ?array $fsEntry,
+        PluginScanRow|ThemeScanRow|LanguageScanRow|null $fsEntry,
         array $options = [],
     ): array {
 
@@ -130,18 +126,17 @@ final readonly class ExtensionLifecycle
         }
 
         return match ($type) {
-            ExtensionType::Plugin => $this->performPluginAction($action, $id, $fsEntry, $options),
-            ExtensionType::Theme => $this->performThemeAction($action, $id, $fsEntry),
-            ExtensionType::Language => $this->performLanguageAction($action, $id, $fsEntry),
+            ExtensionType::Plugin => $this->performPluginAction($action, $id, $fsEntry instanceof PluginScanRow ? $fsEntry : null, $options),
+            ExtensionType::Theme => $this->performThemeAction($action, $id, $fsEntry instanceof ThemeScanRow ? $fsEntry : null),
+            ExtensionType::Language => $this->performLanguageAction($action, $id, $fsEntry instanceof LanguageScanRow ? $fsEntry : null),
         };
     }
 
     /**
-     * @param array<string, mixed>|null $fsEntry
      * @param array{revision?: string} $options
      * @return list<string>
      */
-    private function performPluginAction(string $action, string $id, ?array $fsEntry, array $options): array
+    private function performPluginAction(string $action, string $id, ?PluginScanRow $fsEntry, array $options): array
     {
         $dbRow = $this->repo->find(ExtensionType::Plugin, $id);
         $errors = [];
@@ -172,7 +167,7 @@ final readonly class ExtensionLifecycle
                 break;
 
             case 'update':
-                $previousVersion = $this->stringOrDefault($fsEntry['version'] ?? null, '0');
+                $previousVersion = $fsEntry->version ?? '0';
                 $activityDetails['from_version'] = $previousVersion;
                 if (! isset($options['revision'])) {
                     throw new LogicException("performPluginAction('update'): missing 'revision' option");
@@ -313,7 +308,7 @@ final readonly class ExtensionLifecycle
                 if (! $this->pluginExistsOnDisk($id, $fsEntry)) {
                     break;
                 }
-                $activityDetails['fs_version'] = $fsEntry['version'] ?? $this->pluginRegistry->getManifest($id)?->version;
+                $activityDetails['fs_version'] = $fsEntry->version ?? $this->pluginRegistry->getManifest($id)?->version;
 
                 FilesystemHelper::deltree(PluginLoader::pluginsPath($this->paths) . $id, PluginLoader::pluginsPath($this->paths) . 'trash');
                 break;
@@ -325,10 +320,9 @@ final readonly class ExtensionLifecycle
     }
 
     /**
-     * @param array<string, mixed>|null $fsEntry
      * @return list<string>
      */
-    private function performThemeAction(string $action, string $id, ?array $fsEntry): array
+    private function performThemeAction(string $action, string $id, ?ThemeScanRow $fsEntry): array
     {
 
         $dbRow = $this->repo->find(ExtensionType::Theme, $id);
@@ -351,7 +345,7 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $isMobile = (bool) ($fsEntry['mobile'] ?? false);
+                $isMobile = $fsEntry->mobile ?? false;
                 $currentMobileTheme = $this->currentConfig->mobileTheme;
                 $hasOtherMobileTheme = $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
@@ -407,7 +401,7 @@ final readonly class ExtensionLifecycle
                     $this->setDefaultTheme($replacementTheme);
                 }
 
-                if ((bool) ($fsEntry['mobile'] ?? false)) {
+                if ($fsEntry->mobile ?? false) {
                     $this->configService->confUpdateParam('mobile_theme', '');
                 }
                 break;
@@ -452,10 +446,9 @@ final readonly class ExtensionLifecycle
     }
 
     /**
-     * @param array<string, mixed>|null $fsEntry
      * @return list<string>
      */
-    private function performLanguageAction(string $action, string $id, ?array $fsEntry): array
+    private function performLanguageAction(string $action, string $id, ?LanguageScanRow $fsEntry): array
     {
 
         $dbRow = $this->repo->find(ExtensionType::Language, $id);
@@ -469,8 +462,8 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $fsVersion = $this->stringOrDefault($fsEntry['version'] ?? null, '0');
-                $fsName = $this->stringOrDefault($fsEntry['name'] ?? null, '');
+                $fsVersion = $fsEntry->version ?? '0';
+                $fsName = $fsEntry->name ?? '';
                 $this->repo->insertNamed(ExtensionType::Language, $id, $fsVersion, $fsName);
                 break;
 
@@ -516,18 +509,16 @@ final readonly class ExtensionLifecycle
     /**
      * Also used read-only by the themes listing page (is this theme
      * activable) -- not just this class's own 'activate' action.
-     *
-     * @param array<string, mixed>|null $fsEntry
      */
-    public function missingParentTheme(string $themeId, ?array $fsEntry): ?string
+    public function missingParentTheme(string $themeId, ?ThemeScanRow $fsEntry): ?string
     {
-        $parent = $fsEntry['parent'] ?? null;
-        if (! is_string($parent) || $parent === 'default') {
+        $parent = $fsEntry?->parent;
+        if ($parent === null || $parent === 'default') {
             return null;
         }
 
         $parentFsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$parent] ?? null;
+            ->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -544,12 +535,9 @@ final readonly class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $candidate) {
-            if (($candidate['parent'] ?? null) === $themeId) {
-                $name = $candidate['name'] ?? null;
-                if (is_string($name)) {
-                    $children[] = $name;
-                }
+        foreach (new ExtensionScanner()->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager) as $candidate) {
+            if ($candidate->parent === $themeId) {
+                $children[] = $candidate->name;
             }
         }
 
@@ -589,16 +577,9 @@ final readonly class ExtensionLifecycle
      * that scan ran (e.g. right after PemCatalog::extractArchive()
      * finishes, earlier in the very same 'install' call this method
      * itself gates).
-     *
-     * @param array<string, mixed>|null $fsEntry
      */
-    private function pluginExistsOnDisk(string $id, ?array $fsEntry): bool
+    private function pluginExistsOnDisk(string $id, ?PluginScanRow $fsEntry): bool
     {
         return $fsEntry !== null || $this->pluginRegistry->getManifest($id) instanceof PluginManifest;
-    }
-
-    private function stringOrDefault(mixed $value, string $default): string
-    {
-        return is_scalar($value) ? (string) $value : $default;
     }
 }

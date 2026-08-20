@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Projection\ThemesInstalledPageContext;
 use Piwigo\Admin\Request\ThemesInstalledActionRequest;
@@ -96,7 +97,7 @@ final readonly class ThemesInstalledPageRenderer
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$themesAction->themeId] ?? null;
+            $fs_theme_entry = $extension_scanner->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager)[$themesAction->themeId] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $themesAction->action, $themesAction->themeId, $fs_theme_entry);
             $this->pageState->errors = array_values(array_filter($action_errors, is_string(...)));
 
@@ -108,12 +109,7 @@ final readonly class ThemesInstalledPageRenderer
             }
         }
 
-        // ExtensionScanner::scan()'s own declared return type is a generic
-        // array<string, array<string, mixed>> dispatch shape by design (see
-        // that method's own docblock) -- every $fs_theme read below follows
-        // its documented convention and reads specific keys defensively
-        // instead.
-        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
+        $fs_themes = $extension_scanner->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager);
 
         // ExtensionScanner::scanTheme() reads theme.json directly -- the
         // same marker file $this->themeRegistry->getAllManifests() itself
@@ -127,22 +123,28 @@ final readonly class ThemesInstalledPageRenderer
             if (isset($fs_themes[$manifestId])) {
                 continue;
             }
-            $fs_themes[$manifestId] = [
-                'name' => $manifest->name,
-                'uri' => $manifest->homepage ?? '',
-                'version' => $manifest->version,
-                'description' => $manifest->description,
-                'author' => $manifest->author ?? '',
-                'author uri' => $manifest->authorUri,
-                'parent' => $manifest->parent,
-                'screenshot' => $manifest->assets['screenshot'] ?? '',
-                'mobile' => false,
-                'admin_uri' => null,
-                'activable' => true,
-            ];
+            $screenshot = $manifest->assets['screenshot'] ?? null;
+            $fs_themes[$manifestId] = new ThemeScanRow(
+                id: $manifestId,
+                name: $manifest->name,
+                version: $manifest->version,
+                uri: $manifest->homepage ?? '',
+                description: $manifest->description,
+                author: $manifest->author ?? '',
+                mobile: false,
+                screenshot: is_string($screenshot) ? $screenshot : '',
+                authorUri: $manifest->authorUri,
+                parent: $manifest->parent,
+                activable: true,
+            );
         }
 
-        uasort($fs_themes, $this->htmlRenderer->nameCompare(...));
+        // Piwigo\Html\HtmlService::nameCompare() (HtmlRenderingInterface's
+        // own real, still-generic array<string, mixed> $a/$b contract)
+        // doesn't fit a real ThemeScanRow object directly -- inlined here
+        // rather than wrapping each row back into an array just to satisfy
+        // that signature, same strcmp()-on-strtolower() logic.
+        uasort($fs_themes, static fn (ThemeScanRow $a, ThemeScanRow $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
 
         $default_theme = $this->userService
             ->getDefaultTheme();
@@ -195,32 +197,29 @@ final readonly class ThemesInstalledPageRenderer
      * compareThemes() below already uses; see
      * tests/Unit/Admin/ThemesInstalledPageRendererTest.php).
      *
-     * @param array<string, mixed> $fs_theme ExtensionScanner's scanned entry
-     *   for $theme_id -- see that method's own docblock for the precise
-     *   per-key shape this reads defensively.
      * @param list<string> $db_theme_ids every theme id currently installed
      *   (has a DB row)
      * @return array<string, mixed>
      */
     private function buildTplTheme(
         string $theme_id,
-        array $fs_theme,
+        ThemeScanRow $fs_theme,
         array $db_theme_ids,
         string $default_theme,
         ExtensionLifecycle $extension_lifecycle,
     ): array {
         $tpl_theme = [
             'ID' => $theme_id,
-            'NAME' => $fs_theme['name'],
-            'VISIT_URL' => $fs_theme['uri'],
-            'VERSION' => $fs_theme['version'],
-            'DESC' => $fs_theme['description'],
-            'AUTHOR' => $fs_theme['author'],
-            'AUTHOR_URL' => $fs_theme['author uri'] ?? null,
-            'PARENT' => $fs_theme['parent'] ?? null,
-            'SCREENSHOT' => $fs_theme['screenshot'],
-            'IS_MOBILE' => $fs_theme['mobile'],
-            'ADMIN_URI' => $fs_theme['admin_uri'] ?? null,
+            'NAME' => $fs_theme->name,
+            'VISIT_URL' => $fs_theme->uri,
+            'VERSION' => $fs_theme->version,
+            'DESC' => $fs_theme->description,
+            'AUTHOR' => $fs_theme->author,
+            'AUTHOR_URL' => $fs_theme->authorUri,
+            'PARENT' => $fs_theme->parent,
+            'SCREENSHOT' => $fs_theme->screenshot,
+            'IS_MOBILE' => $fs_theme->mobile,
+            'ADMIN_URI' => $fs_theme->adminUri,
         ];
 
         if (in_array($theme_id, $db_theme_ids, true)) {
@@ -240,10 +239,7 @@ final readonly class ThemesInstalledPageRenderer
             $tpl_theme['STATE'] = 'inactive';
 
             // is the theme "activable" ?
-            // The (bool) cast is redundant: `!` already coerces its operand
-            // to bool, so removing the cast can't change this condition's
-            // truth value.
-            if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
+            if ($fs_theme->activable === false) {
                 $tpl_theme['ACTIVABLE'] = false;
                 $tpl_theme['ACTIVABLE_TOOLTIP'] = $this->lang->t('This theme was not designed to be directly activated');
             } else {

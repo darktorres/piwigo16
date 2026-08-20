@@ -22,6 +22,7 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Install\Projection\InstallRenderPageContext;
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
@@ -142,12 +143,7 @@ final class InstallWizard
     private array $errors = [];
 
     /**
-     * ExtensionScanner::scan()'s own declared return type is a generic
-     * array<string, array<string, mixed>> dispatch shape by design (see
-     * that method's own docblock) -- every real reader here follows its
-     * documented convention and reads specific keys defensively instead.
-     *
-     * @var array<string, array<string, mixed>>
+     * @var array<string, LanguageScanRow>
      */
     private array $fsLanguages;
 
@@ -328,7 +324,7 @@ final class InstallWizard
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, PresentationAccessor::urlService(), $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, EntityManagerFactory::build(DbConnection::build()), 'utf-8');
+            ->scanLanguages($this->paths, $this->currentConfig, EntityManagerFactory::build(DbConnection::build()), 'utf-8');
 
         if ($this->request->languageParam !== null) {
             $language = $this->request->languageParam;
@@ -616,7 +612,7 @@ final class InstallWizard
         $configService->loadConfFromDb();
 
         InstallService::activateCoreThemes($this->lang, $this->currentUser, $this->currentConfigService, $this->currentConfig, $this->paths, $this->eventDispatcher);
-        InstallService::activateCorePlugins($this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig);
+        InstallService::activateCorePlugins($this->paths, $this->currentUser, $this->currentConfig);
 
         $insert = [
             'id' => 1,
@@ -665,8 +661,7 @@ final class InstallWizard
             if ($this->language === $language_code) {
                 $language_selection = $language_code;
             }
-            $fs_language_name = $fs_language['name'] ?? null;
-            $languages_options[$language_code] = is_string($fs_language_name) ? $fs_language_name : $language_code;
+            $languages_options[$language_code] = $fs_language->name;
         }
 
         // -------------------------------------------- errors & infos display

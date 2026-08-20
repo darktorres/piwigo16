@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -18,7 +21,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class UpdatesPwgPageContext implements TemplatePageContext
 {
     /**
-     * @param array<string, list<array<string, mixed>>>|null $missing
+     * @param array<string, list<PluginScanRow|ThemeScanRow|LanguageScanRow>>|null $missing
      */
     public function __construct(
         public ?string $containerVersion,
@@ -72,7 +75,21 @@ final readonly class UpdatesPwgPageContext implements TemplatePageContext
         }
 
         if ($this->missing !== null) {
-            $result['missing'] = $this->missing;
+            // updates_pwg.latte only ever reads ['uri']/['name'] off each
+            // row (the "may not be compatible" plugin/theme link lists) --
+            // the template boundary, converted here rather than carrying
+            // the real PluginScanRow|ThemeScanRow|LanguageScanRow objects
+            // any further.
+            $result['missing'] = array_map(
+                static fn (array $rows): array => array_map(
+                    static fn (PluginScanRow|ThemeScanRow|LanguageScanRow $row): array => [
+                        'uri' => $row->uri,
+                        'name' => $row->name,
+                    ],
+                    $rows
+                ),
+                $this->missing
+            );
         }
 
         if ($this->minorReleasePhpRequired !== null) {

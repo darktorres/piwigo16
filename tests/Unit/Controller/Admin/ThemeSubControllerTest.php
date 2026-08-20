@@ -13,7 +13,6 @@ use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 
@@ -95,7 +94,6 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
 
     try {
         $subController = new ThemeSubController(
-            LangTestFactory::get(),
             UrlServiceTestFactory::build(),
             HtmlServiceTestFactory::build(),
             $currentConfig,

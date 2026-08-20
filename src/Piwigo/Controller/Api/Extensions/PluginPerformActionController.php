@@ -105,16 +105,7 @@ final readonly class PluginPerformActionController implements ControllerInterfac
             $this->entityManager,
         );
         $fsEntry = new ExtensionScanner()
-            ->scan(
-                ExtensionType::Plugin,
-                $this->urlService,
-                $this->lang,
-                $this->paths,
-                $this->currentUser,
-                $this->eventDispatcher,
-                $this->currentConfig,
-                $this->entityManager
-            )[$pluginId] ?? null;
+            ->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$pluginId] ?? null;
 
         $errors = $lifecycle->performAction(ExtensionType::Plugin, $input->action, $pluginId, $fsEntry);
 

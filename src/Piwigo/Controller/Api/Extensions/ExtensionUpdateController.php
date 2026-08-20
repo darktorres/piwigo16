@@ -120,51 +120,40 @@ final readonly class ExtensionUpdateController implements ControllerInterface
             $this->entityManager,
         );
 
-        $scan = fn (ExtensionType $t): array => $scanner->scan(
-            $t,
-            $this->urlService,
-            $this->lang,
-            $this->paths,
-            $this->currentUser,
-            $this->eventDispatcher,
-            $this->currentConfig,
-            $this->entityManager
-        );
-
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
             $wasActive = isset($dbPluginsById[$extensionId]) && $dbPluginsById[$extensionId]['state'] === 'active';
 
             if ($wasActive) {
-                $fsEntry = $scan(ExtensionType::Plugin)[$extensionId] ?? null;
+                $fsEntry = $scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$extensionId] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extensionId, $fsEntry);
             }
 
-            $fsEntry = $scan(ExtensionType::Plugin)[$extensionId] ?? null;
+            $fsEntry = $scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$extensionId] ?? null;
             $upgradeStatus = $lifecycle->performAction(ExtensionType::Plugin, 'update', $extensionId, $fsEntry, [
                 'revision' => $input->revision,
             ])[0] ?? null;
-            $extensionName = $scan(ExtensionType::Plugin)[$extensionId]['name'] ?? $extensionId;
+            $extensionName = $scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$extensionId]->name ?? $extensionId;
 
             if ($wasActive) {
-                $fsEntry = $scan(ExtensionType::Plugin)[$extensionId] ?? null;
+                $fsEntry = $scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$extensionId] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'activate', $extensionId, $fsEntry);
             }
         } elseif ($type === ExtensionType::Theme) {
-            $fsThemesBefore = $scan(ExtensionType::Theme);
-            $extensionName = $fsThemesBefore[$extensionId]['name'] ?? $extensionId;
+            $fsThemesBefore = $scanner->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager);
+            $extensionName = $fsThemesBefore[$extensionId]->name ?? $extensionId;
 
             $extraction = $this->pemCatalog->extractArchive(ExtensionType::Theme, 'upgrade', $input->revision, $extensionId);
             $upgradeStatus = $extraction->status;
 
             $activityDetails = [
                 'theme_id' => $extensionId,
-                'from_version' => $fsThemesBefore[$extensionId]['version'] ?? null,
+                'from_version' => $fsThemesBefore[$extensionId]->version ?? null,
             ];
 
             if ($upgradeStatus === 'ok') {
-                $fsThemesAfter = $scan(ExtensionType::Theme);
-                $activityDetails['to_version'] = $fsThemesAfter[$extensionId]['version'] ?? null;
+                $fsThemesAfter = $scanner->scanThemes($this->urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager);
+                $activityDetails['to_version'] = $fsThemesAfter[$extensionId]->version ?? null;
             } else {
                 $activityDetails['result'] = 'error';
             }
@@ -173,7 +162,7 @@ final readonly class ExtensionUpdateController implements ControllerInterface
         } else {
             $extraction = $this->pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $input->revision, $extensionId);
             $upgradeStatus = $extraction->status;
-            $extensionName = $scan(ExtensionType::Language)[$extensionId]['name'] ?? $extensionId;
+            $extensionName = $scanner->scanLanguages($this->paths, $this->currentConfig, $this->entityManager)[$extensionId]->name ?? $extensionId;
         }
 
         $this->currentTemplate->get()

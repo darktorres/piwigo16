@@ -99,7 +99,7 @@ final class InstallService
             EntityManagerFactory::build($conn),
         );
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig, EntityManagerFactory::build($conn));
+            ->scanThemes($urlService, $paths, $eventDispatcher, $currentConfig, $currentUser, EntityManagerFactory::build($conn));
         foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
@@ -110,12 +110,12 @@ final class InstallService
     /**
      * Automatically activate some core plugins
      */
-    public static function activateCorePlugins(Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig): void
+    public static function activateCorePlugins(Paths $paths, CurrentUser $currentUser, CurrentConfig $currentConfig): void
     {
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, PresentationAccessor::urlService(), $lang, $paths, $currentUser, $eventDispatcher, $currentConfig, EntityManagerFactory::build(DbConnection::build()));
+            ->scanPlugins($paths, $currentUser, $currentConfig);
     }
 
     /**

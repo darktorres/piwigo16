@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Admin\Extensions\Projection\ExtractionResult;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -120,15 +121,19 @@ final readonly class PemCatalog
     }
 
     /**
-     * Cross-references $fsExtensions (id => data, each possibly carrying
-     * an 'extension' PEM id) against the current PEM revision list to find
-     * fs extensions whose installed version isn't a known-compatible PEM
-     * revision. Cached in $_SESSION for 5 minutes (mirrors
+     * Cross-references $fsExtensions (id => scan row, each possibly
+     * carrying an $extension PEM id) against the current PEM revision list
+     * to find fs extensions whose installed version isn't a known-
+     * compatible PEM revision. Cached in $_SESSION for 5 minutes (mirrors
      * plugins.class.php::get_incompatible_plugins(), the only legacy
-     * caller of this exact check -- generalized here since the underlying
-     * logic never referenced anything plugin-specific).
+     * caller of this exact check). $type stays a real param (not hardcoded
+     * to Plugin) since the underlying logic never referenced anything
+     * plugin-specific and this genuinely dispatches the session cache key
+     * by it -- but PluginScanRow is $fsExtensions' own real shape: the one
+     * real caller (PluginsInstalledPageRenderer) only ever passes
+     * ExtensionType::Plugin.
      *
-     * @param array<string, array<string, mixed>> $fsExtensions
+     * @param array<string, PluginScanRow> $fsExtensions
      * @param list<string> $defaultIds
      * @return array<string, mixed>|false
      */
@@ -161,9 +166,8 @@ final readonly class PemCatalog
 
         $extensionIds = [];
         foreach ($fsExtensions as $fsExtension) {
-            $extension = $fsExtension['extension'] ?? null;
-            if (is_scalar($extension)) {
-                $extensionIds[] = (string) $extension;
+            if ($fsExtension->extension !== null) {
+                $extensionIds[] = $fsExtension->extension;
             }
         }
 
@@ -195,11 +199,11 @@ final readonly class PemCatalog
         }
 
         foreach ($fsExtensions as $extensionFsId => $fsExtension) {
-            $extension = $fsExtension['extension'] ?? null;
-            if (! is_string($extension)) {
+            $extension = $fsExtension->extension;
+            if ($extension === null) {
                 continue;
             }
-            $fsVersion = $fsExtension['version'] ?? null;
+            $fsVersion = $fsExtension->version;
             if (! in_array($extensionFsId, $defaultIds, true)
                 and $fsVersion !== 'auto'
                 and (! isset($serverExtensions[$extension]) or ! in_array($fsVersion, $serverExtensions[$extension], true))) {

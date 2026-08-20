@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | Not started | 0 |
+| P41 | Shell-last rendering + `PageState` split | In progress — Batch A landed (redirect.latte spike, `finalizeHtml()` extraction, `LayoutState`/`RequestMetrics` split, per-theme `layout.latte`); Batches B–E + Part 2 (P41-G/H) not started (see below) | 4 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
 | P44 | Latte lint/format enforcement | Not started | 0 |
@@ -2465,43 +2465,119 @@ are a deliberate design choice already established in Batch 3 (ambient
 merge into the already-converted `batch_manager_{unit,global}.latte`),
 not a gap — converting them is optional future polish, not blocking.
 
-**P41 — Shell-last rendering + `PageState` split.** `header.latte` (834
-lines) and `footer.latte` (744 lines) merge into `@layout.latte`; admin's
-48 `assignVarFromTemplate('ADMIN_CONTENT', …)` calls (re-audited
-against the real tree — 48, not the original 61) become the same
-composition. Deletes `Template::$output`, both `COMBINED_*` placeholders,
-the `preg_match('#\n[ \t]*</head>#')` injection, and the
-`pparse`/`flush`/`finalizeOutput`/`fetchOutput` quartet. `AdminShell` and
-`InstallWizard` stop echoing and return strings; `flushPageMessages()`
-moves ahead of the body render.
+**P41 — Shell-last rendering, `PageState` split, and asset-pipeline
+cutover.** Two corrections to the original scope text above, both
+verified directly against the real code: admin's "48
+`assignVarFromTemplate('ADMIN_CONTENT', …)` call sites" is stale —
+already zero, since P40's Batch 3 converted every real admin
+sub-controller to `Renderer::render()` wrapping the result in
+`AdminContentPageContext`; what's left is just `admin.latte` itself
+(P41-C), not 48 call sites. The asset-pipeline swap
+(`CssLoader`/`ScriptLoader` → P36's dormant `PageAssets`) is folded into
+this same plan as Part 2 (P41-G/H below), not a separately-numbered
+future track — `AssetContribution::script()`/`::css()`'s factory params
+map 1:1 onto `Template::combineScript()`/`combineCss()`'s existing
+params, and the swap happens entirely inside those two methods, with
+zero `.latte` file changes.
+
+**The mechanism**: `{layout '…'}` (Latte's own `{extends}` alias) shares
+the *same* variable scope between a child template and the layout it
+extends (traced through `Latte\Runtime\Template::render()` directly,
+not just the compile-time node) — so the existing ambient-merge design
+(`Template::renderView()`'s `[...$this->vars, ...get_object_vars($view)]`)
+already generalizes to it with no new classes: `PageHeaderPageContext`/
+`PageTailPageContext`/`AdminShellFramePageContext`/etc. keep being built
+and `assignContext()`-ed exactly as before, and `Renderer::render($pageView)`
+renders the whole page in one shot because `$pageView`'s own template
+now declares `{layout '…layout.latte'}` and wraps its body in
+`{block content}…{/block}`. Transition is incremental via dual methods:
+`PageHeaderRenderer`/`PageTailRenderer` each split into a
+`prepareContext()` half (kept) and a `@deprecated`-tagged old
+`parse()`-calling `render()`/`renderToString()` half, removed only once
+every real caller has switched (P41-E).
 
 Splits `PageState` (27 public mutable properties, confirmed by direct
-count) by concern: a `PageMessages` collector, page chrome into
-`LayoutView`, debug counters into `RequestMetrics`, admin-chrome badges
-(`nbPendingComments`/`noMd5sumNumber`/`nbOrphans`/`nbPhotosTotal`/
-`updatedVersion`/`notifyApiKeyExpiration`) into their own home,
-`commentRejectionReasons` back to the Comment domain, loose domain
-facts back to their owners. `exposedData`/`exposedStringKeys`/
-`bodyData`/`authKeyId`/`authKeyInvalid` stay as-is, already correctly
-homed per P37.
+count) by concern, not all of it — only the two self-contained clusters
+whose own real readers/writers are exactly the classes this phase
+already rewrites: `Piwigo\Core\LayoutState` (`bodyClasses`/`bodyId`/
+`pageBanner`/`metaRobots`/`headerNotes`/`headerMessages`, read by
+`PageHeaderRenderer`) and `Piwigo\Core\RequestMetrics`
+(`countQueries`/`queriesTime`/`requestStart`/`debugOutput`/
+`executionUuid`, read by `PageTailRenderer`/`TimingHelper`/`Logger`).
+Both live in `Piwigo\Core`, not `Piwigo\Page` as first drafted — deptrac
+caught the real violation: `Filter\FilterService`/`Section\SectionPopulator`
+(L2bExtendedDomain) write to `LayoutState` directly, and L2b may not
+depend on L3Presentation, so it has to sit at `PageState`'s own layer.
+Everything else on `PageState` (`errors`/`warnings`/`messages`/`infos`,
+`nbPendingComments`/`noMd5sumNumber`/`nbOrphans`/`nbPhotosTotal`/
+`updatedVersion`/`notifyApiKeyExpiration`, `commentRejectionReasons`,
+`exposedData`/`exposedStringKeys`/`bodyData`/`authKeyId`/`authKeyInvalid`)
+is explicitly **not** touched — traced each field's real readers/writers
+directly and confirmed none are reached by this phase's own rewrites;
+splitting those out is a real, separate refactor wearing this one's
+badge only because it happens to share a class.
 
-**P36's fork is decided: view-declared** — `{layout}`/`{block}`
-inheritance replaces shell-last composition entirely, but **not
-incrementally as P40 reaches each template**, per P40's own "Scope
-correction" note above: `header.latte`/`footer.latte`/
-`PageHeaderRenderer`/`PageTailRenderer` are shared by every template,
-so this phase is a single, one-time cutover for the whole tree at
-once, triggered only once P40's page-family campaign has fully
-completed — not a per-page-family migration running alongside it.
-This is also where `TemplateLocator`/`ThemeChain`'s logic physically
-moves out of `Template.php` (`resolveLatteTemplatePath()`/
-`loadThemeconf()`/`setTheme()`/`themeConf()`, kept as thin
-`Renderer`-delegating facades during P40 itself) and where P36's
-`PageAssets`/`AssetContribution`/`GetPageAssets`/`ViteManifest`
-mechanism becomes the real, sole asset-resolution path, replacing
-`CssLoader`/`ScriptLoader` — during P40, a migrated page's controller
-keeps calling `Template::combineCss()`/`combineScript()` directly
-instead, so `PageAssets` stays dormant until this cutover.
+**Batch P41-A (landed)** — the spike + mechanism + the `PageState` split
+above. `themes/default/template/redirect.latte` is the spike (smallest
+real body, single real caller in `RedirectService::redirectHtml()`):
+proved the `{layout}` runtime trace holds on a real render (no
+`{block}`-lookup-across-two-`Runtime\Template`-instances issue, no
+`LatteTemplateCompiler::injectVarDocblocks()` anchor-notice regression).
+`Template::finalizeHtml(string $html): string` extracted from the former
+private `finalizeOutput()` so both the old accumulate-then-flush path
+and new `{layout}`-based renders share the same combined-CSS/JS/
+JSON-island/`<head>`-element substitution logic. `LayoutState`/
+`RequestMetrics` (above) swept across every real reader/writer: the 11
+front-end controllers, both popuphelp controllers, `AdminShell`,
+`CheckIntegrity`, `MaintenanceActionDispatcher`, `SectionPopulator`,
+`CalendarRenderer`, `Category{Default,Cats}Renderer`, `TimingHelper`,
+`Logger`, `ConfigBootstrapMiddleware`, `RequestBootstrap`, `PageTail`,
+`RedirectService`, `PageHeaderRenderer`, `PageTailRenderer`,
+`FilterService`, `UserResolutionMiddleware` — plus a new `layout.latte`
+per theme (`themes/default/`, `themes/admin/default/`,
+`themes/standard_pages/`), each merging that theme's own real
+`header.latte`+`footer.latte` chrome, not yet consumed by any real page
+template (P41-B/C and a later standard_pages batch do that). A full
+(not scoped) verification pass this batch's own end found and fixed two
+real gaps a scoped check had missed: `public/admin.php`/`public/random.php`'s
+own manual `RedirectService` construction, and a stale
+`vendor/composer/autoload_classmap.php` entry for a class deleted in the
+same batch.
+
+**Remaining batches.** P41-B converts the 12 remaining front-end
+`PageHeaderRenderer`/`PageTail` call sites (`GalleryController` through
+`PopuphelpController`) — each already renders its own body through a
+P40-converted `View`, only the final render sequence changes.
+P41-C converts `admin.latte` itself (merging `AdminShellFramePageContext`+
+`AdminShellPostDispatchPageContext`'s nav-chrome fields into a real
+View; `AdminContentPageContext` stays ambient, written by whichever
+sub-controller ran) plus `AdminPopuphelpController`. P41-D converts
+`InstallWizard`/`install.latte` (no `{layout}` needed — it's a
+genuinely self-contained document). P41-E is the cutover completion:
+once every real caller has switched, delete the deprecated
+`parse()`-calling halves, `Template::$output`/`pparse`/`flush`/
+`finalizeOutput`/`fetchOutput` (keep `finalizeHtml()`/`parse()` itself —
+`MailService` still legitimately uses it), and physically extract
+`TemplateLocator`/`ThemeChain` out of `Template.php`.
+
+**Part 2 (P41-G/H) — asset-pipeline cutover.** Redirects
+`Template::combineCss()`/`combineScript()`/`footerScript()` to
+`PageAssets::add(AssetContribution)` instead of `CssLoader`/
+`ScriptLoader`, with `finalizeHtml()`'s CSS/JS half reading from
+`PageAssets::resolveCss()`/`resolveScripts()`. Four real gaps found and
+resolved during planning (not left as speculation): `combineScript()`'s
+dead `$template` param dropped outright (zero real call sites);
+`footerScript()`'s 6 real inline-script call sites need a new
+`AssetContribution` inline-code variant, since `PageAssets` becomes the
+*sole* resolver, not a "keep the old mechanism as a parallel concern"
+partial win; `ResolvedAsset` needs a new HTML-tag-rendering step (its
+own docblock already flags "no real caller exists yet"); header and
+footer scripts unify onto the same placeholder-deferred path. Zero
+`.latte` file changes expected — every `{do combineCss}`/
+`{do combineScript}`/`{do footerScript}` tag keeps compiling to the same
+`Template` method calls it always has. P41-H deletes `CssLoader`/
+`ScriptLoader` and the dead `is_template` branch once P41-G is verified
+clean.
 
 **P42 — Typed contributions + plugin-owned routes.**
 

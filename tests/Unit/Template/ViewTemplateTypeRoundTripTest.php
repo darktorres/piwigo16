@@ -37,8 +37,22 @@ test('every View implementation round-trips with its #[Template] file\'s own {te
 
         $templateFile = $attributes[0]->newInstance()->file;
         $root = dirname((string) $sourceFile, 4) . '/';
+
+        // A bare filename can exist under both theme dirs at once (e.g.
+        // comments.latte: Piwigo\Admin\Projection\CommentsView vs.
+        // Piwigo\Controller\Projection\CommentsView) -- Template::
+        // resolveLatteTemplatePath() never hits this ambiguity in
+        // production, since each real Template instance's own
+        // $templateDirs is scoped to one active theme already, but this
+        // check has no such per-class theme context to lean on. Guess the
+        // same way TemplateCallSiteScanner's own Admin/frontend namespace
+        // convention already does (see that scanner's own test), trying
+        // the admin theme first only for a Piwigo\Admin\* class.
+        $prefixes = str_starts_with($class, 'Piwigo\\Admin\\')
+            ? ['themes/admin/default/template/', 'themes/default/template/', '']
+            : ['themes/default/template/', 'themes/admin/default/template/', ''];
         $realPath = null;
-        foreach (['themes/default/template/', 'themes/admin/default/template/', ''] as $prefix) {
+        foreach ($prefixes as $prefix) {
             if (is_file($root . $prefix . $templateFile)) {
                 $realPath = $root . $prefix . $templateFile;
                 break;

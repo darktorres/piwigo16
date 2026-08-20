@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Integrity\CheckIntegrity;
-use Piwigo\Admin\Integrity\Projection\CheckIntegrityPageContext;
+use Piwigo\Admin\Projection\TabsheetPageContext;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
@@ -25,10 +25,10 @@ beforeEach(function (): void {
 });
 
 it('resolves an Admin renderer call site only under the admin theme', function (): void {
-    $templates = $this->result->templatesByClass[CheckIntegrity::class] ?? [];
+    $templates = $this->result->templatesByClass[Tabsheet::class] ?? [];
 
     expect($templates)
-        ->toContain($this->root . '/themes/admin/default/template/check_integrity.latte');
+        ->toContain($this->root . '/themes/admin/default/template/tabsheet.latte');
     foreach ($templates as $path) {
         expect($path)->toContain('/themes/admin/default/template/');
     }
@@ -53,8 +53,8 @@ it('resolves a frontend polymorphic call site to every reachable theme variant',
 });
 
 it('associates assignContext call sites with their context class', function (): void {
-    expect($this->result->contextsByClass[CheckIntegrity::class] ?? [])
-        ->toContain(CheckIntegrityPageContext::class);
+    expect($this->result->contextsByClass[Tabsheet::class] ?? [])
+        ->toContain(TabsheetPageContext::class);
 });
 
 it('records the cross-class context assigners the same-class association cannot cover', function (): void {

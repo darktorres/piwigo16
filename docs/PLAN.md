@@ -130,7 +130,7 @@ Three structural changes produced that drift:
 | P37 | Typed page-data exposure (PHP half) | Done | 1 |
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
-| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) landed, full validation pass still owed; Batches 4–9 scoped (picture/index.latte fragments, menubar, tabsheet, calendar, small standalone pages), not yet executed; mail domain identified as an unphased gap | 2 |
+| P40 | Typed view objects + `Template` split | In progress — Batch 1 (template-extension deletion) + Batch 2 (mechanism + `index.latte` thin slice) + Batch 3 (22-renderer admin `ADMIN_CONTENT` sweep) + Batch 4 (picture page's 6 remaining ambient fragments) landed, full validation pass still owed; Batches 5–9 scoped (index.latte fragments, menubar, tabsheet, calendar, small standalone pages), not yet executed; mail domain identified as an unphased gap | 2 |
 | P41 | Shell-last rendering + `PageState` split | Not started | 0 |
 | P42 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P43 | Escaping campaign | Not started | 0 |
@@ -1955,7 +1955,7 @@ narrative-docblock grep sweep at commit time, not the full
 `lint:latte`/`analyse:phpstan`/`lint:php`/`deptrac`/`test:*` gate list.
 That full pass is still owed before this batch can be marked verified.
 
-**Batches 4–9 (scoped, not yet executed)**: the remaining 44
+**Batch 4 (landed), Batches 5–9 (scoped, not yet executed)**: the remaining 44
 `TemplatePageContext`-implementing classes, traced one by one against
 their real caller and real template body — not assumed from class
 names — to find which are genuine page-family work versus P41 shell
@@ -1978,23 +1978,38 @@ found in what Batch 3's own text claimed:
   `{include}`. Flagged for a deletion review, not folded into any
   batch below.
 
-**Batch 4 — Picture page's remaining ambient fragments.** All 5 fold
-directly onto the existing `PictureView` as new scalar/array
-properties — no new template or nested `Renderer::render()` call
-needed, since none of them own a separate template file of their own:
-`PictureCommentsOrderPageContext` (`orderUrl`/`orderTitle`, 2 scalars),
-`PictureCommentAddPageContext` (`commentAdd`, one raw associative
-array — its own docblock already says "not a fixed structural shape
-worth minting individual properties for"), `PictureMetadataPageContext`,
-`PictureRateSummaryPageContext`, `PictureRatingFormPageContext` — each
-has exactly one caller (`PictureMetadataRenderer`/`PictureRateRenderer`
-respectively). The one real exception: `PictureCommentRenderer`'s own
-use of `comment_list.latte` (`assignVarFromTemplate('COMMENT_LIST',
-'comment_list.latte')`) should switch to the `CommentListView` class
-that **already exists** — built for `CommentsController`'s own,
-separate, already-converted use of the same template — and fold the
-rendered `Html` onto `PictureView` as a new property, deleting
-`PictureCommentListPageContext`.
+**Batch 4 (landed) — Picture page's remaining ambient fragments.** All
+6 context classes (`PictureCommentsOrderPageContext`,
+`PictureCommentListPageContext` — found during implementation, not in
+the original scoping above — `PictureCommentAddPageContext`,
+`PictureMetadataPageContext`, `PictureRateSummaryPageContext`,
+`PictureRatingFormPageContext`) folded onto `PictureView`/
+`SlideshowView` as new properties, landed as 3 commits (one per
+renderer: `PictureMetadataRenderer`, `PictureRateRenderer`,
+`PictureCommentRenderer`). `PictureMetadataRenderer`/`PictureRateRenderer`
+now return their own small result types (`?array`,
+`PictureRateResult`) instead of calling `assignContext()`; both lost
+their now-unused `CurrentTemplate` constructor dependency entirely.
+`PictureCommentRenderer` returns a `PictureCommentsResult` bundling
+all 6 of its own fields. `PictureCommentRenderer`'s own use of
+`comment_list.latte` (`assignVarFromTemplate('COMMENT_LIST',
+'comment_list.latte')`) switched to the `CommentListView` class that
+**already existed** — built for `CommentsController`'s own, separate,
+already-converted use of the same template —
+`CommentListView::$commentDerivativeParams` widened to nullable to
+cover `PictureCommentRenderer`'s own comment rows, which never carry a
+`src_image` (already looking at the one photo above, no per-comment
+illustration needed) — the template's own `isset($commentDerivativeParams)`
+guard already anticipated this. `picture.latte`'s body renamed to
+match throughout, including converting one bare
+`{include 'navigation_bar.latte'}` (relying on inherited scope) to an
+explicit `navbar: $commentsNavbar` param, matching every other real
+call site of that template. Verified end-to-end each commit: `php -l`
++ `composer analyse:phpstan` + `lint:latte` + `picture-1`/`slideshow`
+golden-html unchanged for the first (Metadata) commit; `php -l` +
+`lint:latte` only for Rate/Comments per this session's "skip
+validation" direction — the full deferred pass (phpstan/golden-html/
+test suite) across all of Batch 4 is still owed.
 
 **Batch 5 — small, bounded, 1–2-caller fragments.**
 `check_integrity.latte` (2 callers: `IntroSubController`'s dashboard

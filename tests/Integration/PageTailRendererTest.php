@@ -20,11 +20,13 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\RequestMetricsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -47,10 +49,20 @@ use Piwigo\Users\User;
  * prepareContext()+parse('footer.latte')+finalizeHtml() sequence
  * (P41-E, docs/PLAN.md) -- a real footer.latte render, not just the
  * ambient context prepareContext() assigns.
+ *
+ * `footer.latte` itself was deleted in P41-G/H (its content merged into
+ * `layout.latte`'s own `{layout}/{block}` shell, docs/PLAN.md's P42) --
+ * `renderFooter()` below renders a tiny fixture file extending
+ * `layout.latte` instead, same technique as
+ * `PageHeaderRendererTest::renderHeader()`'s own fix for the identical
+ * problem (see that method's own docblock for why `{layout $layoutPath}`
+ * needs a dynamic expression here, not the usual bare string literal).
  */
 final class PageTailRendererTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
+
+    private ?string $tplDir = null;
 
     private PageTailRenderer $renderer;
 
@@ -79,6 +91,16 @@ final class PageTailRendererTest extends IntegrationTestCase
         // footer.latte's own {get_combined_scripts load='footer'} tag reaches
         // Template::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
+        // layout.latte's own {$lang_info['code']}/{$lang_info['direction']}
+        // reach Lang::langInfo() -- unset by default, real
+        // RequestBootstrap-only wiring this test never boots (same
+        // reasoning as PageHeaderRendererTest's own identical setUp, now
+        // needed here too since renderFooter() renders the full layout,
+        // not just the deleted footer.latte in isolation).
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         CurrentUserTestFactory::get()->set(User::fromUserArray([
@@ -116,6 +138,11 @@ final class PageTailRendererTest extends IntegrationTestCase
         CurrentTemplateTestFactory::get()->reset();
         RequestMetricsTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
+        if ($this->tplDir !== null && is_dir($this->tplDir)) {
+            unlink($this->tplDir . 'page-tail-test.latte');
+            rmdir($this->tplDir);
+        }
+
         $_SESSION = [];
         parent::tearDown();
     }
@@ -125,8 +152,31 @@ final class PageTailRendererTest extends IntegrationTestCase
         $this->renderer->prepareContext($startTime);
 
         $template = CurrentTemplateTestFactory::get()->get();
+        $this->tplDir = sys_get_temp_dir() . '/piwigo-page-tail-renderer-test-' . bin2hex(random_bytes(8)) . '/';
+        mkdir($this->tplDir, 0o777, true);
+        file_put_contents($this->tplDir . 'page-tail-test.latte', "{layout \$layoutPath}\n{block content}{/block}\n");
+        $template->setTemplateDir($this->tplDir);
+        $template->assignContext(new AdHocPageContext([
+            'layoutPath' => dirname(__DIR__, 2) . '/themes/default/template/layout.latte',
+            // layout.latte's own header section (never this test's own
+            // concern -- see PageHeaderRendererTest for that) still
+            // renders as part of the full page -- every required (i.e.
+            // not conditionally-assigned, see PageHeaderPageContext's own
+            // docblock) key PageHeaderRenderer::render() would normally
+            // assign, real values irrelevant.
+            'GALLERY_TITLE' => 'Test Gallery',
+            'PAGE_BANNER' => '',
+            'BODY_ID' => 'the_page',
+            'CONTENT_ENCODING' => 'utf-8',
+            'PAGE_TITLE' => 'Test',
+            'U_HOME' => 'index.php',
+            'LEVEL_SEPARATOR' => ' - ',
+            'SHOW_MOBILE_APP_BANNER' => false,
+            'BODY_CLASSES' => [],
+            'head_elements' => [],
+        ]));
 
-        return $template->finalizeHtml($template->parse('footer.latte'));
+        return $template->finalizeHtml($template->parse('page-tail-test.latte'));
     }
 
     public function testRenderToStringIncludesTheQueryDebugListWhenShowQueriesIsEnabled(): void

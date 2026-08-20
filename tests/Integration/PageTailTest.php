@@ -16,11 +16,13 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -79,6 +81,15 @@ final class PageTailTest extends IntegrationTestCase
         // footer.latte's own {get_combined_scripts load='footer'} tag reaches
         // Template::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
+        // layout.latte's own {$lang_info['code']}/{$lang_info['direction']}
+        // reach Lang::langInfo() -- unset by default, real
+        // RequestBootstrap-only wiring this test never boots (same
+        // reasoning as PageHeaderRendererTest/PageTailRendererTest's own
+        // identical setUp).
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
@@ -132,7 +143,40 @@ final class PageTailTest extends IntegrationTestCase
         try {
             PageTail::prepareContext();
             $template = CurrentTemplateTestFactory::get()->get();
-            $output = $template->finalizeHtml($template->parse('footer.latte'));
+            // footer.latte itself was deleted in P41-G/H (its content
+            // merged into layout.latte's own {layout}/{block} shell,
+            // docs/PLAN.md's P42) -- render a tiny fixture file extending
+            // layout.latte instead, same technique as
+            // PageTailRendererTest::renderFooter()'s own fix for the
+            // identical problem (see PageHeaderRendererTest::renderHeader()'s
+            // own docblock for why {layout $layoutPath} needs a dynamic
+            // expression here, not the usual bare string literal).
+            $tplDir = sys_get_temp_dir() . '/piwigo-page-tail-test-' . bin2hex(random_bytes(8)) . '/';
+            mkdir($tplDir, 0o777, true);
+            file_put_contents($tplDir . 'page-tail-test.latte', "{layout \$layoutPath}\n{block content}{/block}\n");
+            $template->setTemplateDir($tplDir);
+            $template->assignContext(new AdHocPageContext([
+                'layoutPath' => dirname(__DIR__, 2) . '/themes/default/template/layout.latte',
+                // layout.latte's own header section (never this test's
+                // own concern) still renders as part of the full page --
+                // every required (not conditionally-assigned, see
+                // PageHeaderPageContext's own docblock) key
+                // PageHeaderRenderer::render() would normally assign,
+                // real values irrelevant.
+                'GALLERY_TITLE' => 'Test Gallery',
+                'PAGE_BANNER' => '',
+                'BODY_ID' => 'the_page',
+                'CONTENT_ENCODING' => 'utf-8',
+                'PAGE_TITLE' => 'Test',
+                'U_HOME' => 'index.php',
+                'LEVEL_SEPARATOR' => ' - ',
+                'SHOW_MOBILE_APP_BANNER' => false,
+                'BODY_CLASSES' => [],
+                'head_elements' => [],
+            ]));
+            $output = $template->finalizeHtml($template->parse('page-tail-test.latte'));
+            unlink($tplDir . 'page-tail-test.latte');
+            rmdir($tplDir);
 
             // Proves prepareContext()+parse() completed the whole real
             // render (not just the update-check branch) without ever

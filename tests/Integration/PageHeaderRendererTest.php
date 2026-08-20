@@ -13,6 +13,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -43,6 +44,8 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     private static bool $fixtureReady = false;
 
     private PageHeaderRenderer $renderer;
+
+    private ?string $tplDir = null;
 
     #[Override]
     protected function setUp(): void
@@ -87,6 +90,11 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentTemplateTestFactory::get()->reset();
         LayoutStateTestFactory::get()->reset();
+        if ($this->tplDir !== null && is_dir($this->tplDir)) {
+            unlink($this->tplDir . 'page-header-test.latte');
+            rmdir($this->tplDir);
+        }
+
         parent::tearDown();
     }
 
@@ -95,14 +103,41 @@ final class PageHeaderRendererTest extends IntegrationTestCase
      * prepareContext()+parse('header.latte')+finalizeHtml()
      * sequence (P41-E, docs/PLAN.md) -- a real header.latte render
      * against the ambient context prepareContext() assigns.
+     *
+     * `header.latte` itself was deleted in P41-G/H (its content merged
+     * into `layout.latte`'s own `{layout}/{block}` shell, docs/PLAN.md's
+     * P42) -- there is no longer a standalone file to `parse()` in
+     * isolation. A tiny fixture file extending `layout.latte` with an
+     * empty content block reaches the exact same `<head>`/header markup
+     * this test's own assertions check for, via the current architecture
+     * instead of the deleted one. `{layout $layoutPath}` (a dynamic
+     * expression, not the usual bare string literal) is required here --
+     * Latte's own `{layout}` tag resolves a literal path relative to the
+     * *including file's own directory*, not through this app's
+     * `TemplateLocator` search chain the way `{include 'bare.latte'}`
+     * does, so a fixture file living outside `themes/default/template/`
+     * needs the real absolute path handed in as a variable instead.
      */
     private function renderHeader(string $title): string
     {
         $this->renderer->prepareContext($title, new EventDispatcher(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get());
 
         $template = CurrentTemplateTestFactory::get()->get();
+        $this->tplDir = sys_get_temp_dir() . '/piwigo-page-header-renderer-test-' . bin2hex(random_bytes(8)) . '/';
+        mkdir($this->tplDir, 0o777, true);
+        file_put_contents($this->tplDir . 'page-header-test.latte', "{layout \$layoutPath}\n{block content}{/block}\n");
+        $template->setTemplateDir($this->tplDir);
+        $template->assignContext(new AdHocPageContext([
+            'layoutPath' => dirname(__DIR__, 2) . '/themes/default/template/layout.latte',
+            // layout.latte's own footer section (never this test's own
+            // concern -- see PageTailRendererTest for that) still renders
+            // as part of the full page, and needs these to avoid an
+            // undefined-variable warning; real values are irrelevant.
+            'APP_URL' => 'https://example.invalid',
+            'VERSION' => '0',
+        ]));
 
-        return $template->finalizeHtml($template->parse('header.latte'));
+        return $template->finalizeHtml($template->parse('page-header-test.latte'));
     }
 
     public function testRenderIncludesTheHeaderNotesWhenLayoutStateHasAny(): void

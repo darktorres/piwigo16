@@ -6,6 +6,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Site\Projection\SiteCategoryImageCounts;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -225,10 +226,7 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
 
         expect($counts)
             ->toHaveKey($siteId)
-            ->and($counts[$siteId])->toBe([
-                'nb_categories' => 2,
-                'nb_images' => 1,
-            ]);
+            ->and($counts[$siteId])->toEqual(new SiteCategoryImageCounts(categories: 2, images: 1));
     } finally {
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM categories WHERE id IN (?, ?)', [$catWithImageId, $catWithoutImageId]);

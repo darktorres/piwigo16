@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Site\Projection\SiteCategoryImageCounts;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -212,10 +213,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
             $counts = $this->repo->findCategoryAndImageCountsBySite();
 
             self::assertArrayHasKey($siteId, $counts);
-            self::assertSame([
-                'nb_categories' => 2,
-                'nb_images' => 1,
-            ], $counts[$siteId]);
+            self::assertEquals(new SiteCategoryImageCounts(categories: 2, images: 1), $counts[$siteId]);
         } finally {
             $conn->executeStatement(sprintf('DELETE FROM images WHERE id = %d', $imageId));
             $conn->executeStatement(sprintf('DELETE FROM categories WHERE id IN (%d, %d)', $catWithImageId, $catWithoutImageId));

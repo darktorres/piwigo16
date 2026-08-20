@@ -172,8 +172,8 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             $tpl_sites[] = new SiteRow(
                 name: $galleries_url,
                 type: $this->lang->t($is_remote ? 'Remote' : 'Local'),
-                categories: $sites_detail[$id_int]['nb_categories'] ?? 0,
-                images: $sites_detail[$id_int]['nb_images'] ?? 0,
+                categories: $sites_detail[$id_int]->categories ?? 0,
+                images: $sites_detail[$id_int]->images ?? 0,
                 uSynchronize: $update_url,
                 uDelete: (int) $id !== 1 ? $base_url . 'delete' : null,
                 // plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION

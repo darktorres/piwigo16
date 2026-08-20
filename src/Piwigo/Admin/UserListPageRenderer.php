@@ -180,6 +180,7 @@ final class UserListPageRenderer
             guestId: $guest_id,
             viewSelector: $view_selector,
             pagination: $pagination,
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(

@@ -2551,3 +2551,120 @@ $(".icon-help-circled").tipTip({
     maxWidth: '700px',
     fadeIn: '1000'
 });
+
+$(document).ready(function() {
+  // Only webmaster can set admin or webmaster to others users
+  if (connected_user_status !== 'webmaster') {
+    $('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]').attr("disabled", true);
+  }
+  // We set the applyAction btn click event here so plugins can add cases to the list
+  // which is not possible if this JS part is in a JS file
+  // see #1571 on Github
+  jQuery("#applyAction").click(function() {
+      let action = jQuery("select[name=selectAction]").prop("value");
+      let data = {};
+      switch (action) {
+          case 'delete':
+              if (!($("#permitActionUserList .user-list-checkbox[name=confirm_deletion]").attr("data-selected") === "1")) {
+                  alert(missingConfirm);
+                  return false;
+              }
+              break;
+          case 'group_associate':
+              data.group_id = jQuery("#permitActionUserList select[name=associate]").prop("value");
+              break;
+          case 'group_dissociate':
+              data.group_id = jQuery("#permitActionUserList select[name=dissociate]").prop("value");
+              break;
+          case 'status':
+              data.status = jQuery("#permitActionUserList select[name=status]").prop("value");
+              break;
+          case 'enabled_high':
+              data.enabled_high = $("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]").attr("data-selected") === "1" ? true : false;
+              break;
+          case 'level':
+              data.level = jQuery("#permitActionUserList select[name=level]").val();
+              break;
+          case 'nb_image_page':
+              data.nb_image_page = jQuery("#permitActionUserList input[name=nb_image_page]").val();
+              break;
+          case 'theme':
+              data.theme = jQuery("#permitActionUserList select[name=theme]").val();
+              break;
+          case 'language':
+              data.language = jQuery("#permitActionUserList select[name=language]").val();
+              break;
+          case 'recent_period':
+              data.recent_period = recent_period_values[$('#permitActionUserList .period-select-bar .slider-bar-container').slider("option", "value")];;
+              break;
+          case 'expand':
+              data.expand = $("#permitActionUserList .user-list-checkbox[name=expand_yes]").attr("data-selected") === "1" ? true : false;
+              break;
+          case 'show_nb_comments':
+              data.show_nb_comments = $("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]").attr("data-selected") === "1" ? true : false
+              break;
+          case 'show_nb_hits':
+              data.show_nb_hits = $("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]").attr("data-selected") === "1" ? true : false;
+              break;
+          default:
+              alert("Unexpected action");
+              return false;
+      }
+
+      // Translate the `data` bag above into the real /api/v1 request(s)
+      // -- one bulk group action, or one PATCH/DELETE per selected user
+      // (there is no bulk-multi-id endpoint for Users).
+      const userIds = selection.map(x => x.id);
+      const fieldByAction = {
+          status: 'status', enabled_high: 'enabledHigh', level: 'level',
+          nb_image_page: 'nbImagePage', theme: 'theme', language: 'language',
+          recent_period: 'recentPeriod', expand: 'expand',
+          show_nb_comments: 'showNbComments', show_nb_hits: 'showNbHits',
+      };
+      const numericFields = ['level', 'nbImagePage', 'recentPeriod'];
+
+      let request;
+      jQuery("#applyActionLoading").show();
+      jQuery("#applyActionBlock .infos").fadeOut();
+
+      if (action === 'delete') {
+          request = Promise.all(userIds.map(id => jQuery.ajax({
+              url: "api/v1/users/" + id,
+              method: "DELETE",
+              headers: {'X-CSRF-Token': pwg_token},
+          })));
+      } else if (action === 'group_associate' || action === 'group_dissociate') {
+          request = jQuery.ajax({
+              url: "api/v1/groups/" + data.group_id + "/actions/" + (action === 'group_associate' ? 'add-user' : 'remove-user'),
+              method: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ userIds: userIds }),
+              headers: {'X-CSRF-Token': pwg_token},
+          });
+      } else {
+          const field = fieldByAction[action];
+          const value = numericFields.includes(field) ? Number(data[action]) : data[action];
+          request = Promise.all(userIds.map(id => jQuery.ajax({
+              url: "api/v1/users/" + id,
+              method: "PATCH",
+              contentType: "application/json",
+              data: JSON.stringify({ [field]: value }),
+              headers: {'X-CSRF-Token': pwg_token},
+          })));
+      }
+
+      request.then(function() {
+          jQuery("#applyActionLoading").hide();
+          jQuery("#applyActionBlock .infos").fadeIn();
+          jQuery("#applyActionBlock .infos").css("display", "inline-block");
+          update_user_list();
+          if (action == 'delete') {
+              selection = [];
+              update_selection_content();
+          }
+      }).catch(function() {
+          jQuery("#applyActionLoading").hide();
+      });
+      return false;
+  });
+});

@@ -3080,6 +3080,15 @@ Every other page migrated so far was deliberately chosen to have zero
 `{include}` of a not-yet-migrated partial, so this gap doesn't block
 continued progress on the remaining independent pages.
 
+Also migrated 4 more pages/Views, ~79 of 945: `ElementSetRanksView`
+(3), `DoubleSelectView` (1, shared by 4 real callers), `CommentsView`
+(8, csrf_token + 7 strings), `StatsView` (6, month_labels/lang_code +
+2 strings) -- 22 pages/Views landed so far. All 4 had zero
+`{include}` of any not-yet-migrated partial. `test:golden-html`
+byte-identical (2 pure-whitespace baseline regenerations,
+`admin-album-sort`/`admin-stats`, same deleted-blank-line shape as
+every prior batch).
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

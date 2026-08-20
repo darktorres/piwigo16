@@ -337,14 +337,14 @@
             </div>
           {/if}
 
-          {if $displayInfo['rating_score'] and isset($rate_summary)}
+          {if $displayInfo['rating_score'] and isset($rateSummary)}
             <div id="Average" class="imageInfo">
               <dt>{='Rating score'|translate}</dt>
               <dd>
-                {if $rate_summary['count']}
-                  <span id="ratingScore">{$rate_summary['score']}</span> <span
+                {if $rateSummary['count']}
+                  <span id="ratingScore">{$rateSummary['score']}</span> <span
                     id="ratingCount"
-                  >({$rate_summary['count']|translate_dec:'%d rate','%d rates'})</span>
+                  >({$rateSummary['count']|translate_dec:'%d rate','%d rates'})</span>
                 {else}
                   <span id="ratingScore">{='no rate'|translate}</span> <span
                     id="ratingCount"

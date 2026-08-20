@@ -3051,6 +3051,35 @@ an `admin-config-search` `filters_names`-ordering golden-html baseline
 staleness (regenerated, since this migration's own page directly
 exercises it).
 
+Also migrated 8 more pages/Views since the last count, ~65 of 945:
+`CatListView` (4), `ConfigurationSizesView` (7, 2 duplicate
+confirm-dialog strings dropped), `PictureFormatsView` (8, one
+`order: 10` "issue 1080" CSS), `SiteManagerView` (5, 2 duplicates
+dropped).
+
+**Real, deferred sub-task found**: `themes_installed.latte` (and 13
+other real templates, including `admin.latte` the shell itself)
+`{include 'include/colorbox.inc.latte'}` -- one of P42-A's own
+contract-only partials, whose real `combineScript`/`combineCss`
+content hasn't migrated yet. Per the plan's own bottom-up dependency
+rule, none of these 14 pages can migrate their own remaining calls
+until `ColorboxView` (and its sibling contract-only partials,
+`AlbumSelectorView`/`AddAlbumView`/`AutosizeView`/`DatepickerView`/
+`BatchManagerFilterView`/`QuickSearchView`) gets a real `pageAssets()`
+**and** every one of ITS OWN real parents is updated to construct that
+partial's View and merge its `pageAssets()` in -- there is no other
+way for a contract-only, `{include}`-only partial's own declarative
+data to actually apply, since `Renderer::render()` never runs for it.
+`ColorboxView`'s own `pageAssets()` design was worked out (`$load_mode`
+resolves the same 3-way `header`/`footer`/`async` mapping
+`Template::combineScript()` itself uses) but reverted rather than
+committed half-wired to zero real callers -- this is real, substantial
+work (14 files for colorbox alone) deserving its own dedicated
+batch(es), not something to fold into an unrelated single-page commit.
+Every other page migrated so far was deliberately chosen to have zero
+`{include}` of a not-yet-migrated partial, so this gap doesn't block
+continued progress on the remaining independent pages.
+
 **P43 — Typed contributions + plugin-owned routes.**
 
 *The problem.* Core ships **two** mechanisms for one need, on the same

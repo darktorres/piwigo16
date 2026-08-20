@@ -1453,6 +1453,9 @@ final readonly class PictureController implements ControllerInterface
             cookiePath: new CookieService()
                 ->cookiePath(),
             pdfViewerFilesizeThreshold: $pdf_viewer_filesize_threshold,
+            rootUrl: $this->urlService->getRootUrl(),
+            iconDir: $this->currentTemplate->get()
+                ->themeConf('icon_dir'),
             current: [
                 ...$element_info,
                 'selected_derivative' => $selected_derivative,

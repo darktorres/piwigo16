@@ -1,0 +1,93 @@
+{*
+  P41 (docs/PLAN.md) shell layout -- merges header.latte + footer.latte's
+  own chrome into one real Latte {layout}/{block} pair, same mechanism as
+  themes/default/template/layout.latte's own docblock. Every converted
+  standard_pages template declares {layout 'layout.latte'} right after its
+  own {templateType} line and wraps its existing body in
+  {block content}...{/block}; this file supplies everything before and
+  after that slot. Ambient ROOT_URL/themeconf/lang_info/pwg and whatever
+  an earlier assignContext() call this request already made (BODY_ID/
+  BODY_CLASSES/etc, still assigned by PageHeaderRenderer/PageTailRenderer
+  exactly as before P41) reach this file the same way they reach any
+  {templateType} template's own View.
+
+  Unlike themes/default/template/layout.latte, this theme's own original
+  header.latte never emitted a header_msgs/theHeader/header_notes chrome
+  block, and its own footer.latte never closed <div id="the_page"> (real
+  browsers handle that fine at end-of-document) -- both kept exactly as-is
+  here, not backfilled with the default theme's own shape.
+*}
+<!DOCTYPE html>
+<html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
+  <head>
+    <meta
+      n:if="$SHOW_MOBILE_APP_BANNER"
+      name="apple-itunes-app"
+      content="app-id=472225196"
+    >
+    <meta charset="{$CONTENT_ENCODING}">
+    <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{if $PAGE_TITLE != l10n('Home') && $PAGE_TITLE != $GALLERY_TITLE}{$PAGE_TITLE} | {/if}{$GALLERY_TITLE}</title>
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="{$ROOT_URL}{$themeconf['icon_dir']}/favicon.ico"
+    >
+
+    {spaceless}
+      {foreach $themes as $theme}
+        {if $theme['load_css']}
+          {do combineCss(path: "themes/" . $theme['id'] . "/theme.css", order: -10)}
+        {/if}
+        {if !empty($theme['local_head'])}
+          {include $theme['local_head'], load_css: $theme['load_css']}
+        {/if}
+      {/foreach}
+      {do combineCss(path: "themes/standard_pages/css/utilities.css", order: -5)}
+
+      {do combineScript(id: "jquery", load: "header")}
+    {/spaceless}
+
+    <!-- BEGIN get_combined -->
+    {do localCssRules($themes)}
+    {=getCombinedCss()}
+
+    {=getCombinedScripts('header')}
+    <!-- END get_combined -->
+
+    {if !empty($head_elements)}
+      {foreach $head_elements as $elt}
+        {$elt|noescape}
+      {/foreach}
+    {/if}
+  </head>
+
+  <body
+    id="{$BODY_ID}"
+    class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"
+  >
+    <div id="the_page">
+      {block content}{/block}
+    {* <div id="the_page"> above is deliberately never closed -- see this
+       file's own docblock. *}
+
+    {do combineScript(id: 'page-data', load: 'footer', path: 'themes/default/js/page-data.js')}
+    {do exposeString('Yes, I am sure')}
+    {do exposeString('No, I have changed my mind')}
+    {do exposeString('Are you sure?')}
+    {=getPageDataScript()}
+
+    <!-- BEGIN get_combined -->
+    {=getCombinedScripts('footer')}
+    <!-- END get_combined -->
+
+    <script
+      n:if="isset($VITALS_SCRIPT_URL)"
+      type="module"
+      src="{$VITALS_SCRIPT_URL}"
+    ></script>
+
+  </body>
+</html>

@@ -1,0 +1,238 @@
+{*
+  P41 (docs/PLAN.md) shell layout -- merges header.latte + footer.latte's
+  own chrome into one real Latte {layout}/{block} pair, same mechanism as
+  themes/default/template/layout.latte's own docblock. Every converted
+  admin page-family template declares {layout 'layout.latte'} right after
+  its own {templateType} line and wraps its existing body in
+  {block content}...{/block}; this file supplies everything before and
+  after that slot. Ambient ROOT_URL/themeconf/lang_info/pwg and whatever
+  an earlier assignContext() call this request already made (BODY_ID/
+  header_notes/USERNAME/U_LOGOUT/etc, still assigned by
+  PageHeaderRenderer/PageTailRenderer exactly as before P41) reach this
+  file the same way they reach any {templateType} template's own View.
+
+  Warning: this is the admin pages layout only, don't confuse with
+  themes/default/template/layout.latte (the public gallery one).
+*}
+<!DOCTYPE html>
+<html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
+  <head>
+    <meta
+      n:if="$SHOW_MOBILE_APP_BANNER"
+      name="apple-itunes-app"
+      content="app-id=472225196"
+    >
+    <meta charset="{$CONTENT_ENCODING}">
+    <title>{$GALLERY_TITLE} :: {$PAGE_TITLE}</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="{$ROOT_URL}{$themeconf['icon_dir']}/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{$ROOT_URL}themes/admin/default/fonts/open-sans/open-sans.css"
+    >
+
+    {spaceless}
+      {do combineCss(path: "themes/admin/default/fontello/css/fontello.css", order: -10)}
+      {do combineCss(path: "themes/admin/default/css/utilities.css", order: -5)}
+      {var $theme_id = ""}
+      {foreach $themes as $theme}
+        {var $theme_id = $theme['id']}
+
+        {if $theme['load_css']}
+          {do combineCss(path: "themes/admin/" . $theme['id'] . "/theme.css", order: -10)}
+          {do combineCss(path: "themes/admin/" . $theme['id'] . "/css/components/general.css", order: -9)}
+        {/if}
+        {if !empty($theme['local_head'])}
+          {include $theme['local_head'], load_css: $theme['load_css']}
+        {/if}
+      {/foreach}
+
+      {do combineScript(id: 'jquery', path: 'themes/default/js/jquery.min.js')}
+    {/spaceless}
+
+    <!-- BEGIN get_combined -->
+    {=getCombinedCss()}
+
+    {=getCombinedScripts('header')}
+    <!-- END get_combined -->
+
+    {if !empty($head_elements)}
+      {foreach $head_elements as $elt}
+        {$elt|noescape}
+      {/foreach}
+    {/if}
+  </head>
+
+  <body id="{$BODY_ID}">
+    <div id="the_page">
+      <div n:if="!empty($header_msgs)" class="header_msgs">
+        {foreach $header_msgs as $elt}
+          {$elt}
+        {/foreach}
+      </div>
+
+      <div id="pwgHead">
+        <a
+          href="{$U_RETURN|noescape}"
+          class="visit-gallery tiptip"
+          title="{='Visit Gallery'|translate}"
+        ><i class="icon-left-open"></i>{='Visit'|translate}</a>
+        <div class="pwgHead-gallery-title">{$GALLERY_TITLE}</div>
+
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>{$USERNAME}</span>
+
+          {spaceless}
+            <a
+              href="{$U_CHANGE_THEME|noescape}"
+              class="tiptip"
+              title="{='Switch to clear or dark colors for administration'|translate}"
+            >
+              {if $theme_id == "clear"}
+                <i class="icon-moon-inv"></i><span>Dark</span>
+              {elseif $theme_id == "roma"}
+                <i class="icon-sun-inv"></i><span>Light</span>
+              {/if}
+            </a>
+          {/spaceless}
+
+          <a
+            class="tiptip"
+            href="{$U_FAQ|noescape}"
+            title="{='Instructions to use Piwigo'|translate}"
+          ><i
+              class="icon-help-circled"
+            ></i><span>{='Help Me'|translate}</span></a>
+          <a href="{$U_LOGOUT|noescape}"><i
+              class="icon-logout"
+            ></i><span>{='Logout'|translate}</span></a>
+        </div>
+      </div>
+
+      <div class="u-clear-both"></div>
+
+      <div n:if="!empty($header_notes)" class="header_notes">
+        {foreach $header_notes as $elt}
+          {$elt}
+        {/foreach}
+      </div>
+
+      <div id="pwgMain">
+        {block content}{/block}
+      </div>{* <!-- pwgMain --> *}
+
+      {if isset($footer_elements)}
+        {foreach $footer_elements as $elt}
+          {$elt|noescape}
+        {/foreach}
+      {/if}
+
+      <div n:if="isset($debug['QUERIES_LIST'])" id="debug">
+        {$debug['QUERIES_LIST']|noescape}
+      </div>
+
+      <div id="footer">
+        <div>
+          <a
+            class="externalLink tiptip piwigo-logo"
+            href="{$APP_URL}"
+            title="{='Visit Piwigo project website'|translate}"
+          ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+          <span
+            n:if="isset($DISPLAY_BELL) and $DISPLAY_BELL"
+            id="whats_new_notification"
+            class="icon-blue tiptip"
+            onclick="show_user_whats_new()"
+            title="{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}"
+          >
+            <i class="icon-bell"></i>
+          </span>
+        </div>
+        <div id="pageInfos">
+          {if isset($debug['TIME'])}
+            {='Page generated in'|translate} {$debug['TIME']} ({$debug['NB_QUERIES']} {='SQL queries in'|translate} {$debug['SQL_TIME']}) -
+          {/if}
+
+          {='Contact'|translate}
+          <a
+            href="mailto:{$CONTACT_MAIL}?subject={='A comment on your site'|translate|rawurlencode}"
+          >{='Webmaster'|translate}</a>
+        </div>{* <!-- pageInfos --> *}
+      </div>{* <!-- footer --> *}
+    </div>{* <!-- the_page --> *}
+
+    <div
+      n:if="(isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)"
+      id="whats_new"
+    >
+      <div id="whats_new_popin">
+        <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+        <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
+        <div>
+          <div class="whats_new_block_container">
+            <div class="whats_new_block icon-blue whats_new_block_w_60">
+              <h4><a
+                  href="{$RELEASE_NOTE_URL|noescape}"
+                  target="_blank"
+                >{='Brand new login & preferences with Standard pages !'|translate}</a></h4>
+            </div>
+            <div class="whats_new_block icon-purple whats_new_block_w_40">
+              <h4><a
+                  href="{$RELEASE_NOTE_URL|noescape}"
+                  target="_blank"
+                >{='Two factor authentication is here'|translate}</a></h4>
+            </div>
+          </div>
+          <div class="whats_new_block_container">
+            <div class="whats_new_block icon-green whats_new_block_w_100">
+              <h4><a
+                  href="{$RELEASE_NOTE_URL|noescape}"
+                  target="_blank"
+                >{='UI redesigns that make a difference'|translate}</a></h4>
+            </div>
+          </div>
+        </div>
+        <div class="whats_new_buttons">
+          <button onClick="hide_user_whats_new()"><i
+              class="icon-thumbs-up"
+            ></i> {='Ok, got it!'|translate}</button>
+          <a
+            class="buttonLike"
+            href="{$RELEASE_NOTE_URL|noescape}"
+            target="_blank"
+          ><i class="icon-book"></i> {='Read the release note'|translate}</a>
+        </div>
+      </div>
+    </div>
+
+    {do combineScript(id: 'jquery.tipTip', load: 'footer', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
+    {do exposeData('whats_new_major_version', $WHATS_NEW_MAJOR_VERSION)}
+    {do exposeData('show_whats_new', $SHOW_WHATS_NEW ?? false)}
+    {do combineScript(id: 'footer', load: 'footer', require: 'jquery.tipTip,page-data', path: 'themes/admin/default/js/footer.js')}
+
+    {do combineScript(id: 'page-data', load: 'footer', path: 'themes/default/js/page-data.js')}
+    {do exposeString('Yes, I am sure')}
+    {do exposeString('No, I have changed my mind')}
+    {do exposeString('Are you sure?')}
+    {=getPageDataScript()}
+
+    <!-- BEGIN get_combined -->
+    {=getCombinedScripts('footer')}
+    <!-- END get_combined -->
+
+    <script
+      n:if="isset($VITALS_SCRIPT_URL)"
+      type="module"
+      src="{$VITALS_SCRIPT_URL}"
+    ></script>
+
+    <div n:if="isset($EXTRA_BODY_CONTENT)">{$EXTRA_BODY_CONTENT|noescape}</div>
+
+  </body>
+</html>

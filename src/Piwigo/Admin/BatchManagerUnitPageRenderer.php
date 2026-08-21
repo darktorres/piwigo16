@@ -199,6 +199,12 @@ final readonly class BatchManagerUnitPageRenderer
         new FilterPanelRenderer()
             ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer, $this->currentConfig, $this->entityManager, $this->csrfService);
 
+        // Genuinely ambient -- FilterPanelRenderer::render() above
+        // assigns it directly onto this same Template instance's own
+        // $vars bag (still the old assignContext() mechanism), not via
+        // this class's own BatchManagerUnitView construction below.
+        $associated_categories_raw = $template->getTemplateVars('associated_categories');
+
         // how many items to display on this page
         if ($batchManagerUnitRequest->displayRequested) {
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
@@ -463,6 +469,9 @@ final readonly class BatchManagerUnitPageRenderer
             elements: $elements,
             rootPath: $this->paths->root,
             jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
+            colorscheme: $template->themeConf('colorscheme'),
+            rootUrl: $this->urlService->getRootUrl(),
+            associatedCategories: is_array($associated_categories_raw) ? $associated_categories_raw : [],
         ));
 
         $template->assignContext(new AdminContentPageContext(

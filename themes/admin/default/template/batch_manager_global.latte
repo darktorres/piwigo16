@@ -1,4 +1,8 @@
 {templateType Piwigo\Admin\Projection\BatchManagerGlobalView}
+{* Kept -- this is real markup (the "add album" popin form), not just
+   asset registration; BatchManagerGlobalView::pageAssets() already
+   merges in AddAlbumView's own combineCss/combineScript contribution
+   too (PageAssets::add()'s dedup makes that a harmless no-op). *}
 {include 'include/add_album.inc.latte', load_mode: 'async'}
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}

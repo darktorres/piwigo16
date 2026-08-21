@@ -1,13 +1,5 @@
 {templateType Piwigo\Admin\Projection\AddAlbumView}
-{if empty($load_mode)}{var $load_mode = 'footer'}{/if}
 {include 'colorbox.inc.latte'}
-
-{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-
-{do combineScript(id: 'addAlbum', load: $load_mode, path: 'themes/admin/default/js/addAlbum.js')}
-{do combineCss(id: 'add_album', path: 'themes/admin/default/css/components/add_album.css')}
 
 <div class="add-album-popin-wrap">
   <div id="addAlbumForm">

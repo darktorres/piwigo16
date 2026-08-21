@@ -587,6 +587,7 @@ final readonly class BatchManagerGlobalPageRenderer
             thumbnails: $thumbnails,
             rootPath: $this->paths->root,
             jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

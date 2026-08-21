@@ -60,11 +60,14 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets
         public array $setupErrors,
         public array $setupWarnings,
         public ?string $hideWarningsLink,
+        public string $colorscheme,
     ) {}
 
     /**
-     * Only `include/colorbox.inc.latte`'s own contribution -- this
-     * page's own many other `combineCss`/`combineScript`/`exposeData`/
+     * Only `include/colorbox.inc.latte`'s and (when `!$displayFormats`,
+     * matching the template's own original `{if}` guard exactly)
+     * `include/add_album.inc.latte`'s own contributions -- this page's
+     * own many other `combineCss`/`combineScript`/`exposeData`/
      * `exposeString` call sites (`docs/PLAN.md`'s P42-B colorbox-family
      * batch) are not migrated yet, deliberately, and stay imperative
      * for now; both sources coexist correctly (`PageAssets::add()`'s
@@ -75,7 +78,17 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets
     #[Override]
     public function pageAssets(): array
     {
-        return new ColorboxView()
+        $assets = new ColorboxView()
             ->pageAssets();
+
+        if (! $this->displayFormats) {
+            $assets = [
+                ...$assets,
+                ...new AddAlbumView(colorscheme: $this->colorscheme)
+                    ->pageAssets(),
+            ];
+        }
+
+        return $assets;
     }
 }

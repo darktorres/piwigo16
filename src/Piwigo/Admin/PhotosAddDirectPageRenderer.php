@@ -189,6 +189,7 @@ final readonly class PhotosAddDirectPageRenderer
             switchFormatModeUrl: $this->urlService->getRootUrl() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
             formatExt: implode(',', array_filter($conf_format_ext, is_string(...))),
             strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
+            colorscheme: $template->themeConf('colorscheme'),
         ));
 
         $template->assignContext(new AdminContentPageContext(

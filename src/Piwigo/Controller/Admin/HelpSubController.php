@@ -9,6 +9,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HelpPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
@@ -43,9 +44,9 @@ final readonly class HelpSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new HelpPageRenderer()
+        return new HelpPageRenderer()
             ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->renderer, $this->currentConfig);
     }
 }

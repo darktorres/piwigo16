@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Override;
 use Piwigo\Admin\PictureCoiPageRenderer;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -23,9 +24,9 @@ final readonly class PictureCoiSubController implements AdminSubControllerInterf
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $this->pictureCoiPageRenderer
+        return $this->pictureCoiPageRenderer
             ->render();
     }
 }

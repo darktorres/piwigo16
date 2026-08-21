@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
@@ -300,7 +299,7 @@ test('render() lists real activity aggregated by user and skips the additional-f
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
-        new UserActivityPageRenderer()
+        $result = new UserActivityPageRenderer()
             ->render(
                 userActivityTestLang(),
                 userActivityTestAccessControl(),
@@ -318,15 +317,9 @@ test('render() lists real activity aggregated by user and skips the additional-f
                 new Renderer(CurrentTemplateTestFactory::get()),
             );
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
-        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($result->pageTitle)
             ->toBe('Users');
 
         $parts = [];

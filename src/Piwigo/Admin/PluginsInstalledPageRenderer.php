@@ -16,7 +16,7 @@ use Piwigo\Admin\Request\PluginsInstalledDisplayRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -43,10 +43,8 @@ use Piwigo\Users\PreferencesService;
  */
 final class PluginsInstalledPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CurrentLogger $currentLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, CurrentTemplate $currentTemplate, PreferencesService $preferencesService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, CurrentUser $currentUser, Paths $paths, PluginRegistry $pluginRegistry, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $pluginsDisplay = PluginsInstalledDisplayRequest::fromGlobals();
 
         // should we display details on plugins?
@@ -249,9 +247,9 @@ final class PluginsInstalledPageRenderer
             enableExtensionsInstall: $currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Plugins'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Plugins'),
+        );
     }
 }

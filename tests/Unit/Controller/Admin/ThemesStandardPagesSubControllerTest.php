@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -95,16 +94,9 @@ test('handle renders the real standard-pages config screen with no themes instal
 
         $subController = themesStandardPagesSubControllerTestSubject();
 
-        $subController->handle(new ServerRequest('GET', '/admin.php?page=themes_standard_pages'));
+        $result = $subController->handle(new ServerRequest('GET', '/admin.php?page=themes_standard_pages'));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
         expect((string) $adminContent)
             ->toContain('themes_standard_pages_rendered=yes');

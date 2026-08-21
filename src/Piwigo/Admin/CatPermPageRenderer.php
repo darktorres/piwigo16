@@ -9,7 +9,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\CatPermView;
 use Piwigo\Admin\Request\CatPermSubmitRequest;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -62,7 +62,7 @@ final readonly class CatPermPageRenderer
      *   representative_picture_id: ?int, uppercats: string, commentable: bool,
      *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
      */
-    public function render(string $admin_album_base_url, array $category): void
+    public function render(string $admin_album_base_url, array $category): AdminPageResult
     {
         // $page is a local scratch array for this method's own body only.
         /** @var array<string, mixed> $page */
@@ -171,9 +171,9 @@ final readonly class CatPermPageRenderer
             rootUrl: $this->urlService->getRootUrl(),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
+        return new AdminPageResult(
+            content: $adminContent,
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
-        ));
+        );
     }
 }

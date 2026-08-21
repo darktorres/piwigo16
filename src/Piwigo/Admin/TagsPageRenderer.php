@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\TagsView;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -42,10 +42,8 @@ final readonly class TagsPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
@@ -152,9 +150,9 @@ final readonly class TagsPageRenderer
             perPage: $per_page,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Tags'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Tags'),
+        );
     }
 }

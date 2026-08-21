@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -15,6 +16,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\PhotoDispatchRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -62,7 +64,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         /** @var array<string, mixed> $page */
         $page = [];
@@ -92,14 +94,18 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         ));
 
         if ($tab === 'properties') {
-            $this->pictureModifyPageRenderer
+            return $this->pictureModifyPageRenderer
                 ->render($adminPhotoBaseUrl);
-        } elseif ($tab === 'coi') {
-            $this->pictureCoiPageRenderer
+        }
+        if ($tab === 'coi') {
+            return $this->pictureCoiPageRenderer
                 ->render();
-        } elseif ($this->currentConfig->isFormatsEnabled) {
-            new PictureFormatsPageRenderer()
+        }
+        if ($this->currentConfig->isFormatsEnabled) {
+            return new PictureFormatsPageRenderer()
                 ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager, $this->renderer);
         }
+
+        return new AdminPageResult(content: new Html(''));
     }
 }

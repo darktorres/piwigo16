@@ -12,7 +12,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -25,7 +25,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 
 /**
@@ -50,7 +49,6 @@ final readonly class ElementSetRanksPageRenderer
         private UrlServiceInterface $urlService,
         private ErrorCollector $errorCollector,
         private ImageStdParams $imageStdParams,
-        private CurrentTemplate $currentTemplate,
         private CategoryAdminService $categoryAdminService,
         private ImageService $imageService,
         private HtmlRenderingInterface $htmlRenderer,
@@ -60,10 +58,8 @@ final readonly class ElementSetRanksPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $htmlRenderer = $this->htmlRenderer;
 
         $sort_fields = [
@@ -196,6 +192,6 @@ final readonly class ElementSetRanksPageRenderer
             saveSuccess: $save_success,
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

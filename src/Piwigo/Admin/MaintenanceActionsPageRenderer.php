@@ -18,7 +18,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -88,10 +88,8 @@ final readonly class MaintenanceActionsPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(array $maintActions): void
+    public function render(array $maintActions): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
@@ -169,9 +167,9 @@ final readonly class MaintenanceActionsPageRenderer
             advancedFeatures: $advanced_features_event->advancedFeatures,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
+        return new AdminPageResult(
+            content: $adminContent,
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
-        ));
+        );
     }
 }

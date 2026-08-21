@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\UserListPageRenderer;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -55,9 +56,9 @@ final readonly class UserListSubController implements AdminSubControllerInterfac
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new UserListPageRenderer()
+        return new UserListPageRenderer()
             ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->userService, $this->preferencesService, $this->groupService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->entityManager, $this->renderer);
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration\Admin;
 
 use Doctrine\DBAL\Connection;
-use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -183,12 +182,10 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
-        new UserActivityPageRenderer()
-            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
+        $adminContent = new UserActivityPageRenderer()
+            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplateTestFactory::get(), $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))
+            ->content;
 
-        $template = CurrentTemplateTestFactory::get()->get();
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        self::assertInstanceOf(Html::class, $adminContent);
         // user_activity.latte's own body only ever prints a
         // n:foreach="$ulist as $user" <option> per user, each carrying a
         // <span class='username_filter'> -- an empty ulist leaves only the

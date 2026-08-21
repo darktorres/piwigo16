@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Projection\UpdatesExtView;
@@ -11,7 +12,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -41,10 +42,8 @@ final class UpdatesExtPageRenderer
      * (config/admin_pages.php registers each of those 4 controllers for
      * exactly one slug), so each passes its own literal.
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, PageState $pageState, CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         if (! $currentConfig->enableExtensionsInstall) {
             $htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
@@ -152,7 +151,7 @@ final class UpdatesExtPageRenderer
             // renders without the update-list content below rather than
             // needing a dedicated termination mechanism.
             $pageState->addError($lang->t('Can\'t connect to server.'));
-            return;
+            return new AdminPageResult(content: new Html(''));
         }
 
         $adminContent = $renderer->render(new UpdatesExtView(
@@ -164,9 +163,9 @@ final class UpdatesExtPageRenderer
             isWebmaster: ($accessControl->isWebmaster()) ? 1 : 0,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Updates'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Updates'),
+        );
     }
 }

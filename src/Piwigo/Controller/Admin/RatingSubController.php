@@ -10,6 +10,7 @@ use Piwigo\Admin\RatingPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -46,9 +47,9 @@ final readonly class RatingSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new RatingPageRenderer()
+        return new RatingPageRenderer()
             ->render($this->lang, $this->accessControl, $this->urlService, $this->currentTemplate, $this->currentConfig, $this->categoryService, $this->inputValidator, $this->eventDispatcher, $this->entityManager, $this->csrfService, $this->renderer);
     }
 }

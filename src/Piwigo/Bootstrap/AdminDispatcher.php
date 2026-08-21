@@ -6,8 +6,10 @@ namespace Piwigo\Bootstrap;
 
 use LogicException;
 use Piwigo\Controller\Admin\AdminSubControllerInterface;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -43,7 +45,18 @@ final class AdminDispatcher
             );
         }
 
-        $controller->handle($request);
+        $result = $controller->handle($request);
+
+        // P43-F (in progress): a page not yet converted returns null,
+        // having already assigned AdminContentPageContext itself -- see
+        // AdminSubControllerInterface's own docblock.
+        if ($result !== null) {
+            self::currentTemplate()->get()->assignContext(new AdminContentPageContext(
+                adminContent: $result->content,
+                adminPageTitle: $result->pageTitle,
+                helpUrl: $result->helpUrl,
+            ));
+        }
     }
 
     /**
@@ -69,5 +82,15 @@ final class AdminDispatcher
         }
 
         return $paths;
+    }
+
+    private static function currentTemplate(): CurrentTemplate
+    {
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+        }
+
+        return $currentTemplate;
     }
 }

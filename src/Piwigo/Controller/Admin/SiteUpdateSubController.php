@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\SiteUpdateView;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
 use Piwigo\Core\CurrentLogger;
@@ -109,7 +110,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
     }
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $logger = $this->currentLogger->get();
         $template = $this->currentTemplate->get();
@@ -1037,5 +1038,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             adminPageTitle: $this->lang->t('Synchronize'),
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
         ));
+        return null;
     }
 }

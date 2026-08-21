@@ -16,7 +16,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -72,10 +72,8 @@ final readonly class ThemesSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         // Consumed by CoreTabs::addCoreTabs()'s own 'themes' case,
         // triggered synchronously inside Tabsheet::select() below -- must
         // be set before that call, not dead code (see this class's own
@@ -90,18 +88,28 @@ final readonly class ThemesSubController implements AdminSubControllerInterface
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'update') {
-            new UpdatesExtPageRenderer()
+            $result = new UpdatesExtPageRenderer()
                 ->render($this->lang, $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
-            $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Themes')));
-        } elseif ($tab === 'new') {
-            $this->themesNewPageRenderer
-                ->render('themes', $tab);
-        } elseif ($tab === 'standard_pages') {
-            $this->themesStandardPagesPageRenderer
-                ->render();
-        } else {
-            $this->themesInstalledPageRenderer
-                ->render('themes');
+
+            // This controller's own ADMIN_PAGE_TITLE override always wins
+            // over UpdatesExtPageRenderer's own -- matches this class's
+            // own docblock.
+            return new AdminPageResult(
+                content: $result->content,
+                pageTitle: $this->lang->t('Themes'),
+                helpUrl: $result->helpUrl,
+            );
         }
+        if ($tab === 'new') {
+            return $this->themesNewPageRenderer
+                ->render('themes', $tab);
+        }
+        if ($tab === 'standard_pages') {
+            return $this->themesStandardPagesPageRenderer
+                ->render();
+        }
+
+        return $this->themesInstalledPageRenderer
+            ->render('themes');
     }
 }

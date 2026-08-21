@@ -11,6 +11,7 @@ use Piwigo\Admin\MenubarPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
@@ -40,9 +41,9 @@ final readonly class MenubarSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new MenubarPageRenderer()
+        return new MenubarPageRenderer()
             ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager, $this->configCachePool, $this->renderer);
     }
 }

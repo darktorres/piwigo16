@@ -12,7 +12,7 @@ use Piwigo\Admin\Request\ThemesStandardPagesSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -24,7 +24,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 
@@ -50,7 +49,6 @@ final readonly class ThemesStandardPagesPageRenderer
         private ConfigService $configService,
         private StorageRegistry $storageRegistry,
         private PageState $pageState,
-        private CurrentTemplate $currentTemplate,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
@@ -61,10 +59,8 @@ final readonly class ThemesStandardPagesPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
@@ -210,9 +206,9 @@ final readonly class ThemesStandardPagesPageRenderer
             saveError: $save_error,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Themes'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Themes'),
+        );
     }
 }

@@ -17,7 +17,7 @@ use Piwigo\Admin\Request\LanguagesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -29,7 +29,6 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -57,7 +56,6 @@ final readonly class LanguagesInstalledPageRenderer
         private ConfigService $configService,
         private CurrentLogger $currentLogger,
         private PageState $pageState,
-        private CurrentTemplate $currentTemplate,
         private ActivityService $activityService,
         private UserService $userService,
         private HtmlRenderingInterface $htmlRenderer,
@@ -79,10 +77,8 @@ final readonly class LanguagesInstalledPageRenderer
      * -- it's the only class registered for the 'languages' slug in
      * config/admin_pages.php.
      */
-    public function render(string $pageSlug): void
+    public function render(string $pageSlug): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
@@ -166,9 +162,9 @@ final readonly class LanguagesInstalledPageRenderer
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Languages'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Languages'),
+        );
     }
 }

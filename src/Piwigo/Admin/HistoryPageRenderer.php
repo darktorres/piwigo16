@@ -10,7 +10,7 @@ use Piwigo\Admin\Request\HistoryFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -39,10 +39,8 @@ final class HistoryPageRenderer
      * tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager, Renderer $renderer, Paths $paths): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager, Renderer $renderer, Paths $paths): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         $historyFilter = HistoryFilterRequest::fromGlobals($inputValidator);
@@ -88,9 +86,9 @@ final class HistoryPageRenderer
             jqueryCode: is_string($lang->langInfo()['jquery_code'] ?? null) ? $lang->langInfo()['jquery_code'] : '',
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('History'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('History'),
+        );
     }
 }

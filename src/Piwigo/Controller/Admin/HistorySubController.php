@@ -10,6 +10,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HistoryPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -45,9 +46,9 @@ final readonly class HistorySubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new HistoryPageRenderer()
+        return new HistoryPageRenderer()
             ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator, $this->entityManager, $this->renderer, $this->paths);
     }
 }

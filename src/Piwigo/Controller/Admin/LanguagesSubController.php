@@ -15,7 +15,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -67,10 +67,8 @@ final readonly class LanguagesSubController implements AdminSubControllerInterfa
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case,
         // triggered synchronously inside Tabsheet::select() below -- must
         // be set before that call, not dead code (see this class's own
@@ -85,15 +83,24 @@ final readonly class LanguagesSubController implements AdminSubControllerInterfa
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'update') {
-            new UpdatesExtPageRenderer()
+            $result = new UpdatesExtPageRenderer()
                 ->render($this->lang, $this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
-            $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Languages')));
-        } elseif ($tab === 'new') {
-            $this->languagesNewPageRenderer
-                ->render('languages', $tab);
-        } else {
-            $this->languagesInstalledPageRenderer
-                ->render('languages');
+
+            // This controller's own ADMIN_PAGE_TITLE override always wins
+            // over UpdatesExtPageRenderer's own -- matches this class's
+            // own docblock.
+            return new AdminPageResult(
+                content: $result->content,
+                pageTitle: $this->lang->t('Languages'),
+                helpUrl: $result->helpUrl,
+            );
         }
+        if ($tab === 'new') {
+            return $this->languagesNewPageRenderer
+                ->render('languages', $tab);
+        }
+
+        return $this->languagesInstalledPageRenderer
+            ->render('languages');
     }
 }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\HelpPageRenderer;
@@ -122,16 +121,10 @@ test('render() shows the English documentation message for an en_ user and defau
             enabledHigh: false,
         ));
 
-        new HelpPageRenderer()
+        $result = new HelpPageRenderer()
             ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()), $currentConfig);
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
         expect((string) $adminContent)
             ->toBe('content=|title=Add Photos')

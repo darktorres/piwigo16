@@ -15,7 +15,7 @@ use Piwigo\Common\Enum\AlbumSortOrder;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -47,10 +47,8 @@ use Piwigo\Validation\InputValidator;
  */
 final class AlbumsPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, Renderer $renderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, CategoryAdminService $categoryAdminService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $albums_counter = $categoryService->countAllCategories();
 
         $albumsRequest = AlbumsRequest::fromGlobals($inputValidator);
@@ -257,10 +255,10 @@ final class AlbumsPageRenderer
         // |                          sending html code                        |
         // +-------------------------------------------------------------------+
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Albums'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Albums'),
+        );
     }
 
     /**

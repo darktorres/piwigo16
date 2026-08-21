@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
@@ -188,10 +187,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         $this->writeFixtureTheme('default', 'Default');
         $this->writeFixtureTheme('pwgtest-extra-theme', 'PwgTest Extra Theme');
 
-        $this->renderer->render('themes');
-
-        $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
-        self::assertInstanceOf(Html::class, $adminContentRaw);
+        $adminContentRaw = $this->renderer->render('themes')->content;
         $adminContent = (string) $adminContentRaw;
 
         // The real gap: a genuine non-default/standard_pages theme reaches

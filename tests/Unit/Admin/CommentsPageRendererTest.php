@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Piwigo\Admin\CommentsPageRenderer;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
@@ -107,18 +106,12 @@ test('render() assigns the comments page context and tabsheet without any real t
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $coreTabs->addCoreTabs(...));
 
-        new CommentsPageRenderer()
+        $result = new CommentsPageRenderer()
             ->render(LangTestFactory::get(), commentsPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), $eventDispatcher, new CsrfService(CurrentConfigTestFactory::get()), new Renderer(CurrentTemplateTestFactory::get()));
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
-        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($result->pageTitle)
             ->toBe('User comments');
         expect((string) $adminContent)
             ->toStartWith('csrf=')

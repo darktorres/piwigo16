@@ -9,7 +9,7 @@ use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\DoubleSelectView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -18,7 +18,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -38,7 +37,6 @@ final readonly class UserPermPageRenderer
         private AccessControl $accessControl,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private CurrentTemplate $currentTemplate,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
         private UserService $userService,
@@ -48,10 +46,8 @@ final readonly class UserPermPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $htmlRenderer = $this->htmlRenderer;
 
         $permissionService = $this->permissionService;
@@ -140,6 +136,6 @@ final readonly class UserPermPageRenderer
             doubleSelect: $doubleSelect,
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

@@ -10,6 +10,7 @@ use Piwigo\Admin\GroupPermPageRenderer;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -17,7 +18,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
@@ -37,7 +37,6 @@ final readonly class GroupPermSubController implements AdminSubControllerInterfa
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private CurrentUser $currentUser,
-        private CurrentTemplate $currentTemplate,
         private AuditService $auditService,
         private CategoryService $categoryService,
         private GroupService $groupService,
@@ -50,9 +49,9 @@ final readonly class GroupPermSubController implements AdminSubControllerInterfa
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->entityManager, $this->csrfService, $this->renderer)
+        return new GroupPermPageRenderer($this->lang, $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer, $this->inputValidator, $this->entityManager, $this->csrfService, $this->renderer)
             ->render();
     }
 }

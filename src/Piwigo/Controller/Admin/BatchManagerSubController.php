@@ -25,6 +25,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\BatchManagerPerformFilters;
 use Piwigo\Controller\Admin\Event\BatchManagerRegisterFilters;
 use Piwigo\Controller\Admin\Event\PerformBatchManagerPrefilters;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\BatchManagerFilterOptionsPageContext;
 use Piwigo\Controller\Admin\Projection\BatchManagerNoSearchResultsPageContext;
 use Piwigo\Controller\Admin\Projection\BatchManagerSearchDebugPageContext;
@@ -111,7 +112,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -176,6 +177,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
+        return null;
     }
 
     private function handleGetActions(BatchManagerRequest $batchManagerRequest, string $getPage, UserId $userId): void

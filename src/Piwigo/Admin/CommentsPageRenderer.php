@@ -6,7 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Projection\CommentsView;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -22,10 +22,8 @@ use Piwigo\Template\Renderer;
  */
 final class CommentsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, EventDispatcher $eventDispatcher, CsrfService $csrfService, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, EventDispatcher $eventDispatcher, CsrfService $csrfService, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         // CoreTabs::setContext() must be called with myBaseUrl here so this
@@ -42,9 +40,9 @@ final class CommentsPageRenderer
                 ->getToken(),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('User comments'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('User comments'),
+        );
     }
 }

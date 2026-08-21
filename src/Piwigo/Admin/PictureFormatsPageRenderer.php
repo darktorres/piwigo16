@@ -9,7 +9,7 @@ use Piwigo\Admin\Projection\PictureFormatsView;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -27,10 +27,8 @@ use Piwigo\Validation\InputValidator;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CsrfService $csrfService, EntityManagerInterface $entityManager, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, CsrfService $csrfService, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         $image_id = PictureFormatsImageIdRequest::fromGlobals($inputValidator)->imageId;
@@ -73,6 +71,6 @@ final class PictureFormatsPageRenderer
                 ->getToken(),
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

@@ -10,7 +10,7 @@ use Piwigo\Admin\Projection\UpdatesPwgView;
 use Piwigo\Admin\Request\UpdatesPwgRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -18,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
@@ -44,7 +43,6 @@ final readonly class UpdatesPwgPageRenderer
         private AccessControl $accessControl,
         private RedirectServiceInterface $redirectService,
         private PageState $pageState,
-        private CurrentTemplate $currentTemplate,
         private CoreUpdateService $coreUpdateService,
         private ExtensionUpdateChecker $extensionUpdateChecker,
         private HtmlRenderingInterface $htmlRenderer,
@@ -54,10 +52,8 @@ final readonly class UpdatesPwgPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->currentConfig->enableCoreUpdate) {
             $this->htmlRenderer
                 ->fatalError('Piwigo core update system is disabled');
@@ -184,9 +180,9 @@ final readonly class UpdatesPwgPageRenderer
             majorDockerReleaseUrl: $major_docker_release_url,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Updates'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Updates'),
+        );
     }
 }

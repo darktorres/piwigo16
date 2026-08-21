@@ -16,7 +16,7 @@ use Piwigo\Admin\Request\PluginsNewRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
@@ -76,7 +76,7 @@ final readonly class PluginsNewPageRenderer
      * config/admin_pages.php, and it already computes its own $tab local
      * before dispatching here).
      */
-    public function render(string $pageSlug, string $tab): void
+    public function render(string $pageSlug, string $tab): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -305,9 +305,9 @@ final readonly class PluginsNewPageRenderer
             colorscheme: $template->themeConf('colorscheme'),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Plugins'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Plugins'),
+        );
     }
 }

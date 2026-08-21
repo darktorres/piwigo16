@@ -11,7 +11,7 @@ use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -34,7 +34,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserActivityPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, ActivityService $activityService, UserService $userService, ImageService $imageService, CategoryService $categoryService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, InputValidator $inputValidator, EventDispatcher $eventDispatcher, Renderer $renderer): AdminPageResult
     {
         $template = $currentTemplate->get();
 
@@ -174,9 +174,9 @@ final class UserActivityPageRenderer
             colorscheme: $template->themeConf('colorscheme'),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Users'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Users'),
+        );
     }
 }

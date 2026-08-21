@@ -22,6 +22,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\FilterViewsSelection;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayView;
@@ -159,7 +160,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     private bool $watermarkLoadedInTpl = false;
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -848,6 +849,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             helpUrl: $u_help,
             adminPageTitle: $this->lang->t('Configuration'),
         ));
+        return null;
     }
 
     /**

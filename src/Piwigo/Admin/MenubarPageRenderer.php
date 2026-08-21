@@ -11,7 +11,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
@@ -29,10 +29,8 @@ use Piwigo\Template\Renderer;
  */
 final class MenubarPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ConfigCachePool $configCachePool, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ConfigCachePool $configCachePool, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         if (! $accessControl->isWebmaster()) {
             $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
@@ -121,10 +119,10 @@ final class MenubarPageRenderer
             saveSuccess: $save_success,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Menu Management'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Menu Management'),
+        );
     }
 
     /**

@@ -9,7 +9,7 @@ use Piwigo\Admin\Projection\UserListView;
 use Piwigo\Admin\Request\UserListFilterRequest;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -37,7 +37,7 @@ use Piwigo\Validation\InputValidator;
  */
 final class UserListPageRenderer
 {
-    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager, Renderer $renderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, GroupService $groupService, HtmlRenderingInterface $htmlRenderer, CurrentConfig $currentConfig, CsrfService $csrfService, InputValidator $inputValidator, Paths $paths, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
     {
         $template = $currentTemplate->get();
 
@@ -183,10 +183,10 @@ final class UserListPageRenderer
             colorscheme: $template->themeConf('colorscheme'),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Users'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Users'),
+        );
     }
 
     private static function webmasterIdIsLocal(Paths $paths): bool

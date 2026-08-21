@@ -10,7 +10,7 @@ use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Admin\Projection\MaintenanceSysView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Template\CurrentTemplate;
@@ -32,10 +32,8 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, PageState $pageState, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $activity_log_entries = [];
         if ($accessControl->isWebmaster()) {
             $activity_log = $entityManager->getRepository(ActivityEntity::class)
@@ -54,6 +52,6 @@ final class MaintenanceSysPageRenderer
             activityLogEntries: $activity_log_entries,
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

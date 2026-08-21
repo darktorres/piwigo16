@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Override;
 use Piwigo\Admin\CatOptionsPageRenderer;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -22,9 +23,9 @@ final readonly class CatOptionsSubController implements AdminSubControllerInterf
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $this->catOptionsPageRenderer
+        return $this->catOptionsPageRenderer
             ->render();
     }
 }

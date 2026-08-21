@@ -10,6 +10,7 @@ use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\History\HistoryService;
@@ -46,9 +47,9 @@ final readonly class StatsSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new StatsPageRenderer()
+        return new StatsPageRenderer()
             ->render($this->lang, $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->historyService, $this->eventDispatcher, $this->renderer);
     }
 }

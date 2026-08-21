@@ -10,7 +10,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\PermalinksView;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -46,10 +46,8 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $htmlRenderer = $this->htmlRenderer;
 
         $permalinksRequest = PermalinksRequest::fromGlobals($this->inputValidator);
@@ -157,11 +155,11 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             categoriesOptions: $categories_options,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Albums'),
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Albums'),
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
-        ));
+        );
     }
 
     /**

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
@@ -104,16 +103,9 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
             throw new LogicException('Container returned an unexpected type for ' . ThemesSubController::class);
         }
 
-        $subController->handle(new ServerRequest('GET', '/admin.php?page=themes&tab=standard_pages'));
+        $result = $subController->handle(new ServerRequest('GET', '/admin.php?page=themes&tab=standard_pages'));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
         expect((string) $adminContent)
             ->toContain('themes_standard_pages_rendered=yes');

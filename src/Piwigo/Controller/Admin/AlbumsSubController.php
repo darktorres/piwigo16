@@ -10,6 +10,7 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -46,9 +47,9 @@ final readonly class AlbumsSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new AlbumsPageRenderer()
+        return new AlbumsPageRenderer()
             ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer, $this->inputValidator, $this->renderer);
     }
 }

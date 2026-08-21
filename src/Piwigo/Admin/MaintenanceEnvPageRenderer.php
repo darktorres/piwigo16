@@ -18,7 +18,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\DateHelper;
@@ -87,10 +87,8 @@ final readonly class MaintenanceEnvPageRenderer
         private ?PersistentCache $persistentCache = null,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $action = MaintenanceActionRequest::fromGlobals()->action;
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
             ->dispatch($action);
@@ -155,9 +153,9 @@ final readonly class MaintenanceEnvPageRenderer
             activePluginNames: $active_plugin_names,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
+        return new AdminPageResult(
+            content: $adminContent,
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
-        ));
+        );
     }
 }

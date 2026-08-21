@@ -12,7 +12,7 @@ use Piwigo\Admin\Event\CatModifyPageRendering;
 use Piwigo\Admin\Projection\CatModifyView;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -50,10 +50,8 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $eventDispatcher->dispatch(new CatModifyPageRendering());
 
         // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
@@ -314,8 +312,7 @@ final class CatModifyPageRenderer
 
         $eventDispatcher->dispatch(new CatModifyPageRendered());
 
-        // ----------------------------------------------------------- sending html code
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 
     /**

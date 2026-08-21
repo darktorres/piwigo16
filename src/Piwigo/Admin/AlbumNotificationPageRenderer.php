@@ -12,7 +12,7 @@ use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -75,7 +75,7 @@ final readonly class AlbumNotificationPageRenderer
      *   representative_picture_id: ?int, uppercats: string, commentable: bool,
      *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
      */
-    public function render(string $admin_album_base_url, array $category): void
+    public function render(string $admin_album_base_url, array $category): AdminPageResult
     {
         $template = $this->currentTemplate->get();
         $save_success = null;
@@ -297,6 +297,6 @@ final readonly class AlbumNotificationPageRenderer
             colorscheme: $template->themeConf('colorscheme'),
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
@@ -103,16 +102,9 @@ test('handle renders the real menubar-order admin screen with no registered bloc
             throw new LogicException('Container returned an unexpected type for ' . MenubarSubController::class);
         }
 
-        $subController->handle(new ServerRequest('GET', '/admin.php?page=menubar'));
+        $result = $subController->handle(new ServerRequest('GET', '/admin.php?page=menubar'));
 
-        // assignVarFromTemplate() wraps ADMIN_CONTENT in Latte\Runtime\Html
-        // (see that method's own docblock), not a plain string.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
         expect((string) $adminContent)
             ->toContain('menubar_admin_rendered=yes');

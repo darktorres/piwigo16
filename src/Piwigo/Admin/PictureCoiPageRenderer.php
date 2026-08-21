@@ -10,7 +10,7 @@ use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Paths;
@@ -22,7 +22,6 @@ use Piwigo\Image\DerivativeUrlStyleOverride;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 
@@ -35,7 +34,6 @@ final readonly class PictureCoiPageRenderer
         private AccessControl $accessControl,
         private RedirectServiceInterface $redirectService,
         private ImageStdParams $imageStdParams,
-        private CurrentTemplate $currentTemplate,
         private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private InputValidator $inputValidator,
@@ -44,10 +42,8 @@ final readonly class PictureCoiPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -134,6 +130,6 @@ final readonly class PictureCoiPageRenderer
             croppedDerivatives: $cropped_derivatives,
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

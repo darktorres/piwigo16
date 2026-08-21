@@ -12,7 +12,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\DoubleSelectView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -23,7 +23,6 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
@@ -41,7 +40,6 @@ final readonly class GroupPermPageRenderer
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private CurrentUser $currentUser,
-        private CurrentTemplate $currentTemplate,
         private AuditService $auditService,
         private CategoryService $categoryService,
         private GroupService $groupService,
@@ -53,10 +51,8 @@ final readonly class GroupPermPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $categoryService = $this->categoryService;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -147,6 +143,6 @@ final readonly class GroupPermPageRenderer
             doubleSelect: $doubleSelect,
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

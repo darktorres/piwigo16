@@ -15,7 +15,7 @@ use Piwigo\Admin\Request\ThemesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -26,7 +26,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -49,7 +48,6 @@ final readonly class ThemesNewPageRenderer
         private UrlServiceInterface $urlService,
         private CurrentLogger $currentLogger,
         private PageState $pageState,
-        private CurrentTemplate $currentTemplate,
         private ActivityService $activityService,
         private PreferencesService $preferencesService,
         private HtmlRenderingInterface $htmlRenderer,
@@ -70,10 +68,8 @@ final readonly class ThemesNewPageRenderer
      * config/admin_pages.php, and it already computes its own $tab local
      * before dispatching here).
      */
-    public function render(string $pageSlug, string $tab): void
+    public function render(string $pageSlug, string $tab): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->currentConfig->enableExtensionsInstall) {
             $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
@@ -205,9 +201,9 @@ final readonly class ThemesNewPageRenderer
             newThemes: $new_themes,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Themes'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Themes'),
+        );
     }
 }

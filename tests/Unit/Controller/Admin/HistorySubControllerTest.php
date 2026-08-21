@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
-use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
@@ -127,19 +126,13 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             Paths::fromRoot($root),
         );
 
-        $subController->handle(new ServerRequest('GET', '/admin.php'));
+        $result = $subController->handle(new ServerRequest('GET', '/admin.php'));
 
         $today = Env::now()->format('Y-m-d');
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
-        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($result->pageTitle)
             ->toBe('History')
             ->and((string) $adminContent)
             ->toBe('start=' . $today);

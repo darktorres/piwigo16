@@ -13,6 +13,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\DoubleSelectView;
 use Piwigo\Controller\Admin\Projection\NotificationByMailView;
 use Piwigo\Controller\Admin\Request\NotificationByMailRequest;
@@ -92,7 +93,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -339,6 +340,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
             adminPageTitle: $this->lang->t('Send mail to users'),
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
         ));
+        return null;
     }
 
     /**

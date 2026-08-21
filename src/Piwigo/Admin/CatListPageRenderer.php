@@ -14,7 +14,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
@@ -65,10 +65,8 @@ final readonly class CatListPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $categoryService = $this->categoryService;
 
         $this->eventDispatcher->dispatch(new CatListPageRendering());
@@ -252,9 +250,9 @@ final readonly class CatListPageRenderer
             categories: $tpl_categories,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Album list management'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Album list management'),
+        );
     }
 }

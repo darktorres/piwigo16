@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -39,9 +40,9 @@ final readonly class PictureFormatsSubController implements AdminSubControllerIn
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new PictureFormatsPageRenderer()
+        return new PictureFormatsPageRenderer()
             ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->csrfService, $this->entityManager, $this->renderer);
     }
 }

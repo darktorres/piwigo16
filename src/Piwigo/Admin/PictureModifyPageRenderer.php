@@ -19,7 +19,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -88,7 +88,7 @@ final readonly class PictureModifyPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(string $adminPhotoBaseUrl): void
+    public function render(string $adminPhotoBaseUrl): AdminPageResult
     {
         // $page['image'] starts as ImageService::getImageInfos()'s own
         // precisely-shaped return, but $row (derived from it below) later
@@ -453,8 +453,8 @@ final readonly class PictureModifyPageRenderer
             rootUrl: $this->urlService->getRootUrl(),
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
-
         $this->eventDispatcher->dispatch(new PictureModifyPageRendered());
+
+        return new AdminPageResult(content: $adminContent);
     }
 }

@@ -14,7 +14,7 @@ use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\MaintenanceDispatchRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -67,10 +67,8 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         // Consumed by CoreTabs::addCoreTabs()'s own 'maintenance' case,
         // triggered synchronously inside Tabsheet::select() below -- must
         // be set before that call, not dead code (see this class's own
@@ -159,16 +157,24 @@ final readonly class MaintenanceSubController implements AdminSubControllerInter
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'env') {
-            $this->maintenanceEnvPageRenderer
+            $result = $this->maintenanceEnvPageRenderer
                 ->render();
         } elseif ($tab === 'sys') {
-            new MaintenanceSysPageRenderer()
+            $result = new MaintenanceSysPageRenderer()
                 ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate, $this->currentConfig, $this->entityManager, $this->renderer);
         } else {
-            $this->maintenanceActionsPageRenderer
+            $result = $this->maintenanceActionsPageRenderer
                 ->render($maintActions);
         }
 
-        $template->assignContext(new AdminContentPageContext(adminPageTitle: $this->lang->t('Maintenance')));
+        // This controller's own ADMIN_PAGE_TITLE override always wins over
+        // any per-tab renderer's own -- none of the 3 tab renderers set
+        // one of their own, so this is not currently observable, but kept
+        // as the one source of truth for this page's title regardless.
+        return new AdminPageResult(
+            content: $result->content,
+            pageTitle: $this->lang->t('Maintenance'),
+            helpUrl: $result->helpUrl,
+        );
     }
 }

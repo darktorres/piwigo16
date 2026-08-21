@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\GroupListView;
 use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -41,7 +41,7 @@ final readonly class GroupListPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -90,9 +90,9 @@ final readonly class GroupListPageRenderer
             colorscheme: $template->themeConf('colorscheme'),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>',
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>',
+        );
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
@@ -220,7 +219,6 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php', CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()),
             PageStateTestFactory::get(),
-            CurrentTemplateTestFactory::get(),
             HtmlServiceTestFactory::build(),
             CurrentConfigTestFactory::get(),
             new CsrfService(CurrentConfigTestFactory::get()),
@@ -316,11 +314,10 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
                 'name' => 'a-logo.png',
             ];
 
-            $this->renderer->render();
+            $adminContentRaw = $this->renderer->render()
+                ->content;
 
             $uploadDir = $fixtureRoot . 'logo';
-            $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
-            self::assertInstanceOf(Html::class, $adminContentRaw);
             self::assertStringContainsString(
                 sprintf(LangTestFactory::get()->t('Add write access to the "%s" directory'), $uploadDir),
                 (string) $adminContentRaw
@@ -360,7 +357,8 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             // of a PHPUnit\Framework\Error\Warning.
             set_error_handler(static fn (): bool => true, E_WARNING);
             try {
-                $this->renderer->render();
+                $adminContentRaw = $this->renderer->render()
+                    ->content;
             } finally {
                 restore_error_handler();
             }
@@ -372,8 +370,6 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             self::assertSame(2, ThemesStandardPagesLogoStreamWrapper::$opens);
 
             $uploadDir = $fixtureRoot . 'logo';
-            $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
-            self::assertInstanceOf(Html::class, $adminContentRaw);
             self::assertStringContainsString(
                 "{$uploadDir}/stdpageslogo.png " . LangTestFactory::get()->t('no write access'),
                 (string) $adminContentRaw
@@ -429,10 +425,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // markup.
         $currentConfig->useStandardPages = false;
 
-        $this->renderer->render();
+        $adminContentRaw = $this->renderer->render()
+            ->content;
 
-        $adminContentRaw = CurrentTemplateTestFactory::get()->get()->getTemplateVars('ADMIN_CONTENT');
-        self::assertInstanceOf(Html::class, $adminContentRaw);
         $adminContent = (string) $adminContentRaw;
         self::assertStringContainsString('Uses Standard Pages Theme', $adminContent);
         self::assertStringNotContainsString('Plain Theme', $adminContent);

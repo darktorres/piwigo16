@@ -13,7 +13,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\GetAdminsSiteLinks;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\SiteManagerView;
 use Piwigo\Controller\Admin\Request\SiteManagerRequest;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -72,10 +72,8 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         if (! $this->currentConfig->enableSynchronization) {
             $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
@@ -197,9 +195,9 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             sites: $tpl_sites,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Synchronize'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Synchronize'),
+        );
     }
 }

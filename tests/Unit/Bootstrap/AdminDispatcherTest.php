@@ -6,6 +6,7 @@ use Nyholm\Psr7\ServerRequest;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Controller\Admin\PhotosAddSubController;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -102,10 +103,12 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
 
             public ?ServerRequestInterface $request = null;
 
-            public function handle(ServerRequestInterface $request): void
+            public function handle(ServerRequestInterface $request): ?AdminPageResult
             {
                 $this->handled = true;
                 $this->request = $request;
+
+                return null;
             }
         };
 

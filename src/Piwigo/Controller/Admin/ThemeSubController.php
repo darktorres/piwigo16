@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\ThemeIdRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -60,7 +61,7 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $theme = ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
 
@@ -82,5 +83,6 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
 
         $this->currentTemplate->get()
             ->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return null;
     }
 }

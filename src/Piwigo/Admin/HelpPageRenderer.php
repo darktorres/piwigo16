@@ -9,7 +9,7 @@ use Piwigo\Admin\Projection\HelpView;
 use Piwigo\Admin\Request\HelpSectionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -24,10 +24,8 @@ use Piwigo\Users\CurrentUser;
  */
 final class HelpPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, Renderer $renderer, CurrentConfig $currentConfig): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, Renderer $renderer, CurrentConfig $currentConfig): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         $selected = HelpSectionRequest::fromGlobals()->section;
@@ -71,6 +69,6 @@ final class HelpPageRenderer
             ));
         }
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return new AdminPageResult(content: $adminContent);
     }
 }

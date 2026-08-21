@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Override;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\PluginSectionRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\PluginConfig\CurrentPluginRegistry;
@@ -48,7 +49,7 @@ final readonly class PluginSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $pluginSection = PluginSectionRequest::fromGlobals($this->inputValidator);
 
@@ -69,5 +70,6 @@ final readonly class PluginSubController implements AdminSubControllerInterface
 
         $this->currentTemplate->get()
             ->assignContext(new AdminContentPageContext(adminContent: $adminContent));
+        return null;
     }
 }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
@@ -127,15 +126,9 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             $currentConfig,
         );
 
-        $subController->handle(new ServerRequest('GET', '/admin.php'));
+        $result = $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
         expect((string) $adminContent)
             ->toBe('title=Add Photos');

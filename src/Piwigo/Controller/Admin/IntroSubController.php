@@ -25,6 +25,7 @@ use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\IntroPageRendered;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\IntroView;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
 use Piwigo\Core\AppInfo;
@@ -114,7 +115,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         // $link_start is computed locally rather than read from a global:
         // AdminShell's own same-named value (used for its menubar hrefs)
@@ -551,6 +552,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $template->assignContext(new AdminContentPageContext(
             adminContent: $adminContent,
         ));
+        return null;
     }
 
     /**

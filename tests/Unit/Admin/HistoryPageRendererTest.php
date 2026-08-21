@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
-use Latte\Runtime\Html;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\HistoryPageRenderer;
@@ -118,20 +117,14 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
 
-        new HistoryPageRenderer()
+        $result = new HistoryPageRenderer()
             ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager, new Renderer(CurrentTemplateTestFactory::get()), Paths::fromRoot($root));
 
         $today = Env::now()->format('Y-m-d');
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
-        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($result->pageTitle)
             ->toBe('History')
             ->and((string) $adminContent)
             ->toBe('start=' . $today . '|end=' . $today . '|userId=-1|userName=null');

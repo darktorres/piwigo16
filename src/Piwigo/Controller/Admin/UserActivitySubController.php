@@ -10,6 +10,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\UserActivityPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -48,9 +49,9 @@ final readonly class UserActivitySubController implements AdminSubControllerInte
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        new UserActivityPageRenderer()
+        return new UserActivityPageRenderer()
             ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService, $this->htmlRenderer, $this->inputValidator, $this->eventDispatcher, $this->renderer);
     }
 }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -280,17 +279,11 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
             new Renderer(CurrentTemplateTestFactory::get()),
         );
 
-        $subController->handle(new ServerRequest('GET', '/admin.php'));
+        $result = $subController->handle(new ServerRequest('GET', '/admin.php'));
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
+        $adminContent = $result->content;
 
-        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($result->pageTitle)
             ->toBe('Users');
 
         [$usersPart, $ulistPart] = explode('|', (string) $adminContent, 2);

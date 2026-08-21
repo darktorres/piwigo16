@@ -18,7 +18,7 @@ use Piwigo\Admin\Request\ThemesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -79,7 +79,7 @@ final readonly class ThemesInstalledPageRenderer
      * fixed page slug statically (it's the only class registered for the
      * 'themes' slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug): void
+    public function render(string $pageSlug): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -187,10 +187,10 @@ final readonly class ThemesInstalledPageRenderer
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Themes'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Themes'),
+        );
     }
 
     /**

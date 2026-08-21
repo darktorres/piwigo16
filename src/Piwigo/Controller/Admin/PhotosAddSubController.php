@@ -10,6 +10,7 @@ use Piwigo\Admin\PhotosAddDirectPageRenderer;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Bootstrap\AdminAccessor;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -37,7 +38,7 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): ?AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -76,5 +77,6 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
             new PhotosAddFtpPageRenderer()
                 ->render($this->lang, $this->currentTemplate, $this->renderer);
         }
+        return null;
     }
 }

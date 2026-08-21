@@ -14,6 +14,7 @@ use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\UpdatesTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -72,7 +73,7 @@ final readonly class UpdatesSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         if (! $this->currentConfig->enableExtensionsInstall and ! $this->currentConfig->enableCoreUpdate) {
             $this->htmlRenderer
@@ -93,11 +94,11 @@ final readonly class UpdatesSubController implements AdminSubControllerInterface
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'ext') {
-            new UpdatesExtPageRenderer()
+            return new UpdatesExtPageRenderer()
                 ->render($this->lang, $this->accessControl, 'updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->renderer);
-        } else {
-            $this->updatesPwgPageRenderer
-                ->render();
         }
+
+        return $this->updatesPwgPageRenderer
+            ->render();
     }
 }

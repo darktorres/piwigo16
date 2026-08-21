@@ -11,7 +11,7 @@ use Piwigo\Admin\Projection\StatsView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
@@ -53,10 +53,8 @@ final class StatsPageRenderer
      * this page's own tab within the shared 'history' tabsheet group (see
      * HistoryPageRenderer, its sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, HistoryService $historyService, EventDispatcher $eventDispatcher, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, HistoryService $historyService, EventDispatcher $eventDispatcher, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         // Bounded to match HistoryService::logVisit()'s own
@@ -144,11 +142,11 @@ final class StatsPageRenderer
             monthLabels: join('~', array_filter($lang_month, is_string(...))),
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('History'),
             helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',
-            adminPageTitle: $lang->t('History'),
-        ));
+        );
     }
 
     /**

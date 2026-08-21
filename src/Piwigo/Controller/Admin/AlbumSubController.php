@@ -19,6 +19,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\AlbumSubControllerPageContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -70,7 +71,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): void
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -106,17 +107,19 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         ));
 
         if ($tab === 'properties') {
-            new CatModifyPageRenderer()
+            return new CatModifyPageRenderer()
                 ->render($this->lang, $this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->csrfService, $this->activityService, $this->categoryService, $this->htmlRenderer, $this->entityManager, $this->renderer);
-        } elseif ($tab === 'sort_order') {
-            $this->elementSetRanksPageRenderer
+        }
+        if ($tab === 'sort_order') {
+            return $this->elementSetRanksPageRenderer
                 ->render();
-        } elseif ($tab === 'permissions') {
-            $this->catPermPageRenderer
-                ->render($adminAlbumBaseUrl, $category);
-        } else {
-            $this->albumNotificationPageRenderer
+        }
+        if ($tab === 'permissions') {
+            return $this->catPermPageRenderer
                 ->render($adminAlbumBaseUrl, $category);
         }
+
+        return $this->albumNotificationPageRenderer
+            ->render($adminAlbumBaseUrl, $category);
     }
 }

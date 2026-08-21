@@ -10,7 +10,7 @@ use Piwigo\Admin\Projection\CatOptionsView;
 use Piwigo\Admin\Request\CatOptionsRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\DoubleSelectView;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -49,10 +49,8 @@ final readonly class CatOptionsPageRenderer
         private Renderer $renderer,
     ) {}
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $catOptionsRequest = CatOptionsRequest::fromGlobals($this->inputValidator);
@@ -150,10 +148,10 @@ final readonly class CatOptionsPageRenderer
             doubleSelect: $doubleSelect,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Properties of abums'),
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Properties of abums'),
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_options',
-        ));
+        );
     }
 }

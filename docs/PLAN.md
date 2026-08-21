@@ -3389,6 +3389,35 @@ for quick_search -- not migrated yet); every already-migrated real
 parent's own merge is a harmless dedup-safe redundant registration
 alongside them.
 
+**Colorbox-family batch, part 5 -- the last 3 large pages.**
+`BatchManagerUnitView` (10+6+8 call sites; new `$colorscheme`/
+`$rootUrl`/`$associatedCategories` -- the last read back via
+`$template->getTemplateVars('associated_categories')` right after
+`FilterPanelRenderer::render()` returns, the same ambient-read-back
+shape as `AdminShellView::$hasHelp` above; `all_related_categories_ids`
+is a real derived value, a `json_decode()` loop over `$elements`,
+covered by a new unit test; its now-fully-redundant
+`{include 'include/colorbox.inc.latte'}` line was finally removed once
+the `$all_selected_album` pattern that caused part 2's phpstan-latte
+false positive was itself migrated away) and `BatchManagerGlobalView`
+(10+8+11 call sites; new `$colorscheme`/`$rootUrl`/
+`$associatedCategories`/`$allElements`, both ambient-read-back after
+`FilterPanelRenderer::render()`) closed out their own remaining
+non-colorbox-family calls. `PhotosAddDirectView` (14+11+14 call sites;
+new `$colorscheme`/`$rootPath`/`$pluploadCode`; `plupload_i18n-{code}`'s
+own `file_exists()` gate and `original_image_id_str`'s derivation from
+`$formatsOriginalInfo['id'] ?? -1` are both real derived values,
+covered by a new unit test) closes the last of the 4 large
+colorbox-family admin pages -- **~71 pages/Views landed so far, ~882 of
+945 call sites**. Dropped the last real trigger for phpstan.neon's
+`encapsedStringPart.nonString` ignore rule on the generated Latte
+analysis path (an unmatched-ignore PHPStan error, fixed by removing the
+now-stale rule, not by suppressing or reintroducing it). Remaining P42-B
+scope: `BatchManagerFilterView`'s own ~15 call sites (deferred, ambient
+shape); `local_head.latte`'s `resolveLocalHeadOnce()` infrastructure gap
+(bypasses `Renderer::render()` entirely); the `MenubarBlockView`/
+`index.latte` design gap (no real `Renderer::render()` target).
+
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign
 (124 commits, 614 files, `$array['field']` access converted to typed

@@ -3288,6 +3288,48 @@ already-documented `admin-config-search` `filters_names` drift were
 deliberately left untouched (`git checkout --` on just those 2
 baseline files after the batch regeneration).
 
+Migrated 8 more non-colorbox-blocked pages one at a time
+(`NotificationByMailView`, `GroupListView`, `HistoryView`,
+`UserActivityView`, `ConfigurationMainView`, `IntroView`,
+`ThemesInstalledView`, `ThemesNewView`) -- each still includes
+`colorbox.inc.latte`/`datepicker.inc.latte`/`autosize.inc.latte`
+(still imperative at the time), so each got the same known
+same-priority-tie reorder against that still-live include,
+golden-html-regenerated per this section's own accepted-risk
+guidance. `IntroView`/`ConfigurationMainView` both have real derived
+`exposedPageData()`/`exposedStrings()` logic (an `array_keys()`
+loop plus a `subscribeBaseUrl`-gated conditional; a `count()` guarded
+by `is_array()`), each with its own new unit test.
+
+**Colorbox-family batch, part 1**: `AutosizeView`/`DatepickerView`
+(2 of the 6 real P42-A partials still needing `pageAssets()`) --
+confirmed both are contract-only, never reached via `Renderer::
+render()`'s own hook (only ever `{include}`d), so every one of their
+real parents (`AutosizeView`: `NotificationByMailView`,
+`PictureModifyView`, `BatchManagerUnitView`; `DatepickerView`:
+`HistoryView`, `BatchManagerGlobalView`, `BatchManagerUnitView`,
+`PictureModifyView`) constructs an instance purely to merge
+`->pageAssets()` in, the same construct-and-merge pattern
+`PictureNavButtonsView`/`ToasterView` already established.
+`BatchManagerGlobalView`/`BatchManagerUnitView`/`PictureModifyView`
+are 3 large, still-mostly-imperative pages -- only the merged
+colorbox-family contribution is declarative on each so far, deliberately;
+their own remaining `combineCss`/`combineScript`/`exposeData` call
+sites stay imperative until a dedicated future batch, coexisting
+correctly per `PageAssets::add()`'s own dedup contract.
+`DatepickerView`'s `file_exists()`-gated per-language script
+registration is a real derived value (new `$rootPath`/`$jqueryCode`
+ambient properties replace its own `$ROOT_PATH`/
+`$lang_info['jquery_code']` reads), covered by a new unit test.
+`HistorySubController`/`HistoryPageRenderer` needed a new `Paths`
+dependency threaded through -- caught via a real `ArgumentCountError`
+on the first golden-html run after this change, not assumed --
+**~63 pages/Views landed so far (2 of them contract-only colorbox-
+family partials), ~674 of 945 call sites**. 4 colorbox-family
+partials remain (`ColorboxView`/`AlbumSelectorView`/`AddAlbumView`/
+`BatchManagerFilterView`), each with more, and more tightly-coupled,
+real parents than `Autosize`/`Datepicker` had.
+
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign
 (124 commits, 614 files, `$array['field']` access converted to typed

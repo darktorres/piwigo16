@@ -133,7 +133,10 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C–F not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id`
+stable DOM hooks + indexed rating-button ids across the picture/thumbnail
+family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks).
+P43-D–F not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3737,6 +3740,31 @@ live HTTP 500 from a bare `(string)` cast on an `int` option value) is
 in that sub-pass's own commit message. Every sub-pass individually
 golden-HTML-gated and independently commit-reviewed, not batched into
 one pass at the end.
+
+**P43-C (landed) — stable DOM hooks.** `data-image-id` added to
+`picture.latte`/`slideshow.latte`'s own `#theImage` wrapper and to
+each `thumbnails.latte` `<li>` -- mirrors `rating.latte`'s own
+pre-existing `data-image-id` convention, the one real precedent a
+corpus-wide audit found (`data-category-id` had zero prior uses
+anywhere). `data-category-id` added to `mainpage_categories.latte`'s
+own per-album `<li>`. The picture page's own 6 rating buttons (0-5)
+also gained stable, indexed ids (`id="rate-{$mark}"`) -- a real gap
+found auditing `picture.latte`'s own form controls, part of this
+batch's own "stable form-control ids" scope. Retires real historical
+`set_prefilter` demand outright: a plugin that only needed a selector
+to hook its own `<script>` onto, no markup insertion, no longer needs
+`set_prefilter` at all for that.
+
+Also deleted 6 confirmed-dead raw-HTML plugin hooks found while
+touching these same 2 files -- `$PLUGIN_PICTURE_BEFORE`/`AFTER`
+(`picture.latte`) and `$PLUGIN_INDEX_CONTENT_BEFORE`/`BEGIN`/`END`/
+`AFTER` (`index.latte`), all zero real assignments anywhere in `src/`,
+same pattern as `$PLUGINS_PROFILE` (P43-A part 3). Golden-HTML +
+visual-regression gated (this batch's own stated requirement, beyond
+P43-B's golden-HTML-only gate): 9 real routes affected, every baseline
+change reviewed by hand -- either the new attribute/id with a correct
+real value, or whitespace removed by the dead-hook cleanup. No visual
+regression (attributes and ids are invisible).
 
 **P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
 Found during a deep review of the Template layer, not part of this

@@ -43,7 +43,6 @@ use Piwigo\Mail\Projection\MailRecipient;
 use Piwigo\Mail\Projection\MailTitlePageContext;
 use Piwigo\Mail\Projection\NotificationAdminView;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -119,7 +118,6 @@ final class MailService implements MailerInterface
         private readonly Lang $lang,
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
-        private readonly SessionService $sessionService,
         private readonly Translator $translator,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentUser $currentUser,
@@ -426,7 +424,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
     }
 
     /**

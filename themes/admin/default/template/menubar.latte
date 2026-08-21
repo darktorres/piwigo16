@@ -40,7 +40,7 @@
             size="4"
             name="pos_{$block['reg']->getId()}"
             maxlength="4"
-            value="{=math('abs(pos)', pos: $block['pos'])}"
+            value="{=abs($block['pos'])}"
           >
         </label>
       </p>

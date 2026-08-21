@@ -208,7 +208,6 @@ final class MailServiceTest extends IntegrationTestCase
         $lang = Kernel::container()->get(Lang::class);
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         $paths = Kernel::container()->get(Paths::class);
-        $sessionService = Kernel::container()->get(SessionService::class);
         $translator = Kernel::container()->get(Translator::class);
         $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
         $currentUser = Kernel::container()->get(CurrentUser::class);
@@ -220,7 +219,7 @@ final class MailServiceTest extends IntegrationTestCase
         $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
         $imageStdParams = Kernel::container()->get(ImageStdParams::class);
         if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig
-            || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+            || ! $paths instanceof Paths
             || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
             || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
             || ! $webmasterMailProvider instanceof WebmasterMailProviderInterface
@@ -233,7 +232,7 @@ final class MailServiceTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type');
         }
 
-        return new MailService($lang, $currentConfig, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, $webmasterMailProvider, $repo, $authService, $userService, $pageState, $htmlRenderer, $imageStdParams);
+        return new MailService($lang, $currentConfig, $paths, $translator, $eventDispatcher, $currentUser, $urlService, $webmasterMailProvider, $repo, $authService, $userService, $pageState, $htmlRenderer, $imageStdParams);
     }
 
     private function setCurrentUserToFixtureAdmin(): void

@@ -20,13 +20,9 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Throwable;
@@ -42,12 +38,6 @@ use Throwable;
  * to its own "not yet loaded" baseline rather than throwing -- safe as a
  * required constructor param even before the schema exists (e.g.
  * public/install.php).
- *
- * SessionService's container factory does not eagerly touch the DB
- * (SessionRepository extends Doctrine's lazy EntityRepository), so a
- * throwaway instance built from a fresh DbConnection::build() is safe as
- * the no-Kernel-booted fallback -- it is only queried if Template's
- * get_device function is invoked, which no production template does.
  */
 final class TemplateTestFactory
 {
@@ -65,7 +55,6 @@ final class TemplateTestFactory
             self::resolve(CurrentConfigService::class) ?? new CurrentConfigService(),
             self::resolve(Paths::class) ?? Paths::fromRoot(sys_get_temp_dir()),
             self::resolve(AccessLevelChecker::class) ?? new AccessLevelChecker($currentUser, $currentConfig),
-            self::resolve(SessionService::class) ?? new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
             self::resolve(UrlServiceInterface::class) ?? UrlServiceTestFactory::build(),
             self::resolve(PageState::class) ?? new PageState(),
             self::resolve(HtmlRenderingInterface::class) ?? HtmlServiceTestFactory::build(),

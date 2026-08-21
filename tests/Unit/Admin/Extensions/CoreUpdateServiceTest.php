@@ -124,7 +124,6 @@ function core_update_service_test_mail_service(): MailService
         core_update_service_test_lang(),
         new CurrentConfig(),
         Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new EventDispatcher(),
         new CurrentUser(new CurrentConfig()),

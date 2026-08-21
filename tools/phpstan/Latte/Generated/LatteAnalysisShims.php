@@ -87,38 +87,20 @@ final class LatteAnalysisShims
         'rawurlencode',
         'intval',
         'json_encode',
-        'json_decode',
         'htmlspecialchars',
         'in_array',
         'ucfirst',
-        'strstr',
-        'stristr',
-        'md5',
-        'strtolower',
-        'str_ireplace',
-        'strpos',
-        'preg_match',
         'is_null',
-        'is_file',
-        'file_exists',
-        'constant',
-        'array_key_exists',
-        'sizeOf',
         'str_replace',
         'nl2br',
-        'ternary',
         'cat',
         'count',
         'strip_tags',
         'str_repeat',
         'default',
-        'date_format',
-        'number_format',
         'url_is_remote',
         'is_admin',
         'is_classic_user',
-        'get_device',
-        'get_gallery_home_url',
     ];
 
     public const FUNCTIONS = [
@@ -139,16 +121,13 @@ final class LatteAnalysisShims
         'getCombinedScripts',
         'combineCss',
         'getCombinedCss',
-        'defineDerivative',
         'htmlHead',
         'footerScript',
-        'localCssRules',
         'exposeData',
         'exposeString',
         'getPageDataScript',
         'htmlOptions',
         'htmlRadios',
-        'math',
         'once',
         'is_admin',
         'is_classic_user',
@@ -273,9 +252,9 @@ final class LatteAnalysisShims
     }
 
     /**
-     * @return list<string>
+     * @return array<array-key, mixed>
      */
-    public static function explode(string $text, string $delimiter = ','): array
+    public static function explode(string $value, string $separator = ''): array
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -497,7 +476,7 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function trim(string $string, string $characters = " \n\r\t\v\000"): string
+    public static function trim(string $s, string $charlist = " \t\n\r\000\v "): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -560,11 +539,6 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function json_decode(string $json, ?bool $associative = null, int $depth = 512, int $flags = 0): mixed
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function htmlspecialchars(string $string, int $flags = 11, ?string $encoding = null, bool $double_encode = true): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
@@ -583,77 +557,7 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function strstr(string $haystack, string $needle, bool $before_needle = false): string|false
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function stristr(string $haystack, string $needle, bool $before_needle = false): string|false
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function md5(string $string, bool $binary = false): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function strtolower(string $string): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param list<string>|string $search
-     * @param list<string>|string $replace
-     */
-    public static function str_ireplace(string $subject, array|string $search, array|string $replace): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function strpos(string $haystack, string $needle, int $offset = 0): int|false
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function preg_match(string $pattern, string $subject, mixed &$matches = null, int $flags = 0, int $offset = 0): int|false
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function is_null(mixed $value): bool
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function is_file(string $filename): bool
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function file_exists(string $filename): bool
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function constant(string $name): mixed
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<array-key, mixed> $array
-     */
-    public static function array_key_exists(mixed $key, array $array): bool
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param \Countable|array<array-key, mixed> $value
-     */
-    public static function sizeOf(\Countable|array $value, int $mode = \COUNT_NORMAL): int
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -668,11 +572,6 @@ final class LatteAnalysisShims
     }
 
     public static function nl2br(string $string, bool $use_xhtml = true): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function ternary(mixed $param, mixed $true, mixed $false): mixed
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -705,16 +604,6 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function date_format(mixed $value, string $format = '%b %e, %Y'): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function number_format(int|float $number, int $decimals = 0, string $decimalSeparator = '.', string $thousandsSeparator = ','): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function url_is_remote(string $url): bool
     {
         throw new \LogicException('Analysis-only shim; never executed.');
@@ -726,16 +615,6 @@ final class LatteAnalysisShims
     }
 
     public static function is_classic_user(string $userStatus = ''): bool
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function get_device(): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function get_gallery_home_url(): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -785,25 +664,12 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function defineDerivative(?string $type = null, ?int $width = null, ?int $height = null, int|float|bool $crop = 0, ?int $minWidth = null, ?int $minHeight = null): \Piwigo\Image\DerivativeParams
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function htmlHead(\Latte\Runtime\Html|string $content): void
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
     public static function footerScript(\Latte\Runtime\Html|string $content, ?string $require = null): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<int, array<string, mixed>> $themes
-     */
-    public static function localCssRules(array $themes): void
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -845,14 +711,6 @@ final class LatteAnalysisShims
      * @param mixed ...$extra forwarded HTML attributes -- runtime
      */
     public static function htmlRadios(?array $options = null, ?array $values = null, ?array $output = null, string|int|float|bool|null $selected = null, string|int|float|bool|null $checked = null, string $name = 'radio', string $separator = '', bool $escape = true, bool $labels = true, bool $labelIds = false, mixed ...$extra): \Latte\Runtime\Html
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<string, mixed>|float|int|string $vars values for free
-     */
-    public static function math(string $equation, mixed ...$vars): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

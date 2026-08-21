@@ -46,7 +46,6 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Page\PageDataPayload;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Projection\LocalHeadView;
@@ -258,7 +257,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly CurrentConfigService $currentConfigService,
         private readonly Paths $paths,
         private readonly AccessLevelChecker $accessLevelChecker,
-        private readonly SessionService $sessionService,
         private readonly UrlServiceInterface $urlService,
         private readonly PageState $pageState,
         private readonly HtmlRenderingInterface $htmlRenderer,
@@ -414,7 +412,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $this->clearLatteCacheDir($cacheDir);
         }
 
-        $extension = new PiwigoExtension($this, $this->lang, $this->accessLevelChecker, $this->sessionService, $this->urlService);
+        $extension = new PiwigoExtension($this, $this->lang, $this->accessLevelChecker, $this->urlService);
         $this->latteEngineInstance = new LatteEngine($cacheDir, $this->currentConfig->templateCompileCheck, $extension, $this->lang->currentUserLanguage());
 
         return $this->latteEngineInstance;

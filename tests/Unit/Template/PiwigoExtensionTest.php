@@ -10,7 +10,6 @@ use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
@@ -28,9 +27,9 @@ use Piwigo\Users\CurrentUser;
  * -- they're thin `$this->template->x(...)` delegates with their own
  * real coverage in TemplateInstanceTest.php; duplicating it against a
  * second, PiwigoExtension-constructed Template would just be the same
- * assertions with extra indirection. `htmlOptions()`/`htmlRadios()`/
- * `math()` are real, substantial ports of Smarty's own stdlib plugins
- * with no Template involvement at all, so they get real coverage here.
+ * assertions with extra indirection. `htmlOptions()`/`htmlRadios()`
+ * are real, substantial ports of Smarty's own stdlib plugins with no
+ * Template involvement at all, so they get real coverage here.
  */
 function piwigo_extension_test_build(): PiwigoExtension
 {
@@ -44,7 +43,6 @@ function piwigo_extension_test_build(): PiwigoExtension
         TemplateTestFactory::build(),
         LangTestFactory::get(),
         new AccessLevelChecker($currentUser, $currentConfig),
-        SessionServiceTestFactory::get(),
         UrlServiceTestFactory::build(),
     );
 }
@@ -98,7 +96,7 @@ test('translateDec treats a non-numeric count as 0, matching Lang::plural()\'s o
         ->toBe('0 items');
 });
 
-// --- isAdmin / isClassicUser / getDevice ---------------------------------
+// --- isAdmin / isClassicUser ----------------------------------------------
 
 test('isAdmin reflects the given userStatus without needing the current user', function (): void {
     $extension = piwigo_extension_test_build();
@@ -118,53 +116,7 @@ test('isClassicUser reflects the given userStatus without needing the current us
         ->toBeFalse();
 });
 
-test('getDevice defaults to "desktop" and caches it in the session when unset', function (): void {
-    $_SESSION = [];
-    $extension = piwigo_extension_test_build();
-
-    expect($extension->getDevice())
-        ->toBe('desktop')
-        ->and($_SESSION['pwg_device'] ?? null)
-        ->toBe('desktop');
-
-    unset($_SESSION);
-});
-
-test('getDevice returns the already-cached session value without overwriting it', function (): void {
-    $_SESSION = [
-        'pwg_device' => 'tablet',
-    ];
-    $extension = piwigo_extension_test_build();
-
-    expect($extension->getDevice())
-        ->toBe('tablet')
-        ->and($_SESSION['pwg_device'])
-        ->toBe('tablet');
-
-    unset($_SESSION);
-});
-
-// --- explode / ternary / cat ---------------------------------------------
-
-test('explode splits on the given delimiter', function (): void {
-    expect(PiwigoExtension::explode('a,b,c', ','))
-        ->toBe(['a', 'b', 'c']);
-});
-
-test('explode falls back to "," when the delimiter is an empty string', function (): void {
-    expect(PiwigoExtension::explode('a,b,c', ''))
-        ->toBe(['a', 'b', 'c']);
-});
-
-test('ternary returns the true branch for a truthy param', function (): void {
-    expect(PiwigoExtension::ternary(1, 'yes', 'no'))
-        ->toBe('yes');
-});
-
-test('ternary returns the false branch for a falsy param', function (): void {
-    expect(PiwigoExtension::ternary(0, 'yes', 'no'))
-        ->toBe('no');
-});
+// --- cat -------------------------------------------------------------------
 
 test('cat concatenates the piped value with every extra piece', function (): void {
     expect(PiwigoExtension::cat('a', 'b', 'c'))
@@ -205,29 +157,7 @@ test('defaultFilter returns the original value when it is not empty', function (
         ->toBe('real value');
 });
 
-// --- dateFormat / numberFormat --------------------------------------------
-
-test('dateFormat maps strftime-style tokens to native date() format characters', function (): void {
-    expect(PiwigoExtension::dateFormat(1704067200, '%Y-%m-%d'))
-        ->toBe(date('Y-m-d', 1704067200));
-});
-
-test('dateFormat returns an empty string for an unparseable value', function (): void {
-    expect(PiwigoExtension::dateFormat('not-a-real-date', '%Y'))
-        ->toBe('');
-});
-
-test('numberFormat defaults to zero decimals', function (): void {
-    expect(PiwigoExtension::numberFormat(1234.56))
-        ->toBe('1,235');
-});
-
-test('numberFormat honors explicit decimals and separators', function (): void {
-    expect(PiwigoExtension::numberFormat(1234.5, 2, ',', '.'))
-        ->toBe('1.234,50');
-});
-
-// --- replace / strReplace / strIreplace / join ----------------------------
+// --- replace / strReplace / join -------------------------------------------
 
 test('replace does a plain scalar search/replacement, not a regex', function (): void {
     expect(PiwigoExtension::replace('a.b.c', '.', '-'))
@@ -237,11 +167,6 @@ test('replace does a plain scalar search/replacement, not a regex', function ():
 test('strReplace reorders to str_replace($search, $replace, $subject) with the piped value as $subject', function (): void {
     expect(PiwigoExtension::strReplace('hello world', 'world', 'there'))
         ->toBe('hello there');
-});
-
-test('strIreplace is case-insensitive, unlike strReplace', function (): void {
-    expect(PiwigoExtension::strIreplace('Hello WORLD', 'world', 'there'))
-        ->toBe('Hello there');
 });
 
 test('join reorders to implode($glue, $pieces) with the piped array first', function (): void {
@@ -324,34 +249,5 @@ test('htmlRadios renders one radio row per entry, marking the selected/checked v
 
 test('htmlRadios returns an empty Html when neither options nor values is given', function (): void {
     expect((string) PiwigoExtension::htmlRadios())
-        ->toBe('');
-});
-
-// --- math --------------------------------------------------------------
-
-test('math evaluates a basic arithmetic equation', function (): void {
-    expect(PiwigoExtension::math('2 + 3 * 4'))
-        ->toBe('14');
-});
-
-test('math substitutes named numeric vars into the equation', function (): void {
-    expect(PiwigoExtension::math('x + y', x: 2, y: 3))
-        ->toBe('5');
-});
-
-test('math allows whitelisted PHP math functions', function (): void {
-    expect(PiwigoExtension::math('max(2,5,3)'))
-        ->toBe('5');
-});
-
-test('math returns an empty string for an equation referencing an unknown identifier', function (): void {
-    expect(PiwigoExtension::math('shell_exec(1)'))
-        ->toBe('');
-});
-
-test('math rejects an equation containing a backtick or dollar sign', function (): void {
-    expect(PiwigoExtension::math('1 + `x`'))
-        ->toBe('')
-        ->and(PiwigoExtension::math('1 + $x'))
         ->toBe('');
 });

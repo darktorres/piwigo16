@@ -22,7 +22,6 @@ use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\EmailRecipient;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -60,7 +59,6 @@ function mail_service_test_build(
     $lang = Kernel::container()->get(Lang::class);
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     $paths = Kernel::container()->get(Paths::class);
-    $sessionService = Kernel::container()->get(SessionService::class);
     $translator = Kernel::container()->get(Translator::class);
     $eventDispatcher = Kernel::container()->get(EventDispatcher::class);
     $currentUser = Kernel::container()->get(CurrentUser::class);
@@ -73,7 +71,7 @@ function mail_service_test_build(
     $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
     $imageStdParams = Kernel::container()->get(ImageStdParams::class);
     if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig
-        || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
+        || ! $paths instanceof Paths
         || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
         || ! $currentUser instanceof CurrentUser || ! $urlService instanceof UrlServiceInterface
         || ! $webmasterMailProvider instanceof WebmasterMailProviderInterface
@@ -91,7 +89,6 @@ function mail_service_test_build(
         $lang,
         $currentConfig,
         $paths,
-        $sessionService,
         $translator,
         $eventDispatcher,
         $currentUser,

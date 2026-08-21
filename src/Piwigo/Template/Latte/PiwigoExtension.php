@@ -15,10 +15,8 @@ use Latte\Extension;
 use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -35,24 +33,22 @@ use Piwigo\Template\Template;
  *    revisit only if benchmarked).
  *  - **PHP passthroughs as filters** -- `sprintf`, `urlencode`, etc., plus
  *    Smarty's own built-in modifiers real templates rely on directly
- *    (`cat`, `count`, `date_format`, `default`, `join`, `lower`, `nl2br`,
- *    `number_format`, `replace`, `strip_tags`, `str_repeat`) that have no
- *    `registerPlugin()` call anywhere in `Template.php` to find by reading
- *    that file alone. Pipe-incompatible PHP functions (`implode`,
- *    `str_replace`, `preg_match`, ...) stay unregistered -- templates call
- *    them inline via `{=implode(',', $arr)}` instead (Latte's own
- *    print-expression tag), since a filter's piped value has to be the
- *    wrapped function's first argument and those don't fit that shape.
+ *    (`cat`, `count`, `default`, `join`, `lower`, `nl2br`, `replace`,
+ *    `strip_tags`, `str_repeat`) that have no `registerPlugin()` call
+ *    anywhere in `Template.php` to find by reading that file alone.
+ *    Pipe-incompatible PHP functions (`implode`, `str_replace`,
+ *    `preg_match`, ...) stay unregistered -- templates call them inline
+ *    via `{=implode(',', $arr)}` instead (Latte's own print-expression
+ *    tag), since a filter's piped value has to be the wrapped function's
+ *    first argument and those don't fit that shape.
  *  - **Stateful asset/page functions** -- `combineScript`/`combineCss`/
- *    `getCombinedScripts`/`getCombinedCss`/`defineDerivative`/`htmlHead`/
- *    `footerScript`/`localCssRules`/`exposeData`/
- *    `exposeString`/`getPageDataScript` all delegate to the owning
- *    `Template` instance's own (renamed, same-body) methods -- reusing
- *    its already-correct `PageAssets`/`PageState`/
- *    validation logic directly rather than re-deriving it here (the
- *    last three accumulate into `PageState`, docs/PLAN.md's P37).
- *    `html_options`/
- *    `html_radios`/`math` are generic, stateless ports of Smarty's own
+ *    `getCombinedScripts`/`getCombinedCss`/`htmlHead`/`footerScript`/
+ *    `exposeData`/`exposeString`/`getPageDataScript` all delegate to the
+ *    owning `Template` instance's own (renamed, same-body) methods --
+ *    reusing its already-correct `PageAssets`/`PageState` validation
+ *    logic directly rather than re-deriving it here (the last three
+ *    accumulate into `PageState`, docs/PLAN.md's P37). `html_options`/
+ *    `html_radios` are generic, stateless ports of Smarty's own
  *    stdlib plugins (no `Template` state involved).
  */
 final class PiwigoExtension extends Extension
@@ -61,7 +57,6 @@ final class PiwigoExtension extends Extension
         private readonly Template $template,
         private readonly Lang $lang,
         private readonly AccessLevelChecker $accessLevelChecker,
-        private readonly SessionService $sessionService,
         private readonly UrlServiceInterface $urlService,
     ) {}
 
@@ -91,45 +86,25 @@ final class PiwigoExtension extends Extension
             'rawurlencode' => rawurlencode(...),
             'intval' => intval(...),
             'json_encode' => json_encode(...),
-            'json_decode' => json_decode(...),
             'htmlspecialchars' => htmlspecialchars(...),
             'in_array' => in_array(...),
             'ucfirst' => ucfirst(...),
-            'strstr' => strstr(...),
-            'stristr' => stristr(...),
-            'trim' => trim(...),
-            'md5' => md5(...),
-            'strtolower' => strtolower(...),
-            'str_ireplace' => self::strIreplace(...),
-            'strpos' => strpos(...),
-            'preg_match' => preg_match(...),
             'is_null' => is_null(...),
-            'is_file' => is_file(...),
-            'file_exists' => file_exists(...),
-            'constant' => constant(...),
-            'array_key_exists' => array_key_exists(...),
-            'sizeOf' => sizeof(...),
             'str_replace' => self::strReplace(...),
             'lower' => strtolower(...),
             'nl2br' => nl2br(...),
             'join' => self::join(...),
-            'explode' => self::explode(...),
-            'ternary' => self::ternary(...),
             'cat' => self::cat(...),
             'count' => count(...),
             'strip_tags' => self::stripTags(...),
             'str_repeat' => str_repeat(...),
             'default' => self::defaultFilter(...),
-            'date_format' => self::dateFormat(...),
-            'number_format' => self::numberFormat(...),
             'replace' => self::replace(...),
 
             // Domain-specific helpers.
             'url_is_remote' => $this->urlService->urlIsRemote(...),
             'is_admin' => $this->isAdmin(...),
             'is_classic_user' => $this->isClassicUser(...),
-            'get_device' => $this->getDevice(...),
-            'get_gallery_home_url' => $this->urlService->getGalleryHomeUrl(...),
         ];
     }
 
@@ -196,16 +171,13 @@ final class PiwigoExtension extends Extension
             'getCombinedScripts' => $this->template->getCombinedScripts(...),
             'combineCss' => $this->template->combineCss(...),
             'getCombinedCss' => $this->template->getCombinedCss(...),
-            'defineDerivative' => $this->template->defineDerivative(...),
             'htmlHead' => $this->template->htmlHead(...),
             'footerScript' => $this->template->footerScript(...),
-            'localCssRules' => $this->template->localCssRules(...),
             'exposeData' => $this->template->exposeData(...),
             'exposeString' => $this->template->exposeString(...),
             'getPageDataScript' => $this->template->getPageDataScript(...),
             'htmlOptions' => self::htmlOptions(...),
             'htmlRadios' => self::htmlRadios(...),
-            'math' => self::math(...),
             'once' => $this->template->once(...),
             // Also registered as filters above, same names -- same
             // {if}-rejects-pipes reason as translate/l10n above. Real live
@@ -258,11 +230,6 @@ final class PiwigoExtension extends Extension
         return $this->accessLevelChecker->isClassicUser($userStatus);
     }
 
-    public function getDevice(): string
-    {
-        return DeviceHelper::getDevice($this->sessionService);
-    }
-
     /**
      * Smarty's `|@str_replace` modifier is a bare PHP passthrough
      * (`str_replace($search, $replace, $subject)`), which puts the piped
@@ -283,17 +250,6 @@ final class PiwigoExtension extends Extension
     }
 
     /**
-     * Same reordering as strReplace() above, for Smarty's `|@str_ireplace`.
-     *
-     * @param list<string>|string $search
-     * @param list<string>|string $replace
-     */
-    public static function strIreplace(string $subject, array|string $search, array|string $replace): string
-    {
-        return str_ireplace($search, $replace, $subject);
-    }
-
-    /**
      * Smarty's `|@join:', '` modifier -- PHP's `implode($glue, $arr)` has
      * the glue first, pipe-incompatible; reordered to `(arr, glue)` here so
      * the piped array is the first argument.
@@ -303,22 +259,6 @@ final class PiwigoExtension extends Extension
     public static function join(array $pieces, string $glue = ','): string
     {
         return implode($glue, $pieces);
-    }
-
-    /**
-     * Behaves like Template::modExplode() -- falls back to ',' on an empty
-     * delimiter, which explode('', $s) would otherwise reject.
-     *
-     * @return list<string>
-     */
-    public static function explode(string $text, string $delimiter = ','): array
-    {
-        return explode($delimiter !== '' ? $delimiter : ',', $text);
-    }
-
-    public static function ternary(mixed $param, mixed $true, mixed $false): mixed
-    {
-        return (bool) $param ? $true : $false;
     }
 
     /**
@@ -362,56 +302,6 @@ final class PiwigoExtension extends Extension
     public static function defaultFilter(mixed $value, mixed $fallback): mixed
     {
         return in_array($value, [null, false, 0, '0', '', []], true) ? $fallback : $value;
-    }
-
-    /**
-     * Smarty `|date_format:"%d"` modifier -- maps the strftime-style format
-     * to PHP `date()` for the subset Piwigo templates actually use. The
-     * input value is coerced via PHP's own parsing rules (Unix timestamp,
-     * ISO string, or 'now' for $smarty.now -> time()).
-     */
-    public static function dateFormat(mixed $value, string $format = '%b %e, %Y'): string
-    {
-        if (is_int($value)) {
-            $timestamp = $value;
-        } else {
-            $coerced = is_scalar($value) ? (string) $value : 'now';
-            $timestamp = strtotime($coerced);
-            if ($timestamp === false) {
-                return '';
-            }
-        }
-        $map = [
-            '%d' => 'd',
-            '%m' => 'm',
-            '%Y' => 'Y',
-            '%y' => 'y',
-            '%H' => 'H',
-            '%M' => 'i',
-            '%S' => 's',
-            '%B' => 'F',
-            '%b' => 'M',
-            '%A' => 'l',
-            '%a' => 'D',
-            '%e' => 'j',
-            '%j' => 'z',
-            '%p' => 'A',
-            '%P' => 'a',
-            '%%' => '%',
-        ];
-
-        return date(strtr($format, $map), $timestamp);
-    }
-
-    /**
-     * Wrapper around PHP's number_format() with sane defaults -- Smarty's
-     * `|number_format` was a plain passthrough, so Piwigo's templates either
-     * call it bare (`{$n|number_format}`), relying on the zero-decimal
-     * default, or with explicit args.
-     */
-    public static function numberFormat(int|float $number, int $decimals = 0, string $decimalSeparator = '.', string $thousandsSeparator = ','): string
-    {
-        return number_format($number, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
     /**
@@ -535,92 +425,6 @@ final class PiwigoExtension extends Extension
         }
 
         return new Html(implode($separator === '' ? "\n" : $separator, $rows));
-    }
-
-    /**
-     * Port of Smarty's `{math}` plugin. Evaluates an arithmetic `equation`
-     * against named numeric vars passed via `...$vars`. Mirrors Smarty's
-     * whitelist of math functions, balanced-paren check, and `$`/backtick
-     * blocks.
-     *
-     * @param array<string, mixed>|float|int|string $vars values for free
-     *     identifiers in the equation. May also include the `format` and
-     *     `assign` reserved keys, which are ignored at this layer.
-     */
-    public static function math(string $equation, mixed ...$vars): string
-    {
-        /** @var array<string, true> $allowed */
-        static $allowed = [
-            'int' => true,
-            'abs' => true,
-            'ceil' => true,
-            'acos' => true,
-            'acosh' => true,
-            'cos' => true,
-            'cosh' => true,
-            'deg2rad' => true,
-            'rad2deg' => true,
-            'exp' => true,
-            'floor' => true,
-            'log' => true,
-            'log10' => true,
-            'max' => true,
-            'min' => true,
-            'pi' => true,
-            'pow' => true,
-            'rand' => true,
-            'round' => true,
-            'asin' => true,
-            'asinh' => true,
-            'sin' => true,
-            'sinh' => true,
-            'sqrt' => true,
-            'srand' => true,
-            'atan' => true,
-            'atanh' => true,
-            'tan' => true,
-            'tanh' => true,
-        ];
-        $eq = preg_replace('/\s+/', '', $equation) ?? $equation;
-        $number = '-?(?:\d+(?:[,.]\d+)?|pi|\x{03c0})';
-        $functionsOrVars = '((?:0x[a-fA-F0-9]+)|([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*))';
-        $operators = '[,+\/*\^%-]';
-        $regex = '/^((' . $number . '|' . $functionsOrVars . '|(' . $functionsOrVars . '\s*\((?1)*\)|\((?1)*\)))(?:' . $operators . '(?1))?)+$/u';
-        if (preg_match($regex, $eq) !== 1
-            || substr_count($eq, '(') !== substr_count($eq, ')')
-            || str_contains($eq, '`')
-            || str_contains($eq, '$')
-        ) {
-            return '';
-        }
-        unset($vars['format'], $vars['assign']);
-        $numericVars = [];
-        foreach ($vars as $k => $v) {
-            if (is_string($k) && is_numeric($v)) {
-                $numericVars[$k] = $v;
-            }
-        }
-        preg_match_all('!(?:0x[a-fA-F0-9]+)|([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)!', $eq, $matches);
-        /** @var list<string> $idents */
-        $idents = $matches[1];
-        foreach ($idents as $ident) {
-            if ($ident === '' || isset($allowed[$ident])) {
-                continue;
-            }
-            if (! array_key_exists($ident, $numericVars)) {
-                return '';
-            }
-        }
-        foreach ($numericVars as $key => $val) {
-            $eq = preg_replace('/\b' . preg_quote($key, '/') . '\b/', '(' . (string) $val . ')', $eq) ?? $eq;
-        }
-        // The validated equation contains only digits, math operators and
-        // whitelisted PHP function names -- eval is a deliberate match of
-        // Smarty's own plugin behavior, gated by the regex above.
-        $result = null;
-        eval('$result = ' . $eq . ';');
-
-        return (string) $result;
     }
 
     /**

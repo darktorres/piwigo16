@@ -393,7 +393,7 @@ final class InstallWizard
         // wanted this early. The theme-base "unconditional admin-layout
         // assets" piece (docs/PLAN.md's P42-A) would otherwise register
         // them regardless, a real regression caught via golden-html.
-        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
+        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
         $this->currentTemplate->set($template);
         $this->template = $template;
     }

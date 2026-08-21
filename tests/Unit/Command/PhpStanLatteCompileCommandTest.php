@@ -10,7 +10,6 @@ use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
@@ -30,7 +29,6 @@ function phpstan_latte_compile_command_test_build(Paths $paths): PhpStanLatteCom
             TemplateTestFactory::build(),
             LangTestFactory::get(),
             new AccessLevelChecker($currentUser, $currentConfig),
-            SessionServiceTestFactory::get(),
             UrlServiceTestFactory::build(),
         ),
         $paths,

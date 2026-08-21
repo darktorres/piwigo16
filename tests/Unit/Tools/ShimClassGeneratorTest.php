@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Latte\Engine;
+use Latte\Extension;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -10,7 +11,6 @@ use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
@@ -29,7 +29,6 @@ function shim_generator_test_extension(): PiwigoExtension
         TemplateTestFactory::build(),
         LangTestFactory::get(),
         new AccessLevelChecker($currentUser, $currentConfig),
-        SessionServiceTestFactory::get(),
         UrlServiceTestFactory::build(),
     );
 }
@@ -38,6 +37,69 @@ function shim_generator_test_engine(): Engine
 {
     $engine = new Engine();
     $engine->addExtension(shim_generator_test_extension());
+
+    return $engine;
+}
+
+/**
+ * A real static method the generator can reflect for one specific
+ * docblock-copying edge case (`@return list<string>` -- native PHP has
+ * no way to express "a list of strings" in a return type, so the
+ * generator falls back to copying the docblock line verbatim). Kept
+ * separate from `PiwigoExtension` itself: this shape doesn't need to be
+ * a real, currently-registered filter/function to be worth the
+ * generator handling correctly.
+ */
+final class ShimClassGeneratorTestEdgeCaseFixture
+{
+    /**
+     * @return list<string>
+     */
+    public static function explode(string $text, string $delimiter = ','): array
+    {
+        return explode($delimiter !== '' ? $delimiter : ',', $text);
+    }
+}
+
+/**
+ * Isolated from `shim_generator_test_engine()`'s real, production
+ * PiwigoExtension registrations on purpose: these 3 tests exercise
+ * generator mechanics (untyped/by-ref internal-function params,
+ * control-character default escaping, docblock-line copying) that
+ * happened to be demonstrated by real `PiwigoExtension` registrations
+ * once, but the generator itself must keep handling correctly whether
+ * or not any *current* registration happens to exhibit them --
+ * `array_key_exists`/`preg_match`/`trim` are plain PHP internal
+ * functions here, not tied to whatever PiwigoExtension currently
+ * registers.
+ */
+function shim_generator_test_edge_case_engine(): Engine
+{
+    $extension = new class() extends Extension {
+        /**
+         * @return array<string, callable>
+         */
+        public function getFilters(): array
+        {
+            return [
+                'array_key_exists' => array_key_exists(...),
+                'trim' => trim(...),
+                'explode' => ShimClassGeneratorTestEdgeCaseFixture::explode(...),
+            ];
+        }
+
+        /**
+         * @return array<string, callable>
+         */
+        public function getFunctions(): array
+        {
+            return [
+                'preg_match' => preg_match(...),
+            ];
+        }
+    };
+    $engine = new Engine();
+    $engine->addExtension($extension);
 
     return $engine;
 }
@@ -78,20 +140,28 @@ it('emits variadic union types with FQCN class members', function (): void {
 });
 
 it('types internal-function parameters reflection leaves untyped', function (): void {
-    expect($this->generated)
+    $generated = new ShimClassGenerator(shim_generator_test_edge_case_engine())
+        ->generate();
+
+    expect($generated)
         ->toContain('public static function array_key_exists(mixed $key, array $array): bool')
         ->toContain('mixed &$matches = null');
 });
 
 it('escapes control characters in string defaults instead of emitting them raw', function (): void {
-    expect($this->generated)
+    $generated = new ShimClassGenerator(shim_generator_test_edge_case_engine())
+        ->generate();
+
+    expect($generated)
         ->toContain('$characters = " \n\r\t\v\000"')
         ->not->toContain("\$characters = ' ");
 });
 
 it('copies array-typed docblock lines the native signature cannot express', function (): void {
-    expect($this->generated)
-        ->toContain('@param list<string>|string $search')
+    $generated = new ShimClassGenerator(shim_generator_test_edge_case_engine())
+        ->generate();
+
+    expect($generated)
         ->toContain('@return list<string>');
 });
 

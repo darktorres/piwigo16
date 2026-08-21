@@ -25,7 +25,6 @@ use Piwigo\Page\Event\NoPhotoYetRendered;
 use Piwigo\Page\Projection\NoPhotoYetView;
 use Piwigo\Page\Request\NoPhotoYetRequest;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
@@ -57,7 +56,6 @@ final readonly class NoPhotoYetRenderer
         private readonly Paths $paths,
         private readonly AdminContext $adminContext,
         private readonly ApiContext $apiContext,
-        private readonly SessionService $sessionService,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentUser $currentUser,
         private readonly CurrentTemplate $currentTemplate,
@@ -98,7 +96,7 @@ final readonly class NoPhotoYetRenderer
                 // needed here either.
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', $user_theme);
+                $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = NoPhotoYetRequest::fromGlobals()->action;

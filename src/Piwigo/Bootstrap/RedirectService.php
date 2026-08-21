@@ -29,7 +29,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
@@ -155,15 +154,6 @@ final readonly class RedirectService implements RedirectServiceInterface
         return $currentConfigService;
     }
 
-    private static function sessionService(): SessionService
-    {
-        $sessionService = Kernel::container()->get(SessionService::class);
-        if (! $sessionService instanceof SessionService) {
-            throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
-        }
-        return $sessionService;
-    }
-
     /**
      * Resolve helper matching the ones above -- needed for Template's own
      * required collaborators, same "Kernel-container-resolving static
@@ -238,10 +228,10 @@ final readonly class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
+            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
+            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         }
 

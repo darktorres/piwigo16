@@ -8,7 +8,6 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiContext;
@@ -21,8 +20,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -92,7 +89,6 @@ function noPhotoYetTestRenderer(AdminContext $adminContext, ApiContext $apiConte
         Paths::fromRoot(sys_get_temp_dir()),
         $adminContext,
         $apiContext,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         CurrentUserTestFactory::get(),
         CurrentTemplateTestFactory::get(),

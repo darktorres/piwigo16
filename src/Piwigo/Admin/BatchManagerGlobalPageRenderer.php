@@ -468,6 +468,15 @@ final readonly class BatchManagerGlobalPageRenderer
         $associated_categories_raw = $template->getTemplateVars('associated_categories');
         $all_elements_raw = $template->getTemplateVars('all_elements');
 
+        // batch_manager_filter.inc.latte's own exposedPageData() needs --
+        // 'dimensions'/'filesize' are assigned by
+        // BatchManagerSubController::handle() (before this renderer
+        // runs at all), 'filter_category_selected' by
+        // FilterPanelRenderer::render() above, same ambient-bag shape.
+        $filter_dimensions_raw = $template->getTemplateVars('dimensions');
+        $filter_filesize_raw = $template->getTemplateVars('filesize');
+        $filter_category_selected_raw = $template->getTemplateVars('filter_category_selected');
+
         $in_caddie = $prefilter_value === 'caddie';
 
         $associated_tags = null;
@@ -598,6 +607,9 @@ final readonly class BatchManagerGlobalPageRenderer
             rootUrl: $this->urlService->getRootUrl(),
             associatedCategories: is_array($associated_categories_raw) ? $associated_categories_raw : [],
             allElements: is_array($all_elements_raw) ? $all_elements_raw : [],
+            filterDimensions: is_array($filter_dimensions_raw) ? $filter_dimensions_raw : [],
+            filterFilesize: is_array($filter_filesize_raw) ? $filter_filesize_raw : [],
+            filterCategorySelected: is_int($filter_category_selected_raw) ? $filter_category_selected_raw : null,
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

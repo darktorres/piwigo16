@@ -27,10 +27,15 @@ use Piwigo\Template\Latte\Attribute\Template;
  * mechanism) assigns them directly onto the same `Template` instance's
  * `$vars` bag, which `Renderer::render()`'s own ambient merge picks up
  * the same way it does `ROOT_URL`. `$associatedCategories`/
- * `$allElements` are the 2 exceptions -- read back from that same
- * ambient bag right after `FilterPanelRenderer::render()` returns
+ * `$allElements`/`$filterDimensions`/`$filterFilesize`/
+ * `$filterCategorySelected` are the exceptions -- read back from that
+ * same ambient bag right after `FilterPanelRenderer::render()` returns
  * (docs/PLAN.md's P42-B), since `exposedPageData()` below needs their
- * real values. `$thumbnails` is always included (even empty) since
+ * real values. The last 3 feed `include/batch_manager_filter.inc.latte`'s
+ * own registrations, declared directly here rather than via a
+ * constructed `BatchManagerFilterView` instance -- see
+ * `BatchManagerUnitView`'s own docblock for why. `$thumbnails` is
+ * always included (even empty) since
  * the template reads it with `{if !empty($thumbnails)}`, not `isset()`.
  * Each `$thumbnails` row stays a loose, dynamically `array_merge()`-built
  * shape, same precedent as `PluginsInstalledView::$plugins`.
@@ -48,6 +53,8 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
      * @param list<array<string, mixed>> $thumbnails
      * @param array<array-key, mixed> $associatedCategories
      * @param array<array-key, mixed> $allElements
+     * @param array<array-key, mixed> $filterDimensions
+     * @param array<array-key, mixed> $filterFilesize
      */
     public function __construct(
         public bool $inCaddie,
@@ -69,6 +76,9 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         public string $rootUrl,
         public array $associatedCategories,
         public array $allElements,
+        public array $filterDimensions,
+        public array $filterFilesize,
+        public ?int $filterCategorySelected,
     ) {}
 
     /**
@@ -96,6 +106,25 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             ...new AlbumSelectorView()
                 ->pageAssets(),
+            // include/batch_manager_filter.inc.latte's own registrations.
+            // Both this and AlbumSelectorView are now fully declarative,
+            // so their relative order is this array's own order, not
+            // either partial's old textual {include} position --
+            // batch_manager_filter.inc.latte itself {include}s
+            // album_selector.inc.latte internally (a bare relative path,
+            // the same nested-include shape documented on
+            // ColorboxView/AddAlbumView), so album_selector's own
+            // contribution has to resolve first, matching the accepted
+            // golden-html baseline confirmed by a real diff, not assumed.
+            AssetContribution::script('doubleSlider', 'themes/admin/default/js/doubleSlider.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.slider']),
+            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js'),
+            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::script('jquery.ui.slider', 'themes/default/js/ui/minified/jquery.ui.slider.min.js', loadMode: LoadMode::Async, dependsOn: ['jquery.ui']),
+            AssetContribution::css('themes/default/js/ui/theme/jquery.ui.slider.css'),
+            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async),
         ];
     }
 
@@ -114,6 +143,9 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             'nb_thumbs_page' => $this->nbThumbsPage,
             'nb_thumbs_set' => $this->nbThumbsSet,
             'all_elements' => $this->allElements,
+            'dimensions' => $this->filterDimensions,
+            'filesize' => $this->filterFilesize,
+            'filter_category_selected' => $this->filterCategorySelected,
         ];
     }
 
@@ -141,6 +173,14 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             'Select an album',
             ...new AlbumSelectorView()
                 ->exposedStrings(),
+            // include/batch_manager_filter.inc.latte's own strings --
+            // see pageAssets()'s own comment for why these resolve after
+            // AlbumSelectorView's, not before.
+            'between %d and %d pixels',
+            'between %.2f and %.2f',
+            'between %s and %s MB',
+            'Select at least one album',
+            'Select at least one tag',
         ];
     }
 }

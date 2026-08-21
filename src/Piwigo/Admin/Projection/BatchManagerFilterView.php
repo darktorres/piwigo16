@@ -33,6 +33,18 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * match the real template variable names exactly, mirroring the
  * upstream `TemplatePageContext::toArray()` keys they're assigned
  * from -- `{templateType}`'s reflection lookup is name-exact.
+ *
+ * No `HasPageAssets`/`ExposesPageData` here (docs/PLAN.md's P42-B):
+ * this file's own former `combineCss`/`combineScript`/`exposeData`/
+ * `exposeString` calls moved directly onto its 2 real parents'
+ * (`BatchManagerUnitView`/`BatchManagerGlobalView`) own methods instead
+ * of a constructed instance of this class -- every one of the 4 real
+ * values those calls need (`$dimensions`/`$filesize`/
+ * `$filter_category_selected`, plus the ambient `$themeconf['colorscheme']`
+ * already on each parent) is real and ambient-readable, but this
+ * class's own constructor carries the other 9 real template properties
+ * too, which would need real (not dummy) values just to build an
+ * instance whose only use is calling 3 methods that never touch them.
  */
 #[TemplateAttr('include/batch_manager_filter.inc.latte')]
 final readonly class BatchManagerFilterView implements View

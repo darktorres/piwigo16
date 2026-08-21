@@ -1,22 +1,9 @@
 {templateType Piwigo\Admin\Projection\BatchManagerFilterView}
-{do combineScript(id: 'doubleSlider', load: 'footer', require: 'jquery.ui.slider', path: 'themes/admin/default/js/doubleSlider.js')}
-{do combineScript(id: 'jquery.selectize', load: 'header', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize." . $themeconf['colorscheme'] . ".css")}
-{do combineScript(id: 'jquery.ui.slider', require: 'jquery.ui', load: 'async', path: 'themes/default/js/ui/minified/jquery.ui.slider.min.js')}
-{do combineCss(path: "themes/default/js/ui/theme/jquery.ui.slider.css")}
-{do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
-
-{do exposeData('dimensions', $dimensions)}
-{do exposeData('filesize', $filesize)}
-{do exposeData('filter_category_selected', $filter_category_selected)}
-{do exposeString('between %d and %d pixels')}
-{do exposeString('between %.2f and %.2f')}
-{do exposeString('between %s and %s MB')}
-{do exposeString('Select at least one album')}
-{do exposeString('Select at least one tag')}
-
-{do combineScript(id: 'batchManagerFilter', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/batchManagerFilter.js')}
-{do combineCss(id: 'batch_manager_filter', path: 'themes/admin/default/css/components/batch_manager_filter.css')}
+{* All of this partial's own combineCss/combineScript/exposeData/
+   exposeString calls moved to its 2 real parents' own
+   pageAssets()/exposedPageData()/exposedStrings() (docs/PLAN.md's
+   P42-B) -- batch_manager_unit.latte and batch_manager_global.latte,
+   the only 2 real templates that {include} this file. *}
 <fieldset>
   <legend><span
       class='icon-filter icon-green'
@@ -457,7 +444,6 @@
           <i class="icon-help-circled"></i>
           <span>{='Search tips'|translate}</span>
         </p>
-        {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/default/js/scripts.js')}
         <div n:if="isset($no_search_results)">{='No results for'|translate} :
           <em><strong>
               {foreach $no_search_results as $res}

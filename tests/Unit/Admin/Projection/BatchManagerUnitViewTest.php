@@ -28,6 +28,9 @@ function makeBatchManagerUnitView(array $elements): BatchManagerUnitView
         colorscheme: 'light',
         rootUrl: '',
         associatedCategories: [],
+        filterDimensions: [],
+        filterFilesize: [],
+        filterCategorySelected: null,
     );
 }
 

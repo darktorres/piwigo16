@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-F fully landed: introduced `Controller\Admin\Projection\AdminPageResult`, converted `AdminSubControllerInterface::handle()` and all 36 real implementers plus all 40 `Piwigo\Admin\*PageRenderer` classes from directly assigning `AdminContentPageContext` to returning `render(): AdminPageResult`, and `AdminDispatcher::dispatch()` is now the one place that turns that into the ambient `AdminContentPageContext` — closes the "76 real files" scope the batch's own plan text named. Along the way found and fixed 2 real regressions the migration itself introduced (a not-yet-converted parent `SubController` silently discarding an already-converted renderer's output in `ThemesSubController`/`PhotoSubController`), caught via golden-HTML diffs. P43-E not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | Done — all batches (A–G) landed. P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-F fully landed: introduced `Controller\Admin\Projection\AdminPageResult`, converted `AdminSubControllerInterface::handle()` and all 36 real implementers plus all 40 `Piwigo\Admin\*PageRenderer` classes from directly assigning `AdminContentPageContext` to returning `render(): AdminPageResult`, and `AdminDispatcher::dispatch()` is now the one place that turns that into the ambient `AdminContentPageContext` — closes the "76 real files" scope the batch's own plan text named. Along the way found and fixed 2 real regressions the migration itself introduced (a not-yet-converted parent `SubController` silently discarding an already-converted renderer's output in `ThemesSubController`/`PhotoSubController`), caught via golden-HTML diffs. P43-E fully landed: new `PluginConfig\PageRouteProviderInterface`/`Routing\PageRouteRegistrarInterface` (manifest `hasPageRoutes`) let an active plugin register real public-facing routes onto `RoutingMiddleware`'s own live `RouteCollection`, mirroring `ApiRouteProviderInterface`'s existing layered shape exactly; new `PluginConfig\AdminPageProviderInterface` (manifest `hasAdminPages`) lets an active plugin contribute its own `admin.php` `?page=` slug, aggregated by `PluginRegistry::adminPages()` and merged onto the static `config/admin_pages.php` map by a new `AdminDispatcher::pageMap()` — found and fixed a real gap the plan text itself hadn't named: `Admin\AdminShell` independently re-read the static config file for its own slug validation before ever reaching `AdminDispatcher`, so a plugin-contributed slug would have passed dispatch but still 404'd there without also fixing that call site. Also fixed a real P43-F regression found along the way (`PluginSettingsPageDispatchTest.php` still reading `ADMIN_CONTENT` via the old `getTemplateVars()` path after `PluginSubController::handle()` had already been converted to return `AdminPageResult`) | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3846,6 +3846,88 @@ else via a systematic sweep of every converted renderer's real callers.
 
 Verified: PHPStan clean, ECS clean, deptrac 0 violations, full Unit/Arch
 (5441 passed), golden-HTML (74 passed), visual-regression (66 passed).
+
+**P43-E (landed) — plugin-owned routes (admin pages + public pages).**
+The piece that makes P43's own "deliberately no escape hatch" decision
+viable: since nothing else lets a plugin own a whole page, page
+ownership goes through real routing/dispatch instead.
+
+Public pages: new `PluginConfig\PageRouteProviderInterface` (manifest
+`hasPageRoutes: true`) mirrors `ApiRouteProviderInterface` exactly --
+`registerPageRoutes(RouteCollection $routes): void`, called once per
+request from the same `Http\Middleware\RoutingMiddleware::process()`
+call site as the API-routes registrar, via a new narrow `Routing\
+PageRouteRegistrarInterface` (bound to `PluginConfig\CurrentPluginRegistry`,
+same shape as `ApiRouteRegistrarInterface`). Deliberately no reserved
+URL-prefix/route-name namespace here (unlike API routes' mandatory
+`/api/v1/plugin-routes/{id}/`): a real clean-URL page route (the actual
+cited need -- `tag_groups`/`piwigo_masonry_grid`/`PWG_Stuffs`-style
+plugins wanting their own root-level entry point, e.g. `/tag_groups.php`)
+needs to look like an ordinary path, not a namespaced sub-path. Stays
+safe without one because `RoutingMiddleware::process()` always appends
+plugin routes after `Bootstrap\RouteDefinitions::all()`'s own core
+routes, and `UrlMatcher` tries routes in registration order -- a plugin
+can add a route but can never shadow an existing core path.
+
+Admin pages: new `PluginConfig\AdminPageProviderInterface` (manifest
+`hasAdminPages: true`) -- `registerAdminPages(): array<string, class-string>`,
+called once per request. `PluginRegistry::adminPages()` aggregates every
+booted plugin's own map, throwing `PluginValidationException` on an
+inter-plugin slug collision (silently letting the later plugin win would
+make the earlier one permanently unreachable with no visible error).
+`Bootstrap\AdminDispatcher::pageMap()` (a new public method, replacing
+the old private `map()` internally) merges that onto the static
+`config/admin_pages.php` map, throwing `LogicException` on a
+plugin-vs-core collision -- gracefully skipping the plugin half entirely
+when `CurrentPluginRegistry` isn't initialised yet (a new
+`isInitialized()` method, mirroring `Template\CurrentTemplate`'s own),
+covering both a Unit test dispatching directly with no real request
+pipeline and (in principle) any future caller reached before
+`PluginBootstrapMiddleware::process()` has run.
+
+A real gap the plan's own text hadn't named, found only by reading
+`Admin\AdminShell::runDispatch()` directly rather than trusting the
+plan: that method independently re-`require`d the static
+`config/admin_pages.php` file for its own `?page=` slug validation
+*before* ever calling `AdminDispatcher::dispatch()` -- patching only
+`AdminDispatcher::map()` (the plan's own stated scope) would have left a
+plugin-contributed slug passing `dispatch()`'s own check yet still
+404ing (silently falling back to `'intro'`) at this earlier gate.
+Fixed by having `AdminShell` call the same new `AdminDispatcher::pageMap()`
+instead of reading the file itself, making it the one real merged source
+of truth both call sites share. Removed `AdminShell`'s own `Paths`
+constructor param as a result -- its one remaining use was that same
+direct file read.
+
+`AdminPageProviderInterface` deliberately types its own
+`registerAdminPages()` return as a bare `class-string`, not
+`class-string<Controller\Admin\AdminSubControllerInterface>`:
+`Piwigo\Controller` sits above `Piwigo\PluginConfig` in this project's
+layered architecture (`deptrac.yaml`'s `L4Integration`/`L3Presentation`
+split), so `PluginConfig` may not reference it -- `AdminDispatcher::
+dispatch()`'s own existing `instanceof` check (same layer as
+`AdminSubControllerInterface`, already run for every resolved page
+regardless of origin) enforces that contract for free instead, with no
+new validation needed.
+
+Both new manifest flags get the identical install()/activate()-time
+contract-conformance validation (`PluginValidationException`) the
+existing `hasSettings`/`hasApiRoutes` flags already have.
+
+Also fixed a real P43-F regression found along the way, unrelated to
+this batch's own design: `PluginSettingsPageDispatchTest.php` still read
+`ADMIN_CONTENT` back via `Template::getTemplateVars()` after
+`PluginSubController::handle()` -- which no longer assigns it directly
+since P43-F converted that class to `return AdminPageResult` instead --
+undetected until now since this file lives in the Integration suite,
+deferred for the rest of that same session.
+
+Verified: PHPStan clean, ECS clean, deptrac 0 violations, full Unit/Arch
+(5442 passed), golden-HTML (74 passed), visual-regression (66 passed),
+plus the 3 directly-touched Integration test files (24 passed,
+end-to-end against a real DB + real filesystem scan + real runtime class
+autoloading, matching this project's own established fixture-plugin
+testing convention).
 
 **P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
 Found during a deep review of the Template layer, not part of this

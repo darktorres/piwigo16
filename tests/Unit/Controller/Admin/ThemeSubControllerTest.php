@@ -10,6 +10,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ThemeRegistry;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -18,9 +20,9 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Piwigo\Controller\Admin\ThemeSubController -- 9 constructor deps, no
- * template rendering at all (dispatches to the theme's own
- * SettingsPageInterface on the happy path instead). No dedicated
+ * Piwigo\Controller\Admin\ThemeSubController -- 11 constructor deps
+ * (dispatches to the theme's own SettingsPageInterface on the happy
+ * path, then renders its returned View itself). No dedicated
  * Integration/Browser spec of its own.
  *
  * Covers the "invalid theme" fatalError() guard: a well-formed ?theme=
@@ -68,6 +70,22 @@ function themeSubControllerTestThemeRegistry(): ThemeRegistry
     return $themeRegistry;
 }
 
+/**
+ * Container-autowired, matching themeSubControllerTestThemeRegistry()'s
+ * own style -- the "invalid theme" branch this file covers never
+ * reaches Renderer::render(), so a fully-wired instance isn't needed
+ * for correctness, only for the constructor's own type.
+ */
+function themeSubControllerTestCurrentTemplate(): CurrentTemplate
+{
+    $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+    if (! $currentTemplate instanceof CurrentTemplate) {
+        throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+    }
+
+    return $currentTemplate;
+}
+
 function themeSubControllerTestRrmdir(string $dir): void
 {
     if (! is_dir($dir)) {
@@ -105,6 +123,8 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
             new EventDispatcher(),
             themeSubControllerTestEntityManager(),
             themeSubControllerTestThemeRegistry(),
+            themeSubControllerTestCurrentTemplate(),
+            new Renderer(themeSubControllerTestCurrentTemplate()),
         );
 
         $exception = null;

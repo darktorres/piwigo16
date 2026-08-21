@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Controller\Admin\PluginSubController;
@@ -9,13 +10,14 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\CurrentPluginRegistry;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Piwigo\Controller\Admin\PluginSubController -- 4 constructor deps, no
- * template rendering at all. No dedicated Integration/Browser spec of
- * its own.
+ * Piwigo\Controller\Admin\PluginSubController -- 6 constructor deps. No
+ * dedicated Integration/Browser spec of its own.
  *
  * Covers the "plugin not active" fatalError() guard -- a well-formed
  * ?section= value (passes InputValidator's own charset check cleanly)
@@ -52,11 +54,18 @@ test('handle() fatal-errors when the requested plugin is not active', function (
         $loadedPlugins = new LoadedPlugins();
         $loadedPlugins->set([]);
 
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+        }
+
         $subController = new PluginSubController(
             $loadedPlugins,
             HtmlServiceTestFactory::build(),
             new InputValidator(),
             new CurrentPluginRegistry(),
+            $currentTemplate,
+            new Renderer($currentTemplate),
         );
 
         $exception = null;

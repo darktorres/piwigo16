@@ -55,6 +55,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -135,6 +136,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         private EntityManagerInterface $entityManager,
         private CurrentPluginRegistry $currentPluginRegistry,
         private CurrentLogger $currentLogger,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -275,6 +277,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->accessControl,
             $this->imageWriteFacade($conn),
             $this->categoryWriteFacade($conn),
+            $this->renderer,
         );
     }
 

@@ -45,6 +45,7 @@ use Piwigo\PluginConfig\ThemeValidationException;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -142,6 +143,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $this->containerGet(AccessControl::class),
             $imageWriteFacade,
             $categoryWriteFacade,
+            new Renderer($this->containerGet(CurrentTemplate::class)),
         );
     }
 
@@ -631,6 +633,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
 
             namespace {$namespace};
 
+            use Piwigo\\Core\\View;
             use Piwigo\\PluginConfig\\ExtensionContext;
             use Piwigo\\PluginConfig\\ExtensionInterface;
             use Piwigo\\PluginConfig\\SettingsPageInterface;
@@ -653,9 +656,11 @@ final class ThemeRegistryTest extends IntegrationTestCase
                 public function update(string \$oldVersion, string \$newVersion): void {}
                 public function subscribedEvents(): array { return []; }
 
-                public function handleSettingsRequest(ServerRequestInterface \$request): void
+                public function handleSettingsRequest(ServerRequestInterface \$request): View
                 {
                     self::\$receivedRequest = \$request;
+
+                    return new class implements View {};
                 }
             }
             PHP);

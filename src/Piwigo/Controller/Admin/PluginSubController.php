@@ -6,10 +6,13 @@ namespace Piwigo\Controller\Admin;
 
 use Override;
 use Piwigo\Admin\LoadedPlugins;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\PluginSectionRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\PluginConfig\SettingsPageInterface;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -40,6 +43,8 @@ final readonly class PluginSubController implements AdminSubControllerInterface
         private HtmlRenderingInterface $htmlRenderer,
         private InputValidator $inputValidator,
         private CurrentPluginRegistry $currentPluginRegistry,
+        private CurrentTemplate $currentTemplate,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -59,6 +64,10 @@ final readonly class PluginSubController implements AdminSubControllerInterface
                 ->fatalError('Plugin ' . $pluginSection->pluginId . ' has no settings page');
         }
 
-        $instance->handleSettingsRequest($request);
+        $view = $instance->handleSettingsRequest($request);
+        $adminContent = $this->renderer->render($view);
+
+        $this->currentTemplate->get()
+            ->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Request\ThemeIdRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -17,6 +18,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\SettingsPageInterface;
 use Piwigo\PluginConfig\ThemeRegistry;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -52,6 +55,8 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
         private ThemeRegistry $themeRegistry,
+        private CurrentTemplate $currentTemplate,
+        private Renderer $renderer,
     ) {}
 
     #[Override]
@@ -72,6 +77,10 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
                 ->fatalError('Theme ' . $theme . ' has no settings page');
         }
 
-        $instance->handleSettingsRequest($request);
+        $view = $instance->handleSettingsRequest($request);
+        $adminContent = $this->renderer->render($view);
+
+        $this->currentTemplate->get()
+            ->assignContext(new AdminContentPageContext(adminContent: $adminContent));
     }
 }

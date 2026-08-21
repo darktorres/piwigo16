@@ -26,6 +26,7 @@ use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
@@ -64,6 +65,7 @@ final readonly class ExtensionContextFactory
         private AccessControl $accessControl,
         private ImageWriteFacade $imageWriteFacade,
         private CategoryWriteFacade $categoryWriteFacade,
+        private Renderer $renderer,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -93,6 +95,7 @@ final readonly class ExtensionContextFactory
             $this->accessControl,
             $this->imageWriteFacade,
             $this->categoryWriteFacade,
+            $this->renderer,
         );
     }
 }

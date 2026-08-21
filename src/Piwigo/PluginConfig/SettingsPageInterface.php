@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
+use Piwigo\Core\View;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -21,13 +22,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * `handleSettingsRequest()` reads input from the given PSR-7 request
  * (`getParsedBody()`/`getQueryParams()`), matching
  * `AdminSubControllerInterface`'s own SEC-19 "never $_GET/$_POST
- * directly" contract, and is expected to render its own output via the
- * already-booted `ExtensionContext::template()` --
- * `assignContext()`/`assignVarFromTemplate('ADMIN_CONTENT', ...)`, the
- * same real mechanism `Controller\Admin\ConfigurationSubController`
- * itself uses.
+ * directly" contract, and returns the `View` to render as this page's
+ * own admin content -- its 2 real callers (`Controller\Admin\
+ * PluginSubController`/`ThemeSubController`) render it via
+ * `ExtensionContext::render()`/`Renderer::render()` and assign it into
+ * `AdminContentPageContext` themselves, the same shape every other
+ * admin sub-controller already uses (P43-D, docs/PLAN.md).
  */
 interface SettingsPageInterface
 {
-    public function handleSettingsRequest(ServerRequestInterface $request): void;
+    public function handleSettingsRequest(ServerRequestInterface $request): View;
 }

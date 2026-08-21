@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\PluginConfig;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use LogicException;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\LangCode;
@@ -22,6 +23,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\View;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
@@ -32,6 +34,7 @@ use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -94,6 +97,7 @@ final readonly class ExtensionContext
         private AccessControl $accessControl,
         private ImageWriteFacade $imageWriteFacade,
         private CategoryWriteFacade $categoryWriteFacade,
+        private Renderer $renderer,
     ) {}
 
     /**
@@ -114,6 +118,26 @@ final readonly class ExtensionContext
         }
 
         return $this->currentTemplate->get();
+    }
+
+    /**
+     * `render(View): Html` -- the single rendering API for a plugin/theme's
+     * own typed `View`s, matching `Template\Renderer::render()`'s own
+     * contract exactly (page-asset/exposed-page-data pre-population,
+     * `#[Template]`-attribute resolution). Same `boot()`-time guard as
+     * `template()` above, for the same reason: `Renderer::render()`
+     * resolves `$this->currentTemplate->get()` internally, which would
+     * otherwise throw its own unhelpful message during `boot()`.
+     */
+    public function render(View $view): Html
+    {
+        if (! $this->currentTemplate->isInitialized()) {
+            throw new LogicException(
+                'ExtensionContext::render() is unavailable during boot() -- the request\'s Template isn\'t constructed yet. Use a subscribedEvents() handler for a later lifecycle event instead.',
+            );
+        }
+
+        return $this->renderer->render($view);
     }
 
     /**

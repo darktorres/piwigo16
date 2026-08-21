@@ -162,13 +162,32 @@ function themeSubWriteFixtureTheme(string $themeId, string $namespaceSuffix): st
         ],
     ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
-    // handleSettingsRequest() renders via ExtensionContext::template()->
-    // assignVarFromTemplate('ADMIN_CONTENT', ...), the same real
-    // mechanism SettingsPageInterface's own docblock documents and
-    // Tests/Integration/PluginSettingsPageDispatchTest.php's own
-    // writeFixtureSettingsPlugin() already exercises for plugins -- this
-    // embeds the marker inside the normal admin page chrome (a real DOM
-    // descendant of <html>), so a normal page fetch finds it directly.
+    // handleSettingsRequest() returns a typed View whose #[Template(...)]
+    // attribute names this fixture's own real .latte file by its real,
+    // already-known absolute path (P43-D, docs/PLAN.md) -- the same
+    // technique Tests/Integration/PluginSettingsPageDispatchTest.php's
+    // own writeFixtureSettingsPlugin() already exercises for plugins.
+    // This embeds the marker inside the normal admin page chrome (a real
+    // DOM descendant of <html>), so a normal page fetch finds it
+    // directly.
+    $viewClassName = 'ThemeView' . $namespaceSuffix;
+    file_put_contents($dir . '/src/' . $viewClassName . '.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\Core\\View;
+        use Piwigo\\Template\\Latte\\Attribute\\Template;
+
+        #[Template('{$templatePath}')]
+        final readonly class {$viewClassName} implements View
+        {
+        }
+
+        PHP);
+
     file_put_contents($dir . '/src/' . $className . '.php', <<<PHP
         <?php
 
@@ -177,6 +196,7 @@ function themeSubWriteFixtureTheme(string $themeId, string $namespaceSuffix): st
         namespace {$namespace};
 
         use LogicException;
+        use Piwigo\\Core\\View;
         use Piwigo\\PluginConfig\\ExtensionContext;
         use Piwigo\\PluginConfig\\ExtensionInterface;
         use Piwigo\\PluginConfig\\SettingsPageInterface;
@@ -202,13 +222,13 @@ function themeSubWriteFixtureTheme(string $themeId, string $namespaceSuffix): st
                 return [];
             }
 
-            public function handleSettingsRequest(ServerRequestInterface \$request): void
+            public function handleSettingsRequest(ServerRequestInterface \$request): View
             {
                 if (\$this->context === null) {
                     throw new LogicException('boot() was never called');
                 }
 
-                \$this->context->template()->assignVarFromTemplate('ADMIN_CONTENT', '{$templatePath}');
+                return new {$viewClassName}();
             }
         }
 
@@ -221,6 +241,7 @@ function themeSubRemoveFixtureTheme(string $themeId, string $namespaceSuffix): v
 {
     $dir = themeSubThemesPath() . $themeId;
     @unlink($dir . '/src/Theme' . $namespaceSuffix . '.php');
+    @unlink($dir . '/src/ThemeView' . $namespaceSuffix . '.php');
     if (is_dir($dir . '/src')) {
         rmdir($dir . '/src');
     }
@@ -504,9 +525,11 @@ function pluginSubRemoveFixturePlugin(string $pluginId): void
  * ("needs a real, booted plugin instance, not attempted here"), and
  * Tests/Integration/PluginSettingsPageDispatchTest.php covers the
  * controller layer directly (bypassing a real HTTP request/admin.php
- * dispatch, which this Browser-level test adds). Same
- * assignVarFromTemplate('ADMIN_CONTENT', ...) mechanism that Integration
- * test's own writeFixtureSettingsPlugin() uses.
+ * dispatch, which this Browser-level test adds). Same technique that
+ * Integration test's own writeFixtureSettingsPlugin() uses:
+ * handleSettingsRequest() returns a typed View whose #[Template(...)]
+ * attribute names this fixture's own real .latte file by its real,
+ * already-known absolute path (P43-D, docs/PLAN.md).
  */
 function pluginSubWriteFixtureSettingsPlugin(string $pluginId, string $namespaceSuffix): void
 {
@@ -516,6 +539,7 @@ function pluginSubWriteFixtureSettingsPlugin(string $pluginId, string $namespace
 
     $namespace = 'PiwigoTestFixture\\PluginSettings' . $namespaceSuffix;
     $className = 'Plugin' . $namespaceSuffix;
+    $viewClassName = 'PluginView' . $namespaceSuffix;
     $templatePath = $dir . '/template/admin.latte';
     file_put_contents($templatePath, 'CT_PLUGINSUB_INCLUDED');
 
@@ -535,6 +559,23 @@ function pluginSubWriteFixtureSettingsPlugin(string $pluginId, string $namespace
         ],
     ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
+    file_put_contents($dir . '/src/' . $viewClassName . '.php', <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        namespace {$namespace};
+
+        use Piwigo\\Core\\View;
+        use Piwigo\\Template\\Latte\\Attribute\\Template;
+
+        #[Template('{$templatePath}')]
+        final readonly class {$viewClassName} implements View
+        {
+        }
+
+        PHP);
+
     file_put_contents($dir . '/src/' . $className . '.php', <<<PHP
         <?php
 
@@ -543,6 +584,7 @@ function pluginSubWriteFixtureSettingsPlugin(string $pluginId, string $namespace
         namespace {$namespace};
 
         use LogicException;
+        use Piwigo\\Core\\View;
         use Piwigo\\PluginConfig\\ExtensionContext;
         use Piwigo\\PluginConfig\\ExtensionInterface;
         use Piwigo\\PluginConfig\\SettingsPageInterface;
@@ -568,13 +610,13 @@ function pluginSubWriteFixtureSettingsPlugin(string $pluginId, string $namespace
                 return [];
             }
 
-            public function handleSettingsRequest(ServerRequestInterface \$request): void
+            public function handleSettingsRequest(ServerRequestInterface \$request): View
             {
                 if (\$this->context === null) {
                     throw new LogicException('boot() was never called');
                 }
 
-                \$this->context->template()->assignVarFromTemplate('ADMIN_CONTENT', '{$templatePath}');
+                return new {$viewClassName}();
             }
         }
 
@@ -585,6 +627,7 @@ function pluginSubRemoveFixtureSettingsPlugin(string $pluginId, string $namespac
 {
     $dir = pluginSubPluginsPath() . $pluginId;
     @unlink($dir . '/src/Plugin' . $namespaceSuffix . '.php');
+    @unlink($dir . '/src/PluginView' . $namespaceSuffix . '.php');
     if (is_dir($dir . '/src')) {
         rmdir($dir . '/src');
     }

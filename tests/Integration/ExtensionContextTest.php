@@ -26,6 +26,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\View;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -46,11 +47,14 @@ use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\MailServiceTestSpyTransport;
 use Piwigo\Tests\Support\MailServiceTestTransportSwap;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
@@ -100,6 +104,19 @@ final class ExtensionContextTestFakePlugin implements ExtensionInterface
         return [];
     }
 }
+
+/**
+ * Minimal real `View` for `testRenderRendersARealViewAgainstItsOwnTemplate()`
+ * -- points at a tiny permanent fixture `.latte` file
+ * (`tests/Fixtures/PluginConfig/extension-context-test-fake-view.latte`)
+ * via an absolute path built from `__DIR__` (a compile-time magic
+ * constant, so it's a valid attribute-argument constant expression) --
+ * the same real-absolute-path resolution `TemplateLocator::resolve()`
+ * already handles for `FileCombiner`'s own combinable rendering, not a
+ * new mechanism.
+ */
+#[TemplateAttr(__DIR__ . '/../Fixtures/PluginConfig/extension-context-test-fake-view.latte')]
+final readonly class ExtensionContextTestFakeView implements View {}
 
 /**
  * Covers ExtensionContext end-to-end against a real container/DB --
@@ -209,6 +226,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->containerGet(AccessControl::class),
             $this->imageWriteFacade,
             $this->categoryWriteFacade,
+            new Renderer($this->containerGet(CurrentTemplate::class)),
         );
     }
 
@@ -723,6 +741,35 @@ final class ExtensionContextTest extends IntegrationTestCase
         $this->expectExceptionMessageIsOrContains('unavailable during boot()');
 
         $this->context->template();
+    }
+
+    /**
+     * render(View): Html (P43-D, docs/PLAN.md) -- proves the real chain
+     * (Renderer::render() -> #[Template] resolution -> Template::
+     * renderView()) actually reaches a real, working Latte render, not
+     * just that the method compiles.
+     */
+    public function testRenderRendersARealViewAgainstItsOwnTemplate(): void
+    {
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        self::assertInstanceOf(CurrentTemplate::class, $currentTemplate);
+        $currentTemplate->set(TemplateTestFactory::build());
+
+        $html = $this->context->render(new ExtensionContextTestFakeView());
+
+        self::assertStringContainsString('Fixture view rendered via ExtensionContext::render().', (string) $html);
+    }
+
+    public function testRenderThrowsBeforeFinalizeConstructsIt(): void
+    {
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        self::assertInstanceOf(CurrentTemplate::class, $currentTemplate);
+        $currentTemplate->reset();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessageIsOrContains('unavailable during boot()');
+
+        $this->context->render(new ExtensionContextTestFakeView());
     }
 
     public function testRedirectThrowsResponseReadyException(): void

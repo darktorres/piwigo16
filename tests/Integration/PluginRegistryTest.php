@@ -43,6 +43,7 @@ use Piwigo\PluginConfig\PluginValidationException;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -140,6 +141,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(AccessControl::class),
             $imageWriteFacade,
             $categoryWriteFacade,
+            new Renderer($this->containerGet(CurrentTemplate::class)),
         );
     }
 

@@ -50,6 +50,7 @@ use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -68,8 +69,10 @@ use Piwigo\Validation\InputValidator;
  * proving the whole chain (`CurrentPluginRegistry` ->
  * `PluginRegistry::getBootedInstance()` -> `SettingsPageInterface::
  * handleSettingsRequest()` -> `ExtensionContext::checkCsrfOrFail()`/
- * `template()`/`setSetting()`) actually reaches real, working
- * collaborators, not just that each piece compiles in isolation.
+ * `setSetting()`, its returned `View` -> `PluginSubController`'s own
+ * `Renderer::render()` + `AdminContentPageContext` assignment)
+ * actually reaches real, working collaborators, not just that each
+ * piece compiles in isolation.
  */
 final class PluginSettingsPageDispatchTest extends IntegrationTestCase
 {
@@ -161,6 +164,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->containerGet(AccessControl::class),
             $imageWriteFacade,
             $categoryWriteFacade,
+            new Renderer($this->containerGet(CurrentTemplate::class)),
         );
 
         $this->containerGet(CurrentTemplate::class)->set(TemplateTestFactory::build());
@@ -258,13 +262,18 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
 
     /**
      * Writes a fixture plugin implementing both `ExtensionInterface` and
-     * `SettingsPageInterface` -- `handleSettingsRequest()` renders a real
-     * `.latte` file via `template()->assignVarFromTemplate('ADMIN_CONTENT',
-     * ...)` (the real, absolute-path mechanism this phase's own design
-     * relies on) on every request, and on POST additionally calls
-     * `checkCsrfOrFail()` then persists `$settingKey` via `setSetting()`
-     * -- the real `LocalFilesEditor`-shaped "fail-fast CSRF, then
-     * persist" pattern this phase's own design is grounded in.
+     * `SettingsPageInterface` -- `handleSettingsRequest()` returns a
+     * typed `View` (P43-D, docs/PLAN.md), whose `#[Template(...)]`
+     * attribute names this fixture's own real `.latte` file by its real,
+     * already-known absolute path -- a dynamically-generated fixture can
+     * freely embed that as a literal (unlike a real, hand-authored
+     * plugin, whose source is fixed long before any specific install
+     * path is known; that's what the `myplugin:` prefix `TemplateLocator`
+     * loader detail P43-D's own design note defers is actually for). On
+     * POST additionally calls `checkCsrfOrFail()` then persists
+     * `$settingKey` via `setSetting()` -- the real `LocalFilesEditor`-
+     * shaped "fail-fast CSRF, then persist" pattern this phase's own
+     * design is grounded in.
      */
     private function writeFixtureSettingsPlugin(string $pluginsDir, string $id, string $namespaceSuffix, string $settingKey): string
     {
@@ -274,6 +283,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
 
         $namespace = 'PiwigoTest\\SettingsFixture' . $namespaceSuffix;
         $className = 'Plugin' . $namespaceSuffix;
+        $viewClassName = 'PluginView' . $namespaceSuffix;
         $templatePath = $dir . '/template/admin.latte';
         file_put_contents($templatePath, 'Fixture settings page rendered.');
 
@@ -293,6 +303,22 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             ],
         ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
+        file_put_contents($dir . '/src/' . $viewClassName . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\Core\\View;
+            use Piwigo\\Template\\Latte\\Attribute\\Template;
+
+            #[Template('{$templatePath}')]
+            final readonly class {$viewClassName} implements View
+            {
+            }
+            PHP);
+
         file_put_contents($dir . '/src/' . $className . '.php', <<<PHP
             <?php
 
@@ -300,6 +326,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
 
             namespace {$namespace};
 
+            use Piwigo\\Core\\View;
             use Piwigo\\PluginConfig\\ExtensionContext;
             use Piwigo\\PluginConfig\\ExtensionInterface;
             use Piwigo\\PluginConfig\\SettingsPageInterface;
@@ -321,7 +348,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
                 public function update(string \$oldVersion, string \$newVersion): void {}
                 public function subscribedEvents(): array { return []; }
 
-                public function handleSettingsRequest(ServerRequestInterface \$request): void
+                public function handleSettingsRequest(ServerRequestInterface \$request): View
                 {
                     if (\$this->context === null) {
                         throw new \\LogicException('boot() was never called');
@@ -334,7 +361,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
                         \$this->context->setSetting('{$settingKey}', is_string(\$value) ? \$value : '');
                     }
 
-                    \$this->context->template()->assignVarFromTemplate('ADMIN_CONTENT', '{$templatePath}');
+                    return new {$viewClassName}();
                 }
             }
             PHP);
@@ -361,6 +388,8 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->containerGet(HtmlRenderingInterface::class),
             new InputValidator(),
             $currentPluginRegistry,
+            $this->containerGet(CurrentTemplate::class),
+            new Renderer($this->containerGet(CurrentTemplate::class)),
         );
     }
 

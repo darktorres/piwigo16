@@ -631,6 +631,7 @@ final class RequestBootstrap
             self::accessControl(),
             self::imageWriteFacade($conn),
             self::categoryWriteFacade($conn),
+            self::templateRenderer(),
         );
     }
 

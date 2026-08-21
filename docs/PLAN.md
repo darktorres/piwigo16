@@ -146,6 +146,7 @@ Three structural changes produced that drift:
 | P53 | Picture pipeline (new feature) | Not started | 0 |
 | P54 | Dark mode (new feature) | Not started | 0 |
 | P55 | Real quality gates | Not started | 0 |
+| P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -3704,7 +3705,32 @@ Lighthouse perf, a11y and best-practices thresholds and real per-entry
 "a11y gate" becomes a real automated check. Needs P35–P54's real bundles,
 templates and features to measure against.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P55 backbone)
+**P56 — Codebase-wide non-DI audit.** Found while reviewing `Template`
+during P43-G, then extended codebase-wide: a full sweep of every
+`Kernel::container()` call site outside `config/container.php` (225
+across 38 files). Most are already-correct, deliberate design (the
+`Bootstrap` service-locator/orchestration layer, `RedirectService`'s
+established static-resolver pattern) — real scope is two groups. P56-A:
+12 domain-service classes with a lazy container-resolver method
+alongside a real constructor; 11 confirmed correctly static (many real
+manual construction sites, a genuine DI-container cycle on
+`HtmlService`, or serving a sibling static method), 1 real conversion
+(`MailService`'s `processCache()`/`currentConfigService()`, undocumented
+and — checked directly — carrying no construction-time cost). P56-B: 8
+fully static-only utility classes plus 2 reclassified from P56-A; 7
+confirmed genuinely convertible once real callers are checked (most
+already have a real constructor of their own — `DateHelper`,
+`FilesystemHelper`, `PermissionCacheInvalidator`, `ImageBackend`,
+`PageHeaderRenderer`, `MenubarRenderer`, `UniqueExecLock`,
+`CoverageCollector`), only `DbConnection` stays static for a real
+structural reason (it builds the connection the container's own
+dependency graph itself depends on) — `ErrorCollector::currentConfig()`
+is already optimally scoped, no change. Independent of every other
+phase — no ordering constraint, land whenever convenient. Re-verify
+every call-site count above at execution time rather than trusting this
+snapshot to stay accurate.
+
+## Greenfield tracks (T3, cuttable — outside the P0–P56 backbone)
 
 All entirely cuttable, never gating a backbone commit, dropped first on
 overrun. None have started; each depends on backbone phases that have not

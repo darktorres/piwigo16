@@ -47,16 +47,11 @@ final class AdminDispatcher
 
         $result = $controller->handle($request);
 
-        // P43-F (in progress): a page not yet converted returns null,
-        // having already assigned AdminContentPageContext itself -- see
-        // AdminSubControllerInterface's own docblock.
-        if ($result !== null) {
-            self::currentTemplate()->get()->assignContext(new AdminContentPageContext(
-                adminContent: $result->content,
-                adminPageTitle: $result->pageTitle,
-                helpUrl: $result->helpUrl,
-            ));
-        }
+        self::currentTemplate()->get()->assignContext(new AdminContentPageContext(
+            adminContent: $result->content,
+            adminPageTitle: $result->pageTitle,
+            helpUrl: $result->helpUrl,
+        ));
     }
 
     /**

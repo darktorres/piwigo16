@@ -17,7 +17,7 @@ use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -88,7 +88,7 @@ final readonly class BatchManagerUnitPageRenderer
      *   scalar-filtered image id set -- see
      *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      */
-    public function render(array $catElementsId, int $pageStart): void
+    public function render(array $catElementsId, int $pageStart): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -486,12 +486,12 @@ final readonly class BatchManagerUnitPageRenderer
             filterCategorySelected: is_int($filter_category_selected_raw) ? $filter_category_selected_raw : null,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Batch Manager'),
-        ));
-
         $this->eventDispatcher->dispatch(new BatchManagerUnitRendered());
+
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Batch Manager'),
+        );
     }
 
     /**

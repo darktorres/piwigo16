@@ -14,7 +14,6 @@ use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\SiteUpdateView;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
@@ -110,7 +109,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
     }
 
     #[Override]
-    public function handle(ServerRequestInterface $request): ?AdminPageResult
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         $logger = $this->currentLogger->get();
         $template = $this->currentTemplate->get();
@@ -1033,11 +1032,10 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             footerElements: $footer_elements,
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Synchronize'),
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Synchronize'),
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
-        ));
-        return null;
+        );
     }
 }

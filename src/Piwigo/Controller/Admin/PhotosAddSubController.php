@@ -38,10 +38,8 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): ?AdminPageResult
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
-        $template = $this->currentTemplate->get();
-
         // getUploadFormConfig()'s return value is unused here -- see this
         // class's own docblock: the upload pipeline lives in UploadService,
         // not this sub-controller.
@@ -68,15 +66,15 @@ final readonly class PhotosAddSubController implements AdminSubControllerInterfa
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         if ($tab === 'direct') {
-            $this->photosAddDirectPageRenderer
+            return $this->photosAddDirectPageRenderer
                 ->render();
-        } elseif ($tab === 'applications') {
-            new PhotosAddApplicationsPageRenderer()
-                ->render($this->lang, $this->currentTemplate, $this->renderer);
-        } else {
-            new PhotosAddFtpPageRenderer()
+        }
+        if ($tab === 'applications') {
+            return new PhotosAddApplicationsPageRenderer()
                 ->render($this->lang, $this->currentTemplate, $this->renderer);
         }
-        return null;
+
+        return new PhotosAddFtpPageRenderer()
+            ->render($this->lang, $this->currentTemplate, $this->renderer);
     }
 }

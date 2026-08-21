@@ -19,7 +19,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -95,7 +95,7 @@ final readonly class BatchManagerGlobalPageRenderer
      *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      * @param ?list<ImageDuplicateField> $duplicatesOnFields
      */
-    public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void
+    public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -612,8 +612,8 @@ final readonly class BatchManagerGlobalPageRenderer
             filterCategorySelected: is_int($filter_category_selected_raw) ? $filter_category_selected_raw : null,
         ));
 
-        $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));
-
         $this->eventDispatcher->dispatch(new BatchManagerGlobalRendered());
+
+        return new AdminPageResult(content: $adminContent);
     }
 }

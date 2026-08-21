@@ -24,7 +24,6 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\IntroPageRendered;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\IntroView;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
@@ -115,7 +114,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): ?AdminPageResult
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         // $link_start is computed locally rather than read from a global:
         // AdminShell's own same-named value (used for its menubar hrefs)
@@ -123,7 +122,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         // or $GLOBALS[]-declared.
         $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
         $logger = $this->currentLogger->get();
-        $template = $this->currentTemplate->get();
 
         if (IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
             $this->preferencesService
@@ -547,12 +545,9 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $adminContent = new Html((string) $adminContent . (string) $c13yHtml);
         }
 
-        // No adminPageTitle override -- this page keeps AdminShell's own
+        // No pageTitle override -- this page keeps AdminShell's own
         // default.
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-        ));
-        return null;
+        return new AdminPageResult(content: $adminContent);
     }
 
     /**

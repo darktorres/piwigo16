@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Projection\PhotosAddApplicationsView;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -16,15 +16,13 @@ use Piwigo\Template\Renderer;
  */
 final class PhotosAddApplicationsPageRenderer
 {
-    public function render(Lang $lang, CurrentTemplate $currentTemplate, Renderer $renderer): void
+    public function render(Lang $lang, CurrentTemplate $currentTemplate, Renderer $renderer): AdminPageResult
     {
-        $template = $currentTemplate->get();
-
         $adminContent = $renderer->render(new PhotosAddApplicationsView());
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $lang->t('Upload Photos'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $lang->t('Upload Photos'),
+        );
     }
 }

@@ -187,7 +187,8 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         $this->writeFixtureTheme('default', 'Default');
         $this->writeFixtureTheme('pwgtest-extra-theme', 'PwgTest Extra Theme');
 
-        $adminContentRaw = $this->renderer->render('themes')->content;
+        $adminContentRaw = $this->renderer->render('themes')
+            ->content;
         $adminContent = (string) $adminContentRaw;
 
         // The real gap: a genuine non-default/standard_pages theme reaches

@@ -123,7 +123,6 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
             new EventDispatcher(),
             themeSubControllerTestEntityManager(),
             themeSubControllerTestThemeRegistry(),
-            themeSubControllerTestCurrentTemplate(),
             new Renderer(themeSubControllerTestCurrentTemplate()),
         );
 

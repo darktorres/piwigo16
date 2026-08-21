@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Controller\Admin\AdminSubControllerInterface;
@@ -9,7 +10,10 @@ use Piwigo\Controller\Admin\PhotosAddSubController;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -103,12 +107,12 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
 
             public ?ServerRequestInterface $request = null;
 
-            public function handle(ServerRequestInterface $request): ?AdminPageResult
+            public function handle(ServerRequestInterface $request): AdminPageResult
             {
                 $this->handled = true;
                 $this->request = $request;
 
-                return null;
+                return new AdminPageResult(content: new Html(''));
             }
         };
 
@@ -120,6 +124,22 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
                 Paths::class => Paths::fromRoot($decoyRoot),
             ],
             function () use ($request): void {
+                // AdminDispatcher::dispatch() now unconditionally assigns
+                // AdminContentPageContext onto the current Template --
+                // needs a real, initialized one just like any other real
+                // request. dataDirChecked must be pre-set (same idiom every
+                // other test building a real Template under a bare/fresh
+                // CurrentConfig uses) so Template::__construct() doesn't
+                // reach its own CurrentConfigService::get() call, which
+                // this throwaway override container never initializes.
+                CurrentConfigTestFactory::get()->dataDirChecked = '1';
+
+                $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+                if (! $currentTemplate instanceof CurrentTemplate) {
+                    throw new LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+                }
+                $currentTemplate->set(TemplateTestFactory::build());
+
                 AdminDispatcher::dispatch('decoy_slug', $request);
             }
         );

@@ -64,7 +64,6 @@ test('handle() fatal-errors when the requested plugin is not active', function (
             HtmlServiceTestFactory::build(),
             new InputValidator(),
             new CurrentPluginRegistry(),
-            $currentTemplate,
             new Renderer($currentTemplate),
         );
 

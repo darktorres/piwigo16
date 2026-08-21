@@ -112,7 +112,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): ?AdminPageResult
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -171,13 +171,12 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         ));
 
         if ($tab === 'unit') {
-            $this->batchManagerUnitPageRenderer
+            return $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
-        } else {
-            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
-                ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
-        return null;
+
+        return new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
+            ->render($cat_elements_id, $start, $duplicates_on_fields);
     }
 
     private function handleGetActions(BatchManagerRequest $batchManagerRequest, string $getPage, UserId $userId): void

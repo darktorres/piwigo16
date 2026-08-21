@@ -388,7 +388,6 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->containerGet(HtmlRenderingInterface::class),
             new InputValidator(),
             $currentPluginRegistry,
-            $this->containerGet(CurrentTemplate::class),
             new Renderer($this->containerGet(CurrentTemplate::class)),
         );
     }

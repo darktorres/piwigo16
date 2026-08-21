@@ -9,7 +9,6 @@ use Override;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Request\ThemeIdRequest;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -19,7 +18,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\SettingsPageInterface;
 use Piwigo\PluginConfig\ThemeRegistry;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
@@ -56,12 +54,11 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
         private ThemeRegistry $themeRegistry,
-        private CurrentTemplate $currentTemplate,
         private Renderer $renderer,
     ) {}
 
     #[Override]
-    public function handle(ServerRequestInterface $request): ?AdminPageResult
+    public function handle(ServerRequestInterface $request): AdminPageResult
     {
         $theme = ThemeIdRequest::fromGlobals($this->inputValidator)->themeId;
 
@@ -81,8 +78,6 @@ final readonly class ThemeSubController implements AdminSubControllerInterface
         $view = $instance->handleSettingsRequest($request);
         $adminContent = $this->renderer->render($view);
 
-        $this->currentTemplate->get()
-            ->assignContext(new AdminContentPageContext(adminContent: $adminContent));
-        return null;
+        return new AdminPageResult(content: $adminContent);
     }
 }

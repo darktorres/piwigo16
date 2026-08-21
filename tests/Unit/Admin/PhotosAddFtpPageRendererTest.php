@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Latte\Runtime\Html;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -64,20 +63,12 @@ test('render() falls back to empty ftp help content when the real language file 
         file_put_contents($tplDir . 'photos_add_ftp.latte', 'ftp={$ftpHelpContent}');
         $template->setTemplateDir($tplDir);
 
-        new PhotosAddFtpPageRenderer()
+        $result = new PhotosAddFtpPageRenderer()
             ->render(LangTestFactory::get(), CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
-        // Renderer::render() wraps its result in Latte\Runtime\Html.
-        $adminContent = $template->getTemplateVars('ADMIN_CONTENT');
-        expect($adminContent)
-            ->toBeInstanceOf(Html::class);
-        if (! $adminContent instanceof Html) {
-            throw new LogicException('unreachable -- asserted above');
-        }
-
-        expect($template->getTemplateVars('ADMIN_PAGE_TITLE'))
+        expect($result->pageTitle)
             ->toBe('Upload Photos')
-            ->and((string) $adminContent)
+            ->and((string) $result->content)
             ->toBe('ftp=');
     } finally {
         photosAddFtpTestRrmdir($root);

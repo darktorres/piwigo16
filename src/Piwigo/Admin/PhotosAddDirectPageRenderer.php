@@ -14,7 +14,7 @@ use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
+use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -80,7 +80,7 @@ final readonly class PhotosAddDirectPageRenderer
         return $urlService->getRootUrl() . 'admin.php?page=photos_add';
     }
 
-    public function render(): void
+    public function render(): AdminPageResult
     {
         $template = $this->currentTemplate->get();
 
@@ -196,10 +196,10 @@ final readonly class PhotosAddDirectPageRenderer
             pluploadCode: is_string($this->lang->langInfo()['plupload_code'] ?? null) ? $this->lang->langInfo()['plupload_code'] : '',
         ));
 
-        $template->assignContext(new AdminContentPageContext(
-            adminContent: $adminContent,
-            adminPageTitle: $this->lang->t('Upload Photos'),
-        ));
+        return new AdminPageResult(
+            content: $adminContent,
+            pageTitle: $this->lang->t('Upload Photos'),
+        );
     }
 
     /**

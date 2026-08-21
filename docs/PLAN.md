@@ -132,7 +132,7 @@ Three structural changes produced that drift:
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
-| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) ~942/945 landed, including the MenubarBlockView/MonthCalendarView design gap; 3 call sites remain pending a small follow-up (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
+| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
 | P43 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
@@ -3489,16 +3489,33 @@ applied automatically. Fixed by having `resolveLocalHeadOnce()` apply
 `HasPageAssets` inline, the same way `Renderer::render()`'s own hook
 would.
 
-**P42-B is now closed except 3 call sites, genuinely blocked on a
-missing sibling migration, not a design gap**: `colorbox.inc.latte`
-(2 calls) and `help/quick_search.latte` (1 call) each still have one
-real parent that hasn't yet merged their contribution directly
-(`SearchFiltersView`/`CatModifyView` don't merge `ColorboxView`;
-`BatchManagerUnitView`/`BatchManagerGlobalView` don't merge
-`QuickSearchView`) -- confirmed by grep, not assumed. Small, mechanical,
-same established construct-and-merge pattern as everything else in
-this campaign, deferred to its own follow-up batch -- **~942 of 945
-call sites migrated, 3 remain pending that follow-up**.
+**P42-B is fully closed.** The last 3 call sites (`colorbox.inc.latte`
+x2, `help/quick_search.latte` x1) were each blocked on one real parent
+not yet merging their contribution directly -- `SearchFiltersView`/
+`CatModifyView` now merge `ColorboxView`, `BatchManagerUnitView`/
+`BatchManagerGlobalView` now merge `QuickSearchView` (its own
+`is_dark_mode` derived from `$this->colorscheme === 'dark'`, matching
+`SearchFiltersView`'s own established pattern). Every real parent of
+both files now covers them declaratively, so `colorbox.inc.latte` is
+now fully empty (matching `autosize.inc.latte`/`datepicker.inc.latte`'s
+own zero-markup precedent) and its now-redundant `{include}` lines
+were removed from `add_album.inc.latte`/`album_selector.inc.latte`;
+`quick_search.latte` keeps its own `{include}` at both real parents
+for its real markup, only its `{do combineCss}` call moved. Two more
+real ordering fixes surfaced via golden-html diffs on `search`/
+`admin-album`/`admin-batch`, not assumed: `ColorboxView`'s own
+resolution position relative to `AlbumSelectorView`/`QuickSearchView`
+differs by page (search.php wants it last; cat_modify.php wants it
+right after `AlbumSelectorView`) -- once two things are BOTH fully
+declarative, their relative order is governed purely by array
+position, not by either one's former textual `{include}` position, so
+this has to be checked per page, not assumed transitively from one
+already-fixed page. Also restored a blank line lost from
+`album_selector.inc.latte`'s own body when its nested colorbox
+`{include}` was removed. **Re-grepped the full corpus and confirmed
+zero remaining `{do combineCss}`/`{do combineScript}`/`{do exposeData}`/
+`{do exposeString}`/`{do footerScript}`/`{do htmlHead}` calls anywhere
+-- 945 of 945 call sites migrated.**
 
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign

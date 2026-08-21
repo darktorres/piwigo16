@@ -968,11 +968,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * fired from `Renderer::render()`'s first call on this instance, same
      * timing as `dispatchPageAssetsOnce()` above. Renders
      * `LocalHeadView` directly via `renderView()` (not a recursive
-     * `Renderer::render()` call -- nothing this piece renders needs
-     * `Renderer`'s own View-capability hook) purely for its side effect
-     * on `$this->pageAssets`; the returned markup string itself is
-     * discarded, matching `local_head.latte`'s own real content (a
-     * conditional `{do combineCss(...)}`, nothing that prints).
+     * `Renderer::render()` call -- `Renderer` itself depends on this
+     * class via `CurrentTemplate`, so calling back into it here would be
+     * circular) purely for its side effect on `$this->pageAssets`; the
+     * returned markup string itself is discarded, matching
+     * `local_head.latte`'s own real content (empty markup once
+     * `pageAssets()` covers its former `{do combineCss(...)}`). Applies
+     * `HasPageAssets` inline (docs/PLAN.md's P42-B) since bypassing
+     * `Renderer::render()` above also bypasses its own automatic
+     * `HasPageAssets` hook.
      *
      * Narrowly scoped to the one real instance that exists today
      * (`themes/default/local_head.latte`) by comparing each resolved
@@ -1007,7 +1011,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 continue;
             }
 
-            $this->renderView('themes/default/local_head.latte', new LocalHeadView(load_css: (bool) ($theme['load_css'] ?? true)));
+            $localHeadView = new LocalHeadView(load_css: (bool) ($theme['load_css'] ?? true));
+            $this->registerPageAssets($localHeadView->pageAssets());
+            $this->renderView('themes/default/local_head.latte', $localHeadView);
         }
     }
 

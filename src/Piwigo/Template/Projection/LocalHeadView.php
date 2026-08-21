@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
 
@@ -21,11 +24,35 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * the theme root, not under `themes/default/template/` like every other
  * real template, so the usual bare-filename + `$templateDirs` search
  * would never find it.
+ *
+ * `pageAssets()` (docs/PLAN.md's P42-B) replicates this file's own
+ * former `{if $load_css}{do combineCss(...)}{/if}` -- but
+ * `Template::resolveLocalHeadOnce()` calls `renderView()` on this View
+ * directly, not through `Renderer::render()` (it can't: `Renderer`
+ * itself depends on `Template` via `CurrentTemplate`, so `Template`
+ * calling back into `Renderer` would be circular), so
+ * `resolveLocalHeadOnce()` applies `HasPageAssets` inline instead of
+ * relying on `Renderer::render()`'s own hook to do it.
  */
 #[TemplateAttr('themes/default/local_head.latte')]
-final readonly class LocalHeadView implements View
+final readonly class LocalHeadView implements View, HasPageAssets
 {
     public function __construct(
         public bool $load_css,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        if (! $this->load_css) {
+            return [];
+        }
+
+        return [
+            AssetContribution::css('themes/default/print.css', order: -10),
+        ];
+    }
 }

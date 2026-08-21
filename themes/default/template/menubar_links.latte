@@ -1,7 +1,6 @@
 {templateType Piwigo\Menu\Projection\MenubarBlockView}
 <dt>{='Links'|translate}</dt>
 <dd>
-  {do combineScript(id: 'menubar-links', load: 'footer', path: 'themes/default/js/menubar-links.js')}
   <ul>{spaceless}
       <li n:foreach="$block->data as $link">
         <a

@@ -72,18 +72,33 @@ final readonly class IndexView implements View, HasPageAssets
         public Html $selectedTagsTemplate,
         public array $pluginIndexButtons,
         public ?string $searchId,
+        public bool $monthCalendarActive,
     ) {}
 
     /**
+     * `$monthCalendarActive` replicates `month_calendar.latte`'s own
+     * former `combineCss` call -- included, when at all, via this
+     * template's own bare `{include $FILE_CHRONOLOGY_VIEW}` (always the
+     * literal `'month_calendar.latte'` in practice -- its one real
+     * construction site, {@see \Piwigo\Calendar\CalendarRenderer::render()},
+     * never passes anything else), a real derived value (not a fixed
+     * literal), covered by its own unit test (docs/PLAN.md's P42-B).
+     *
      * @return list<AssetContribution>
      */
     #[Override]
     public function pageAssets(): array
     {
-        return [
+        $assets = [
             AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::script('index', 'themes/default/js/index.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
         ];
+
+        if ($this->monthCalendarActive) {
+            $assets[] = AssetContribution::css('themes/default/css/pages/month_calendar.css', id: 'month_calendar');
+        }
+
+        return $assets;
     }
 }

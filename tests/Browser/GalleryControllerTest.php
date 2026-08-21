@@ -168,6 +168,16 @@ it('renders a category filtered by creation chronology, exercising the alternate
     $page->assertNoJavaScriptErrors();
 });
 
+it('renders month_calendar.latte and its own CSS when the calendar chronology view is requested', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/index.php?/category/1/created-monthly-calendar');
+    $body = H::rawWebpage($page)->content();
+
+    expect($body)
+        ->toContain('themes/default/css/pages/month_calendar.css');
+    $page->assertNoJavaScriptErrors();
+});
+
 it('shows page-not-found when start is beyond the item count', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/start-999');

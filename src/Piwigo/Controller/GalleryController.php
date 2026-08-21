@@ -659,6 +659,14 @@ final readonly class GalleryController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
 
+        // Genuinely ambient -- SectionPopulator::populate()'s own
+        // CalendarRenderer::render() call (earlier in this same request)
+        // assigns FILE_CHRONOLOGY_VIEW onto this same Template instance's
+        // own $vars bag when a calendar chronology view applies, matching
+        // index.latte's own `{if isset($FILE_CHRONOLOGY_VIEW)}` guard
+        // exactly (docs/PLAN.md's P42-B).
+        $monthCalendarActive = $template->getTemplateVars('FILE_CHRONOLOGY_VIEW') === 'month_calendar.latte';
+
         $indexView = new IndexView(
             thumbNavbar: $navigationBar,
             title: $template_title,
@@ -685,6 +693,7 @@ final readonly class GalleryController implements ControllerInterface
             selectedTagsTemplate: $selected_tags_template,
             pluginIndexButtons: $template->indexButtons(),
             searchId: $searchFilterResult->data?->searchId,
+            monthCalendarActive: $monthCalendarActive,
         );
 
         $this->historyService

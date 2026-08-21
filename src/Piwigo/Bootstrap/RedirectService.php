@@ -14,14 +14,18 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -160,6 +164,47 @@ final readonly class RedirectService implements RedirectServiceInterface
         return $sessionService;
     }
 
+    /**
+     * Resolve helper matching the ones above -- needed for Template's own
+     * required collaborators, same "Kernel-container-resolving static
+     * helper" shape as adminContext() above.
+     */
+    private static function urlService(): UrlServiceInterface
+    {
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+        }
+        return $urlService;
+    }
+
+    private static function pageState(): PageState
+    {
+        $pageState = Kernel::container()->get(PageState::class);
+        if (! $pageState instanceof PageState) {
+            throw new LogicException('Container returned an unexpected type for ' . PageState::class);
+        }
+        return $pageState;
+    }
+
+    private static function htmlRenderer(): HtmlRenderingInterface
+    {
+        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
+        }
+        return $htmlRenderer;
+    }
+
+    private static function imageStdParams(): ImageStdParams
+    {
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
+        if (! $imageStdParams instanceof ImageStdParams) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
+        }
+        return $imageStdParams;
+    }
+
     #[Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
@@ -193,10 +238,10 @@ final readonly class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
+            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), $paths, new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), $paths->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         } elseif (self::adminContext()->isActive()) {
-            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
+            $template = new Template(self::currentConfig(), $this->lang, $this->eventDispatcher, self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), new AccessLevelChecker(self::currentUser(), self::currentConfig()), self::sessionService(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes', ThemeId::from($this->userService->getDefaultTheme()));
             self::currentTemplate()->set($template);
         }
 

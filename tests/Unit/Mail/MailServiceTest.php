@@ -5,11 +5,14 @@ declare(strict_types=1);
 use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\BoundedSendmailTransport;
@@ -66,6 +69,9 @@ function mail_service_test_build(
     $mailRecipientRepo ??= Kernel::container()->get(MailRecipientRepositoryInterface::class);
     $authService ??= Kernel::container()->get(AuthService::class);
     $userService = Kernel::container()->get(UserService::class);
+    $pageState = Kernel::container()->get(PageState::class);
+    $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+    $imageStdParams = Kernel::container()->get(ImageStdParams::class);
     if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig
         || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
         || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
@@ -74,6 +80,9 @@ function mail_service_test_build(
         || ! $mailRecipientRepo instanceof MailRecipientRepositoryInterface
         || ! $authService instanceof AuthService
         || ! $userService instanceof UserService
+        || ! $pageState instanceof PageState
+        || ! $htmlRenderer instanceof HtmlRenderingInterface
+        || ! $imageStdParams instanceof ImageStdParams
     ) {
         throw new LogicException('Container returned an unexpected type');
     }
@@ -91,6 +100,9 @@ function mail_service_test_build(
         $mailRecipientRepo,
         $authService,
         $userService,
+        $pageState,
+        $htmlRenderer,
+        $imageStdParams,
     );
 }
 

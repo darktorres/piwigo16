@@ -12,13 +12,17 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
@@ -33,11 +37,11 @@ use Throwable;
  * test-seeded state on those instances). Falls back to a fresh, DB-free,
  * bare instance for tests that never boot a Kernel.
  *
- * ImageStdParams is not among the resolved collaborators: its container
- * factory unconditionally hits the DB (`loadFromDb()`), which is unsafe
- * as a required constructor param before the schema exists (e.g.
- * public/install.php). Template resolves it lazily internally instead
- * (see Template::imageStdParams()).
+ * ImageStdParams' own container factory (config/container.php) is hardened
+ * against both a missing table and an unavailable connection, degrading
+ * to its own "not yet loaded" baseline rather than throwing -- safe as a
+ * required constructor param even before the schema exists (e.g.
+ * public/install.php).
  *
  * SessionService's container factory does not eagerly touch the DB
  * (SessionRepository extends Doctrine's lazy EntityRepository), so a
@@ -62,6 +66,10 @@ final class TemplateTestFactory
             self::resolve(Paths::class) ?? Paths::fromRoot(sys_get_temp_dir()),
             self::resolve(AccessLevelChecker::class) ?? new AccessLevelChecker($currentUser, $currentConfig),
             self::resolve(SessionService::class) ?? new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
+            self::resolve(UrlServiceInterface::class) ?? UrlServiceTestFactory::build(),
+            self::resolve(PageState::class) ?? new PageState(),
+            self::resolve(HtmlRenderingInterface::class) ?? HtmlServiceTestFactory::build(),
+            self::resolve(ImageStdParams::class) ?? new ImageStdParams(),
             $root,
             $theme === '' ? null : ThemeId::from($theme),
             $path,

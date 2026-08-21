@@ -28,7 +28,10 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
@@ -98,6 +101,9 @@ function noPhotoYetTestRenderer(AdminContext $adminContext, ApiContext $apiConte
         new ProcessCache(),
         CurrentConfigServiceTestFactory::get(),
         new Renderer(CurrentTemplateTestFactory::get()),
+        PageStateTestFactory::get(),
+        HtmlServiceTestFactory::build(),
+        ImageStdParamsTestFactory::get(),
     );
 }
 

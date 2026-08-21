@@ -31,7 +31,10 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 use ReflectionProperty;
 use SessionHandler;
@@ -339,11 +342,12 @@ final class InstallWizardTest extends IntegrationTestCase
 
     /**
      * Mirrors public/install.php's own real bootstrap sequence exactly (not
-     * just InstallWizard's constructor+boot()): sets
-     * Piwigo\Template\Template's static URL service (a "pre-existing
-     * gap" the entry shell's own docblock already documents: nothing inside
-     * InstallWizard/InstallBootstrap does this, since install.php never runs
-     * RequestBootstrap::configure(), the only other real caller).
+     * just InstallWizard's constructor+boot()): InstallWizard now takes
+     * UrlServiceInterface/HtmlRenderingInterface/ImageStdParams directly as
+     * constructor collaborators (matching Template's own required
+     * collaborators), the same shape install.php's own
+     * `RequestBootstrap::urlService()`/`htmlRenderer()`/`imageStdParams()`
+     * calls supply in production.
      *
      * @param array<string, string> $post
      * @param array<string, string> $get
@@ -366,7 +370,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $dbCredentials = DbCredentialsTestFactory::get();
         $currentTemplate = new CurrentTemplate();
 
-        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), $currentTemplate, CurrentUserTestFactory::get(), new ConnectedWithSession(), new Renderer($currentTemplate));
+        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), $currentTemplate, CurrentUserTestFactory::get(), new ConnectedWithSession(), new Renderer($currentTemplate), UrlServiceTestFactory::build(), HtmlServiceTestFactory::build(), ImageStdParamsTestFactory::get());
         $wizard->boot();
 
         return $wizard;

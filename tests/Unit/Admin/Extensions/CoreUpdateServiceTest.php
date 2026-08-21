@@ -33,6 +33,7 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailService;
@@ -147,6 +148,9 @@ function core_update_service_test_mail_service(): MailService
             new ConnectedWithSession(),
         ),
         core_update_service_test_user_service(),
+        new PageState(),
+        HtmlServiceTestFactory::build(),
+        new ImageStdParams(),
     );
 }
 

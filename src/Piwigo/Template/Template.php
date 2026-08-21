@@ -241,6 +241,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly Paths $paths,
         private readonly AccessLevelChecker $accessLevelChecker,
         private readonly SessionService $sessionService,
+        private readonly UrlServiceInterface $urlService,
+        private readonly PageState $pageState,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly ImageStdParams $imageStdParams,
         string $root = '.',
         ?ThemeId $theme = null,
         string $path = 'template',
@@ -263,7 +267,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             FilesystemHelper::mkgetdir($dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
                 $this->lang->load('admin.lang');
-                $this->htmlRenderer()
+                $this->htmlRenderer
                     ->fatalError(
                         $this->lang->t(
                             'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
@@ -337,34 +341,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- `UrlServiceInterface`
-     * stays on this established, already-correct pattern rather than
-     * being folded into the required-collaborator list above for no
-     * reason. `private static` (not `private`) so it's reachable from
-     * makeScriptSrc() below, which is itself an instance method but
-     * keeps calling this via `self::` like every other caller in this
-     * class. Resolves the container-shared instance, not a throwaway
-     * `new UrlService($this->htmlRenderer())` -- see Image\SrcImage's
-     * own docblock for why (RootPathOverride's cross-instance sharing
-     * requirement).
-     */
-    private static function urlService(): UrlServiceInterface
-    {
-        $urlService = Kernel::container()->get(UrlServiceInterface::class);
-        if (! $urlService instanceof UrlServiceInterface) {
-            throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
-        }
-
-        return $urlService;
-    }
-
-    /**
-     * `public` (unlike urlService() above) and called from well outside
-     * this class -- `Core\DateHelper`, `Core\FilesystemHelper`, and
-     * `Bootstrap\RequestBootstrap` all resolve `Lang` this way rather than
-     * carrying their own constructor-injected reference, the same
-     * permanent-exception shape `currentConfig()` below has for
-     * `themeconf.inc.php`.
+     * `public` and called from well outside this class -- `Core\DateHelper`,
+     * `Core\FilesystemHelper`, and `Bootstrap\RequestBootstrap` all resolve
+     * `Lang` this way rather than carrying their own constructor-injected
+     * reference, the same permanent-exception shape `currentConfig()`
+     * below has for `themeconf.inc.php`.
      */
     public static function lang(): Lang
     {
@@ -377,25 +358,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Same reasoning as urlService() above -- docs/PLAN.md's P37 needs
-     * `PageState` here (getPageDataScript()'s own PageDataPayload
-     * construction below), and this class's constructor already has 11
-     * real call sites across 6 files; a container resolve here avoids
-     * touching all of them for one new dependency.
-     */
-    private static function pageState(): PageState
-    {
-        $pageState = Kernel::container()->get(PageState::class);
-        if (! $pageState instanceof PageState) {
-            throw new LogicException('Container returned an unexpected type for ' . PageState::class);
-        }
-
-        return $pageState;
-    }
-
-    /**
-     * `public` and referenced by its fully-qualified name, same reasoning
-     * as lang() above -- used inside
+     * `public` and referenced by its fully-qualified name -- used inside
      * themes/standard_pages/themeconf.inc.php. Unlike lang()'s own
      * compiled-cache-codegen use case, this file is a real, direct PHP
      * `include` from loadThemeconf() below -- `$this` genuinely IS the
@@ -417,53 +380,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- every real use in
-     * this class is `->fatalError(...)`, a defensive early-crash guard
-     * (missing param, non-writable dir, etc.), not real business logic.
-     * `HtmlRenderingInterface` is already bound in container.php, so this
-     * matches Core\FilesystemHelper::fatalError()'s own already-established
-     * precedent for this exact interface/method combination (see that
-     * method's own docblock) rather than growing this class's own
-     * constructor for a 14-site error-path-only usage.
-     */
-    private function htmlRenderer(): HtmlRenderingInterface
-    {
-        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
-        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
-            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
-        }
-
-        return $htmlRenderer;
-    }
-
-    /**
-     * Container resolve, not a constructor property -- ImageStdParams's
-     * own container factory (config/container.php) unconditionally calls
-     * loadFromDb() against a real DB connection. A required constructor
-     * param here would force that DB read merely by constructing a
-     * Template, or (worse) merely by *any* caller satisfying this class's
-     * own constructor signature -- InstallWizard's own real construction
-     * site had to resolve this eagerly just to build a Template, before
-     * install.php has ever confirmed the schema exists (the
-     * `derivative_settings` table doesn't exist yet on a fresh install).
-     * Kept lazy here, so nothing forces this cost except
-     * defineDerivative() actually running.
-     */
-    private function imageStdParams(): ImageStdParams
-    {
-        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
-        if (! $imageStdParams instanceof ImageStdParams) {
-            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
-        }
-
-        return $imageStdParams;
-    }
-
-    /**
-     * Lazily constructed, memoized per `Template` instance -- mirrors
-     * `imageStdParams()` above: nothing forces this cost (a real
-     * cache-dir mkdir, a `PiwigoExtension` construction) except a
-     * `.latte` file actually being parsed.
+     * Lazily constructed, memoized per `Template` instance -- nothing
+     * forces this cost (a real cache-dir mkdir, a `PiwigoExtension`
+     * construction) except a `.latte` file actually being parsed.
      */
     private function latteEngine(): LatteEngine
     {
@@ -477,7 +396,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $this->clearLatteCacheDir($cacheDir);
         }
 
-        $extension = new PiwigoExtension($this, $this->lang, $this->accessLevelChecker, $this->sessionService, self::urlService());
+        $extension = new PiwigoExtension($this, $this->lang, $this->accessLevelChecker, $this->sessionService, $this->urlService);
         $this->latteEngineInstance = new LatteEngine($cacheDir, $this->currentConfig->templateCompileCheck, $extension, $this->lang->currentUserLanguage());
 
         return $this->latteEngineInstance;
@@ -515,7 +434,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             return $resolved;
         }
 
-        $this->htmlRenderer()
+        $this->htmlRenderer
             ->fatalError("Template->parse(): Couldn't load Latte template file: {$file}");
     }
 
@@ -783,7 +702,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // own "htmlRenderer resolver throws" case).
         $path = $this->resolveLatteTemplatePath($file);
 
-        $this->assign('ROOT_URL', self::urlService()->getRootUrl());
+        $this->assign('ROOT_URL', $this->urlService->getRootUrl());
         // ROOT_PATH is the template-side equivalent of PHPWG_ROOT_PATH for
         // the handful of templates that need a real filesystem existence
         // check (datepicker.inc.latte's own
@@ -808,7 +727,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function renderView(string $file, View $view): string
     {
-        $this->assign('ROOT_URL', self::urlService()->getRootUrl());
+        $this->assign('ROOT_URL', $this->urlService->getRootUrl());
         $this->assign('ROOT_PATH', $this->paths->root);
         $path = $this->resolveLatteTemplatePath($file);
 
@@ -891,7 +810,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $content = [];
         foreach ($css as $asset) {
-            $href = self::urlService()->embellishUrl(self::urlService()->getRootUrl() . $asset->path);
+            $href = $this->urlService->embellishUrl($this->urlService->getRootUrl() . $asset->path);
             if ($asset->version !== false) {
                 $href .= '?v' . ((bool) $asset->version ? $asset->version : AppInfo::VERSION);
             }
@@ -914,7 +833,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // survive until this substitution runs against footer.latte's
         // own placeholder, regardless of how many separate
         // Template::finalizeHtml() calls the request makes along the way.
-        $pageDataPayload = new PageDataPayload(self::pageState(), self::lang());
+        $pageDataPayload = new PageDataPayload($this->pageState, self::lang());
         $html = str_replace(
             self::JSON_ISLAND_TAG,
             '<script type="application/json" id="page-data">' . $pageDataPayload->toJson() . '</script>',
@@ -1037,12 +956,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     private function makeAssetSrc(ResolvedAsset $asset): string
     {
-        $isRemote = self::urlService()->urlIsRemote($asset->path) || str_starts_with($asset->path, '//');
+        $isRemote = $this->urlService->urlIsRemote($asset->path) || str_starts_with($asset->path, '//');
 
         if ($isRemote) {
             $ret = $asset->path;
         } else {
-            $ret = self::urlService()->getRootUrl() . $asset->path;
+            $ret = $this->urlService->getRootUrl() . $asset->path;
             if ($asset->version !== false) {
                 $ret .= '?v' . ((bool) $asset->version ? $asset->version : AppInfo::VERSION);
             }
@@ -1050,7 +969,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // trigger the event for eventual use of a cdn
         $combinedScriptEvent = $this->eventDispatcher->dispatch(new CombinedScript($ret, $asset));
 
-        return self::urlService()->embellishUrl($combinedScriptEvent->src);
+        return $this->urlService->embellishUrl($combinedScriptEvent->src);
     }
 
     /**
@@ -1220,12 +1139,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function defineDerivative(?string $type = null, ?int $width = null, ?int $height = null, bool|float|int $crop = 0, ?int $minWidth = null, ?int $minHeight = null): DerivativeParams
     {
         if ($type !== null) {
-            return $this->imageStdParams()
+            return $this->imageStdParams
                 ->getByType($type);
         }
 
         if ($width === null || $height === null) {
-            $this->htmlRenderer()
+            $this->htmlRenderer
                 ->fatalError('defineDerivative missing width or height');
         }
 
@@ -1236,17 +1155,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if ($cropRatio !== 0 && $cropRatio !== 0.0) {
             $minw = $minWidth ?? $width;
             if ($minw > $width) {
-                $this->htmlRenderer()
+                $this->htmlRenderer
                     ->fatalError('defineDerivative invalid min_width');
             }
             $minh = $minHeight ?? $height;
             if ($minh > $height) {
-                $this->htmlRenderer()
+                $this->htmlRenderer
                     ->fatalError('defineDerivative invalid min_height');
             }
         }
 
-        return $this->imageStdParams()
+        return $this->imageStdParams
             ->getCustom($width, $height, $cropRatio, $minw, $minh);
     }
 
@@ -1347,7 +1266,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function exposeData(string $key, string|int|float|bool|null|array $value): void
     {
-        self::pageState()->exposeData($key, $value);
+        $this->pageState->exposeData($key, $value);
     }
 
     /**
@@ -1355,7 +1274,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function exposeString(string $translationKey): void
     {
-        self::pageState()->exposeString($translationKey);
+        $this->pageState->exposeString($translationKey);
     }
 
     /**

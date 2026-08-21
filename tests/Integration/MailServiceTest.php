@@ -21,9 +21,11 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
@@ -31,6 +33,7 @@ use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Event\BeforeParseMailTemplate;
@@ -213,6 +216,9 @@ final class MailServiceTest extends IntegrationTestCase
         $webmasterMailProvider = Kernel::container()->get(WebmasterMailProviderInterface::class);
         $authService = Kernel::container()->get(AuthService::class);
         $userService = Kernel::container()->get(UserService::class);
+        $pageState = Kernel::container()->get(PageState::class);
+        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
         if (! $lang instanceof Lang || ! $currentConfig instanceof CurrentConfig
             || ! $paths instanceof Paths || ! $sessionService instanceof SessionService
             || ! $translator instanceof Translator || ! $eventDispatcher instanceof EventDispatcher
@@ -220,11 +226,14 @@ final class MailServiceTest extends IntegrationTestCase
             || ! $webmasterMailProvider instanceof WebmasterMailProviderInterface
             || ! $authService instanceof AuthService
             || ! $userService instanceof UserService
+            || ! $pageState instanceof PageState
+            || ! $htmlRenderer instanceof HtmlRenderingInterface
+            || ! $imageStdParams instanceof ImageStdParams
         ) {
             throw new LogicException('Container returned an unexpected type');
         }
 
-        return new MailService($lang, $currentConfig, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, $webmasterMailProvider, $repo, $authService, $userService);
+        return new MailService($lang, $currentConfig, $paths, $sessionService, $translator, $eventDispatcher, $currentUser, $urlService, $webmasterMailProvider, $repo, $authService, $userService, $pageState, $htmlRenderer, $imageStdParams);
     }
 
     private function setCurrentUserToFixtureAdmin(): void

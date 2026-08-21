@@ -57,6 +57,9 @@ $wizard = new InstallWizard(
     RequestBootstrap::currentUser(),
     new ConnectedWithSession(),
     RequestBootstrap::templateRenderer(),
+    RequestBootstrap::urlService(),
+    RequestBootstrap::htmlRenderer(),
+    RequestBootstrap::imageStdParams(),
 );
 
 // InstallWizard::boot()'s own "PHP extension mysqli is not loaded"/

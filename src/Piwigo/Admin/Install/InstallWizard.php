@@ -54,12 +54,14 @@ use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
@@ -71,6 +73,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -192,6 +195,9 @@ final class InstallWizard
         private readonly CurrentUser $currentUser,
         private readonly ConnectedWithSession $connectedWithSession,
         private readonly Renderer $renderer,
+        private readonly UrlServiceInterface $urlService,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -387,7 +393,7 @@ final class InstallWizard
         // wanted this early. The theme-base "unconditional admin-layout
         // assets" piece (docs/PLAN.md's P42-A) would otherwise register
         // them regardless, a real regression caught via golden-html.
-        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
+        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $this->currentConfig), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
         $this->currentTemplate->set($template);
         $this->template = $template;
     }

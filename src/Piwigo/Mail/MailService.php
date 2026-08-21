@@ -20,14 +20,17 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\View;
 use Piwigo\Core\WebmasterMailProviderInterface;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Event\BeforeParseMailTemplate;
@@ -125,6 +128,9 @@ final class MailService implements MailerInterface
         private readonly MailRecipientRepositoryInterface $mailRecipientRepo,
         private readonly AuthService $authService,
         private readonly UserService $userService,
+        private readonly PageState $pageState,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly ImageStdParams $imageStdParams,
         private readonly ?TransportInterface $transportOverride = null,
     ) {}
 
@@ -420,7 +426,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->sessionService, $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
     }
 
     /**

@@ -3,12 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TemplatePageContext;
-use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -133,40 +131,20 @@ test('assignContext flattens a TemplatePageContext to individually-assigned temp
 
 // --- container-resolver LogicException guards -------------------------------
 //
-// Every real Kernel::container()->get(X::class) call in config/container.php
-// legitimately produces a real instance of X -- these `!$x instanceof X`
-// guards only fire on container misconfiguration, reproduced here via
-// KernelContainerOverride's own established "rebind one class to a plain
-// stdClass" seam (already the precedent for this exact
+// urlService()/htmlRenderer() no longer exist as container-resolving
+// methods on this class (P43-G, docs/PLAN.md: both are now real
+// constructor-injected properties, so a wrong type is a PHP TypeError at
+// construction time, not a runtime `!$x instanceof X` guard here to
+// test). lang() is the one remaining real example of this pattern --
+// still a genuine `Kernel::container()->get(X::class)` call, reproduced
+// here via KernelContainerOverride's own established "rebind one class
+// to a plain stdClass" seam (already the precedent for this exact
 // "Container returned an unexpected type for" shape, see e.g.
-// tests/Unit/Bootstrap/InfrastructureAccessorTest.php). Each test restores
+// tests/Unit/Bootstrap/InfrastructureAccessorTest.php). The test restores
 // a real Kernel::boot() afterward -- KernelContainerOverride::with()'s own
 // `finally` leaves Kernel unbooted once the exception propagates out past
 // it, and this file's own shared afterEach (LangTestFactory::get()->reset()
 // in particular, which has no pre-boot fallback) requires a booted Kernel.
-
-test('urlService resolver throws when the container returns an unexpected type', function (): void {
-    // Construction alone no longer touches urlService() (the old Smarty
-    // modifier registrations that resolved it eagerly are gone) -- parse()
-    // is the real, live call site that still needs it, for its own
-    // ROOT_URL assign. Passing __FILE__ (a real, absolute, existing path)
-    // takes resolveLatteTemplatePath()'s own short-circuit branch, so
-    // parse() reaches the urlService() call instead of failing earlier
-    // via htmlRenderer()->fatalError() on an unresolvable file -- Latte
-    // never actually renders this PHP file, since urlService() throws
-    // first.
-    $t = TemplateTestFactory::build();
-
-    expect(static fn (): mixed => KernelContainerOverride::with(
-        [
-            UrlServiceInterface::class => new stdClass(),
-        ],
-        static fn (): string => $t->parse(__FILE__)
-    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . UrlServiceInterface::class);
-
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->dataDirChecked = '1';
-});
 
 test('lang resolver throws when the container returns an unexpected type', function (): void {
     expect(static fn (): mixed => KernelContainerOverride::with(
@@ -175,20 +153,6 @@ test('lang resolver throws when the container returns an unexpected type', funct
         ],
         static fn (): Lang => Template::lang()
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
-
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->dataDirChecked = '1';
-});
-
-test('htmlRenderer resolver throws when the container returns an unexpected type', function (): void {
-    $t = TemplateTestFactory::build();
-
-    expect(static fn (): mixed => KernelContainerOverride::with(
-        [
-            HtmlRenderingInterface::class => new stdClass(),
-        ],
-        static fn (): string => $t->parse('no-such-handle')
-    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentConfigTestFactory::get()->dataDirChecked = '1';

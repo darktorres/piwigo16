@@ -39,6 +39,7 @@ use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -64,6 +65,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Listener\CommentSpamListener;
 use Piwigo\Listener\HtmlRenderingListener;
@@ -351,7 +353,7 @@ final class RequestBootstrap
                 new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                     ->getAdminThemePref() ?? self::currentConfig()->adminTheme
             );
-            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
@@ -367,7 +369,7 @@ final class RequestBootstrap
             // before Template is constructed, so a theme's subscribedEvents()
             // are live before anything in the same request could fire them.
             self::themeRegistry($conn)->bootCurrent($theme);
-            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes', $theme);
         }
 
         self::currentTemplate()->set($template);
@@ -389,7 +391,7 @@ final class RequestBootstrap
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
-            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()))
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::sessionService(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()), self::pageState(), self::htmlRenderer(), self::imageStdParams())
                 ->render();
         }
 
@@ -956,6 +958,39 @@ final class RequestBootstrap
         }
 
         return $urlService;
+    }
+
+    /**
+     * Public, same reason as urlService()/pageState() above --
+     * public/install.php's own manual InstallWizard construction needs
+     * this to satisfy Template's own required collaborators.
+     */
+    public static function htmlRenderer(): HtmlRenderingInterface
+    {
+        $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+        if (! $htmlRenderer instanceof HtmlRenderingInterface) {
+            throw new LogicException('Container returned an unexpected type for ' . HtmlRenderingInterface::class);
+        }
+
+        return $htmlRenderer;
+    }
+
+    /**
+     * Public, same reason as htmlRenderer() above -- public/install.php's
+     * own manual InstallWizard construction needs this too. Safe to
+     * resolve unconditionally: the container factory (config/container.php)
+     * already tolerates a missing table or an unavailable connection,
+     * degrading to ImageStdParams' own "not yet loaded" baseline rather
+     * than throwing.
+     */
+    public static function imageStdParams(): ImageStdParams
+    {
+        $imageStdParams = Kernel::container()->get(ImageStdParams::class);
+        if (! $imageStdParams instanceof ImageStdParams) {
+            throw new LogicException('Container returned an unexpected type for ' . ImageStdParams::class);
+        }
+
+        return $imageStdParams;
     }
 
     /**

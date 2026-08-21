@@ -133,10 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id`
-stable DOM hooks + indexed rating-button ids across the picture/thumbnail
-family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks).
-P43-D–F not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-E–F not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3765,6 +3762,49 @@ P43-B's golden-HTML-only gate): 9 real routes affected, every baseline
 change reviewed by hand -- either the new attribute/id with a correct
 real value, or whitespace removed by the dead-hook cleanup. No visual
 regression (attributes and ids are invisible).
+
+**P43-D (landed) — `render(View): Html` as `ExtensionContext`'s single
+rendering API.** `ExtensionContext::render(View): Html` delegates to
+an injected `Template\Renderer`, matching `Renderer::render()`'s own
+contract exactly (page-asset/exposed-page-data pre-population,
+`#[Template]`-attribute resolution) — same `boot()`-time
+`isInitialized()` guard as the existing `template()` accessor, for the
+identical reason. `Renderer` threaded through as a new required
+constructor param on `ExtensionContext`/`ExtensionContextFactory`/
+`PluginBootstrapMiddleware` — the real manual-construction sites
+resolve it via `RequestBootstrap::templateRenderer()`/container
+autowiring, no new infrastructure.
+
+`SettingsPageInterface::handleSettingsRequest()` changes from `void`
+(side-effecting `ADMIN_CONTENT` via `assignVarFromTemplate()`) to
+returning a `View`. Its 2 real callers (`PluginSubController`/
+`ThemeSubController`) now render the returned `View` via
+`ExtensionContext::render()`'s own `Renderer` and assign it into
+`AdminContentPageContext` themselves — the same shape every other
+admin sub-controller already uses (P40's own Batch 3 pattern).
+
+A plugin author's own `#[Template(...)]` attribute can't embed a
+dynamically-computed install-path (PHP attribute arguments must be
+constant expressions) — the real resolution mechanism for that
+(informally sketched as a `myplugin:` prefix) is explicitly out of
+scope here per the plan's own design note, deferred until a real
+plugin actually needs it. Every fixture touched by this batch
+sidesteps this by embedding a real, already-known absolute path as a
+literal string at fixture-generation time (dynamically-generated test
+code can do this freely; a real, hand-authored plugin's source is
+fixed long before any install path is known).
+
+Full verification (5441 Unit/Arch, 2121 Integration, 774 Browser, 74
+golden-HTML, 66 visual-regression) surfaced two real, unrelated
+regressions from the earlier P43-B batch — neither covered by
+golden-HTML/visual-regression's own fixture data — fixed in the same
+pass: a `|stripTags|replace:...` filter-chain order bug (Latte's
+`stripTags` marks its own output `Html`-typed, which broke the *next*
+piped filter; a real HTTP 500 on any picture page with a non-empty
+author/comment field) and a stale `NotificationByMailSubControllerTest`
+assertion still expecting P43-B's pre-migration
+`selected="selected"` XHTML attribute pair instead of the bare
+HTML5-style `selected` its own `n:attr` conversion now renders.
 
 **P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
 Found during a deep review of the Template layer, not part of this

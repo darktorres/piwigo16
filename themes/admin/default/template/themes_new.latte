@@ -1,7 +1,5 @@
 {templateType Piwigo\Admin\Projection\ThemesNewView}
 {include 'include/colorbox.inc.latte'}
-{do exposeData('default_screenshot', $defaultScreenshot)}
-{do combineScript(id: 'themes_new', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/themes_new.js')}
 
 {if !empty($newThemes)}
   <div class="themeBoxes">

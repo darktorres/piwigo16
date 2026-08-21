@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -32,6 +33,10 @@ use Piwigo\Template\Projection\ToasterView;
  * `$isStandardPagesTheme`/`$standardPagesSelectedSkin` disambiguate
  * `pageAssets()` the same way `IdentificationView`'s own do -- the
  * default theme's own template has zero registration calls of its own.
+ * `$pluginProfileFields` is `$template->profileFields()` -- the default
+ * theme's own template never reads it (it embeds `$profileContent`
+ * instead, which already carries `ProfileFormView`'s own copy of the
+ * same call).
  */
 #[Template('profile.latte')]
 final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
@@ -41,6 +46,7 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
      * @param array<int|string, string> $templateOptions
      * @param array<string, string> $languageOptions
      * @param array<int|string, string> $apiExpiration
+     * @param list<ProfileField> $pluginProfileFields
      */
     public function __construct(
         public Html $profileContent,
@@ -68,6 +74,7 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
         public string $apiEmailInfos,
         public bool $isStandardPagesTheme,
         public string $standardPagesSelectedSkin,
+        public array $pluginProfileFields,
     ) {}
 
     /**

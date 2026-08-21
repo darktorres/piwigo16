@@ -210,6 +210,7 @@ final readonly class ProfileController implements ControllerInterface
             nbComments: $formData->nbComments,
             nbHits: $formData->nbHits,
             csrfToken: $formData->pwgToken,
+            pluginProfileFields: $template->profileFields(),
         ));
 
         $urlService = $this->urlService;
@@ -279,6 +280,7 @@ final readonly class ProfileController implements ControllerInterface
             apiEmailInfos: $formData->apiEmailInfos,
             isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
             standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
+            pluginProfileFields: $template->profileFields(),
         ));
         $body = $template->finalizeHtml((string) $html);
 

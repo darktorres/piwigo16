@@ -296,6 +296,7 @@ final readonly class RegisterController implements ControllerInterface
             helpLink: $help_link,
             isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
             standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
+            pluginRegisterFields: $template->registerFields(),
         );
 
         new PageHeaderRenderer()

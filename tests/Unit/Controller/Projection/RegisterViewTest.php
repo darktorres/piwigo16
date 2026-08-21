@@ -20,6 +20,7 @@ function makeRegisterView(bool $isStandardPagesTheme): RegisterView
         helpLink: '',
         isStandardPagesTheme: $isStandardPagesTheme,
         standardPagesSelectedSkin: 'default',
+        pluginRegisterFields: [],
     );
 }
 

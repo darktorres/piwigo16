@@ -28,6 +28,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Contribution\PictureInfoRow;
+use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -218,6 +219,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @var array<int, PictureInfoRow[]>
      */
     private array $pictureInfoRows = [];
+
+    /**
+     * @var array<int, ProfileField[]>
+     */
+    private array $registerFields = [];
+
+    /**
+     * @var array<int, ProfileField[]>
+     */
+    private array $profileFields = [];
 
     /**
      * Owns the theme directory chain `resolveLatteTemplatePath()` walks
@@ -1382,6 +1393,26 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Registers a typed field to be displayed on the registration form
+     * -- P43's typed replacement for a hand-written
+     * `set_prefilter('register', ...)` markup patch.
+     */
+    public function addRegisterField(ProfileField $field): void
+    {
+        $this->registerFields[$field->order][] = $field;
+    }
+
+    /**
+     * Registers a typed field to be displayed on the profile-edit form
+     * -- P43's typed replacement for a hand-written
+     * `set_prefilter('profile_content', ...)` markup patch.
+     */
+    public function addProfileField(ProfileField $field): void
+    {
+        $this->profileFields[$field->order][] = $field;
+    }
+
+    /**
      * Every real `switchBox` pair in this codebase (`themes/default/js/
      * index.js`'s own `#derivativeSwitchLink`/`#derivativeSwitchBox` etc.)
      * is wired via a `window.SwitchBox.push(link, box)` call --
@@ -1463,6 +1494,29 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function pictureInfoRows(): array
     {
         return self::flattenByOrder($this->pictureInfoRows);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- the
+     * `View`-based sibling for `RegisterView::$pluginRegisterFields`.
+     *
+     * @return list<ProfileField>
+     */
+    public function registerFields(): array
+    {
+        return self::flattenByOrder($this->registerFields);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- the
+     * `View`-based sibling for `ProfileFormView`/`ProfileView`'s own
+     * `$pluginProfileFields`.
+     *
+     * @return list<ProfileField>
+     */
+    public function profileFields(): array
+    {
+        return self::flattenByOrder($this->profileFields);
     }
 
     /**

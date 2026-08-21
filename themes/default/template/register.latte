@@ -76,6 +76,31 @@
         </ul>
       </fieldset>
 
+      <fieldset n:if="$pluginRegisterFields !== []">
+        <ul>
+          <li n:foreach="$pluginRegisterFields as $field">
+            <span class="property">
+              <label for="{$field->name}">{$field->label}</label>
+            </span>
+            <input
+              n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
+              type="checkbox"
+              name="{$field->name}"
+              id="{$field->name}"
+              value="1"
+              n:attr="checked: $field->value !== '' ? 'checked' : null"
+            >
+            <input
+              n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+              type="text"
+              name="{$field->name}"
+              id="{$field->name}"
+              value="{$field->value}"
+            >
+          </li>
+        </ul>
+      </fieldset>
+
       <p class="bottomButtons">
         <input type="hidden" name="key" value="{$formKey}">
         <input

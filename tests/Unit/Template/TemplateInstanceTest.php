@@ -8,8 +8,10 @@ use Piwigo\Asset\Event\GetPageAssets;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Contribution\FieldType;
 use Piwigo\Contribution\PanelLink;
 use Piwigo\Contribution\PictureInfoRow;
+use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HeadLink;
@@ -940,6 +942,34 @@ test('pictureInfoRows() is empty when no row was ever registered', function (): 
     $t = TemplateTestFactory::build();
 
     expect($t->pictureInfoRows())
+        ->toBe([]);
+});
+
+test('registerFields()/profileFields() return registered fields sorted by order, independently of each other', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addRegisterField(new ProfileField(label: 'B', name: 'b', order: 50));
+    $t->addRegisterField(new ProfileField(label: 'A', name: 'a', order: 10));
+    $t->addProfileField(new ProfileField(label: 'Only on profile', name: 'p', type: FieldType::Checkbox));
+
+    $registerFields = $t->registerFields();
+    $profileFields = $t->profileFields();
+
+    expect(array_map(static fn (ProfileField $f): string => $f->label, $registerFields))
+        ->toBe(['A', 'B'])
+        ->and($profileFields)
+        ->toHaveCount(1)
+        ->and($profileFields[0]->label)
+        ->toBe('Only on profile')
+        ->and($profileFields[0]->type)
+        ->toBe(FieldType::Checkbox);
+});
+
+test('registerFields()/profileFields() are empty when no field was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->registerFields())
+        ->toBe([])
+        ->and($t->profileFields())
         ->toBe([]);
 });
 

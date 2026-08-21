@@ -133,6 +133,31 @@
             ></i> {='must not be empty'|translate}</p>
         </div>
 
+        <div n:foreach="$pluginRegisterFields as $field" class="column-flex">
+          <label n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" for="{$field->name}">{$field->label}</label>
+          <div n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" class="row-flex input-container">
+            <input
+              type="text"
+              name="{$field->name}"
+              id="{$field->name}"
+              value="{$field->value}"
+            >
+          </div>
+          <div n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox" class="row-flex option">
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="{$field->name}"
+                id="{$field->name}"
+                value="1"
+                n:attr="checked: $field->value !== '' ? 'checked' : null"
+              >
+              <span class="slider round"></span>
+            </label>
+            <p>{$field->label}</p>
+          </div>
+        </div>
+
         <div class="column-flex">
           <input type="hidden" name="key" value="{$formKey}">
           <input

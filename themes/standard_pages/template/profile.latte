@@ -66,6 +66,30 @@
           ></i>
           {='must not be empty'|translate}</p>
       </div>
+      <div n:foreach="$pluginProfileFields as $field" class="column-flex">
+        <label n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" for="{$field->name}">{$field->label}</label>
+        <div n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" class="row-flex input-container">
+          <input
+            type="text"
+            name="{$field->name}"
+            id="{$field->name}"
+            value="{$field->value}"
+          >
+        </div>
+        <div n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox" class="row-flex option">
+          <label class="switch">
+            <input
+              type="checkbox"
+              name="{$field->name}"
+              id="{$field->name}"
+              value="1"
+              n:attr="checked: $field->value !== '' ? 'checked' : null"
+            >
+            <span class="slider round"></span>
+          </label>
+          <p>{$field->label}</p>
+        </div>
+      </div>
       <div class="save">
         <button
           class="btn btn-main"
@@ -556,33 +580,6 @@
       </div>
     </div>
   </section>
-
-  {if isset($PLUGINS_PROFILE)}
-    <section
-      n:foreach="$PLUGINS_PROFILE as $k_block => $plugin_block"
-      id="{$k_block}-section"
-      class="profile-section"
-    >
-      <div class="title display-section" data-display="{$k_block}-display">
-        <div class="column-flex">
-          <h1>{$plugin_block['name']}</h1>
-          <p>{$plugin_block['desc']}</p>
-        </div>
-        <i class="gallery-icon-up-open display-btn close"></i>
-      </div>
-      <div class="form plugins" id="{$k_block}-display">
-        {include $plugin_block['template']}
-        {if $plugin_block['standard_show_save']}
-          <div class="save">
-            <button
-              class="btn btn-main"
-              id="save_{$k_block}"
-            >{='Submit'|translate}</button>
-          </div>
-        {/if}
-      </div>
-    </section>
-  {/if}
 
   <section n:if="count($languageOptions) > 1" id="language-switch">
     <div id="lang-select">

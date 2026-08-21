@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -23,12 +24,16 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `standard_pages`'s does, as an array key into `$languageOptions`.
  * `$isStandardPagesTheme`/`$standardPagesSelectedSkin` disambiguate
  * `pageAssets()` the same way `IdentificationView`'s own do.
+ * `$pluginRegisterFields` is shared by both real templates too --
+ * `$template->registerFields()`, P43's typed replacement for a
+ * hand-written `set_prefilter('register', ...)` markup patch.
  */
 #[Template('register.latte')]
 final readonly class RegisterView implements View, HasPageAssets
 {
     /**
      * @param array<string, string> $languageOptions
+     * @param list<ProfileField> $pluginRegisterFields
      */
     public function __construct(
         public string $homeUrl,
@@ -42,6 +47,7 @@ final readonly class RegisterView implements View, HasPageAssets
         public string $helpLink,
         public bool $isStandardPagesTheme,
         public string $standardPagesSelectedSkin,
+        public array $pluginRegisterFields,
     ) {}
 
     /**

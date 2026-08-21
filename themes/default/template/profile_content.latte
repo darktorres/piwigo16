@@ -134,14 +134,30 @@
     </ul>
   </fieldset>
 
-  {if isset($PLUGINS_PROFILE)}
-    <fieldset n:foreach="$PLUGINS_PROFILE as $plugin_block">
-      <legend>{$plugin_block['name']}</legend>
-      <div class="plugins fields">
-        {include $plugin_block['template'], plugin_block: $plugin_block}
-      </div>
-    </fieldset>
-  {/if}
+  <fieldset n:if="$pluginProfileFields !== []">
+    <ul>
+      <li n:foreach="$pluginProfileFields as $field">
+        <span class="property">
+          <label for="{$field->name}">{$field->label}</label>
+        </span>
+        <input
+          n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
+          type="checkbox"
+          name="{$field->name}"
+          id="{$field->name}"
+          value="1"
+          n:attr="checked: $field->value !== '' ? 'checked' : null"
+        >
+        <input
+          n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+          type="text"
+          name="{$field->name}"
+          id="{$field->name}"
+          value="{$field->value}"
+        >
+      </li>
+    </ul>
+  </fieldset>
 
   <p class="bottomButtons">
     <input type="hidden" name="pwg_token" value="{$csrfToken}">

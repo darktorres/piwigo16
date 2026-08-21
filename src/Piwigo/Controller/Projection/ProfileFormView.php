@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -14,7 +15,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * theme's `profile.latte` ever embeds this render -- `standard_pages`'s
  * own `profile.latte` renders every one of these same fields inline in
  * its own body instead (see `ProfileView`'s own docblock), so this
- * class exists purely for the default theme.
+ * class exists purely for the default theme. `$pluginProfileFields` is
+ * `$template->profileFields()`, the same call `ProfileView` itself
+ * makes for `standard_pages`'s own inline form -- P43's typed
+ * replacement for a hand-written `set_prefilter('profile_content', ...)`
+ * markup patch.
  */
 #[Template('profile_content.latte')]
 final readonly class ProfileFormView implements View
@@ -23,6 +28,7 @@ final readonly class ProfileFormView implements View
      * @param array<int|string, string> $templateOptions
      * @param array<int|string, string> $languageOptions
      * @param array<string, string> $radioOptions
+     * @param list<ProfileField> $pluginProfileFields
      */
     public function __construct(
         public string $fAction,
@@ -43,5 +49,6 @@ final readonly class ProfileFormView implements View
         public string $nbComments,
         public string $nbHits,
         public string $csrfToken,
+        public array $pluginProfileFields,
     ) {}
 }

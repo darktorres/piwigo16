@@ -35,6 +35,7 @@ function makeProfileView(bool $isStandardPagesTheme): ProfileView
         apiEmailInfos: '',
         isStandardPagesTheme: $isStandardPagesTheme,
         standardPagesSelectedSkin: 'default',
+        pluginProfileFields: [],
     );
 }
 

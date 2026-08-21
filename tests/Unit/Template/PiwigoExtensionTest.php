@@ -116,34 +116,7 @@ test('isClassicUser reflects the given userStatus without needing the current us
         ->toBeFalse();
 });
 
-// --- cat -------------------------------------------------------------------
-
-test('cat concatenates the piped value with every extra piece', function (): void {
-    expect(PiwigoExtension::cat('a', 'b', 'c'))
-        ->toBe('abc');
-});
-
-test('cat casts non-string scalars to string before concatenating', function (): void {
-    expect(PiwigoExtension::cat(1, 2.5, true))
-        ->toBe('12.51');
-});
-
-// --- stripTags / defaultFilter --------------------------------------------
-
-test('stripTags replaces every tag with a single space by default', function (): void {
-    expect(PiwigoExtension::stripTags('<b>x</b><i>y</i>'))
-        ->toBe(' x  y ');
-});
-
-test('stripTags removes tags without replacement when replaceWithSpace is false', function (): void {
-    expect(PiwigoExtension::stripTags('<b>x</b><i>y</i>', false))
-        ->toBe('xy');
-});
-
-test('stripTags coerces a non-scalar value to an empty string first', function (): void {
-    expect(PiwigoExtension::stripTags(['not', 'scalar']))
-        ->toBe('');
-});
+// --- defaultFilter -----------------------------------------------------
 
 test('defaultFilter returns the fallback for every empty sentinel value', function (): void {
     foreach ([null, false, 0, '0', '', []] as $sentinel) {
@@ -157,7 +130,7 @@ test('defaultFilter returns the original value when it is not empty', function (
         ->toBe('real value');
 });
 
-// --- replace / strReplace / join -------------------------------------------
+// --- replace / strReplace ---------------------------------------------
 
 test('replace does a plain scalar search/replacement, not a regex', function (): void {
     expect(PiwigoExtension::replace('a.b.c', '.', '-'))
@@ -167,16 +140,6 @@ test('replace does a plain scalar search/replacement, not a regex', function ():
 test('strReplace reorders to str_replace($search, $replace, $subject) with the piped value as $subject', function (): void {
     expect(PiwigoExtension::strReplace('hello world', 'world', 'there'))
         ->toBe('hello there');
-});
-
-test('join reorders to implode($glue, $pieces) with the piped array first', function (): void {
-    expect(PiwigoExtension::join(['a', 'b', 'c'], ', '))
-        ->toBe('a, b, c');
-});
-
-test('join defaults the glue to a comma', function (): void {
-    expect(PiwigoExtension::join(['a', 'b']))
-        ->toBe('a,b');
 });
 
 // --- htmlOptions -----------------------------------------------------------

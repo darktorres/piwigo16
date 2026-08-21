@@ -140,7 +140,7 @@
       data-revision="{$plugin['REVISION_DATE']}"
       data-downloads="{$plugin['DOWNLOADS']}"
       data-author="{$plugin['AUTHOR']}"
-      data-tags="{$plugin['TAGS']|join:", "}"
+      data-tags="{$plugin['TAGS']|implode:", "}"
     >
       <div class="pluginContent">
         <div class="pluginImage">
@@ -221,7 +221,7 @@
         <div class="pluginMoreInfo">
           <div
             class="pluginTags tiptip"
-            title="{='Tags'|translate} : {$plugin['TAGS']|join:", "}"
+            title="{='Tags'|translate} : {$plugin['TAGS']|implode:", "}"
           >
             <span
               n:foreach="$plugin['TAGS'] as $tag_id => $tag_label"
@@ -229,7 +229,7 @@
             >{$tag_label}</span>
           </div>
           <div class="pluginDesc">
-            {$plugin['BIG_DESC']|nl2br|noescape}
+            {$plugin['BIG_DESC']|breakLines}
           </div>
         </div>
       </div>

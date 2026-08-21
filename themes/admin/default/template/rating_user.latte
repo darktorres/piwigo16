@@ -69,7 +69,7 @@
               {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr['id']]['tn']|noescape}" alt="thumb-{$rate_arr['id']}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
               <a
                 title="{=(string) $rate_over|htmlspecialchars|noescape}"
-              >{$rates|count}</a>
+              >{$rates|length}</a>
             {/if}</td>
         {/foreach}
         <td><a class="del icon-trash"></a></td>

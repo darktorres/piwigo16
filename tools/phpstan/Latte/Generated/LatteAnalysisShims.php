@@ -93,9 +93,6 @@ final class LatteAnalysisShims
         'is_null',
         'str_replace',
         'nl2br',
-        'cat',
-        'count',
-        'strip_tags',
         'str_repeat',
         'default',
         'url_is_remote',
@@ -314,9 +311,9 @@ final class LatteAnalysisShims
     }
 
     /**
-     * @param array<int, scalar> $pieces
+     * @param iterable<mixed, mixed> $arr
      */
-    public static function join(array $pieces, string $glue = ','): string
+    public static function join(iterable $arr, string $glue = ''): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
@@ -572,24 +569,6 @@ final class LatteAnalysisShims
     }
 
     public static function nl2br(string $string, bool $use_xhtml = true): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function cat(string|int|float|bool|null $value, string|int|float|bool|null ...$pieces): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param \Countable|array<array-key, mixed> $value
-     */
-    public static function count(\Countable|array $value, int $mode = \COUNT_NORMAL): int
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function strip_tags(mixed $value, bool $replaceWithSpace = true): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

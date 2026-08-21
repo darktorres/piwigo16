@@ -33,9 +33,16 @@ use Piwigo\Template\Template;
  *    revisit only if benchmarked).
  *  - **PHP passthroughs as filters** -- `sprintf`, `urlencode`, etc., plus
  *    Smarty's own built-in modifiers real templates rely on directly
- *    (`cat`, `count`, `default`, `join`, `lower`, `nl2br`, `replace`,
- *    `strip_tags`, `str_repeat`) that have no `registerPlugin()` call
- *    anywhere in `Template.php` to find by reading that file alone.
+ *    (`default`, `lower`, `nl2br`, `replace`, `str_repeat`) that have no
+ *    `registerPlugin()` call anywhere in `Template.php` to find by
+ *    reading that file alone. `cat`/`count`/`join`/`strip_tags` were the
+ *    same shape once, migrated onto Latte's own built-in `~`/`|length`/
+ *    `|implode`/`|striptags` (P43-B, docs/PLAN.md) -- `nl2br` stays a
+ *    registered passthrough rather than migrating fully to `|breakLines`,
+ *    since 3 of its 5 real call sites need `|htmlspecialchars`'s
+ *    `ENT_QUOTES` escaping for a double-quoted HTML attribute context
+ *    that `|breakLines`'s own internal `ENT_NOQUOTES` escaping doesn't
+ *    provide.
  *    Pipe-incompatible PHP functions (`implode`, `str_replace`,
  *    `preg_match`, ...) stay unregistered -- templates call them inline
  *    via `{=implode(',', $arr)}` instead (Latte's own print-expression
@@ -92,11 +99,15 @@ final class PiwigoExtension extends Extension
             'is_null' => is_null(...),
             'str_replace' => self::strReplace(...),
             'lower' => strtolower(...),
+            // Kept live: 3 of the 5 real nl2br sites are inside a
+            // double-quoted HTML attribute, relying on the preceding
+            // explicit |htmlspecialchars's ENT_QUOTES escaping -- Latte's
+            // own |breakLines filter escapes with ENT_NOQUOTES
+            // internally (quotes left unescaped), which would reopen an
+            // attribute-breakout for those 3 sites specifically. The
+            // other 2 real sites (plain HTML body text, no attribute
+            // context) already migrated to |breakLines.
             'nl2br' => nl2br(...),
-            'join' => self::join(...),
-            'cat' => self::cat(...),
-            'count' => count(...),
-            'strip_tags' => self::stripTags(...),
             'str_repeat' => str_repeat(...),
             'default' => self::defaultFilter(...),
             'replace' => self::replace(...),
@@ -247,52 +258,6 @@ final class PiwigoExtension extends Extension
         // return type is always string here -- no is_array() re-check
         // needed on the result.
         return str_replace($search, $replace, $subject);
-    }
-
-    /**
-     * Smarty's `|@join:', '` modifier -- PHP's `implode($glue, $arr)` has
-     * the glue first, pipe-incompatible; reordered to `(arr, glue)` here so
-     * the piped array is the first argument.
-     *
-     * @param array<int, scalar> $pieces
-     */
-    public static function join(array $pieces, string $glue = ','): string
-    {
-        return implode($glue, $pieces);
-    }
-
-    /**
-     * Smarty's `|cat:` modifier concatenates values onto the pipe head.
-     * Multi-arg form (`{$x|cat:'a','b'}`) calls `cat($x, 'a', 'b')`.
-     */
-    public static function cat(string|int|float|bool|null $value, string|int|float|bool|null ...$pieces): string
-    {
-        $parts = [(string) $value];
-        foreach ($pieces as $p) {
-            $parts[] = (string) $p;
-        }
-
-        return implode('', $parts);
-    }
-
-    /**
-     * Smarty's `|strip_tags[:bool]` modifier:
-     *   - `|strip_tags` (default true) -- replaces every tag with a single
-     *     space, so `<b>x</b><i>y</i>` becomes ` x  y `.
-     *   - `|strip_tags:false` -- removes tags without replacement, identical
-     *     to PHP's bare `strip_tags($string)`.
-     *
-     * PHP 8's native `strip_tags($string, $allowed)` rejects a `bool` second
-     * argument with a TypeError, so this can't bind directly to
-     * `strip_tags(...)` -- a real PHP-version landmine, not stylistic.
-     */
-    public static function stripTags(mixed $value, bool $replaceWithSpace = true): string
-    {
-        $s = is_scalar($value) ? (string) $value : '';
-
-        return $replaceWithSpace
-            ? (preg_replace('/<[^>]*>/', ' ', $s) ?? $s)
-            : strip_tags($s);
     }
 
     /**

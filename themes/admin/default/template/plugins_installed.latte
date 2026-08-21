@@ -94,12 +94,12 @@
         {if !empty($plugin['AUTHOR_URL'])}
           {var $author = ("<a href='%s'>%s</a>"|sprintf:$plugin['AUTHOR_URL'],$plugin['AUTHOR'])}
         {else}
-          {var $author = ('<u>'|cat:$plugin['AUTHOR']|cat:'</u>')}
+          {var $author = ('<u>' . $plugin['AUTHOR'] . '</u>')}
         {/if}
       {/if}
 
       {if !empty($plugin['VISIT_URL'])}
-        {var $version = ("<a class='externalLink' href='"|cat:$plugin['VISIT_URL']|cat:"'>"|cat:$plugin['VERSION']|cat:"</a>")}
+        {var $version = ("<a class='externalLink' href='" . $plugin['VISIT_URL'] . "'>" . $plugin['VERSION'] . "</a>")}
       {else}
         {var $version = $plugin['VERSION']}
       {/if}

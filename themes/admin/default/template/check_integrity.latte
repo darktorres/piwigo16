@@ -64,7 +64,7 @@
                       <br
                         n:if="$c13y['show_correction_success_fct'] or !empty($c13y['correction_error_fct']) or $c13y['show_correction_fct'] or $c13y['show_correction_bad_fct']"
                       >
-                      {$c13y['correction_msg']|nl2br|noescape}
+                      {$c13y['correction_msg']|breakLines}
                     {/if}
                   </label>
                 </td>

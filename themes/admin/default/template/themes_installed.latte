@@ -29,11 +29,11 @@
       {if !empty($theme['AUTHOR_URL'])}
         {var $author = ("<a href='%s'>%s</a>"|sprintf:$theme['AUTHOR_URL'],$theme['AUTHOR'])}
       {else}
-        {var $author = ('<u>'|cat:$theme['AUTHOR']|cat:'</u>')}
+        {var $author = ('<u>' . $theme['AUTHOR'] . '</u>')}
       {/if}
     {/if}
     {if !empty($theme['VISIT_URL'])}
-      {var $version = ("<a class='externalLink' href='"|cat:$theme['VISIT_URL']|cat:"'>"|cat:$theme['VERSION']|cat:"</a>")}
+      {var $version = ("<a class='externalLink' href='" . $theme['VISIT_URL'] . "'>" . $theme['VERSION'] . "</a>")}
     {else}
       {var $version = $theme['VERSION']}
     {/if}

@@ -114,7 +114,7 @@
     <p>
       <strong>{='Linked albums'|translate} <span
           class="linked-albums-badge {if count($relatedCategories) < 1} badge-red {/if}"
-        > {$relatedCategories|count} </span></strong>
+        > {$relatedCategories|length} </span></strong>
       {if count($relatedCategories) < 1}
         <span class="orphan-photo">{='This photo is an orphan'|translate}</span>
       {else}

@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-E–F not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-F fully landed: introduced `Controller\Admin\Projection\AdminPageResult`, converted `AdminSubControllerInterface::handle()` and all 36 real implementers plus all 40 `Piwigo\Admin\*PageRenderer` classes from directly assigning `AdminContentPageContext` to returning `render(): AdminPageResult`, and `AdminDispatcher::dispatch()` is now the one place that turns that into the ambient `AdminContentPageContext` — closes the "76 real files" scope the batch's own plan text named. Along the way found and fixed 2 real regressions the migration itself introduced (a not-yet-converted parent `SubController` silently discarding an already-converted renderer's output in `ThemesSubController`/`PhotoSubController`), caught via golden-HTML diffs. P43-E not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3805,6 +3805,47 @@ author/comment field) and a stale `NotificationByMailSubControllerTest`
 assertion still expecting P43-B's pre-migration
 `selected="selected"` XHTML attribute pair instead of the bare
 HTML5-style `selected` its own `n:attr` conversion now renders.
+
+**P43-F (landed) — migrate the admin rendering backbone onto
+`render(View): Html`.** Closes the gap P43-D deliberately left open: a
+new `Controller\Admin\Projection\AdminPageResult` (`content: Html,
+pageTitle: ?string = null, helpUrl: ?string = null`) replaces
+`AdminSubControllerInterface::handle()`'s own side-effecting
+`void` contract, and every one of the 40 real `Piwigo\Admin\*PageRenderer`
+classes' `render()` methods, with `AdminDispatcher::dispatch()` now the
+one seam that turns a returned `AdminPageResult` into the ambient
+`AdminContentPageContext` every admin page's shell reads — closing the
+76-file scope (36 `AdminSubControllerInterface` implementers + 40
+`*PageRenderer` classes) this batch's own plan text named.
+
+Landed in two commits rather than one atomic 76-file change: a first
+pass introduced the DTO with `AdminSubControllerInterface::handle()`
+temporarily returning `?AdminPageResult` (a page not yet converted kept
+assigning `AdminContentPageContext` itself and returned `null`, which
+`AdminDispatcher::dispatch()` treated as "nothing further to do"),
+letting each page convert independently; a second pass finished the
+remaining 8 `SubController`s still on that shim and dropped the `?`
+once every real implementer returned a genuine `AdminPageResult`.
+
+The 4 multi-tab dispatchers (`ThemesSubController`/`PluginsSubController`/
+`LanguagesSubController`/`UpdatesSubController`, plus `MaintenanceSubController`
+and `AlbumSubController`/`PhotoSubController`, which turned out to share
+the identical shape) merge their own title/help-url override with
+whichever per-tab renderer's `AdminPageResult` the selected tab produced,
+rather than assigning a second, separate `AdminContentPageContext` after
+the fact.
+
+Found and fixed two real regressions the migration itself introduced
+along the way, both caught via golden-HTML diffs (a missing
+`autoupdate_bar` block): `ThemesSubController` and `PhotoSubController`
+were each silently discarding an already-converted renderer's real
+output because their own `handle()` hadn't been converted yet in the
+same pass — a direct consequence of converting `PageRenderer`s and their
+parent `SubController`s in different commits, confirmed safe everywhere
+else via a systematic sweep of every converted renderer's real callers.
+
+Verified: PHPStan clean, ECS clean, deptrac 0 violations, full Unit/Arch
+(5441 passed), golden-HTML (74 passed), visual-regression (66 passed).
 
 **P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
 Found during a deep review of the Template layer, not part of this

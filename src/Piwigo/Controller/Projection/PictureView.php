@@ -11,6 +11,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -52,6 +53,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
      * @param list<string>|null $relatedCategories
      * @param list<ButtonContribution> $pluginPictureButtons
      * @param list<ActionContribution> $pluginPictureActions
+     * @param list<PictureInfoRow> $pluginPictureInfoRows
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
@@ -99,6 +101,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         public ?string $uOriginal,
         public array $pluginPictureButtons,
         public array $pluginPictureActions,
+        public array $pluginPictureInfoRows,
         public ?array $metadata,
         public ?array $rateSummary,
         public ?array $rating,

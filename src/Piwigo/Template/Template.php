@@ -27,6 +27,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -212,6 +213,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @var array<int, ActionContribution[]>
      */
     private array $indexActions = [];
+
+    /**
+     * @var array<int, PictureInfoRow[]>
+     */
+    private array $pictureInfoRows = [];
 
     /**
      * Owns the theme directory chain `resolveLatteTemplatePath()` walks
@@ -1366,6 +1372,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Registers a typed label/value row to be displayed in the picture
+     * page's own "imageInfoTable" list -- P43's typed replacement for a
+     * hand-written `set_prefilter('picture', ...)` markup patch.
+     */
+    public function addPictureInfoRow(PictureInfoRow $row): void
+    {
+        $this->pictureInfoRows[$row->order][] = $row;
+    }
+
+    /**
      * Every real `switchBox` pair in this codebase (`themes/default/js/
      * index.js`'s own `#derivativeSwitchLink`/`#derivativeSwitchBox` etc.)
      * is wired via a `window.SwitchBox.push(link, box)` call --
@@ -1436,6 +1452,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function pictureActions(): array
     {
         return self::flattenByOrder($this->pictureActions);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the 4 getters above -- the
+     * `View`-based sibling for `PictureView::$pluginPictureInfoRows`.
+     *
+     * @return list<PictureInfoRow>
+     */
+    public function pictureInfoRows(): array
+    {
+        return self::flattenByOrder($this->pictureInfoRows);
     }
 
     /**

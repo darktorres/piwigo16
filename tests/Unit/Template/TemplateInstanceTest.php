@@ -9,6 +9,7 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Contribution\PanelLink;
+use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HeadLink;
@@ -924,6 +925,22 @@ test('addPictureAction registers no SwitchBox wiring for an action with an empty
 
     expect($tags['footer'])
         ->not->toContain('SwitchBox');
+});
+
+test('pictureInfoRows() returns registered rows sorted by order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addPictureInfoRow(new PictureInfoRow(label: 'B', value: 'b-value', order: 50));
+    $t->addPictureInfoRow(new PictureInfoRow(label: 'A', value: 'a-value', order: 10));
+
+    expect(array_map(static fn (PictureInfoRow $r): string => $r->label, $t->pictureInfoRows()))
+        ->toBe(['A', 'B']);
+});
+
+test('pictureInfoRows() is empty when no row was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->pictureInfoRows())
+        ->toBe([]);
 });
 
 // --- parse(): unresolvable filename -----------------------------------------

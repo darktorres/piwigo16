@@ -59,6 +59,7 @@ function makePictureView(
         uOriginal: $uOriginal,
         pluginPictureButtons: [],
         pluginPictureActions: [],
+        pluginPictureInfoRows: [],
         metadata: null,
         rateSummary: null,
         rating: $rating,

@@ -317,11 +317,13 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
         assert($updated !== null);
         expect($updated['enabled'])->toBe(1);
 
-        // {html_options ... selected=$category_option_true_selected} --
-        // still listed under "Subscribed" (opt_true) AND rendered
-        // pre-selected (opt_true_selected), since $post['cat_true'] was
-        // never touched by doTimeoutTreatment() (no timeout occurred).
-        expect($result['body'])->toContain('value="ct00mailfail285" selected="selected"');
+        // double_select.latte's own n:attr="selected: ..." (P43-B,
+        // docs/PLAN.md) -- still listed under "Subscribed" (opt_true) AND
+        // rendered pre-selected (opt_true_selected), since $post['cat_true']
+        // was never touched by doTimeoutTreatment() (no timeout occurred).
+        // Bare selected, not selected="selected" -- n:attr renders the
+        // HTML5-style bare attribute, not the old XHTML-style pair.
+        expect($result['body'])->toContain('value="ct00mailfail285" selected');
     } finally {
         nbmSetUserMailNotificationRow(4, null);
         nbmSetUserMailAddress(4, $originalMailAddress);

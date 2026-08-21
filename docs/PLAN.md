@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-A in progress: `ButtonContribution`/`ActionContribution`/`PanelLink` (`Piwigo\Contribution\`) landed, replacing `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`; remaining P43-A kinds (picture info row, profile/register field, auth button, thumbnail overlay, menu item, `FieldOverride`, `FormProvider`) not started. P43-B–F not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A in progress: `ButtonContribution`/`ActionContribution`/`PanelLink` (`Piwigo\Contribution\`) landed, replacing `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`; remaining P43-A kinds (picture info row, profile/register field, auth button, thumbnail overlay, menu item, `FieldOverride`, `FormProvider`) not started. P43-C–F not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3614,6 +3614,36 @@ profile/register field, auth button, thumbnail overlay, menu item,
 `FieldOverride`, `FormProvider` — are each their own follow-up
 increment, gated by their own real-plugin field-shape research before
 design.
+
+**P43-B (landed) — Latte API cleanup (`PiwigoExtension.php`).** Three
+mechanical sub-passes, gated by golden-HTML on every commit. (1)
+`math()`/`eval()` removal: the one real call site
+(`menubar.latte`'s `{=math('abs(pos)', pos: $block['pos'])}`) becomes
+`{=abs($block['pos'])}`; deleted the ~85-line whitelisted-function-name
+`eval()` dispatcher, the last `eval()` in the codebase. (2) 22
+zero-use registrations pruned (re-grepped fresh against the plan's own
+24-name list rather than trusting it — 2 were already live or handled
+elsewhere), including the `SessionService`-only-used-by-`getDevice()`
+cascade this surfaced: `Template`, `NoPhotoYetRenderer`, `MailService`,
+and `RedirectService`'s `sessionService()` resolver all dropped the
+now-dead dependency across 7 real construction sites. (3)
+`cat`/`count`/`join`/`strip_tags` migrated onto Latte's own
+`.`/`|length`/`|implode`/`|stripTags` builtins (5 real
+`nl2br`→`|breakLines` sites deliberately **not** migrated — 3 rely on
+`|htmlspecialchars`'s `ENT_QUOTES` for double-quoted-attribute safety
+that `|breakLines`'s internal `ENT_NOQUOTES` can't provide); caught and
+fixed 2 real plan errors along the way (the plan's cited `cat` → `~`
+target is Latte's *unary bitwise-not* operator, not concatenation —
+confirmed via `UnaryOpNode.php` and an isolated compile test, fixed to
+`.`; Smarty's `strip_tags` replaces a removed tag with a space,
+`|striptags` doesn't). (4) `htmlOptions()`/`htmlRadios()` (Smarty
+`{html_options}`/`{html_radios}` ports) replaced by plain `n:foreach`
+loops directly in templates, 48+6 real sites across 21 files — full
+detail (the two real bugs found and fixed: entity double-encoding, a
+live HTTP 500 from a bare `(string)` cast on an `int` option value) is
+in that sub-pass's own commit message. Every sub-pass individually
+golden-HTML-gated and independently commit-reviewed, not batched into
+one pass at the end.
 
 **P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
 Found during a deep review of the Template layer, not part of this

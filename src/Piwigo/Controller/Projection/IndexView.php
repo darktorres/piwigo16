@@ -9,6 +9,8 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\ActionContribution;
+use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -44,7 +46,8 @@ final readonly class IndexView implements View, HasPageAssets
      * @param list<array<string, mixed>>|null $relatedTags
      * @param list<array<string, mixed>> $tagSearchResults
      * @param list<array{DISPLAY: string, URL: string, SELECTED: bool}> $imageDerivatives
-     * @param list<string> $pluginIndexButtons
+     * @param list<ButtonContribution> $pluginIndexButtons
+     * @param list<ActionContribution> $pluginIndexActions
      */
     public function __construct(
         public array $thumbNavbar,
@@ -71,6 +74,7 @@ final readonly class IndexView implements View, HasPageAssets
         public array $imageDerivatives,
         public Html $selectedTagsTemplate,
         public array $pluginIndexButtons,
+        public array $pluginIndexActions,
         public ?string $searchId,
         public bool $monthCalendarActive,
     ) {}

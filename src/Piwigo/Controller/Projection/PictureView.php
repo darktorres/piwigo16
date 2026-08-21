@@ -9,6 +9,8 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\ActionContribution;
+use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -48,7 +50,8 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
      * @param list<array<string, mixed>>|null $relatedTags
      * @param list<string>|null $relatedCategories
-     * @param list<string> $pluginPictureButtons
+     * @param list<ButtonContribution> $pluginPictureButtons
+     * @param list<ActionContribution> $pluginPictureActions
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
@@ -95,6 +98,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         public string $cookiePath,
         public ?string $uOriginal,
         public array $pluginPictureButtons,
+        public array $pluginPictureActions,
         public ?array $metadata,
         public ?array $rateSummary,
         public ?array $rating,

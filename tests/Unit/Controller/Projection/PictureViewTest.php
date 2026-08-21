@@ -58,6 +58,7 @@ function makePictureView(
         cookiePath: '/',
         uOriginal: $uOriginal,
         pluginPictureButtons: [],
+        pluginPictureActions: [],
         metadata: null,
         rateSummary: null,
         rating: $rating,

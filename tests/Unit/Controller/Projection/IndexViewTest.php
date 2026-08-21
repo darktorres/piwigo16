@@ -32,6 +32,7 @@ function makeIndexView(bool $monthCalendarActive): IndexView
         imageDerivatives: [],
         selectedTagsTemplate: new Html(''),
         pluginIndexButtons: [],
+        pluginIndexActions: [],
         searchId: null,
         monthCalendarActive: $monthCalendarActive,
     );

@@ -182,10 +182,35 @@
               class="pwg-button-text"
             >{='Calendar'|translate}</span>
           </a>{/spaceless}</li>
-      {if !empty($pluginIndexButtons)}<li
-          n:foreach="$pluginIndexButtons as $button"
-        >{$button|noescape}</li>{/if}
-      {if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS|noescape}{/if}
+      <li n:foreach="$pluginIndexButtons as $button" n:attr="id: $button->id">{spaceless}<a
+            href="{$button->url|noescape}"
+            title="{$button->label}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="{$button->icon}"></span><span
+              class="pwg-button-text"
+            >{$button->label}</span>
+          </a>{/spaceless}</li>
+      <li n:foreach="$pluginIndexActions as $action">{spaceless}<a
+            id="{$action->id}Link"
+            title="{$action->label}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="{$action->icon}"></span><span
+              class="pwg-button-text"
+            >{$action->label}</span>
+          </a>
+          <div n:if="$action->panel !== []" id="{$action->id}Box" class="switchBox">
+            <div class="switchBoxTitle">{$action->label}</div>
+            <a
+              n:foreach="$action->panel as $link"
+              href="{$link->url|noescape}"
+              rel="nofollow"
+            >{if $link->icon !== null}<span class="{$link->icon}"></span>{/if}{$link->label}</a>
+          </div>
+        {/spaceless}</li>
     </ul>
 
     <div id="breadcrumb">

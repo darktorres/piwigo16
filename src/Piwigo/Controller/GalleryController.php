@@ -692,6 +692,7 @@ final readonly class GalleryController implements ControllerInterface
             imageDerivatives: $image_derivatives,
             selectedTagsTemplate: $selected_tags_template,
             pluginIndexButtons: $template->indexButtons(),
+            pluginIndexActions: $template->indexActions(),
             searchId: $searchFilterResult->data?->searchId,
             monthCalendarActive: $monthCalendarActive,
         );

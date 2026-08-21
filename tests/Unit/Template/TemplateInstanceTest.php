@@ -6,6 +6,9 @@ use Latte\Runtime\Html;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\Event\GetPageAssets;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Contribution\ActionContribution;
+use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Contribution\PanelLink;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HeadLink;
@@ -842,37 +845,85 @@ test('concat casts an existing Latte\Runtime\Html value to string instead of dro
         ->toBe('Hello World');
 });
 
-// --- picture/index buttons ------------------------------------------------
+// --- picture/index buttons + actions ---------------------------------------
 
-test('parsePictureButtons assigns registered buttons sorted by rank', function (): void {
+test('pictureButtons() returns registered buttons sorted by order', function (): void {
     $t = TemplateTestFactory::build();
-    $t->addPictureButton('<button-b>', 50);
-    $t->addPictureButton('<button-a>', 10);
+    $t->addPictureButton(new ButtonContribution(label: 'B', url: '/b', icon: 'b-icon', order: 50));
+    $t->addPictureButton(new ButtonContribution(label: 'A', url: '/a', icon: 'a-icon', order: 10));
 
-    $t->parsePictureButtons();
-
-    expect($t->getTemplateVars('PLUGIN_PICTURE_BUTTONS'))
-        ->toBe(['<button-a>', '<button-b>']);
+    expect(array_map(static fn (ButtonContribution $b): string => $b->label, $t->pictureButtons()))
+        ->toBe(['A', 'B']);
 });
 
-test('parsePictureButtons does nothing when no button was ever registered', function (): void {
+test('pictureButtons() is empty when no button was ever registered', function (): void {
     $t = TemplateTestFactory::build();
 
-    $t->parsePictureButtons();
-
-    expect($t->getTemplateVars('PLUGIN_PICTURE_BUTTONS'))
-        ->toBeNull();
+    expect($t->pictureButtons())
+        ->toBe([]);
 });
 
-test('parseIndexButtons assigns registered buttons sorted by rank', function (): void {
+test('indexButtons() returns registered buttons sorted by order, preserving registration order within the same order', function (): void {
     $t = TemplateTestFactory::build();
-    $t->addIndexButton('<index-b>', 99);
-    $t->addIndexButton('<index-a>', 1);
+    $t->addIndexButton(new ButtonContribution(label: 'first-at-50', url: '/1', icon: 'i', order: 50));
+    $t->addIndexButton(new ButtonContribution(label: 'A', url: '/a', icon: 'a-icon', order: 1));
+    $t->addIndexButton(new ButtonContribution(label: 'second-at-50', url: '/2', icon: 'i', order: 50));
 
-    $t->parseIndexButtons();
+    expect(array_map(static fn (ButtonContribution $b): string => $b->label, $t->indexButtons()))
+        ->toBe(['A', 'first-at-50', 'second-at-50']);
+});
 
-    expect($t->getTemplateVars('PLUGIN_INDEX_BUTTONS'))
-        ->toBe(['<index-a>', '<index-b>']);
+test('indexActions()/pictureActions() return registered actions sorted by order, panel links preserved', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addIndexAction(new ActionContribution(
+        id: 'langSwitch',
+        label: 'Language',
+        icon: 'lang',
+        panel: [new PanelLink(label: 'English', url: '/?lang=en'), new PanelLink(label: 'French', url: '/?lang=fr')],
+        order: 20,
+    ));
+    $t->addPictureAction(new ActionContribution(id: 'picAction', label: 'Formats', icon: 'formats', order: 5));
+
+    $indexActions = $t->indexActions();
+    $pictureActions = $t->pictureActions();
+
+    expect($indexActions)
+        ->toHaveCount(1)
+        ->and($indexActions[0]->id)
+        ->toBe('langSwitch')
+        ->and($indexActions[0]->panel)
+        ->toHaveCount(2)
+        ->and($indexActions[0]->panel[1]->label)
+        ->toBe('French')
+        ->and($pictureActions)
+        ->toHaveCount(1)
+        ->and($pictureActions[0]->id)
+        ->toBe('picAction');
+});
+
+test('addIndexAction registers the SwitchBox wiring script for an action with a panel', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addIndexAction(new ActionContribution(
+        id: 'langSwitch',
+        label: 'Language',
+        icon: 'lang',
+        panel: [new PanelLink(label: 'English', url: '/?lang=en')],
+    ));
+
+    $tags = templateInstanceTestScriptTags($t);
+
+    expect($tags['footer'])
+        ->toContain('window.SwitchBox.push("#langSwitchLink","#langSwitchBox")');
+});
+
+test('addPictureAction registers no SwitchBox wiring for an action with an empty panel', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addPictureAction(new ActionContribution(id: 'noPanel', label: 'Formats', icon: 'formats'));
+
+    $tags = templateInstanceTestScriptTags($t);
+
+    expect($tags['footer'])
+        ->not->toContain('SwitchBox');
 });
 
 // --- parse(): unresolvable filename -----------------------------------------

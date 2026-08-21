@@ -25,6 +25,8 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Contribution\ActionContribution;
+use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -187,14 +189,30 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public const string JSON_ISLAND_TAG = '<!-- JSON_ISLAND -->';
 
     /**
-     * @var array<int, string[]> - Runtime buttons on picture page
+     * Keyed by `ButtonContribution::$order`, same ksort+flatten shape as
+     * `AssetContribution`'s own ordering -- a plain rank, not a `Priority`
+     * enum (P43, docs/PLAN.md: no `enum Priority` exists anywhere in this
+     * codebase, `AssetContribution::$order`'s own plain `int` is the one
+     * proven ordering precedent).
+     *
+     * @var array<int, ButtonContribution[]>
      */
-    public array $pictureButtons = [];
+    private array $pictureButtons = [];
 
     /**
-     * @var array<int, string[]> - Runtime buttons on index page
+     * @var array<int, ButtonContribution[]>
      */
-    public array $indexButtons = [];
+    private array $indexButtons = [];
+
+    /**
+     * @var array<int, ActionContribution[]>
+     */
+    private array $pictureActions = [];
+
+    /**
+     * @var array<int, ActionContribution[]>
+     */
+    private array $indexActions = [];
 
     /**
      * Owns the theme directory chain `resolveLatteTemplatePath()` walks
@@ -1310,92 +1328,140 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * Registers a button to be displayed on picture page.
+     * Registers a typed button to be displayed on the picture page --
+     * P43's typed replacement for the former raw-HTML `addPictureButton()`.
      */
-    public function addPictureButton(string $content, int $rank = 50): void
+    public function addPictureButton(ButtonContribution $button): void
     {
-        $this->pictureButtons[$rank][] = $content;
+        $this->pictureButtons[$button->order][] = $button;
     }
 
     /**
-     * Registers a button to be displayed on index pages.
+     * Registers a typed button to be displayed on index pages -- P43's
+     * typed replacement for the former raw-HTML `addIndexButton()`.
      */
-    public function addIndexButton(string $content, int $rank = 50): void
+    public function addIndexButton(ButtonContribution $button): void
     {
-        $this->indexButtons[$rank][] = $content;
+        $this->indexButtons[$button->order][] = $button;
     }
 
     /**
-     * Assigns PLUGIN_PICTURE_BUTTONS template variable with registered picture buttons.
+     * Registers a typed toggle-panel action to be displayed on the
+     * picture page -- P43's typed replacement for the former
+     * `concat('PLUGIN_PICTURE_ACTIONS', ...)`.
      */
-    public function parsePictureButtons(): void
+    public function addPictureAction(ActionContribution $action): void
     {
-        if ($this->pictureButtons !== []) {
-            ksort($this->pictureButtons);
-            $buttons = [];
-            foreach ($this->pictureButtons as $k => $row) {
-                $buttons = array_merge($buttons, $row);
-            }
-            $this->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
+        $this->pictureActions[$action->order][] = $action;
+        $this->registerActionSwitchBox($action);
+    }
+
+    /**
+     * Registers a typed toggle-panel action to be displayed on index
+     * pages -- P43's typed replacement for the former
+     * `concat('PLUGIN_INDEX_ACTIONS', ...)`.
+     */
+    public function addIndexAction(ActionContribution $action): void
+    {
+        $this->indexActions[$action->order][] = $action;
+        $this->registerActionSwitchBox($action);
+    }
+
+    /**
+     * Every real `switchBox` pair in this codebase (`themes/default/js/
+     * index.js`'s own `#derivativeSwitchLink`/`#derivativeSwitchBox` etc.)
+     * is wired via a `window.SwitchBox.push(link, box)` call --
+     * `themes/default/js/switchbox.js`'s own generic toggle/hide
+     * behavior, already an unconditional page asset on both
+     * `IndexView`/`PictureView` (`core.switchbox`). Registered here, once
+     * per action, rather than requiring `index.latte`/`picture.latte` to
+     * emit this JS themselves -- a plugin author gets working toggle
+     * behavior for free, with no JS of their own to write (matching the
+     * real `language_switch_17.0.0` plugin's own pre-P43 flag-picker,
+     * which had to hand-write this same wiring itself). `json_encode()`
+     * around each selector, not raw string concatenation, since `$id` is
+     * plugin-supplied and this is a JS string literal rendered inside an
+     * inline `<script>` tag -- the same `JSON_HEX_*` flag set
+     * `PageDataPayload`'s own JSON-island encode already uses for the
+     * identical `<script>`-context escaping concern.
+     */
+    private function registerActionSwitchBox(ActionContribution $action): void
+    {
+        if ($action->panel === []) {
+            return;
         }
+
+        $flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR;
+        $link = json_encode('#' . $action->id . 'Link', $flags);
+        $box = json_encode('#' . $action->id . 'Box', $flags);
+        $this->footerScript(
+            "window.SwitchBox=window.SwitchBox||[];window.SwitchBox.push({$link},{$box});",
+            'core.switchbox'
+        );
     }
 
     /**
-     * Assigns PLUGIN_INDEX_BUTTONS template variable with registered index buttons.
-     */
-    public function parseIndexButtons(): void
-    {
-        if ($this->indexButtons !== []) {
-            ksort($this->indexButtons);
-            $buttons = [];
-            foreach ($this->indexButtons as $k => $row) {
-                $buttons = array_merge($buttons, $row);
-            }
-            $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
-        }
-    }
-
-    /**
-     * Same ksort+flatten logic as `parseIndexButtons()` above, returned
-     * instead of `assign()`-ed -- the `View`-based sibling for a migrated
-     * page's own `IndexView::$pluginIndexButtons` property.
+     * Ksort+flatten by `$order`, same shape as `indexButtons()` below --
+     * the `View`-based sibling for a migrated page's own
+     * `IndexView::$pluginIndexButtons` property.
      *
-     * @return list<string>
+     * @return list<ButtonContribution>
      */
     public function indexButtons(): array
     {
-        if ($this->indexButtons === []) {
-            return [];
-        }
-
-        ksort($this->indexButtons);
-        $buttons = [];
-        foreach ($this->indexButtons as $row) {
-            $buttons = array_merge($buttons, $row);
-        }
-
-        return array_values($buttons);
+        return self::flattenByOrder($this->indexButtons);
     }
 
     /**
-     * Same ksort+flatten logic as `parsePictureButtons()` above, returned
-     * instead of `assign()`-ed -- the `View`-based sibling for a migrated
-     * page's own `PictureView::$pluginPictureButtons` property.
+     * Ksort+flatten by `$order`, same shape as `pictureButtons()` below --
+     * the `View`-based sibling for a migrated page's own
+     * `PictureView::$pluginPictureButtons` property.
      *
-     * @return list<string>
+     * @return list<ButtonContribution>
      */
     public function pictureButtons(): array
     {
-        if ($this->pictureButtons === []) {
+        return self::flattenByOrder($this->pictureButtons);
+    }
+
+    /**
+     * @return list<ActionContribution>
+     */
+    public function indexActions(): array
+    {
+        return self::flattenByOrder($this->indexActions);
+    }
+
+    /**
+     * @return list<ActionContribution>
+     */
+    public function pictureActions(): array
+    {
+        return self::flattenByOrder($this->pictureActions);
+    }
+
+    /**
+     * Shared by all 4 getters above -- same ksort-by-rank, flatten,
+     * preserve-registration-order-within-a-rank logic the former
+     * `parseIndexButtons()`/`parsePictureButtons()` methods each had
+     * their own copy of.
+     *
+     * @template T
+     * @param array<int, T[]> $byOrder
+     * @return list<T>
+     */
+    private static function flattenByOrder(array $byOrder): array
+    {
+        if ($byOrder === []) {
             return [];
         }
 
-        ksort($this->pictureButtons);
-        $buttons = [];
-        foreach ($this->pictureButtons as $row) {
-            $buttons = array_merge($buttons, $row);
+        ksort($byOrder);
+        $flattened = [];
+        foreach ($byOrder as $row) {
+            $flattened = array_merge($flattened, $row);
         }
 
-        return array_values($buttons);
+        return array_values($flattened);
     }
 }

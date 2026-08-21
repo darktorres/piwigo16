@@ -1332,7 +1332,6 @@ final readonly class PictureController implements ControllerInterface
             'cookiePath' => new CookieService()
                 ->cookiePath(),
             'uOriginal' => $u_original,
-            'pluginPictureButtons' => $template->pictureButtons(),
             'metadata' => $metadata,
             'rateSummary' => $rateResult->rateSummary,
             'rating' => $rateResult->rating,
@@ -1360,7 +1359,7 @@ final readonly class PictureController implements ControllerInterface
         if ($slideshow and $this->currentConfig->lightSlideshow) {
             $html = $this->renderer->render(new SlideshowView(...$commonPictureViewArgs));
         } else {
-            $html = $this->renderer->render(new PictureView(...$commonPictureViewArgs, rootUrl: $this->urlService->getRootUrl()));
+            $html = $this->renderer->render(new PictureView(...$commonPictureViewArgs, rootUrl: $this->urlService->getRootUrl(), pluginPictureButtons: $template->pictureButtons(), pluginPictureActions: $template->pictureActions()));
         }
         $body = $template->finalizeHtml((string) $html);
 

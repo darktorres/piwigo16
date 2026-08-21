@@ -117,8 +117,36 @@
             </div>
           {/if} {* has formats *}
         {/if}{/spaceless}
-      {if isset($pluginPictureButtons)}{foreach $pluginPictureButtons as $button}{$button|noescape}{/foreach}{/if}
-      {if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS|noescape}{/if}
+      {foreach $pluginPictureButtons as $button}{spaceless}<a
+            n:attr="id: $button->id"
+            href="{$button->url|noescape}"
+            title="{$button->label}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="{$button->icon}"></span><span
+              class="pwg-button-text"
+            >{$button->label}</span>
+          </a>{/spaceless}{/foreach}
+      {foreach $pluginPictureActions as $action}{spaceless}<a
+            id="{$action->id}Link"
+            title="{$action->label}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="{$action->icon}"></span><span
+              class="pwg-button-text"
+            >{$action->label}</span>
+          </a>
+          <div n:if="$action->panel !== []" id="{$action->id}Box" class="switchBox">
+            <div class="switchBoxTitle">{$action->label}</div>
+            <a
+              n:foreach="$action->panel as $link"
+              href="{$link->url|noescape}"
+              rel="nofollow"
+            >{if $link->icon !== null}<span class="{$link->icon}"></span>{/if}{$link->label}</a>
+          </div>
+        {/spaceless}{/foreach}
       {spaceless}{if isset($favorite)}
           <a
             href="{$favorite['U_FAVORITE']|noescape}"

@@ -27,6 +27,12 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `picture_nav_buttons.latte`'s own contract-only
  * `PictureNavButtonsView` contribution -- `slideshow.latte` itself has
  * zero registration calls of its own (docs/PLAN.md's P42-B).
+ *
+ * No `$pluginPictureButtons`/`$pluginPictureActions` -- confirmed by
+ * grep that `slideshow.latte` never reads either (P43-A, docs/PLAN.md):
+ * `PictureController` feeds both views from the same
+ * `$template->pictureButtons()`/`pictureActions()` calls, but only
+ * `PictureView` actually renders them.
  */
 #[Template('slideshow.latte')]
 final readonly class SlideshowView implements View, HasPageAssets, ExposesPageData
@@ -42,7 +48,6 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
      * @param list<array<string, mixed>>|null $relatedTags
      * @param list<string>|null $relatedCategories
-     * @param list<string> $pluginPictureButtons
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
@@ -88,7 +93,6 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
         public string $csrfToken,
         public string $cookiePath,
         public ?string $uOriginal,
-        public array $pluginPictureButtons,
         public ?array $metadata,
         public ?array $rateSummary,
         public ?array $rating,

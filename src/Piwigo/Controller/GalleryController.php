@@ -277,6 +277,13 @@ final readonly class GalleryController implements ControllerInterface
         $searchFilterResult = $this->searchFilterRenderer->render($section_context);
         $resolved_search_id = $searchFilterResult->resolvedSearchId;
         if ($searchFilterResult->data !== null) {
+            $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
+            $user_rank = match (true) {
+                $accessLevelChecker->isAdmin('') => 'admin',
+                $accessLevelChecker->isClassicUser('') => 'user',
+                default => 'none',
+            };
+
             $searchFiltersHtml = $this->renderer->render(new SearchFiltersView(
                 displayFilter: $searchFilterResult->data->displayFilter,
                 showFilterRatings: $searchFilterResult->data->showFilterRatings,
@@ -298,6 +305,8 @@ final readonly class GalleryController implements ControllerInterface
                 datePosted: $searchFilterResult->data->datePosted,
                 listDateCreated: $searchFilterResult->data->listDateCreated,
                 dateCreated: $searchFilterResult->data->dateCreated,
+                colorscheme: $template->themeConf('colorscheme'),
+                userRank: $user_rank,
             ));
             $template->assignContext(new SearchFiltersHtmlPageContext($searchFiltersHtml));
         }

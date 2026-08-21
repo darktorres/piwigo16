@@ -3440,10 +3440,34 @@ not wherever its own old `{include}` line sat relative to
 call site. `include/batch_manager_filter.inc.latte`'s own `{include}`
 line stays at both parents for its real markup (the filter form
 itself) -- **~71 pages/Views landed so far, ~899 of 945 call sites**.
-Remaining P42-B scope: `local_head.latte`'s `resolveLocalHeadOnce()`
-infrastructure gap (bypasses `Renderer::render()` entirely); the
-`MenubarBlockView`/`index.latte` design gap (no real
-`Renderer::render()` target).
+
+**`index.latte`'s own remaining 3 calls.** Re-checked against current
+code rather than trusted from an earlier progress note (which had
+wrongly lumped this file in with the menubar-sub-block design gap
+below): `IndexView` is genuinely `Renderer::render()`'d
+(`GalleryController::__invoke()`'s own
+`$this->renderer->render($indexView)` call), so its own 3 static
+`combineScript`/`combineCss` calls were fully portable on their own,
+no design gap at all -- **~72 pages/Views landed so far, ~902 of 945
+call sites**. Also confirmed while re-checking: `local_head.latte`'s
+own former infrastructure gap is **already closed** (landed in
+P42-A -- `Renderer::render()` already calls `Template::
+resolveLocalHeadOnce()`, and no `layout.latte` has a direct
+`local_head` `{include}` left), not open as an earlier progress note
+claimed.
+
+Remaining P42-B scope, confirmed still real: the `MenubarBlockView`/
+`MonthCalendarView` design gap -- `menubar_identification.latte`/
+`menubar_links.latte`/`menubar_menu.latte` (8 calls total) are reached
+only via `menubar.latte`'s own native Latte `{include $block->template,
+block: $block, id: $id}` (a dynamic filename include, never a
+constructed View passed through `Renderer::render()`), and
+`month_calendar.latte` (1 call) the same way via
+`CalendarChronologyPageContext::$fileChronologyView`'s own bare
+`{include $FILE_CHRONOLOGY_VIEW}` in `index.latte` -- both
+`MenubarBlockView`/`MonthCalendarView` are deliberately contract-only
+(no `View` interface, no `#[Template]`), confirmed still true by
+reading both classes fresh, not assumed from the earlier note.
 
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign

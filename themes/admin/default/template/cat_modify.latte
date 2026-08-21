@@ -1,28 +1,4 @@
 {templateType Piwigo\Admin\Projection\CatModifyView}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'cat_modify', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/cat_modify.js')}
-{do exposeData('cat_id', $catId)}
-{do exposeData('parent_cat_id', $parentCatId)}
-{do exposeData('cat_name', $catName)}
-{do exposeData('nb_subcats', $nbSubcats)}
-{do exposeData('csrf_token', $csrfToken)}
-{do exposeData('u_delete', $uDelete)}
-{do exposeData('is_visible', $isVisible)}
-{do exposeString('No, I have changed my mind')}
-{do exposeString('Delete album')}
-{do exposeString('Delete album "%s" and its %d sub-albums.')}
-{do exposeString('Just now')}
-{do exposeString('delete only album, not photos')}
-{do exposeString('delete album and the %d orphan photos')}
-{do exposeString('delete album and all %d photos, even the %d associated to other albums')}
-{do exposeString('Comments allowed for sub-albums')}
-{do exposeString('Comments disallowed for sub-albums')}
-{do exposeString('New parent album')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineCss(id: 'cat_modify', path: 'themes/admin/default/css/pages/cat_modify.css')}
-{do combineScript(id: 'jquery.tipTip', load: 'footer', path: 'themes/default/js/plugins/jquery.tipTip.minified.js')}
 
 <div class="cat-modify" id="cat-modify">
   <div class="cat-modify-header">

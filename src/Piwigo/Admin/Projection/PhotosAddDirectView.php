@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -23,7 +24,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * has zero real references at all.
  */
 #[Template('photos_add_direct.latte')]
-final readonly class PhotosAddDirectView implements View, HasPageAssets
+final readonly class PhotosAddDirectView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<array-key, mixed>|null $formatsOriginalInfo
@@ -89,6 +90,34 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets
             ];
         }
 
-        return $assets;
+        return [
+            ...$assets,
+            ...new AlbumSelectorView()
+                ->pageAssets(),
+        ];
+    }
+
+    /**
+     * Only `include/album_selector.inc.latte`'s own contribution --
+     * this page's own many other `exposeData`/`exposeString` call
+     * sites (`docs/PLAN.md`'s P42-B colorbox-family batch) are not
+     * migrated yet, deliberately, and stay imperative for now.
+     *
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return new AlbumSelectorView()
+            ->exposedStrings();
     }
 }

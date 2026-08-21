@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -31,7 +32,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * not minted into its own DTO here.
  */
 #[Template('batch_manager_unit.latte')]
-final readonly class BatchManagerUnitView implements View, HasPageAssets
+final readonly class BatchManagerUnitView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<array-key, string> $levelOptions
@@ -56,8 +57,9 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets
 
     /**
      * Only `include/autosize.inc.latte`'s, `include/datepicker.inc.latte`'s,
-     * and `include/colorbox.inc.latte`'s own contributions -- this
-     * page's own many other `combineCss`/`combineScript` call sites
+     * `include/colorbox.inc.latte`'s, and `include/album_selector.inc.latte`'s
+     * own contributions -- this page's own many other
+     * `combineCss`/`combineScript` call sites
      * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
      * yet, deliberately, and stay imperative for now; both sources
      * coexist correctly (`PageAssets::add()`'s own dedup contract).
@@ -74,6 +76,32 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets
                 ->pageAssets(),
             ...new ColorboxView()
                 ->pageAssets(),
+            ...new AlbumSelectorView()
+                ->pageAssets(),
         ];
+    }
+
+    /**
+     * Only `include/album_selector.inc.latte`'s own contribution --
+     * this page's own many other `exposeData` call sites
+     * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
+     * yet, deliberately, and stay imperative for now.
+     *
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return new AlbumSelectorView()
+            ->exposedStrings();
     }
 }

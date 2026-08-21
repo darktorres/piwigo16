@@ -416,6 +416,10 @@
   </div>
 </div>
 
+{* Kept -- real markup (the linked-album popin), not just asset
+   registration; BatchManagerUnitView::pageAssets()/exposedStrings()
+   already merge in AlbumSelectorView's own contribution too
+   (dedup-safe no-op). *}
 {include 'include/album_selector.inc.latte'}
 
 {do exposeData('all_related_categories_ids', $all_selected_album)}

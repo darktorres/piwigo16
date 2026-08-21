@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -21,7 +26,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `cat_modify.js`'s `pwg_getPageData()` reads.
  */
 #[Template('cat_modify.latte')]
-final readonly class CatModifyView implements View
+final readonly class CatModifyView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, mixed>|null $representant
@@ -59,4 +64,66 @@ final readonly class CatModifyView implements View
         public ?array $representant,
         public string $csrfToken,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('cat_modify', 'themes/admin/default/js/cat_modify.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            // order 10 is required, see issue 1080
+            AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
+            AssetContribution::css('themes/admin/default/css/pages/cat_modify.css', id: 'cat_modify'),
+            AssetContribution::script('jquery.tipTip', 'themes/default/js/plugins/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
+            ...new AlbumSelectorView()
+                ->pageAssets(),
+        ];
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'cat_id' => $this->catId,
+            'parent_cat_id' => $this->parentCatId,
+            'cat_name' => $this->catName,
+            'nb_subcats' => $this->nbSubcats,
+            'csrf_token' => $this->csrfToken,
+            'u_delete' => $this->uDelete,
+            'is_visible' => $this->isVisible,
+        ];
+    }
+
+    /**
+     * `'No, I have changed my mind'` already covered unconditionally by
+     * `ThemeBaseAssets`'s own confirm-dialog triplet (docs/PLAN.md's
+     * P42) -- dropped, not ported.
+     *
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Delete album',
+            'Delete album "%s" and its %d sub-albums.',
+            'Just now',
+            'delete only album, not photos',
+            'delete album and the %d orphan photos',
+            'delete album and all %d photos, even the %d associated to other albums',
+            'Comments allowed for sub-albums',
+            'Comments disallowed for sub-albums',
+            'New parent album',
+            ...new AlbumSelectorView()
+                ->exposedStrings(),
+        ];
+    }
 }

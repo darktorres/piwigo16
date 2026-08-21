@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
 
@@ -18,15 +23,81 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * `picture_modify.latte`, `search_filters.inc.latte`, and
  * `batch_manager_filter.inc.latte` itself -- the reason this file
  * converts before or with `batch_manager_filter.inc.latte`, not after).
+ * Its own real markup (the linked-album popin) still needs a plain
+ * `{include}` at each real call site, wrapped in the template's own
+ * `{if once('inc_album_selector')}` guard so the shared popin renders
+ * only once even when this partial is `{include}`d repeatedly on the
+ * same page (docs/PLAN.md's P42-B) -- only the `{do combineCss}`/
+ * `{do combineScript}`/`{do exposeString}` calls move to
+ * `pageAssets()`/`exposedStrings()`; `once()`'s own dedup concern
+ * doesn't apply to those, since `PageAssets::add()`/`Template::
+ * exposeString()` are already dedup-safe regardless of call count.
+ * `include/colorbox.inc.latte`'s own contribution (still imperative --
+ * see that file's own docblock) is deliberately NOT merged in here for
+ * the identical reason `AddAlbumView` doesn't: this file's own
+ * `{include 'colorbox.inc.latte', load_mode: $load_mode}` line stays
+ * live.
  *
  * `$load_mode` is genuinely optional -- the template's own
  * `{if empty($load_mode)}{var $load_mode = 'footer'}{/if}` default
  * applies at all 7 real call sites, none of which pass it explicitly.
  */
 #[TemplateAttr('include/album_selector.inc.latte')]
-final readonly class AlbumSelectorView implements View
+final readonly class AlbumSelectorView implements View, HasPageAssets, ExposesPageData
 {
     public function __construct(
         public ?string $load_mode = null,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        $loadMode = match ($this->load_mode) {
+            'header' => LoadMode::Header,
+            'async' => LoadMode::Async,
+            default => LoadMode::Footer,
+        };
+
+        return [
+            AssetContribution::css('themes/admin/default/css/components/album_selector.css'),
+            AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
+            AssetContribution::script('albumSelector', 'themes/admin/default/js/album_selector.js', loadMode: $loadMode, dependsOn: ['page-data']),
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+        ];
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Only the first %d albums are displayed, out of %d.',
+            'Album already selected',
+            'No search in progress',
+            '<b>%d</b> albums found',
+            '<b>1</b> album found',
+            '<b>%d+</b> albums found, try to refine the search',
+            'Add a sub-album to “%s”',
+            'Create and select',
+            'Root',
+            'Name field must not be empty',
+            'An error has occured',
+            'Select an album',
+            'Search',
+        ];
+    }
 }

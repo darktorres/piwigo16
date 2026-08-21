@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -31,7 +32,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * shape, same precedent as `PluginsInstalledView::$plugins`.
  */
 #[Template('batch_manager_global.latte')]
-final readonly class BatchManagerGlobalView implements View, HasPageAssets
+final readonly class BatchManagerGlobalView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>|null $associatedTags
@@ -82,6 +83,32 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets
                 ->pageAssets(),
             ...new AddAlbumView(load_mode: 'async', colorscheme: $this->colorscheme)
                 ->pageAssets(),
+            ...new AlbumSelectorView()
+                ->pageAssets(),
         ];
+    }
+
+    /**
+     * Only `include/album_selector.inc.latte`'s own contribution --
+     * this page's own many other `exposeData` call sites
+     * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
+     * yet, deliberately, and stay imperative for now.
+     *
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return new AlbumSelectorView()
+            ->exposedStrings();
     }
 }

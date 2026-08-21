@@ -2,24 +2,6 @@
 {if once('inc_album_selector')}
   {if empty($load_mode)}{var $load_mode = 'footer'}{/if}
   {include 'colorbox.inc.latte', load_mode: $load_mode}
-  {do combineCss(path: "themes/admin/default/css/components/album_selector.css")}
-  {do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
-  {do combineScript(id: 'albumSelector', load: $load_mode, require: 'page-data', path: 'themes/admin/default/js/album_selector.js')}
-  {* {combine_script id='albumSelector' load=$load_mode path='themes/admin/default/js/test-ab.js'} *}
-  {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-  {do exposeString('Only the first %d albums are displayed, out of %d.')}
-  {do exposeString('Album already selected')}
-  {do exposeString('No search in progress')}
-  {do exposeString('<b>%d</b> albums found')}
-  {do exposeString('<b>1</b> album found')}
-  {do exposeString('<b>%d+</b> albums found, try to refine the search')}
-  {do exposeString('Add a sub-album to “%s”')}
-  {do exposeString('Create and select')}
-  {do exposeString('Root')}
-  {do exposeString('Name field must not be empty')}
-  {do exposeString('An error has occured')}
-  {do exposeString('Select an album')}
-  {do exposeString('Search')}
 
   <div id="addLinkedAlbum" class="linkedAlbumPopIn">
     <div class="linkedAlbumPopInContainer">

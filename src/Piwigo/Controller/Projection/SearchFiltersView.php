@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Override;
+use Piwigo\Admin\Projection\AlbumSelectorView;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -13,9 +18,19 @@ use Piwigo\Template\Latte\Attribute\Template;
  * \Piwigo\Search\SearchFilterRenderer::render()}'s own {@see
  * \Piwigo\Search\Projection\SearchFilterData}, same L2bExtendedDomain
  * split as {@see ThumbnailsView}/`CategoryDefaultRenderer`.
+ *
+ * Unlike every other colorbox-family real parent (docs/PLAN.md's
+ * P42-B), this View genuinely IS rendered via `Renderer::render()`
+ * (see `GalleryController::__invoke()`), so `pageAssets()` fires
+ * through the normal hook -- no construct-and-merge trick needed to
+ * pick up `AlbumSelectorView`'s own contribution below. This page's
+ * own many other `combineCss`/`combineScript`/`exposeData`/
+ * `exposeString` call sites are not migrated yet, deliberately, and
+ * stay imperative for now; both sources coexist correctly
+ * (`PageAssets::add()`'s own dedup contract).
  */
 #[Template('include/search_filters.inc.latte')]
-final readonly class SearchFiltersView implements View
+final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, array<string, mixed>> $displayFilter
@@ -57,4 +72,40 @@ final readonly class SearchFiltersView implements View
         public ?array $listDateCreated,
         public ?array $dateCreated,
     ) {}
+
+    /**
+     * Only `include/album_selector.inc.latte`'s own contribution.
+     *
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return new AlbumSelectorView()
+            ->pageAssets();
+    }
+
+    /**
+     * Only `include/album_selector.inc.latte`'s own contribution --
+     * this page's own many other `exposeData`/`exposeString` call
+     * sites are not migrated yet, deliberately, and stay imperative
+     * for now.
+     *
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return new AlbumSelectorView()
+            ->exposedStrings();
+    }
 }

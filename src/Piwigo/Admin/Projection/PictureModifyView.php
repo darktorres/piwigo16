@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -23,7 +24,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * reads.
  */
 #[Template('picture_modify.latte')]
-final readonly class PictureModifyView implements View, HasPageAssets
+final readonly class PictureModifyView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<int, array{name: mixed, id: string}> $tagSelection
@@ -67,11 +68,12 @@ final readonly class PictureModifyView implements View, HasPageAssets
 
     /**
      * Only `include/autosize.inc.latte`'s, `include/datepicker.inc.latte`'s,
-     * and `include/colorbox.inc.latte`'s own contributions -- this
-     * page's own many other `combineCss`/`combineScript` call sites
-     * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
-     * yet, deliberately, and stay imperative for now; both sources
-     * coexist correctly (`PageAssets::add()`'s own dedup contract).
+     * `include/colorbox.inc.latte`'s, and `include/album_selector.inc.latte`'s
+     * own contributions -- this page's own many other
+     * `combineCss`/`combineScript` call sites (`docs/PLAN.md`'s P42-B
+     * colorbox-family batch) are not migrated yet, deliberately, and
+     * stay imperative for now; both sources coexist correctly
+     * (`PageAssets::add()`'s own dedup contract).
      *
      * @return list<AssetContribution>
      */
@@ -85,6 +87,32 @@ final readonly class PictureModifyView implements View, HasPageAssets
                 ->pageAssets(),
             ...new ColorboxView()
                 ->pageAssets(),
+            ...new AlbumSelectorView()
+                ->pageAssets(),
         ];
+    }
+
+    /**
+     * Only `include/album_selector.inc.latte`'s own contribution --
+     * this page's own many other `exposeData`/`exposeString` call
+     * sites (`docs/PLAN.md`'s P42-B colorbox-family batch) are not
+     * migrated yet, deliberately, and stay imperative for now.
+     *
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return new AlbumSelectorView()
+            ->exposedStrings();
     }
 }

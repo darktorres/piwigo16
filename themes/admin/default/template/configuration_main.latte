@@ -1,10 +1,5 @@
 {templateType Piwigo\Controller\Admin\Projection\ConfigurationMainView}
 {include 'include/colorbox.inc.latte'}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
-{do exposeData('order_by_options_count', count($main['order_by_options']))}
-{do combineScript(id: 'configuration_main', load: 'footer', require: 'jquery,jquery.tipTip,jquery.colorbox,page-data', path: 'themes/admin/default/js/configuration_main.js')}
-{do combineCss(id: 'configuration_main', path: 'themes/admin/default/css/pages/configuration_main.css')}
 
 <form method="post" action="{$fAction|noescape}" class="properties">
   <div id="configContent">

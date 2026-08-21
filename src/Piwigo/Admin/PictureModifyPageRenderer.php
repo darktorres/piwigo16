@@ -449,6 +449,8 @@ final readonly class PictureModifyPageRenderer
                 ->getToken(),
             rootPath: $this->paths->root,
             jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
+            colorscheme: $template->themeConf('colorscheme'),
+            rootUrl: $this->urlService->getRootUrl(),
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

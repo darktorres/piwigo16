@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -64,17 +65,11 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         public string $csrfToken,
         public string $rootPath,
         public string $jqueryCode,
+        public string $colorscheme,
+        public string $rootUrl,
     ) {}
 
     /**
-     * Only `include/autosize.inc.latte`'s, `include/datepicker.inc.latte`'s,
-     * `include/colorbox.inc.latte`'s, and `include/album_selector.inc.latte`'s
-     * own contributions -- this page's own many other
-     * `combineCss`/`combineScript` call sites (`docs/PLAN.md`'s P42-B
-     * colorbox-family batch) are not migrated yet, deliberately, and
-     * stay imperative for now; both sources coexist correctly
-     * (`PageAssets::add()`'s own dedup contract).
-     *
      * @return list<AssetContribution>
      */
     #[Override]
@@ -87,32 +82,54 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
                 ->pageAssets(),
             ...new ColorboxView()
                 ->pageAssets(),
+            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/pages/picture_modify.css', id: 'picture_modify'),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('picture_modify', 'themes/admin/default/js/picture_modify.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox', 'page-data']),
+            // order 10 is required, see issue 1080
+            AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             ...new AlbumSelectorView()
                 ->pageAssets(),
         ];
     }
 
     /**
-     * Only `include/album_selector.inc.latte`'s own contribution --
-     * this page's own many other `exposeData`/`exposeString` call
-     * sites (`docs/PLAN.md`'s P42-B colorbox-family batch) are not
-     * migrated yet, deliberately, and stay imperative for now.
-     *
      * @return array<string, string|int|float|bool|null|array<mixed>>
      */
     #[Override]
     public function exposedPageData(): array
     {
-        return [];
+        return [
+            'cache_key_categories' => $this->cacheKeys['categories'],
+            'cache_key_tags' => $this->cacheKeys['tags'],
+            'cache_key_hash' => $this->cacheKeys['_hash'],
+            'root_url' => $this->rootUrl,
+            'u_delete' => $this->uDelete,
+            'related_categories_ids' => $this->relatedCategoriesIds,
+        ];
     }
 
     /**
+     * `'Are you sure?'`/`'No, I have changed my mind'` already covered
+     * unconditionally by `ThemeBaseAssets`'s own confirm-dialog triplet
+     * (docs/PLAN.md's P42) -- dropped, not ported.
+     *
      * @return list<string>
      */
     #[Override]
     public function exposedStrings(): array
     {
-        return new AlbumSelectorView()
-            ->exposedStrings();
+        return [
+            'Create',
+            'Cancel',
+            'Yes, delete',
+            'This photo is an orphan',
+            'Associate to album',
+            ...new AlbumSelectorView()
+                ->exposedStrings(),
+        ];
     }
 }

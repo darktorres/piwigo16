@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A in progress: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType` (`Piwigo\Contribution\`) landed, replacing `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/hand-written `set_prefilter('picture'\|'register'\|'profile_content', ...)` patches (the last of which also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism); remaining P43-A kinds (auth button, thumbnail overlay, menu item, `FieldOverride`, `FormProvider`) not started. P43-C–F not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C–F not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3661,10 +3661,52 @@ had zero real assignments anywhere in `src/` — and its own
 template path, exactly the kind of escape hatch P43 is meant to close.
 Not carried forward into the typed replacement.
 
-The remaining P43-A kinds — auth button, thumbnail overlay, menu item,
-`FieldOverride`, `FormProvider` — are each their own follow-up
-increment, gated by their own real-plugin field-shape research before
-design.
+**P43-A, part 4 (landed) — auth button, thumbnail overlay, menu item,
+`FieldOverride`, `FormProvider`.** The remaining 5 kinds, landed
+together in one pass (implementation batched, full verification run
+once at the end, not per-kind — a deliberate departure from parts 1-3's
+own per-kind commit-and-verify cadence, at the user's explicit
+direction for this batch).
+
+- `Piwigo\Contribution\AuthButton` -- a third-party sign-in button on
+  the identification/register pages (real plugins: `oAuth`,
+  `SocialConnect`). `$providerId` (not a URL) is what the page's own JS
+  dispatches on -- a real sign-in flow is JS-driven, not a plain link.
+  One shared list for both pages, unlike `ProfileField`'s per-page
+  split: every real plugin read registers the identical provider list
+  on both with the same callback.
+- `Piwigo\Contribution\ThumbnailOverlay` -- an icon overlay on every
+  gallery-index thumbnail (real plugins: `quick_fav`, `quick_star`).
+  Per-photo state (is this one a favorite) stays out of core's typed
+  contract -- a plugin's own JS reads the rendered `data-image-id` and
+  does its own state lookup/toggle client-side, the same mount-point
+  pattern the rest of P43-A already established.
+- `Piwigo\Contribution\MenuItem` -- a nav link appended to the
+  menubar's own "Menu" block (`mbMenu`/`menubar_menu.latte`). No
+  template change needed -- that template already iterates its row
+  list generically, so `MenubarRenderer` just appends converted rows to
+  `$block->data`.
+- `Piwigo\Contribution\FieldOverride` (a 1-case enum) -- hides the
+  profile-edit form's native password fields, the typed replacement for
+  `oAuth`'s own `set_prefilter('profile_content', ...)` patch
+  (client-side jQuery `.hide()` there; server-side non-render here).
+  Deliberately narrow: one case, matching the one real concrete need
+  found, not a generic "hide any named field" mechanism invented on
+  spec.
+- `Piwigo\Contribution\FormProvider` -- a titled group of
+  `ProfileField`s rendered as its own labeled section on the
+  profile-edit form, the typed replacement for the dead
+  `$PLUGINS_PROFILE`/`$plugin_block` mechanism already deleted in part
+  3 above. Reuses `ProfileField`'s existing typed, no-raw-HTML field
+  shape rather than inventing a second rendering primitive.
+
+All 5 follow the same collector shape parts 1-3 already established
+(`Template::addXxx()`/`xxx()`, ksort+flatten by `$order` via the
+existing `flattenByOrder()` helper where ordering applies). Golden-HTML
+gated: all 7 baseline changes from this batch are pure whitespace (the
+new templates' empty `n:if`/`n:foreach` blocks, no plugin registered in
+the fixture), reviewed by hand, no content or semantic change. P43-A is
+now fully landed.
 
 **P43-B (landed) — Latte API cleanup (`PiwigoExtension.php`).** Three
 mechanical sub-passes, gated by golden-HTML on every commit. (1)

@@ -195,6 +195,8 @@ final class PluginRegistry
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
         $this->assertApiRoutesContractSatisfied($manifest, $instance);
+        $this->assertAdminPagesContractSatisfied($manifest, $instance);
+        $this->assertPageRoutesContractSatisfied($manifest, $instance);
         $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         $instance->install();
 
@@ -227,6 +229,8 @@ final class PluginRegistry
         $instance = $this->bootInstance($manifest);
         $this->assertSettingsContractSatisfied($manifest, $instance);
         $this->assertApiRoutesContractSatisfied($manifest, $instance);
+        $this->assertAdminPagesContractSatisfied($manifest, $instance);
+        $this->assertPageRoutesContractSatisfied($manifest, $instance);
         $instance->boot($this->contextFactory->build(PluginId::from($pluginId)));
         $instance->activate();
 
@@ -498,6 +502,38 @@ final class PluginRegistry
     }
 
     /**
+     * `install()`/`activate()`'s own manifest-authoring check for
+     * `AdminPageProviderInterface` -- same shape and same rationale as
+     * `assertSettingsContractSatisfied()` above.
+     */
+    private function assertAdminPagesContractSatisfied(PluginManifest $manifest, ExtensionInterface $instance): void
+    {
+        if ($manifest->hasAdminPages && ! $instance instanceof AdminPageProviderInterface) {
+            throw new PluginValidationException(
+                $manifest->id,
+                rtrim($this->paths->plugins, '/') . "/{$manifest->id}/plugin.json",
+                "Plugin '{$manifest->id}' declares hasAdminPages but its main class does not implement AdminPageProviderInterface.",
+            );
+        }
+    }
+
+    /**
+     * `install()`/`activate()`'s own manifest-authoring check for
+     * `PageRouteProviderInterface` -- same shape and same rationale as
+     * `assertSettingsContractSatisfied()` above.
+     */
+    private function assertPageRoutesContractSatisfied(PluginManifest $manifest, ExtensionInterface $instance): void
+    {
+        if ($manifest->hasPageRoutes && ! $instance instanceof PageRouteProviderInterface) {
+            throw new PluginValidationException(
+                $manifest->id,
+                rtrim($this->paths->plugins, '/') . "/{$manifest->id}/plugin.json",
+                "Plugin '{$manifest->id}' declares hasPageRoutes but its main class does not implement PageRouteProviderInterface.",
+            );
+        }
+    }
+
+    /**
      * Called once per request, from `Http\Middleware\RoutingMiddleware::
      * process()` via `CurrentPluginRegistry::registerApiRoutes()` (a
      * `Routing\ApiRouteRegistrarInterface` passthrough) -- not from
@@ -514,6 +550,61 @@ final class PluginRegistry
                 $instance->registerApiRoutes($routes);
             }
         }
+    }
+
+    /**
+     * Called once per request, from `Http\Middleware\RoutingMiddleware::
+     * process()` via `CurrentPluginRegistry::registerPageRoutes()` --
+     * same call site and same shape as `registerApiRoutes()` above, for
+     * `PageRouteProviderInterface` instead.
+     */
+    public function registerPageRoutes(RouteCollection $routes): void
+    {
+        foreach ($this->bootedInstances as $instance) {
+            if ($instance instanceof PageRouteProviderInterface) {
+                $instance->registerPageRoutes($routes);
+            }
+        }
+    }
+
+    /**
+     * Called once per request, from `Bootstrap\AdminDispatcher::pageMap()`
+     * -- every active plugin implementing `AdminPageProviderInterface`
+     * gets its own `admin.php` `?page=` slug -> handler class-string map
+     * merged into the one this method returns. Throws on an inter-plugin
+     * slug collision (two active plugins declaring the same slug) --
+     * silently letting the later plugin win would make the earlier
+     * plugin's own page permanently unreachable with no visible error, a
+     * strictly worse outcome than failing loudly here. A collision
+     * against a core, statically-registered slug is `AdminDispatcher::
+     * pageMap()`'s own concern, not this method's -- `PluginRegistry`
+     * itself has no visibility into `config/admin_pages.php`.
+     *
+     * @return array<string, class-string>
+     */
+    public function adminPages(): array
+    {
+        /** @var array<string, class-string> $pages */
+        $pages = [];
+        foreach ($this->bootedInstances as $pluginId => $instance) {
+            if (! $instance instanceof AdminPageProviderInterface) {
+                continue;
+            }
+
+            foreach ($instance->registerAdminPages() as $slug => $class) {
+                if (isset($pages[$slug])) {
+                    throw new PluginValidationException(
+                        $pluginId,
+                        rtrim($this->paths->plugins, '/') . "/{$pluginId}/plugin.json",
+                        "Plugin '{$pluginId}' declares admin page slug '{$slug}', which another active plugin already registered.",
+                    );
+                }
+
+                $pages[$slug] = $class;
+            }
+        }
+
+        return $pages;
     }
 
     /**

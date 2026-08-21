@@ -218,7 +218,18 @@ deptrac:
     # gets its own dependencies via plain container autowiring later,
     # not via this interface), but it has nowhere else to go and
     # PluginRegistry::registerApiRoutes() references it directly (the
-    # manifest-time `hasApiRoutes` validation).
+    # manifest-time `hasApiRoutes` validation). AdminPageProviderInterface/
+    # PageRouteProviderInterface (P43-E) ride the same collector for the
+    # identical reason -- PluginRegistry::adminPages()/registerPageRoutes()
+    # reference them directly (the manifest-time `hasAdminPages`/
+    # `hasPageRoutes` validation), and neither has anywhere else to go.
+    # AdminPageProviderInterface deliberately types its own
+    # registerAdminPages() return as a bare `class-string`, not
+    # `class-string<Controller\Admin\AdminSubControllerInterface>` --
+    # Controller\Admin is L4Integration, above this layer, so PluginConfig
+    # may not reference it; AdminDispatcher::dispatch()'s own existing
+    # instanceof check (L4, runs for every resolved page regardless of
+    # origin) is what actually enforces that contract instead.
     - name: L3Presentation
       collectors:
         - type: classLike
@@ -226,7 +237,7 @@ deptrac:
         - type: classLike
           value: ^Piwigo\\Listener\\(?!UploadFormatListener$).+
         - type: classLike
-          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException|SettingsPageInterface|CurrentPluginRegistry|ApiRouteProviderInterface)$
+          value: ^Piwigo\\PluginConfig\\(ExtensionInterface|ExtensionContext|ExtensionContextFactory|ExtensionSession|PluginManifest|ThemeManifest|PluginRegistry|ThemeRegistry|PluginValidationException|PluginDependencyException|ThemeValidationException|ThemeDependencyException|SettingsPageInterface|CurrentPluginRegistry|ApiRouteProviderInterface|AdminPageProviderInterface|PageRouteProviderInterface)$
         - type: classLike
           value: ^Piwigo\\PluginConfig\\Facade\\.*
     # L4 Integration — Piwigo\Command (bin/piwigo's Symfony Console

@@ -39,6 +39,8 @@ final readonly class PluginManifest
         public ?string $authorUri = null,
         public bool|string $hasSettings = false,
         public bool $hasApiRoutes = false,
+        public bool $hasAdminPages = false,
+        public bool $hasPageRoutes = false,
         public array $require = [],
         public array $autoloadPsr4 = [],
     ) {}
@@ -83,6 +85,16 @@ final readonly class PluginManifest
             $hasApiRoutes = false;
         }
 
+        $hasAdminPages = $data['hasAdminPages'] ?? false;
+        if (! is_bool($hasAdminPages)) {
+            $hasAdminPages = false;
+        }
+
+        $hasPageRoutes = $data['hasPageRoutes'] ?? false;
+        if (! is_bool($hasPageRoutes)) {
+            $hasPageRoutes = false;
+        }
+
         return new self(
             id: self::requireString($data, 'id'),
             name: self::requireString($data, 'name'),
@@ -96,6 +108,8 @@ final readonly class PluginManifest
             authorUri: self::optionalString($data, 'authorUri'),
             hasSettings: $hasSettings,
             hasApiRoutes: $hasApiRoutes,
+            hasAdminPages: $hasAdminPages,
+            hasPageRoutes: $hasPageRoutes,
             require: $require,
             autoloadPsr4: $psr4,
         );

@@ -7,6 +7,7 @@ namespace Piwigo\PluginConfig;
 use LogicException;
 use Override;
 use Piwigo\Routing\ApiRouteRegistrarInterface;
+use Piwigo\Routing\PageRouteRegistrarInterface;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -25,13 +26,13 @@ use Symfony\Component\Routing\RouteCollection;
  * (`Admin\LoadedPluginsMiddleware`, immediately after `PluginBootstrap
  * Middleware` in the real pipeline, is the other real reader).
  *
- * Implements `Routing\ApiRouteRegistrarInterface` (P29.6) as a thin
- * passthrough to `PluginRegistry::registerApiRoutes()` -- bound to that
- * interface in `config/container.php` so `Http\Middleware\
- * RoutingMiddleware` can depend on the narrow capability instead of this
- * whole class.
+ * Implements `Routing\ApiRouteRegistrarInterface`/`PageRouteRegistrarInterface`
+ * (P29.6/P43-E) as thin passthroughs to `PluginRegistry::registerApiRoutes()`/
+ * `registerPageRoutes()` -- bound to those interfaces in
+ * `config/container.php` so `Http\Middleware\RoutingMiddleware` can
+ * depend on the narrow capability instead of this whole class.
  */
-final class CurrentPluginRegistry implements ApiRouteRegistrarInterface
+final class CurrentPluginRegistry implements ApiRouteRegistrarInterface, PageRouteRegistrarInterface
 {
     private ?PluginRegistry $registry = null;
 
@@ -49,10 +50,29 @@ final class CurrentPluginRegistry implements ApiRouteRegistrarInterface
         $this->registry = $registry;
     }
 
+    /**
+     * `Bootstrap\AdminDispatcher::pageMap()`'s own guard against reading
+     * this before `PluginBootstrapMiddleware::process()` has run (e.g. a
+     * Unit test constructing an admin sub-controller dispatch directly,
+     * with no real request pipeline behind it) -- same shape as
+     * `Template\CurrentTemplate::isInitialized()`.
+     */
+    public function isInitialized(): bool
+    {
+        return $this->registry instanceof PluginRegistry;
+    }
+
     #[Override]
     public function registerApiRoutes(RouteCollection $routes): void
     {
         $this->get()
             ->registerApiRoutes($routes);
+    }
+
+    #[Override]
+    public function registerPageRoutes(RouteCollection $routes): void
+    {
+        $this->get()
+            ->registerPageRoutes($routes);
     }
 }

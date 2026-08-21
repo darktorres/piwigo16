@@ -9,6 +9,7 @@ use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\PluginConfig\CurrentPluginRegistry;
 use Piwigo\Template\CurrentTemplate;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,16 +22,22 @@ use Psr\Http\Message\ServerRequestInterface;
  * through this class, the same seam RequestBootstrap/RequestPipeline
  * already use.
  *
- * Every admin page is a config/admin_pages.php sub-controller; admin.php
- * already falls back to 'intro' for any slug not in the map, so an
- * unmapped slug reaching this point is a programming error, not user
- * input.
+ * Every admin page is a config/admin_pages.php sub-controller, or (P43-E)
+ * an active plugin's own contributed slug (`PluginConfig\
+ * AdminPageProviderInterface`, manifest `hasAdminPages: true`), merged
+ * in by `pageMap()`; `Admin\AdminShell::runDispatch()` -- the one real
+ * caller of `dispatch()` -- validates the requested `?page=` slug
+ * against that same merged map (not the static file directly) before
+ * ever reaching this class, so a plugin-contributed slug passes that
+ * check too. admin.php already falls back to 'intro' for any slug not in
+ * the map, so an unmapped slug reaching this point is a programming
+ * error, not user input.
  */
 final class AdminDispatcher
 {
     public static function dispatch(string $pageSlug, ServerRequestInterface $request): void
     {
-        $map = self::map();
+        $map = self::pageMap();
 
         if (! isset($map[$pageSlug])) {
             throw new LogicException(
@@ -55,9 +62,48 @@ final class AdminDispatcher
     }
 
     /**
+     * The full, merged admin-page-slug registry: the static
+     * `config/admin_pages.php` map plus any active plugin's own
+     * contributed pages. `Admin\AdminShell`'s own `?page=` slug
+     * validation reads this same merged map (not the static file
+     * directly) so a plugin-contributed slug passes that check too, not
+     * just this class's own `dispatch()`.
+     *
+     * Gracefully skips the plugin half when `CurrentPluginRegistry`
+     * isn't initialised yet (e.g. a Unit test dispatching directly, with
+     * no real request pipeline -- `PluginBootstrapMiddleware::process()`
+     * always runs before `Admin\AdminShell::runDispatch()` in the real
+     * `admin.php` entry point, so this is never reached in production).
+     *
      * @return array<string, class-string<AdminSubControllerInterface>>
      */
-    private static function map(): array
+    public static function pageMap(): array
+    {
+        $pages = self::staticMap();
+
+        $currentPluginRegistry = self::currentPluginRegistry();
+        if (! $currentPluginRegistry->isInitialized()) {
+            return $pages;
+        }
+
+        foreach ($currentPluginRegistry->get()->adminPages() as $slug => $class) {
+            if (isset($pages[$slug])) {
+                throw new LogicException(
+                    "Plugin-contributed admin page slug '{$slug}' collides with an existing config/admin_pages.php entry."
+                );
+            }
+
+            /** @var class-string<AdminSubControllerInterface> $class */
+            $pages[$slug] = $class;
+        }
+
+        return $pages;
+    }
+
+    /**
+     * @return array<string, class-string<AdminSubControllerInterface>>
+     */
+    private static function staticMap(): array
     {
         /** @var array<string, class-string<AdminSubControllerInterface>> $map */
         $map = require self::paths()->root . 'config/admin_pages.php';
@@ -87,5 +133,15 @@ final class AdminDispatcher
         }
 
         return $currentTemplate;
+    }
+
+    private static function currentPluginRegistry(): CurrentPluginRegistry
+    {
+        $currentPluginRegistry = Kernel::container()->get(CurrentPluginRegistry::class);
+        if (! $currentPluginRegistry instanceof CurrentPluginRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . CurrentPluginRegistry::class);
+        }
+
+        return $currentPluginRegistry;
     }
 }

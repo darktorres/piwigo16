@@ -79,6 +79,14 @@
       "type": "boolean",
       "description": "Whether the plugin registers its own /api/v1/plugin-routes/{id}/... REST routes via ApiRouteProviderInterface. Default: false."
     },
+    "hasAdminPages": {
+      "type": "boolean",
+      "description": "Whether the plugin contributes its own admin.php ?page= slug(s) via AdminPageProviderInterface. Default: false."
+    },
+    "hasPageRoutes": {
+      "type": "boolean",
+      "description": "Whether the plugin registers its own public-facing page routes (e.g. a clean-URL entry point like the legacy tag_groups.php) via PageRouteProviderInterface. Default: false."
+    },
     "require": {
       "type": "object",
       "additionalProperties": {

@@ -14,6 +14,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\IntroSubController;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -864,5 +865,355 @@ final class PluginRegistryTest extends IntegrationTestCase
         $route = $routes->get('api_v1_plugin_routes_' . $id . '_ping');
         self::assertNotNull($route, 'the booted plugin\'s route must land in the collection');
         self::assertSame('/api/v1/plugin-routes/' . $id . '/ping', $route->getPath());
+    }
+
+    /**
+     * install() -- a manifest declaring `hasAdminPages: true` whose main
+     * class implements plain `ExtensionInterface` only (never
+     * `AdminPageProviderInterface`) is a real authoring mistake, caught
+     * here rather than surfacing confusingly deep inside
+     * `Bootstrap\AdminDispatcher::pageMap()`. Same shape as
+     * testInstallThrowsWhenHasSettingsIsDeclaredButSettingsPageInterfaceIsNotImplemented()
+     * above.
+     */
+    public function testInstallThrowsWhenHasAdminPagesIsDeclaredButAdminPageProviderInterfaceIsNotImplemented(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-missing-admin-pages-contract-' . $suffix;
+        $namespace = 'PiwigoTest\\FixtureMissingAdminPages' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin declaring hasAdminPages without implementing AdminPageProviderInterface',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasAdminPages' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class {$className} implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->install($id);
+            self::fail('install() must throw when hasAdminPages is declared but AdminPageProviderInterface is not implemented');
+        } catch (PluginValidationException $e) {
+            self::assertSame($id, $e->pluginId);
+            self::assertStringContainsString('AdminPageProviderInterface', $e->getMessage());
+        }
+    }
+
+    /**
+     * install() -- same shape as the hasAdminPages/hasApiRoutes contract
+     * checks above, for `hasPageRoutes`/`PageRouteProviderInterface`.
+     */
+    public function testInstallThrowsWhenHasPageRoutesIsDeclaredButPageRouteProviderInterfaceIsNotImplemented(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-missing-page-routes-contract-' . $suffix;
+        $namespace = 'PiwigoTest\\FixtureMissingPageRoutes' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin declaring hasPageRoutes without implementing PageRouteProviderInterface',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasPageRoutes' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class {$className} implements ExtensionInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+
+        try {
+            $registry->install($id);
+            self::fail('install() must throw when hasPageRoutes is declared but PageRouteProviderInterface is not implemented');
+        } catch (PluginValidationException $e) {
+            self::assertSame($id, $e->pluginId);
+            self::assertStringContainsString('PageRouteProviderInterface', $e->getMessage());
+        }
+    }
+
+    /**
+     * adminPages() -- a booted plugin implementing
+     * `AdminPageProviderInterface` gets its own contributed `?page=` slug
+     * merged into the returned map.
+     */
+    public function testAdminPagesReturnsABootedPluginsOwnSlugMap(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-admin-pages-' . $suffix;
+        $namespace = 'PiwigoTest\\FixtureAdminPages' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin contributing its own admin page slug',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasAdminPages' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\AdminPageProviderInterface;
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+
+            final class {$className} implements ExtensionInterface, AdminPageProviderInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+
+                public function registerAdminPages(): array
+                {
+                    return ['{$id}_settings' => \Piwigo\Controller\Admin\IntroSubController::class];
+                }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->install($id);
+        $registry->activate($id);
+        $registry->bootActive();
+
+        $pages = $registry->adminPages();
+
+        self::assertSame(IntroSubController::class, $pages[$id . '_settings'] ?? null);
+    }
+
+    /**
+     * adminPages() -- two active plugins declaring the same admin page
+     * slug is a real authoring conflict: silently letting the later
+     * plugin win would make the earlier plugin's own page permanently
+     * unreachable with no visible error, so this throws instead.
+     */
+    public function testAdminPagesThrowsOnInterPluginSlugCollision(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $slug = 'zz_shared_slug_' . $suffix;
+
+        foreach (['a', 'b'] as $letter) {
+            $id = "zz-admin-pages-collision-{$letter}-{$suffix}";
+            $namespace = "PiwigoTest\\FixtureAdminPagesCollision{$letter}{$suffix}";
+            $className = 'Plugin' . $suffix;
+            mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+            file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+                'id' => $id,
+                'name' => $id,
+                'version' => '1.0.0',
+                'description' => 'Fixture plugin colliding on the same admin page slug as its sibling',
+                'license' => 'MIT',
+                'minPiwigo' => '16.3.0',
+                'main' => $namespace . '\\' . $className,
+                'hasAdminPages' => true,
+                'autoload' => [
+                    'psr-4' => [
+                        $namespace . '\\' => 'src/',
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+            file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+                <?php
+
+                declare(strict_types=1);
+
+                namespace {$namespace};
+
+                use Piwigo\\PluginConfig\\AdminPageProviderInterface;
+                use Piwigo\\PluginConfig\\ExtensionContext;
+                use Piwigo\\PluginConfig\\ExtensionInterface;
+
+                final class {$className} implements ExtensionInterface, AdminPageProviderInterface
+                {
+                    public function boot(ExtensionContext \$context): void {}
+                    public function install(): void {}
+                    public function activate(): void {}
+                    public function deactivate(): void {}
+                    public function uninstall(): void {}
+                    public function update(string \$oldVersion, string \$newVersion): void {}
+                    public function subscribedEvents(): array { return []; }
+
+                    public function registerAdminPages(): array
+                    {
+                        return ['{$slug}' => \\Piwigo\\Controller\\Admin\\IntroSubController::class];
+                    }
+                }
+                PHP);
+
+            $registry = $this->buildRegistry($dir);
+            $registry->install($id);
+            $registry->activate($id);
+        }
+
+        $registry = $this->buildRegistry($dir);
+        $registry->bootActive();
+
+        $this->expectException(PluginValidationException::class);
+        $this->expectExceptionMessageIsOrContains($slug);
+        $registry->adminPages();
+    }
+
+    /**
+     * registerPageRoutes() -- a booted plugin implementing
+     * `PageRouteProviderInterface` gets its own `registerPageRoutes()`
+     * called and its route lands in the real, live `RouteCollection`
+     * passed in. Same shape as
+     * testRegisterApiRoutesAddsABootedPluginsRouteToTheCollection() above.
+     */
+    public function testRegisterPageRoutesAddsABootedPluginsRouteToTheCollection(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-page-routes-' . $suffix;
+        $namespace = 'PiwigoTest\\FixturePageRoutes' . $suffix;
+        $className = 'Plugin' . $suffix;
+        mkdir($dir . '/' . $id . '/src', 0o777, true);
+
+        file_put_contents($dir . '/' . $id . '/plugin.json', json_encode([
+            'id' => $id,
+            'name' => $id,
+            'version' => '1.0.0',
+            'description' => 'Fixture plugin registering its own public page route',
+            'license' => 'MIT',
+            'minPiwigo' => '16.3.0',
+            'main' => $namespace . '\\' . $className,
+            'hasPageRoutes' => true,
+            'autoload' => [
+                'psr-4' => [
+                    $namespace . '\\' => 'src/',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+
+        file_put_contents($dir . '/' . $id . '/src/' . $className . '.php', <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace {$namespace};
+
+            use Piwigo\\PluginConfig\\ExtensionContext;
+            use Piwigo\\PluginConfig\\ExtensionInterface;
+            use Piwigo\\PluginConfig\\PageRouteProviderInterface;
+            use Symfony\\Component\\Routing\\Route;
+            use Symfony\\Component\\Routing\\RouteCollection;
+
+            final class {$className} implements ExtensionInterface, PageRouteProviderInterface
+            {
+                public function boot(ExtensionContext \$context): void {}
+                public function install(): void {}
+                public function activate(): void {}
+                public function deactivate(): void {}
+                public function uninstall(): void {}
+                public function update(string \$oldVersion, string \$newVersion): void {}
+                public function subscribedEvents(): array { return []; }
+
+                public function registerPageRoutes(RouteCollection \$routes): void
+                {
+                    \$routes->add('{$id}_page', new Route(
+                        '/{$id}.php',
+                        defaults: ['_controller' => 'PingController'],
+                    ));
+                }
+            }
+            PHP);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->install($id);
+        $registry->activate($id);
+        $registry->bootActive();
+
+        $routes = new RouteCollection();
+        $registry->registerPageRoutes($routes);
+
+        $route = $routes->get($id . '_page');
+        self::assertNotNull($route, 'the booted plugin\'s page route must land in the collection');
+        self::assertSame('/' . $id . '.php', $route->getPath());
     }
 }

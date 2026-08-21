@@ -29,13 +29,11 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
@@ -77,7 +75,6 @@ final readonly class AdminShell
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private ConfigService $configService,
-        private Paths $paths,
         private FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private CoreTabs $coreTabs,
         private SessionService $sessionService,
@@ -239,11 +236,14 @@ final readonly class AdminShell
             }
         }
 
-        // A valid page slug is one registered in config/admin_pages.php --
-        // every admin page is dispatched to an AdminDispatcher
-        // sub-controller. Anything else falls back to 'intro'.
-        /** @var array<string, class-string<AdminSubControllerInterface>> $admin_pages */
-        $admin_pages = require $this->paths->root . 'config/admin_pages.php';
+        // A valid page slug is one registered in config/admin_pages.php,
+        // or (P43-E) contributed by an active plugin -- every admin page
+        // is dispatched to an AdminDispatcher sub-controller. Anything
+        // else falls back to 'intro'. AdminDispatcher::pageMap() (not a
+        // direct require of the static file) is the one merged source of
+        // truth this check and AdminDispatcher::dispatch() itself both
+        // read, so a plugin-contributed slug passes this check too.
+        $admin_pages = AdminDispatcher::pageMap();
 
         if (isset($_GET['page'])
             and is_string($_GET['page'])

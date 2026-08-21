@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Latte\Runtime\Html;
 use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use Override;
@@ -408,10 +407,9 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
         $controller = $this->buildController($registry, $id);
         $_GET['section'] = $id . '/admin.php';
 
-        $controller->handle(new ServerRequest('GET', '/admin.php'));
+        $rendered = $controller->handle(new ServerRequest('GET', '/admin.php'))
+            ->content;
 
-        $rendered = $this->containerGet(CurrentTemplate::class)->get()->getTemplateVars('ADMIN_CONTENT');
-        self::assertInstanceOf(Html::class, $rendered);
         self::assertStringContainsString('Fixture settings page rendered.', (string) $rendered);
     }
 

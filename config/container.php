@@ -93,6 +93,7 @@ use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Routing\ApiRouteRegistrarInterface;
+use Piwigo\Routing\PageRouteRegistrarInterface;
 use Piwigo\Routing\Router;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
@@ -273,6 +274,10 @@ return [
     // trivial fake. See src/Piwigo/Routing/ApiRouteRegistrarInterface.php's
     // own docblock.
     ApiRouteRegistrarInterface::class => get(CurrentPluginRegistry::class),
+
+    // Same shape as ApiRouteRegistrarInterface above, for
+    // PageRouteProviderInterface (P43-E) instead.
+    PageRouteRegistrarInterface::class => get(CurrentPluginRegistry::class),
 
     // Factory binding -- the value never actually varies per request
     // (always built from the same config/storage.php), so there's nothing

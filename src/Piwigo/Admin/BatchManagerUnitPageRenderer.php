@@ -22,6 +22,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
@@ -79,6 +80,7 @@ final readonly class BatchManagerUnitPageRenderer
         private InputValidator $inputValidator,
         private PermissionsCachePool $permissionsCachePool,
         private Renderer $renderer,
+        private Paths $paths,
     ) {}
 
     /**
@@ -459,6 +461,8 @@ final readonly class BatchManagerUnitPageRenderer
             elementIds: $element_ids_value,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             elements: $elements,
+            rootPath: $this->paths->root,
+            jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
         ));
 
         $template->assignContext(new AdminContentPageContext(

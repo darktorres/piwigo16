@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -28,7 +31,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * shape, same precedent as `PluginsInstalledView::$plugins`.
  */
 #[Template('batch_manager_global.latte')]
-final readonly class BatchManagerGlobalView implements View
+final readonly class BatchManagerGlobalView implements View, HasPageAssets
 {
     /**
      * @param list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>|null $associatedTags
@@ -53,5 +56,24 @@ final readonly class BatchManagerGlobalView implements View
         public int $nbThumbsSet,
         public array $cacheKeys,
         public array $thumbnails,
+        public string $rootPath,
+        public string $jqueryCode,
     ) {}
+
+    /**
+     * Only `include/datepicker.inc.latte`'s own contribution -- this
+     * page's own many other `combineCss`/`combineScript`/`exposeData`
+     * call sites (`docs/PLAN.md`'s P42-B colorbox-family batch) are not
+     * migrated yet, deliberately, and stay imperative for now; both
+     * sources coexist correctly (`PageAssets::add()`'s own dedup
+     * contract).
+     *
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return new DatepickerView(load_mode: 'async', rootPath: $this->rootPath, jqueryCode: $this->jqueryCode)
+            ->pageAssets();
+    }
 }

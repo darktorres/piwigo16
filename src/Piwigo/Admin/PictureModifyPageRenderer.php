@@ -447,6 +447,8 @@ final readonly class PictureModifyPageRenderer
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             csrfToken: $this->csrfService
                 ->getToken(),
+            rootPath: $this->paths->root,
+            jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

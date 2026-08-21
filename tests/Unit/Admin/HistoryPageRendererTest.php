@@ -119,7 +119,7 @@ test('render() defaults the date range to today and skips the user-id lookup whe
         }
 
         new HistoryPageRenderer()
-            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
+            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager, new Renderer(CurrentTemplateTestFactory::get()), Paths::fromRoot($root));
 
         $today = Env::now()->format('Y-m-d');
 

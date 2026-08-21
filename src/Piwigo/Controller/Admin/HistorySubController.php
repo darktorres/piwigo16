@@ -11,6 +11,7 @@ use Piwigo\Admin\HistoryPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -40,12 +41,13 @@ final readonly class HistorySubController implements AdminSubControllerInterface
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
         private Renderer $renderer,
+        private Paths $paths,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
         new HistoryPageRenderer()
-            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator, $this->entityManager, $this->renderer);
+            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator, $this->entityManager, $this->renderer, $this->paths);
     }
 }

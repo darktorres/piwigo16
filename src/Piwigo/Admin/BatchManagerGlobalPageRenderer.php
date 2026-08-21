@@ -585,6 +585,8 @@ final readonly class BatchManagerGlobalPageRenderer
             nbThumbsSet: count($cat_elements_id),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             thumbnails: $thumbnails,
+            rootPath: $this->paths->root,
+            jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

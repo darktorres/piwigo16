@@ -14,6 +14,7 @@ use Piwigo\Controller\Admin\Projection\AdminContentPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -38,7 +39,7 @@ final class HistoryPageRenderer
      * tab within the shared 'history' tabsheet group (see
      * StatsPageRenderer, its sibling in that same group).
      */
-    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager, Renderer $renderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, InputValidator $inputValidator, EntityManagerInterface $entityManager, Renderer $renderer, Paths $paths): void
     {
         $template = $currentTemplate->get();
 
@@ -83,6 +84,8 @@ final class HistoryPageRenderer
             start: $form['start'],
             end: $form['end'],
             guestId: $currentConfig->guestId,
+            rootPath: $paths->root,
+            jqueryCode: is_string($lang->langInfo()['jquery_code'] ?? null) ? $lang->langInfo()['jquery_code'] : '',
         ));
 
         $template->assignContext(new AdminContentPageContext(

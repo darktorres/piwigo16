@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin\Projection;
 
 use Latte\Runtime\Html;
 use Override;
+use Piwigo\Admin\Projection\AutosizeView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -46,6 +47,8 @@ final readonly class NotificationByMailView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
+            ...new AutosizeView()
+                ->pageAssets(),
             AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notification_by_mail.js', loadMode: LoadMode::Footer),
         ];
     }

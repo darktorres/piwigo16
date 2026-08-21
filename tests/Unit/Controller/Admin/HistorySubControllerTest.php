@@ -124,6 +124,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             new InputValidator(),
             $entityManager,
             new Renderer(CurrentTemplateTestFactory::get()),
+            Paths::fromRoot($root),
         );
 
         $subController->handle(new ServerRequest('GET', '/admin.php'));

@@ -268,6 +268,194 @@
             <input
               type="checkbox"
               class="filters-icon-check"
+              name="filters_views_box[tags]"
+              id="tagsFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Tags
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="tagsArrow"
+          ></div>
+          <select
+            name="filters_views[tags][access]"
+            id="ftagsSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="tagsAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="tagsAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[album]"
+              id="albumFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Album
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="albumArrow"
+          ></div>
+          <select
+            name="filters_views[album][access]"
+            id="falbumSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="albumAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="albumAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[ratio]"
+              id="ratioFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Ratio
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="ratioArrow"
+          ></div>
+          <select
+            name="filters_views[ratio][access]"
+            id="fratioSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="ratioAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="ratioAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[width]"
+              id="widthFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Width
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="widthArrow"
+          ></div>
+          <select
+            name="filters_views[width][access]"
+            id="fwidthSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="widthAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="widthAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
               name="filters_views_box[words]"
               id="wordsFilters"
               
@@ -315,22 +503,22 @@
             <input
               type="checkbox"
               class="filters-icon-check"
-              name="filters_views_box[tags]"
-              id="tagsFilters"
+              name="filters_views_box[author]"
+              id="authorFilters"
               
               checked="checked"
               
               
             >
-            Tags
+            Author
           </label>
           <div
             class='select-views-arrow icon-down-open'
-            id="tagsArrow"
+            id="authorArrow"
           ></div>
           <select
-            name="filters_views[tags][access]"
-            id="ftagsSelect"
+            name="filters_views[author][access]"
+            id="fauthorSelect"
             class="select-views"
           >
             <option
@@ -345,13 +533,295 @@
             >Registered users</option>
             <option
               value="admins-only"
-              id="tagsAdmin"
+              id="authorAdmin"
               
             >Admins only</option>
           </select>
           <div
             class='icon-users select-views-admin'
-            id="tagsAdminIcon"
+            id="authorAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[expert]"
+              id="expertFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Expert mode
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="expertArrow"
+          ></div>
+          <select
+            name="filters_views[expert][access]"
+            id="fexpertSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="expertAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="expertAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[height]"
+              id="heightFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Height
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="heightArrow"
+          ></div>
+          <select
+            name="filters_views[height][access]"
+            id="fheightSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="heightAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="heightAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[rating]"
+              id="ratingFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Rating
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="ratingArrow"
+          ></div>
+          <select
+            name="filters_views[rating][access]"
+            id="fratingSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="ratingAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="ratingAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[added_by]"
+              id="added_byFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Added by
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="added_byArrow"
+          ></div>
+          <select
+            name="filters_views[added_by][access]"
+            id="fadded_bySelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="added_byAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="added_byAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[file_size]"
+              id="file_sizeFilters"
+              
+              checked="checked"
+              
+              
+            >
+            Filesize
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="file_sizeArrow"
+          ></div>
+          <select
+            name="filters_views[file_size][access]"
+            id="ffile_sizeSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="file_sizeAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="file_sizeAdminIcon"
+          ></div>
+        </li>
+        <li
+          class="filters-grid"
+        >
+          <label class="font-checkbox">
+            <span class="icon-check"></span>
+            <input
+              type="checkbox"
+              class="filters-icon-check"
+              name="filters_views_box[file_type]"
+              id="file_typeFilters"
+              
+              checked="checked"
+              
+              
+            >
+            File type
+          </label>
+          <div
+            class='select-views-arrow icon-down-open'
+            id="file_typeArrow"
+          ></div>
+          <select
+            name="filters_views[file_type][access]"
+            id="ffile_typeSelect"
+            class="select-views"
+          >
+            <option
+              value="everybody"
+              
+              selected
+              
+            >Everybody</option>
+            <option
+              value="registered-users"
+              
+            >Registered users</option>
+            <option
+              value="admins-only"
+              id="file_typeAdmin"
+              
+            >Admins only</option>
+          </select>
+          <div
+            class='icon-users select-views-admin'
+            id="file_typeAdminIcon"
           ></div>
         </li>
         <li
@@ -446,476 +916,6 @@
           <div
             class='icon-users select-views-admin'
             id="creation_dateAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[album]"
-              id="albumFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Album
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="albumArrow"
-          ></div>
-          <select
-            name="filters_views[album][access]"
-            id="falbumSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="albumAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="albumAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[author]"
-              id="authorFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Author
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="authorArrow"
-          ></div>
-          <select
-            name="filters_views[author][access]"
-            id="fauthorSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="authorAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="authorAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[added_by]"
-              id="added_byFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Added by
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="added_byArrow"
-          ></div>
-          <select
-            name="filters_views[added_by][access]"
-            id="fadded_bySelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="added_byAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="added_byAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[file_type]"
-              id="file_typeFilters"
-              
-              checked="checked"
-              
-              
-            >
-            File type
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="file_typeArrow"
-          ></div>
-          <select
-            name="filters_views[file_type][access]"
-            id="ffile_typeSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="file_typeAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="file_typeAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[ratio]"
-              id="ratioFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Ratio
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="ratioArrow"
-          ></div>
-          <select
-            name="filters_views[ratio][access]"
-            id="fratioSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="ratioAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="ratioAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[rating]"
-              id="ratingFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Rating
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="ratingArrow"
-          ></div>
-          <select
-            name="filters_views[rating][access]"
-            id="fratingSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="ratingAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="ratingAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[file_size]"
-              id="file_sizeFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Filesize
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="file_sizeArrow"
-          ></div>
-          <select
-            name="filters_views[file_size][access]"
-            id="ffile_sizeSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="file_sizeAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="file_sizeAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[height]"
-              id="heightFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Height
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="heightArrow"
-          ></div>
-          <select
-            name="filters_views[height][access]"
-            id="fheightSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="heightAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="heightAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[width]"
-              id="widthFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Width
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="widthArrow"
-          ></div>
-          <select
-            name="filters_views[width][access]"
-            id="fwidthSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="widthAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="widthAdminIcon"
-          ></div>
-        </li>
-        <li
-          class="filters-grid"
-        >
-          <label class="font-checkbox">
-            <span class="icon-check"></span>
-            <input
-              type="checkbox"
-              class="filters-icon-check"
-              name="filters_views_box[expert]"
-              id="expertFilters"
-              
-              checked="checked"
-              
-              
-            >
-            Expert mode
-          </label>
-          <div
-            class='select-views-arrow icon-down-open'
-            id="expertArrow"
-          ></div>
-          <select
-            name="filters_views[expert][access]"
-            id="fexpertSelect"
-            class="select-views"
-          >
-            <option
-              value="everybody"
-              
-              selected
-              
-            >Everybody</option>
-            <option
-              value="registered-users"
-              
-            >Registered users</option>
-            <option
-              value="admins-only"
-              id="expertAdmin"
-              
-            >Admins only</option>
-          </select>
-          <div
-            class='icon-users select-views-admin'
-            id="expertAdminIcon"
           ></div>
         </li>
       </ul>
@@ -1213,8 +1213,7 @@
       </div>
     </div>
 
-
-    <script type="application/json" id="page-data">{"data":{"filters_names":["words","tags","post_date","creation_date","album","author","added_by","file_type","ratio","rating","file_size","height","width","expert"],"active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+    <script type="application/json" id="page-data">{"data":{"filters_names":["tags","album","ratio","width","words","author","expert","height","rating","added_by","file_size","file_type","post_date","creation_date"],"active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
     <script type="text/javascript" src="themes/admin/default/js/common.js?v17.0.0"></script>
     <script type="text/javascript" src="themes/default/js/plugins/jquery.colorbox.min.js?v17.0.0"></script>

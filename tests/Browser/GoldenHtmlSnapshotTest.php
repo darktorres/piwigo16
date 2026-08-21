@@ -195,6 +195,22 @@ function goldenHtmlDir(): string
  *    -- normalizing it away here would hide that finding instead of
  *    surfacing it on every future run.
  *
+ *  - `admin-dashboard`'s own activity-tooltip counts (`>N Activities</span>`,
+ *    `title="N login"`/`title="N additions"`-style `tooltip-detail` spans,
+ *    and the bare `(Activate) N`/`(Install) N` "System" entries): real
+ *    `ActivityService::getDailyActionCountsSince()` totals, cumulative
+ *    across every login/upload/edit/etc. any Browser test (this file's
+ *    own suite included) has ever performed against the shared test DB
+ *    since its last reimport -- confirmed live: every count in this one
+ *    block drifted between two runs of this same suite, not just the 2
+ *    that happened to produce a visible diff on any single comparison.
+ *    Unlike `random.php`'s ordering below, this isn't randomness by
+ *    design -- it's real, meaningful production data whose specific
+ *    *value* golden-html was never positioned to verify (VR/screenshot
+ *    tests catch a real layout regression; this test's own job is
+ *    markup structure) -- so the numbers are normalized, not the
+ *    surrounding structure.
+ *
  * Deliberately NOT normalized at all: `random.php`'s photo ordering
  * (`list/4,3,1,2,5` vs. `list/5,1,2,3,4`) -- inherently random by design,
  * not a bug; that route cannot be byte-compared without the app itself
@@ -217,6 +233,9 @@ function goldenHtmlNormalize(string $html): string
     $html = preg_replace('#[0-9]{9,11}(?:\.[0-9]+)?:[0-9]+:\{\{TOKEN\}\}#', '{{ANTIBOT_KEY}}', $html) ?? $html;
     $html = preg_replace('#feed=[A-Za-z0-9]{40,60}#', 'feed={{FEED_TOKEN}}', $html) ?? $html;
     $html = preg_replace('#(psk-[0-9]{8}-)[A-Za-z0-9]{10}#', '$1{{SEARCH_SUFFIX}}', $html) ?? $html;
+    $html = preg_replace('#(class="tooltip-title"\s*>)\d+( Activit(?:y|ies)</span>)#', '$1{{N}}$2', $html) ?? $html;
+    $html = preg_replace('#(tooltip-detail"\s*title=")\d+( [a-z ]+"\s*>)\d+(</span>)#', '$1{{N}}$2{{N}}$3', $html) ?? $html;
+    $html = preg_replace('#(<span> \([A-Za-z]+\) )\d+( </span>)#', '$1{{N}}$2', $html) ?? $html;
 
     // This checkout's own absolute filesystem path, which real pages do
     // print: a site's `galleries_url` is seeded as an absolute path by

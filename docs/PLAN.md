@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A in progress: `ButtonContribution`/`ActionContribution`/`PanelLink` (`Piwigo\Contribution\`) landed, replacing `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`; remaining P43-A kinds (picture info row, profile/register field, auth button, thumbnail overlay, menu item, `FieldOverride`, `FormProvider`) not started. P43-C–F not started | 2 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A in progress: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow` (`Piwigo\Contribution\`) landed, replacing `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/hand-written `set_prefilter('picture', ...)` patches; remaining P43-A kinds (profile/register field, auth button, thumbnail overlay, menu item, `FieldOverride`, `FormProvider`) not started. P43-C–F not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3609,9 +3609,26 @@ plugin author writes no JS of their own. `SlideshowView`'s own dead
 `slideshow.latte`) was dropped while this exact area was already being
 touched, not carried forward into the new typed system.
 `parseIndexButtons()`/`parsePictureButtons()` (zero real callers) were
-deleted outright. The remaining P43-A kinds — picture info row,
-profile/register field, auth button, thumbnail overlay, menu item,
-`FieldOverride`, `FormProvider` — are each their own follow-up
+deleted outright.
+
+**P43-A, part 2 (landed) — typed picture info row.**
+`Piwigo\Contribution\PictureInfoRow` replaces a hand-written
+`set_prefilter('picture', ...)` regex/`str_replace()` patch against
+`picture.latte`'s `<dl id="standard" class="imageInfoTable">` list —
+real-plugin field-shape research first (`~/piwigo16-plugins`: 42 real
+`set_prefilter('picture', ...)` sites; `Copyrights`, `download_counter`,
+`Extended_author`, `piwigo-openstreetmap`, `piwigo-forecast` read in
+full) confirmed `$value` needs to accept a raw `Html` fragment, not
+just plain text — `piwigo-openstreetmap` embeds a `<div id="map">`
+widget, `piwigo-forecast` emits multi-line `<b>`/`<br>`-formatted
+weather data. Same collector shape as `ButtonContribution`/
+`ActionContribution` (`Template::$pictureInfoRows`/
+`addPictureInfoRow()`/`pictureInfoRows()`, reusing the existing
+`flattenByOrder()` helper) — no new abstraction. Wired through
+`PictureView::$pluginPictureInfoRows`; not added to `SlideshowView`,
+which never renders the `imageInfoTable` block. The remaining P43-A
+kinds — profile/register field, auth button, thumbnail overlay, menu
+item, `FieldOverride`, `FormProvider` — are each their own follow-up
 increment, gated by their own real-plugin field-shape research before
 design.
 

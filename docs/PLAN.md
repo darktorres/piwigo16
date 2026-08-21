@@ -3618,11 +3618,16 @@ deleted outright.
 real-plugin field-shape research first (`~/piwigo16-plugins`: 42 real
 `set_prefilter('picture', ...)` sites; `Copyrights`, `download_counter`,
 `Extended_author`, `piwigo-openstreetmap`, `piwigo-forecast` read in
-full) confirmed `$value` needs to accept a raw `Html` fragment, not
-just plain text — `piwigo-openstreetmap` embeds a `<div id="map">`
-widget, `piwigo-forecast` emits multi-line `<b>`/`<br>`-formatted
-weather data. Same collector shape as `ButtonContribution`/
-`ActionContribution` (`Template::$pictureInfoRows`/
+full). `$value` is a plain, always-escaped `string` — no `Html` escape
+hatch: an initial design let `$value` accept raw `Html`, justified by
+`piwigo-openstreetmap`'s `<div id="map">` widget and
+`piwigo-forecast`'s multi-line formatted weather data, but neither
+plugin is ported yet — P43's contributions are typed value objects
+specifically so there's no raw-HTML surface to reason about, so the
+escape hatch was dropped; a plugin whose real content needs richer
+markup gets a typed answer for that when it's actually ported, not a
+passthrough kept around on spec. Same collector shape as
+`ButtonContribution`/`ActionContribution` (`Template::$pictureInfoRows`/
 `addPictureInfoRow()`/`pictureInfoRows()`, reusing the existing
 `flattenByOrder()` helper) — no new abstraction. Wired through
 `PictureView::$pluginPictureInfoRows`; not added to `SlideshowView`,

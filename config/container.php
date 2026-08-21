@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Doctrine\ORM\EntityManagerInterface;
@@ -319,10 +320,26 @@ return [
     // ImageStdParams' own already-documented "not yet loaded" baseline
     // (see getWatermark()'s own docblock) -- exactly the state a real
     // pre-migration bin/piwigo invocation needs, not a new fallback path.
+    //
+    // The tablesExist() check itself needs a working DB connection to run
+    // at all -- Admin\Install\InstallWizard::boot() constructs a Template
+    // (which resolves ImageStdParams) before performInstall() creates the
+    // schema, and on the very first GET to install.php (before any form
+    // is submitted) DbCredentials::seed() runs with an empty $dbuser, so
+    // the connection attempt itself throws Doctrine\DBAL\Exception\
+    // ConnectionException -- a failure tablesExist() can't gracefully
+    // return false from, since it never gets a connection to query.
+    // Template's own constructor already tolerates this identical failure
+    // class (TableNotFoundException and ConnectionException, both caught
+    // via their common Doctrine\DBAL\Exception interface) for the same
+    // reason -- see its own try/catch around confUpdateParam().
     ImageStdParams::class => factory(static function (): ImageStdParams {
         $imageStdParams = new ImageStdParams();
-        if (DbConnection::build()->createSchemaManager()->tablesExist(['derivative_settings'])) {
-            $imageStdParams->loadFromDb();
+        try {
+            if (DbConnection::build()->createSchemaManager()->tablesExist(['derivative_settings'])) {
+                $imageStdParams->loadFromDb();
+            }
+        } catch (Exception) {
         }
         return $imageStdParams;
     }),

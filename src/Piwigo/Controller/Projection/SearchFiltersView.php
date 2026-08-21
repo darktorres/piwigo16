@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Projection;
 
 use Override;
 use Piwigo\Admin\Projection\AlbumSelectorView;
+use Piwigo\Admin\Projection\ColorboxView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -101,6 +102,12 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')
+                ->pageAssets(),
+            // include/colorbox.inc.latte's own contribution -- reached
+            // transitively via album_selector.inc.latte's own nested
+            // include (docs/PLAN.md's P42-B) -- resolves last among
+            // these 3, matching the accepted golden-html baseline.
+            ...new ColorboxView()
                 ->pageAssets(),
         ];
     }

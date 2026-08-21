@@ -82,6 +82,12 @@ final readonly class CatModifyView implements View, HasPageAssets, ExposesPageDa
             AssetContribution::script('jquery.tipTip', 'themes/default/js/plugins/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
             ...new AlbumSelectorView()
                 ->pageAssets(),
+            // include/colorbox.inc.latte's own contribution -- reached
+            // transitively via album_selector.inc.latte's own nested
+            // include (docs/PLAN.md's P42-B) -- resolves after it,
+            // matching the accepted golden-html baseline.
+            ...new ColorboxView()
+                ->pageAssets(),
         ];
     }
 

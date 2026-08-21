@@ -20,12 +20,13 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * (`search_filters.inc.latte`, `batch_manager_filter.inc.latte`), both
  * passing the one real variable this body reads.
  *
- * `pageAssets()` (docs/PLAN.md's P42-B) is merged in by
- * `SearchFiltersView`, the one real parent already migrated -- this
- * file's own `{do combineCss}` call stays live too, since the other
- * real parent (`batch_manager_filter.inc.latte`) isn't migrated yet;
- * both sources coexist correctly (`PageAssets::add()`'s own dedup
- * contract).
+ * `pageAssets()` (docs/PLAN.md's P42-B) is merged in by both real
+ * parents' own Views (`SearchFiltersView` directly;
+ * `BatchManagerUnitView`/`BatchManagerGlobalView`, since
+ * `batch_manager_filter.inc.latte` itself is the other real caller) --
+ * this file's own former `{do combineCss}` call was removed once both
+ * were confirmed covered. Its own real markup (the quick-search-syntax
+ * popin) still needs a plain `{include}` at each real call site.
  */
 #[TemplateAttr('help/quick_search.latte')]
 final readonly class QuickSearchView implements View, HasPageAssets

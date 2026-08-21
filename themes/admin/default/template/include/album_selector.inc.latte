@@ -1,7 +1,5 @@
 {templateType Piwigo\Admin\Projection\AlbumSelectorView}
 {if once('inc_album_selector')}
-  {if empty($load_mode)}{var $load_mode = 'footer'}{/if}
-  {include 'colorbox.inc.latte', load_mode: $load_mode}
 
   <div id="addLinkedAlbum" class="linkedAlbumPopIn">
     <div class="linkedAlbumPopInContainer">

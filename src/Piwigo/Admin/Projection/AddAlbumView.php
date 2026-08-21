@@ -38,11 +38,13 @@ final readonly class AddAlbumView implements View, HasPageAssets
     ) {}
 
     /**
-     * `include/colorbox.inc.latte`'s own contribution (still imperative
-     * -- docs/PLAN.md's P42-B colorbox-family batch) is deliberately
-     * NOT merged in here: this file's own `{include 'colorbox.inc.latte'}`
-     * line stays live, so merging it too would just be a redundant
-     * duplicate registration one level removed.
+     * `include/colorbox.inc.latte`'s own contribution is deliberately
+     * NOT merged in here (docs/PLAN.md's P42-B): both of this file's own
+     * real parents (`BatchManagerGlobalView`/`PhotosAddDirectView`)
+     * already merge `ColorboxView` directly, so a merge here would just
+     * be a redundant duplicate registration one level removed --
+     * `include/colorbox.inc.latte`'s own `{include}` line was removed
+     * from this file once that coverage was confirmed complete.
      *
      * @return list<AssetContribution>
      */

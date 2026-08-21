@@ -11,6 +11,7 @@ use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
+use Piwigo\Template\Projection\QuickSearchView;
 
 /**
  * `batch_manager_unit.latte`'s own typed view, constructed by {@see
@@ -120,6 +121,12 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.js', loadMode: LoadMode::Footer),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
+            // quick_search.latte's own contribution, reached via
+            // batch_manager_filter.inc.latte's own {include} of it --
+            // resolves after batch_manager_filter's own registrations
+            // above, matching the accepted golden-html baseline.
+            ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')
+                ->pageAssets(),
             AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async),
         ];
     }

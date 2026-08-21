@@ -32,11 +32,13 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * `pageAssets()`/`exposedStrings()`; `once()`'s own dedup concern
  * doesn't apply to those, since `PageAssets::add()`/`Template::
  * exposeString()` are already dedup-safe regardless of call count.
- * `include/colorbox.inc.latte`'s own contribution (still imperative --
- * see that file's own docblock) is deliberately NOT merged in here for
- * the identical reason `AddAlbumView` doesn't: this file's own
- * `{include 'colorbox.inc.latte', load_mode: $load_mode}` line stays
- * live.
+ * `include/colorbox.inc.latte`'s own contribution is deliberately NOT
+ * merged in here (docs/PLAN.md's P42-B), for the identical reason
+ * `AddAlbumView` doesn't: every one of this file's 7 real parents
+ * already merges `ColorboxView` directly, so this file's own former
+ * `{include 'colorbox.inc.latte', load_mode: $load_mode}` line (and the
+ * `$load_mode` default it fed) was removed once that coverage was
+ * confirmed complete.
  *
  * `$load_mode` is genuinely optional -- the template's own
  * `{if empty($load_mode)}{var $load_mode = 'footer'}{/if}` default

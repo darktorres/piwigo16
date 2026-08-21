@@ -11,7 +11,6 @@
   {include 'infos_errors.latte'}
 </div>
 
-{if !empty($PLUGIN_INDEX_CONTENT_BEFORE)}{$PLUGIN_INDEX_CONTENT_BEFORE|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage{if isset($chronology['TITLE'])} calendarTitleBar{/if}">
     <ul class="categoryActions">
@@ -245,8 +244,6 @@
     >{$chronology['TITLE']|noescape}</h2>
   </div>{* <!-- titrePage --> *}
 
-  {if !empty($PLUGIN_INDEX_CONTENT_BEGIN)}{$PLUGIN_INDEX_CONTENT_BEGIN|noescape}{/if}
-
   <p
     n:if="!empty($noSearchResults)"
     class="search_results"
@@ -345,7 +342,5 @@
     {include 'navigation_bar.latte', navbar: $thumbNavbar}
   {/if}
 
-  {if !empty($PLUGIN_INDEX_CONTENT_END)}{$PLUGIN_INDEX_CONTENT_END|noescape}{/if}
 </div>{* <!-- content --> *}
-{if !empty($PLUGIN_INDEX_CONTENT_AFTER)}{$PLUGIN_INDEX_CONTENT_AFTER|noescape}{/if}
 {/block}

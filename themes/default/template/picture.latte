@@ -7,8 +7,6 @@
     {include 'infos_errors.latte'}
   {/if}
 
-  {if !empty($PLUGIN_PICTURE_BEFORE)}{$PLUGIN_PICTURE_BEFORE|noescape}{/if}
-
   <div id="imageHeaderBar">
     <div class="browsePath">
       {$sectionTitle|noescape}<span
@@ -204,7 +202,7 @@
   </div>{* imageToolBar *}
 
   <div id="theImageAndInfos">
-    <div id="theImage">
+    <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
       {$elementContent|noescape}
 
       {if isset($commentImg)}
@@ -392,6 +390,7 @@
                           type="button"
                           name="rate"
                           value="{$mark}"
+                          id="rate-{$mark}"
                           class="rateButtonSelected"
                           title="{$mark}"
                         >
@@ -400,6 +399,7 @@
                           type="submit"
                           name="rate"
                           value="{$mark}"
+                          id="rate-{$mark}"
                           class="rateButton"
                           title="{$mark}"
                         >
@@ -524,7 +524,5 @@
       </div>
     </div>
   {/if}{* comments *}
-
-  {if !empty($PLUGIN_PICTURE_AFTER)}{$PLUGIN_PICTURE_AFTER|noescape}{/if}
 </div>
 {/block}

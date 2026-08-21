@@ -10,7 +10,10 @@
     {if $cat['representative']}
       {var $derivative = $pwg->derivative($derivativeParams, $cat['representative']['src_image'])}
     {/if}
-    <li class="{if $iterator->counter0 % 2 !== 0}odd{else}even{/if}">
+    <li
+      class="{if $iterator->counter0 % 2 !== 0}odd{else}even{/if}"
+      data-category-id="{$cat['id']}"
+    >
       <div class="thumbnailCategory">
         <div class="illustration">
           <a href="{$cat['URL']|noescape}">

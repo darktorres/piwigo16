@@ -19,7 +19,7 @@
   </div>
 
   <div id="content">
-    <div id="theImage">
+    <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
       {$elementContent|noescape}
       <p
         n:if="isset($commentImg)"

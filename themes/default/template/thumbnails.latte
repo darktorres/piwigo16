@@ -15,7 +15,7 @@
     }</style>
     {foreach $thumbnails as $thumbnail}
       {var $derivative = $pwg->derivative($derivativeParams, $thumbnail['src_image'])}
-      <li>
+      <li data-image-id="{$thumbnail['id']}">
         <span class="wrap1">
           <span class="wrap2">
             <span

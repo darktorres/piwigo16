@@ -1,8 +1,6 @@
 {templateType Piwigo\Admin\Projection\AdminShellView}
 {layout 'layout.latte'}
 {block content}
-{do exposeData('active_menu', $activeMenu)}
-{do combineScript(id: 'admin', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/admin.js')}
 
 <div id="menubar">
   <div id="adminHome"><a href="{$uAdmin|noescape}" class="admin-main"><i
@@ -144,8 +142,6 @@
     {$TABSHEET|noescape}
   {/if}
   {if isset($U_HELP)}
-    {include 'include/colorbox.inc.latte'}
-    {do combineScript(id: 'admin_help', load: 'footer', require: 'jquery.colorbox', path: 'themes/admin/default/js/admin_help.js')}
     <ul class="HelpActions">
       <li><a
           href="{$U_HELP|noescape}&amp;output=content_only"

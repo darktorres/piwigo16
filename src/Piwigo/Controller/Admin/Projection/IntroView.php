@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\Projection\ColorboxView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -64,6 +65,8 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
+            ...new ColorboxView()
+                ->pageAssets(),
             AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::script('intro', 'themes/admin/default/js/intro.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip', 'page-data']),
             AssetContribution::script('intro_tooltips', 'themes/admin/default/js/intro_tooltips.js', loadMode: LoadMode::Footer),

@@ -66,12 +66,12 @@ final readonly class PictureModifyView implements View, HasPageAssets
     ) {}
 
     /**
-     * Only `include/autosize.inc.latte`'s and `include/datepicker.inc.latte`'s
-     * own contributions -- this page's own many other
-     * `combineCss`/`combineScript` call sites (`docs/PLAN.md`'s P42-B
-     * colorbox-family batch) are not migrated yet, deliberately, and
-     * stay imperative for now; both sources coexist correctly
-     * (`PageAssets::add()`'s own dedup contract).
+     * Only `include/autosize.inc.latte`'s, `include/datepicker.inc.latte`'s,
+     * and `include/colorbox.inc.latte`'s own contributions -- this
+     * page's own many other `combineCss`/`combineScript` call sites
+     * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
+     * yet, deliberately, and stay imperative for now; both sources
+     * coexist correctly (`PageAssets::add()`'s own dedup contract).
      *
      * @return list<AssetContribution>
      */
@@ -82,6 +82,8 @@ final readonly class PictureModifyView implements View, HasPageAssets
             ...new AutosizeView()
                 ->pageAssets(),
             ...new DatepickerView(rootPath: $this->rootPath, jqueryCode: $this->jqueryCode)
+                ->pageAssets(),
+            ...new ColorboxView()
                 ->pageAssets(),
         ];
     }

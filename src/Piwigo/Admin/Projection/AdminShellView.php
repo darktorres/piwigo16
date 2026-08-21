@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -33,10 +38,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * property on this page-specific View.
  */
 #[Template('admin.latte')]
-final readonly class AdminShellView implements View
+final readonly class AdminShellView implements View, HasPageAssets, ExposesPageData
 {
     public function __construct(
         public int $activeMenu,
+        public bool $hasHelp,
         public bool $enableSynchronization,
         public string $uHistoryStat,
         public string $uMaintenance,
@@ -66,4 +72,53 @@ final readonly class AdminShellView implements View
         public int $nbOrphans,
         public string $uOrphans,
     ) {}
+
+    /**
+     * `admin_help`/`include/colorbox.inc.latte`'s own contribution is
+     * genuinely conditional -- both sat inside the template's own
+     * `{if isset($U_HELP)}` block, gated on `AdminContentPageContext::
+     * $helpUrl` (per-sub-page ambient, assigned before this View is
+     * constructed -- see this class's own docblock). `$hasHelp` mirrors
+     * that same `isset()` check.
+     *
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        $assets = [
+            AssetContribution::script('admin', 'themes/admin/default/js/admin.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+        ];
+
+        if ($this->hasHelp) {
+            $assets = [
+                ...$assets,
+                ...new ColorboxView()
+                    ->pageAssets(),
+                AssetContribution::script('admin_help', 'themes/admin/default/js/admin_help.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox']),
+            ];
+        }
+
+        return $assets;
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'active_menu' => $this->activeMenu,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [];
+    }
 }

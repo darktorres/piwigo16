@@ -36,6 +36,8 @@ final readonly class ThemesNewView implements View, HasPageAssets, ExposesPageDa
     public function pageAssets(): array
     {
         return [
+            ...new ColorboxView()
+                ->pageAssets(),
             AssetContribution::script('themes_new', 'themes/admin/default/js/themes_new.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];
     }

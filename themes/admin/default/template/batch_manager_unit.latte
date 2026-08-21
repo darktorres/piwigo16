@@ -1,4 +1,9 @@
 {templateType Piwigo\Admin\Projection\BatchManagerUnitView}
+{* Kept -- BatchManagerUnitView::pageAssets() already merges in
+   ColorboxView's own contribution too (PageAssets::add()'s dedup makes
+   this a harmless no-op); removing this line triggers an unrelated
+   phpstan-latte "implicit array creation" false positive on this
+   file's own $all_selected_album loop further down. *}
 {include 'include/colorbox.inc.latte'}
 
 {do combineScript(id: 'jquery.sort', load: 'footer', path: 'themes/default/js/plugins/jquery.sort.js')}

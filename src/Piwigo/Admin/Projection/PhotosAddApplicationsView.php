@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -14,4 +18,19 @@ use Piwigo\Template\Latte\Attribute\Template;
  * page-specific data.
  */
 #[Template('photos_add_applications.latte')]
-final readonly class PhotosAddApplicationsView implements View {}
+final readonly class PhotosAddApplicationsView implements View, HasPageAssets
+{
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            ...new ColorboxView()
+                ->pageAssets(),
+            AssetContribution::script('photos_add_applications', 'themes/admin/default/js/photos_add_applications.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox']),
+            AssetContribution::css('themes/admin/default/css/pages/photos_add_applications.css', id: 'photos_add_applications'),
+        ];
+    }
+}

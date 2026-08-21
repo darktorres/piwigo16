@@ -47,6 +47,8 @@ final readonly class UserActivityView implements View, HasPageAssets, ExposesPag
     public function pageAssets(): array
     {
         return [
+            ...new ColorboxView()
+                ->pageAssets(),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),

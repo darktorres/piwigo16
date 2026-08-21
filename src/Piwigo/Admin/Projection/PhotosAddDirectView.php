@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -20,7 +23,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * has zero real references at all.
  */
 #[Template('photos_add_direct.latte')]
-final readonly class PhotosAddDirectView implements View
+final readonly class PhotosAddDirectView implements View, HasPageAssets
 {
     /**
      * @param array<array-key, mixed>|null $formatsOriginalInfo
@@ -58,4 +61,21 @@ final readonly class PhotosAddDirectView implements View
         public array $setupWarnings,
         public ?string $hideWarningsLink,
     ) {}
+
+    /**
+     * Only `include/colorbox.inc.latte`'s own contribution -- this
+     * page's own many other `combineCss`/`combineScript`/`exposeData`/
+     * `exposeString` call sites (`docs/PLAN.md`'s P42-B colorbox-family
+     * batch) are not migrated yet, deliberately, and stay imperative
+     * for now; both sources coexist correctly (`PageAssets::add()`'s
+     * own dedup contract).
+     *
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return new ColorboxView()
+            ->pageAssets();
+    }
 }

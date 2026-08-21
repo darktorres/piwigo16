@@ -476,6 +476,7 @@ final readonly class AdminShell
 
         $adminShellView = new AdminShellView(
             activeMenu: AdminUiHelper::getActiveMenu($page_slug),
+            hasHelp: $template->getTemplateVars('U_HELP') !== null,
             enableSynchronization: $this->currentConfig->enableSynchronization,
             uHistoryStat: $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
             uMaintenance: $link_start . 'maintenance',

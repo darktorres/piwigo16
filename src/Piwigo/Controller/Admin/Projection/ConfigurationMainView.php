@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\Projection\ColorboxView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -43,6 +44,8 @@ final readonly class ConfigurationMainView implements View, HasPageAssets, Expos
     public function pageAssets(): array
     {
         return [
+            ...new ColorboxView()
+                ->pageAssets(),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
             AssetContribution::script('configuration_main', 'themes/admin/default/js/configuration_main.js', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.tipTip', 'jquery.colorbox', 'page-data']),
             AssetContribution::css('themes/admin/default/css/pages/configuration_main.css', id: 'configuration_main'),

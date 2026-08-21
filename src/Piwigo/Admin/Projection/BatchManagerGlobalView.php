@@ -61,19 +61,23 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets
     ) {}
 
     /**
-     * Only `include/datepicker.inc.latte`'s own contribution -- this
-     * page's own many other `combineCss`/`combineScript`/`exposeData`
-     * call sites (`docs/PLAN.md`'s P42-B colorbox-family batch) are not
-     * migrated yet, deliberately, and stay imperative for now; both
-     * sources coexist correctly (`PageAssets::add()`'s own dedup
-     * contract).
+     * Only `include/datepicker.inc.latte`'s and `include/colorbox.inc.latte`'s
+     * own contributions -- this page's own many other
+     * `combineCss`/`combineScript`/`exposeData` call sites
+     * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
+     * yet, deliberately, and stay imperative for now; both sources
+     * coexist correctly (`PageAssets::add()`'s own dedup contract).
      *
      * @return list<AssetContribution>
      */
     #[Override]
     public function pageAssets(): array
     {
-        return new DatepickerView(load_mode: 'async', rootPath: $this->rootPath, jqueryCode: $this->jqueryCode)
-            ->pageAssets();
+        return [
+            ...new DatepickerView(load_mode: 'async', rootPath: $this->rootPath, jqueryCode: $this->jqueryCode)
+                ->pageAssets(),
+            ...new ColorboxView(load_mode: 'footer')
+                ->pageAssets(),
+        ];
     }
 }

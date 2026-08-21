@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -17,7 +22,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `ADMIN_CONTENT` afterward -- see this file's own trailing comment.
  */
 #[Template('intro.latte')]
-final readonly class IntroView implements View
+final readonly class IntroView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<string> $activityWeekNumber
@@ -51,4 +56,61 @@ final readonly class IntroView implements View
         public float $storageTotal,
         public array $storageChartData,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('intro', 'themes/admin/default/js/intro.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip', 'page-data']),
+            AssetContribution::script('intro_tooltips', 'themes/admin/default/js/intro_tooltips.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/admin/default/css/pages/intro.css', id: 'intro'),
+        ];
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [
+            'storage_total' => $this->storageTotal,
+            'storage_chart_data' => $this->storageChartData,
+            'check_for_updates' => $this->checkForUpdates,
+            'subscribe_base_url' => $this->subscribeBaseUrl,
+            'email' => $this->email,
+            'old_newsletters_url' => $this->oldNewslettersUrl,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        $strings = [
+            'A new version of Piwigo is available.',
+            'Some upgrades are available for extensions.',
+            '%s GB used',
+            '%s MB used',
+            '%sGB',
+            '%sMB',
+            '%d files',
+            ...array_keys($this->storageChartData),
+        ];
+
+        if ($this->subscribeBaseUrl !== null) {
+            $strings[] = 'Subscribe to our newsletter and stay updated!';
+            $strings[] = 'Sign up to the newsletter';
+            $strings[] = 'See previous newsletters';
+            $strings[] = 'Understood, do not show again';
+        }
+
+        return $strings;
+    }
 }

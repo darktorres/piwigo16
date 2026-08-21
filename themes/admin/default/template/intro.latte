@@ -1,35 +1,6 @@
 {templateType Piwigo\Controller\Admin\Projection\IntroView}
 {include 'include/colorbox.inc.latte'}
 
-{do combineScript(id: 'jquery.cluetip', load: 'async', require: 'jquery', path: 'themes/default/js/plugins/jquery.cluetip.js')}
-
-{do exposeString('A new version of Piwigo is available.')}
-{do exposeString('Some upgrades are available for extensions.')}
-{do exposeString('%s GB used')}
-{do exposeString('%s MB used')}
-{do exposeString('%sGB')}
-{do exposeString('%sMB')}
-{do exposeString('%d files')}
-{do exposeData('storage_total', $storageTotal)}
-{do exposeData('storage_chart_data', $storageChartData)}
-{do exposeData('check_for_updates', $checkForUpdates)}
-{do exposeData('subscribe_base_url', $subscribeBaseUrl)}
-{do exposeData('email', $email)}
-{do exposeData('old_newsletters_url', $oldNewslettersUrl)}
-{foreach $storageChartData as $type_to_translate => $details}
-  {do exposeString($type_to_translate)}
-{/foreach}
-{if isset($subscribeBaseUrl)}
-  {do exposeString('Subscribe to our newsletter and stay updated!')}
-  {do exposeString('Sign up to the newsletter')}
-  {do exposeString('See previous newsletters')}
-  {do exposeString('Understood, do not show again')}
-{/if}
-{do combineScript(id: 'intro', load: 'footer', require: 'jquery.cluetip,page-data', path: 'themes/admin/default/js/intro.js')}
-{do combineScript(id: 'intro_tooltips', load: 'footer', path: 'themes/admin/default/js/intro_tooltips.js')}
-
-{do combineCss(id: 'intro', path: 'themes/admin/default/css/pages/intro.css')}
-
 <h2>{='Piwigo Administration'|translate}</h2>
 
 <div class="intro-page-container">

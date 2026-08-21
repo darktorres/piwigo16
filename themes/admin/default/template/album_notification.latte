@@ -28,7 +28,7 @@
           name="group"
           placeholder="{='Type in a search term'|translate}"
         >
-          {=htmlOptions(options: $groupMailOptions)}
+          <option n:foreach="$groupMailOptions as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
         </select>
       {elseif isset($noGroupInGallery) and $noGroupInGallery}
         {='There is no group in this gallery.'|translate} <a
@@ -51,7 +51,7 @@
           multiple
           placeholder="{='Type in a search term'|translate}"
         >
-          {=htmlOptions(options: $userOptions)}
+          <option n:foreach="$userOptions as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
         </select>
       {else}
         {='No user is permitted to see this private album'|translate}.

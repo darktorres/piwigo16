@@ -48,17 +48,32 @@
 
         <li>
           <span class="property">{='Expand all albums'|translate}</span>
-          {=htmlRadios(name: 'expand', options: $radioOptions, selected: $expand)}
+          <label n:foreach="$radioOptions as $optKey => $optLabel"><input
+              type="radio"
+              name="expand"
+              value="{$optKey}"
+              n:attr="checked: $optKey === $expand ? 'checked' : null"
+            >{html_entity_decode(strval($optLabel))}</label>
         </li>
 
         <li n:if="$activateComments">
           <span class="property">{='Show number of comments'|translate}</span>
-          {=htmlRadios(name: 'show_nb_comments', options: $radioOptions, selected: $nbComments)}
+          <label n:foreach="$radioOptions as $optKey => $optLabel"><input
+              type="radio"
+              name="show_nb_comments"
+              value="{$optKey}"
+              n:attr="checked: $optKey === $nbComments ? 'checked' : null"
+            >{html_entity_decode(strval($optLabel))}</label>
         </li>
 
         <li>
           <span class="property">{='Show number of hits'|translate}</span>
-          {=htmlRadios(name: 'show_nb_hits', options: $radioOptions, selected: $nbHits)}
+          <label n:foreach="$radioOptions as $optKey => $optLabel"><input
+              type="radio"
+              name="show_nb_hits"
+              value="{$optKey}"
+              n:attr="checked: $optKey === $nbHits ? 'checked' : null"
+            >{html_entity_decode(strval($optLabel))}</label>
         </li>
       </ul>
     </fieldset>

@@ -8,14 +8,22 @@
     <label>
       {='Sort by'|translate}
       <select name="order_by">
-        {=htmlOptions(options: $orderByOptions, selected: $orderByOptionsSelected)}
+        <option
+          n:foreach="$orderByOptions as $optKey => $optLabel"
+          value="{$optKey}"
+          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $orderByOptionsSelected), true) ? 'selected' : null"
+        >{html_entity_decode(strval($optLabel))}</option>
       </select>
     </label>
 
     <label>
       {='Users'|translate}
       <select name="users">
-        {=htmlOptions(options: $userOptions, selected: $userOptionsSelected)}
+        <option
+          n:foreach="$userOptions as $optKey => $optLabel"
+          value="{$optKey}"
+          n:attr="selected: in_array($optKey, array_map(strval(...), $userOptionsSelected), true) ? 'selected' : null"
+        >{html_entity_decode(strval($optLabel))}</option>
       </select>
     </label>
 

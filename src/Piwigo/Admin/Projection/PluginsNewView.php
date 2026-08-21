@@ -15,9 +15,10 @@ use Piwigo\Template\Latte\Attribute\Template;
 /**
  * `plugins_new.latte`'s own typed view, constructed by {@see
  * \Piwigo\Admin\PluginsNewPageRenderer::render()}. `$orderSelected`
- * feeds `htmlOptions()`'s own `selected` parameter, which already
- * defaults to and accepts `null` -- an always-present `null` behaves
- * identically to the original conditionally-omitted key. `$plugins` is
+ * feeds the template's own `n:attr="selected: ..."` comparison against
+ * `$orderOptions`, which already tolerates a `null` `$orderSelected` --
+ * an always-present `null` behaves identically to the original
+ * conditionally-omitted key. `$plugins` is
  * always included (even empty) since the template reads it with
  * `{if !empty($plugins)}`, not `isset()`. `$colorscheme` is the
  * ambient `$themeconf['colorscheme']` the template's own

@@ -14,7 +14,8 @@ use Piwigo\Template\Latte\Attribute\Template;
  * \Piwigo\Controller\CommentsController::__invoke()}. `$categories`/
  * `$categoriesSelected` are `CategorySelectOptions::$options`/`$selected`,
  * unwrapped here rather than kept as a nested object -- `comments.latte`
- * reads both as plain arrays via `htmlOptions(...)`. `$commentList`
+ * reads both as plain arrays via an `n:foreach`-over-`<option>` loop.
+ * `$commentList`
  * stays nullable: the template guards it with `isset()`, and the
  * controller only ever renders a real {@see
  * \Piwigo\Picture\Projection\CommentListView} when there is at least

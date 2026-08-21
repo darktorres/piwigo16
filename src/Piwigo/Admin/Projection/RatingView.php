@@ -16,7 +16,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `rating.latte`'s own typed view, constructed by {@see
  * \Piwigo\Admin\RatingPageRenderer::render()}. `$orderByOptions` and
  * `$images` are both always included -- the template reads
- * `orderByOptions` via an unguarded `{=htmlOptions(...)}` and `images`
+ * `orderByOptions` via an unguarded `{foreach}` and `images`
  * via an unguarded `{foreach}`. `$colorscheme`/`$rootUrl` are the
  * ambient `$themeconf['colorscheme']`/`$ROOT_URL` the template's own
  * `combineCss`/`exposeData` calls read -- the controller resolves both

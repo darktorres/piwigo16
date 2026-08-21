@@ -717,8 +717,8 @@
           >
             {foreach $authors as $author}
               <option
-                value="{$author['author']|striptags}"
-              >{$author['author']|striptags} ({$author['counter']|translate_dec:'%d photo','%d photos'})</option>
+                value="{$author['author']|stripTags}"
+              >{$author['author']|stripTags} ({$author['counter']|translate_dec:'%d photo','%d photos'})</option>
             {/foreach}
           </select>
 
@@ -767,7 +767,7 @@
                   ></span>
                   <span
                     class="added_by-name"
-                  >{$added_by['added_by_name']|striptags}</span>
+                  >{$added_by['added_by_name']|stripTags}</span>
                   <span class="added_by-badge">{$added_by['counter']}</span>
                 </label>
               </div>

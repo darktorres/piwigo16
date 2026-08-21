@@ -20,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * documented on `RatingUserPageRenderer`'s own `avgCompare()`/
  * `countCompare()`/etc. comparators, not a fixed structural shape worth
  * minting its own DTO for here. `$orderByOptions` is always included --
- * the template reads it via an unguarded `{=htmlOptions(...)}`, matching
+ * the template reads it via an unguarded `{foreach}`, matching
  * the original code's own unconditional loop. `$rootUrl` is the ambient
  * `$ROOT_URL` the template's own `exposeData` call reads -- the
  * controller resolves it the same way `Template` itself would, via

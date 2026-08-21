@@ -114,7 +114,13 @@
         <label>{='Theme'|translate}</label>
         <div class="row-flex input-container">
           <i class="icon-brush"></i>
-          {=htmlOptions(name: 'theme', options: $templateOptions, selected: $templateSelection)}
+          <select name="theme">
+            <option
+              n:foreach="$templateOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $templateSelection), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
+          </select>
         </div>
         <p class="error-message"><i
             class="gallery-icon-attention-circled"
@@ -125,7 +131,13 @@
         <label>{='Language'|translate}</label>
         <div class="row-flex input-container">
           <i class="icon-language"></i>
-          {=htmlOptions(name: 'language', options: $languageOptions, selected: $languageSelection)}
+          <select name="language">
+            <option
+              n:foreach="$languageOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array($optKey, array_map(strval(...), (array) $languageSelection), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
+          </select>
         </div>
         <p class="error-message"><i
             class="gallery-icon-attention-circled"
@@ -403,7 +415,9 @@
                 <label>{='Duration'|translate}</label>
                 <div class="row-flex input-container api-expiration">
                   <i class="gallery-icon-calendar"></i>
-                  {=htmlOptions(name: 'api_expiration', options: $apiExpiration)}
+                  <select name="api_expiration">
+                    <option n:foreach="$apiExpiration as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
+                  </select>
                 </div>
                 <p id="error_api_key_date" class="error-message"><i
                     class="gallery-icon-attention-circled"

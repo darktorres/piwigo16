@@ -28,7 +28,7 @@
       <meta
         n:if="isset($INFO_AUTHOR)"
         name="author"
-        content="{$INFO_AUTHOR|striptags|replace:'"',' '}"
+        content="{$INFO_AUTHOR|stripTags|replace:'"',' '}"
       >
       <meta
         n:if="isset($related_tags)"
@@ -38,7 +38,7 @@
       {if isset($COMMENT_IMG)}
         <meta
           name="description"
-          content="{$COMMENT_IMG|striptags|replace:'"',' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}"
+          content="{$COMMENT_IMG|stripTags|replace:'"',' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}"
         >
       {else}
         <meta

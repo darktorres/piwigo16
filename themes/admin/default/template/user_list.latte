@@ -346,7 +346,11 @@
           <div id="action_status" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="status">
-                {=htmlOptions(options: $prefStatusOptions, selected: $prefStatusSelected)}
+                <option
+                  n:foreach="$prefStatusOptions as $optKey => $optLabel"
+                  value="{$optKey}"
+                  n:attr="selected: in_array($optKey, array_map(strval(...), (array) $prefStatusSelected), true) ? 'selected' : null"
+                >{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -355,7 +359,7 @@
           <div id="action_group_associate" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="associate">
-                {=htmlOptions(options: $associationOptions)}
+                <option n:foreach="$associationOptions as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -364,7 +368,7 @@
           <div id="action_group_dissociate" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="dissociate">
-                {=htmlOptions(options: $associationOptions)}
+                <option n:foreach="$associationOptions as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -393,7 +397,11 @@
           <div id="action_level" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="level" size="1">
-                {=htmlOptions(options: $levelOptions, selected: $levelSelected)}
+                <option
+                  n:foreach="$levelOptions as $optKey => $optLabel"
+                  value="{$optKey}"
+                  n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $levelSelected), true) ? 'selected' : null"
+                >{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -416,7 +424,11 @@
           <div id="action_theme" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="theme" size="1">
-                {=htmlOptions(options: $themeOptions, selected: $themeSelected)}
+                <option
+                  n:foreach="$themeOptions as $optKey => $optLabel"
+                  value="{$optKey}"
+                  n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $themeSelected), true) ? 'selected' : null"
+                >{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -425,7 +437,11 @@
           <div id="action_language" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="language" size="1">
-                {=htmlOptions(options: $languageOptions, selected: $languageSelected)}
+                <option
+                  n:foreach="$languageOptions as $optKey => $optLabel"
+                  value="{$optKey}"
+                  n:attr="selected: in_array($optKey, array_map(strval(...), (array) $languageSelected), true) ? 'selected' : null"
+                >{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -765,7 +781,11 @@
                 <p class="user-property-label">{='Theme'|translate}</p>
                 <div class="user-property-select-container">
                   <select name="privacy" class="user-property-select">
-                    {=htmlOptions(options: $themeOptions, selected: $themeSelected)}
+                    <option
+                      n:foreach="$themeOptions as $optKey => $optLabel"
+                      value="{$optKey}"
+                      n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $themeSelected), true) ? 'selected' : null"
+                    >{html_entity_decode(strval($optLabel))}</option>
                   </select>
                 </div>
               </div>
@@ -773,7 +793,11 @@
                 <p class="user-property-label">{='Language'|translate}</p>
                 <div class="user-property-select-container">
                   <select name="privacy" class="user-property-select">
-                    {=htmlOptions(options: $languageOptions, selected: $languageSelected)}
+                    <option
+                      n:foreach="$languageOptions as $optKey => $optLabel"
+                      value="{$optKey}"
+                      n:attr="selected: in_array($optKey, array_map(strval(...), (array) $languageSelected), true) ? 'selected' : null"
+                    >{html_entity_decode(strval($optLabel))}</option>
                   </select>
                 </div>
               </div>
@@ -1193,7 +1217,11 @@
                 <p class="user-property-label">{='Theme'|translate}</p>
                 <div class="user-property-select-container">
                   <select name="privacy" class="user-property-select">
-                    {=htmlOptions(options: $themeOptions, selected: $themeSelected)}
+                    <option
+                      n:foreach="$themeOptions as $optKey => $optLabel"
+                      value="{$optKey}"
+                      n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $themeSelected), true) ? 'selected' : null"
+                    >{html_entity_decode(strval($optLabel))}</option>
                   </select>
                 </div>
               </div>
@@ -1201,7 +1229,11 @@
                 <p class="user-property-label">{='Language'|translate}</p>
                 <div class="user-property-select-container">
                   <select name="privacy" class="user-property-select">
-                    {=htmlOptions(options: $languageOptions, selected: $languageSelected)}
+                    <option
+                      n:foreach="$languageOptions as $optKey => $optLabel"
+                      value="{$optKey}"
+                      n:attr="selected: in_array($optKey, array_map(strval(...), (array) $languageSelected), true) ? 'selected' : null"
+                    >{html_entity_decode(strval($optLabel))}</option>
                   </select>
                 </div>
               </div>

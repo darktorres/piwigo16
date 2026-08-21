@@ -323,7 +323,11 @@
           <!-- level -->
           <div id="action_level" class="bulkAction">
             <select name="level" size="1">
-              {=htmlOptions(options: $levelOptions, selected: $levelOptionsSelected)}
+              <option
+                n:foreach="$levelOptions as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $levelOptionsSelected), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </div>
 

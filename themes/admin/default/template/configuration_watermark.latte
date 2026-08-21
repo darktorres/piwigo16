@@ -15,7 +15,11 @@
             class="{if isset($ferrors['watermarkImage'])}u-hidden{/if}"
           ><label>{='Select a file'|translate}</label>
             <select name="w[file]" id="wSelect">
-              {=htmlOptions(options: $watermarkFiles, selected: $watermark['file'])}
+              <option
+                n:foreach="$watermarkFiles as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array($optKey, array_map(strval(...), (array) $watermark['file']), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
             </select>
 
             {='... or '|translate}<a

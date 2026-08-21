@@ -52,7 +52,11 @@
           <label>
             {='Default comments order'|translate}
             <select name="comments_order">
-              {=htmlOptions(options: $comments['comments_order_options'], selected: $comments['comments_order'])}
+              <option
+                n:foreach="$comments['comments_order_options'] as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $comments['comments_order']), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </label>
         </li>

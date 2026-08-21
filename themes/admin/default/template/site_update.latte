@@ -114,7 +114,11 @@
               > {='add new photos to caddie'|translate}</label></li>
           <li><label>{='Who can see these photos?'|translate} <select
                 name="privacy_level"
-              >{=htmlOptions(options: $introduction['privacy_level_options'], selected: $introduction['privacy_level_selected'])}</select></label></li>
+              ><option
+                  n:foreach="$introduction['privacy_level_options'] as $optKey => $optLabel"
+                  value="{$optKey}"
+                  n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $introduction['privacy_level_selected']), true) ? 'selected' : null"
+                >{html_entity_decode(strval($optLabel))}</option></select></label></li>
         </ul>
       </li>
     </ul>
@@ -172,7 +176,11 @@
     <ul>
       <li>
         <select class="categoryList" name="cat" size="10">
-          {=htmlOptions(options: $categoryOptions->options, selected: $categoryOptions->selected)}
+          <option
+            n:foreach="$categoryOptions->options as $optKey => $optLabel"
+            value="{$optKey}"
+            n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoryOptions->selected), true) ? 'selected' : null"
+          >{html_entity_decode(strval($optLabel))}</option>
         </select>
       </li>
 

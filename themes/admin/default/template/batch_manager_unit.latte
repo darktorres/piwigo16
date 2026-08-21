@@ -215,7 +215,11 @@
               <i>{='level of confidentiality'|translate}</i>
             </div>
             <select name="level" id="level" size="1">
-              {=htmlOptions(options: $levelOptions, selected: $element['level_options_selected'])}
+              <option
+                n:foreach="$levelOptions as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $element['level_options_selected']), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </div>
           <div class="full-line-tag-box" id="action_add_tags">

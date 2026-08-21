@@ -264,7 +264,11 @@
           title="{='remove this filter'|translate}"
         ><span>[x]</span></a>
         <select name="filter_level" size="1">
-          {=htmlOptions(options: $filter_level_options, selected: $filter_level_options_selected)}
+          <option
+            n:foreach="$filter_level_options as $optKey => $optLabel"
+            value="{$optKey}"
+            n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $filter_level_options_selected), true) ? 'selected' : null"
+          >{html_entity_decode(strval($optLabel))}</option>
         </select>
         <label class="font-checkbox"><span class="icon-check"></span><input
             type="checkbox"

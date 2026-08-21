@@ -78,7 +78,11 @@
       <div id="image_order_user_define_options">
         <p n:foreach="$imageOrder as $order" class="field">
           <select name="image_order[]">
-            {=htmlOptions(options: $imageOrderOptions, selected: $order)}
+            <option
+              n:foreach="$imageOrderOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array($optKey, array_map(strval(...), (array) $order), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
           </select>
         </p>
       </div>

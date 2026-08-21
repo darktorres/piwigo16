@@ -37,7 +37,11 @@
 
           <span n:foreach="$main['order_by'] as $order" class="filter">
             <select name="order_by[]">
-              {=htmlOptions(options: $main['order_by_options'], selected: $order)}
+              <option
+                n:foreach="$main['order_by_options'] as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $order), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
             </select>
             <a class="removeFilter">{='delete'|translate}</a>
           </span>
@@ -142,7 +146,11 @@
               >
                 {if count($groupOptions) > 0}
                   <select name="email_admin_on_new_user_filter_group">
-                    {=htmlOptions(options: $groupOptions, selected: $main['email_admin_on_new_user_filter_group'])}
+                    <option
+                      n:foreach="$groupOptions as $optKey => $optLabel"
+                      value="{$optKey}"
+                      n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $main['email_admin_on_new_user_filter_group']), true) ? 'selected' : null"
+                    >{html_entity_decode(strval($optLabel))}</option>
                   </select>
                 {else}
                   {='There is no group in this gallery.'|translate} <a
@@ -192,7 +200,13 @@
       <ul>
         <li>
           <label>{='Week starts on'|translate}
-            {=htmlOptions(name: "week_starts_on", options: $main['week_starts_on_options'], selected: $main['week_starts_on_options_selected'])}</label>
+            <select name="week_starts_on">
+              <option
+                n:foreach="$main['week_starts_on_options'] as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $main['week_starts_on_options_selected']), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
+            </select></label>
         </li>
 
         <li>

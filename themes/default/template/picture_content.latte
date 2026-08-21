@@ -21,7 +21,7 @@
     alt="{$altImg}"
     id="theMainImage"
     usemap="#map{$current['selected_derivative']->getType()}"
-    title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|striptags|replace:'"',' '}{else}{$current['TITLE_ESC']|noescape} - {$altImg}{/if}"
+    title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|stripTags|replace:'"',' '}{else}{$current['TITLE_ESC']|noescape} - {$altImg}{/if}"
   >
 
   <div

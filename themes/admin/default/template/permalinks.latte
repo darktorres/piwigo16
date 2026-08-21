@@ -13,7 +13,11 @@
       <br>
       <select name="cat_id">
         <option value="0">------</option>
-        {=htmlOptions(options: $categoriesOptions->options, selected: $categoriesOptions->selected)}
+        <option
+          n:foreach="$categoriesOptions->options as $optKey => $optLabel"
+          value="{$optKey}"
+          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoriesOptions->selected), true) ? 'selected' : null"
+        >{html_entity_decode(strval($optLabel))}</option>
       </select>
     </p>
 

@@ -44,77 +44,216 @@
                       name="language"
                       onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;"
                     >
-                    <option value="af_ZA">Afrikaans (Suid-Afrika)</option>
-<option value="ar_SA">Arbic (saudi)</option>
-<option value="az_AZ">Azərbaycanca (Azərbaycan)</option>
-<option value="id_ID">Bahasa Indonesia (Indonesia)</option>
-<option value="br_FR">Brezhoneg (Frañs)</option>
-<option value="es_AR">Castellano (Argentina)</option>
-<option value="ca_ES">Català (Catalunya/Spain)</option>
-<option value="da_DK">Dansk (Danmark)</option>
-<option value="de_DE">Deutsch (Deutschland)</option>
-<option value="dv_MV">Dhivehi (Maldives)</option>
-<option value="nl_NL">Dutch (Nederland)</option>
-<option value="en_UK" selected="selected">English (Great Britain)</option>
-<option value="en_GB">English (Great Britain)</option>
-<option value="en_US">English (United States)</option>
-<option value="es_ES">Español (España)</option>
-<option value="eo_EO">Esperanto (Esperantio)</option>
-<option value="et_EE">Estonian (Estonia)</option>
-<option value="eu_ES">Euskara (Euskadi)</option>
-<option value="fi_FI">Finnish (Suomi)</option>
-<option value="fr_FR">Français (France)</option>
-<option value="fr_CA">Français (Québec)</option>
-<option value="ga_IE">Gaeilge (éire)</option>
-<option value="gl_ES">Galego (Galiza)</option>
-<option value="ka_GE">Georgian (Georgia)</option>
-<option value="he_IL">Hebrew (Israel)</option>
-<option value="hr_HR">Hrvatski (Hrvatska)</option>
-<option value="it_IT">Italiano (Italia)</option>
-<option value="ja_JP">Japanese (Japan)</option>
-<option value="lv_LV">Latvian (Latvia)</option>
-<option value="lt_LT">Lietuvių (Lietuva)</option>
-<option value="lb_LU">Lëtzebuergesch (Luxembourg)</option>
-<option value="hu_HU">Magyar (Hungary)</option>
-<option value="ms_MY">Malay (Malaysia)</option>
-<option value="es_MX">México (Mexico)</option>
-<option value="nb_NO">Norwegian (Norway)</option>
-<option value="nn_NO">Norwegian nynorsk (Norway)</option>
-<option value="pl_PL">Polish (Polska)</option>
-<option value="pt_BR">Português (Brasil)</option>
-<option value="pt_PT">Português (Portugal)</option>
-<option value="ro_RO">Română (România)</option>
-<option value="ru_RU">Russian (Russia)</option>
-<option value="sk_SK">Slovenčina (Slovenská republika)</option>
-<option value="sl_SI">slovenščina (Slovenija)</option>
-<option value="sh_RS">Srpski (Srbija)</option>
-<option value="sv_SE">Swedish (Sverige)</option>
-<option value="vi_VN">Tiếng Việt (Việt Nam)</option>
-<option value="tr_TR">Turkish (Turkey)</option>
-<option value="wo_SN">Wolof (Sénégal)</option>
-<option value="is_IS">Íslenska (Ísland)</option>
-<option value="cs_CZ">Čeština (Česká Republika)</option>
-<option value="el_GR">Ελληνικά (Ελλάδα)</option>
-<option value="bg_BG">Български (България)</option>
-<option value="mk_MK">Македонски (Република Македонија)</option>
-<option value="mn_MN">Монгол (Монгол улс)</option>
-<option value="sr_RS">Српски (Србија)</option>
-<option value="uk_UA">Українська (Україна)</option>
-<option value="hy_AM">Հայերեն (Հայաստան)</option>
-<option value="ar_EG">العربية (مصر) (مصر)</option>
-<option value="fa_IR">پارسی (ایران)</option>
-<option value="kok_IN">कोंकणी (भारत)</option>
-<option value="bn_IN">বাংলা (ভারত)</option>
-<option value="gu_IN">ગુજરાતી (હિન્દુસ્તાન)</option>
-<option value="ta_IN">தமிழ் (இந்தியா)</option>
-<option value="kn_IN">ಕನ್ನಡ (ಭಾರತ)</option>
-<option value="th_TH">ภาษาไทย (ประเทศไทย)</option>
-<option value="km_KH">ភាសាខ្មែរ​ (ប្រទេសកម្ពុជា)</option>
-<option value="zh_TW">中文 (中國)</option>
-<option value="zh_HK">中文 (香港) (香港特別行政區)</option>
-<option value="zh_CN">简体中文 (中国)</option>
-<option value="ko_KR">한국어 (대한민국)</option>
-
+                    <option
+                        value="af_ZA"
+                      >Afrikaans (Suid-Afrika)</option>
+                    <option
+                        value="ar_SA"
+                      >Arbic (saudi)</option>
+                    <option
+                        value="az_AZ"
+                      >Azərbaycanca (Azərbaycan)</option>
+                    <option
+                        value="id_ID"
+                      >Bahasa Indonesia (Indonesia)</option>
+                    <option
+                        value="br_FR"
+                      >Brezhoneg (Frañs)</option>
+                    <option
+                        value="es_AR"
+                      >Castellano (Argentina)</option>
+                    <option
+                        value="ca_ES"
+                      >Català (Catalunya/Spain)</option>
+                    <option
+                        value="da_DK"
+                      >Dansk (Danmark)</option>
+                    <option
+                        value="de_DE"
+                      >Deutsch (Deutschland)</option>
+                    <option
+                        value="dv_MV"
+                      >Dhivehi (Maldives)</option>
+                    <option
+                        value="nl_NL"
+                      >Dutch (Nederland)</option>
+                    <option
+                        value="en_UK" selected
+                      >English (Great Britain)</option>
+                    <option
+                        value="en_GB"
+                      >English (Great Britain)</option>
+                    <option
+                        value="en_US"
+                      >English (United States)</option>
+                    <option
+                        value="es_ES"
+                      >Español (España)</option>
+                    <option
+                        value="eo_EO"
+                      >Esperanto (Esperantio)</option>
+                    <option
+                        value="et_EE"
+                      >Estonian (Estonia)</option>
+                    <option
+                        value="eu_ES"
+                      >Euskara (Euskadi)</option>
+                    <option
+                        value="fi_FI"
+                      >Finnish (Suomi)</option>
+                    <option
+                        value="fr_FR"
+                      >Français (France)</option>
+                    <option
+                        value="fr_CA"
+                      >Français (Québec)</option>
+                    <option
+                        value="ga_IE"
+                      >Gaeilge (éire)</option>
+                    <option
+                        value="gl_ES"
+                      >Galego (Galiza)</option>
+                    <option
+                        value="ka_GE"
+                      >Georgian (Georgia)</option>
+                    <option
+                        value="he_IL"
+                      >Hebrew (Israel)</option>
+                    <option
+                        value="hr_HR"
+                      >Hrvatski (Hrvatska)</option>
+                    <option
+                        value="it_IT"
+                      >Italiano (Italia)</option>
+                    <option
+                        value="ja_JP"
+                      >Japanese (Japan)</option>
+                    <option
+                        value="lv_LV"
+                      >Latvian (Latvia)</option>
+                    <option
+                        value="lt_LT"
+                      >Lietuvių (Lietuva)</option>
+                    <option
+                        value="lb_LU"
+                      >Lëtzebuergesch (Luxembourg)</option>
+                    <option
+                        value="hu_HU"
+                      >Magyar (Hungary)</option>
+                    <option
+                        value="ms_MY"
+                      >Malay (Malaysia)</option>
+                    <option
+                        value="es_MX"
+                      >México (Mexico)</option>
+                    <option
+                        value="nb_NO"
+                      >Norwegian (Norway)</option>
+                    <option
+                        value="nn_NO"
+                      >Norwegian nynorsk (Norway)</option>
+                    <option
+                        value="pl_PL"
+                      >Polish (Polska)</option>
+                    <option
+                        value="pt_BR"
+                      >Português (Brasil)</option>
+                    <option
+                        value="pt_PT"
+                      >Português (Portugal)</option>
+                    <option
+                        value="ro_RO"
+                      >Română (România)</option>
+                    <option
+                        value="ru_RU"
+                      >Russian (Russia)</option>
+                    <option
+                        value="sk_SK"
+                      >Slovenčina (Slovenská republika)</option>
+                    <option
+                        value="sl_SI"
+                      >slovenščina (Slovenija)</option>
+                    <option
+                        value="sh_RS"
+                      >Srpski (Srbija)</option>
+                    <option
+                        value="sv_SE"
+                      >Swedish (Sverige)</option>
+                    <option
+                        value="vi_VN"
+                      >Tiếng Việt (Việt Nam)</option>
+                    <option
+                        value="tr_TR"
+                      >Turkish (Turkey)</option>
+                    <option
+                        value="wo_SN"
+                      >Wolof (Sénégal)</option>
+                    <option
+                        value="is_IS"
+                      >Íslenska (Ísland)</option>
+                    <option
+                        value="cs_CZ"
+                      >Čeština (Česká Republika)</option>
+                    <option
+                        value="el_GR"
+                      >Ελληνικά (Ελλάδα)</option>
+                    <option
+                        value="bg_BG"
+                      >Български (България)</option>
+                    <option
+                        value="mk_MK"
+                      >Македонски (Република Македонија)</option>
+                    <option
+                        value="mn_MN"
+                      >Монгол (Монгол улс)</option>
+                    <option
+                        value="sr_RS"
+                      >Српски (Србија)</option>
+                    <option
+                        value="uk_UA"
+                      >Українська (Україна)</option>
+                    <option
+                        value="hy_AM"
+                      >Հայերեն (Հայաստան)</option>
+                    <option
+                        value="ar_EG"
+                      >العربية (مصر) (مصر)</option>
+                    <option
+                        value="fa_IR"
+                      >پارسی (ایران)</option>
+                    <option
+                        value="kok_IN"
+                      >कोंकणी (भारत)</option>
+                    <option
+                        value="bn_IN"
+                      >বাংলা (ভারত)</option>
+                    <option
+                        value="gu_IN"
+                      >ગુજરાતી (હિન્દુસ્તાન)</option>
+                    <option
+                        value="ta_IN"
+                      >தமிழ் (இந்தியா)</option>
+                    <option
+                        value="kn_IN"
+                      >ಕನ್ನಡ (ಭಾರತ)</option>
+                    <option
+                        value="th_TH"
+                      >ภาษาไทย (ประเทศไทย)</option>
+                    <option
+                        value="km_KH"
+                      >ភាសាខ្មែរ​ (ប្រទេសកម្ពុជា)</option>
+                    <option
+                        value="zh_TW"
+                      >中文 (中國)</option>
+                    <option
+                        value="zh_HK"
+                      >中文 (香港) (香港特別行政區)</option>
+                    <option
+                        value="zh_CN"
+                      >简体中文 (中国)</option>
+                    <option
+                        value="ko_KR"
+                      >한국어 (대한민국)</option>
                   </select>
                 </td>
               </tr>

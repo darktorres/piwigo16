@@ -27,9 +27,7 @@ use Piwigo\Users\CurrentUser;
  * -- they're thin `$this->template->x(...)` delegates with their own
  * real coverage in TemplateInstanceTest.php; duplicating it against a
  * second, PiwigoExtension-constructed Template would just be the same
- * assertions with extra indirection. `htmlOptions()`/`htmlRadios()`
- * are real, substantial ports of Smarty's own stdlib plugins with no
- * Template involvement at all, so they get real coverage here.
+ * assertions with extra indirection.
  */
 function piwigo_extension_test_build(): PiwigoExtension
 {
@@ -140,77 +138,4 @@ test('replace does a plain scalar search/replacement, not a regex', function ():
 test('strReplace reorders to str_replace($search, $replace, $subject) with the piped value as $subject', function (): void {
     expect(PiwigoExtension::strReplace('hello world', 'world', 'there'))
         ->toBe('hello there');
-});
-
-// --- htmlOptions -----------------------------------------------------------
-
-test('htmlOptions renders one <option> per associative entry', function (): void {
-    $result = PiwigoExtension::htmlOptions(options: [
-        'a' => 'Label A',
-        'b' => 'Label B',
-    ]);
-
-    expect((string) $result)
-        ->toBe("<option value=\"a\">Label A</option>\n<option value=\"b\">Label B</option>\n");
-});
-
-test('htmlOptions marks the selected value', function (): void {
-    $result = PiwigoExtension::htmlOptions(options: [
-        'a' => 'Label A',
-        'b' => 'Label B',
-    ], selected: 'b');
-
-    expect((string) $result)
-        ->toContain('<option value="b" selected="selected">Label B</option>');
-});
-
-test('htmlOptions wraps the result in a <select> only when name is given', function (): void {
-    $bare = PiwigoExtension::htmlOptions(options: [
-        'a' => 'Label A',
-    ]);
-    $wrapped = PiwigoExtension::htmlOptions(options: [
-        'a' => 'Label A',
-    ], name: 'my-select');
-
-    expect((string) $bare)
-        ->not->toContain('<select')
-        ->and((string) $wrapped)
-        ->toContain('<select name="my-select">');
-});
-
-test('htmlOptions double-encodes nothing -- an option label already containing a real HTML entity is not re-escaped', function (): void {
-    // Real regression: Smarty's own smarty_function_escape_special_chars()
-    // calls htmlspecialchars() with $double_encode=false -- see
-    // escapeHtmlOption()'s own docblock (permalinks.latte's indentation
-    // prefix bakes in literal &nbsp; sequences).
-    $result = PiwigoExtension::htmlOptions(options: [
-        'a' => '&nbsp;Indented',
-    ]);
-
-    expect((string) $result)
-        ->toContain('&nbsp;Indented')
-        ->not->toContain('&amp;nbsp;');
-});
-
-test('htmlOptions returns an empty Html when neither options nor values is given', function (): void {
-    expect((string) PiwigoExtension::htmlOptions())
-        ->toBe('');
-});
-
-// --- htmlRadios --------------------------------------------------------
-
-test('htmlRadios renders one radio row per entry, marking the selected/checked value', function (): void {
-    $result = PiwigoExtension::htmlRadios(options: [
-        'a' => 'Label A',
-        'b' => 'Label B',
-    ], selected: 'b', name: 'my-radio');
-
-    expect((string) $result)
-        ->toContain('name="my-radio" value="a"')
-        ->toContain('name="my-radio" value="b" checked="checked"');
-});
-
-test('htmlRadios returns an empty Html when neither options nor values is given', function (): void {
-    expect((string) PiwigoExtension::htmlRadios())
-        ->toBe('');
 });

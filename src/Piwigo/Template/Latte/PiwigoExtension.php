@@ -37,7 +37,7 @@ use Piwigo\Template\Template;
  *    `registerPlugin()` call anywhere in `Template.php` to find by
  *    reading that file alone. `cat`/`count`/`join`/`strip_tags` were the
  *    same shape once, migrated onto Latte's own built-in `~`/`|length`/
- *    `|implode`/`|striptags` (P43-B, docs/PLAN.md) -- `nl2br` stays a
+ *    `|implode`/`|stripTags` (P43-B, docs/PLAN.md) -- `nl2br` stays a
  *    registered passthrough rather than migrating fully to `|breakLines`,
  *    since 3 of its 5 real call sites need `|htmlspecialchars`'s
  *    `ENT_QUOTES` escaping for a double-quoted HTML attribute context
@@ -54,9 +54,12 @@ use Piwigo\Template\Template;
  *    owning `Template` instance's own (renamed, same-body) methods --
  *    reusing its already-correct `PageAssets`/`PageState` validation
  *    logic directly rather than re-deriving it here (the last three
- *    accumulate into `PageState`, docs/PLAN.md's P37). `html_options`/
- *    `html_radios` are generic, stateless ports of Smarty's own
- *    stdlib plugins (no `Template` state involved).
+ *    accumulate into `PageState`, docs/PLAN.md's P37). Smarty's
+ *    `html_options`/`html_radios` plugins were similarly ported once,
+ *    fully replaced (P43-B) by plain `{foreach}` loops over `<option>`/
+ *    radio `<label>` markup directly in templates -- no runtime port
+ *    needed, since Latte's `n:foreach`/`n:attr` already express the same
+ *    shape natively.
  */
 final class PiwigoExtension extends Extension
 {
@@ -187,8 +190,6 @@ final class PiwigoExtension extends Extension
             'exposeData' => $this->template->exposeData(...),
             'exposeString' => $this->template->exposeString(...),
             'getPageDataScript' => $this->template->getPageDataScript(...),
-            'htmlOptions' => self::htmlOptions(...),
-            'htmlRadios' => self::htmlRadios(...),
             'once' => $this->template->once(...),
             // Also registered as filters above, same names -- same
             // {if}-rejects-pipes reason as translate/l10n above. Real live
@@ -278,236 +279,5 @@ final class PiwigoExtension extends Extension
     public static function replace(string $subject, string $search, string $replacement): string
     {
         return str_replace($search, $replacement, $subject);
-    }
-
-    /**
-     * Port of Smarty's `{html_options}` plugin. Emits a list of `<option>`
-     * tags from `options` (associative key=value) or from `values` paired
-     * with `output`. When `name` is provided, the result is wrapped in a
-     * `<select>` element.
-     *
-     * @param array<int|string, mixed>|null $options associative value->label map
-     * @param list<string|int>|null $values raw option values (used with $output)
-     * @param list<string>|null $output labels matching $values by index
-     * @param array<int|string, mixed>|string|int|float|bool|null $selected
-     * @param mixed ...$extra forwarded HTML attributes -- runtime
-     *   is_scalar() guards which ones actually get emitted, no static
-     *   narrowing needed here
-     */
-    public static function htmlOptions(
-        ?array $options = null,
-        ?array $values = null,
-        ?array $output = null,
-        array|string|int|float|bool|null $selected = null,
-        ?string $name = null,
-        ?string $id = null,
-        ?string $class = null,
-        mixed ...$extra,
-    ): Html {
-        if ($options === null && $values === null) {
-            return new Html('');
-        }
-        $selectedNorm = self::normalizeSelected($selected);
-        $idx = 0;
-        $body = '';
-        if ($options !== null) {
-            foreach ($options as $optKey => $optVal) {
-                $body .= self::htmlOption($optKey, $optVal, $selectedNorm, $id, $class, $idx);
-            }
-        } else {
-            $output ??= [];
-            foreach ($values as $i => $optKey) {
-                $body .= self::htmlOption($optKey, $output[$i] ?? '', $selectedNorm, $id, $class, $idx);
-            }
-        }
-        if ($name === null || $name === '') {
-            return new Html($body);
-        }
-        $extraAttrs = '';
-        if ($class !== null && $class !== '') {
-            $extraAttrs .= ' class="' . $class . '"';
-        }
-        if ($id !== null && $id !== '') {
-            $extraAttrs .= ' id="' . $id . '"';
-        }
-        foreach ($extra as $key => $val) {
-            if (! is_scalar($val)) {
-                continue;
-            }
-            $extraAttrs .= ' ' . $key . '="' . self::escapeHtmlOption((string) $val) . '"';
-        }
-
-        return new Html('<select name="' . $name . '"' . $extraAttrs . '>' . "\n" . $body . '</select>' . "\n");
-    }
-
-    /**
-     * Port of Smarty's `{html_radios}` plugin. Emits a sequence of
-     * `<label><input type="radio">...</label>` rows, one per entry in
-     * `options` or `values`/`output`.
-     *
-     * @param array<int|string, mixed>|null $options
-     * @param list<string|int>|null $values
-     * @param list<string>|null $output
-     * @param mixed ...$extra forwarded HTML attributes -- runtime
-     *   is_scalar() guards which ones actually get emitted, no static
-     *   narrowing needed here
-     */
-    public static function htmlRadios(
-        ?array $options = null,
-        ?array $values = null,
-        ?array $output = null,
-        string|int|float|bool|null $selected = null,
-        string|int|float|bool|null $checked = null,
-        string $name = 'radio',
-        string $separator = '',
-        bool $escape = true,
-        bool $labels = true,
-        bool $labelIds = false,
-        mixed ...$extra,
-    ): Html {
-        if ($options === null && $values === null) {
-            return new Html('');
-        }
-        $sel = $selected ?? $checked;
-        $selectedStr = $sel === null ? null : (string) $sel;
-        $extraAttrs = '';
-        foreach ($extra as $key => $val) {
-            if (! is_scalar($val)) {
-                continue;
-            }
-            $extraAttrs .= ' ' . $key . '="' . self::escapeHtmlOption((string) $val) . '"';
-        }
-        $rows = [];
-        if ($options !== null) {
-            foreach ($options as $optKey => $optVal) {
-                $rows[] = self::htmlRadioRow($name, $optKey, $optVal, $selectedStr, $extraAttrs, $labels, $labelIds, $escape);
-            }
-        } else {
-            $output ??= [];
-            foreach ($values as $i => $optKey) {
-                $rows[] = self::htmlRadioRow($name, $optKey, $output[$i] ?? '', $selectedStr, $extraAttrs, $labels, $labelIds, $escape);
-            }
-        }
-
-        return new Html(implode($separator === '' ? "\n" : $separator, $rows));
-    }
-
-    /**
-     * `html_options`/`html_radios`' shared escaping -- Smarty's own
-     * `smarty_function_escape_special_chars()` (vendor/smarty/smarty/src/
-     * functions.php) calls `htmlspecialchars($string, ENT_COMPAT,
-     * Smarty::$_CHARSET, false)`: `ENT_COMPAT` (double quotes only, not
-     * single -- every call site here only ever lands inside a
-     * double-quoted attribute) and, critically, `$double_encode = false`.
-     * A bare `htmlspecialchars($str, ENT_QUOTES)` (PHP's `double_encode`
-     * default is `true`) double-encodes any option label that already
-     * contains a real HTML entity -- e.g.
-     * permalinks.latte: `CategoryAdminService`'s indentation prefix bakes in
-     * literal `&nbsp;` sequences, which came out as `&amp;nbsp;` before
-     * this fix, a real rendering regression
-     * (not a cosmetic ENT_QUOTES-vs-ENT_COMPAT difference).
-     */
-    private static function escapeHtmlOption(string $value): string
-    {
-        return htmlspecialchars($value, ENT_COMPAT, 'UTF-8', false);
-    }
-
-    /**
-     * @param array<int|string, mixed>|string|int|float|bool|null $selected
-     * @return array<string, true>|string|null
-     */
-    private static function normalizeSelected(array|string|int|float|bool|null $selected): array|string|null
-    {
-        if ($selected === null) {
-            return null;
-        }
-        if (is_array($selected)) {
-            $map = [];
-            foreach ($selected as $val) {
-                if (is_scalar($val)) {
-                    $map[self::escapeHtmlOption((string) $val)] = true;
-                }
-            }
-
-            return $map;
-        }
-
-        return self::escapeHtmlOption((string) $selected);
-    }
-
-    /**
-     * @param array<string, true>|string|null $selected
-     */
-    private static function htmlOption(
-        int|string $optKey,
-        mixed $optVal,
-        array|string|null $selected,
-        ?string $id,
-        ?string $class,
-        int &$idx,
-    ): string {
-        if (is_array($optVal)) {
-            $inner = 0;
-            $body = '<optgroup label="' . self::escapeHtmlOption((string) $optKey) . '">' . "\n";
-            foreach ($optVal as $k => $v) {
-                $body .= self::htmlOption($k, $v, $selected, $id !== null ? $id . '-' . $idx : null, $class, $inner);
-            }
-            $idx++;
-
-            return $body . "</optgroup>\n";
-        }
-        $key = self::escapeHtmlOption((string) $optKey);
-        $line = '<option value="' . $key . '"';
-        if (is_array($selected)) {
-            if (isset($selected[$key])) {
-                $line .= ' selected="selected"';
-            }
-        } elseif ($selected !== null && $key === $selected) {
-            $line .= ' selected="selected"';
-        }
-        if ($class !== null && $class !== '') {
-            $line .= ' class="' . $class . ' option"';
-        }
-        if ($id !== null && $id !== '') {
-            $line .= ' id="' . $id . '-' . $idx . '"';
-        }
-        $idx++;
-        $label = is_scalar($optVal) ? self::escapeHtmlOption((string) $optVal) : '';
-
-        return $line . '>' . $label . '</option>' . "\n";
-    }
-
-    private static function htmlRadioRow(
-        string $name,
-        int|string $value,
-        mixed $label,
-        ?string $selected,
-        string $extraAttrs,
-        bool $labels,
-        bool $labelIds,
-        bool $escape,
-    ): string {
-        $valueStr = self::escapeHtmlOption((string) $value);
-        $checked = ($selected !== null && $valueStr === $selected) ? ' checked="checked"' : '';
-        $labelStr = is_scalar($label) ? (string) $label : '';
-        if ($escape) {
-            $labelStr = self::escapeHtmlOption($labelStr);
-        }
-        $idAttr = '';
-        if ($labelIds) {
-            $idAttr = ' id="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"';
-        }
-        // Self-closing ' />' (XHTML style), not a plain '>' -- matches
-        // Smarty's own html_radios/html_checkboxes shared implementation
-        // (vendor/smarty/smarty/src/FunctionHandler/HtmlBase.php's
-        // `$_output .= $extra . ' />' . $output;`). profile_content.latte's
-        // "Expand all albums" radios is the first real caller to actually
-        // exercise this.
-        $input = '<input type="radio" name="' . $name . '" value="' . $valueStr . '"' . $idAttr . $checked . $extraAttrs . ' />' . $labelStr;
-        if ($labels) {
-            return '<label' . ($labelIds ? ' for="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"' : '') . '>' . $input . '</label>';
-        }
-
-        return $input;
     }
 }

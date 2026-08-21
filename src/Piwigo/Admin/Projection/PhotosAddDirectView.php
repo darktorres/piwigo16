@@ -21,8 +21,8 @@ use Piwigo\Template\Latte\Attribute\Template;
  * in `photos_add_direct.latte`'s own real body: the "Manage
  * Permissions" fieldset that would have used the first three is
  * commented out (Smarty-era `{html_options ...}` syntax, not even this
- * project's own `{=htmlOptions(...)}` convention), and `CACHE_KEYS`
- * has zero real references at all.
+ * project's own `n:foreach`-over-`<option>` convention), and
+ * `CACHE_KEYS` has zero real references at all.
  */
 #[Template('photos_add_direct.latte')]
 final readonly class PhotosAddDirectView implements View, HasPageAssets, ExposesPageData

@@ -54,7 +54,11 @@
                       name="language"
                       onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;"
                     >
-                      {=htmlOptions(options: $languageOptions, selected: $languageSelection)}
+                      <option
+                        n:foreach="$languageOptions as $optKey => $optLabel"
+                        value="{$optKey}"
+                        n:attr="selected: in_array($optKey, array_map(strval(...), (array) $languageSelection), true) ? 'selected' : null"
+                      >{html_entity_decode(strval($optLabel))}</option>
                     </select>
                   </td>
                 </tr>

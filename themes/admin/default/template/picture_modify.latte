@@ -194,7 +194,11 @@
       <br>
       <div class='select-icon icon-down-open'></div>
       <select name="level" size="1">
-        {=htmlOptions(options: $levelOptions, selected: $levelOptionsSelected)}
+        <option
+          n:foreach="$levelOptions as $optKey => $optLabel"
+          value="{$optKey}"
+          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $levelOptionsSelected), true) ? 'selected' : null"
+        >{html_entity_decode(strval($optLabel))}</option>
       </select>
     </p>
 

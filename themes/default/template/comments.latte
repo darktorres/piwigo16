@@ -43,7 +43,11 @@
         <li>
           <select name="cat">
             <option value="0">------------</option>
-            {=htmlOptions(options: $categories, selected: $categoriesSelected)}
+            <option
+              n:foreach="$categories as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoriesSelected), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
           </select>
         </li>
       </ul>
@@ -54,7 +58,11 @@
         </li>
         <li>
           <select name="since">
-            {=htmlOptions(options: $sinceOptions, selected: $sinceOptionsSelected)}
+            <option
+              n:foreach="$sinceOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $sinceOptionsSelected), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
           </select>
         </li>
       </ul>
@@ -69,7 +77,11 @@
         </li>
         <li>
           <select name="sort_by">
-            {=htmlOptions(options: $sortByOptions, selected: $sortByOptionsSelected)}
+            <option
+              n:foreach="$sortByOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array($optKey, array_map(strval(...), (array) $sortByOptionsSelected), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
           </select>
         </li>
       </ul>
@@ -80,7 +92,11 @@
         </li>
         <li>
           <select name="sort_order">
-            {=htmlOptions(options: $sortOrderOptions, selected: $sortOrderOptionsSelected)}
+            <option
+              n:foreach="$sortOrderOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array($optKey, array_map(strval(...), (array) $sortOrderOptionsSelected), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
           </select>
         </li>
       </ul>
@@ -91,7 +107,11 @@
         </li>
         <li>
           <select name="items_number">
-            {=htmlOptions(options: $itemNumberOptions, selected: $itemNumberOptionsSelected)}
+            <option
+              n:foreach="$itemNumberOptions as $optKey => $optLabel"
+              value="{$optKey}"
+              n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $itemNumberOptionsSelected), true) ? 'selected' : null"
+            >{html_entity_decode(strval($optLabel))}</option>
           </select>
         </li>
       </ul>

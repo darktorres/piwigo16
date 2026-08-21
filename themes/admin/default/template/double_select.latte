@@ -9,7 +9,11 @@
         multiple="multiple"
         size="30"
       >
-        {=htmlOptions(options: $categoryOptionTrue, selected: $categoryOptionTrueSelected)}
+        <option
+          n:foreach="$categoryOptionTrue as $optKey => $optLabel"
+          value="{$optKey}"
+          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoryOptionTrueSelected), true) ? 'selected' : null"
+        >{html_entity_decode(strval($optLabel))}</option>
       </select>
       <p><input
           class="submit"
@@ -27,7 +31,11 @@
         multiple="multiple"
         size="30"
       >
-        {=htmlOptions(options: $categoryOptionFalse, selected: $categoryOptionFalseSelected)}
+        <option
+          n:foreach="$categoryOptionFalse as $optKey => $optLabel"
+          value="{$optKey}"
+          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoryOptionFalseSelected), true) ? 'selected' : null"
+        >{html_entity_decode(strval($optLabel))}</option>
       </select>
       <p><input
           class="submit"

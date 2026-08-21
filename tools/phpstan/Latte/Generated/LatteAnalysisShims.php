@@ -123,8 +123,6 @@ final class LatteAnalysisShims
         'exposeData',
         'exposeString',
         'getPageDataScript',
-        'htmlOptions',
-        'htmlRadios',
         'once',
         'is_admin',
         'is_classic_user',
@@ -667,29 +665,6 @@ final class LatteAnalysisShims
     }
 
     public static function getPageDataScript(): \Latte\Runtime\Html
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<int|string, mixed>|null $options associative value->label map
-     * @param list<string|int>|null $values raw option values (used with $output)
-     * @param list<string>|null $output labels matching $values by index
-     * @param array<int|string, mixed>|string|int|float|bool|null $selected
-     * @param mixed ...$extra forwarded HTML attributes -- runtime
-     */
-    public static function htmlOptions(?array $options = null, ?array $values = null, ?array $output = null, array|string|int|float|bool|null $selected = null, ?string $name = null, ?string $id = null, ?string $class = null, mixed ...$extra): \Latte\Runtime\Html
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<int|string, mixed>|null $options
-     * @param list<string|int>|null $values
-     * @param list<string>|null $output
-     * @param mixed ...$extra forwarded HTML attributes -- runtime
-     */
-    public static function htmlRadios(?array $options = null, ?array $values = null, ?array $output = null, string|int|float|bool|null $selected = null, string|int|float|bool|null $checked = null, string $name = 'radio', string $separator = '', bool $escape = true, bool $labels = true, bool $labelIds = false, mixed ...$extra): \Latte\Runtime\Html
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

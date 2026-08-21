@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | In progress — P43-G (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies: `urlService()`, `pageState()`, `htmlRenderer()`, `imageStdParams()`, plus a hardened `ImageStdParams` container factory) landed; P43-A–F not started | 1 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-A in progress: `ButtonContribution`/`ActionContribution`/`PanelLink` (`Piwigo\Contribution\`) landed, replacing `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`; remaining P43-A kinds (picture info row, profile/register field, auth button, thumbnail overlay, menu item, `FieldOverride`, `FormProvider`) not started. P43-B–F not started | 2 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3590,6 +3590,30 @@ acceptable. Plugin-owned routes are consequently **required, not
 optional** — making `Bootstrap\RouteDefinitions` extensible is the only
 remaining answer for page ownership (`tag_groups`,
 `piwigo_masonry_grid`, `PWG_Stuffs`).
+
+**P43-A, part 1 (landed) — typed index/picture buttons and actions.**
+`Piwigo\Contribution\{ButtonContribution,ActionContribution,PanelLink}`
+replace `addIndexButton()`/`addPictureButton()`'s raw-HTML-string
+contract and `concat('PLUGIN_INDEX_ACTIONS'/'PLUGIN_PICTURE_ACTIONS', ...)`.
+A button navigates directly (label/url/icon/id/order); an action
+toggles an expandable panel of `PanelLink` entries, matching both
+core's own native `switchBox` pattern (Related tags/Sort order/Photo
+sizes) and the real `language_switch_17.0.0` plugin's own flag-picker
+— the one real, already-rewritten 17.0.0-generation caller found for
+`PLUGIN_INDEX_ACTIONS` in the wider plugin ecosystem, whose own
+docblock confirmed the panel shape a plain button-only design would
+have missed. Registering an action with a panel wires its `switchBox`
+toggle automatically (`Template::registerActionSwitchBox()`), so a
+plugin author writes no JS of their own. `SlideshowView`'s own dead
+`$pluginPictureButtons` property (declared, never read by
+`slideshow.latte`) was dropped while this exact area was already being
+touched, not carried forward into the new typed system.
+`parseIndexButtons()`/`parsePictureButtons()` (zero real callers) were
+deleted outright. The remaining P43-A kinds — picture info row,
+profile/register field, auth button, thumbnail overlay, menu item,
+`FieldOverride`, `FormProvider` — are each their own follow-up
+increment, gated by their own real-plugin field-shape research before
+design.
 
 **P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
 Found during a deep review of the Template layer, not part of this

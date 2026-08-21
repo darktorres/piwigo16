@@ -133,7 +133,7 @@ Three structural changes produced that drift:
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
-| P43 | Typed contributions + plugin-owned routes | Not started | 0 |
+| P43 | Typed contributions + plugin-owned routes | In progress — P43-G (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies: `urlService()`, `pageState()`, `htmlRenderer()`, `imageStdParams()`, plus a hardened `ImageStdParams` container factory) landed; P43-A–F not started | 1 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
@@ -3589,6 +3589,27 @@ acceptable. Plugin-owned routes are consequently **required, not
 optional** — making `Bootstrap\RouteDefinitions` extensible is the only
 remaining answer for page ownership (`tag_groups`,
 `piwigo_masonry_grid`, `PWG_Stuffs`).
+
+**P43-G (landed) — constructor-inject `Template`'s hidden dependencies.**
+Found during a deep review of the Template layer, not part of this
+phase's original design above. `Template.php` had 6
+private/private-static methods reaching `Kernel::container()` directly
+instead of taking a constructor collaborator like the class's other 9.
+`currentConfig()`/`lang()` stay static for real, unrelated reasons (a
+raw PHP `include` needing a PHPStan-visible access path; external
+static-only callers with no constructor to inject into). The other 4
+(`urlService()`, `pageState()`, `htmlRenderer()`, `imageStdParams()`)
+each resolved a real container-wide singleton with no
+re-resolve-to-observe-current-state requirement, so all 4 are now real
+constructor properties, threaded through all 7 real construction sites
+(`RequestBootstrap` x2, `RedirectService` x2, `MailService`,
+`NoPhotoYetRenderer`, `InstallWizard`). `imageStdParams()`'s own
+container factory (`config/container.php`) needed hardening first — its
+`tablesExist()` guard already tolerated a missing table but not an
+unavailable connection (a real `InstallWizard::boot()` first-GET
+credential-timing quirk); wrapped in the same `try/catch (Exception) {}`
+pattern `Template`'s own constructor already used for the identical
+failure class.
 
 **P44 — Escaping campaign.** The residue after P38 removes the JS-context
 cases and P40 turns rendered-sub-template vars into `Html`-typed

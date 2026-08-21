@@ -1,9 +1,6 @@
 {templateType Piwigo\Controller\Projection\IndexView}
 {layout 'layout.latte'}
 {block content}
-{do combineScript(id: 'core.switchbox', load: 'async', require: 'jquery', path: 'themes/default/js/switchbox.js')}
-{do combineScript(id: 'index', load: 'footer', path: 'themes/default/js/index.js')}
-{do combineCss(path: "themes/default/vendor/fontello/css/gallery-icon.css", order: -10)}
 
 {$MENUBAR|noescape}
 

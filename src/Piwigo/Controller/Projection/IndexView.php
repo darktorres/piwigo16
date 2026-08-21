@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Latte\Runtime\Html;
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -29,7 +33,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * is empty on a search page, not just `SearchFiltersView`'s sidebar.
  */
 #[Template('index.latte')]
-final readonly class IndexView implements View
+final readonly class IndexView implements View, HasPageAssets
 {
     /**
      * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $thumbNavbar
@@ -69,4 +73,17 @@ final readonly class IndexView implements View
         public array $pluginIndexButtons,
         public ?string $searchId,
     ) {}
+
+    /**
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('index', 'themes/default/js/index.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
+        ];
+    }
 }

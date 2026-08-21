@@ -132,7 +132,7 @@ Three structural changes produced that drift:
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
-| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) not started (see below) | 6 |
+| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) ~942/945 landed, including the MenubarBlockView/MonthCalendarView design gap; 3 call sites remain pending a small follow-up (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
 | P43 | Typed contributions + plugin-owned routes | Not started | 0 |
 | P44 | Escaping campaign | Not started | 0 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
@@ -3449,25 +3449,56 @@ below): `IndexView` is genuinely `Renderer::render()`'d
 `$this->renderer->render($indexView)` call), so its own 3 static
 `combineScript`/`combineCss` calls were fully portable on their own,
 no design gap at all -- **~72 pages/Views landed so far, ~902 of 945
-call sites**. Also confirmed while re-checking: `local_head.latte`'s
-own former infrastructure gap is **already closed** (landed in
-P42-A -- `Renderer::render()` already calls `Template::
-resolveLocalHeadOnce()`, and no `layout.latte` has a direct
-`local_head` `{include}` left), not open as an earlier progress note
-claimed.
+call sites**.
 
-Remaining P42-B scope, confirmed still real: the `MenubarBlockView`/
-`MonthCalendarView` design gap -- `menubar_identification.latte`/
-`menubar_links.latte`/`menubar_menu.latte` (8 calls total) are reached
-only via `menubar.latte`'s own native Latte `{include $block->template,
-block: $block, id: $id}` (a dynamic filename include, never a
-constructed View passed through `Renderer::render()`), and
-`month_calendar.latte` (1 call) the same way via
-`CalendarChronologyPageContext::$fileChronologyView`'s own bare
-`{include $FILE_CHRONOLOGY_VIEW}` in `index.latte` -- both
-`MenubarBlockView`/`MonthCalendarView` are deliberately contract-only
-(no `View` interface, no `#[Template]`), confirmed still true by
-reading both classes fresh, not assumed from the earlier note.
+**The `MenubarBlockView`/`MonthCalendarView` design gap -- closed.**
+`menubar_identification.latte`/`menubar_links.latte`/`menubar_menu.latte`
+(5 calls) are reached only via `menubar.latte`'s own native Latte
+`{include $block->template, block: $block, id: $id}` (a dynamic
+filename include, never a constructed View passed through
+`Renderer::render()`) -- but `MenubarView` itself (`menubar.latte`'s
+own real View, rendered by `BlockManager::apply()`) already holds every
+block's fully-resolved `$template`/`$data` before its own render call
+starts. `MenubarView::pageAssets()`/`exposedStrings()` now iterate
+`$this->blocks` and pattern-match the 3 known in-tree sub-block
+filenames, replicating each one's own registrations directly --
+`menubar_menu.latte`'s own `$block->data['qsearch'] === true` branch
+included, with its own unit test. An unrecognized (plugin) `$block->
+template` falls through untouched. `MenubarBlockView` itself stays
+deliberately contract-only -- its real parent didn't need to be.
+`month_calendar.latte` (1 call) turned out to have zero genuine
+dynamism despite its own `{include $FILE_CHRONOLOGY_VIEW}` shape:
+`CalendarChronologyPageContext::$fileChronologyView` has exactly one
+real construction site (`CalendarRenderer::render()`) and it's always
+the literal `'month_calendar.latte'`. `GalleryController` now reads
+`FILE_CHRONOLOGY_VIEW` back ambiently (assigned earlier in the same
+request by `SectionPopulator`'s own `CalendarRenderer::render()` call)
+before constructing `IndexView`, matching the template's own
+`{if isset($FILE_CHRONOLOGY_VIEW)}` guard -- verified end-to-end via a
+new browser test, since `chronology_view=calendar` had zero existing
+test coverage at any level before this (golden-html's own
+`calendar-posted` fixture only exercises the `list` view).
+
+**A real gap in the prior "local_head.latte is fully closed" note,
+found while re-checking.** `local_head.latte` itself still had 1 live
+call (`print.css`) -- `Template::resolveLocalHeadOnce()` calls
+`renderView()` directly, not `Renderer::render()` (would be circular:
+`Renderer` itself depends on `Template` via `CurrentTemplate`), so
+giving `LocalHeadView` a `pageAssets()` alone would never have been
+applied automatically. Fixed by having `resolveLocalHeadOnce()` apply
+`HasPageAssets` inline, the same way `Renderer::render()`'s own hook
+would.
+
+**P42-B is now closed except 3 call sites, genuinely blocked on a
+missing sibling migration, not a design gap**: `colorbox.inc.latte`
+(2 calls) and `help/quick_search.latte` (1 call) each still have one
+real parent that hasn't yet merged their contribution directly
+(`SearchFiltersView`/`CatModifyView` don't merge `ColorboxView`;
+`BatchManagerUnitView`/`BatchManagerGlobalView` don't merge
+`QuickSearchView`) -- confirmed by grep, not assumed. Small, mechanical,
+same established construct-and-merge pattern as everything else in
+this campaign, deferred to its own follow-up batch -- **~942 of 945
+call sites migrated, 3 remain pending that follow-up**.
 
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign

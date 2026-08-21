@@ -186,6 +186,29 @@ test('a dependency is promoted to its dependent\'s stricter load mode, real Scri
         ->toBe(['dep.js', 'main.js']);
 });
 
+test('an async dependency of an async dependent is promoted to footer, real ScriptLoader::checkLoadDep() behavior', function (): void {
+    $assets = new PageAssets(pageAssetsTestManifest());
+    // Both ends async -- the strict `>` check alone can't see this case
+    // (2 > 2 is false), but two async tags have no guaranteed relative
+    // execution order, so the dependency still has to be promoted.
+    $assets->add(AssetContribution::script('dep', 'dep.js', loadMode: LoadMode::Async));
+    $assets->add(AssetContribution::script('main', 'main.js', loadMode: LoadMode::Async, dependsOn: ['dep']));
+
+    $resolved = $assets->resolveScripts();
+    $paths = array_map(fn ($r) => $r->path, $resolved);
+
+    // Only the dependency needs promoting (matching real
+    // ScriptLoader::checkLoadDep() behavior, which only ever demoted
+    // the precedent) -- the footer group's own synchronous scripts
+    // always finish executing before the async-loader IIFE (itself
+    // footer-positioned) even starts creating <script async> tags, so
+    // 'main' can safely stay async once 'dep' is guaranteed synchronous.
+    expect($resolved[0]->loadMode)->toBe(LoadMode::Footer)
+        ->and($resolved[1]->loadMode)->toBe(LoadMode::Async)
+        ->and($paths)
+        ->toBe(['dep.js', 'main.js']);
+});
+
 test('circular script dependencies throw rather than looping forever', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
     $assets->add(AssetContribution::script('a', 'a.js', dependsOn: ['b']));

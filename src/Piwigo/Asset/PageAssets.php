@@ -386,6 +386,26 @@ final class PageAssets
      * load more loosely than whatever depends on it -- an async script
      * can't safely precede a footer script that requires it, since two
      * async tags have no guaranteed relative order.
+     *
+     * That "no guaranteed relative order" also holds between TWO async
+     * scripts -- confirmed against `ScriptLoader::checkLoadDep()`'s own
+     * real, pre-P41-G/H logic (`git show 00fd301ac5~1:.../ScriptLoader.php`),
+     * which had a second, dedicated check for exactly this case: `$load
+     * === 2 && $scripts[$precedent]->loadMode === 2` (both async)
+     * demoted the dependency to Footer, unless the dependency could be
+     * file-combined into the same bundle as its dependent (P41-G/H's own
+     * intentional drop of file-combining -- `docs/PLAN.md`'s P41-G/H
+     * section -- makes that exception permanently moot, not something
+     * to port forward). The general loop below only fires on strictly
+     * `>`, so an Async-depends-on-Async pair (both value 2) silently
+     * passed through unpromoted -- a real regression from that
+     * migration, not a hypothetical: `PictureView`'s own
+     * `AssetContribution::script('rating', ..., dependsOn: ['core.scripts'])`
+     * has both ends `LoadMode::Async`, and `<script async>` tags execute
+     * whenever they finish downloading, in no guaranteed order --
+     * caught via a real, intermittent `picture-1` VR failure
+     * (`Uncaught ReferenceError: pwgAddEventListener is not defined`,
+     * defined in `core.scripts`'s own `scripts.js`).
      */
     private function promoteLoadModes(): void
     {
@@ -414,6 +434,9 @@ final class PageAssets
                     $dependencyMode = $dependency->loadMode ?? LoadMode::Header;
                     if ($dependencyMode->value > $mode->value) {
                         $this->scripts[$dependencyId] = self::withLoadMode($dependency, $mode);
+                        $changed = true;
+                    } elseif ($dependencyMode === LoadMode::Async && $mode === LoadMode::Async) {
+                        $this->scripts[$dependencyId] = self::withLoadMode($dependency, LoadMode::Footer);
                         $changed = true;
                     }
                 }

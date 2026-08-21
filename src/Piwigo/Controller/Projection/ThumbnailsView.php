@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
@@ -28,12 +29,17 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `index.latte` reads directly, not folded onto `IndexView` itself.
  * `$rootUrl`/`$iconDir` are the ambient `$ROOT_URL`/`$themeconf['icon_dir']`
  * the template's own `error_icon` `exposeData` call reads.
+ * `$pluginThumbnailOverlays` is `$template->thumbnailOverlays()` --
+ * `CategoryDefaultRenderer` (L2aCoreDomain) may not call `Template`
+ * directly, so `GalleryController` (L3/L4) resolves it the same way it
+ * resolves every other field here.
  */
 #[Template('thumbnails.latte')]
 final readonly class ThumbnailsView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<int|string, mixed> $thumbnails
+     * @param list<ThumbnailOverlay> $pluginThumbnailOverlays
      */
     public function __construct(
         public DerivativeParams $derivativeParams,
@@ -42,6 +48,7 @@ final readonly class ThumbnailsView implements View, HasPageAssets, ExposesPageD
         public array $thumbnails,
         public string $rootUrl,
         public string $iconDir,
+        public array $pluginThumbnailOverlays,
     ) {}
 
     /**

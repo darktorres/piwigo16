@@ -26,9 +26,14 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Contribution\ActionContribution;
+use Piwigo\Contribution\AuthButton;
 use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Contribution\FieldOverride;
+use Piwigo\Contribution\FormProvider;
+use Piwigo\Contribution\MenuItem;
 use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
+use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
@@ -229,6 +234,36 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @var array<int, ProfileField[]>
      */
     private array $profileFields = [];
+
+    /**
+     * @var array<int, AuthButton[]>
+     */
+    private array $authButtons = [];
+
+    /**
+     * @var array<int, ThumbnailOverlay[]>
+     */
+    private array $thumbnailOverlays = [];
+
+    /**
+     * @var array<int, MenuItem[]>
+     */
+    private array $menuItems = [];
+
+    /**
+     * No `$order`-keyed bucketing like the collectors above -- a
+     * `FieldOverride` case is a plain presence check
+     * (`in_array($case, $this->fieldOverrides, true)`), not a
+     * visually-stacked list.
+     *
+     * @var list<FieldOverride>
+     */
+    private array $fieldOverrides = [];
+
+    /**
+     * @var array<int, FormProvider[]>
+     */
+    private array $formProviders = [];
 
     /**
      * Owns the theme directory chain `resolveLatteTemplatePath()` walks
@@ -1413,6 +1448,60 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Registers a typed third-party sign-in button, shown on both the
+     * identification and registration pages -- P43's typed replacement
+     * for a hand-written `set_prefilter('identification', ...)`/
+     * `set_prefilter('register', ...)` markup patch.
+     */
+    public function addAuthButton(AuthButton $button): void
+    {
+        $this->authButtons[$button->order][] = $button;
+    }
+
+    /**
+     * Registers a typed icon overlay to be displayed on every thumbnail
+     * on the gallery index -- P43's typed replacement for a
+     * hand-written `set_prefilter('index_thumbnails', ...)` markup
+     * patch.
+     */
+    public function addThumbnailOverlay(ThumbnailOverlay $overlay): void
+    {
+        $this->thumbnailOverlays[$overlay->order][] = $overlay;
+    }
+
+    /**
+     * Registers a typed navigational link to be appended to the
+     * menubar's own "Menu" block -- P43's typed replacement for a
+     * hand-written `set_prefilter('menubar', ...)` markup patch.
+     */
+    public function addMenuItem(MenuItem $item): void
+    {
+        $this->menuItems[$item->order][] = $item;
+    }
+
+    /**
+     * Requests a native form field be hidden -- P43's typed replacement
+     * for a hand-written `set_prefilter('profile_content', ...)` patch
+     * that hides the profile-edit form's own password fields.
+     */
+    public function overrideField(FieldOverride $override): void
+    {
+        $this->fieldOverrides[] = $override;
+    }
+
+    /**
+     * Registers a typed, titled field group to be displayed on the
+     * profile-edit form as its own labeled section -- P43's typed
+     * replacement for the dead `$PLUGINS_PROFILE`/
+     * `{include $plugin_block['template']}` mechanism (see
+     * `FormProvider`'s own docblock).
+     */
+    public function addFormProvider(FormProvider $provider): void
+    {
+        $this->formProviders[$provider->order][] = $provider;
+    }
+
+    /**
      * Every real `switchBox` pair in this codebase (`themes/default/js/
      * index.js`'s own `#derivativeSwitchLink`/`#derivativeSwitchBox` etc.)
      * is wired via a `window.SwitchBox.push(link, box)` call --
@@ -1517,6 +1606,65 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function profileFields(): array
     {
         return self::flattenByOrder($this->profileFields);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- the
+     * `View`-based sibling for `IdentificationView`/`RegisterView`'s
+     * own `$pluginAuthButtons`.
+     *
+     * @return list<AuthButton>
+     */
+    public function authButtons(): array
+    {
+        return self::flattenByOrder($this->authButtons);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- the
+     * `View`-based sibling for `ThumbnailsView::$pluginThumbnailOverlays`.
+     *
+     * @return list<ThumbnailOverlay>
+     */
+    public function thumbnailOverlays(): array
+    {
+        return self::flattenByOrder($this->thumbnailOverlays);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- read
+     * by `Menu\MenubarRenderer::render()` to append to the `mbMenu`
+     * block's own row list.
+     *
+     * @return list<MenuItem>
+     */
+    public function menuItems(): array
+    {
+        return self::flattenByOrder($this->menuItems);
+    }
+
+    /**
+     * The `View`-based sibling for `ProfileFormView`/`ProfileView`'s own
+     * `$pluginFieldOverrides` -- not order-keyed, see `$fieldOverrides`'s
+     * own docblock.
+     *
+     * @return list<FieldOverride>
+     */
+    public function fieldOverrides(): array
+    {
+        return $this->fieldOverrides;
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- the
+     * `View`-based sibling for `ProfileFormView`/`ProfileView`'s own
+     * `$pluginFormProviders`.
+     *
+     * @return list<FormProvider>
+     */
+    public function formProviders(): array
+    {
+        return self::flattenByOrder($this->formProviders);
     }
 
     /**

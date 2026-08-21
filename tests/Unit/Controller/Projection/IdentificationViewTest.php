@@ -20,6 +20,7 @@ function makeIdentificationView(bool $isStandardPagesTheme): IdentificationView
         helpLink: '',
         isStandardPagesTheme: $isStandardPagesTheme,
         standardPagesSelectedSkin: 'default',
+        pluginAuthButtons: [],
     );
 }
 

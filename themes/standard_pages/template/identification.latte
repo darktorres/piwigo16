@@ -128,6 +128,17 @@
         </div>
       </form>
 
+      <div n:if="$pluginAuthButtons !== []" class="auth-buttons">
+        <p>{='Or sign in with'|translate}</p>
+        <a
+          n:foreach="$pluginAuthButtons as $button"
+          href="#"
+          data-provider="{$button->providerId}"
+          title="{$button->label}"
+          class="btn btn-main btn-secondary"
+        >{$button->label}</a>
+      </div>
+
       <div class="secondary-links">
         {if isset($register)}
           <p>{='Don\'t have an account yet ?'|translate} <a

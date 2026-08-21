@@ -353,6 +353,16 @@ final class MenubarRenderer
                   'URL' => $urlService->getRootUrl() . 'notification.php',
                   'REL' => 'rel="nofollow"',
               ];
+
+            foreach ($template->menuItems() as $item) {
+                $block->data[] = [
+                    'URL' => $item->url,
+                    'TITLE' => $item->title,
+                    'NAME' => $item->label,
+                    'COUNTER' => $item->counter,
+                ];
+            }
+
             $block->template = 'menubar_menu.latte';
         }
 

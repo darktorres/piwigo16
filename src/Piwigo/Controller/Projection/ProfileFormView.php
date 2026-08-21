@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Piwigo\Contribution\FieldOverride;
+use Piwigo\Contribution\FormProvider;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -19,7 +21,8 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `$template->profileFields()`, the same call `ProfileView` itself
  * makes for `standard_pages`'s own inline form -- P43's typed
  * replacement for a hand-written `set_prefilter('profile_content', ...)`
- * markup patch.
+ * markup patch. `$pluginFieldOverrides` is `$template->fieldOverrides()`.
+ * `$pluginFormProviders` is `$template->formProviders()`.
  */
 #[Template('profile_content.latte')]
 final readonly class ProfileFormView implements View
@@ -29,6 +32,8 @@ final readonly class ProfileFormView implements View
      * @param array<int|string, string> $languageOptions
      * @param array<string, string> $radioOptions
      * @param list<ProfileField> $pluginProfileFields
+     * @param list<FieldOverride> $pluginFieldOverrides
+     * @param list<FormProvider> $pluginFormProviders
      */
     public function __construct(
         public string $fAction,
@@ -50,5 +55,7 @@ final readonly class ProfileFormView implements View
         public string $nbHits,
         public string $csrfToken,
         public array $pluginProfileFields,
+        public array $pluginFieldOverrides,
+        public array $pluginFormProviders,
     ) {}
 }

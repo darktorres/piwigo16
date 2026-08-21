@@ -9,6 +9,8 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\FieldOverride;
+use Piwigo\Contribution\FormProvider;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
@@ -47,6 +49,8 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
      * @param array<string, string> $languageOptions
      * @param array<int|string, string> $apiExpiration
      * @param list<ProfileField> $pluginProfileFields
+     * @param list<FieldOverride> $pluginFieldOverrides
+     * @param list<FormProvider> $pluginFormProviders
      */
     public function __construct(
         public Html $profileContent,
@@ -75,6 +79,8 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
         public bool $isStandardPagesTheme,
         public string $standardPagesSelectedSkin,
         public array $pluginProfileFields,
+        public array $pluginFieldOverrides,
+        public array $pluginFormProviders,
     ) {}
 
     /**

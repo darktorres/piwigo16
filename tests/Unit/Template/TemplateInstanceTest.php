@@ -7,11 +7,16 @@ use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\Event\GetPageAssets;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Contribution\ActionContribution;
+use Piwigo\Contribution\AuthButton;
 use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Contribution\FieldOverride;
 use Piwigo\Contribution\FieldType;
+use Piwigo\Contribution\FormProvider;
+use Piwigo\Contribution\MenuItem;
 use Piwigo\Contribution\PanelLink;
 use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
+use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HeadLink;
@@ -970,6 +975,91 @@ test('registerFields()/profileFields() are empty when no field was ever register
     expect($t->registerFields())
         ->toBe([])
         ->and($t->profileFields())
+        ->toBe([]);
+});
+
+test('authButtons() returns registered buttons sorted by order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addAuthButton(new AuthButton(label: 'B', providerId: 'b', order: 50));
+    $t->addAuthButton(new AuthButton(label: 'A', providerId: 'a', order: 10));
+
+    expect(array_map(static fn (AuthButton $b): string => $b->label, $t->authButtons()))
+        ->toBe(['A', 'B']);
+});
+
+test('authButtons() is empty when no button was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->authButtons())
+        ->toBe([]);
+});
+
+test('thumbnailOverlays() returns registered overlays sorted by order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addThumbnailOverlay(new ThumbnailOverlay(icon: 'icon-b', order: 50));
+    $t->addThumbnailOverlay(new ThumbnailOverlay(icon: 'icon-a', order: 10));
+
+    expect(array_map(static fn (ThumbnailOverlay $o): string => $o->icon, $t->thumbnailOverlays()))
+        ->toBe(['icon-a', 'icon-b']);
+});
+
+test('thumbnailOverlays() is empty when no overlay was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->thumbnailOverlays())
+        ->toBe([]);
+});
+
+test('menuItems() returns registered items sorted by order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addMenuItem(new MenuItem(label: 'B', url: '/b', order: 50));
+    $t->addMenuItem(new MenuItem(label: 'A', url: '/a', order: 10));
+
+    expect(array_map(static fn (MenuItem $i): string => $i->label, $t->menuItems()))
+        ->toBe(['A', 'B']);
+});
+
+test('menuItems() is empty when no item was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->menuItems())
+        ->toBe([]);
+});
+
+test('fieldOverrides() returns every registered override, in registration order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->overrideField(FieldOverride::Password);
+
+    expect($t->fieldOverrides())
+        ->toBe([FieldOverride::Password]);
+});
+
+test('fieldOverrides() is empty when no override was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->fieldOverrides())
+        ->toBe([]);
+});
+
+test('formProviders() returns registered providers sorted by order, with their fields intact', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addFormProvider(new FormProvider(title: 'B', fields: [], order: 50));
+    $t->addFormProvider(new FormProvider(title: 'A', fields: [new ProfileField(label: 'X', name: 'x')], order: 10));
+
+    $providers = $t->formProviders();
+
+    expect(array_map(static fn (FormProvider $p): string => $p->title, $providers))
+        ->toBe(['A', 'B'])
+        ->and($providers[0]->fields)
+        ->toHaveCount(1)
+        ->and($providers[0]->fields[0]->name)
+        ->toBe('x');
+});
+
+test('formProviders() is empty when no provider was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->formProviders())
         ->toBe([]);
 });
 

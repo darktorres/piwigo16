@@ -581,6 +581,7 @@ final readonly class GalleryController implements ControllerInterface
                 thumbnails: $categoryDefaultResult->thumbnails,
                 rootUrl: $urlService->getRootUrl(),
                 iconDir: $template->themeConf('icon_dir'),
+                pluginThumbnailOverlays: $template->thumbnailOverlays(),
             ));
             $template->assignContext(new ThumbnailsHtmlPageContext($thumbnailsHtml));
 

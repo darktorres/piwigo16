@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\AuthButton;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -28,13 +29,17 @@ use Piwigo\Template\Latte\Attribute\Template;
  * would, via `$template->themeConf('id') === 'standard_pages'`.
  * `$standardPagesSelectedSkin` is the ambient `$STD_PGS_SELECTED_SKIN`
  * the `standard_pages` file's own `combineCss()` call reads, only
- * meaningful when `$isStandardPagesTheme` is true.
+ * meaningful when `$isStandardPagesTheme` is true. `$pluginAuthButtons`
+ * is `$template->authButtons()`, the same call `RegisterView` itself
+ * makes -- P43's typed replacement for a hand-written
+ * `set_prefilter('identification', ...)` markup patch.
  */
 #[Template('identification.latte')]
 final readonly class IdentificationView implements View, HasPageAssets
 {
     /**
      * @param array<string, string> $languageOptions
+     * @param list<AuthButton> $pluginAuthButtons
      */
     public function __construct(
         public string $homeUrl,
@@ -48,6 +53,7 @@ final readonly class IdentificationView implements View, HasPageAssets
         public string $helpLink,
         public bool $isStandardPagesTheme,
         public string $standardPagesSelectedSkin,
+        public array $pluginAuthButtons,
     ) {}
 
     /**

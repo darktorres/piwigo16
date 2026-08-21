@@ -20,6 +20,7 @@ function makeThumbnailsView(array $thumbnails): ThumbnailsView
         thumbnails: $thumbnails,
         rootUrl: 'http://example.com/',
         iconDir: 'icon',
+        pluginThumbnailOverlays: [],
     );
 }
 

@@ -98,5 +98,18 @@
       </a>
     </p>
   </form>
+
+  <fieldset n:if="$pluginAuthButtons !== []" class="authButtons">
+    <legend>{='Or sign in with'|translate}</legend>
+    <a
+      n:foreach="$pluginAuthButtons as $button"
+      href="#"
+      data-provider="{$button->providerId}"
+      title="{$button->label}"
+      class="pwg-state-default pwg-button"
+    >
+      <span n:if="$button->icon" class="{$button->icon}">&nbsp;</span><span>{$button->label}</span>
+    </a>
+  </fieldset>
 </div> <!-- content -->
 {/block}

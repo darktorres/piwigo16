@@ -21,6 +21,7 @@ function makeRegisterView(bool $isStandardPagesTheme): RegisterView
         isStandardPagesTheme: $isStandardPagesTheme,
         standardPagesSelectedSkin: 'default',
         pluginRegisterFields: [],
+        pluginAuthButtons: [],
     );
 }
 

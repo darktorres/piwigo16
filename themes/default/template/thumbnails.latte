@@ -18,6 +18,12 @@
       <li>
         <span class="wrap1">
           <span class="wrap2">
+            <span
+              n:foreach="$pluginThumbnailOverlays as $overlay"
+              n:attr="id: $overlay->id"
+              class="thumbnailOverlay"
+              data-image-id="{$thumbnail['id']}"
+            ><i class="{$overlay->icon}"></i></span>
             <a href="{$thumbnail['URL']|noescape}">
               <img
                 class="thumbnail"

@@ -26,24 +26,26 @@
             value="{$email}"
           >
         </li>
-        <li>
-          <span class="property">
-            <label for="password">{='Password'|translate}</label>
-          </span>
-          <input type="password" name="password" id="password" value="">
-        </li>
-        <li>
-          <span class="property">
-            <label for="use_new_pwd">{='New password'|translate}</label>
-          </span>
-          <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
-        </li>
-        <li>
-          <span class="property">
-            <label for="passwordConf">{='Confirm Password'|translate}</label>
-          </span>
-          <input type="password" name="passwordConf" id="passwordConf" value="">
-        </li>
+        {if !in_array(\Piwigo\Contribution\FieldOverride::Password, $pluginFieldOverrides, true)}
+          <li>
+            <span class="property">
+              <label for="password">{='Password'|translate}</label>
+            </span>
+            <input type="password" name="password" id="password" value="">
+          </li>
+          <li>
+            <span class="property">
+              <label for="use_new_pwd">{='New password'|translate}</label>
+            </span>
+            <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
+          </li>
+          <li>
+            <span class="property">
+              <label for="passwordConf">{='Confirm Password'|translate}</label>
+            </span>
+            <input type="password" name="passwordConf" id="passwordConf" value="">
+          </li>
+        {/if}
       {/if}
     </ul>
   </fieldset>
@@ -137,6 +139,32 @@
   <fieldset n:if="$pluginProfileFields !== []">
     <ul>
       <li n:foreach="$pluginProfileFields as $field">
+        <span class="property">
+          <label for="{$field->name}">{$field->label}</label>
+        </span>
+        <input
+          n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
+          type="checkbox"
+          name="{$field->name}"
+          id="{$field->name}"
+          value="1"
+          n:attr="checked: $field->value !== '' ? 'checked' : null"
+        >
+        <input
+          n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+          type="text"
+          name="{$field->name}"
+          id="{$field->name}"
+          value="{$field->value}"
+        >
+      </li>
+    </ul>
+  </fieldset>
+
+  <fieldset n:foreach="$pluginFormProviders as $provider">
+    <legend>{$provider->title}</legend>
+    <ul>
+      <li n:foreach="$provider->fields as $field">
         <span class="property">
           <label for="{$field->name}">{$field->label}</label>
         </span>

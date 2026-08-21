@@ -297,6 +297,7 @@ final readonly class RegisterController implements ControllerInterface
             isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
             standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
             pluginRegisterFields: $template->registerFields(),
+            pluginAuthButtons: $template->authButtons(),
         );
 
         new PageHeaderRenderer()

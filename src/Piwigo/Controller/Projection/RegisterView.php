@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\AuthButton;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -27,6 +28,8 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `$pluginRegisterFields` is shared by both real templates too --
  * `$template->registerFields()`, P43's typed replacement for a
  * hand-written `set_prefilter('register', ...)` markup patch.
+ * `$pluginAuthButtons` is `$template->authButtons()`, the same call
+ * `IdentificationView` itself makes.
  */
 #[Template('register.latte')]
 final readonly class RegisterView implements View, HasPageAssets
@@ -34,6 +37,7 @@ final readonly class RegisterView implements View, HasPageAssets
     /**
      * @param array<string, string> $languageOptions
      * @param list<ProfileField> $pluginRegisterFields
+     * @param list<AuthButton> $pluginAuthButtons
      */
     public function __construct(
         public string $homeUrl,
@@ -48,6 +52,7 @@ final readonly class RegisterView implements View, HasPageAssets
         public bool $isStandardPagesTheme,
         public string $standardPagesSelectedSkin,
         public array $pluginRegisterFields,
+        public array $pluginAuthButtons,
     ) {}
 
     /**

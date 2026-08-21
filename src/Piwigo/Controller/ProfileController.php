@@ -211,6 +211,8 @@ final readonly class ProfileController implements ControllerInterface
             nbHits: $formData->nbHits,
             csrfToken: $formData->pwgToken,
             pluginProfileFields: $template->profileFields(),
+            pluginFieldOverrides: $template->fieldOverrides(),
+            pluginFormProviders: $template->formProviders(),
         ));
 
         $urlService = $this->urlService;
@@ -281,6 +283,8 @@ final readonly class ProfileController implements ControllerInterface
             isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
             standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
             pluginProfileFields: $template->profileFields(),
+            pluginFieldOverrides: $template->fieldOverrides(),
+            pluginFormProviders: $template->formProviders(),
         ));
         $body = $template->finalizeHtml((string) $html);
 

@@ -195,6 +195,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             thumbnails: $result->thumbnails,
             rootUrl: '',
             iconDir: '',
+            pluginThumbnailOverlays: [],
         ));
 
         return (string) $html;

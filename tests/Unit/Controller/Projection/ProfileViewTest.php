@@ -36,6 +36,8 @@ function makeProfileView(bool $isStandardPagesTheme): ProfileView
         isStandardPagesTheme: $isStandardPagesTheme,
         standardPagesSelectedSkin: 'default',
         pluginProfileFields: [],
+        pluginFieldOverrides: [],
+        pluginFormProviders: [],
     );
 }
 

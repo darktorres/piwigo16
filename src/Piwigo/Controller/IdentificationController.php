@@ -239,6 +239,7 @@ final readonly class IdentificationController implements ControllerInterface
             helpLink: $help_link,
             isStandardPagesTheme: $template->themeConf('id') === 'standard_pages',
             standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
+            pluginAuthButtons: $template->authButtons(),
         );
 
         new PageHeaderRenderer()

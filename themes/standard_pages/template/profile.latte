@@ -90,6 +90,33 @@
           <p>{$field->label}</p>
         </div>
       </div>
+      <div n:foreach="$pluginFormProviders as $provider" class="column-flex first">
+        <label class="options-title">{$provider->title}</label>
+        <div n:foreach="$provider->fields as $field" class="column-flex">
+          <label n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" for="{$field->name}">{$field->label}</label>
+          <div n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" class="row-flex input-container">
+            <input
+              type="text"
+              name="{$field->name}"
+              id="{$field->name}"
+              value="{$field->value}"
+            >
+          </div>
+          <div n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox" class="row-flex option">
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="{$field->name}"
+                id="{$field->name}"
+                value="1"
+                n:attr="checked: $field->value !== '' ? 'checked' : null"
+              >
+              <span class="slider round"></span>
+            </label>
+            <p>{$field->label}</p>
+          </div>
+        </div>
+      </div>
       <div class="save">
         <button
           class="btn btn-main"
@@ -253,7 +280,11 @@
   </section>
 
   {* PASSWORD *}
-  <section n:if="!$specialUser" id="password-section" class="profile-section">
+  <section
+    n:if="!$specialUser && !in_array(\Piwigo\Contribution\FieldOverride::Password, $pluginFieldOverrides, true)"
+    id="password-section"
+    class="profile-section"
+  >
     <div class="title display-section" data-display="password-display">
       <div class="column-flex">
         <h1>{='Password'|translate}</h1>

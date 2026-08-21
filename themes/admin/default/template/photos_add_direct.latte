@@ -1,66 +1,9 @@
 {templateType Piwigo\Admin\Projection\PhotosAddDirectView}
 {if isset($addToAlbum) or isset($selectedCategoryName)}{var $can_upload = true}{else}{var $can_upload = false}{/if}
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-{do combineScript(id: 'jquery.plupload', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/plupload/plupload.full.min.js')}
-{do combineScript(id: 'jquery.plupload.queue', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/plupload/jquery.plupload.queue/jquery.plupload.queue.min.js')}
-{* Plupload owns file selection/drag-drop/queue UI only -- its own
-   upload transport is unused. The real byte transfer goes through
-   tus-js-client against the tus 1.0.0 server (/api/v1/uploads), driven
-   manually in photos_add_direct.js via plupload's own up.trigger() so
-   every existing UploadProgress/FileUploaded/Error/UploadComplete
-   handler keeps working unchanged. *}
-{do combineScript(id: 'tus-js-client', load: 'footer', path: 'themes/default/js/plugins/tus-js-client/tus.min.js')}
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-
-{do combineCss(path: "themes/default/js/plugins/plupload/jquery.plupload.queue/css/jquery.plupload.queue.css")}
-
-{var $plupload_i18n = "themes/default/js/plugins/plupload/i18n/{$lang_info['plupload_code']}.js"}
-{if file_exists($ROOT_PATH . $plupload_i18n)}
-  {do combineScript(id: "plupload_i18n-{$lang_info['plupload_code']}", load: 'footer', path: $plupload_i18n, require: 'jquery.plupload.queue')}
-{/if}
-
 {if !$displayFormats}
   {include 'include/add_album.inc.latte'}
 {/if}
-
-{do combineScript(id: 'LocalStorageCache', load: 'footer', path: 'themes/admin/default/js/LocalStorageCache.js')}
-
-{do combineScript(id: 'jquery.selectize', load: 'footer', path: 'themes/default/js/plugins/selectize.min.js')}
-{do combineCss(id: 'jquery.selectize', path: "themes/default/js/plugins/selectize.{$themeconf['colorscheme']}.css")}
-
-{do combineScript(id: 'piecon', load: 'footer', path: 'themes/default/js/plugins/piecon.js')}
-{do combineScript(id: 'add_photo', load: 'footer', require: 'tus-js-client,page-data', path: 'themes/admin/default/js/photos_add_direct.js')}
-
-{do combineCss(id: 'photos_add_direct', path: 'themes/admin/default/css/pages/photos_add_direct.css')}
-
-{var $originalImageIdStr = ' ' . ($formatsOriginalInfo['id'] ?? -1) . ' '}
-{do exposeData('display_formats', $displayFormats)}
-{do exposeData('have_formats_original', $haveFormatsOriginal)}
-{do exposeData('original_image_id_str', $originalImageIdStr)}
-{do exposeData('formats_ext_info', $formatsExtInfo)}
-{do exposeData('nb_albums', (string) $nbAlbums)}
-{do exposeData('chunk_size', $chunkSize)}
-{do exposeData('max_file_size', $maxFileSize)}
-{do exposeData('csrf_token', $pwgToken)}
-{do exposeData('file_exts', $fileExts)}
-{do exposeData('format_ext', $formatExt)}
-{do exposeData('related_categories_ids', $selectedCategory)}
-{do exposeString('This format already exists, it will be overwritten !')}
-{do exposeString('Remove')}
-{do exposeString('%d photos uploaded')}
-{do exposeString('%d photos updated')}
-{do exposeString('%d formats added for %d photos')}
-{do exposeString('%d formats updated for %d photos')}
-{do exposeString('Manage this set of %d photos')}
-{do exposeString('Album "%s" now contains %d photos')}
-{do exposeString('Error when trying to detect formats')}
-{do exposeString('There is multiple image in the database with the following names : %s.')}
-{do exposeString('No picture found with the following name : %s.')}
-{do exposeString('and %d more')}
-{do exposeString('Upload in progress')}
-{do exposeString('Drop into album')}
 
 <div id="photosAddContent">
   {if count($setupErrors) > 0}

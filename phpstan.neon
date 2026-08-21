@@ -371,9 +371,6 @@ parameters:
             identifier: echo.nonString
             path: _analysis/phpstan-latte/*
         -
-            identifier: encapsedStringPart.nonString
-            path: _analysis/phpstan-latte/*
-        -
             identifier: foreach.nonIterable
             path: _analysis/phpstan-latte/*
         -

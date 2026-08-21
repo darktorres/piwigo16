@@ -5,40 +5,6 @@
    too (PageAssets::add()'s dedup makes that a harmless no-op). *}
 {include 'include/add_album.inc.latte', load_mode: 'async'}
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/default/js/common.js')}
-
-{do combineScript(id: 'jquery.progressBar', load: 'async', path: 'themes/default/js/plugins/jquery.progressbar.min.js')}
-{do combineScript(id: 'jquery.ajaxmanager', load: 'async', path: 'themes/default/js/plugins/jquery.ajaxmanager.js')}
-
-{do combineScript(id: 'batchManagerGlobal', load: 'async', require: 'jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider', path: 'themes/admin/default/js/batchManagerGlobal.js')}
-
-{do combineScript(id: 'batch_manager_global', load: 'footer', require: 'page-data', path: 'themes/admin/default/js/batch_manager_global.js')}
-{do combineCss(id: 'batch_manager_global', path: 'themes/admin/default/css/pages/batch_manager_global.css')}
-{do exposeData('cache_key_tags', $cacheKeys['tags'])}
-{do exposeData('cache_key_categories', $cacheKeys['categories'])}
-{do exposeData('cache_key_hash', $cacheKeys['_hash'])}
-{do exposeData('root_url', $ROOT_URL)}
-{do exposeData('associated_categories', $associated_categories)}
-{do exposeData('nb_thumbs_page', $nbThumbsPage)}
-{do exposeData('nb_thumbs_set', $nbThumbsSet)}
-{do exposeData('all_elements', $all_elements)}
-{do exposeString('Cancel')}
-{do exposeString('Deletion in progress')}
-{do exposeString('Synchronization in progress')}
-{do exposeString('Are you sure?')}
-{do exposeString('Generate multiple size images')}
-{do exposeString('Create')}
-{do exposeString('on the %d selected photos')}
-{do exposeString('%d of %d photos selected')}
-{do exposeString('No photo selected, %d photos in current set')}
-{do exposeString('All %d photos are selected')}
-{do exposeString('Add Album')}
-{do exposeString('Select an album')}
-
-{do combineScript(id: 'jquery.confirm', load: 'footer', require: 'jquery', path: 'themes/default/js/plugins/jquery-confirm.min.js')}
-{do combineCss(path: "themes/default/js/plugins/jquery-confirm.min.css")}
-{do combineCss(path: "themes/admin/default/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-
 <div id="batchManagerGlobal">
   <form action="{$F_ACTION|noescape}" method="post">
     <input type="hidden" name="start" value="{$START}">

@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
@@ -20,13 +21,16 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `count($cat_elements_id) > 0` branch. No `$usedMetadata` field -- the
  * template's own body (and `batch_manager_global.js`'s
  * `pwg_getPageData()` reads) never reference it. No `$fAction`/
- * `$start`/`$csrfToken`/`$uDisplay`/`$selection`/`$associatedCategories`/
- * `$allElements` field either -- those are genuinely ambient here:
- * `FilterPanelRenderer::render()` (called earlier in the same request,
- * still on the old assignContext() mechanism) assigns them directly
- * onto the same `Template` instance's `$vars` bag, which
- * `Renderer::render()`'s own ambient merge picks up the same way it
- * does `ROOT_URL`. `$thumbnails` is always included (even empty) since
+ * `$start`/`$csrfToken`/`$uDisplay`/`$selection` field either -- those
+ * stay genuinely ambient here: `FilterPanelRenderer::render()` (called
+ * earlier in the same request, still on the old assignContext()
+ * mechanism) assigns them directly onto the same `Template` instance's
+ * `$vars` bag, which `Renderer::render()`'s own ambient merge picks up
+ * the same way it does `ROOT_URL`. `$associatedCategories`/
+ * `$allElements` are the 2 exceptions -- read back from that same
+ * ambient bag right after `FilterPanelRenderer::render()` returns
+ * (docs/PLAN.md's P42-B), since `exposedPageData()` below needs their
+ * real values. `$thumbnails` is always included (even empty) since
  * the template reads it with `{if !empty($thumbnails)}`, not `isset()`.
  * Each `$thumbnails` row stays a loose, dynamically `array_merge()`-built
  * shape, same precedent as `PluginsInstalledView::$plugins`.
@@ -42,6 +46,8 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
      * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
      * @param list<array<string, mixed>> $thumbnails
+     * @param array<array-key, mixed> $associatedCategories
+     * @param array<array-key, mixed> $allElements
      */
     public function __construct(
         public bool $inCaddie,
@@ -60,17 +66,12 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         public string $rootPath,
         public string $jqueryCode,
         public string $colorscheme,
+        public string $rootUrl,
+        public array $associatedCategories,
+        public array $allElements,
     ) {}
 
     /**
-     * Only `include/datepicker.inc.latte`'s, `include/colorbox.inc.latte`'s,
-     * and `include/add_album.inc.latte`'s own contributions -- this
-     * page's own many other `combineCss`/`combineScript`/`exposeData`
-     * call sites (`docs/PLAN.md`'s P42-B colorbox-family batch) are not
-     * migrated yet, deliberately, and stay imperative for now; both
-     * sources coexist correctly (`PageAssets::add()`'s own dedup
-     * contract).
-     *
      * @return list<AssetContribution>
      */
     #[Override]
@@ -83,32 +84,63 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
                 ->pageAssets(),
             ...new AddAlbumView(load_mode: 'async', colorscheme: $this->colorscheme)
                 ->pageAssets(),
+            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
+            AssetContribution::script('jquery.ajaxmanager', 'themes/default/js/plugins/jquery.ajaxmanager.js', loadMode: LoadMode::Async),
+            AssetContribution::script('batchManagerGlobal', 'themes/admin/default/js/batchManagerGlobal.js', loadMode: LoadMode::Async, dependsOn: ['jquery', 'datepicker', 'jquery.colorbox', 'addAlbum', 'doubleSlider']),
+            AssetContribution::script('batch_manager_global', 'themes/admin/default/js/batch_manager_global.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
+            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            // order 10 is required, see issue 1080
+            AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             ...new AlbumSelectorView()
                 ->pageAssets(),
         ];
     }
 
     /**
-     * Only `include/album_selector.inc.latte`'s own contribution --
-     * this page's own many other `exposeData` call sites
-     * (`docs/PLAN.md`'s P42-B colorbox-family batch) are not migrated
-     * yet, deliberately, and stay imperative for now.
-     *
      * @return array<string, string|int|float|bool|null|array<mixed>>
      */
     #[Override]
     public function exposedPageData(): array
     {
-        return [];
+        return [
+            'cache_key_tags' => $this->cacheKeys['tags'],
+            'cache_key_categories' => $this->cacheKeys['categories'],
+            'cache_key_hash' => $this->cacheKeys['_hash'],
+            'root_url' => $this->rootUrl,
+            'associated_categories' => $this->associatedCategories,
+            'nb_thumbs_page' => $this->nbThumbsPage,
+            'nb_thumbs_set' => $this->nbThumbsSet,
+            'all_elements' => $this->allElements,
+        ];
     }
 
     /**
+     * `'Are you sure?'` already covered unconditionally by
+     * `ThemeBaseAssets`'s own confirm-dialog triplet (docs/PLAN.md's
+     * P42) -- dropped, not ported.
+     *
      * @return list<string>
      */
     #[Override]
     public function exposedStrings(): array
     {
-        return new AlbumSelectorView()
-            ->exposedStrings();
+        return [
+            'Cancel',
+            'Deletion in progress',
+            'Synchronization in progress',
+            'Generate multiple size images',
+            'Create',
+            'on the %d selected photos',
+            '%d of %d photos selected',
+            'No photo selected, %d photos in current set',
+            'All %d photos are selected',
+            'Add Album',
+            'Select an album',
+            ...new AlbumSelectorView()
+                ->exposedStrings(),
+        ];
     }
 }

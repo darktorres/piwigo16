@@ -461,6 +461,13 @@ final readonly class BatchManagerGlobalPageRenderer
         new FilterPanelRenderer()
             ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer, $this->currentConfig, $this->entityManager, $this->csrfService);
 
+        // Genuinely ambient -- FilterPanelRenderer::render() above
+        // assigns both directly onto this same Template instance's own
+        // $vars bag (still the old assignContext() mechanism), not via
+        // this class's own BatchManagerGlobalView construction below.
+        $associated_categories_raw = $template->getTemplateVars('associated_categories');
+        $all_elements_raw = $template->getTemplateVars('all_elements');
+
         $in_caddie = $prefilter_value === 'caddie';
 
         $associated_tags = null;
@@ -588,6 +595,9 @@ final readonly class BatchManagerGlobalPageRenderer
             rootPath: $this->paths->root,
             jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
             colorscheme: $template->themeConf('colorscheme'),
+            rootUrl: $this->urlService->getRootUrl(),
+            associatedCategories: is_array($associated_categories_raw) ? $associated_categories_raw : [],
+            allElements: is_array($all_elements_raw) ? $all_elements_raw : [],
         ));
 
         $template->assignContext(new AdminContentPageContext(adminContent: $adminContent));

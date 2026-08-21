@@ -3330,6 +3330,32 @@ partials remain (`ColorboxView`/`AlbumSelectorView`/`AddAlbumView`/
 `BatchManagerFilterView`), each with more, and more tightly-coupled,
 real parents than `Autosize`/`Datepicker` had.
 
+**Colorbox-family batch, part 2**: `ColorboxView`'s own `pageAssets()`
+merged into all 12 real direct parents, plus a fresh full migration of
+`AdminShellView` (`admin.latte` itself -- the shell every admin page
+renders inside; a new `$hasHelp` property gates the same conditional
+`admin_help`/colorbox pair the original template's own
+`{if isset($U_HELP)}` block did, resolved from `AdminContentPageContext::
+$helpUrl` read back via `$template->getTemplateVars('U_HELP')` after
+`AdminDispatcher::dispatch()` runs) and `PhotosAddApplicationsView`
+(fully migrated, 3 call sites) -- **~65 pages/Views, ~690 of 945 call
+sites**. `colorbox.inc.latte`'s own imperative calls stay in place,
+deliberately not deleted this batch: emptying it broke every page
+reaching colorbox only *transitively*, through `album_selector.inc.latte`/
+`add_album.inc.latte`'s own internal `{include 'colorbox.inc.latte',
+...}` (missed by the initial real-parent grep since both reference it
+by a bare relative path, not `include/colorbox.inc.latte` -- a real,
+caught-not-assumed gap, confirmed via a real golden-html regression on
+`search`/`admin-album`/`admin-photo-editor` and fixed by reverting).
+Every direct parent's new PHP-side merge is a harmless, dedup-safe
+redundant registration alongside `colorbox.inc.latte`'s own still-live
+call, until `AlbumSelectorView`/`AddAlbumView` get their own turn in a
+future batch and can absorb it properly. `batch_manager_unit.latte`
+also keeps its own `{include 'include/colorbox.inc.latte'}` line for
+an unrelated, confirmed-reproducible reason: removing it triggers a
+phpstan-latte "implicit array creation" false positive on an unrelated
+`$all_selected_album` loop later in the same file.
+
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign
 (124 commits, 614 files, `$array['field']` access converted to typed

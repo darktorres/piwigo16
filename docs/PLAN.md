@@ -3412,11 +3412,38 @@ colorbox-family admin pages -- **~71 pages/Views landed so far, ~882 of
 945 call sites**. Dropped the last real trigger for phpstan.neon's
 `encapsedStringPart.nonString` ignore rule on the generated Latte
 analysis path (an unmatched-ignore PHPStan error, fixed by removing the
-now-stale rule, not by suppressing or reintroducing it). Remaining P42-B
-scope: `BatchManagerFilterView`'s own ~15 call sites (deferred, ambient
-shape); `local_head.latte`'s `resolveLocalHeadOnce()` infrastructure gap
-(bypasses `Renderer::render()` entirely); the `MenubarBlockView`/
-`index.latte` design gap (no real `Renderer::render()` target).
+now-stale rule, not by suppressing or reintroducing it).
+
+**`batch_manager_filter.inc.latte`'s own remaining 17 call sites.**
+Its own 13 constructor properties are all real template variables, but
+only 4 (`$dimensions`/`$filesize`/`$filter_category_selected` plus the
+ambient `$themeconf['colorscheme']`) feed its own asset/data/string
+registrations -- constructing a full `BatchManagerFilterView` instance
+just to call 3 methods that never touch the other 9 wasn't worth it,
+so its 2 real parents (`BatchManagerUnitView`/`BatchManagerGlobalView`)
+declare its registrations directly instead, reading the 3 genuinely
+ambient values back the same way as `$associatedCategories`/
+`$allElements` (`$dimensions`/`$filesize` assigned by
+`BatchManagerSubController::handle()`, `$filter_category_selected` by
+`FilterPanelRenderer::render()`, both before either View is
+constructed). A real ordering subtlety surfaced by a golden-html diff
+on `admin-batch`: `batch_manager_filter.inc.latte` itself `{include}`s
+`album_selector.inc.latte` internally (a bare relative path, the same
+nested-include shape already known from `colorbox.inc.latte`/
+`add_album.inc.latte`) -- since `AlbumSelectorView`'s own merge into
+each parent is already fully declarative, it resolves entirely before
+any template body runs at all, regardless of where its own spread sits
+textually in the parent's PHP array; the filter block's own
+registrations have to be placed *after* it in that array to match,
+not wherever its own old `{include}` line sat relative to
+`album_selector.inc.latte`'s *other*, still-imperative-at-the-time
+call site. `include/batch_manager_filter.inc.latte`'s own `{include}`
+line stays at both parents for its real markup (the filter form
+itself) -- **~71 pages/Views landed so far, ~899 of 945 call sites**.
+Remaining P42-B scope: `local_head.latte`'s `resolveLocalHeadOnce()`
+infrastructure gap (bypasses `Renderer::render()` entirely); the
+`MenubarBlockView`/`index.latte` design gap (no real
+`Renderer::render()` target).
 
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign

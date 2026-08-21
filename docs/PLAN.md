@@ -3356,6 +3356,39 @@ an unrelated, confirmed-reproducible reason: removing it triggers a
 phpstan-latte "implicit array creation" false positive on an unrelated
 `$all_selected_album` loop later in the same file.
 
+**Colorbox-family batch, parts 3-4**: `AddAlbumView` (real markup, the
+"add album" popin -- only its own `combineCss`/`combineScript` calls
+move declaratively, its `{include}` stays at every real parent for the
+markup) and `AlbumSelectorView` (same shape, the linked-album popin,
+guarded by the template's own `{if once('inc_album_selector')}` --
+`once()`'s per-render dedup concern doesn't apply to the PHP-side
+merge, since `PageAssets::add()`/`Template::exposeString()` are
+already dedup-safe regardless of call count) closed out all 7+2 real
+parents, plus a fresh full migration of `CatModifyView` (admin-album's
+own page) and `SearchFiltersView`/`QuickSearchView` (search.php's
+sidebar, genuinely `Renderer::render()`'d for real -- caught a real
+gap here: `ExposesPageData` was initially missed, confirmed via a
+golden-html diff showing album_selector's own strings vanish from the
+JSON island entirely, not just reorder). `BatchManagerFilterView` is
+deliberately NOT touched -- its 2 real parents already merge
+`AlbumSelectorView` directly, which is enough to compensate for its
+own nested `{include 'album_selector.inc.latte'}` too (same asset
+ids, dedup-safe regardless of source); its own ~15 remaining call
+sites are deferred to a dedicated batch, since its own constructor
+properties are genuinely ambient (assigned by a *different* renderer,
+`FilterPanelRenderer`, earlier in the same request -- not by its own
+`{include}` call), a materially different shape than every other
+partial handled so far. A fresh full migration of `PictureModifyView`
+(9+6+7 call sites, the last of the 4 large colorbox-family pages to
+close its own remaining, non-colorbox-family calls) -- **~68
+pages/Views landed so far, ~790 of 945 call sites**. `colorbox.inc.latte`
+and `help/quick_search.latte` both deliberately keep their own live
+`{do}` calls (each has a second real parent -- `add_album.inc.latte`/
+`album_selector.inc.latte` for colorbox, `batch_manager_filter.inc.latte`
+for quick_search -- not migrated yet); every already-migrated real
+parent's own merge is a harmless dedup-safe redundant registration
+alongside them.
+
 **Final step of P42, once every batch above lands**: reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign
 (124 commits, 614 files, `$array['field']` access converted to typed

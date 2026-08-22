@@ -14,6 +14,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\ThemeListRow;
 use Piwigo\Admin\Projection\ThemesInstalledView;
 use Piwigo\Admin\Request\ThemesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
@@ -184,7 +185,7 @@ final readonly class ThemesInstalledPageRenderer
             deactivateBaseUrl: $base_url . '&amp;action=deactivate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             setDefaultBaseUrl: $base_url . '&amp;action=set_default&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             deleteBaseUrl: $base_url . '&amp;action=delete&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-            tplThemes: $tpl_themes,
+            tplThemes: array_map(static fn (ThemeListRow $theme): array => $theme->toArray(), $tpl_themes),
             isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
@@ -204,7 +205,6 @@ final readonly class ThemesInstalledPageRenderer
      *
      * @param list<string> $db_theme_ids every theme id currently installed
      *   (has a DB row)
-     * @return array<string, mixed>
      */
     private function buildTplTheme(
         string $theme_id,
@@ -212,83 +212,103 @@ final readonly class ThemesInstalledPageRenderer
         array $db_theme_ids,
         string $default_theme,
         ExtensionLifecycle $extension_lifecycle,
-    ): array {
-        $tpl_theme = [
-            'ID' => $theme_id,
-            'NAME' => $fs_theme->name,
-            'VISIT_URL' => $fs_theme->uri,
-            'VERSION' => $fs_theme->version,
-            'DESC' => $fs_theme->description,
-            'AUTHOR' => $fs_theme->author,
-            'AUTHOR_URL' => $fs_theme->authorUri,
-            'PARENT' => $fs_theme->parent,
-            'SCREENSHOT' => $fs_theme->screenshot,
-            'IS_MOBILE' => $fs_theme->mobile,
-            'ADMIN_URI' => $fs_theme->adminUri,
-        ];
-
+    ): ThemeListRow {
         if (in_array($theme_id, $db_theme_ids, true)) {
-            $tpl_theme['STATE'] = 'active';
-            $tpl_theme['IS_DEFAULT'] = ($theme_id === $default_theme);
-            $tpl_theme['DEACTIVABLE'] = true;
+            $state = 'active';
+            $isDefault = $theme_id === $default_theme;
+            $deactivable = true;
 
             if (count($db_theme_ids) <= 1) {
-                $tpl_theme['DEACTIVABLE'] = false;
-                $tpl_theme['DEACTIVATE_TOOLTIP'] = $this->lang->t('Impossible to deactivate this theme, you need at least one theme.');
+                $deactivable = false;
             }
-            if ($tpl_theme['IS_DEFAULT']) {
-                $tpl_theme['DEACTIVABLE'] = false;
-                $tpl_theme['DEACTIVATE_TOOLTIP'] = $this->lang->t('Impossible to deactivate the default theme.');
-            }
-        } else {
-            $tpl_theme['STATE'] = 'inactive';
-
-            // is the theme "activable" ?
-            if ($fs_theme->activable === false) {
-                $tpl_theme['ACTIVABLE'] = false;
-                $tpl_theme['ACTIVABLE_TOOLTIP'] = $this->lang->t('This theme was not designed to be directly activated');
-            } else {
-                $tpl_theme['ACTIVABLE'] = true;
+            if ($isDefault) {
+                $deactivable = false;
             }
 
-            $missing_parent = $extension_lifecycle->missingParentTheme($theme_id, $fs_theme);
-            if (isset($missing_parent)) {
-                $tpl_theme['ACTIVABLE'] = false;
-
-                $tpl_theme['ACTIVABLE_TOOLTIP'] = $this->lang->t(
-                    'Impossible to activate this theme, the parent theme is missing: %s',
-                    $missing_parent
-                );
-            }
-
-            // is the theme "deletable" ?
-            $children = $extension_lifecycle->getChildrenThemes($theme_id);
-
-            $tpl_theme['DELETABLE'] = true;
-
-            if (count($children) > 0) {
-                $tpl_theme['DELETABLE'] = false;
-
-                // array_filter() here is defense-in-depth, not covering a
-                // reachable case: getChildrenThemes()'s own loop already
-                // only ever appends a value after its own is_string() guard,
-                // so $children is provably all-strings before this line
-                // ever sees it.
-                $tpl_theme['DELETE_TOOLTIP'] = $this->lang->t(
-                    'Impossible to delete this theme. Other themes depends on it: %s',
-                    implode(', ', array_filter($children, is_string(...)))
-                );
-            }
+            return new ThemeListRow(
+                id: $theme_id,
+                name: $fs_theme->name,
+                visitUrl: $fs_theme->uri,
+                version: $fs_theme->version,
+                desc: $fs_theme->description,
+                author: $fs_theme->author,
+                authorUrl: $fs_theme->authorUri,
+                isMobile: $fs_theme->mobile,
+                screenshot: $fs_theme->screenshot,
+                adminUri: $fs_theme->adminUri,
+                state: $state,
+                isDefault: $isDefault,
+                deactivable: $deactivable,
+                activable: true,
+                activableTooltip: null,
+                deletable: true,
+                deleteTooltip: null,
+            );
         }
 
-        return $tpl_theme;
+        $state = 'inactive';
+
+        // is the theme "activable" ?
+        if ($fs_theme->activable === false) {
+            $activable = false;
+            $activableTooltip = $this->lang->t('This theme was not designed to be directly activated');
+        } else {
+            $activable = true;
+            $activableTooltip = null;
+        }
+
+        $missing_parent = $extension_lifecycle->missingParentTheme($theme_id, $fs_theme);
+        if (isset($missing_parent)) {
+            $activable = false;
+
+            $activableTooltip = $this->lang->t(
+                'Impossible to activate this theme, the parent theme is missing: %s',
+                $missing_parent
+            );
+        }
+
+        // is the theme "deletable" ?
+        $children = $extension_lifecycle->getChildrenThemes($theme_id);
+
+        $deletable = true;
+        $deleteTooltip = null;
+
+        if (count($children) > 0) {
+            $deletable = false;
+
+            // array_filter() here is defense-in-depth, not covering a
+            // reachable case: getChildrenThemes()'s own loop already
+            // only ever appends a value after its own is_string() guard,
+            // so $children is provably all-strings before this line
+            // ever sees it.
+            $deleteTooltip = $this->lang->t(
+                'Impossible to delete this theme. Other themes depends on it: %s',
+                implode(', ', array_filter($children, is_string(...)))
+            );
+        }
+
+        return new ThemeListRow(
+            id: $theme_id,
+            name: $fs_theme->name,
+            visitUrl: $fs_theme->uri,
+            version: $fs_theme->version,
+            desc: $fs_theme->description,
+            author: $fs_theme->author,
+            authorUrl: $fs_theme->authorUri,
+            isMobile: $fs_theme->mobile,
+            screenshot: $fs_theme->screenshot,
+            adminUri: $fs_theme->adminUri,
+            state: $state,
+            isDefault: false,
+            deactivable: false,
+            activable: $activable,
+            activableTooltip: $activableTooltip,
+            deletable: $deletable,
+            deleteTooltip: $deleteTooltip,
+        );
     }
 
-    /**
-     * @param array<string, mixed> $a
-     * @param array<string, mixed> $b
-     */
-    private function compareThemes(array $a, array $b): int
+    private function compareThemes(ThemeListRow $a, ThemeListRow $b): int
     {
         // 'active'=>0 and 'inactive'=>1 are the only 2 weights this map can
         // ever produce (every other STATE falls through the `?? 1` below,
@@ -302,32 +322,18 @@ final readonly class ThemesInstalledPageRenderer
             'inactive' => 1,
         ];
 
-        // The (bool) casts below are redundant: if() already coerces its
-        // condition to bool, so removing either cast can't change which
-        // branch runs.
-        if ((bool) ($a['IS_DEFAULT'] ?? false)) {
+        if ($a->isDefault) {
             return -1;
         }
-        if ((bool) ($b['IS_DEFAULT'] ?? false)) {
+        if ($b->isDefault) {
             return 1;
         }
 
-        // 'STATE' and 'NAME' are always plain strings in every $tpl_theme built
-        // above ('STATE' is a string literal, 'NAME' comes from
-        // ExtensionScanner's guaranteed-string invariant), but $a/$b are only
-        // known as array<string, mixed> here since usort's callback signature
-        // can't carry the caller's more precise shape.
-        $a_state = $a['STATE'] ?? null;
-        $b_state = $b['STATE'] ?? null;
-        $a_state = is_string($a_state) ? $a_state : '';
-        $b_state = is_string($b_state) ? $b_state : '';
+        $a_state = $a->state;
+        $b_state = $b->state;
 
         if ($a_state === $b_state) {
-            $a_name = $a['NAME'] ?? null;
-            $b_name = $b['NAME'] ?? null;
-            $a_name = is_string($a_name) ? $a_name : '';
-            $b_name = is_string($b_name) ? $b_name : '';
-            return strcasecmp($a_name, $b_name);
+            return strcasecmp($a->name, $b->name);
         }
 
         // $a's own `?? 1` fallback and this whole comparison's left operand

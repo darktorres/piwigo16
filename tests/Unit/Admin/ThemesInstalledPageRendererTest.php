@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\ThemeListRow;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
@@ -83,11 +84,7 @@ use Piwigo\Users\UserService;
  * screenshot.png, which every fixture theme written below avoids by
  * always including one.
  */
-/**
- * @param  array<string, mixed>  $a
- * @param  array<string, mixed>  $b
- */
-function callCompareThemes(array $a, array $b): int
+function callCompareThemes(ThemeListRow $a, ThemeListRow $b): int
 {
     $method = new ReflectionMethod(ThemesInstalledPageRenderer::class, 'compareThemes');
     $instance = new ReflectionClass(ThemesInstalledPageRenderer::class)->newInstanceWithoutConstructor();
@@ -96,17 +93,44 @@ function callCompareThemes(array $a, array $b): int
     return $method->invoke($instance, $a, $b);
 }
 
+/**
+ * Minimal ThemeListRow builder for compareThemes()'s own tests -- only
+ * isDefault/state/name affect its comparison, every other field is
+ * irrelevant filler.
+ */
+function themeListRowForCompare(bool $isDefault, string $state, string $name): ThemeListRow
+{
+    return new ThemeListRow(
+        id: 'x',
+        name: $name,
+        visitUrl: '',
+        version: '',
+        desc: '',
+        author: '',
+        authorUrl: null,
+        isMobile: false,
+        screenshot: '',
+        adminUri: null,
+        state: $state,
+        isDefault: $isDefault,
+        deactivable: false,
+        activable: false,
+        activableTooltip: null,
+        deletable: false,
+        deleteTooltip: null,
+    );
+}
+
+// compareThemes() used to be tested with plain arrays, including several
+// cases for a missing IS_DEFAULT/STATE key or a non-string NAME -- now
+// that $tpl_theme is a real ThemeListRow (isDefault: bool, state: string,
+// name: string, all non-nullable), those specific input shapes are no
+// longer constructible at all, so that coverage is retired rather than
+// carried forward as dead code.
+
 test('the default theme always sorts first regardless of its own state or name', function (): void {
-    $default = [
-        'IS_DEFAULT' => true,
-        'STATE' => 'inactive',
-        'NAME' => 'zzz-theme',
-    ];
-    $other = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'aaa-theme',
-    ];
+    $default = themeListRowForCompare(isDefault: true, state: 'inactive', name: 'zzz-theme');
+    $other = themeListRowForCompare(isDefault: false, state: 'active', name: 'aaa-theme');
 
     expect(callCompareThemes($default, $other))
         ->toBe(-1)
@@ -115,16 +139,8 @@ test('the default theme always sorts first regardless of its own state or name',
 });
 
 test('an active theme sorts before an inactive theme of the same non-default status', function (): void {
-    $active = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'zzz-theme',
-    ];
-    $inactive = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'inactive',
-        'NAME' => 'aaa-theme',
-    ];
+    $active = themeListRowForCompare(isDefault: false, state: 'active', name: 'zzz-theme');
+    $inactive = themeListRowForCompare(isDefault: false, state: 'inactive', name: 'aaa-theme');
 
     expect(callCompareThemes($active, $inactive))
         ->toBe(-1)
@@ -133,16 +149,8 @@ test('an active theme sorts before an inactive theme of the same non-default sta
 });
 
 test('same-state themes tie-break on a case-insensitive name comparison', function (): void {
-    $lower = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'alpha',
-    ];
-    $upperLater = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'BETA',
-    ];
+    $lower = themeListRowForCompare(isDefault: false, state: 'active', name: 'alpha');
+    $upperLater = themeListRowForCompare(isDefault: false, state: 'active', name: 'BETA');
 
     expect(callCompareThemes($lower, $upperLater))
         ->toBeLessThan(0)
@@ -151,70 +159,19 @@ test('same-state themes tie-break on a case-insensitive name comparison', functi
 });
 
 test('identical state and name compare equal', function (): void {
-    $a = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'same-name',
-    ];
-    $b = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'same-name',
-    ];
+    $a = themeListRowForCompare(isDefault: false, state: 'active', name: 'same-name');
+    $b = themeListRowForCompare(isDefault: false, state: 'active', name: 'same-name');
 
     expect(callCompareThemes($a, $b))
         ->toBe(0);
 });
 
-test('a theme with no IS_DEFAULT key at all on the $a side is treated as not default', function (): void {
-    // Every other test explicitly sets IS_DEFAULT => false -- distinct
-    // from a genuinely absent key, which also falls back to false via the
-    // same `?? false`.
-    $noKeyA = [
-        'STATE' => 'active',
-        'NAME' => 'aaa',
-    ];
-    $withDefault = [
-        'IS_DEFAULT' => true,
-        'STATE' => 'inactive',
-        'NAME' => 'zzz',
-    ];
-
-    expect(callCompareThemes($noKeyA, $withDefault))
-        ->toBe(1);
-});
-
-test('a theme with no IS_DEFAULT key at all on the $b side is treated as not default', function (): void {
-    // $a must clear its own IS_DEFAULT check first (real, not a
-    // short-circuit) for this to reach $b's own fallback.
-    $active = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'aaa',
-    ];
-    $noKeyB = [
-        'STATE' => 'inactive',
-        'NAME' => 'zzz',
-    ];
-
-    expect(callCompareThemes($active, $noKeyB))
-        ->toBe(-1);
-});
-
 test('an unrecognized STATE value falls back to the same sort weight as inactive', function (): void {
-    // $s only maps 'active'=>0/'inactive'=>1; any other string (or a
-    // missing key entirely) reads through the `?? 1` fallback -- confirmed
-    // by direct read of compareThemes()'s own $s lookup.
-    $unrecognized = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'quarantined',
-        'NAME' => 'zzz',
-    ];
-    $inactive = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'inactive',
-        'NAME' => 'aaa',
-    ];
+    // $s only maps 'active'=>0/'inactive'=>1; any other string reads
+    // through the `?? 1` fallback -- confirmed by direct read of
+    // compareThemes()'s own $s lookup.
+    $unrecognized = themeListRowForCompare(isDefault: false, state: 'quarantined', name: 'zzz');
+    $inactive = themeListRowForCompare(isDefault: false, state: 'inactive', name: 'aaa');
 
     // 'quarantined' !== 'inactive' as strings, so this does NOT take the
     // strcasecmp() name tie-break (that requires $a_state === $b_state
@@ -233,67 +190,19 @@ test('an active theme sorts before a same-weight-1 unrecognized-state theme, not
     // which map to 1 -- so this specific direction (active vs
     // unrecognized) is what proves $b_state's fallback participates in the
     // comparison at all, as opposed to some unrelated defect.
-    $active = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'x',
-    ];
-    $unrecognized = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'quarantined',
-        'NAME' => 'y',
-    ];
+    $active = themeListRowForCompare(isDefault: false, state: 'active', name: 'x');
+    $unrecognized = themeListRowForCompare(isDefault: false, state: 'quarantined', name: 'y');
 
     expect(callCompareThemes($active, $unrecognized))
         ->toBe(-1);
 });
 
 test('an inactive theme and a same-weight-1 unrecognized-state theme deterministically sort inactive second', function (): void {
-    $inactive = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'inactive',
-        'NAME' => 'x',
-    ];
-    $unrecognized = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'quarantined',
-        'NAME' => 'y',
-    ];
+    $inactive = themeListRowForCompare(isDefault: false, state: 'inactive', name: 'x');
+    $unrecognized = themeListRowForCompare(isDefault: false, state: 'quarantined', name: 'y');
 
     expect(callCompareThemes($inactive, $unrecognized))
         ->toBe(1);
-});
-
-test('a missing STATE key on both sides is treated as the empty string, not a crash', function (): void {
-    $a = [
-        'IS_DEFAULT' => false,
-        'NAME' => 'aaa',
-    ];
-    $b = [
-        'IS_DEFAULT' => false,
-        'NAME' => 'zzz',
-    ];
-
-    expect(callCompareThemes($a, $b))
-        ->toBeLessThan(0);
-});
-
-test('a non-string NAME on either side is treated as the empty string, not a crash', function (): void {
-    $nonStringName = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => ['not-a-string'],
-    ];
-    $realName = [
-        'IS_DEFAULT' => false,
-        'STATE' => 'active',
-        'NAME' => 'aaa',
-    ];
-
-    expect(callCompareThemes($nonStringName, $realName))
-        ->toBeLessThan(0)
-        ->and(callCompareThemes($realName, $nonStringName))
-        ->toBeGreaterThan(0);
 });
 
 // ---------------------------------------------------------------------
@@ -305,9 +214,8 @@ test('a non-string NAME on either side is treated as the empty string, not a cra
 
 /**
  * @param  list<string>  $db_theme_ids
- * @return array<string, mixed>
  */
-function callBuildTplTheme(string $theme_id, ThemeScanRow $fs_theme, array $db_theme_ids, string $default_theme, ExtensionLifecycle $lifecycle): array
+function callBuildTplTheme(string $theme_id, ThemeScanRow $fs_theme, array $db_theme_ids, string $default_theme, ExtensionLifecycle $lifecycle): ThemeListRow
 {
     $method = new ReflectionMethod(ThemesInstalledPageRenderer::class, 'buildTplTheme');
     $instance = new ReflectionClass(ThemesInstalledPageRenderer::class)->newInstanceWithoutConstructor();
@@ -322,7 +230,7 @@ function callBuildTplTheme(string $theme_id, ThemeScanRow $fs_theme, array $db_t
     $langProp = new ReflectionProperty(ThemesInstalledPageRenderer::class, 'lang');
     $langProp->setValue($instance, LangTestFactory::get());
 
-    /** @var array<string, mixed> */
+    /** @var ThemeListRow */
     return $method->invoke($instance, $theme_id, $fs_theme, $db_theme_ids, $default_theme, $lifecycle);
 }
 
@@ -480,7 +388,9 @@ afterEach(function () use (&$themesInstalledFixtureRoot): void {
 test('buildTplTheme maps every fs_theme field to its own distinct template key', function (): void {
     // Every key below uses a distinct, non-symmetric value so that a
     // dropped key, a swapped key, or a coalesced-to-null optional field is
-    // independently observable.
+    // independently observable. 'parent' is set on the fs_theme input but
+    // deliberately not asserted here: ThemeListRow drops PARENT entirely
+    // (confirmed dead in themes_installed.latte's own real body).
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry([
         'name' => 'A Real Theme',
         'uri' => 'https://example.test/theme',
@@ -494,64 +404,76 @@ test('buildTplTheme maps every fs_theme field to its own distinct template key',
         'admin_uri' => '/admin/theme-a',
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ID'])->toBe('theme-a')
-        ->and($tpl['NAME'])->toBe('A Real Theme')
-        ->and($tpl['VISIT_URL'])->toBe('https://example.test/theme')
-        ->and($tpl['VERSION'])->toBe('2.5.1')
-        ->and($tpl['DESC'])->toBe('A real description')
-        ->and($tpl['AUTHOR'])->toBe('Real Author')
-        ->and($tpl['AUTHOR_URL'])->toBe('https://example.test/author')
-        ->and($tpl['PARENT'])->toBe('a-real-parent')
-        ->and($tpl['SCREENSHOT'])->toBe('/path/to/screenshot.png')
-        ->and($tpl['IS_MOBILE'])->toBeTrue()
-        ->and($tpl['ADMIN_URI'])->toBe('/admin/theme-a');
+    expect($tpl->id)
+        ->toBe('theme-a')
+        ->and($tpl->name)
+        ->toBe('A Real Theme')
+        ->and($tpl->visitUrl)
+        ->toBe('https://example.test/theme')
+        ->and($tpl->version)
+        ->toBe('2.5.1')
+        ->and($tpl->desc)
+        ->toBe('A real description')
+        ->and($tpl->author)
+        ->toBe('Real Author')
+        ->and($tpl->authorUrl)
+        ->toBe('https://example.test/author')
+        ->and($tpl->screenshot)
+        ->toBe('/path/to/screenshot.png')
+        ->and($tpl->isMobile)
+        ->toBeTrue()
+        ->and($tpl->adminUri)
+        ->toBe('/admin/theme-a');
 });
 
-test('buildTplTheme defaults author_uri/parent/admin_uri to null when absent from fs_theme', function (): void {
+test('buildTplTheme defaults author_uri/admin_uri to null when absent from fs_theme', function (): void {
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['AUTHOR_URL'])->toBeNull()
-        ->and($tpl['PARENT'])->toBeNull()
-        ->and($tpl['ADMIN_URI'])->toBeNull();
+    expect($tpl->authorUrl)
+        ->toBeNull()
+        ->and($tpl->adminUri)
+        ->toBeNull();
 });
 
 // --- active state / is-default / deactivation eligibility ---
 
-test('an active, non-default theme with other themes installed is deactivable with no tooltip', function (): void {
+test('an active, non-default theme with other themes installed is deactivable', function (): void {
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), ['theme-a', 'theme-b'], 'theme-b', themesInstalledLifecycle());
 
-    expect($tpl['STATE'])->toBe('active')
-        ->and($tpl['IS_DEFAULT'])->toBeFalse()
-        ->and($tpl['DEACTIVABLE'])->toBeTrue()
-        ->and($tpl)
-        ->not->toHaveKey('DEACTIVATE_TOOLTIP');
+    expect($tpl->state)
+        ->toBe('active')
+        ->and($tpl->isDefault)
+        ->toBeFalse()
+        ->and($tpl->deactivable)
+        ->toBeTrue();
 });
 
 test('the default active theme is never deactivable, even with other themes installed', function (): void {
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), ['theme-a', 'theme-b'], 'theme-a', themesInstalledLifecycle());
 
-    expect($tpl['IS_DEFAULT'])->toBeTrue()
-        ->and($tpl['DEACTIVABLE'])->toBeFalse()
-        ->and($tpl['DEACTIVATE_TOOLTIP'])->toBe('Impossible to deactivate the default theme.');
+    expect($tpl->isDefault)
+        ->toBeTrue()
+        ->and($tpl->deactivable)
+        ->toBeFalse();
 });
 
 test('the last remaining active theme is not deactivable even when it is not the default theme', function (): void {
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), ['theme-a'], 'some-other-theme', themesInstalledLifecycle());
 
-    expect($tpl['IS_DEFAULT'])->toBeFalse()
-        ->and($tpl['DEACTIVABLE'])->toBeFalse()
-        ->and($tpl['DEACTIVATE_TOOLTIP'])->toBe('Impossible to deactivate this theme, you need at least one theme.');
+    expect($tpl->isDefault)
+        ->toBeFalse()
+        ->and($tpl->deactivable)
+        ->toBeFalse();
 });
 
-test('when a theme is both the last remaining theme and the default theme, the default-theme guard runs last and its tooltip wins', function (): void {
+test('when a theme is both the last remaining theme and the default theme, it is still not deactivable', function (): void {
     // Both guards are unconditional `if`s (not `elseif`), evaluated in a
     // fixed order (count<=1 first, then IS_DEFAULT) -- confirmed by direct
-    // read of buildTplTheme(). A theme that is both trips both, and the
-    // IS_DEFAULT guard, running second, overwrites DEACTIVATE_TOOLTIP.
+    // read of buildTplTheme(). A theme that is both trips both.
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), ['theme-a'], 'theme-a', themesInstalledLifecycle());
 
-    expect($tpl['DEACTIVABLE'])->toBeFalse()
-        ->and($tpl['DEACTIVATE_TOOLTIP'])->toBe('Impossible to deactivate the default theme.');
+    expect($tpl->deactivable)
+        ->toBeFalse();
 });
 
 // --- activable detection ---
@@ -561,17 +483,21 @@ test('a theme explicitly marked non-activable in its own metadata is not activab
         'activable' => false,
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['STATE'])->toBe('inactive')
-        ->and($tpl['ACTIVABLE'])->toBeFalse()
-        ->and($tpl['ACTIVABLE_TOOLTIP'])->toBe('This theme was not designed to be directly activated');
+    expect($tpl->state)
+        ->toBe('inactive')
+        ->and($tpl->activable)
+        ->toBeFalse()
+        ->and($tpl->activableTooltip)
+        ->toBe('This theme was not designed to be directly activated');
 });
 
 test('a theme with no activable flag at all is activable by default', function (): void {
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ACTIVABLE'])->toBeTrue()
-        ->and($tpl)
-        ->not->toHaveKey('ACTIVABLE_TOOLTIP');
+    expect($tpl->activable)
+        ->toBeTrue()
+        ->and($tpl->activableTooltip)
+        ->toBeNull();
 });
 
 test('a theme explicitly marked activable stays activable', function (): void {
@@ -579,9 +505,10 @@ test('a theme explicitly marked activable stays activable', function (): void {
         'activable' => true,
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ACTIVABLE'])->toBeTrue()
-        ->and($tpl)
-        ->not->toHaveKey('ACTIVABLE_TOOLTIP');
+    expect($tpl->activable)
+        ->toBeTrue()
+        ->and($tpl->activableTooltip)
+        ->toBeNull();
 });
 
 // --- missing-parent-theme detection ---
@@ -591,8 +518,10 @@ test('a theme whose declared parent is not installed on disk is not activable, w
         'parent' => 'totally-missing-parent-xyz',
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ACTIVABLE'])->toBeFalse()
-        ->and($tpl['ACTIVABLE_TOOLTIP'])->toContain('totally-missing-parent-xyz');
+    expect($tpl->activable)
+        ->toBeFalse()
+        ->and($tpl->activableTooltip)
+        ->toContain('totally-missing-parent-xyz');
 });
 
 test('a missing-parent tooltip overrides an otherwise-activable theme even when no activable flag was set', function (): void {
@@ -606,8 +535,10 @@ test('a missing-parent tooltip overrides an otherwise-activable theme even when 
         'parent' => 'totally-missing-parent-xyz',
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ACTIVABLE'])->toBeFalse()
-        ->and($tpl['ACTIVABLE_TOOLTIP'])->toContain('totally-missing-parent-xyz');
+    expect($tpl->activable)
+        ->toBeFalse()
+        ->and($tpl->activableTooltip)
+        ->toContain('totally-missing-parent-xyz');
 });
 
 test('a missing grandparent theme is surfaced through a real installed intermediate parent theme', function () use (&$themesInstalledFixtureRoot): void {
@@ -624,9 +555,12 @@ test('a missing grandparent theme is surfaced through a real installed intermedi
         'parent' => 'middle-theme',
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ACTIVABLE'])->toBeFalse()
-        ->and($tpl['ACTIVABLE_TOOLTIP'])->toContain('totally-missing-ancestor-xyz')
-        ->and($tpl['ACTIVABLE_TOOLTIP'])->not->toContain('middle-theme');
+    expect($tpl->activable)
+        ->toBeFalse()
+        ->and($tpl->activableTooltip)
+        ->toContain('totally-missing-ancestor-xyz')
+        ->and($tpl->activableTooltip)
+        ->not->toContain('middle-theme');
 });
 
 test('a theme whose declared parent is actually installed on disk remains activable', function () use (&$themesInstalledFixtureRoot): void {
@@ -639,9 +573,10 @@ test('a theme whose declared parent is actually installed on disk remains activa
         'parent' => 'real-parent-theme',
     ]), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['ACTIVABLE'])->toBeTrue()
-        ->and($tpl)
-        ->not->toHaveKey('ACTIVABLE_TOOLTIP');
+    expect($tpl->activable)
+        ->toBeTrue()
+        ->and($tpl->activableTooltip)
+        ->toBeNull();
 });
 
 // --- delete eligibility ---
@@ -649,9 +584,10 @@ test('a theme whose declared parent is actually installed on disk remains activa
 test('a theme with no children on disk is deletable', function (): void {
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['DELETABLE'])->toBeTrue()
-        ->and($tpl)
-        ->not->toHaveKey('DELETE_TOOLTIP');
+    expect($tpl->deletable)
+        ->toBeTrue()
+        ->and($tpl->deleteTooltip)
+        ->toBeNull();
 });
 
 test('a theme with one real child theme depending on it is not deletable, and the tooltip names the child', function () use (&$themesInstalledFixtureRoot): void {
@@ -663,8 +599,10 @@ test('a theme with one real child theme depending on it is not deletable, and th
 
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['DELETABLE'])->toBeFalse()
-        ->and($tpl['DELETE_TOOLTIP'])->toContain('Child One');
+    expect($tpl->deletable)
+        ->toBeFalse()
+        ->and($tpl->deleteTooltip)
+        ->toContain('Child One');
 });
 
 test('a theme with multiple real child themes lists every dependent name in the tooltip', function () use (&$themesInstalledFixtureRoot): void {
@@ -680,9 +618,12 @@ test('a theme with multiple real child themes lists every dependent name in the 
 
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['DELETABLE'])->toBeFalse()
-        ->and($tpl['DELETE_TOOLTIP'])->toContain('Child One')
-        ->and($tpl['DELETE_TOOLTIP'])->toContain('Child Two');
+    expect($tpl->deletable)
+        ->toBeFalse()
+        ->and($tpl->deleteTooltip)
+        ->toContain('Child One')
+        ->and($tpl->deleteTooltip)
+        ->toContain('Child Two');
 });
 
 test('an unrelated real theme on disk (not a child) does not block deletion', function () use (&$themesInstalledFixtureRoot): void {
@@ -694,7 +635,8 @@ test('an unrelated real theme on disk (not a child) does not block deletion', fu
 
     $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
 
-    expect($tpl['DELETABLE'])->toBeTrue()
-        ->and($tpl)
-        ->not->toHaveKey('DELETE_TOOLTIP');
+    expect($tpl->deletable)
+        ->toBeTrue()
+        ->and($tpl->deleteTooltip)
+        ->toBeNull();
 });

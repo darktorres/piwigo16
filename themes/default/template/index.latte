@@ -182,7 +182,7 @@
             >{='Calendar'|translate}</span>
           </a>{/spaceless}</li>
       <li n:foreach="$pluginIndexButtons as $button" n:attr="id: $button->id">{spaceless}<a
-            href="{$button->url|noescape}"
+            href="{$button->url}"
             title="{$button->label}"
             class="pwg-state-default pwg-button"
             rel="nofollow"

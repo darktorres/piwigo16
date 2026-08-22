@@ -448,6 +448,49 @@ it('dispatches IndexRendered with the real category id/name/comment when viewing
     }
 });
 
+it('escapes an HTML-special-character-bearing plugin-contributed index button URL (P44-C)', function (): void {
+    // index.latte:185's {$button->url} used to print |noescape --
+    // label/icon two lines away were already correctly auto-escaped;
+    // url was the one field that slipped through.
+    $pluginId = 'pwgtest-gallery-index-button-escaping';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+
+    galWriteFixturePlugin($pluginDir, <<<'PHP'
+        \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
+            \Piwigo\Controller\Event\IndexRendering::class,
+            static function () use ($context): void {
+                $context->template()->addIndexButton(new \Piwigo\Contribution\ButtonContribution(
+                    label: 'Test Button',
+                    url: '"><script>alert(1)</script>',
+                    icon: 'icon-star',
+                    order: 1,
+                ));
+            }
+        );
+        PHP);
+
+    $db = galDbConnect();
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
+    H::dbClose($db);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/index.php?/category/1');
+        $body = H::rawWebpage($page)->content();
+
+        expect($body)
+            ->not->toContain('"><script>alert(1)</script>');
+        expect($body)
+            ->toContain('href="&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        $cleanupDb = galDbConnect();
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
+        H::dbClose($cleanupDb);
+        galRemoveFixturePlugin($pluginDir);
+    }
+});
+
 it('dispatches IndexRendered with null category fields on a tag page (not a single-category view)', function (): void {
     $pluginId = 'pwgtest-gallery-index-rendered-tag';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;

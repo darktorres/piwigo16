@@ -117,7 +117,7 @@
         {/if}{/spaceless}
       {foreach $pluginPictureButtons as $button}{spaceless}<a
             n:attr="id: $button->id"
-            href="{$button->url|noescape}"
+            href="{$button->url}"
             title="{$button->label}"
             class="pwg-state-default pwg-button"
             rel="nofollow"

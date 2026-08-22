@@ -4,11 +4,11 @@
   <div class="themeBoxes">
     <div n:foreach="$newThemes as $theme" class="themeBox">
       <div class="themeShot"><a
-          href="{$theme['screenshot']|noescape}"
+          href="{$theme['screenshot']}"
           class="preview-box"
           title="{$theme['name']}"
         ><img
-            src="{$theme['screenshot']|noescape}"
+            src="{$theme['screenshot']}"
             class="themeShotImg"
           ></a></div>
       <div class="themeName" title="{$theme['name']}">{$theme['name']}</div>

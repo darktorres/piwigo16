@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryInfo;
+use Piwigo\Category\Projection\GroupCategoryPair;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -209,10 +210,10 @@ final readonly class CategoryAdminService
             $inserts = [];
             foreach ($privateCats as $privateCatId) {
                 foreach ($groupIds as $groupId) {
-                    $inserts[] = [
-                        'group_id' => $groupId,
-                        'cat_id' => $privateCatId,
-                    ];
+                    $inserts[] = new GroupCategoryPair(
+                        groupId: $groupId,
+                        catId: $privateCatId,
+                    );
                 }
             }
 

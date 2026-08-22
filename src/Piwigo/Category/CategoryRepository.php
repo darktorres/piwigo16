@@ -33,6 +33,7 @@ use Piwigo\Category\Projection\CategoryRankUpdateRow;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\ComputedCategoryRollupRow;
+use Piwigo\Category\Projection\GroupCategoryPair;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -2408,7 +2409,7 @@ final readonly class CategoryRepository
      * IGNORE equivalent, same reasoning as Group\GroupRepository::
      * addMembers().
      *
-     * @param array<int, array{group_id: int, cat_id: int}> $inserts
+     * @param list<GroupCategoryPair> $inserts
      *
      * Bulk write with an INSERT IGNORE option ORM persist()/flush() has no
      * equivalent for.
@@ -2417,7 +2418,10 @@ final readonly class CategoryRepository
     {
         $em = $this->em;
         new BatchWriter($em->getConnection())
-            ->massInsert('group_access', ['group_id', 'cat_id'], $inserts, [
+            ->massInsert('group_access', ['group_id', 'cat_id'], array_map(
+                static fn (GroupCategoryPair $pair): array => $pair->toArray(),
+                $inserts
+            ), [
                 'ignore' => $ignore,
             ]);
         $em->clear();

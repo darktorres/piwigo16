@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Sort;
 
+use Piwigo\Common\ValueObject\SortEntry;
+
 /**
  * The typed column vocabulary backing `GET /api/v1/users`'s `order` query
  * param (id, username, level, email). Unlike {@see PhotoSortField}, an
@@ -68,7 +70,7 @@ enum UserSortField
      * `UserListController`'s own signal to return a 422 `problem+json`
      * error rather than fall back to any default.
      *
-     * @return ?list<array{field: self, dir: string}>
+     * @return ?list<SortEntry<self, string>>
      */
     public static function parseOrderClause(string $order): ?array
     {
@@ -88,10 +90,7 @@ enum UserSortField
             }
 
             $dir = isset($matches[2]) && strtoupper($matches[2]) === 'DESC' ? 'DESC' : 'ASC';
-            $clauses[] = [
-                'field' => $field,
-                'dir' => $dir,
-            ];
+            $clauses[] = new SortEntry($field, $dir);
         }
 
         return $clauses;

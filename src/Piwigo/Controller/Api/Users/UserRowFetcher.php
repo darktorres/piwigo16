@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Api\Users;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AuthService;
+use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\DateHelper;
 use Piwigo\Db\SqlDialect;
@@ -69,14 +70,13 @@ final readonly class UserRowFetcher
             return [];
         }
 
-        return $this->fetch(new UserListCriteria(userId: $userIds), [[
-            'field' => UserSortField::Id,
-            'dir' => 'ASC',
-        ]], null, 0, false)['rows'];
+        return $this->fetch(new UserListCriteria(userId: $userIds), [
+            new SortEntry(UserSortField::Id, 'ASC'),
+        ], null, 0, false)['rows'];
     }
 
     /**
-     * @param list<array{field: UserSortField, dir: string}> $orderClauses
+     * @param list<SortEntry<UserSortField, string>> $orderClauses
      * @return array{rows: list<array<string, mixed>>, total: int}
      */
     public function page(UserListCriteria $criteria, array $orderClauses, ?int $limit, int $offset): array
@@ -85,7 +85,7 @@ final readonly class UserRowFetcher
     }
 
     /**
-     * @param list<array{field: UserSortField, dir: string}> $orderClauses
+     * @param list<SortEntry<UserSortField, string>> $orderClauses
      * @return array{rows: list<array<string, mixed>>, total: int}
      */
     private function fetch(UserListCriteria $criteria, array $orderClauses, ?int $limit, int $offset, bool $includeTotalCount): array

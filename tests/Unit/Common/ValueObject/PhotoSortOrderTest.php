@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\PhotoSortField;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
+use Piwigo\Common\ValueObject\SortEntry;
 
 /**
  * Piwigo\Common\ValueObject\PhotoSortOrder -- the structured photo sort
@@ -35,15 +36,9 @@ test('fromConfigFragment() round-trips a known fragment through the structured p
         ->and($order->toStoredBody())
         ->toBe('name ASC, hit DESC')
         ->and($order->entries())
-        ->toBe([
-            [
-                'field' => PhotoSortField::Name,
-                'dir' => SortOrder::Asc,
-            ],
-            [
-                'field' => PhotoSortField::Hit,
-                'dir' => SortOrder::Desc,
-            ],
+        ->toEqual([
+            new SortEntry(PhotoSortField::Name, SortOrder::Asc),
+            new SortEntry(PhotoSortField::Hit, SortOrder::Desc),
         ]);
 });
 
@@ -76,11 +71,8 @@ test('a random order stays structured despite carrying no direction', function (
     // the two platforms spell it differently and only the structured path
     // is rendered per platform.
     expect(PhotoSortOrder::fromConfigFragment($fragment)->entries())
-        ->toBe([
-            [
-                'field' => PhotoSortField::Random,
-                'dir' => SortOrder::Asc,
-            ],
+        ->toEqual([
+            new SortEntry(PhotoSortField::Random, SortOrder::Asc),
         ]);
 })->with([
     'ORDER BY RAND()',
@@ -125,11 +117,8 @@ test('fromApiOrderParam() accepts the API vocabulary, including its aliases', fu
     expect(PhotoSortOrder::fromApiOrderParam('date_created desc, file')->toSortFieldTokens())
         ->toBe(['date_creation DESC', 'file ASC'])
         ->and(PhotoSortOrder::fromApiOrderParam('rand')->entries())
-        ->toBe([
-            [
-                'field' => PhotoSortField::Random,
-                'dir' => SortOrder::Asc,
-            ],
+        ->toEqual([
+            new SortEntry(PhotoSortField::Random, SortOrder::Asc),
         ])
         ->and(PhotoSortOrder::fromApiOrderParam('')->isEmpty())
         ->toBeTrue();

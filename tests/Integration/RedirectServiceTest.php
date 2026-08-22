@@ -233,4 +233,41 @@ final class RedirectServiceTest extends IntegrationTestCase
         self::assertStringContainsString('Refresh redirect', $body);
         self::assertStringContainsString('content="5;url=http://example.test/refresh-target.php"', $body);
     }
+
+    /**
+     * P44-C: page_refresh['U_REFRESH'] used to reach both
+     * layout.latte's meta-refresh `content` attribute and
+     * redirect.latte's fallback `<a href>` via `|noescape` -- an
+     * HTML-special-character-bearing URL (unvalidated real producers:
+     * QSearchController's `$q`, BatchManagerSubController's `$getPage`)
+     * reached both sites completely unescaped. Both sites now rely on
+     * Latte's own auto-escape instead.
+     */
+    public function testRedirectHtmlEscapesAnHtmlSpecialCharacterBearingUrlAtBothPrintSites(): void
+    {
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
+        CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
+
+        $execId = UniqueExecLock::begins(new Logger([
+            'severity' => Logger::OFF,
+        ]), 'check_for_updates');
+        self::assertTrue($execId);
+
+        $maliciousUrl = 'http://example.test/target.php?q=x"><script>alert(1)</script>';
+
+        $body = null;
+        try {
+            new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()))->redirectHtml($maliciousUrl, 'A custom redirect message', 5);
+        } catch (ResponseReadyException $e) {
+            $body = (string) $e->response()
+                ->getBody();
+        }
+
+        self::assertStringNotContainsString('"><script>alert(1)</script>', $body);
+        self::assertStringContainsString('content="5;url=http://example.test/target.php?q=x&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"', $body);
+        self::assertStringContainsString('href="http://example.test/target.php?q=x&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"', $body);
+    }
 }

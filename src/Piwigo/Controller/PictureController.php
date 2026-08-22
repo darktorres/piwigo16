@@ -736,9 +736,16 @@ final readonly class PictureController implements ControllerInterface
                     // creating an automated refresh page in
                     // header.latte
                     $refresh = $slideshow_params['period'];
+                    // Plain '&', not the default '&amp;' -- this feeds
+                    // page_refresh['U_REFRESH'], printed with no
+                    // |noescape at layout.latte/redirect.latte (P44-C):
+                    // Latte's own auto-escape now does the encoding once,
+                    // at print time, so pre-encoding '&' here would
+                    // double-escape it.
                     $url_link = $urlService->addUrlParams(
                         $picture[$id_pict_redirect]['url'],
-                        $slideshow_url_params
+                        $slideshow_url_params,
+                        argSeparator: '&'
                     );
                 }
             }

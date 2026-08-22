@@ -2107,6 +2107,13 @@ it('wraps around to the first photo via meta-refresh when a repeating slideshow 
         ->toContain('http-equiv="refresh"');
     expect($body)
         ->toMatch('/content="\d+;url=[^"]*\/' . $idA . '\/[^"]*"/');
+    // P44-C: page_refresh['U_REFRESH'] is now printed with no |noescape,
+    // trusting Latte's own auto-escape -- PictureController's own
+    // addUrlParams() call must pass argSeparator: '&' explicitly (its
+    // default is '&amp;'), or a pre-encoded '&amp;' here would be
+    // re-escaped to '&amp;amp;' by that auto-escape at print time.
+    expect($body)
+        ->not->toContain('&amp;amp;');
 });
 
 it('falls back to the medium derivative size, without warnings, when the picture_deriv session value is corrupted to a non-string', function (): void {

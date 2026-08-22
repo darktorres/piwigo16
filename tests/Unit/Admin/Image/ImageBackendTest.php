@@ -431,10 +431,8 @@ test('getRotationAngleFromCode maps every known code, wrapping modulo 4', functi
     expect(ImageBackend::getRotationAngleFromCode(1))->toBe(90);
     expect(ImageBackend::getRotationAngleFromCode(2))->toBe(180);
     expect(ImageBackend::getRotationAngleFromCode(3))->toBe(270);
-    // ImageDerivativeController's own caller passes a native Doctrine int,
-    // but the signature also accepts a numeric-string (legacy mysqli-style
-    // caller) -- and the mod-4 wrap covers a value one full cycle past 3.
-    expect(ImageBackend::getRotationAngleFromCode('4'))->toBe(0);
+    // the mod-4 wrap covers a value one full cycle past 3.
+    expect(ImageBackend::getRotationAngleFromCode(4))->toBe(0);
 });
 
 test('getRotationAngleFromCode throws for an unexpected code', function (): void {
@@ -1259,10 +1257,6 @@ test('getGraphicsLibrary resolves through the gd case and appends a real GD vers
 //   Orientation tag (e.g. int(6), never " 6"), so this file's own
 //   hand-crafted EXIF fixtures can never produce a leading-whitespace
 //   value to distinguish the two. Category 5.
-// - getRotationAngleFromCode()'s `(int) $rotation_code % 4` cast (line
-//   393): PHP's `%` operator already coerces a numeric-string operand to
-//   int on its own -- the existing '4'-string test already
-//   passes regardless of this cast. Category 5.
 // - isImagick()'s `extension_loaded('imagick') and class_exists('Imagick')`
 //   (line 448, `and` vs `or`): both operands are real facts about the SAME
 //   running PHP process for the SAME extension name -- they can't

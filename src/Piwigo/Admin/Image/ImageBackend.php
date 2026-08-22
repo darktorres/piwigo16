@@ -381,14 +381,14 @@ final class ImageBackend implements ImageInterface
     }
 
     /**
-     * @param int|numeric-string $rotation_code ImageDerivativeController's
-     *   only caller passes $row->rotation, a native ?int hydrated by
-     *   Doctrine ORM from ImageEntity's smallint `rotation` column --
-     *   not a mysqli-fetched numeric string
+     * ImageDerivativeController's only real caller passes $row->rotation
+     * (already null-checked there), a native ?int hydrated by Doctrine ORM
+     * from ImageEntity's smallint `rotation` column -- never a
+     * mysqli-fetched numeric string.
      */
-    public static function getRotationAngleFromCode(int|string $rotation_code): int
+    public static function getRotationAngleFromCode(int $rotation_code): int
     {
-        return match ((int) $rotation_code % 4) {
+        return match ($rotation_code % 4) {
             0 => 0,
             1 => 90,
             2 => 180,

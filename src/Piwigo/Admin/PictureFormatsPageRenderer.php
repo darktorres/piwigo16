@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Projection\PictureFormatRow;
 use Piwigo\Admin\Projection\PictureFormatsView;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
@@ -47,26 +48,29 @@ final class PictureFormatsPageRenderer
 
         $formats = [];
         foreach ($entityManager->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
-            $format = $formatRow->toArray();
-            $format['download_url'] = 'action.php?format=' . $formatRow->formatId . '&amp;download';
-
-            $format['label'] = strtoupper($formatRow->ext);
+            $label = strtoupper($formatRow->ext);
             $lang_key = 'format ' . strtoupper($formatRow->ext);
             $lang_label = $lang->has($lang_key) ? $lang->t($lang_key) : null;
             if ($lang_label !== null) {
-                $format['label'] = $lang_label;
+                $label = $lang_label;
             }
 
             $filesize = (float) ($formatRow->filesize ?? 0);
-            $format['filesize'] = round($filesize / 1024.0, 2);
 
-            $formats[] = $format;
+            $formats[] = new PictureFormatRow(
+                formatId: $formatRow->formatId,
+                imageId: $formatRow->imageId->value,
+                ext: $formatRow->ext,
+                filesize: round($filesize / 1024.0, 2),
+                downloadUrl: 'action.php?format=' . $formatRow->formatId . '&amp;download',
+                label: $label,
+            );
         }
 
         $adminContent = $renderer->render(new PictureFormatsView(
             addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
             imgSquareSrc: DerivativeImage::url($imageStdParams->getByType(ImageStdParams::SQUARE), $image),
-            formats: $formats,
+            formats: array_map(static fn (PictureFormatRow $format): array => $format->toArray(), $formats),
             pwgToken: $csrfService
                 ->getToken(),
         ));

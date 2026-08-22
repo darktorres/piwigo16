@@ -131,7 +131,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      * crossing.
      */
     #[Override]
-    public function findGalleriesUrlForCategory(int|string $categoryId): ?string
+    public function findGalleriesUrlForCategory(int $categoryId): ?string
     {
         $galleriesUrl = $this->getEntityManager()
             ->createQueryBuilder()

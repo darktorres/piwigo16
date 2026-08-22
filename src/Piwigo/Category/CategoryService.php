@@ -2281,7 +2281,7 @@ final readonly class CategoryService
         return $this->repo->findDirsByIds($ids);
     }
 
-    public function getGalleriesUrlForCategory(int|string $categoryId, SiteGalleriesUrlLookupInterface $siteGalleriesUrlLookup): ?string
+    public function getGalleriesUrlForCategory(int $categoryId, SiteGalleriesUrlLookupInterface $siteGalleriesUrlLookup): ?string
     {
         return $siteGalleriesUrlLookup->findGalleriesUrlForCategory($categoryId);
     }

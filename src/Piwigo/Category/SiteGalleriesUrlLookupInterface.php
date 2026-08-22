@@ -32,5 +32,5 @@ interface SiteGalleriesUrlLookupInterface
      * $categoryId's own site's galleries_url, via the site_id FK join, or
      * null when the category has no site (or doesn't exist).
      */
-    public function findGalleriesUrlForCategory(int|string $categoryId): ?string;
+    public function findGalleriesUrlForCategory(int $categoryId): ?string;
 }

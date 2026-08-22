@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\Event\BatchManagerGlobalRendered;
 use Piwigo\Admin\Event\BatchManagerGlobalRendering;
 use Piwigo\Admin\Event\ElementSetGlobalAction;
@@ -145,27 +146,19 @@ final readonly class BatchManagerGlobalPageRenderer
         // Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is always
         // written as an array by BatchManagerSubController (which runs before
         // dispatching to this renderer); this guards against corrupted/foreign
-        // session state and lets PHPStan track a real array shape for the reads
-        // below (this file never writes to $_SESSION['bulk_manager_filter']).
-        /** @var array<string, mixed> $bulk_manager_filter */
-        $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
-
-        // prefilter is a shortcut to test if the current filter contains a
-        // given prefilter. The idea is to make conditions simpler to write in the
-        // code.
-        $prefilter = 'none';
-        if (isset($bulk_manager_filter['prefilter'])) {
-            $prefilter = $bulk_manager_filter['prefilter'];
-        }
+        // session state (this file never writes to $_SESSION['bulk_manager_filter']).
+        /** @var array<string, mixed> $bulk_manager_filter_raw */
+        $bulk_manager_filter_raw = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+        $bulk_manager_filter = BulkManagerFilter::fromArray($bulk_manager_filter_raw);
 
         $get_page = $batchManagerGlobalRequest->page;
         $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
 
-        // $prefilter never changes after the assignment above; narrowed once
-        // here and reused for every `== 'xxx'` comparison below ($bulk_manager_filter
-        // is only known as array<string, mixed>, so a bare offset read stays
-        // `mixed` even though it's provably a string at this point).
-        $prefilter_value = is_string($prefilter) ? $prefilter : 'none';
+        // prefilter is a shortcut to test if the current filter contains a
+        // given prefilter. The idea is to make conditions simpler to write in
+        // the code; $prefilter_value never changes after this assignment,
+        // reused for every `=== 'xxx'` comparison below.
+        $prefilter_value = $bulk_manager_filter->prefilter ?? 'none';
 
         // A local working copy of post -- the author/title branches below
         // used to null $_POST['author']/$_POST['title'] in place when their
@@ -235,8 +228,7 @@ final readonly class BatchManagerGlobalPageRenderer
                     $images_to_update = $tagService->compareImageTagLists($taglist_before, $taglist_after);
                     $imageService->updateImagesLastmodified($images_to_update);
 
-                    if (isset($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags']) &&
-                      (bool) count(array_intersect(array_filter($bulk_manager_filter['tags'], is_scalar(...)), $del_tags))) {
+                    if ($bulk_manager_filter->tags !== [] && count(array_intersect($bulk_manager_filter->tags, $del_tags)) > 0) {
                         $redirect = true;
                     }
                 } else {
@@ -301,8 +293,8 @@ final readonly class BatchManagerGlobalPageRenderer
                             $redirect = true;
                         }
                     }
-                } elseif (isset($bulk_manager_filter['category'])
-                    and $move_category !== (is_numeric($bulk_manager_filter['category']) ? (int) $bulk_manager_filter['category'] : null)) {
+                } elseif ($bulk_manager_filter->category !== null
+                    and $move_category !== $bulk_manager_filter->category) {
                     $redirect = true;
                 }
             } elseif ($action === 'dissociate' && isset($post['dissociate']) && is_numeric($post['dissociate'])) {
@@ -376,8 +368,8 @@ final readonly class BatchManagerGlobalPageRenderer
                         'action' => 'privacy_level',
                     ]);
 
-                if (isset($bulk_manager_filter['level'])) {
-                    if ($post['level'] < $bulk_manager_filter['level']) {
+                if ($bulk_manager_filter->level !== null) {
+                    if ($post['level'] < $bulk_manager_filter->level) {
                         $redirect = true;
                     }
                 }
@@ -525,16 +517,14 @@ final readonly class BatchManagerGlobalPageRenderer
 
             $is_category = false;
             $filter_category_id = 0;
-            if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])
-                and ! isset($bulk_manager_filter['category_recursive'])) {
+            if ($bulk_manager_filter->category !== null && ! $bulk_manager_filter->categoryRecursive) {
                 $is_category = true;
-                $filter_category_id = (int) $bulk_manager_filter['category'];
+                $filter_category_id = $bulk_manager_filter->category;
             }
 
             // If using the 'duplicates' filter,
             // order by the fields that are used to find duplicates.
-            if (isset($bulk_manager_filter['prefilter'])
-                and $bulk_manager_filter['prefilter'] === 'duplicates'
+            if ($bulk_manager_filter->prefilter === 'duplicates'
                 and $duplicatesOnFields !== null) {
                 $order_by_fields = array_merge(array_map(static fn (ImageDuplicateField $field): string => $field->column(), $duplicatesOnFields), ['id']);
                 $order_by = ' ORDER BY ' . join(', ', $order_by_fields);

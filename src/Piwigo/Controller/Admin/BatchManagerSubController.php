@@ -8,8 +8,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
-use Piwigo\Admin\BatchManager\Projection\DuplicateFieldFlags;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
@@ -135,12 +135,14 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
 
         /** @var array<string, mixed> $bulk_filter */
         $bulk_filter = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
+        $filter = BulkManagerFilter::fromArray($bulk_filter);
 
         $filter_resolver = $this->filterResolver;
 
         $duplicates_on_fields = null;
         $cat_elements_id = $this->computeCurrentSet(
             $filter_resolver,
+            $filter,
             $bulk_filter,
             $get_page,
             $user_id,
@@ -166,8 +168,8 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $template->assignContext(new BatchManagerFilterOptionsPageContext(
-            dimensions: $this->computeDimensionOptions($bulk_filter),
-            filesize: $this->computeFilesizeOptions($bulk_filter),
+            dimensions: $this->computeDimensionOptions($filter->dimension),
+            filesize: $this->computeFilesizeOptions($filter->filesize),
         ));
 
         if ($tab === 'unit') {
@@ -517,7 +519,11 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
     }
 
     /**
-     * @param array<string, mixed> $bulkFilter
+     * @param array<string, mixed> $bulkFilter the same session bag $filter
+     *   was already built from -- kept alongside it for the 2 real reads
+     *   that need the raw array specifically (the "is this the only active
+     *   session filter key" count, and BatchManagerPerformFilters's own
+     *   confirmed-boundary event payload), not just as a fallback
      * @param ?list<ImageDuplicateField> $duplicatesOnFields by-ref out-param, only ever
      *   computed for the 'duplicates' prefilter -- fed back to the caller
      *   so it can pass it on to BatchManagerGlobalPageRenderer for its own
@@ -531,6 +537,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
      */
     private function computeCurrentSet(
         FilterResolver $filterResolver,
+        BulkManagerFilter $filter,
         array $bulkFilter,
         string $getPage,
         UserId $userId,
@@ -540,12 +547,11 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $template = $this->currentTemplate->get();
 
         $filter_sets = [];
-        if (isset($bulkFilter['prefilter']) && is_string($bulkFilter['prefilter'])) {
-            $prefilter = $bulkFilter['prefilter'];
-            $duplicateFlags = DuplicateFieldFlags::fromBulkFilter($bulkFilter);
+        if ($filter->prefilter !== null) {
+            $prefilter = $filter->prefilter;
 
             if ($prefilter === 'duplicates') {
-                $duplicatesOnFields = $filterResolver->duplicateFieldsFromFilter($duplicateFlags);
+                $duplicatesOnFields = $filterResolver->duplicateFieldsFromFilter($filter->duplicateFlags);
             }
 
             $prefilter_result = match ($prefilter) {
@@ -553,7 +559,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                 // ImageService methods -- not duplicated into FilterResolver.
                 'no_album' => $this->imageService->getOrphans(),
                 'no_sync_md5sum' => $this->imageService->getPhotosNoMd5sum(),
-                default => $filterResolver->resolvePrefilter($prefilter, $duplicateFlags, count($bulkFilter) === 1, $userId, $confOrderBy),
+                default => $filterResolver->resolvePrefilter($prefilter, $filter->duplicateFlags, count($bulkFilter) === 1, $userId, $confOrderBy),
             };
 
             if ($prefilter_result !== null) {
@@ -564,8 +570,8 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             }
         }
 
-        if (isset($bulkFilter['category']) && is_numeric($bulkFilter['category'])) {
-            $category_id = (int) $bulkFilter['category'];
+        if ($filter->category !== null) {
+            $category_id = $filter->category;
 
             // we need to check the category still exists (it may have been deleted since it was added in the session)
             if (! $filterResolver->categoryExists(CategoryId::from($category_id))) {
@@ -573,7 +579,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                 $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
             }
 
-            $categories = isset($bulkFilter['category_recursive'])
+            $categories = $filter->categoryRecursive
                 ? $this->categoryService->getSubcatIds([$category_id])
                 : [$category_id];
             $categories = array_values(array_map(intval(...), array_filter($categories, is_numeric(...))));
@@ -581,69 +587,49 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $filter_sets[] = $filterResolver->categoryImageIds($categories);
         }
 
-        if (isset($bulkFilter['level']) && is_numeric($bulkFilter['level'])) {
+        if ($filter->level !== null) {
             $filter_sets[] = $filterResolver->levelPhotoIds(
-                (int) $bulkFilter['level'],
-                isset($bulkFilter['level_include_lower']),
+                $filter->level,
+                $filter->levelIncludeLower,
                 $confOrderBy
             );
         }
 
+        // Guarded on the raw session array's own key presence/count (not
+        // $filter->tags's already-int-filtered list) to preserve the
+        // original behavior exactly: a corrupted/foreign session's
+        // all-non-numeric 'tags' entry used to still reach
+        // getImageIdsForTags() with an empty resolved id list (and
+        // therefore still narrow $current_set via an empty intersect) --
+        // an edge case no real write path produces and no test covers, but
+        // not worth changing silently here.
         if (is_array($bulkFilter['tags'] ?? null) && count($bulkFilter['tags']) > 0) {
-            $filter_tag_ids = [];
-            foreach ($bulkFilter['tags'] as $filter_tag_id) {
-                if (is_numeric($filter_tag_id)) {
-                    $filter_tag_ids[] = (int) $filter_tag_id;
-                }
-            }
-
-            $filter_tag_mode = is_string($bulkFilter['tag_mode'] ?? null) ? $bulkFilter['tag_mode'] : 'AND';
-
             $filter_sets[] = $this->tagService
                 ->getImageIdsForTags(
-                    array_map(TagId::from(...), $filter_tag_ids),
-                    $filter_tag_mode,
+                    array_map(TagId::from(...), $filter->tags),
+                    $filter->tagMode ?? 'AND',
                     null,
                     null,
                     false // we don't apply permissions in administration screens
                 );
         }
 
-        if (isset($bulkFilter['dimension']) && is_array($bulkFilter['dimension'])) {
-            // $bulkFilter is only known as array<string, mixed>, so a nested array
-            // offset only narrows to array<mixed, mixed> after is_array() --
-            // rebuild with only string keys so dimensionPhotoIds()'s declared
-            // array<string, mixed> parameter type-checks against a real, verified
-            // shape rather than a trust-me cast.
-            $filter_dimension = [];
-            foreach ($bulkFilter['dimension'] as $dimension_key => $dimension_value) {
-                if (is_string($dimension_key)) {
-                    $filter_dimension[$dimension_key] = $dimension_value;
-                }
-            }
-            $dimension_ids = $filterResolver->dimensionPhotoIds(DimensionFilter::fromArray($filter_dimension), $confOrderBy);
+        if (! $filter->dimension->isEmpty()) {
+            $dimension_ids = $filterResolver->dimensionPhotoIds($filter->dimension, $confOrderBy);
             if ($dimension_ids !== null) {
                 $filter_sets[] = $dimension_ids;
             }
         }
 
-        if (isset($bulkFilter['filesize']) && is_array($bulkFilter['filesize'])) {
-            $filter_filesize = [];
-            foreach ($bulkFilter['filesize'] as $filesize_key => $filesize_value) {
-                if (is_string($filesize_key)) {
-                    $filter_filesize[$filesize_key] = $filesize_value;
-                }
-            }
-            $filesize_ids = $filterResolver->filesizePhotoIds(FilesizeFilter::fromArray($filter_filesize), $confOrderBy);
+        if (! $filter->filesize->isEmpty()) {
+            $filesize_ids = $filterResolver->filesizePhotoIds($filter->filesize, $confOrderBy);
             if ($filesize_ids !== null) {
                 $filter_sets[] = $filesize_ids;
             }
         }
 
-        if (isset($bulkFilter['search']) && is_array($bulkFilter['search'])
-            && isset($bulkFilter['search']['q']) && is_string($bulkFilter['search']['q'])
-            && (bool) strlen($bulkFilter['search']['q'])) {
-            $res = $this->searchService->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
+        if ($filter->searchQuery !== null && $filter->searchQuery !== '') {
+            $res = $this->searchService->getQuickSearchResultsNoCache($filter->searchQuery, [
                 'permissions' => false,
             ]);
             $res_debug = $res['debug'];
@@ -676,11 +662,9 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
     }
 
     /**
-     * @param array<string, mixed> $bulkFilter
-     *
      * @return array<string, mixed>
      */
-    private function computeDimensionOptions(array $bulkFilter): array
+    private function computeDimensionOptions(DimensionFilter $dimension): array
     {
         $widths = [];
         $heights = [];
@@ -752,7 +736,14 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         }
 
         // selected=bound if nothing selected
-        $selected_dimension = isset($bulkFilter['dimension']) && is_array($bulkFilter['dimension']) ? $bulkFilter['dimension'] : [];
+        $selected_dimension = [
+            'min_width' => $dimension->minWidth,
+            'max_width' => $dimension->maxWidth,
+            'min_height' => $dimension->minHeight,
+            'max_height' => $dimension->maxHeight,
+            'min_ratio' => $dimension->minRatio,
+            'max_ratio' => $dimension->maxRatio,
+        ];
         foreach (array_keys($dimensions['bounds']) as $type) {
             $dimensions['selected'][$type] = $selected_dimension[$type]
               ?? $dimensions['bounds'][$type]
@@ -763,11 +754,9 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
     }
 
     /**
-     * @param array<string, mixed> $bulkFilter
-     *
      * @return array<string, mixed>
      */
-    private function computeFilesizeOptions(array $bulkFilter): array
+    private function computeFilesizeOptions(FilesizeFilter $filesizeFilter): array
     {
         $filesizes = [];
         $filesize = [];
@@ -791,7 +780,10 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         ];
 
         // selected=bound if nothing selected
-        $selected_filesize = isset($bulkFilter['filesize']) && is_array($bulkFilter['filesize']) ? $bulkFilter['filesize'] : [];
+        $selected_filesize = [
+            'min' => $filesizeFilter->min,
+            'max' => $filesizeFilter->max,
+        ];
         foreach (array_keys($filesize['bounds']) as $type) {
             $filesize['selected'][$type] = $selected_filesize[$type]
               ?? $filesize['bounds'][$type]

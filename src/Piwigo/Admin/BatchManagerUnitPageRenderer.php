@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\Event\BatchManagerUnitRendered;
 use Piwigo\Admin\Event\BatchManagerUnitRendering;
 use Piwigo\Admin\Projection\BatchManagerUnitView;
@@ -240,22 +241,20 @@ final readonly class BatchManagerUnitPageRenderer
             // Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is
             // always written as an array by BatchManagerSubController (which runs
             // before dispatching to this renderer); this guards against
-            // corrupted/foreign session state and lets PHPStan track a real array
-            // shape for the reads below (this file never writes to
+            // corrupted/foreign session state (this file never writes to
             // $_SESSION['bulk_manager_filter']).
-            /** @var array<string, mixed> $bulk_manager_filter */
-            $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+            /** @var array<string, mixed> $bulk_manager_filter_raw */
+            $bulk_manager_filter_raw = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+            $bulk_manager_filter = BulkManagerFilter::fromArray($bulk_manager_filter_raw);
 
             $is_category = false;
             $filter_category_id = 0;
-            if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])
-                and ! isset($bulk_manager_filter['category_recursive'])) {
+            if ($bulk_manager_filter->category !== null && ! $bulk_manager_filter->categoryRecursive) {
                 $is_category = true;
-                $filter_category_id = (int) $bulk_manager_filter['category'];
+                $filter_category_id = $bulk_manager_filter->category;
             }
 
-            if (isset($bulk_manager_filter['prefilter'])
-                and $bulk_manager_filter['prefilter'] === 'duplicates') {
+            if ($bulk_manager_filter->prefilter === 'duplicates') {
                 $order_by = ' ORDER BY file, id';
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --

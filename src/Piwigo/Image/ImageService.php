@@ -886,7 +886,7 @@ final readonly class ImageService
      *
      * @param array<int, int|string> $images
      */
-    public function saveImagesOrder(int|string $categoryId, array $images): void
+    public function saveImagesOrder(int $categoryId, array $images): void
     {
         $currentRank = 0;
         $datas = [];
@@ -1068,7 +1068,7 @@ final readonly class ImageService
      *   storage_category_id: ?int, level: int, md5sum: ?string, added_by: ?int,
      *   rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}|null
      */
-    public function getImageRow(int|string $imageId): ?array
+    public function getImageRow(int $imageId): ?array
     {
         $imageIdVo = ImageId::tryFrom($imageId);
 

@@ -2202,14 +2202,11 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array{id: int, name: string, permalink: ?string, dir: ?string, rank: ?int, status: string}>
+     * @return list<CategoryChildRow>
      */
     public function getChildrenOfParent(?int $parentId): array
     {
-        return array_map(
-            static fn (CategoryChildRow $row): array => $row->toArray(),
-            $this->repo->findChildrenOfParent($parentId)
-        );
+        return $this->repo->findChildrenOfParent($parentId);
     }
 
     /**

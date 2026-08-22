@@ -14,6 +14,7 @@ use Piwigo\Admin\Request\CatListRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
+use Piwigo\Category\Projection\CategoryChildRow;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
@@ -157,10 +158,8 @@ final readonly class CatListPageRenderer
 
         $categories_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation));
 
-        $categories = [];
-
+        /** @var array<int, CategoryChildRow> $categories */
         $categories = array_column($categoryService->getChildrenOfParent($parent_id), null, 'id');
-        /** @var array<int|string, array{id: int|string, name: string, permalink: ?string, dir: ?string, rank: int|string|null, status: string}> $categories */
 
         // get the categories containing images directly
         $categories_with_images = [];
@@ -197,7 +196,7 @@ final readonly class CatListPageRenderer
         $tpl_categories = [];
 
         foreach ($categories as $category) {
-            $cat_id = (int) $category['id'];
+            $cat_id = $category->id;
 
             $cat_list_url = $base_url . 'cat_list';
 
@@ -206,11 +205,11 @@ final readonly class CatListPageRenderer
                 $self_url .= '&amp;parent_id=' . $parent_id;
             }
 
-            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category->name, 'admin_cat_list'));
 
             $u_delete = null;
             $u_sync = null;
-            if (in_array($category['dir'], [null, '', '0'], true)) {
+            if (in_array($category->dir, [null, '', '0'], true)) {
                 $u_delete = $self_url . '&amp;delete=' . $cat_id . '&amp;pwg_token=' . $this->csrfService->getToken();
             } elseif ($this->currentConfig->enableSynchronization) {
                 $u_sync = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
@@ -222,17 +221,17 @@ final readonly class CatListPageRenderer
                 nbSubPhotos: $nb_sub_photos[$cat_id] ?? 0,
                 nbSubAlbums: isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,
                 id: $cat_id,
-                rank: is_numeric($category['rank']) ? ((int) $category['rank']) * 10 : 0,
+                rank: ($category->rank ?? 0) * 10,
                 uJumpto: $this->urlService->makeIndexUrl(
                     [
-                        'category' => $category,
+                        'category' => $category->toArray(),
                     ]
                 ),
                 uChildren: $cat_list_url . '&amp;parent_id=' . $cat_id,
                 uEdit: $base_url . 'album-' . $cat_id,
                 uAddPhotosAlbum: $base_url . 'photos_add&amp;album=' . $cat_id,
                 uMove: $base_url . 'albums#cat-' . $cat_id,
-                isVirtual: in_array($category['dir'], [null, '', '0'], true),
+                isVirtual: in_array($category->dir, [null, '', '0'], true),
                 catAdminAccess: $categoryService->catAdminAccess($cat_id, $this->currentUser),
                 uDelete: $u_delete,
                 uSync: $u_sync,

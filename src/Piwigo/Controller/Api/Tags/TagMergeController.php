@@ -15,6 +15,7 @@ use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\Event\MergeTags;
+use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -67,10 +68,10 @@ final readonly class TagMergeController implements ControllerInterface
 
         $inserts = [];
         foreach ($imagesToAdd as $imageId) {
-            $inserts[] = [
-                'tag_id' => $input->destinationTagId,
-                'image_id' => $imageId,
-            ];
+            $inserts[] = new ImageTagPair(
+                imageId: $imageId,
+                tagId: $input->destinationTagId,
+            );
         }
         $this->tagService->copyImageTagAssociations($inserts, ignore: true);
 

@@ -26,6 +26,7 @@ use Piwigo\Tag\Event\GetTagAltNames;
 use Piwigo\Tag\Event\GetTagNameLikeWhere;
 use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\Event\RenderTagUrl;
+use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 use Piwigo\Tag\Projection\TagCreateOutcome;
@@ -444,10 +445,10 @@ final readonly class TagService
         $inserts = [];
         foreach ($images as $imageId) {
             foreach (array_unique($tags) as $tagId) {
-                $inserts[] = [
-                    'image_id' => $imageId,
-                    'tag_id' => $tagId->value,
-                ];
+                $inserts[] = new ImageTagPair(
+                    imageId: $imageId,
+                    tagId: $tagId->value,
+                );
             }
         }
         $this->repo->massInsertImageTags($inserts);
@@ -532,7 +533,7 @@ final readonly class TagService
      * already know exactly which rows to
      * copy and log their own activity entries separately.
      *
-     * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
+     * @param  list<ImageTagPair>  $inserts
      */
     public function copyImageTagAssociations(array $inserts, bool $ignore = false): void
     {
@@ -612,10 +613,10 @@ final readonly class TagService
 
         foreach ($tagsOf as $imageId => $tagIds) {
             foreach (array_unique($tagIds) as $tagId) {
-                $inserts[] = [
-                    'image_id' => $imageId,
-                    'tag_id' => $tagId->value,
-                ];
+                $inserts[] = new ImageTagPair(
+                    imageId: (int) $imageId,
+                    tagId: $tagId->value,
+                );
             }
         }
 

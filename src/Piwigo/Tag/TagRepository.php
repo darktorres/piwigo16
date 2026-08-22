@@ -21,6 +21,7 @@ use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Tag\Projection\ImageTagLink;
+use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 use Piwigo\Tag\Projection\TagIdName;
@@ -865,7 +866,7 @@ final class TagRepository extends EntityRepository
      * persist() (an ORM insert writes one row per flush(), not a single
      * bulk statement).
      *
-     * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
+     * @param  list<ImageTagPair>  $inserts
      */
     public function massInsertImageTags(array $inserts, bool $ignore = false): void
     {
@@ -875,7 +876,10 @@ final class TagRepository extends EntityRepository
 
         $em = $this->getEntityManager();
         new BatchWriter($em->getConnection())
-            ->massInsert('image_tag', array_keys($inserts[0]), $inserts, [
+            ->massInsert('image_tag', ['image_id', 'tag_id'], array_map(
+                static fn (ImageTagPair $pair): array => $pair->toArray(),
+                $inserts
+            ), [
                 'ignore' => $ignore,
             ]);
         $em->clear();

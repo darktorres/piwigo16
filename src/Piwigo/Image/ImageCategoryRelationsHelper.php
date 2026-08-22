@@ -14,6 +14,7 @@ namespace Piwigo\Image;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\OperationError;
+use Piwigo\Image\Projection\ImageCategoryPair;
 
 /**
  * Sets an image's category associations. `Controller\Api\Images\
@@ -127,11 +128,11 @@ final readonly class ImageCategoryRelationsHelper
         $inserts = [];
 
         foreach ($new_cat_ids as $cat_id) {
-            $inserts[] = [
-                'image_id' => $image_id->value,
-                'category_id' => $cat_id,
-                'rank' => $rank_on_category[$cat_id],
-            ];
+            $inserts[] = new ImageCategoryPair(
+                imageId: $image_id->value,
+                categoryId: $cat_id,
+                rank: $rank_on_category[$cat_id],
+            );
         }
 
         $this->imageService->insertImageCategoryLinks($inserts);

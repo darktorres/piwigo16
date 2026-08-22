@@ -32,6 +32,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -573,10 +574,10 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                 $inserts[] = $insert;
 
-                $insert_links[] = [
-                    'image_id' => $insert['id'],
-                    'category_id' => $insert['storage_category_id'],
-                ];
+                $insert_links[] = new ImageCategoryPair(
+                    imageId: $insert['id'],
+                    categoryId: $insert['storage_category_id'],
+                );
 
                 $infos[] = [
                     'path' => $insert['path'],

@@ -28,6 +28,7 @@ use Piwigo\Image\Projection\ExtensionBreakdown;
 use Piwigo\Image\Projection\FormatCountSum;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
+use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\ImageIdExt;
 use Piwigo\Image\Projection\ImageIdFile;
 use Piwigo\Image\Projection\ImageLookupRow;
@@ -509,11 +510,11 @@ final readonly class ImageService
                 if (! in_array((int) $imageId, $existing[$categoryId], true)) {
                     $rank = ++$currentRankOf[$categoryId];
 
-                    $inserts[] = [
-                        'image_id' => $imageId,
-                        'category_id' => $categoryId,
-                        'rank' => $rank,
-                    ];
+                    $inserts[] = new ImageCategoryPair(
+                        imageId: $imageId,
+                        categoryId: $categoryId,
+                        rank: $rank,
+                    );
                 }
             }
         }
@@ -871,7 +872,7 @@ final readonly class ImageService
      * next rank. $rank is optional per row -- see ImageRepository::
      * massInsertImageCategory()'s own docblock.
      *
-     * @param  list<array{image_id: int|string, category_id: int|string, rank?: int|string}>  $inserts
+     * @param  list<ImageCategoryPair>  $inserts
      */
     public function insertImageCategoryLinks(array $inserts): void
     {

@@ -32,6 +32,7 @@ use Piwigo\Image\Projection\ExtensionBreakdown;
 use Piwigo\Image\Projection\FormatCountSum;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
+use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\ImageFormat;
 use Piwigo\Image\Projection\ImageIdExt;
 use Piwigo\Image\Projection\ImageIdFile;
@@ -1590,7 +1591,7 @@ final class ImageRepository extends EntityRepository
      * own caller which always supplies it. Bulk multi-row INSERT via
      * BatchWriter, not ORM persist()/flush().
      *
-     * @param  list<array{image_id: int|string, category_id: int|string, rank?: int|string}>  $inserts
+     * @param  list<ImageCategoryPair>  $inserts
      */
     public function massInsertImageCategory(array $inserts): void
     {
@@ -1598,8 +1599,10 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
+        $rows = array_map(static fn (ImageCategoryPair $pair): array => $pair->toArray(), $inserts);
+
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert('image_category', array_keys($inserts[0]), $inserts);
+            ->massInsert('image_category', array_keys($rows[0]), $rows);
         $this->getEntityManager()
             ->clear();
     }

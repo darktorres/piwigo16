@@ -3529,7 +3529,37 @@ merge/rebase/cherry-pick of the whole range -- reimplement the
 `/home/torres/piwigo17-rewrite-3/HANDOFF-array-to-object-campaign.md`
 as the theme-by-theme index (every cited commit hash is directly
 `git show`-able from this worktree too, since both share the same
-`.git` object database -- no fetch needed). Not started.
+`.git` object database -- no fetch needed).
+
+**In progress.** Sections 1-2 (standalone conversions, AuthService),
+Section 4 (small utility VOs, clusters 14/17/18/20), and Section 12
+(the `SearchRules` VO family mini-campaign — foundation commit plus
+all 5 adoption sites: `HistorySearchController`,
+`ImageFilteredSearchCreateController`, `SearchController`,
+`SearchService`, `SearchFilterRenderer`) are **fully landed**, one
+commit per themed item, each independently PHPStan/ECS/deptrac/
+Unit+Integration+Browser-verified. One Section-1 item
+(`MailerInterface::mail()`'s `$args`/`$tpl` → `MailArgs`/`MailOptions`,
+cluster 7) deliberately **deferred**: this branch's own prior,
+independent View-typing work already converted half of that cluster's
+motivation (the `$tpl['filename']` runtime-template mechanism now
+resolves through `buildRuntimeTemplateView()` → typed
+`NotificationAdminView`/`CatGroupInfoView`, superseding the
+reference's own `MailOptions`+`$extra` approach) — converting just the
+remaining `$args` half alone would be a large, high-risk rewrite of
+core mail-sending logic for comparatively low remaining value; revisit
+as its own deliberate decision, not silently folded into this pass.
+One item confirmed **moot**: `Script::$extra` (the target classes were
+already deleted by this branch's own earlier P41-G/H asset-pipeline
+swap).
+
+Remaining: Sections 8-10 (the big `PageContext` → VO batch, described
+by the handoff doc as the bulk of the diff and safe to parallelize
+across files), Section 13 (the ~19-item signature-narrowing sweep),
+Section 14 (`Session\Session` VO-scaffold removal — needs a
+`17.x-rewrite`-side check first, per the handoff's own caution), and
+Section 15 (Psalm-suppression cleanup — likely moot here, see
+`feedback_no_psalm_gating.md`).
 
 **P43 — Typed contributions + plugin-owned routes.**
 

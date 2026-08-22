@@ -71,7 +71,7 @@ final readonly class PictureCoiPageRenderer
         $row = $image->toArray();
 
         if ($pictureCoiRequest->isSubmitted) {
-            $representativeExtForDelete = isset($row['representative_ext']) && $row['representative_ext'] !== '' && $row['representative_ext'] !== '0' && is_string($row['representative_ext'])
+            $representativeExtForDelete = isset($row['representative_ext']) && $row['representative_ext'] !== '' && $row['representative_ext'] !== '0'
                 ? $row['representative_ext']
                 : null;
             $derivative_infos = new DerivativePathInfo($row['path'], $representativeExtForDelete);

@@ -392,11 +392,11 @@ test('getAll() coerces a plain info array into a SrcImage and keys the result by
             'square' => new DerivativeParams(SizingParams::square(120)),
         ]);
 
-        $all = DerivativeImage::getAll([
+        $all = DerivativeImage::getAll(SrcImageInfo::fromRow([
             'id' => 7,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+        ]));
 
         expect(array_keys($all))
             ->toBe(['square']);
@@ -427,11 +427,11 @@ test('getAll() maps a disabled type to the SAME instance as its fallback enabled
             'thumb' => 'square',
         ]);
 
-        $all = DerivativeImage::getAll([
+        $all = DerivativeImage::getAll(SrcImageInfo::fromRow([
             'id' => 7,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+        ]));
 
         expect(array_keys($all))
             ->toBe(['square', 'thumb']);
@@ -454,11 +454,11 @@ test('getOne() falls back to the mapped enabled type for a disabled type, and re
             'thumb' => 'square',
         ]);
 
-        $infos = [
+        $infos = SrcImageInfo::fromRow([
             'id' => 9,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-        ];
+        ]);
 
         $fallback = DerivativeImage::getOne('thumb', $infos);
         if (! $fallback instanceof DerivativeImage) {

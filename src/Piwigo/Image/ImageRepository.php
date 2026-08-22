@@ -883,10 +883,10 @@ final class ImageRepository extends EntityRepository
      * The query already guarantees numeric ids, so no `is_string()`
      * filtering is applied here.
      *
-     * @param array<int, int|string> $images
+     * @param array<int> $images
      * @return list<int>
      */
-    public function findDissociableImageIds(array $images, int|string $category): array
+    public function findDissociableImageIds(array $images, int $category): array
     {
         return array_values(array_map(
             static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0),
@@ -898,8 +898,8 @@ final class ImageRepository extends EntityRepository
                 ->where('ic.category = :category')
                 ->andWhere('i.id IN (:images)')
                 ->andWhere('(ic.category != i.storageCategory OR i.storageCategory IS NULL)')
-                ->setParameter('category', (int) $category)
-                ->setParameter('images', array_map(intval(...), $images), ArrayParameterType::INTEGER)
+                ->setParameter('category', $category)
+                ->setParameter('images', $images, ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -908,14 +908,14 @@ final class ImageRepository extends EntityRepository
     /**
      * @param array<int, int> $imageIds
      */
-    public function deleteImageCategoryLinks(array $imageIds, int|string $category): void
+    public function deleteImageCategoryLinks(array $imageIds, int $category): void
     {
         $em = $this->getEntityManager();
         $em->createQueryBuilder()
             ->delete(ImageCategoryEntity::class, 'ic')
             ->where('ic.category = :category')
             ->andWhere('ic.image IN (:images)')
-            ->setParameter('category', (int) $category)
+            ->setParameter('category', $category)
             ->setParameter('images', $imageIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
@@ -930,7 +930,7 @@ final class ImageRepository extends EntityRepository
      * above (many images, one category), this is one image, many
      * categories.
      *
-     * @param list<int|string> $categoryIds
+     * @param list<int> $categoryIds
      */
     public function deleteImageCategoryLinksForCategoryIds(ImageId $imageId, array $categoryIds): void
     {
@@ -944,7 +944,7 @@ final class ImageRepository extends EntityRepository
             ->where('ic.image = :imageId')
             ->andWhere('ic.category IN (:categoryIds)')
             ->setParameter('imageId', $imageId->value)
-            ->setParameter('categoryIds', array_map(intval(...), $categoryIds), ArrayParameterType::INTEGER)
+            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
     }

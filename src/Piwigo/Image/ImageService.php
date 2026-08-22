@@ -530,9 +530,9 @@ final readonly class ImageService
     /**
      * Dissociate a list of images from a category.
      *
-     * @param array<int, int|string> $images
+     * @param array<int> $images
      */
-    public function dissociateImagesFromCategory(array $images, int|string $category): int
+    public function dissociateImagesFromCategory(array $images, int $category): int
     {
         // physical links must not be broken, so we must first retrieve image_id
         // which create virtual links with the category to "dissociate from".
@@ -845,7 +845,7 @@ final readonly class ImageService
     }
 
     /**
-     * @param list<int|string> $categoryIds
+     * @param list<int> $categoryIds
      */
     public function deleteImageCategoryLinksForCategoryIds(ImageId $imageId, array $categoryIds): void
     {

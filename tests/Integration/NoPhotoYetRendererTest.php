@@ -45,6 +45,17 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Users\UserService;
 
     /**
+     * [P44-A] That same untestable admin (isAdmin()) branch is also where
+     * `no_photo_yet.latte`'s `nextStepUrl`/`deactivateUrl`/`loginUrl` prints
+     * live -- previously `|noescape`'d with `nextStepUrl` sourced straight
+     * from the admin-configurable `noPhotoYetUrl` config value with no
+     * escaping at all (an admin-self-XSS gap: only reachable by an admin
+     * configuring a malicious value into their own site). Fixed by
+     * removing `|noescape` from all 3 (trusting Latte's own auto-escape,
+     * this campaign's established pattern) -- not independently
+     * regression-tested here for the same 2 reasons this docblock already
+     * gives for the branch itself being unreachable from this test file.
+     *
      * Exercises the guard-condition-false branch, the nb_photos>0 branch, and
      * (via the transaction+rollback trick documented above the 2 tests near
      * the bottom of this file) the nb_photos===0 branch's 'browse'/'deactivate'

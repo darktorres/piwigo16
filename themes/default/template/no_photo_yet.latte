@@ -15,7 +15,7 @@
           id="noPhotoWelcome"
         >{='Welcome to your Piwigo photo gallery!'|translate}</p>
 
-        <form method="post" action="{$loginUrl|noescape}" id="quickconnect">
+        <form method="post" action="{$loginUrl}" id="quickconnect">
           {='Username'|translate}
           <br><input type="text" name="username">
           <br>
@@ -30,15 +30,15 @@
             ></p>
         </form>
         <div id="deactivate"><a
-            href="{$deactivateUrl|noescape}"
+            href="{$deactivateUrl}"
           >{='... or browse your empty gallery'|translate}</a></div>
       {else}
         <p id="noPhotoWelcome">{$intro}</p>
         <div class="bigButton"><a
-            href="{$nextStepUrl|noescape}"
+            href="{$nextStepUrl}"
           >{='I want to add photos'|translate}</a></div>
         <div id="deactivate"><a
-            href="{$deactivateUrl|noescape}"
+            href="{$deactivateUrl}"
           >{='... or please deactivate this message, I will find my way by myself'|translate}</a></div>
       {/if}
     </div>

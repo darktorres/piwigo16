@@ -172,12 +172,6 @@
               <option
                 value="generate_derivatives"
               >{='Generate multiple size images'|translate}</option>
-              {if !empty($element_set_global_plugins_actions)}
-                <option
-                  n:foreach="$element_set_global_plugins_actions as $action"
-                  value="{$action['ID']}"
-                >{$action['NAME']}</option>
-              {/if}
             </select>
           </div>
           <p id="confirmDel" class="u-invisible">
@@ -372,16 +366,6 @@
               > {$disp}</label>
           </div>
 
-          <!-- plugins -->
-          {if !empty($element_set_global_plugins_actions)}
-            <div
-              n:foreach="$element_set_global_plugins_actions as $action"
-              id="action_{$action['ID']}"
-              class="bulkAction"
-            >
-              {if !empty($action['CONTENT'])}{$action['CONTENT']|noescape}{/if}
-            </div>
-          {/if}
         </div>
       </div> <!-- #permitAction -->
       <div

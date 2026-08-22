@@ -1548,8 +1548,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * @param  list<int|string>  $ids
-     * @return array<int|string, ?string>
+     * @param  list<int>  $ids
+     * @return array<int, ?string>
      */
     public function getStatusByIds(array $ids): array
     {
@@ -1617,7 +1617,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * @param  list<int|string>  $userIds
+     * @param  list<string>  $userIds
      * @return list<NotificationRecipient>
      */
     public function getNotificationRecipientsByIds(array $userIds): array

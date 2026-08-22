@@ -1814,7 +1814,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * `UserEntity`, matching every real consumer of this row shape, which
      * expects a plain scalar there.
      *
-     * @param  list<int|string>  $userIds
+     * @param  list<string>  $userIds
      * @return list<NotificationRecipient>
      */
     public function findNotificationRecipientsByIds(array $userIds): array
@@ -1829,7 +1829,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->from(UserInfoEntity::class, 'ui')
             ->innerJoin('ui.user', 'u')
             ->where('ui.user IN (:userIds)')
-            ->setParameter('userIds', array_map(static fn (int|string $id): int => (int) $id, $userIds), ArrayParameterType::INTEGER)
+            ->setParameter('userIds', array_map(static fn (string $id): int => (int) $id, $userIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1976,8 +1976,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * `users` is mapped ({@see UserEntity}); see this class's own
      * docblock for why its columns are fixed, not caller-supplied.
      *
-     * @param  list<int|string>  $ids
-     * @return array<int|string, ?string>
+     * @param  list<int>  $ids
+     * @return array<int, ?string>
      */
     public function findStatusByIds(array $ids): array
     {
@@ -1991,7 +1991,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->from(UserEntity::class, 'u')
             ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.user')
             ->where('u.id IN (:ids)')
-            ->setParameter('ids', array_map(static fn (int|string $id): int => (int) $id, $ids), ArrayParameterType::INTEGER)
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 

@@ -40,6 +40,19 @@ test('fromArray defaults status to an empty string when missing or malformed', f
         ->toBe('');
 });
 
+test('fromArray defaults status to an empty string for a genuinely-a-string-but-unrecognized value (P44-H)', function (): void {
+    // Confirms status is allowlisted, not just type-checked -- a plain
+    // is_string() check alone would have let this straight through to
+    // CategoryAdminService::setCategoryPermissions(), which would then
+    // write it to category.status as-is.
+    $request = CatPermSubmitRequest::fromArray([
+        'status' => 'not_a_real_status',
+    ]);
+
+    expect($request->status)
+        ->toBe('');
+});
+
 test('fromArray defaults groups/users to an empty list when not an array', function (): void {
     $request = CatPermSubmitRequest::fromArray([
         'groups' => 'not-an-array',

@@ -15,6 +15,17 @@ use Override;
  * The collation is binary, so two Username instances compare case-sensitively
  * by `$a->value === $b->value` — `Foo` and `foo` are distinct accounts at
  * the DB level and stay distinct here.
+ *
+ * [P44-H] Also rejects the 5 HTML-special characters (`<`, `>`, `&`, `"`,
+ * `'`) -- neither this class nor the registration/profile-update flow ever
+ * restricted username characters beyond the checks above, and a stored
+ * username reaches several raw-HTML sinks unescaped elsewhere (e.g.
+ * MailService's password-reset/activation mail bodies). This is
+ * deliberately narrower than a general alphanumeric-only policy: legitimate
+ * unicode names, spaces, and punctuation outside this specific set stay
+ * valid -- only the exact character class that enables HTML injection is
+ * blocked, closing the root cause for every current and future consumer
+ * of stored username data at once.
  */
 final readonly class Username implements StringVo
 {
@@ -44,6 +55,12 @@ final readonly class Username implements StringVo
         // Reject any C0 / DEL control char anywhere in the string.
         if (preg_match('/[\x00-\x1F\x7F]/', $value) === 1) {
             throw new InvalidArgumentException("Username must not contain control characters: '{$value}'");
+        }
+        // Reject the HTML-special character class (P44-H) -- see this
+        // class's own docblock for why this specific set, not a broader
+        // alphanumeric-only restriction.
+        if (preg_match('/[<>&"\']/', $value) === 1) {
+            throw new InvalidArgumentException("Username must not contain '<', '>', '&', '\"', or \"'\": '{$value}'");
         }
         return new self($value);
     }

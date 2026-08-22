@@ -48,6 +48,11 @@ final class UsernameTest extends StringVoContract
         yield 'embedded control' => ["adm\x01in"];
         yield 'DEL char' => ["adm\x7Fin"];
         yield 'over 100 chars' => [str_repeat('a', 101)];
+        yield 'less-than' => ['<script>'];
+        yield 'greater-than' => ['admin>'];
+        yield 'ampersand' => ['admin&co'];
+        yield 'double quote' => ['admin"'];
+        yield 'single quote' => ["admin'"];
     }
 
     public function testCaseSensitiveBinaryCollation(): void
@@ -76,5 +81,21 @@ final class UsernameTest extends StringVoContract
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains("Username exceeds 100 chars: '{$tooLong}'");
         Username::from($tooLong);
+    }
+
+    public function testFromRejectsAnHtmlSpecialCharacterWithItsOwnMessage(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageIsOrContains('must not contain');
+        Username::from('<script>alert(1)</script>');
+    }
+
+    public function testFromAcceptsUnicodeAndPunctuationOutsideTheHtmlSpecialCharacterClass(): void
+    {
+        // The P44-H restriction is deliberately narrow: legitimate
+        // non-ASCII names, spaces, and punctuation outside '<>&"\''
+        // stay valid.
+        $name = 'Jean-François (test), déjà-vu';
+        self::assertSame($name, Username::from($name)->value);
     }
 }

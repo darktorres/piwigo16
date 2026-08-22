@@ -407,6 +407,11 @@ namespace Piwigo\Tests\Integration {
 
         public function testCheckAndSaveUserInfosRejectsAUsernameContainingHtmlTags(): void
         {
+            // Username::from()'s own HTML-special character class (P44-H)
+            // now rejects this before the method-local strip_tags() check
+            // (deleted, since it could no longer fire with a different
+            // outcome) ever gets there -- 'invalid login format', not the
+            // former dedicated 'html tags are not allowed in login'.
             $result = $this->service->checkAndSaveUserInfos(
                 new UserInfoUpdateInput(userIds: [4], username: '<b>evil</b>'),
                 PageStateTestFactory::get()
@@ -414,7 +419,23 @@ namespace Piwigo\Tests\Integration {
 
             self::assertTrue($result->isFailure);
             self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
-            self::assertSame(LangTestFactory::get()->t('html tags are not allowed in login'), $result->failureMessage);
+            self::assertSame(LangTestFactory::get()->t('invalid login format'), $result->failureMessage);
+        }
+
+        public function testCheckAndSaveUserInfosRejectsAUsernameContainingAnAmpersandOrQuoteWithNoAngleBrackets(): void
+        {
+            // The real gap this closes (P44-H), reached independently via
+            // the profile-update path too: '&'/'"'/'\'' alone were never
+            // caught by the pre-existing strip_tags()-based check (deleted
+            // above) at all.
+            $result = $this->service->checkAndSaveUserInfos(
+                new UserInfoUpdateInput(userIds: [4], username: 'evil & "quoted\''),
+                PageStateTestFactory::get()
+            );
+
+            self::assertTrue($result->isFailure);
+            self::assertSame(UserInfoUpdateFailureReason::InvalidInput, $result->failureReason);
+            self::assertSame(LangTestFactory::get()->t('invalid login format'), $result->failureMessage);
         }
 
         public function testCheckAndSaveUserInfosRejectsAnInvalidEmail(): void
@@ -1088,6 +1109,13 @@ namespace Piwigo\Tests\Integration {
 
         public function testRegisterUserRejectsALoginWithHtmlTags(): void
         {
+            // Username::from()'s own HTML-special character class (P44-H)
+            // now rejects this via the 'invalid login format' check --
+            // the former, separately-pushed 'html tags are not allowed in
+            // login' error is deleted (dead code: any input it could ever
+            // fire for necessarily contains '<', which the format check
+            // above it always rejects too), so only one error is expected
+            // now, not both.
             $result = $this->service->registerUser(
                 '<b>tag-' . bin2hex(random_bytes(3)) . '</b>',
                 'password123',
@@ -1097,7 +1125,26 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result->userId);
-            self::assertSame([LangTestFactory::get()->t('html tags are not allowed in login')], $result->errors);
+            self::assertSame([LangTestFactory::get()->t('invalid login format')], $result->errors);
+        }
+
+        public function testRegisterUserRejectsALoginContainingAnAmpersandOrQuoteWithNoAngleBrackets(): void
+        {
+            // The real gap this closes (P44-H): unlike '<b>evil</b>',
+            // '&'/'"'/'\'' alone were never caught by the pre-existing
+            // strip_tags()-based check (deleted above) at all -- only
+            // Username::from()'s own new character-class restriction
+            // rejects this.
+            $result = $this->service->registerUser(
+                'tag-' . bin2hex(random_bytes(3)) . '& "\'',
+                'password123',
+                null,
+                UrlServiceTestFactory::build(),
+                $this->mailer
+            );
+
+            self::assertNull($result->userId);
+            self::assertSame([LangTestFactory::get()->t('invalid login format')], $result->errors);
         }
 
         public function testRegisterUserRejectsAnInvalidMailAddress(): void

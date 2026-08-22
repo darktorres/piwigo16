@@ -7,9 +7,12 @@ namespace Piwigo\Admin\Request;
 /**
  * Validated `$_POST` shape for CatPermPageRenderer::render()'s permissions
  * save form (the "permissions" tab of the "album" page slug).
- * `status` falls back to an empty string on
- * malformed input (never matches 'public'/'private', same as the
- * original comment); `groups`/`users` are the real int ids only,
+ * `status` is allowlisted against `'public'`/`'private'` (P44-H) --
+ * anything else, including a genuinely-a-string-but-unrecognized value
+ * (a plain type check alone lets that straight through), falls back to
+ * an empty string, matching `CategoryAdminService::setCategoryPermissions()`'s
+ * own two-literal branching so a stray value can never reach
+ * `category.status` as-is; `groups`/`users` are the real int ids only,
  * matching the original's own defensive per-element `is_numeric()` cast.
  */
 final readonly class CatPermSubmitRequest
@@ -37,7 +40,7 @@ final readonly class CatPermSubmitRequest
     public static function fromArray(array $post): self
     {
         $status_raw = $post['status'] ?? null;
-        $status = is_string($status_raw) ? $status_raw : '';
+        $status = in_array($status_raw, ['public', 'private'], true) ? $status_raw : '';
 
         return new self(
             $post !== [],

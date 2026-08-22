@@ -313,19 +313,23 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
         $loginUsername = Username::tryFrom($login);
         // The 3 checks above catch empty/leading-space/trailing-space, but
-        // Username::from() also rejects >100 chars and embedded control
-        // characters -- neither has a dedicated check here, so a login
+        // Username::from() also rejects >100 chars, embedded control
+        // characters, and (P44-H) the HTML-special character class
+        // ('<>&"\'') -- none has a dedicated check here, so a login
         // passing all 3 above could still fail Username::from() once
         // UserEntity::$username is VO-typed. Report it the same way as the
         // other format violations rather than let it through silently.
+        // This supersedes the former standalone `$login !== strip_tags($login)`
+        // check below (deleted, not just left alongside this one): any
+        // input strip_tags() would ever change necessarily contains a
+        // literal '<', which Username::from() now always rejects too --
+        // that check could no longer produce a different outcome than
+        // this one.
         if (! $loginUsername instanceof Username && $login !== '' && $login === trim($login)) {
             $errors[] = $this->lang->t('invalid login format');
         }
         if ($loginUsername instanceof Username && $this->getUserId($loginUsername) instanceof UserId) {
             $duplicateUsername = true;
-        }
-        if ($login !== strip_tags($login)) {
-            $errors[] = $this->lang->t('html tags are not allowed in login');
         }
 
         $mailError = $this->validateMailAddress(null, $mailAddress);
@@ -1244,9 +1248,13 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 if ($user_id instanceof UserId and $user_id->value !== $user_ids[0]) {
                     return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, $this->lang->t('this login is already used'));
                 }
-                if ($username_param !== strip_tags($username_param)) {
-                    return UserInfoUpdateResult::failure(UserInfoUpdateFailureReason::InvalidInput, $this->lang->t('html tags are not allowed in login'));
-                }
+                // The former `$username_param !== strip_tags($username_param)`
+                // check here is deleted, not just left alongside the
+                // Username::tryFrom() one above (P44-H): any input
+                // strip_tags() would ever change necessarily contains a
+                // literal '<', which Username::from() now always rejects
+                // too (the HTML-special character class), so that check
+                // could no longer be reached with a different outcome.
                 $username_update = $username_param_vo;
             }
 

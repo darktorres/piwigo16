@@ -23,6 +23,7 @@ use Piwigo\Controller\Event\IndexRendering;
 use Piwigo\Controller\Projection\CanonicalUrlPageContext;
 use Piwigo\Controller\Projection\CategoryCatsHtmlPageContext;
 use Piwigo\Controller\Projection\CategoryCatsView;
+use Piwigo\Controller\Projection\ImageOrderOption;
 use Piwigo\Controller\Projection\IndexView;
 use Piwigo\Controller\Projection\SearchFiltersHtmlPageContext;
 use Piwigo\Controller\Projection\SearchFiltersView;
@@ -526,16 +527,16 @@ final readonly class GalleryController implements ControllerInterface
                         $order_selected = true;
                     }
 
-                    $tpl_orders[$order_id] = [
-                        'DISPLAY' => $order[0],
-                        'URL' => $url . $order_id,
-                        'SELECTED' => (string) $order_idx === (string) $order_id,
-                    ];
+                    $tpl_orders[$order_id] = new ImageOrderOption(
+                        display: $order[0],
+                        url: $url . $order_id,
+                        selected: (string) $order_idx === (string) $order_id,
+                    );
                 }
             }
 
-            $tpl_orders[0]['SELECTED'] = ! $order_selected; // unselect "Default" if another one is selected
-            $image_orders = $tpl_orders;
+            $tpl_orders[0]->selected = ! $order_selected; // unselect "Default" if another one is selected
+            $image_orders = array_map(static fn (ImageOrderOption $option): array => $option->toArray(), $tpl_orders);
         }
 
         // category comment
@@ -599,11 +600,11 @@ final readonly class GalleryController implements ControllerInterface
                 unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
                 foreach ($type_map as $params) {
-                    $image_derivatives[] = [
-                        'DISPLAY' => $this->lang->t($params->type),
-                        'URL' => $url . $params->type,
-                        'SELECTED' => $params->type === $selected_type,
-                    ];
+                    $image_derivatives[] = new ImageOrderOption(
+                        display: $this->lang->t($params->type),
+                        url: $url . $params->type,
+                        selected: $params->type === $selected_type,
+                    )->toArray();
                 }
             }
         }

@@ -36,6 +36,7 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -328,7 +329,7 @@ final readonly class CategoryCatsRenderer
             }
 
             foreach ($infosOfImage as &$info) {
-                $info['src_image'] = new SrcImage($info);
+                $info['src_image'] = new SrcImage(SrcImageInfo::fromRow($info));
             }
             unset($info);
         }

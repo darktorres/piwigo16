@@ -19,6 +19,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
@@ -44,7 +45,7 @@ final class PictureFormatsPageRenderer
             $htmlRenderer
                 ->fatalError('image_id #' . $image_id->value . ' does not exist');
         }
-        $image = $imageRow->toArray();
+        $image = SrcImageInfo::fromRow($imageRow->toArray());
 
         $formats = [];
         foreach ($entityManager->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {

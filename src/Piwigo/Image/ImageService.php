@@ -24,6 +24,7 @@ use Piwigo\Db\SortRenderer;
 use Piwigo\Image\Event\BeginDeleteElements;
 use Piwigo\Image\Event\DeleteElements;
 use Piwigo\Image\Projection\AddMethodBreakdown;
+use Piwigo\Image\Projection\DerivativePathInfo;
 use Piwigo\Image\Projection\ExtensionBreakdown;
 use Piwigo\Image\Projection\FormatCountSum;
 use Piwigo\Image\Projection\Image;
@@ -285,7 +286,7 @@ final readonly class ImageService
             $representativeExt = is_string($representativeExt) && $representativeExt !== '' ? $representativeExt : null;
 
             $files = [];
-            $files[] = ImagePathHelper::getElementPath($row->toArray(), $urlService, $this->paths);
+            $files[] = ImagePathHelper::getElementPath($rowPath, $urlService, $this->paths);
 
             if ($representativeExt !== null) {
                 $files[] = ImagePathHelper::originalToRepresentative($files[0], $representativeExt);
@@ -309,14 +310,8 @@ final readonly class ImageService
             }
 
             if ($ok) {
-                $derivativeInfos = [
-                    'path' => $rowPath,
-                ];
-                if ($representativeExt !== null) {
-                    $derivativeInfos['representative_ext'] = $representativeExt;
-                }
                 new DerivativeCacheService($this->currentConfig, $this->paths)
-                    ->deleteElementDerivatives($derivativeInfos);
+                    ->deleteElementDerivatives(new DerivativePathInfo($rowPath, $representativeExt));
                 $newIds[] = $rowId;
             } else {
                 break;

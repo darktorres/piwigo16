@@ -35,22 +35,16 @@ test('originalToFormat inserts a pwg_format/ segment and swaps the extension', f
 test('getElementPath prefixes a local path with the app root', function (): void {
     $urlService = UrlServiceTestFactory::build();
 
-    expect(ImagePathHelper::getElementPath([
-        'path' => 'galleries/2024/photo.jpg',
-    ], $urlService, Paths::fromRoot('/var/www/piwigo')))
+    expect(ImagePathHelper::getElementPath('galleries/2024/photo.jpg', $urlService, Paths::fromRoot('/var/www/piwigo')))
         ->toBe('/var/www/piwigo/galleries/2024/photo.jpg');
 });
 
 test('getElementPath leaves a remote (http/https) path untouched', function (): void {
     $urlService = UrlServiceTestFactory::build();
 
-    expect(ImagePathHelper::getElementPath([
-        'path' => 'https://cdn.example.test/photo.jpg',
-    ], $urlService, Paths::fromRoot('/var/www/piwigo')))
+    expect(ImagePathHelper::getElementPath('https://cdn.example.test/photo.jpg', $urlService, Paths::fromRoot('/var/www/piwigo')))
         ->toBe('https://cdn.example.test/photo.jpg');
-    expect(ImagePathHelper::getElementPath([
-        'path' => 'http://cdn.example.test/photo.jpg',
-    ], $urlService, Paths::fromRoot('/var/www/piwigo')))
+    expect(ImagePathHelper::getElementPath('http://cdn.example.test/photo.jpg', $urlService, Paths::fromRoot('/var/www/piwigo')))
         ->toBe('http://cdn.example.test/photo.jpg');
 });
 
@@ -61,8 +55,6 @@ test('getElementPath leaves an already-absolute local path untouched, not double
     // photo (real bug, found live).
     $urlService = UrlServiceTestFactory::build();
 
-    expect(ImagePathHelper::getElementPath([
-        'path' => '/var/www/piwigo/galleries/external/photo.jpg',
-    ], $urlService, Paths::fromRoot('/var/www/piwigo')))
+    expect(ImagePathHelper::getElementPath('/var/www/piwigo/galleries/external/photo.jpg', $urlService, Paths::fromRoot('/var/www/piwigo')))
         ->toBe('/var/www/piwigo/galleries/external/photo.jpg');
 });

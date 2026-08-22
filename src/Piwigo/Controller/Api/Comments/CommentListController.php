@@ -23,6 +23,7 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Picture\Event\RenderCommentAuthor;
 use Piwigo\PluginConfig\EventDispatcher;
 use Psr\Http\Message\ResponseInterface;
@@ -119,11 +120,11 @@ final readonly class CommentListController implements ControllerInterface
 
         $comments = [];
         foreach ($this->commentService->getList($criteria, $perPage * $page, $perPage) as $row) {
-            $mediumDerivative = DerivativeImage::getOne(ImageStdParams::MEDIUM, [
-                'id' => $row->imageId,
-                'path' => $row->path,
-                'representative_ext' => $row->representativeExt,
-            ]);
+            $mediumDerivative = DerivativeImage::getOne(ImageStdParams::MEDIUM, new SrcImageInfo(
+                id: is_numeric($row->imageId) ? (int) $row->imageId : 0,
+                path: $row->path,
+                representativeExt: $row->representativeExt,
+            ));
             assert($mediumDerivative instanceof DerivativeImage);
 
             if (! is_numeric($row->authorId) || (int) $row->authorId === 0 || (int) $row->authorId === $this->currentConfig->guestId) {

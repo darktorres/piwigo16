@@ -35,6 +35,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\ForbiddenCategoriesCache;
@@ -266,7 +267,7 @@ final readonly class PictureModifyPageRenderer
 
         $admin_url_start = $adminPhotoBaseUrl . '-properties';
 
-        $src_image = new SrcImage($row);
+        $src_image = new SrcImage(SrcImageInfo::fromRow($row));
 
         // in case the photo needs a rotation of 90 degrees (clockwise or counterclockwise), we switch width and height
         if (in_array(is_numeric($row['rotation']) ? (int) $row['rotation'] : null, [1, 3], true)) {

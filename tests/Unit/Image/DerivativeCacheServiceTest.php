@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Image\Projection\DerivativePathInfo;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
@@ -104,9 +105,9 @@ test('deleteElementDerivatives removes every derivative for the given element', 
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
     file_put_contents($derivDir . '/other-th.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '2026/07/photo.jpg',
-    ]);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('2026/07/photo.jpg')
+    );
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeFalse()
@@ -119,9 +120,10 @@ test('deleteElementDerivatives filters by a specific derivative type', function 
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '2026/07/photo.jpg',
-    ], 'thumb');
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('2026/07/photo.jpg'),
+        'thumb'
+    );
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
         ->and(file_exists($derivDir . '/photo-sq.jpg'))->toBeTrue();
@@ -142,9 +144,10 @@ test('deleteElementDerivatives\'s type pattern uses a trailing wildcard, matchin
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th_100x100.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '2026/07/photo.jpg',
-    ], 'thumb');
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('2026/07/photo.jpg'),
+        'thumb'
+    );
 
     expect(file_exists($derivDir . '/photo-th_100x100.jpg'))->toBeFalse();
 });
@@ -166,9 +169,10 @@ test('deleteElementDerivatives inserts the type pattern without consuming any of
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-thabcjpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '2026/07/photo.jpg',
-    ], 'thumb');
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('2026/07/photo.jpg'),
+        'thumb'
+    );
 
     expect(file_exists($derivDir . '/photo-thabcjpg'))->toBeTrue();
 });
@@ -183,10 +187,9 @@ test('deleteElementDerivatives does not rewrite the path when representative_ext
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '2026/07/photo.jpg',
-        'representative_ext' => '',
-    ]);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('2026/07/photo.jpg', '')
+    );
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
 });
@@ -202,17 +205,17 @@ test('deleteElementDerivatives only strips a leading "../" when it is genuinely 
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '..2026/07/photo.jpg',
-    ]);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('..2026/07/photo.jpg')
+    );
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
 });
 
 test('deleteElementDerivatives throws for a path with no extension', function (): void {
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => 'no_extension',
-    ]);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('no_extension')
+    );
 })->throws(Exception::class);
 
 test('deleteElementDerivatives never attempts to iterate a failed glob() result', function (): void {
@@ -233,9 +236,9 @@ test('deleteElementDerivatives never attempts to iterate a failed glob() result'
         return true;
     });
     try {
-        new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-            'path' => str_repeat('a', 5000) . '.jpg',
-        ]);
+        new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+            new DerivativePathInfo(str_repeat('a', 5000) . '.jpg')
+        );
     } finally {
         restore_error_handler();
     }
@@ -351,10 +354,9 @@ test('deleteElementDerivatives rewrites the path to its pwg_representative form 
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '2026/07/photo.pdf',
-        'representative_ext' => 'jpg',
-    ]);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('2026/07/photo.pdf', 'jpg')
+    );
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
 });
@@ -374,9 +376,9 @@ test('deleteElementDerivatives strips a leading "../" from the path', function (
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
-        'path' => '../2026/07/photo.jpg',
-    ]);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(
+        new DerivativePathInfo('../2026/07/photo.jpg')
+    );
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
 });

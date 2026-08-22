@@ -14,6 +14,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -177,13 +178,12 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     {
         return [
             'current' => [
-                'src_image' => new SrcImage([
-                    'id' => 1,
-                    'path' => $relativePath,
-                    'file' => basename($relativePath),
-                    'width' => 6,
-                    'height' => 6,
-                ]),
+                'src_image' => new SrcImage(new SrcImageInfo(
+                    id: 1,
+                    path: $relativePath,
+                    width: 6,
+                    height: 6,
+                )),
             ],
         ];
     }

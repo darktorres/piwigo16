@@ -25,6 +25,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -248,7 +249,7 @@ final readonly class CategoryAvailableListController implements ControllerInterf
 
             foreach ($this->imageService->getPathsAndLevelForIds($imageIds) as $pathRow) {
                 if ($pathRow->level <= $currentUser->level) {
-                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, $pathRow->toArray());
+                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, SrcImageInfo::fromRow($pathRow->toArray()));
 
                     continue;
                 }
@@ -281,7 +282,7 @@ final readonly class CategoryAvailableListController implements ControllerInterf
 
             if ($newImageIds !== []) {
                 foreach ($this->imageService->getPathsForFileDeletion($newImageIds) as $pathRow) {
-                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, $pathRow->toArray());
+                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, SrcImageInfo::fromRow($pathRow->toArray()));
                 }
             }
         }

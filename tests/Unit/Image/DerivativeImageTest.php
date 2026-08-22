@@ -12,6 +12,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Image\WatermarkParams;
@@ -191,11 +192,11 @@ test('url() throws a RuntimeException when RequestBootstrap has not set a Curren
     // holds no live container reference once built, so resetting
     // afterward doesn't invalidate it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-not-booted'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 42,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     Kernel::reset();
 
     expect(fn (): string => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
@@ -215,11 +216,11 @@ test('url() throws a RuntimeException when the container returns an unexpected t
     // own constructor needs a booted Kernel), then reused once the
     // container is swapped out from under it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-currentconfig-wrong-type'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 42,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function () use ($src): void {
         expect(fn (): string => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
@@ -236,11 +237,11 @@ test('constructing a DerivativeImage throws a RuntimeException when the containe
     // imageStdParams() read (only reachable via the isIdentity() branch,
     // which needs hasSize()=true and a whole seeded type map).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-stdparams-wrong-type'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     $currentConfig = CurrentConfigTestFactory::get();
 
     KernelContainerOverride::withWrongTypeFor(ImageStdParams::class, function () use ($src, $currentConfig): void {
@@ -259,11 +260,11 @@ test('getUrl() throws a RuntimeException when RequestBootstrap has not set a URL
     // urlService()'s own not-booted guard from currentConfig()'s own
     // guard in the test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-geturl-not-booted'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 42,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfigTestFactory::get());
     Kernel::reset();
 
@@ -283,11 +284,11 @@ test('getUrl() throws a RuntimeException when the container returns an unexpecte
     // container is swapped out from under it via
     // KernelContainerOverride::withWrongTypeFor().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-urlservice-wrong-type'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'gallery/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
     KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($derivative): void {
@@ -330,11 +331,11 @@ test('getPath() throws a RuntimeException when the container returns an unexpect
     // real container before Paths::class is swapped out for getPath()'s
     // own call.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-paths-wrong-type'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'gallery/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
     KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($derivative): void {
@@ -364,11 +365,11 @@ test('url() computes the derivative url via a real build() call, prefixed by the
         Paths::class => Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-only'),
         UrlServiceInterface::class => new DerivativeImageTestFakeUrlService('/gallery/'),
     ], function (): void {
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
@@ -476,11 +477,11 @@ test('build() throws when the source path has no extension', function (): void {
     // SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-no-extension'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     // Mutate directly (public property) to a path with no extension --
     // constructing SrcImage this way instead would route through the
     // mimetype-icon branch rather than IS_ORIGINAL, a different scenario.
@@ -495,11 +496,11 @@ test('build() strips a leading "./" from the source location and appends the cus
     // is the first test in the file to call it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => './gallery/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(120, 90)), $src, CurrentConfigTestFactory::get());
 
@@ -520,11 +521,11 @@ test('build() strips a leading "./" from the source location and appends the cus
 test('build() strips a leading "../" from the source location', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => '../gallery/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
@@ -572,13 +573,13 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         ImageStdParamsTestFactory::get()->setWatermark($watermark);
         $mysteryParams->use_watermark = true;
 
-        $src = new SrcImage([
-            'id' => 6,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 6,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 10,
             'height' => 10,
-        ]);
+    ]));
 
         $warnings = [];
         set_error_handler(function (int $errno, string $errstr) use (&$warnings): bool {
@@ -635,13 +636,13 @@ test('build() uses the source image as-is, unrotated and unwatermarked, when it 
     // dimensions) and rotation=0 (the SrcImage default).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-as-is-only'));
 
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 5,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => 40,
         'height' => 40,
-    ]);
+    ]));
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(200, 200)), $src, CurrentConfigTestFactory::get());
 
@@ -660,11 +661,11 @@ test('build() does not strip a leading "../" look-alike that is not actually fol
     // untouched by real code.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => '..2026/gallery/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
@@ -709,11 +710,11 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
         }
         $params->last_mod_time = $mtime;
 
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         $derivative = new DerivativeImage($params, $src, $currentConfig);
 
@@ -761,13 +762,13 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         $thumbParams->use_watermark = $watermark->min_size[0] <= $thumbParams->maxWidth();
         $mediumParams->use_watermark = $watermark->min_size[0] <= $mediumParams->maxWidth();
 
-        $src = new SrcImage([
-            'id' => 3,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 3,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 40,
             'height' => 40,
-        ]);
+    ]));
 
         $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
@@ -848,13 +849,13 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         $thumbParams->use_watermark = true;
         $mediumParams->use_watermark = true;
 
-        $src = new SrcImage([
-            'id' => 4,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 4,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 10,
             'height' => 10,
-        ]);
+    ]));
 
         $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
@@ -876,11 +877,11 @@ test('build() routes through i.php and marks itself not cached when derivative_u
     $currentConfig->derivativeUrlStyle = 0;
 
     try {
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
@@ -905,11 +906,11 @@ test('build() links directly to a static file when derivative_url_style is auto 
         mkdir($root . '/_data/i/gallery', 0o777, true);
         file_put_contents($root . '/_data/i/gallery/photo-cu_80x60_a.jpg', 'cached-bytes');
 
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
@@ -933,11 +934,11 @@ test('getUrl() prefixes the computed rel_url with the real root url', function (
         Paths::class => Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-url-only'),
         UrlServiceInterface::class => new DerivativeImageTestFakeUrlService('/gallery/'),
     ], function (): void {
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
@@ -984,13 +985,13 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
     Kernel::boot(Paths::fromRoot($root));
 
     try {
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 400,
             'height' => 300,
-        ]);
+    ]));
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $src, CurrentConfigTestFactory::get());
 
         // 400x300 scaled to fit within 100x100: width is the binding
@@ -1013,13 +1014,13 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
         // either, so getSize() attempts a live getimagesize() re-read
         // instead of fatalError()-ing -- which fails silently (false, no
         // warning) against this deliberately-not-a-real-image file.
-        $unknownSrc = new SrcImage([
-            'id' => 2,
+        $unknownSrc = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 2,
             'path' => 'upload/2026/07/broken.jpg',
             'file' => 'broken.jpg',
             'width' => null,
             'height' => null,
-        ]);
+    ]));
         $unknownDerivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $unknownSrc, CurrentConfigTestFactory::get());
 
         expect($unknownDerivative->getSize())
@@ -1047,13 +1048,13 @@ test('getScaledSize()/getScaledSizeHtm() scale down proportionally, binding on w
     // Landscape source: width is the overflowing dimension (ratio 2)
     // once scaled down against 100x100 -- exercises the "ratio_w >
     // ratio_h" branch.
-    $landscapeSrc = new SrcImage([
+    $landscapeSrc = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/landscape.jpg',
         'file' => 'landscape.jpg',
         'width' => 400,
         'height' => 300,
-    ]);
+    ]));
     $landscape = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $landscapeSrc, CurrentConfigTestFactory::get());
     expect($landscape->getSize())
         ->toBe([100, 75]);
@@ -1064,13 +1065,13 @@ test('getScaledSize()/getScaledSizeHtm() scale down proportionally, binding on w
 
     // Portrait source (dimensions swapped): height is now the
     // overflowing dimension -- exercises the "ratio_h >= ratio_w" branch.
-    $portraitSrc = new SrcImage([
+    $portraitSrc = new SrcImage(SrcImageInfo::fromRow([
         'id' => 2,
         'path' => 'upload/2026/07/portrait.jpg',
         'file' => 'portrait.jpg',
         'width' => 300,
         'height' => 400,
-    ]);
+    ]));
     $portrait = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $portraitSrc, CurrentConfigTestFactory::get());
     expect($portrait->getSize())
         ->toBe([75, 100]);
@@ -1102,13 +1103,13 @@ test('getScaledSize() still scales when only ONE dimension overflows, not just w
     // SrcImage's own constructor needs a booted Kernel (its
     // pictureExtensions() read).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-scaled-size-one-dim'));
-    $wideSrc = new SrcImage([
+    $wideSrc = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/wide.jpg',
         'file' => 'wide.jpg',
         'width' => 150,
         'height' => 50,
-    ]);
+    ]));
     // classic(1000, 1000) never shrinks a 150x50 source -- getSize()
     // returns the real dimensions unscaled.
     $wide = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $wideSrc, CurrentConfigTestFactory::get());
@@ -1119,13 +1120,13 @@ test('getScaledSize() still scales when only ONE dimension overflows, not just w
     expect($wide->getScaledSize(100, 100))
         ->toBe([100, 33]);
 
-    $tallSrc = new SrcImage([
+    $tallSrc = new SrcImage(SrcImageInfo::fromRow([
         'id' => 2,
         'path' => 'upload/2026/07/tall.jpg',
         'file' => 'tall.jpg',
         'width' => 50,
         'height' => 150,
-    ]);
+    ]));
     $tall = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $tallSrc, CurrentConfigTestFactory::get());
     expect($tall->getSize())
         ->toBe([50, 150]);

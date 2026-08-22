@@ -17,6 +17,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -121,11 +122,11 @@ test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface h
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-themeconf-not-set'));
     srcImageTestSetThemeConfProvider(null);
 
-    expect(fn (): SrcImage => new SrcImage([
+    expect(fn (): SrcImage => new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/doc.pdf',
         'file' => 'doc.pdf',
-    ]))->toThrow(RuntimeException::class, 'SrcImage: no theme-conf provider set (Template not constructed yet?)');
+    ])))->toThrow(RuntimeException::class, 'SrcImage: no theme-conf provider set (Template not constructed yet?)');
 });
 
 test('urlService() throws a RuntimeException when no UrlServiceInterface has been installed yet', function (): void {
@@ -136,11 +137,11 @@ test('urlService() throws a RuntimeException when no UrlServiceInterface has bee
     // holds no live container reference once built, so resetting
     // afterward doesn't invalidate it.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-urlservice-not-set'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     Kernel::reset();
 
     expect(fn (): string => $src->getUrl())
@@ -154,11 +155,11 @@ test('getSize() throws a RuntimeException carrying the untranslated message when
     // Kernel::isBooted() guard falls through to the plain, untranslated
     // RuntimeException, not the container's real HtmlRenderingInterface.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-get-size-no-renderer'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 5,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
     Kernel::reset();
 
     expect(fn (): ?array => $src->getSize())
@@ -171,11 +172,11 @@ test('getSize() delegates the fatal message to the installed HtmlRenderingInterf
     KernelContainerOverride::with([
         HtmlRenderingInterface::class => $renderer,
     ], function () use ($renderer): void {
-        $src = new SrcImage([
-            'id' => 5,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 5,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         expect(fn (): ?array => $src->getSize())
             ->toThrow(SrcImageTestFatalSignal::class);
@@ -188,11 +189,11 @@ test('constructor narrows a numeric-string id to a real int', function (): void 
     // Kills line 171's RemoveIntegerCast. SrcImage's constructor needs a
     // booted Kernel (it reads pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-id-numeric-string'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => '7',
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     expect($src->id)
         ->toBe(7);
@@ -202,11 +203,11 @@ test('constructor defaults id to exactly 0 for a non-numeric id', function (): v
     // Kills line 171's DecrementInteger/IncrementInteger. SrcImage's
     // constructor needs a booted Kernel (it reads pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-id-non-numeric'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 'not-numeric',
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     expect($src->id)
         ->toBe(0);
@@ -216,12 +217,12 @@ test('constructor builds a pwg_representative path when the extension is not a p
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-representative-path'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/doc.pdf',
         'file' => 'doc.pdf',
         'representative_ext' => 'jpg',
-    ]);
+    ]));
 
     expect($src->rel_path)
         ->toBe('upload/2026/07/pwg_representative/doc.jpg');
@@ -237,11 +238,11 @@ test('constructor matches a picture extension case-insensitively', function (): 
     // only matches it through strtolower(). SrcImage's constructor needs a
     // booted Kernel (it reads pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-case-insensitive'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.JPG',
         'file' => 'photo.JPG',
-    ]);
+    ]));
 
     expect($src->isOriginal())
         ->toBeTrue();
@@ -253,14 +254,14 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-rotation-swap'));
-    $rotated = new SrcImage([
+    $rotated = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => 300,
         'height' => 200,
         'rotation' => 1,
-    ]);
+    ]));
     expect($rotated->rotation)
         ->toBe(1);
     expect($rotated->hasSize())
@@ -268,14 +269,14 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
     expect($rotated->getSize())
         ->toBe([200, 300]);
 
-    $unrotated = new SrcImage([
+    $unrotated = new SrcImage(SrcImageInfo::fromRow([
         'id' => 2,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => 300,
         'height' => 200,
         'rotation' => 2,
-    ]);
+    ]));
     expect($unrotated->rotation)
         ->toBe(2);
     expect($unrotated->getSize())
@@ -285,11 +286,11 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
 test('getPath() joins the current root with the resolved rel_path', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-path-only'));
 
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     expect($src->getPath())
         ->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
@@ -312,11 +313,11 @@ test('constructor finds a real per-extension mimetype icon, and getUrl() embelli
             // immediately discards.
             srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
-            $src = new SrcImage([
-                'id' => 1,
+            $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
                 'path' => 'upload/2026/07/file.zzz',
                 'file' => 'file.zzz',
-            ]);
+    ]));
 
             expect($src->isMimetype())
                 ->toBeTrue();
@@ -343,11 +344,11 @@ test('constructor falls back to the shared unknown.png icon when no icon exists 
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/unknown.png', 20, 10);
 
     try {
-        $src = new SrcImage([
-            'id' => 1,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-        ]);
+    ]));
 
         expect($src->isMimetype())
             ->toBeTrue();
@@ -368,11 +369,11 @@ test('constructor falls back to the original path for a .svg with no icon, then 
     file_put_contents($root . '/upload/2026/07/vector.svg', 'not-a-real-image-payload');
 
     try {
-        expect(fn (): SrcImage => new SrcImage([
-            'id' => 1,
+        expect(fn (): SrcImage => new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'upload/2026/07/vector.svg',
             'file' => 'vector.svg',
-        ]))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon upload/2026/07/vector.svg');
+    ])))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon upload/2026/07/vector.svg');
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -389,13 +390,13 @@ test('getSize() re-reads real dimensions from disk when width/height columns are
         // (updateDimensions()), which silently no-ops for an id with no
         // matching row instead of corrupting a real fixture row this
         // test doesn't otherwise care about.
-        $src = new SrcImage([
-            'id' => 999999,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 999999,
             'path' => 'upload/2026/07/synced-later.png',
             'file' => 'synced-later.png',
             'width' => null,
             'height' => null,
-        ]);
+    ]));
 
         expect($src->hasSize())
             ->toBeFalse();
@@ -442,12 +443,12 @@ test('constructor treats a missing path as an empty string, not null, when build
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-missing-path'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => null,
         'file' => 'doc.pdf',
         'representative_ext' => 'jpg',
-    ]);
+    ]));
 
     expect($src->rel_path)
         ->toBe('pjpg');
@@ -465,11 +466,11 @@ test('constructor throws when neither the per-extension icon nor the shared unkn
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
     try {
-        expect(fn (): SrcImage => new SrcImage([
-            'id' => 1,
+        expect(fn (): SrcImage => new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-        ]))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
+    ])))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -490,12 +491,12 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
         // A nonexistent id, not the real fixture image 1 -- same
         // ImageRepository::updateDimensions() side-effect concern as the
         // sibling test above.
-        $src = new SrcImage([
-            'id' => 999999,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 999999,
             'path' => 'upload/2026/07/width-only.png',
             'file' => 'width-only.png',
             'width' => 300,
-        ]);
+    ]));
 
         expect($src->hasSize())
             ->toBeFalse();
@@ -513,14 +514,14 @@ test('constructor narrows a numeric-string width to a real int, and defaults a n
     // default). SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-width-numeric-string'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => '150',
         'height' => 'not-numeric',
         'rotation' => 2,
-    ]);
+    ]));
 
     expect($src->getSize())
         ->toBe([150, 0]);
@@ -535,14 +536,14 @@ test('constructor defaults a non-numeric width to exactly 0, and narrows a numer
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-height-numeric-string'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => 'not-numeric',
         'height' => '90',
         'rotation' => 2,
-    ]);
+    ]));
 
     expect($src->getSize())
         ->toBe([0, 90]);
@@ -554,13 +555,13 @@ test('constructor defaults rotation to exactly 0 when the column is absent, not 
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-rotation-default'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => 300,
         'height' => 200,
-    ]);
+    ]));
 
     expect($src->rotation)
         ->toBe(0);
@@ -578,11 +579,11 @@ test('getUrl() for a real original image requests part "e" without download, thr
     KernelContainerOverride::with([
         UrlServiceInterface::class => $fakeUrlService,
     ], function () use ($fakeUrlService): void {
-        $src = new SrcImage([
-            'id' => 7,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 7,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
 
         expect($src->isOriginal())
             ->toBeTrue();
@@ -600,12 +601,12 @@ test('getUrl() for a real representative image requests part "r"', function (): 
     KernelContainerOverride::with([
         UrlServiceInterface::class => $fakeUrlService,
     ], function () use ($fakeUrlService): void {
-        $src = new SrcImage([
-            'id' => 8,
+        $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 8,
             'path' => 'upload/2026/07/doc.pdf',
             'file' => 'doc.pdf',
             'representative_ext' => 'jpg',
-        ]);
+    ]));
 
         expect($src->isOriginal())
             ->toBeFalse();
@@ -658,13 +659,13 @@ test('getSize() persists the real, correctly-ordered width/height back onto the 
             Paths::class => Paths::fromRoot($root),
             ImageRepository::class => $repo,
         ], function () use ($imageId): void {
-            $src = new SrcImage([
-                'id' => $imageId,
+            $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => $imageId,
                 'path' => 'upload/2026/07/update-dimensions.jpg',
                 'file' => 'update-dimensions.jpg',
                 'width' => null,
                 'height' => null,
-            ]);
+    ]));
 
             expect($src->getSize())
                 ->toBe([77, 55]);
@@ -693,11 +694,11 @@ test('urlService() throws when the container returns an unexpected type for UrlS
     // "no UrlServiceInterface installed" test above reuses a pre-built
     // $src across a Kernel::reset().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-urlservice-wrong-type'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($src): void {
         $src->getUrl();
@@ -711,11 +712,11 @@ test('currentConfig() throws when the container returns an unexpected type for C
     // reaches currentConfig() (it needs pictureExtensions() to classify
     // the extension), so it has to run entirely inside the override.
     expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function (): void {
-        new SrcImage([
-            'id' => 1,
+        new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-        ]);
+    ]));
     }))->toThrow(RuntimeException::class, 'SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
 });
 
@@ -725,11 +726,11 @@ test('paths() throws when the container returns an unexpected type for Paths', f
     // else from the container. Same reuse-a-pre-built-$src shape as
     // urlService()'s own sibling test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-paths-wrong-type'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
-    ]);
+    ]));
 
     expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($src): void {
         $src->getPath();
@@ -752,11 +753,11 @@ test('eventDispatcher() throws when the container returns an unexpected type for
     expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(EventDispatcher::class, function (): void {
         srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
-        new SrcImage([
-            'id' => 1,
+        new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-        ]);
+    ]));
     }))->toThrow(RuntimeException::class, 'SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
 });
 
@@ -771,14 +772,14 @@ test('constructor normalizes rotation via modulo 4, not modulo 3 or modulo 5', f
     // mutant) -- all 3 distinguishable via an exact-value assertion on
     // $src->rotation alone.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-rotation-modulo-4'));
-    $src = new SrcImage([
+    $src = new SrcImage(SrcImageInfo::fromRow([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
         'file' => 'photo.jpg',
         'width' => 300,
         'height' => 200,
         'rotation' => 4,
-    ]);
+    ]));
 
     expect($src->rotation)
         ->toBe(0);
@@ -809,13 +810,13 @@ test('getSize() re-read skips the persistence call when the container returns an
             Paths::class => Paths::fromRoot($root),
             ImageRepository::class => new stdClass(),
         ], function (): ?array {
-            $src = new SrcImage([
-                'id' => 1,
+            $src = new SrcImage(SrcImageInfo::fromRow([
+        'id' => 1,
                 'path' => 'upload/2026/07/skip-persist.png',
                 'file' => 'skip-persist.png',
                 'width' => null,
                 'height' => null,
-            ]);
+    ]));
 
             return $src->getSize();
         });

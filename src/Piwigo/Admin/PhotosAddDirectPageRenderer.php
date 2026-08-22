@@ -28,6 +28,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -137,7 +138,7 @@ final readonly class PhotosAddDirectPageRenderer
             $formats_original_info = $this->imageService
                 ->getImageInfos($photosAddDirectRequest->formatsId, $htmlRenderer);
             if ((bool) $formats_original_info) {
-                $src_image = new SrcImage($formats_original_info);
+                $src_image = new SrcImage(SrcImageInfo::fromRow($formats_original_info));
 
                 $formats_original_info['src'] = DerivativeImage::url(ImageStdParams::SQUARE, $src_image);
 

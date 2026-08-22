@@ -20,6 +20,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\Projection\CategoryRule;
@@ -287,12 +288,12 @@ final readonly class HistorySearchController implements ControllerInterface
             $imageLabel = $labelEvent->elementDescription;
 
             $imageEditUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $imageId;
-            $imageThumbnailUrl = DerivativeImage::url($this->imageStdParams->getByType(ImageStdParams::SQUARE), [
+            $imageThumbnailUrl = DerivativeImage::url($this->imageStdParams->getByType(ImageStdParams::SQUARE), SrcImageInfo::fromRow([
                 'id' => $imageId,
                 'file' => $imageInfo['file'],
                 'path' => $imageInfo['path'],
                 'representative_ext' => $imageInfo['representative_ext'],
-            ]);
+            ]));
         }
 
         $tagIds = [];

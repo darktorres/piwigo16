@@ -21,6 +21,7 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use RuntimeException;
 
@@ -161,36 +162,21 @@ final class SrcImage
 
     /**
      * $infos is genuinely cross-domain by design, confirmed by tracing its
-     * ~17 real construction sites: full `images` table rows
+     * ~19 real construction sites: full `images` table rows
      * (Image\ImageUrlBuilder, Controller\ActionController), but also category-listing rows
      * (Category\CategoryCatsRenderer's own tree-cache-row shape) and
      * upload-pipeline rows (Admin\Upload\UploadService) that merely
-     * happen to carry a subset of the same key names. Every key read
-     * below is already isset()/is_*()-guarded with a safe fallback, so a
-     * caller's row missing any of them degrades gracefully rather than
-     * erroring -- the same cross-domain-generic-row-reader shape as
-     * Category\CategoryService::compareByGlobalRank().
-     *
-     * @param array<string, mixed> $infos assoc array of data from images table
+     * happen to carry a subset of the same 7 field names -- see {@see
+     * SrcImageInfo}'s own docblock.
      */
     public function __construct(
-        array $infos
+        SrcImageInfo $infos
     ) {
 
-        // images.id/.path/.file are all NOT NULL DB columns, but every
-        // element read back from a DB row is string|null per this driver
-        // (no MYSQLI_OPT_INT_AND_FLOAT_NATIVE); narrow explicitly rather
-        // than trusting the schema at the type-check level.
-        $this->id = is_numeric($infos['id']) ? (int) $infos['id'] : 0;
-        $path = is_string($infos['path']) ? $infos['path'] : '';
-        $file = is_string($infos['file'] ?? null) ? $infos['file'] : null;
+        $this->id = $infos->id;
+        $path = $infos->path;
         $ext = strtolower(StringHelper::getExtension($path));
-        $infos['file_ext'] = strtolower(StringHelper::getExtension($file));
-        $infos['path_ext'] = $ext;
-        // representative_ext is a nullable DB column; empty()'s silent
-        // handling of a missing/non-string key is preserved via `?? null`.
-        $representative_ext_raw = $infos['representative_ext'] ?? null;
-        $representative_ext = is_string($representative_ext_raw) ? $representative_ext_raw : '';
+        $representative_ext = $infos->representativeExt ?? '';
         // \Piwigo\Config\CurrentConfig::pictureExtensions() is always a string[] set by config_default.inc.php.
         $picture_ext = self::currentConfig()->pictureExtensions;
         if (in_array($ext, $picture_ext, true)) {
@@ -220,12 +206,11 @@ final class SrcImage
         }
 
         if (! (bool) $this->size) {
-            if (isset($infos['width']) && isset($infos['height'])) {
-                $width = is_numeric($infos['width']) ? (int) $infos['width'] : 0;
-                $height = is_numeric($infos['height']) ? (int) $infos['height'] : 0;
+            if ($infos->width !== null && $infos->height !== null) {
+                $width = $infos->width;
+                $height = $infos->height;
 
-                $rotation_raw = $infos['rotation'] ?? null;
-                $this->rotation = is_numeric($rotation_raw) ? intval($rotation_raw) % 4 : 0;
+                $this->rotation = ($infos->rotation ?? 0) % 4;
                 // 1 or 5 =>  90 clockwise
                 // 3 or 7 => 270 clockwise
                 if ((bool) ($this->rotation % 2)) {
@@ -233,7 +218,7 @@ final class SrcImage
                 }
 
                 $this->size = [$width, $height];
-            } elseif (! array_key_exists('width', $infos)) {
+            } elseif ($infos->dimensionsUnavailable) {
                 $this->flags |= self::DIM_NOT_GIVEN;
             }
         }

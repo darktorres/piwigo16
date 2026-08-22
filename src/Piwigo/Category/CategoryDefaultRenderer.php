@@ -23,6 +23,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetIndexDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -168,7 +169,7 @@ final readonly class CategoryDefaultRenderer
                 'TN_TITLE' => $this->htmlRenderer->getThumbnailTitle($row, $name, $desc),
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
-                'src_image' => new SrcImage($row),
+                'src_image' => new SrcImage(SrcImageInfo::fromRow($row)),
                 'path_ext' => strtolower(StringHelper::getExtension($rowPath)),
                 'file_ext' => strtolower(StringHelper::getExtension($rowFile)),
             ]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Job\Handler;
 
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Image\Projection\DerivativePathInfo;
 use Piwigo\Job\GenerateDerivativeJob;
 
 /**
@@ -18,13 +19,9 @@ final readonly class GenerateDerivativeHandler
 
     public function __invoke(GenerateDerivativeJob $job): void
     {
-        $infos = [
-            'path' => $job->path,
-        ];
-        if ($job->representativeExt !== null) {
-            $infos['representative_ext'] = $job->representativeExt;
-        }
-
-        $this->derivativeCacheService->deleteElementDerivatives($infos, $job->type);
+        $this->derivativeCacheService->deleteElementDerivatives(
+            new DerivativePathInfo($job->path, $job->representativeExt),
+            $job->type
+        );
     }
 }

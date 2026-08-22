@@ -23,6 +23,7 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
@@ -121,7 +122,7 @@ final readonly class ActionController implements ControllerInterface
             $this->currentUser->set($this->currentUser->get()->withEnabledHigh(true));
         }
 
-        $src_image = new SrcImage($element_info);
+        $src_image = new SrcImage(SrcImageInfo::fromRow($element_info));
 
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
@@ -147,7 +148,7 @@ final readonly class ActionController implements ControllerInterface
                         return $this->doError(401, 'Access denied e');
                     }
                 }
-                $file = ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths);
+                $file = ImagePathHelper::getElementPath($elementImage->path, $this->urlService, $this->paths);
                 break;
             case 'r':
                 $representative_ext = $element_info['representative_ext'];
@@ -158,14 +159,14 @@ final readonly class ActionController implements ControllerInterface
                 if (! is_string($representative_ext) || $representative_ext === '' || $representative_ext === '0') {
                     return $this->doError(404, 'Requested file not found');
                 }
-                $file = ImagePathHelper::originalToRepresentative(ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths), $representative_ext);
+                $file = ImagePathHelper::originalToRepresentative(ImagePathHelper::getElementPath($elementImage->path, $this->urlService, $this->paths), $representative_ext);
                 break;
             case 'f':
                 if ($format_row === null) {
                     return $this->doError(400, 'Invalid request - format');
                 }
                 $format_ext = $format_row->ext;
-                $file = ImagePathHelper::originalToFormat(ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths), $format_ext);
+                $file = ImagePathHelper::originalToFormat(ImagePathHelper::getElementPath($elementImage->path, $this->urlService, $this->paths), $format_ext);
                 $original_file = $element_info['file'];
                 $element_info['file'] = StringHelper::getFilenameWoExtension($original_file) . '.' . $format_ext;
                 break;

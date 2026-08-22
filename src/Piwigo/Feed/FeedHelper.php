@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Feed;
 
 use DateTimeImmutable;
+use Piwigo\Feed\Projection\FeedChannel;
+use Piwigo\Feed\Projection\FeedItem;
 
 /**
  * Pure date-conversion and RSS 2.0 rendering helpers for feed.php. Injects
@@ -43,16 +45,13 @@ final class FeedHelper
      * enclosure/etc. -- feed.php never sets any of those), not a
      * general-purpose feed library.
      *
-     * @param array{title?: string, link?: string, encoding?: string} $channel
-     * @param list<array{title?: string, link?: string, description?: string, html?: bool, date?: string, author?: string, guid?: string}> $items
-     *        html wraps description in CDATA instead of escaping it; date is
-     *        an ISO 8601 string
+     * @param list<FeedItem> $items
      */
-    public function generateRss2Feed(array $channel, array $items): string
+    public function generateRss2Feed(FeedChannel $channel, array $items): string
     {
-        $channel_encoding = $channel['encoding'] ?? '';
-        $channel_title = htmlspecialchars($channel['title'] ?? '');
-        $channel_link = htmlspecialchars($channel['link'] ?? '');
+        $channel_encoding = $channel->encoding;
+        $channel_title = htmlspecialchars($channel->title);
+        $channel_link = htmlspecialchars($channel->link);
         $last_build_date = new DateTimeImmutable()
             ->format(\DATE_RFC2822);
 
@@ -67,14 +66,14 @@ final class FeedHelper
         XML . "\n";
 
         foreach ($items as $item) {
-            $item_title = htmlspecialchars(strip_tags($item['title'] ?? ''));
-            $item_link_raw = $item['link'] ?? '';
+            $item_title = htmlspecialchars(strip_tags($item->title));
+            $item_link_raw = $item->link;
             $item_link = htmlspecialchars($item_link_raw);
-            $item_description_raw = $item['description'] ?? '';
-            $item_author = $item['author'] ?? '';
-            $item_date = $item['date'] ?? '';
-            $item_guid_raw = $item['guid'] ?? '';
-            $item_html = $item['html'] ?? false;
+            $item_description_raw = $item->description;
+            $item_author = $item->author;
+            $item_date = $item->date;
+            $item_guid_raw = $item->guid;
+            $item_html = $item->html;
             $item_description = $item_html
                 ? '<![CDATA[' . $item_description_raw . ']]>'
                 : htmlspecialchars($item_description_raw);

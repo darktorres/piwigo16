@@ -817,7 +817,7 @@ final readonly class UploadService
      * 2) move uploaded file to upload/2022/05/16/pwg_format/20100122003814-449ada00.cr2
      * 3) register in database
      */
-    public function addFormat(string $source_filepath, string $format_ext, int|string $format_of): string
+    public function addFormat(string $source_filepath, string $format_ext, int $format_of): string
     {
         if (! $this->currentConfig->isFormatsEnabled) {
             throw new ImageProcessingException('[' . __METHOD__ . '] formats are disabled');
@@ -876,13 +876,13 @@ final readonly class UploadService
 
         $filesize = (int) $file_infos->filesize;
 
-        $existing_format_id = $this->imageService->getFormatIdByImageAndExt(ImageId::from((int) $format_of), $format_ext);
+        $existing_format_id = $this->imageService->getFormatIdByImageAndExt(ImageId::from($format_of), $format_ext);
         if ($existing_format_id !== null) {
             $this->imageService->updateFormatFilesize($existing_format_id, $filesize);
             $format_id = $existing_format_id;
             $add_status = 'update';
         } else {
-            $format_id = $this->imageService->insertFormat(ImageId::from((int) $format_of), $format_ext, $filesize);
+            $format_id = $this->imageService->insertFormat(ImageId::from($format_of), $format_ext, $filesize);
             $add_status = 'add';
         }
 

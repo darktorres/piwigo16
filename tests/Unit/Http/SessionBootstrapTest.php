@@ -54,3 +54,44 @@ test('register is a safe no-op when the installation flag is not active', functi
         Kernel::reset();
     }
 })->throwsNoExceptions();
+
+// [P44-M] requestIsHttps() is a pure $_SERVER read with no side effects
+// (unlike UrlService::getAbsoluteRootUrl()'s own X-Forwarded-Proto
+// detection, which mutates $_SERVER['HTTPS'] as a documented side
+// effect) -- safe to call directly in a Unit test, unlike register()'s
+// real body above.
+beforeEach(function (): void {
+    unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO']);
+});
+
+afterEach(function (): void {
+    unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO']);
+});
+
+test('requestIsHttps is false with neither HTTPS nor X-Forwarded-Proto set', function (): void {
+    expect(SessionBootstrap::requestIsHttps())->toBeFalse();
+});
+
+test('requestIsHttps is true when $_SERVER[\'HTTPS\'] is on', function (): void {
+    $_SERVER['HTTPS'] = 'on';
+
+    expect(SessionBootstrap::requestIsHttps())->toBeTrue();
+});
+
+test('requestIsHttps is true when $_SERVER[\'HTTPS\'] is 1', function (): void {
+    $_SERVER['HTTPS'] = '1';
+
+    expect(SessionBootstrap::requestIsHttps())->toBeTrue();
+});
+
+test('requestIsHttps is false when $_SERVER[\'HTTPS\'] is off', function (): void {
+    $_SERVER['HTTPS'] = 'off';
+
+    expect(SessionBootstrap::requestIsHttps())->toBeFalse();
+});
+
+test('requestIsHttps is true when X-Forwarded-Proto is https, regardless of HTTPS', function (): void {
+    $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+
+    expect(SessionBootstrap::requestIsHttps())->toBeTrue();
+});

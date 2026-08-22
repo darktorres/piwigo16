@@ -73,6 +73,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Http\SessionBootstrap;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
@@ -723,6 +724,14 @@ final class InstallWizard
                 ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies);
                 ini_set('session.use_trans_sid', (int) $this->currentConfig->sessionUseTransSid);
                 ini_set('session.cookie_httponly', 1);
+                // [P44-M] Mirrors Piwigo\Http\SessionBootstrap::register()'s
+                // own secure/samesite hardening -- see that method's
+                // docblock for why.
+                if (SessionBootstrap::requestIsHttps()) {
+                    ini_set('session.cookie_secure', 1);
+                }
+
+                ini_set('session.cookie_samesite', 'Lax');
             }
             session_name($this->currentConfig->sessionName);
             session_set_cookie_params(0, new CookieService()->cookiePath());

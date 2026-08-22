@@ -34,6 +34,8 @@ test('the default baseline contributor adds the unconditional header set', funct
         ->toBe('SAMEORIGIN');
     expect($response->getHeaderLine('Referrer-Policy'))
         ->toBe('strict-origin-when-cross-origin');
+    expect($response->getHeaderLine('Strict-Transport-Security'))
+        ->toBe('max-age=31536000');
 });
 
 test('a custom contributor list can add its own headers', function (): void {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Projection\MenubarBlockConfigRow;
 use Piwigo\Admin\Projection\MenubarView;
 use Piwigo\Admin\Request\MenubarSubmitRequest;
 use Piwigo\Auth\AccessControl;
@@ -105,17 +106,17 @@ final class MenubarPageRenderer
 
         $blocks = [];
         foreach ($mb_conf as $id => $pos) {
-            $blocks[] = [
-                'pos' => $pos / 5,
-                'reg' => $reg_blocks[$id],
-            ];
+            $blocks[] = new MenubarBlockConfigRow(
+                pos: $pos / 5,
+                reg: $reg_blocks[$id],
+            );
         }
 
         $action = $urlService->getRootUrl() . 'admin.php?page=menubar';
         $adminContent = $renderer->render(new MenubarView(
             formAction: $action,
             isWebmaster: $accessControl->isWebmaster() ? 1 : 0,
-            blocks: $blocks,
+            blocks: array_map(static fn (MenubarBlockConfigRow $block): array => $block->toArray(), $blocks),
             saveSuccess: $save_success,
         ));
 

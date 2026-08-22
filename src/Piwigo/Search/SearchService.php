@@ -163,7 +163,7 @@ final readonly class SearchService
     /**
      * @return array<string, mixed>|false
      */
-    public function getSearchArray(int|string $searchId): array|false
+    public function getSearchArray(string $searchId): array|false
     {
         $search = $this->getSearchInfo($searchId);
         if (! $search instanceof Search) {
@@ -1794,7 +1794,7 @@ final readonly class SearchService
      *
      * @return array<string, mixed>
      */
-    public function getSearchResults(int|string $searchId, ?bool $superOrderBy, string $imagesWhere = ''): array
+    public function getSearchResults(string $searchId, ?bool $superOrderBy, string $imagesWhere = ''): array
     {
         $search = $this->getSearchArray($searchId);
         if ($search === false) {

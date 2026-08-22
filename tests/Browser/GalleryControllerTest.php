@@ -142,6 +142,36 @@ it('renders a category page with subcategories, exercising the main thumbnail/so
     $page->assertNoJavaScriptErrors();
 });
 
+it('escapes an HTML-special-character-bearing photo name on the main thumbnail grid (P44-C)', function (): void {
+    // thumbnails.latte:42's {$thumbnail['NAME']} used to print |noescape --
+    // HtmlService::renderElementName() returns the raw stored name
+    // unmodified (RenderElementName has no default handler).
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Thumbnail Name Escaping Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    H::uploadPhotoViaApi($image, $albumId, '<script>alert(1)</script> & "Name"');
+    @unlink($image);
+
+    $page = H::navigateOk($page, '/index.php?/category/' . $albumId);
+    $page->assertNoJavaScriptErrors();
+
+    $html = H::rawWebpage($page)->content();
+    // Text position, not an attribute -- Latte's escapeText() encodes
+    // '<'/'>'/'&' but leaves '"' alone (only attribute position needs
+    // quotes escaped), unlike getCatDisplayName()'s htmlspecialchars()
+    // fix (P44-D), which is ENT_QUOTES because it also feeds href=.
+    expect($html)
+        ->not->toContain('<script>alert(1)</script>');
+    expect($html)
+        ->toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; "Name"');
+});
+
 it('renders a category page in flat mode', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/flat');

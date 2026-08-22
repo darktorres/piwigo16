@@ -1702,7 +1702,7 @@ final readonly class CategoryService
         $this->repo->updateImageOrderForDescendants($uppercatsPrefix, $imageOrder);
     }
 
-    public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, EntityManagerInterface $entityManager, ?string $size = null): CategoryRepresentantProperties
+    public function getCategoryRepresentantProperties(int $imageId, UrlServiceInterface $urlService, EntityManagerInterface $entityManager, ?string $size = null): CategoryRepresentantProperties
     {
         $imageIdVo = ImageId::tryFrom($imageId);
         $row = $imageIdVo instanceof ImageId ? $entityManager->getRepository(ImageEntity::class)->findById($imageIdVo) : null;

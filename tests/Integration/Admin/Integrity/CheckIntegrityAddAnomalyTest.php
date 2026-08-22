@@ -52,16 +52,22 @@ test('addAnomaly records a new anomaly with is_callable computed from a real fun
     expect($c13y->retrieve_list)
         ->toHaveCount(1);
     $entry = $c13y->retrieve_list[0];
-    expect($entry['anomaly'])->toBe('Something is wrong');
-    expect($entry['correction_fct'])->toBe('strlen');
-    expect($entry['correction_fct_args'])->toBe([
-        'arg' => 'x',
-    ]);
-    expect($entry['correction_msg'])->toBe('fix it');
-    expect($entry['is_callable'])->toBeTrue();
-    expect($entry['id'])->toBe(md5('Something is wrongstrlen' . serialize([
-        'arg' => 'x',
-    ]) . 'fix it'));
+    expect($entry->anomaly)
+        ->toBe('Something is wrong');
+    expect($entry->correctionFct)
+        ->toBe('strlen');
+    expect($entry->correctionFctArgs)
+        ->toBe([
+            'arg' => 'x',
+        ]);
+    expect($entry->correctionMsg)
+        ->toBe('fix it');
+    expect($entry->isCallable)
+        ->toBeTrue();
+    expect($entry->id)
+        ->toBe(md5('Something is wrongstrlen' . serialize([
+            'arg' => 'x',
+        ]) . 'fix it'));
 });
 
 test('addAnomaly marks is_callable false for a non-existent function name', function (): void {
@@ -69,7 +75,7 @@ test('addAnomaly marks is_callable false for a non-existent function name', func
 
     $c13y->addAnomaly('Bad correction fn', 'this_function_does_not_exist_anywhere');
 
-    expect($c13y->retrieve_list[0]['is_callable'])->toBeFalse();
+    expect($c13y->retrieve_list[0]->isCallable)->toBeFalse();
 });
 
 test('addAnomaly with no correction function is never callable and carries a null correction_fct', function (): void {
@@ -78,9 +84,12 @@ test('addAnomaly with no correction function is never callable and carries a nul
     $c13y->addAnomaly('Plain anomaly, no fix available');
 
     $entry = $c13y->retrieve_list[0];
-    expect($entry['correction_fct'])->toBeNull();
-    expect($entry['correction_fct_args'])->toBeNull();
-    expect($entry['is_callable'])->toBeFalse();
+    expect($entry->correctionFct)
+        ->toBeNull();
+    expect($entry->correctionFctArgs)
+        ->toBeNull();
+    expect($entry->isCallable)
+        ->toBeFalse();
 });
 
 test('addAnomaly routes an already-ignored id into build_ignore_list instead of retrieve_list', function (): void {
@@ -108,7 +117,7 @@ test('addAnomaly generates distinct ids for anomalies that differ only by correc
 
     expect($c13y->retrieve_list)
         ->toHaveCount(2);
-    expect($c13y->retrieve_list[0]['id'])->not->toBe($c13y->retrieve_list[1]['id']);
+    expect($c13y->retrieve_list[0]->id)->not->toBe($c13y->retrieve_list[1]->id);
 });
 
 // getHtlmLinksMoreInfo() is this class's other genuinely pure method --

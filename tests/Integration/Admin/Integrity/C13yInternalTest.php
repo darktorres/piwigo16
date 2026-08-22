@@ -138,12 +138,15 @@ test('c13yUser flags a configured webmaster_id that has no matching user row, an
     expect($c13y->retrieve_list)
         ->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
-    expect($anomaly['correction_fct'])->toBeInstanceOf(Closure::class);
-    expect($anomaly['is_callable'])->toBeTrue();
-    expect($anomaly['correction_fct_args'])->toBe([
-        'id' => 999999,
-        'action' => 'creation',
-    ]);
+    expect($anomaly->correctionFct)
+        ->toBeInstanceOf(Closure::class);
+    expect($anomaly->isCallable)
+        ->toBeTrue();
+    expect($anomaly->correctionFctArgs)
+        ->toBe([
+            'id' => 999999,
+            'action' => 'creation',
+        ]);
 
     $conn = DbConnection::build();
 
@@ -153,8 +156,8 @@ test('c13yUser flags a configured webmaster_id that has no matching user row, an
         // does -- the most direct proof that the previously-dead dispatch
         // (a bare 'c13y_correction_user' string, never actually callable)
         // now genuinely runs.
-        $correctionFct = $anomaly['correction_fct'];
-        $correctionFctArgs = $anomaly['correction_fct_args'];
+        $correctionFct = $anomaly->correctionFct;
+        $correctionFctArgs = $anomaly->correctionFctArgs;
         if (! is_callable($correctionFct) || ! is_array($correctionFctArgs)) {
             throw new RuntimeException('Expected a callable correction_fct with array args');
         }
@@ -194,25 +197,26 @@ test('c13yUser flags a real user whose status does not match the expected one, a
 
         $webmasterAnomaly = null;
         foreach ($c13y->retrieve_list as $anomaly) {
-            if (($anomaly['correction_fct_args']['id'] ?? null) === 1) {
+            if (($anomaly->correctionFctArgs['id'] ?? null) === 1) {
                 $webmasterAnomaly = $anomaly;
             }
         }
         if ($webmasterAnomaly === null) {
             throw new RuntimeException('Expected c13yUser() to flag the webmaster user\'s mismatched status');
         }
-        expect($webmasterAnomaly['correction_fct_args'])->toBe([
-            'id' => 1,
-            'action' => 'status',
-        ]);
+        expect($webmasterAnomaly->correctionFctArgs)
+            ->toBe([
+                'id' => 1,
+                'action' => 'status',
+            ]);
 
         // Invokes the exact stored closure with its exact stored args, the
         // same way CheckIntegrity::check()'s own correction-running pass
         // does.
-        $correctionFct = $webmasterAnomaly['correction_fct'];
-        $correctionFctArgs = $webmasterAnomaly['correction_fct_args'];
-        if (! is_callable($correctionFct)) {
-            throw new RuntimeException('Expected a callable correction_fct');
+        $correctionFct = $webmasterAnomaly->correctionFct;
+        $correctionFctArgs = $webmasterAnomaly->correctionFctArgs;
+        if (! is_callable($correctionFct) || ! is_array($correctionFctArgs)) {
+            throw new RuntimeException('Expected a callable correction_fct with array args');
         }
         $result = call_user_func_array($correctionFct, $correctionFctArgs);
         expect($result)
@@ -255,12 +259,15 @@ test('c13yUser flags a configured default_user_id distinct from guest_id that ha
     expect($c13y->retrieve_list)
         ->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
-    expect($anomaly['correction_fct'])->toBeInstanceOf(Closure::class);
-    expect($anomaly['is_callable'])->toBeTrue();
-    expect($anomaly['correction_fct_args'])->toBe([
-        'id' => 999995,
-        'action' => 'creation',
-    ]);
+    expect($anomaly->correctionFct)
+        ->toBeInstanceOf(Closure::class);
+    expect($anomaly->isCallable)
+        ->toBeTrue();
+    expect($anomaly->correctionFctArgs)
+        ->toBe([
+            'id' => 999995,
+            'action' => 'creation',
+        ]);
 });
 
 test('c13yCorrectionUser creates the guest_id slot for a "creation" action, renaming around the real "guest" username collision', function (): void {

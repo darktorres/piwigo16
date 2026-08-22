@@ -10,6 +10,7 @@ use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
+use Piwigo\Admin\Integrity\Projection\AnomalyRow;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\ConfigLoader;
@@ -218,7 +219,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $c13y->check();
 
         self::assertContains('1 anomaly has been corrected.', PageStateTestFactory::get()->infos);
-        self::assertTrue($c13y->retrieve_list[0]['corrected'] ?? false);
+        self::assertTrue($c13y->retrieve_list[0]->corrected ?? false);
     }
 
     public function testCheckCorrectionModeReportsTheNotCorrectedCountForAFailedFix(): void
@@ -240,7 +241,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $c13y->check();
 
         self::assertContains('1 anomaly has not been corrected.', PageStateTestFactory::get()->errors);
-        self::assertFalse($c13y->retrieve_list[0]['corrected'] ?? false);
+        self::assertFalse($c13y->retrieve_list[0]->corrected ?? false);
     }
 
     public function testCheckIgnoreModeMarksTheAnomalyIgnoredAndPersistsTheBuildIgnoreList(): void
@@ -262,7 +263,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $c13y->check();
 
         self::assertContains('1 anomaly has been ignored.', PageStateTestFactory::get()->infos);
-        self::assertTrue($c13y->retrieve_list[0]['ignored'] ?? false);
+        self::assertTrue($c13y->retrieve_list[0]->ignored ?? false);
         self::assertSame([$id], $c13y->build_ignore_list);
 
         $rows = DbConnection::build()->fetchAllAssociative(
@@ -324,15 +325,15 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'ignored-1',
-                'anomaly' => 'An ignored anomaly',
-                'correction_fct' => null,
-                'correction_fct_args' => null,
-                'correction_msg' => null,
-                'is_callable' => false,
-                'ignored' => true,
-            ],
+            new AnomalyRow(
+                id: 'ignored-1',
+                anomaly: 'An ignored anomaly',
+                correctionFct: null,
+                correctionFctArgs: null,
+                correctionMsg: null,
+                isCallable: false,
+                ignored: true,
+            ),
         ];
 
         $result = $c13y->display();
@@ -349,19 +350,19 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'bad-1',
-                'anomaly' => 'Malformed anomaly',
-                'correction_fct' => null,
-                'correction_fct_args' => null,
-                'correction_msg' => null,
-                'is_callable' => false,
-                'ignored' => false,
-            ],
+            new AnomalyRow(
+                id: 'bad-1',
+                anomaly: 'Malformed anomaly',
+                correctionFct: null,
+                correctionFctArgs: null,
+                correctionMsg: null,
+                isCallable: false,
+                ignored: false,
+            ),
         ];
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessageIsOrContains("\$c13y['ignored'] cannot be false");
+        $this->expectExceptionMessageIsOrContains('$c13y->ignored cannot be false');
 
         $c13y->display();
     }
@@ -370,15 +371,15 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'corrected-1',
-                'anomaly' => 'A corrected anomaly',
-                'correction_fct' => 'strlen',
-                'correction_fct_args' => null,
-                'correction_msg' => null,
-                'is_callable' => true,
-                'corrected' => true,
-            ],
+            new AnomalyRow(
+                id: 'corrected-1',
+                anomaly: 'A corrected anomaly',
+                correctionFct: 'strlen',
+                correctionFctArgs: null,
+                correctionMsg: null,
+                isCallable: true,
+                corrected: true,
+            ),
         ];
 
         $result = $c13y->display();
@@ -393,15 +394,15 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'failed-1',
-                'anomaly' => 'A failed-correction anomaly',
-                'correction_fct' => 'strlen',
-                'correction_fct_args' => null,
-                'correction_msg' => null,
-                'is_callable' => true,
-                'corrected' => false,
-            ],
+            new AnomalyRow(
+                id: 'failed-1',
+                anomaly: 'A failed-correction anomaly',
+                correctionFct: 'strlen',
+                correctionFctArgs: null,
+                correctionMsg: null,
+                isCallable: true,
+                corrected: false,
+            ),
         ];
 
         $result = $c13y->display();
@@ -419,14 +420,14 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'selectable-1',
-                'anomaly' => 'A selectable anomaly',
-                'correction_fct' => 'strlen',
-                'correction_fct_args' => null,
-                'correction_msg' => null,
-                'is_callable' => true,
-            ],
+            new AnomalyRow(
+                id: 'selectable-1',
+                anomaly: 'A selectable anomaly',
+                correctionFct: 'strlen',
+                correctionFctArgs: null,
+                correctionMsg: null,
+                isCallable: true,
+            ),
         ];
 
         $result = $c13y->display();
@@ -446,14 +447,14 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'bad-fct-1',
-                'anomaly' => 'A bad-fct anomaly',
-                'correction_fct' => 'this_function_does_not_exist_anywhere',
-                'correction_fct_args' => null,
-                'correction_msg' => null,
-                'is_callable' => false,
-            ],
+            new AnomalyRow(
+                id: 'bad-fct-1',
+                anomaly: 'A bad-fct anomaly',
+                correctionFct: 'this_function_does_not_exist_anywhere',
+                correctionFctArgs: null,
+                correctionMsg: null,
+                isCallable: false,
+            ),
         ];
 
         $result = $c13y->display();
@@ -468,14 +469,14 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         $c13y = $this->newCheckIntegrity();
         $c13y->retrieve_list = [
-            [
-                'id' => 'msg-only-1',
-                'anomaly' => 'A message-only anomaly',
-                'correction_fct' => null,
-                'correction_fct_args' => null,
-                'correction_msg' => 'please fix this by hand',
-                'is_callable' => false,
-            ],
+            new AnomalyRow(
+                id: 'msg-only-1',
+                anomaly: 'A message-only anomaly',
+                correctionFct: null,
+                correctionFctArgs: null,
+                correctionMsg: 'please fix this by hand',
+                isCallable: false,
+            ),
         ];
 
         $result = $c13y->display();

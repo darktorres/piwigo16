@@ -836,6 +836,37 @@ it('renders the global-mode thumbnail grid for a real category filter', function
     expect($filterResult['body'])->not->toContain('Fatal error');
 });
 
+it('shows an HTML-special-character-bearing filtered category name single-escaped, not double-escaped, in the filter panel (P44-C)', function (): void {
+    // batch_manager_filter.inc.latte:178's {$filter_category_selected_name}
+    // stays |noescape'd deliberately: FilterPanelRenderer::render() builds
+    // it from getCatDisplayNameFromId() -> getCatDisplayName()'s own
+    // '<a href="...">NAME</a>' branch (default $url ''), whose inner NAME
+    // is already htmlspecialchars()'d (P44-D's getCatDisplayName() fix) --
+    // strip_tags() then only strips the literal <a>...</a> wrapper,
+    // leaving the already-escaped, safe name text. Removing |noescape
+    // here too would double-escape it (verified directly: produced
+    // '&amp;lt;b&amp;gt;' instead of '&lt;b&gt;' before this was caught).
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => '<b>Bold</b> & "Album" ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+
+    $filterResult = bmPost($page, [
+        'submitFilter' => '1',
+        'filter_category_use' => '1',
+        'filter_category' => (string) $albumId,
+    ]);
+    expect($filterResult['status'])->toBe(200);
+
+    expect($filterResult['body'])->not->toContain('<b>Bold</b>');
+    expect($filterResult['body'])->not->toContain('&amp;lt;');
+    expect($filterResult['body'])->toContain('&lt;b&gt;Bold&lt;/b&gt; &amp; &quot;Album&quot;');
+});
+
 it('builds the current selection from a selection[] array, an alternative to whole_set', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::createCategory($page, [

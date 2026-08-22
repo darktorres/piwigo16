@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users\Event;
 
+use Piwigo\Users\Projection\RegistrationCandidate;
+
 /**
  * Typed event for the legacy `register_user_check` filter. No handler is
  * registered for it anywhere today. `$errors` stays loosely `array<mixed>`
@@ -19,10 +21,9 @@ final class RegisterUserCheck
 {
     /**
      * @param array<mixed> $errors
-     * @param array{username: string, password: string, email: ?string} $user
      */
     public function __construct(
         public array $errors,
-        public readonly array $user,
+        public readonly RegistrationCandidate $user,
     ) {}
 }

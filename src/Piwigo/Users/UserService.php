@@ -62,7 +62,9 @@ use Piwigo\Users\Event\RegisterUser;
 use Piwigo\Users\Event\RegisterUserCheck;
 use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\DefaultUserInfo;
+use Piwigo\Users\Projection\NewUserSummary;
 use Piwigo\Users\Projection\NotificationRecipient;
+use Piwigo\Users\Projection\RegistrationCandidate;
 use Piwigo\Users\Projection\RegistrationOutcome;
 use Piwigo\Users\Projection\UserInfo;
 use Piwigo\Users\Projection\UserInfoInsertRow;
@@ -348,11 +350,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $errorsAfterTrigger = $this->eventDispatcher->dispatch(new RegisterUserCheck(
             $errors,
-            [
-                'username' => $login,
-                'password' => $password,
-                'email' => $mailAddress,
-            ]
+            new RegistrationCandidate(
+                username: $login,
+                password: $password,
+                email: $mailAddress,
+            )
         ))->errors;
         $errors = array_values(array_filter($errorsAfterTrigger, is_string(...)));
 
@@ -409,11 +411,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->sendWelcomeEmail($login, $mailAddress, $urlService, $mailer);
         }
 
-        $this->eventDispatcher->dispatch(new RegisterUser([
-            'id' => $userId->value,
-            'username' => $login,
-            'email' => $mailAddress,
-        ]));
+        $this->eventDispatcher->dispatch(new RegisterUser(new NewUserSummary(
+            id: $userId,
+            username: $login,
+            email: $mailAddress,
+        )));
 
         $this->activityLogger->record('user', $userId->value, 'add');
 

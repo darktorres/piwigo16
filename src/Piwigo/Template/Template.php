@@ -714,10 +714,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * `assignVarFromTemplate()`'s own convention -- found live via
      * AdminTools' settings page: `admin.latte` declares
      * `{varType \Latte\Runtime\Html $ADMIN_CONTENT}` and renders it as
-     * bare `{$ADMIN_CONTENT}`, with no `|noescape` filter (unlike
-     * `EXTRA_BODY_CONTENT`'s own template, which applies `|noescape`
-     * explicitly). Latte only skips auto-escaping when the actual
-     * runtime value is a recognized safe type -- a `varType` annotation
+     * bare `{$ADMIN_CONTENT}`, with no `|noescape` filter (the
+     * now-deleted (P44-B) `EXTRA_BODY_CONTENT` template block was the
+     * one real site that still applied `|noescape` explicitly -- dead
+     * code with zero producers, unlike `ADMIN_CONTENT`). Latte only
+     * skips auto-escaping when the actual runtime value is a recognized
+     * safe type -- a `varType` annotation
      * is a static-analysis hint only, not a runtime escaping switch --
      * so assigning a plain string here rendered as literal HTML-escaped
      * source text, not a usable form. Confirmed this was never

@@ -1,7 +1,7 @@
 {templateType Piwigo\Controller\Projection\AboutView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
+{if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
     <ul class="categoryActions"></ul>
@@ -17,11 +17,6 @@
     <ul n:if="isset($themeAbout)">
       <li>{$themeAbout|noescape}</li>
     </ul>
-    {if !empty($about_msgs)}
-      {foreach $about_msgs as $elt}
-        {$elt|noescape}
-      {/foreach}
-    {/if}
   </div>
 </div>
 {/block}

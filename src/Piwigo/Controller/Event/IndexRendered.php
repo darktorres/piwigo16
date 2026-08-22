@@ -10,9 +10,9 @@ namespace Piwigo\Controller\Event;
  * unless the current gallery view is a single real category (mirrors
  * `Section\SectionContext::$category`'s own null-when-not-applicable
  * shape: null on a flat/tag/search/homepage view). Real caller this was
- * added for: a plugin injecting an album-page-specific toolbar via
- * `Page\Event\PageHeaderRendered`/`Template::concat('EXTRA_BODY_CONTENT',
- * ...)` needs to know which category is being viewed (and its
+ * added for: a plugin injecting an album-page-specific toolbar (e.g. via
+ * `Template::concat()` onto a real, already-rendered Html-typed template
+ * var) needs to know which category is being viewed (and its
  * name/comment, to prefill an edit panel -- unlike the picture-page
  * equivalent, no single-category `GET /api/v1/categories/{id}` endpoint
  * exists to fetch this client-side instead) -- `PageHeaderRendered`

@@ -416,8 +416,17 @@ it('dispatches IndexRendered with the real category id/name/comment when viewing
             \\Piwigo\\Controller\\Event\\IndexRendered::class,
             static function (\\Piwigo\\Controller\\Event\\IndexRendered \$event) use (\$context): void {
                 if (\$event->categoryId === 1) {
+                    // MENUBAR, not the now-deleted (P44-B, dead code)
+                    // EXTRA_BODY_CONTENT -- any real, unconditionally
+                    // rendered Html-typed Template var works equally well
+                    // as a vehicle to observe this marker in the page
+                    // body; MENUBAR is the one index.latte itself always
+                    // prints (no isset() guard), and MenubarRenderer::render()
+                    // already assigned it by the time IndexRendered fires,
+                    // so concat() appends onto the real menubar HTML
+                    // rather than replacing it.
                     \$context->template()->concat(
-                        'EXTRA_BODY_CONTENT',
+                        'MENUBAR',
                         '<div id="index-rendered-marker">{$marker}|' . \$event->categoryId . '|' . \$event->categoryName . '|' . \$event->categoryComment . '</div>'
                     );
                 }
@@ -500,8 +509,10 @@ it('dispatches IndexRendered with null category fields on a tag page (not a sing
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Controller\\Event\\IndexRendered::class,
             static function (\\Piwigo\\Controller\\Event\\IndexRendered \$event) use (\$context): void {
+                // See the sibling category-view test above for why MENUBAR,
+                // not the now-deleted (P44-B) EXTRA_BODY_CONTENT.
                 \$context->template()->concat(
-                    'EXTRA_BODY_CONTENT',
+                    'MENUBAR',
                     '<div id="index-rendered-tag-marker">{$marker}|' . var_export(\$event->categoryId, true) . '|' . var_export(\$event->categoryName, true) . '|' . var_export(\$event->categoryComment, true) . '</div>'
                 );
             }

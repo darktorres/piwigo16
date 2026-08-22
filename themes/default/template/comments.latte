@@ -1,7 +1,7 @@
 {templateType Piwigo\Controller\Projection\CommentsView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR|noescape}{/if}
+{if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
   <div class="titrePage">
     <ul class="categoryActions"></ul>

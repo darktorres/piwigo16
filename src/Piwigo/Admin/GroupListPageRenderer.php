@@ -16,6 +16,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\Projection\GroupListRow;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -67,16 +68,12 @@ final readonly class GroupListPageRenderer
         foreach ($groups as $row) {
             $members = $group_repo->findMemberUsernames($row->id);
 
-            $tpl_groups[] = [
-                'name' => $row->name,
-                // Explicit ->value, not relying on GroupId's Stringable
-                // -- Latte templates elsewhere in this page do real
-                // arithmetic on id (group_list.latte's `$group['id']%5`),
-                // which would TypeError against a bare VO object.
-                'id' => $row->id->value,
-                'isDefault' => $row->isDefault,
-                'members' => $this->translator->plural('%d member', '%d members', count($members)),
-            ];
+            $tpl_groups[] = new GroupListRow(
+                id: $row->id,
+                name: $row->name,
+                isDefault: $row->isDefault,
+                members: $this->translator->plural('%d member', '%d members', count($members)),
+            );
 
             $group_counter++;
         }
@@ -85,7 +82,7 @@ final readonly class GroupListPageRenderer
             pwgToken: $this->csrfService
                 ->getToken(),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
-            groups: $tpl_groups,
+            groups: array_map(static fn (GroupListRow $group): array => $group->toArray(), $tpl_groups),
             rootUrl: $this->urlService->getRootUrl(),
             colorscheme: $template->themeConf('colorscheme'),
         ));

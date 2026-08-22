@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\Assert;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\PaginationService;
+use Piwigo\Core\Projection\Navbar;
 
 // CurrentConfig is a constructor-injected instance -- each test builds
 // its own fresh instance rather than mutating/resetting shared static
@@ -18,7 +18,7 @@ test('createNavigationBar returns an empty bar when everything fits on one page'
     $navbar = $service->createNavigationBar('index.php', 10, 0, 20);
 
     expect($navbar)
-        ->toBe([]);
+        ->toEqual(Navbar::none());
 });
 
 test('createNavigationBar computes the current page and total page count', function (): void {
@@ -27,14 +27,9 @@ test('createNavigationBar computes the current page and total page count', funct
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
-    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    Assert::assertIsFloat($currentPage);
-    expect($currentPage)
-        ->toBe(3.0);
-
-    $nbPage = $navbar['NB_PAGE'] ?? null;
-    Assert::assertIsInt($nbPage);
-    expect($nbPage)
+    expect($navbar->currentPage)
+        ->toBe(3.0)
+        ->and($navbar->nbPage)
         ->toBe(5);
 });
 
@@ -44,14 +39,14 @@ test('createNavigationBar omits URL_FIRST/URL_PREV on the first page', function 
 
     $navbar = $service->createNavigationBar('index.php', 100, 0, 20);
 
-    expect($navbar)
-        ->not->toHaveKey('URL_FIRST');
-    expect($navbar)
-        ->not->toHaveKey('URL_PREV');
-    expect($navbar)
-        ->toHaveKey('URL_NEXT');
-    expect($navbar)
-        ->toHaveKey('URL_LAST');
+    expect($navbar->urlFirst)
+        ->toBeNull();
+    expect($navbar->urlPrev)
+        ->toBeNull();
+    expect($navbar->urlNext)
+        ->not->toBeNull();
+    expect($navbar->urlLast)
+        ->not->toBeNull();
 });
 
 test('createNavigationBar omits URL_NEXT/URL_LAST on the last page', function (): void {
@@ -60,14 +55,14 @@ test('createNavigationBar omits URL_NEXT/URL_LAST on the last page', function ()
 
     $navbar = $service->createNavigationBar('index.php', 100, 80, 20);
 
-    expect($navbar)
-        ->toHaveKey('URL_FIRST');
-    expect($navbar)
-        ->toHaveKey('URL_PREV');
-    expect($navbar)
-        ->not->toHaveKey('URL_NEXT');
-    expect($navbar)
-        ->not->toHaveKey('URL_LAST');
+    expect($navbar->urlFirst)
+        ->not->toBeNull();
+    expect($navbar->urlPrev)
+        ->not->toBeNull();
+    expect($navbar->urlNext)
+        ->toBeNull();
+    expect($navbar->urlLast)
+        ->toBeNull();
 });
 
 test('createNavigationBar clamps a negative start to zero', function (): void {
@@ -76,9 +71,7 @@ test('createNavigationBar clamps a negative start to zero', function (): void {
 
     $navbar = $service->createNavigationBar('index.php', 100, -5, 20);
 
-    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    Assert::assertIsFloat($currentPage);
-    expect($currentPage)
+    expect($navbar->currentPage)
         ->toBe(1.0);
 });
 
@@ -105,9 +98,7 @@ test('createNavigationBar clamps a start of exactly -1, one below the real bound
 
     $navbar = $service->createNavigationBar('index.php', 100, -1, 20);
 
-    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    Assert::assertIsFloat($currentPage);
-    expect($currentPage)
+    expect($navbar->currentPage)
         ->toBe(1.0);
 });
 
@@ -124,7 +115,7 @@ test('createNavigationBar returns an empty bar when nbElement exactly equals nbE
     $navbar = $service->createNavigationBar('index.php', 20, 0, 20);
 
     expect($navbar)
-        ->toBe([]);
+        ->toEqual(Navbar::none());
 });
 
 test('createNavigationBar rounds the total page count up, not down or to nearest, for a non-exact division', function (): void {
@@ -138,7 +129,8 @@ test('createNavigationBar rounds the total page count up, not down or to nearest
 
     $navbar = $service->createNavigationBar('index.php', 101, 0, 20);
 
-    expect($navbar['NB_PAGE'] ?? null)->toBe(6);
+    expect($navbar->nbPage)
+        ->toBe(6);
 });
 
 /**
@@ -170,9 +162,7 @@ test('createNavigationBar accepts numeric strings for nbElement and start', func
 
     $navbar = $service->createNavigationBar('index.php', '100', '40', 20);
 
-    $currentPage = $navbar['CURRENT_PAGE'] ?? null;
-    Assert::assertIsFloat($currentPage);
-    expect($currentPage)
+    expect($navbar->currentPage)
         ->toBe(3.0);
 });
 
@@ -182,9 +172,7 @@ test('createNavigationBar builds clean-url-style page links when requested', fun
 
     $navbar = $service->createNavigationBar('index.php/category/1', 100, 40, 20, true);
 
-    $urlNext = $navbar['URL_NEXT'] ?? null;
-    Assert::assertIsString($urlNext);
-    expect($urlNext)
+    expect($navbar->urlNext)
         ->toBe('index.php/category/1/start-60');
 });
 
@@ -194,9 +182,7 @@ test('createNavigationBar builds query-string-style page links by default', func
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
-    $urlNext = $navbar['URL_NEXT'] ?? null;
-    Assert::assertIsString($urlNext);
-    expect($urlNext)
+    expect($navbar->urlNext)
         ->toBe('index.php?start=60');
 });
 
@@ -206,14 +192,12 @@ test('createNavigationBar respects a custom param name', function (): void {
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20, false, 'offset');
 
-    $urlNext = $navbar['URL_NEXT'] ?? null;
-    Assert::assertIsString($urlNext);
-    expect($urlNext)
+    expect($navbar->urlNext)
         ->toBe('index.php?offset=60');
 });
 
 test('createNavigationBar builds the full "pages" link array around the current page, on a middle page', function (): void {
-    // No prior test ever inspected $navbar['pages'] content -- only
+    // No prior test ever inspected $navbar->pages content -- only
     // CURRENT_PAGE/NB_PAGE/URL_NEXT were checked. This one comprehensive
     // assertion (page 3 of 5, pagesAround=2, so every page 1-5 shows)
     // closes most of line 91's for-loop-bounds arithmetic (PlusToMinus/
@@ -228,13 +212,14 @@ test('createNavigationBar builds the full "pages" link array around the current 
 
     $navbar = $service->createNavigationBar('index.php', 100, 40, 20);
 
-    expect($navbar['pages'] ?? null)->toBe([
-        1 => 'index.php',
-        2 => 'index.php?start=20',
-        3 => 'index.php?start=40',
-        4 => 'index.php?start=60',
-        5 => 'index.php?start=80',
-    ]);
+    expect($navbar->pages)
+        ->toBe([
+            1 => 'index.php',
+            2 => 'index.php?start=20',
+            3 => 'index.php?start=40',
+            4 => 'index.php?start=60',
+            5 => 'index.php?start=80',
+        ]);
 });
 
 test('createNavigationBar\'s "pages" array clamps its lower bound to page 2 near the start, not going negative or below', function (): void {
@@ -250,12 +235,13 @@ test('createNavigationBar\'s "pages" array clamps its lower bound to page 2 near
 
     $navbar = $service->createNavigationBar('index.php', 100, 0, 20);
 
-    expect($navbar['pages'] ?? null)->toBe([
-        1 => 'index.php',
-        2 => 'index.php?start=20',
-        3 => 'index.php?start=40',
-        5 => 'index.php?start=80',
-    ]);
+    expect($navbar->pages)
+        ->toBe([
+            1 => 'index.php',
+            2 => 'index.php?start=20',
+            3 => 'index.php?start=40',
+            5 => 'index.php?start=80',
+        ]);
 });
 
 test('createNavigationBar\'s "pages" array clamps its upper bound to the last page near the end, not going past it', function (): void {
@@ -269,12 +255,13 @@ test('createNavigationBar\'s "pages" array clamps its upper bound to the last pa
 
     $navbar = $service->createNavigationBar('index.php', 100, 80, 20);
 
-    expect($navbar['pages'] ?? null)->toBe([
-        1 => 'index.php',
-        3 => 'index.php?start=40',
-        4 => 'index.php?start=60',
-        5 => 'index.php?start=80',
-    ]);
+    expect($navbar->pages)
+        ->toBe([
+            1 => 'index.php',
+            3 => 'index.php?start=40',
+            4 => 'index.php?start=60',
+            5 => 'index.php?start=80',
+        ]);
 });
 
 test('createNavigationBar\'s "pages" array starts from floor(), not ceil() or round(), of a genuinely fractional current page', function (): void {
@@ -304,15 +291,19 @@ test('createNavigationBar\'s "pages" array starts from floor(), not ceil() or ro
 
     $navbar = $service->createNavigationBar('index.php', 1000, 30, 20);
 
-    expect($navbar['CURRENT_PAGE'] ?? null)->toBe(2.5)
-        ->and($navbar['pages'] ?? null)->toBe([
+    expect($navbar->currentPage)
+        ->toBe(2.5)
+        ->and($navbar->pages)
+        ->toBe([
             1 => 'index.php',
             2 => 'index.php?start=20',
             3 => 'index.php?start=40',
             50 => 'index.php?start=980',
         ])
-        ->and($navbar['URL_PREV'] ?? null)->toBe('index.php?start=20')
-        ->and($navbar['URL_NEXT'] ?? null)->toBe('index.php?start=60');
+        ->and($navbar->urlPrev)
+        ->toBe('index.php?start=20')
+        ->and($navbar->urlNext)
+        ->toBe('index.php?start=60');
 });
 
 test('createNavigationBar\'s "pages" array uses ceil(), not round(), for its upper bound when they genuinely disagree', function (): void {
@@ -332,15 +323,19 @@ test('createNavigationBar\'s "pages" array uses ceil(), not round(), for its upp
 
     $navbar = $service->createNavigationBar('index.php', 1000, 26, 20);
 
-    expect($navbar['CURRENT_PAGE'] ?? null)->toBe(2.3)
-        ->and($navbar['pages'] ?? null)->toBe([
+    expect($navbar->currentPage)
+        ->toBe(2.3)
+        ->and($navbar->pages)
+        ->toBe([
             1 => 'index.php',
             2 => 'index.php?start=20',
             3 => 'index.php?start=40',
             50 => 'index.php?start=980',
         ])
-        ->and($navbar['URL_PREV'] ?? null)->toBe('index.php')
-        ->and($navbar['URL_NEXT'] ?? null)->toBe('index.php?start=40');
+        ->and($navbar->urlPrev)
+        ->toBe('index.php')
+        ->and($navbar->urlNext)
+        ->toBe('index.php?start=40');
 });
 
 /**
@@ -370,9 +365,12 @@ test('createNavigationBar builds an exact URL_PREV/URL_NEXT/URL_LAST when nbElem
 
     $navbar = $service->createNavigationBar('index.php', 10, 2, 1);
 
-    expect($navbar['URL_PREV'] ?? null)->toBe('index.php?start=1')
-        ->and($navbar['URL_NEXT'] ?? null)->toBe('index.php?start=3')
-        ->and($navbar['URL_LAST'] ?? null)->toBe('index.php?start=9');
+    expect($navbar->urlPrev)
+        ->toBe('index.php?start=1')
+        ->and($navbar->urlNext)
+        ->toBe('index.php?start=3')
+        ->and($navbar->urlLast)
+        ->toBe('index.php?start=9');
 });
 
 /**
@@ -411,6 +409,8 @@ test('createNavigationBar caps URL_NEXT at the real last page when the unsnapped
     // making the uncapped $next (100) genuinely exceed $last (80).
     $navbar = $service->createNavigationBar('index.php', 100, 85, 20);
 
-    expect($navbar['URL_NEXT'] ?? null)->toBe('index.php?start=80')
-        ->and($navbar['URL_LAST'] ?? null)->toBe('index.php?start=80');
+    expect($navbar->urlNext)
+        ->toBe('index.php?start=80')
+        ->and($navbar->urlLast)
+        ->toBe('index.php?start=80');
 });

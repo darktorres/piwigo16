@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Projection\Navbar;
 
 /**
  * Pure pagination math -- no template/DB dependency.
@@ -30,12 +31,9 @@ final readonly class PaginationService
      *   admin/batch_manager.php pass $_GET/$_REQUEST directly after only
      *   an is_numeric() check
      * Assigned wholesale into Latte templates at every real call site (never
-     * read key-by-key in PHP) -- an empty return means "single page, no
-     * navigation needed"; each key below is independently optional rather
-     * than a value object, matching the .latte files' own per-key isset()
-     * checks.
-     *
-     * @return array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}
+     * read key-by-key in PHP) -- an empty {@see Navbar} means "single page,
+     * no navigation needed"; each field is independently optional, matching
+     * the .latte files' own per-key isset() checks.
      */
     public function createNavigationBar(
         string $url,
@@ -44,7 +42,7 @@ final readonly class PaginationService
         int $nbElementPage,
         bool $cleanUrl = false,
         string $paramName = 'start'
-    ): array {
+    ): Navbar {
         // real callers pass numeric strings here (see docblock); all downstream
         // logic is pure arithmetic/comparison, so normalize once at the entry
         $nbElement = (int) $nbElement;
@@ -95,6 +93,6 @@ final readonly class PaginationService
             $navbar['pages'][$maximum] = $url_start . $last;
             $navbar['NB_PAGE'] = $maximum;
         }
-        return $navbar;
+        return Navbar::fromLegacyArray($navbar);
     }
 }

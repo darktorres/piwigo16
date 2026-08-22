@@ -471,7 +471,7 @@ final readonly class BatchManagerUnitPageRenderer
                 ->getToken(),
             activePlugins: array_keys($this->loadedPlugins->get()),
             perPage: $nb_images,
-            navbar: $nav_bar,
+            navbar: $nav_bar?->toArray(),
             elementIds: $element_ids_value,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             elements: $elements,

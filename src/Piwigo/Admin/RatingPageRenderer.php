@@ -164,7 +164,7 @@ final class RatingPageRenderer
         }
 
         $adminContent = $renderer->render(new RatingView(
-            navbar: $navbar,
+            navbar: $navbar->toArray(),
             fAction: $urlService->getRootUrl() . 'admin.php',
             display: $elements_per_page,
             nbElements: $nb_elements,

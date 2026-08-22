@@ -659,7 +659,7 @@ final readonly class CommentsController implements ControllerInterface
             sortOrderOptionsSelected: $sort_order_value,
             itemNumberOptions: $item_number_options,
             itemNumberOptionsSelected: $selected_items_number,
-            navbar: $navbar,
+            navbar: $navbar->toArray(),
             commentDerivativeParams: $derivative_params,
             categories: $categoriesOptions->options,
             categoriesSelected: $categoriesOptions->selected,

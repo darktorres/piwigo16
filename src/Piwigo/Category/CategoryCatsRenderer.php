@@ -27,6 +27,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\TemplateInterface;
@@ -444,7 +445,7 @@ final readonly class CategoryCatsRenderer
             );
 
             // navigation bar
-            $catsNavigationBar = [];
+            $catsNavigationBar = Navbar::none();
             if ($totalCategories > $nbCategoriesPage) {
                 // PaginationService takes this file's own constructor-injected
                 // $currentConfig directly (same instance nbCategoriesPage()/
@@ -453,7 +454,7 @@ final readonly class CategoryCatsRenderer
                     ->createNavigationBar($this->urlService->duplicateIndexUrl([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
-            $template->assignContext(new CategoryCatsNavbarPageContext($catsNavigationBar));
+            $template->assignContext(new CategoryCatsNavbarPageContext($catsNavigationBar->toArray()));
         }
 
         TimingHelper::debug('end CategoryCatsRenderer::render()', $this->requestMetrics);

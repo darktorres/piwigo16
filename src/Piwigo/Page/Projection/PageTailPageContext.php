@@ -13,22 +13,17 @@ use Piwigo\Core\TemplatePageContext;
  * and `$toggleMobileThemeUrl` are genuinely optional -- the original
  * code only ever assigns those 2 template keys under their own runtime
  * condition, omitted here (not present as a null value) to match that
- * exact original behavior. `$debug` stays a loose bag: it's built by
- * conditionally merging in `QUERIES_LIST` and/or `TIME`/`NB_QUERIES`/
- * `SQL_TIME` under 2 independent config flags, always assigned (even
- * when empty), never a single fixed shape.
+ * exact original behavior. `$debug` is always assigned (even when
+ * entirely empty) -- see {@see \Piwigo\Page\Projection\DebugInfo}.
  */
 final readonly class PageTailPageContext implements TemplatePageContext
 {
-    /**
-     * @param array<string, mixed> $debug
-     */
     public function __construct(
         public string $version,
         public string $phpwgUrl,
         public string $vitalsScriptUrl,
         public ?string $contactMail,
-        public array $debug,
+        public DebugInfo $debug,
         public ?string $toggleMobileThemeUrl,
     ) {}
 
@@ -42,7 +37,7 @@ final readonly class PageTailPageContext implements TemplatePageContext
             'VERSION' => $this->version,
             'APP_URL' => $this->phpwgUrl,
             'VITALS_SCRIPT_URL' => $this->vitalsScriptUrl,
-            'debug' => $this->debug,
+            'debug' => $this->debug->toArray(),
         ];
 
         if ($this->contactMail !== null) {

@@ -10,6 +10,7 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\CategoryInfoTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 
 // CategoryService's own DB-backed methods are covered by
@@ -185,9 +186,7 @@ test('filterMenuRows restricts to direct children of the current category page w
         catMenuRow(2, 5),
         catMenuRow(3, 7),
     ];
-    $categoryPage = [
-        'uppercats' => '5,9',
-    ];
+    $categoryPage = CategoryInfoTestFactory::build(uppercats: '5,9');
 
     $result = CategoryService::filterMenuRows($rows, $categoryPage, false, false, '');
 
@@ -207,41 +206,19 @@ test('filterMenuRows restricts to the visible-categories csv when a filter is ac
         ->toBe([1, 3]);
 });
 
-test('filterMenuRows treats a categoryPage with no uppercats key as having no uppercat restriction', function (): void {
-    // categoryPage !== null (true) but is_scalar($uppercatsRaw) is false
-    // (the key is missing, so it's null) -- only row 1 (top-level) should
-    // pass; row 2 must NOT be pulled in via an empty/zero uppercatIds list.
-    $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
-
-    $result = CategoryService::filterMenuRows($rows, [], false, false, '');
-
-    expect(array_column($result, 'id'))
-        ->toBe([1]);
-});
-
 test('filterMenuRows treats an empty-string uppercats value the same as absent', function (): void {
+    // CategoryInfo::$uppercats is a non-nullable string -- the "categoryPage
+    // has no uppercats at all" case this used to test separately (a bare
+    // array missing the key) can no longer happen with a real object; an
+    // empty string is the only way this branch's own is_scalar()-turned-
+    // non-empty-string check can still resolve to "no restriction" with a
+    // real category page.
     $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
 
-    $result = CategoryService::filterMenuRows($rows, [
-        'uppercats' => '',
-    ], false, false, '');
+    $result = CategoryService::filterMenuRows($rows, CategoryInfoTestFactory::build(uppercats: ''), false, false, '');
 
     expect(array_column($result, 'id'))
         ->toBe([1]);
-});
-
-test('filterMenuRows string-casts a non-string scalar uppercats value before exploding it', function (): void {
-    // uppercats=0 (int, scalar, !== '') takes the restriction branch and
-    // must produce uppercatIds=[0] via the (string) cast -- without it,
-    // explode() would receive a raw int under strict_types and throw.
-    $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
-
-    $result = CategoryService::filterMenuRows($rows, [
-        'uppercats' => 0,
-    ], false, false, '');
-
-    expect(array_column($result, 'id'))
-        ->toBe([1, 2]);
 });
 
 // A mutation-testing sweep found 3 confirmed-equivalent mutants inside

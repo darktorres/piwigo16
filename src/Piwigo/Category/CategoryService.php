@@ -248,15 +248,14 @@ final readonly class CategoryService
      *
      * @param array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}> $allRows keyed by category id,
      *   already permission-filtered (CategoryTreeCache::getForUser())
-     * @param array<string, mixed>|null $categoryPage the currently-viewed
-     *   category ($page['category']/SectionContext::$category), if any --
-     *   only 'uppercats' is read here, defensively, matching that
-     *   property's own already-declared array<string,mixed>|null type
+     * @param ?CategoryInfo $categoryPage the currently-viewed category
+     *   ($page['category']/SectionContext::$category), if any -- only
+     *   'uppercats' is read here
      * @return array<int, array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int, user_id: int, nb_categories: int, count_categories: int, count_images: int, max_date_last: ?string, name: string, permalink: ?string, id: int}>
      */
     public static function filterMenuRows(
         array $allRows,
-        ?array $categoryPage,
+        ?CategoryInfo $categoryPage,
         bool $expand,
         bool $filterEnabled,
         string $visibleCategoriesCsv
@@ -264,9 +263,8 @@ final readonly class CategoryService
         // Always expand when a filter is active -- matches the original
         // SQL's own branch condition exactly.
         if (! $expand && ! $filterEnabled) {
-            $uppercatsRaw = $categoryPage['uppercats'] ?? null;
-            $uppercatIds = $categoryPage !== null && is_scalar($uppercatsRaw) && $uppercatsRaw !== ''
-                ? array_map(intval(...), explode(',', (string) $uppercatsRaw))
+            $uppercatIds = $categoryPage !== null && $categoryPage->uppercats !== ''
+                ? array_map(intval(...), explode(',', $categoryPage->uppercats))
                 : [];
 
             return array_filter(
@@ -753,10 +751,9 @@ final readonly class CategoryService
      * IS_UPPERCAT/icon_ts) built inside this method's own loop; NAME is
      * passed through dispatch(new RenderCategoryName(...)).
      *
-     * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
      */
-    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, FilterState $filterState, CurrentUser $currentUser, Lang $lang): array
+    public function getCategoriesMenu(?CategoryInfo $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, FilterState $filterState, CurrentUser $currentUser, Lang $lang): array
     {
         $user = $currentUser->get();
 
@@ -799,16 +796,13 @@ final readonly class CategoryService
         $selectedCategory = $categoryPage;
         foreach ($rows as $row) {
             // both sides get coerced to string for comparison: $row['id'] is
-            // always a DB-fetch string, but $page['category']['id'] may already
-            // be an int depending on how that array was populated -- matches
-            // the original's loose ==, which PHPStan disallows outright.
+            // always a DB-fetch string, $selectedCategory->id a real int --
+            // matches the original's loose ==, which PHPStan disallows outright.
             $rowIdStr = (string) $row['id'];
             $rowGlobalRank = $row['global_rank'];
             $childDateLast = @$row['max_date_last'] > @$row['date_last'];
-            $selectedId = $selectedCategory['id'] ?? null;
-            $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
-            $selectedIdUppercat = $selectedCategory['id_uppercat'] ?? null;
-            $selectedIdUppercatStr = is_scalar($selectedIdUppercat) ? (string) $selectedIdUppercat : null;
+            $selectedIdStr = $selectedCategory !== null ? (string) $selectedCategory->id : null;
+            $selectedIdUppercatStr = $selectedCategory?->idUppercat !== null ? (string) $selectedCategory->idUppercat : null;
             $menuNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($row['name'], 'get_categories_menu'));
             $row = array_merge(
                 $row,
@@ -836,9 +830,8 @@ final readonly class CategoryService
                 $row['icon_ts'] = RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
             }
             $cats[] = $row;
-            $categoryPageId = $categoryPage['id'] ?? null;
-            $categoryPageIdStr = is_scalar($categoryPageId) ? (string) $categoryPageId : null;
-            if ($categoryPage !== null && $categoryPageIdStr !== null && $categoryPageIdStr === $rowIdStr) { // save the number of subcats for later optim
+            $categoryPageIdStr = $categoryPage !== null ? (string) $categoryPage->id : null;
+            if ($categoryPageIdStr !== null && $categoryPageIdStr === $rowIdStr) { // save the number of subcats for later optim
                 $countCategories = $row['count_categories'];
             }
         }

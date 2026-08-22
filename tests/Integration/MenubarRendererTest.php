@@ -25,6 +25,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
+use Piwigo\Tests\Support\CategoryInfoTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -252,11 +253,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->sectionContextRegistry->set(new SectionContext(
             section: Section::Categories,
             items: [1, 4],
-            category: [
-                'id' => 1,
-                'name' => 'Sample Album',
-                'permalink' => null,
-            ],
+            category: CategoryInfoTestFactory::build(id: 1, name: 'Sample Album'),
             combinedCategories: null,
         ));
 
@@ -285,16 +282,10 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->sectionContextRegistry->set(new SectionContext(
             section: Section::Categories,
             items: [1, 4],
-            category: [
-                'id' => 1,
-                'name' => 'Sample Album',
-                'permalink' => null,
+            category: CategoryInfoTestFactory::build(id: 1, name: 'Sample Album'),
+            combinedCategories: [
+                CategoryInfoTestFactory::build(id: 2, name: 'Nested Sub Album'),
             ],
-            combinedCategories: [[
-                'id' => 2,
-                'name' => 'Nested Sub Album',
-                'permalink' => null,
-            ]],
         ));
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));

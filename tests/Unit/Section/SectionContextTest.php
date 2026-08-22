@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Common\Enum\Section;
 use Piwigo\Section\SectionContext;
+use Piwigo\Tests\Support\CategoryInfoTestFactory;
 
 test('constructor defaults match a categories-section homepage-shaped context', function (): void {
     $context = new SectionContext();
@@ -137,28 +138,19 @@ test('constructor accepts a picture page image id and file slug', function (): v
 });
 
 test('constructor accepts a category and combined-categories shape', function (): void {
+    $category = CategoryInfoTestFactory::build(id: 12, name: 'Holidays');
+    $combined = CategoryInfoTestFactory::build(id: 13, name: 'Summer');
+
     $context = new SectionContext(
         section: Section::Categories,
-        category: [
-            'id' => 12,
-            'name' => 'Holidays',
-        ],
-        combinedCategories: [[
-            'id' => 13,
-            'name' => 'Summer',
-        ]],
+        category: $category,
+        combinedCategories: [$combined],
     );
 
     expect($context->category)
-        ->toBe([
-            'id' => 12,
-            'name' => 'Holidays',
-        ])
+        ->toBe($category)
         ->and($context->combinedCategories)
-        ->toBe([[
-            'id' => 13,
-            'name' => 'Summer',
-        ]]);
+        ->toBe([$combined]);
 });
 
 test('withItems returns a new instance with only the item list replaced', function (): void {
@@ -195,6 +187,9 @@ test('toUrlParams omits every field left at its default value', function (): voi
 });
 
 test('toUrlParams includes only the fields that differ from their default', function (): void {
+    $category = CategoryInfoTestFactory::build(id: 12, name: 'Holidays');
+    $combined = CategoryInfoTestFactory::build(id: 13, name: 'Summer');
+
     $context = new SectionContext(
         section: Section::Categories,
         sectionUrl: '/category/12-holidays',
@@ -208,14 +203,8 @@ test('toUrlParams includes only the fields that differ from their default', func
         flat: true,
         isHomepage: true,
         superOrderBy: true,
-        category: [
-            'id' => 12,
-            'name' => 'Holidays',
-        ],
-        combinedCategories: [[
-            'id' => 13,
-            'name' => 'Summer',
-        ]],
+        category: $category,
+        combinedCategories: [$combined],
         tags: [[
             'id' => 1,
             'name' => 'nature',
@@ -252,14 +241,8 @@ test('toUrlParams includes only the fields that differ from their default', func
             'super_order_by' => true,
             'image_id' => '42',
             'image_file' => 'my-photo',
-            'category' => [
-                'id' => 12,
-                'name' => 'Holidays',
-            ],
-            'combined_categories' => [[
-                'id' => 13,
-                'name' => 'Summer',
-            ]],
+            'category' => $category->toArray(),
+            'combined_categories' => [$combined->toArray()],
             'tags' => [[
                 'id' => 1,
                 'name' => 'nature',

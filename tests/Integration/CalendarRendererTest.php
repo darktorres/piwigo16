@@ -25,6 +25,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Html\HtmlService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\Tests\Support\CategoryInfoTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -480,9 +481,7 @@ namespace Piwigo\Tests\Integration {
             $result = $this->makeRenderer()
                 ->render(
                     section: Section::Categories,
-                    category: [
-                        'id' => 999999,
-                    ],
+                    category: CategoryInfoTestFactory::build(id: 999999),
                     items: [],
                     chronologyField: 'posted',
                     chronologyStyle: 'monthly',

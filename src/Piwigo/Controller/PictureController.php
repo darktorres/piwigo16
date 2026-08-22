@@ -220,8 +220,7 @@ final readonly class PictureController implements ControllerInterface
 
         // access authorization check
         if ($page_category !== null) {
-            $category_id = $page_category['id'] ?? null;
-            $this->categoryService->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, $this->htmlService, $this->redirectService, $this->currentUser);
+            $this->categoryService->checkRestrictions($page_category->id, $this->htmlService, $this->redirectService, $this->currentUser);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -442,18 +441,15 @@ final readonly class PictureController implements ControllerInterface
                 case 'set_as_representative':
 
                     if ($this->accessControl->isAdmin() and $page_category !== null) {
-                        $representative_category_id = $page_category['id'] ?? null;
-                        $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : null;
-                        if ($representative_category_id !== null) {
-                            $this->categoryService->setRepresentativeImage($representative_category_id, $image_id);
-                            $this->entityManager->clear();
-                            $this->activityService->record('album', $representative_category_id, 'edit', [
-                                'action' => $pictureRequest->action,
-                                'image_id' => $image_id,
-                            ]);
+                        $representative_category_id = $page_category->id;
+                        $this->categoryService->setRepresentativeImage($representative_category_id, $image_id);
+                        $this->entityManager->clear();
+                        $this->activityService->record('album', $representative_category_id, 'edit', [
+                            'action' => $pictureRequest->action,
+                            'image_id' => $image_id,
+                        ]);
 
-                            PermissionCacheInvalidator::invalidate();
-                        }
+                        PermissionCacheInvalidator::invalidate();
                     }
 
                     $this->redirectService->redirect($url_self);
@@ -1159,12 +1155,12 @@ final readonly class PictureController implements ControllerInterface
         // actually be taken through any real request; every view silently
         // fell through to the else branch's extra SQL query below, even
         // for the common case of a photo viewed via its own single album.
-        // Normalizing $page_category_id_for_compare to int|null too
-        // (matching this file's own is_numeric()-then-cast idiom used
-        // everywhere else, e.g. $category_id above) makes the comparison
-        // type-consistent and the fast path reachable again.
+        // VisibleCategoryRow::$id and CategoryInfo::$id are both real ints,
+        // never strings -- $page_category_id_for_compare used to be cast
+        // from a $page_category['id'] array read via is_numeric(), the
+        // same real int now available directly off the object.
         $related_cat0_id = $related_categories[0]['id'] ?? null;
-        $page_category_id_for_compare = $page_category !== null && is_numeric($page_category['id'] ?? null) ? (int) $page_category['id'] : null;
+        $page_category_id_for_compare = $page_category?->id;
         $related_categories_display = [];
         if (count($related_categories) === 1 and
             $page_category !== null and
@@ -1172,11 +1168,8 @@ final readonly class PictureController implements ControllerInterface
             // Mirrors the narrowing in include/functions_html.inc.php
             // (get_cat_display_name_from_id()) for the same
             // 'upper_names' shape.
-            $upper_names = $page_category['upper_names'] ?? [];
-            $upper_names = is_array($upper_names) ? $upper_names : [];
-            /** @var array<int, array<string, mixed>> $upper_names */
             $related_categories_display[] = $this->htmlService
-                ->getCatDisplayName($upper_names);
+                ->getCatDisplayName($page_category->upperNames);
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids
@@ -1357,7 +1350,7 @@ final readonly class PictureController implements ControllerInterface
                 $current_image_id,
                 'picture',
                 section: $section_context->section->value,
-                category: $section_context->category,
+                categoryId: $section_context->category?->id,
                 tagIds: $section_context->tagIds,
             );
 

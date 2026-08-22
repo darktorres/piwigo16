@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 
 /**
@@ -18,8 +19,7 @@ final readonly class SectionContext
 {
     /**
      * @param list<int|string> $items image ids in display order
-     * @param array<string, mixed>|null $category current category row
-     * @param list<array<string, mixed>>|null $combinedCategories
+     * @param list<CategoryInfo>|null $combinedCategories
      * @param list<array<string, mixed>> $tags tag rows
      * @param list<int> $tagIds
      * @param list<int|string> $list explicit image id list (section=list)
@@ -40,7 +40,7 @@ final readonly class SectionContext
         public bool $flat = false,
         public bool $isHomepage = false,
         public bool $superOrderBy = false,
-        public ?array $category = null,
+        public ?CategoryInfo $category = null,
         public ?array $combinedCategories = null,
         public array $tags = [],
         public array $tagIds = [],
@@ -152,10 +152,13 @@ final readonly class SectionContext
             $params['image_file'] = $this->imageFile;
         }
         if ($this->category !== null) {
-            $params['category'] = $this->category;
+            $params['category'] = $this->category->toArray();
         }
         if ($this->combinedCategories !== null) {
-            $params['combined_categories'] = $this->combinedCategories;
+            $params['combined_categories'] = array_map(
+                static fn (CategoryInfo $category): array => $category->toArray(),
+                $this->combinedCategories
+            );
         }
         if ($this->tags !== []) {
             $params['tags'] = $this->tags;

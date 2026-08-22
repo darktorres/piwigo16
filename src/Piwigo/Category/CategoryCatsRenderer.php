@@ -13,6 +13,7 @@ use Piwigo\Category\Event\RenderCategoryLiteralDescription;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Category\Projection\CategoryCatsResult;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -101,10 +102,8 @@ final readonly class CategoryCatsRenderer
      * -- it's a plain `assignContext()` call (no render involved), which
      * `TemplateInterface` (L1Infrastructure) already allows an L2a class
      * to call directly.
-     *
-     * @param array<string, mixed>|null $category
      */
-    public function render(Section $section, ?array $category, int $startcat): ?CategoryCatsResult
+    public function render(Section $section, ?CategoryInfo $category, int $startcat): ?CategoryCatsResult
     {
         $logger = $this->currentLogger->get();
         $template = $this->template;
@@ -136,11 +135,7 @@ final readonly class CategoryCatsRenderer
                 return CategoryService::isRecentCategory($dateLast, $recentPeriod, $lastPhotoDate, $now);
             });
         } else {
-            $pageCategory = $category;
-            $targetId = null;
-            if (is_array($pageCategory) && is_numeric($pageCategory['id'] ?? null)) {
-                $targetId = (int) $pageCategory['id'];
-            }
+            $targetId = $category?->id;
 
             $filtered = array_filter($tree, static function (array $row) use ($targetId): bool {
                 $countImages = $row['count_images'];

@@ -380,10 +380,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertNotNull($ctx->category);
-        self::assertSame(1, $ctx->category['id']);
+        self::assertSame(1, $ctx->category->id);
         self::assertNotNull($ctx->combinedCategories);
         self::assertCount(1, $ctx->combinedCategories);
-        self::assertSame(2, $ctx->combinedCategories[0]['id']);
+        self::assertSame(2, $ctx->combinedCategories[0]->id);
         // getImageIdsForCategories([1, 2]) defaults to $mode='AND' -- an
         // intersection, not a union: category 1's images (1,2,3) and
         // category 2's images (4,5) are disjoint sets, so "in both at

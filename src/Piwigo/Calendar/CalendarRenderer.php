@@ -17,6 +17,7 @@ use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -70,7 +71,6 @@ final readonly class CalendarRenderer
     ) {}
 
     /**
-     * @param array<string, mixed>|null $category current category row
      * @param list<int|string> $items current section item ids (only used
      *   when $section !== 'categories'; the categories branch always
      *   recomputes its own item list)
@@ -79,7 +79,7 @@ final readonly class CalendarRenderer
      */
     public function render(
         Section $section,
-        ?array $category,
+        ?CategoryInfo $category,
         array $items,
         string $chronologyField,
         ?string $chronologyStyle,
@@ -98,10 +98,7 @@ final readonly class CalendarRenderer
         if ($section === Section::Categories) { // we will regenerate the items by including subcats elements
             $items = [];
 
-            $category_id = isset($category['id'])
-                && (is_int($category['id']) || is_string($category['id']))
-                ? $category['id']
-                : null;
+            $category_id = $category?->id;
             $forbidden_categories = $this->currentUser->get()
                 ->forbiddenCategories;
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Url;
 
 use LogicException;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiContext;
@@ -100,15 +101,15 @@ function urlServiceTestFirstTagId(mixed $tags): int
 
 /**
  * Same narrowing reasoning as urlServiceTestFirstTagId() above, for a
- * single category/combined-category array entry's own 'id' key.
+ * single category/combined-category CategoryInfo entry's own id.
  */
 function urlServiceTestCategoryId(mixed $category): int
 {
-    if (! is_array($category) || ! is_int($category['id'])) {
-        throw new RuntimeException('Expected a category array with an int \'id\' key.');
+    if (! $category instanceof CategoryInfo) {
+        throw new RuntimeException('Expected a CategoryInfo instance.');
     }
 
-    return $category['id'];
+    return $category->id;
 }
 
 // [Mutation] Remaining untested mutations after mutation testing, all

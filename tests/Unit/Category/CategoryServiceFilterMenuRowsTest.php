@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Category;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Category\CategoryService;
+use Piwigo\Tests\Support\CategoryInfoTestFactory;
 
 /**
  * CategoryService::filterMenuRows() is the PHP-side equivalent of
@@ -77,10 +78,7 @@ final class CategoryServiceFilterMenuRowsTest extends TestCase
     {
         $rows = CategoryService::filterMenuRows(
             self::ALL_ROWS,
-            [
-                'id' => 1,
-                'uppercats' => '1',
-            ],
+            CategoryInfoTestFactory::build(id: 1, uppercats: '1'),
             false,
             false,
             ''

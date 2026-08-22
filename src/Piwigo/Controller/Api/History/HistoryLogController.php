@@ -42,12 +42,7 @@ final readonly class HistoryLogController implements ControllerInterface
             }
         }
 
-        $category = null;
-        if ($input->catId !== null && $input->catId !== 0) {
-            $category = [
-                'id' => $input->catId,
-            ];
-        }
+        $categoryId = $input->catId !== null && $input->catId !== 0 ? $input->catId : null;
 
         $tagIds = null;
         if ($input->tagsString !== null && (bool) preg_match('/^\d+(,\d+)*$/', $input->tagsString)) {
@@ -65,7 +60,7 @@ final readonly class HistoryLogController implements ControllerInterface
             $input->imageId,
             $imageType,
             section: $section,
-            category: $category,
+            categoryId: $categoryId,
             tagIds: $tagIds,
         );
 

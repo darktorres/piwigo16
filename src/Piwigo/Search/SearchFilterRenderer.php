@@ -985,7 +985,7 @@ final readonly class SearchFilterRenderer
                     'tags' => [$tag],
                 ]
             );
-            $tagsFound[] = sprintf('<a href="%s">%s</a>', $url, $tag['name']);
+            $tagsFound[] = sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($tag['name']));
         }
 
         return count($tagsFound) > 0 ? $tagsFound : null;

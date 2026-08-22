@@ -725,6 +725,17 @@ test('generateResetPasswordMail builds an HTML mail with the reset link and gall
         ->toContain('2 hours');
 });
 
+test('generateResetPasswordMail escapes an HTML-special-character-bearing username (P44-D)', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    $service = mail_service_test_build();
+
+    $mail = $service->generateResetPasswordMail('<script>alert(1)</script> & "jane"', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
+
+    expect($mail->content)
+        ->not->toContain('<script>alert(1)</script>')
+        ->toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;jane&quot;');
+});
+
 test('generateSetPasswordMail builds an HTML mail with the activation link and a welcome subject', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = mail_service_test_build();
@@ -741,6 +752,17 @@ test('generateSetPasswordMail builds an HTML mail with the activation link and a
         ->toContain('https://example.test/password.php?key=xyz');
     expect($mail->content)
         ->toContain('48 hours');
+});
+
+test('generateSetPasswordMail escapes an HTML-special-character-bearing username (P44-D)', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    $service = mail_service_test_build();
+
+    $mail = $service->generateSetPasswordMail('<script>alert(1)</script> & "jane"', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
+
+    expect($mail->content)
+        ->not->toContain('<script>alert(1)</script>')
+        ->toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;jane&quot;');
 });
 
 test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {

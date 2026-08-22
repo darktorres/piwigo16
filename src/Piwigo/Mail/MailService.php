@@ -1189,7 +1189,7 @@ final class MailService implements MailerInterface
 
         try {
             $message = '<p style="margin: 20px 0">';
-            $message .= $this->lang->t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+            $message .= $this->lang->t('Someone requested that the password be reset for the following user account:') . ' ' . htmlspecialchars($username) . '</p>';
             $message .= '<p style="margin: 20px 0">' . $this->lang->t('To reset your password, visit the following address:');
             $message .= ' <a href="' . $passwordLink . '">' . $this->lang->t('Change my password') . '</a></p>';
             $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
@@ -1222,7 +1222,7 @@ final class MailService implements MailerInterface
 
         try {
             $message = '<p style="margin: 20px 0">';
-            $message .= $this->lang->t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
+            $message .= $this->lang->t('A photo library administrator has created the following account for you:') . ' ' . htmlspecialchars($username) . '</p>';
             $message .= '<p style="margin: 20px 0">' . $this->lang->t('To set your password, visit the following address:');
             $message .= ' <a href="' . $setPasswordLink . '">' . $this->lang->t('Activate') . '</a></p>';
             $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';

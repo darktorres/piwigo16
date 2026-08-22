@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
@@ -31,6 +30,7 @@ use Piwigo\Controller\Admin\Projection\ConfigurationMainData;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainView;
 use Piwigo\Controller\Admin\Projection\ConfigurationSearchView;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesResult;
+use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabData;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesView;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView;
@@ -179,9 +179,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $page['section'] = $page_section;
 
         // Only used by the POST-handling save path below (normalizing
-        // submitted checkbox values) -- the render-time display no longer
-        // routes through checkboxValue()'s dispatcher for this tab, see
-        // ConfigurationMainData's own construction below.
+        // submitted checkbox values) -- the render-time display reads
+        // this tab's checkboxes' CurrentConfig properties directly by
+        // name instead, see ConfigurationMainData's own construction
+        // below.
         $main_checkboxes = [
             'allow_user_registration',
             'obligatory_user_mail_address',
@@ -196,14 +197,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'upload_detect_duplicate',
         ];
 
-        $sizes_checkboxes = [
-            'original_resize',
-        ];
-
         // Only used by the POST-handling save path below (normalizing
-        // submitted checkbox values) -- the render-time display no longer
-        // routes through checkboxValue()'s dispatcher for this tab, see
-        // ConfigurationCommentsData's own construction below.
+        // submitted checkbox values) -- the render-time display reads
+        // this tab's checkboxes' CurrentConfig properties directly by
+        // name instead, see ConfigurationCommentsData's own construction
+        // below.
         $comments_checkboxes = [
             'activate_comments',
             'comments_forall',
@@ -709,14 +707,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 if (! $this->sizesLoadedInTpl) {
                     $is_gd = (ImageBackend::getLibrary() === 'gd') ? true : false;
 
-                    $sizes = [
-                        'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth,
-                        'original_resize_maxheight' => $this->currentConfig->originalResizeMaxheight,
-                        'original_resize_quality' => $this->currentConfig->originalResizeQuality,
-                    ];
-                    foreach ($sizes_checkboxes as $checkbox) {
-                        $sizes[$checkbox] = $this->checkboxValue($checkbox);
-                    }
+                    $sizes = new ConfigurationSizesTabData(
+                        originalResizeMaxwidth: $this->currentConfig->originalResizeMaxwidth,
+                        originalResizeMaxheight: $this->currentConfig->originalResizeMaxheight,
+                        originalResizeQuality: $this->currentConfig->originalResizeQuality,
+                        originalResize: $this->currentConfig->originalResize,
+                    );
 
                     // derivatives = multiple size
                     $enabled = $this->imageStdParams->getDefinedTypeMap();
@@ -754,7 +750,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     $view = new ConfigurationSizesView(
                         isGd: $is_gd,
-                        sizes: $sizes,
+                        sizes: $sizes->toArray(),
                         derivatives: $derivatives,
                         resizeQuality: $resize_quality,
                         ferrors: null,
@@ -894,28 +890,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             pageTitle: $this->lang->t('Configuration'),
             helpUrl: $u_help,
         );
-    }
-
-    /**
-     * Local dispatcher for this page's own render-time `$sizes_checkboxes`
-     * loop (the `'main'`/`'comments'`/`'display'` tabs now read their own
-     * checkboxes' `CurrentConfig` properties directly by name in
-     * `handle()`'s own `switch`, once each tab's display data took named
-     * properties instead of a spliced array -- see
-     * `ConfigurationMainData`/`ConfigurationCommentsData`/
-     * `ConfigurationDisplayData`). `$main_checkboxes`/`$comments_checkboxes`/
-     * `$display_checkboxes` themselves stay: the POST-handling save path
-     * still normalizes submitted values by iterating the same literal key
-     * lists. Down to its one real remaining checkbox (`original_resize`) --
-     * worth removing entirely once the `'sizes'` tab gets the same
-     * treatment.
-     */
-    private function checkboxValue(string $checkbox): bool
-    {
-        return match ($checkbox) {
-            'original_resize' => $this->currentConfig->originalResize,
-            default => throw new LogicException("checkboxValue(): unknown checkbox key '{$checkbox}'."),
-        };
     }
 
     /**

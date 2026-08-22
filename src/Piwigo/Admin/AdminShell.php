@@ -113,6 +113,34 @@ final readonly class AdminShell
         }
     }
 
+    /**
+     * The theme-toggle link's target URL: the current admin.php request,
+     * replayed with `change_theme=1` appended. `$queryString` is the raw
+     * `$_SERVER['QUERY_STRING']` -- real request data (only ever
+     * meaningfully present here when `$adminShellRequest->testGet` is
+     * empty, i.e. nothing besides page/section/tag was in the request --
+     * `tag` itself is never validated anywhere, see
+     * `AdminShellRequest::fromArrays()`'s own docblock). Deliberately NOT
+     * pre-encoded here: `AdminShellFramePageContext::$uChangeTheme`
+     * carries this value as a plain `string`, printed at
+     * `layout.latte:77`'s `href="{$U_CHANGE_THEME}"` with no `|noescape`
+     * -- Latte's own auto-escape is what turns every HTML-special
+     * character (including `&`) into its entity form, once, at print
+     * time. Pre-encoding `&` here as well (the original code's own
+     * `str_replace('&', '&amp;', ...)`) would double-escape it, and left
+     * every other HTML-special character in `$queryString` completely
+     * unescaped -- a real, unconditional stored/reflected-XSS gap via
+     * `tag` (docs/PLAN.md P44-C).
+     */
+    private function buildChangeThemeUrl(AdminShellRequest $adminShellRequest, ?string $queryString): string
+    {
+        $change_theme_url = $this->urlService->getRootUrl() . 'admin.php?';
+        if (count($adminShellRequest->testGet) === 0 and is_string($queryString) and $queryString !== '') {
+            $change_theme_url .= $queryString . '&';
+        }
+        return $change_theme_url . 'change_theme=1';
+    }
+
     private function runDispatch(): void
     {
         $template = $this->currentTemplate->get();
@@ -193,13 +221,8 @@ final readonly class AdminShell
             );
         }
 
-        $change_theme_url = $this->urlService->getRootUrl() . 'admin.php?';
-        $test_get = $adminShellRequest->testGet;
-        $query_string = $_SERVER['QUERY_STRING'] ?? null;
-        if (count($test_get) === 0 and is_string($query_string) and $query_string !== '') {
-            $change_theme_url .= str_replace('&', '&amp;', $query_string) . '&amp;';
-        }
-        $change_theme_url .= 'change_theme=1';
+        $raw_query_string = $_SERVER['QUERY_STRING'] ?? null;
+        $change_theme_url = $this->buildChangeThemeUrl($adminShellRequest, is_string($raw_query_string) ? $raw_query_string : null);
 
         // ?page=plugin-community-pendings is an clean alias of
         // ?page=plugin&section=community/admin.php&tab=pendings

@@ -120,6 +120,6 @@ final readonly class MyInfoUpdateController implements ControllerInterface
             return ResponseFactory::problem($status === 403 ? 'Forbidden' : 'Unprocessable Entity', $status, $result->failureMessage);
         }
 
-        return ResponseFactory::json($this->sessionStatusPresenter->present());
+        return ResponseFactory::json($this->sessionStatusPresenter->present()->toArray());
     }
 }

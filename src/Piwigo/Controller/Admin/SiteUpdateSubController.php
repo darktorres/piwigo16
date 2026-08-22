@@ -33,6 +33,7 @@ use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\ImageCategoryPair;
+use Piwigo\Image\Projection\ImageSyncInsertRow;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
@@ -539,7 +540,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $caddiables = [];
 
             foreach (array_diff(array_keys($fs), $db_elements) as $path) {
-                $insert = [];
                 // storage category must exist
                 $dirname = dirname($path);
                 if (! isset($db_fulldirs[$dirname])) {
@@ -556,31 +556,33 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                     continue;
                 }
 
-                $insert = [
-                    'id' => $next_element_id++,
-                    'file' => $filename,
-                    'name' => StringHelper::getNameFromFile($filename),
-                    'date_available' => $dbnow,
-                    'path' => $path,
-                    'representative_ext' => $fs[$path]['representative_ext'],
-                    'storage_category_id' => $db_fulldirs[$dirname],
-                    'added_by' => $this->currentUser->get()
-                        ->id->value,
-                ];
-
-                if ($post['privacy_level'] !== '0') {
-                    $insert['level'] = $post['privacy_level'];
+                $insertLevel = null;
+                if ($post['privacy_level'] !== '0' && is_numeric($post['privacy_level'])) {
+                    $insertLevel = (int) $post['privacy_level'];
                 }
+
+                $insert = new ImageSyncInsertRow(
+                    id: $next_element_id++,
+                    file: $filename,
+                    name: StringHelper::getNameFromFile($filename),
+                    dateAvailable: $dbnow,
+                    path: $path,
+                    representativeExt: $fs[$path]['representative_ext'],
+                    storageCategoryId: $db_fulldirs[$dirname],
+                    addedBy: $this->currentUser->get()
+                        ->id->value,
+                    level: $insertLevel,
+                );
 
                 $inserts[] = $insert;
 
                 $insert_links[] = new ImageCategoryPair(
-                    imageId: $insert['id'],
-                    categoryId: $insert['storage_category_id'],
+                    imageId: $insert->id,
+                    categoryId: $insert->storageCategoryId,
                 );
 
                 $infos[] = [
-                    'path' => $insert['path'],
+                    'path' => $insert->path,
                     'info' => $this->lang->t('added'),
                 ];
 
@@ -589,20 +591,20 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                     if ($element_formats !== null) {
                         foreach ($element_formats as $ext => $filesize) {
                             $insert_formats[] = [
-                                'image_id' => $insert['id'],
+                                'image_id' => $insert->id,
                                 'ext' => $ext,
                                 'filesize' => (int) $filesize,
                             ];
 
                             $infos[] = [
-                                'path' => $insert['path'],
+                                'path' => $insert->path,
                                 'info' => $this->lang->t('format %s added', $ext),
                             ];
                         }
                     }
                 }
 
-                $caddiables[] = $insert['id'];
+                $caddiables[] = $insert->id;
             }
 
             // search new/removed formats on photos already registered in database

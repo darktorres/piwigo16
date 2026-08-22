@@ -36,7 +36,9 @@ use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\ImageFormat;
 use Piwigo\Image\Projection\ImageIdExt;
 use Piwigo\Image\Projection\ImageIdFile;
+use Piwigo\Image\Projection\ImageInsertRow;
 use Piwigo\Image\Projection\ImageLookupRow;
+use Piwigo\Image\Projection\ImageSyncInsertRow;
 use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Image\Projection\NextIdCount;
@@ -546,22 +548,17 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Raw `images` INSERT, column names as caller-supplied keys -- Admin\
-     * Upload\UploadService::addUploadedFile()'s own "brand-new photo" branch.
-     * Stays raw DBAL rather than an ORM persist() (unlike Tag\TagRepository::
-     * insert()'s equivalent) since the caller's $insert set is itself
-     * dynamic (level/representative_ext only present conditionally),
-     * mirroring updateFields() above rather than a fixed-shape entity
-     * construction.
-     *
-     * @param array<string, mixed> $insert
+     * Raw `images` INSERT -- Admin\Upload\UploadService::
+     * addUploadedFile()'s own "brand-new photo" branch. Stays raw DBAL
+     * rather than an ORM persist() (unlike Tag\TagRepository::insert()'s
+     * equivalent), same reasoning as updateFields() above.
      */
-    public function insertImage(array $insert): int
+    public function insertImage(ImageInsertRow $insert): int
     {
         $em = $this->getEntityManager();
 
         new BatchWriter($em->getConnection())
-            ->singleInsert('images', $insert);
+            ->singleInsert('images', $insert->toArray());
 
         return (int) $em->getConnection()
             ->lastInsertId();
@@ -570,12 +567,11 @@ final class ImageRepository extends EntityRepository
     /**
      * Bulk `images` insert -- Controller\Admin\SiteUpdateSubController's
      * own filesystem-sync "add every newly-discovered photo at once" step.
-     * Same "dynamic column map" reasoning as insertImage() above, just
-     * batched, dbfields taken from the first row (the caller already
-     * builds every row with the same keyset, same convention as
-     * Tag\TagRepository::massInsertImageTags()).
+     * dbfields taken from the first row (the caller already builds every
+     * row with the same keyset, same convention as Tag\TagRepository::
+     * massInsertImageTags()).
      *
-     * @param array<int, array<string, mixed>> $inserts
+     * @param list<ImageSyncInsertRow> $inserts
      */
     public function massInsertImages(array $inserts): void
     {
@@ -583,8 +579,9 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
+        $rows = array_map(static fn (ImageSyncInsertRow $row): array => $row->toArray(), $inserts);
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert('images', array_keys($inserts[0]), $inserts);
+            ->massInsert('images', array_keys($rows[0]), $rows);
     }
 
     /**

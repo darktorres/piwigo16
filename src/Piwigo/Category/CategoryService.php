@@ -308,11 +308,11 @@ final readonly class CategoryService
         $upperIds = explode(',', $cat->uppercats);
         if (count($upperIds) === 1) {
             $upperNames = [
-                [
-                    'id' => $cat->id->value,
-                    'name' => $cat->name,
-                    'permalink' => $cat->permalink?->value,
-                ],
+                new CategoryIdNamePermalink(
+                    id: $cat->id->value,
+                    name: $cat->name,
+                    permalink: $cat->permalink?->value,
+                ),
             ];
         } else {
             $names = $this->repo->findNamesByIds(array_map(intval(...), $upperIds));
@@ -321,7 +321,7 @@ final readonly class CategoryService
             foreach ($upperIds as $upperId) {
                 $upperIdInt = (int) $upperId;
                 if (isset($names[$upperIdInt])) {
-                    $upperNames[] = $names[$upperIdInt]->toArray();
+                    $upperNames[] = $names[$upperIdInt];
                 }
             }
         }

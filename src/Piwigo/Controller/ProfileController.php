@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Event\ProfilePageRendered;
 use Piwigo\Controller\Event\ProfilePageRendering;
+use Piwigo\Controller\Projection\DefaultUserProfileValues;
 use Piwigo\Controller\Projection\ProfileFormView;
 use Piwigo\Controller\Projection\ProfileView;
 use Piwigo\Controller\Request\ProfileActionRequest;
@@ -32,7 +33,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -154,26 +154,30 @@ final readonly class ProfileController implements ControllerInterface
         // already provides this exact row (process-cached, expand/
         // show_nb_comments/show_nb_hits already real bool), narrowed back
         // down to $fields so no extra column (activation_key included)
-        // leaks into the DEFAULT_USER_VALUES template assignment below,
-        // matching this method's own original raw-query column list.
-        $default_user = $this->userService->getDefaultUserInfo();
-        $default_user = $default_user instanceof DefaultUserInfo ? array_intersect_key($default_user->toArray(), array_flip($fields)) : [];
+        // leaks into the $userdata merge below, matching this method's own
+        // original raw-query column list.
+        $defaultUserInfo = $this->userService->getDefaultUserInfo();
+        $default_user = $defaultUserInfo instanceof DefaultUserInfo ? array_intersect_key($defaultUserInfo->toArray(), array_flip($fields)) : [];
 
         // profile.latte's inline JS (preferencesDefaultValues) interpolates
-        // these bare/unquoted, relying on the *old* enum('true','false')
-        // string rendering as the literal JS tokens true/false -- a real
-        // bool would render as PHP's own `1`/`` instead, so render the
-        // same JS-literal string explicitly, matching
+        // expand/show_nb_comments/show_nb_hits bare/unquoted, relying on the
+        // *old* enum('true','false') string rendering as the literal JS
+        // tokens true/false -- a real bool would render as PHP's own `1`/``
+        // instead, so render the same JS-literal string explicitly, matching
         // ProfileFormHandler::loadIntoTemplate()'s existing convention for
-        // the identical case. A separate array, not a mutation of
-        // $default_user itself -- that one still feeds the $userdata
-        // merge below as real bool.
-        $default_user_for_template = $default_user;
-        foreach (['expand', 'show_nb_comments', 'show_nb_hits'] as $k) {
-            if (isset($default_user_for_template[$k])) {
-                $default_user_for_template[$k] = SqlDialect::getBoolean($default_user_for_template[$k]) ? 'true' : 'false';
-            }
-        }
+        // the identical case. Built directly from $defaultUserInfo's own
+        // typed properties, not derived from $default_user -- that plain
+        // array still feeds the $userdata merge below as real bool, a
+        // separate, unrelated consumer.
+        $default_user_for_template = $defaultUserInfo instanceof DefaultUserInfo
+            ? new DefaultUserProfileValues(
+                nbImagePage: $defaultUserInfo->nbImagePage,
+                expand: $defaultUserInfo->expand ? 'true' : 'false',
+                showNbComments: $defaultUserInfo->showNbComments ? 'true' : 'false',
+                showNbHits: $defaultUserInfo->showNbHits ? 'true' : 'false',
+                recentPeriod: $defaultUserInfo->recentPeriod,
+            )
+            : null;
         // Reset to default (Guest) custom settings
         if ($profileAction->resetToDefault) {
             $userdata = array_merge($userdata, $default_user);
@@ -260,7 +264,7 @@ final readonly class ProfileController implements ControllerInterface
             username: $formData->username,
             email: $formData->email?->value,
             allowUserCustomization: $formData->allowUserCustomization,
-            defaultUserValues: $default_user_for_template,
+            defaultUserValues: $default_user_for_template?->toArray() ?? [],
             apiSelectedExpiration: $formData->apiSelectedExpiration,
             apiCanManage: $formData->apiCanManage,
             helpLink: $help_link,

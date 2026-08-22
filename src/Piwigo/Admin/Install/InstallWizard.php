@@ -41,6 +41,7 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
@@ -658,9 +659,7 @@ final class InstallWizard
             ->resyncIdentitySequence('users');
 
         $this->userService($conn)
-            ->createUserInfos([UserId::from(1), UserId::from(2)], [
-                'language' => $this->language,
-            ]);
+            ->createUserInfos([UserId::from(1), UserId::from(2)], LangCode::from($this->language));
     }
 
     /**

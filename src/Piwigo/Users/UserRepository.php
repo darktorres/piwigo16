@@ -43,6 +43,7 @@ use Piwigo\Users\Projection\BasicUserRow;
 use Piwigo\Users\Projection\NotificationRecipient;
 use Piwigo\Users\Projection\UserAdminListingRow;
 use Piwigo\Users\Projection\UserInfo;
+use Piwigo\Users\Projection\UserInfoInsertRow;
 use Piwigo\Users\Projection\UserInfoWithThemeName;
 use Piwigo\Users\Projection\UserListing;
 use Piwigo\Users\Projection\UsernameById;
@@ -403,14 +404,14 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
     /**
      * @param list<UserId> $userIds
-     * @param array<string, mixed> $row default column => value pairs,
-     *   copied onto every inserted row (matches create_user_infos()'s own
-     *   "start from get_default_user_info(), overlay per-row fields"
-     *   logic) -- keys the caller omits fall back to `user_infos`'s own
+     * @param UserInfoInsertRow $row default column => value pairs, copied
+     *   onto every inserted row (matches create_user_infos()'s own "start
+     *   from get_default_user_info(), overlay per-row fields" logic) --
+     *   fields the caller leaves `null` fall back to `user_infos`'s own
      *   schema-declared column defaults, matching the original raw INSERT's
      *   behavior when a column was left out of the value list entirely.
      */
-    public function insertUserInfos(array $userIds, array $row): void
+    public function insertUserInfos(array $userIds, UserInfoInsertRow $row): void
     {
         if ($userIds === []) {
             return;
@@ -424,13 +425,8 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $em->flush();
     }
 
-    /**
-     * @param array<string, mixed> $row
-     */
-    private function buildUserInfoEntity(UserId $userId, array $row): UserInfoEntity
+    private function buildUserInfoEntity(UserId $userId, UserInfoInsertRow $row): UserInfoEntity
     {
-        $preferencesRaw = $row['preferences'] ?? null;
-
         // getReference() is typed object|null (it delegates to find(), which
         // can return null, when the target has subclasses) -- UserEntity has
         // none, so the real code path always returns a genuine proxy.
@@ -439,7 +435,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
         return new UserInfoEntity(
             user: $userReference,
-            nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 15,
+            nbImagePage: $row->nbImagePage ?? 15,
             // UserInfoEntity::$status is UserStatus (enumType-mapped) --
             // $row is a caller-supplied bag (not necessarily DB-sourced),
             // so this uses tryFrom() with a defensive fallback to guest
@@ -447,22 +443,22 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             // throw is safe only for values already read back from the
             // DB-constrained `enum(...)` column, not arbitrary caller
             // input).
-            status: is_string($row['status'] ?? null) ? (UserStatus::tryFrom($row['status']) ?? UserStatus::Guest) : UserStatus::Guest,
-            language: LangCode::tryFrom($row['language'] ?? null) ?? LangCode::from('en_UK'),
-            expand: (bool) ($row['expand'] ?? false),
-            showNbComments: (bool) ($row['show_nb_comments'] ?? false),
-            showNbHits: (bool) ($row['show_nb_hits'] ?? false),
-            recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 7,
-            theme: ThemeId::tryFrom($row['theme'] ?? null) ?? ThemeId::from('default'),
-            registrationDate: SqlDateTime::tryFrom($row['registration_date'] ?? null),
-            enabledHigh: (bool) ($row['enabled_high'] ?? true),
-            level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
-            activationKey: is_string($row['activation_key'] ?? null) ? $row['activation_key'] : null,
-            activationKeyExpire: SqlDateTime::tryFrom($row['activation_key_expire'] ?? null),
-            lastVisit: SqlDateTime::tryFrom($row['last_visit'] ?? null),
-            lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
-            lastmodified: SqlDateTime::tryFrom($row['lastmodified'] ?? null) ?? SqlDateTime::from(Env::now()->format('Y-m-d H:i:s')),
-            preferences: is_array($preferencesRaw) ? array_filter($preferencesRaw, is_string(...), ARRAY_FILTER_USE_KEY) : null,
+            status: ($row->status !== null ? UserStatus::tryFrom($row->status) : null) ?? UserStatus::Guest,
+            language: $row->language ?? LangCode::from('en_UK'),
+            expand: $row->expand ?? false,
+            showNbComments: $row->showNbComments ?? false,
+            showNbHits: $row->showNbHits ?? false,
+            recentPeriod: $row->recentPeriod ?? 7,
+            theme: $row->theme ?? ThemeId::from('default'),
+            registrationDate: SqlDateTime::tryFrom($row->registrationDate),
+            enabledHigh: $row->enabledHigh ?? true,
+            level: $row->level ?? 0,
+            activationKey: $row->activationKey,
+            activationKeyExpire: SqlDateTime::tryFrom($row->activationKeyExpire),
+            lastVisit: SqlDateTime::tryFrom($row->lastVisit),
+            lastVisitFromHistory: $row->lastVisitFromHistory ?? false,
+            lastmodified: SqlDateTime::tryFrom($row->lastmodified) ?? SqlDateTime::from(Env::now()->format('Y-m-d H:i:s')),
+            preferences: $row->preferences !== null ? array_filter($row->preferences, is_string(...), ARRAY_FILTER_USE_KEY) : null,
         );
     }
 

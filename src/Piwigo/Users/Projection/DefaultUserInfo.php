@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Users\Projection;
 
+use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
+
 /**
  * {@see \Piwigo\Users\UserService::getDefaultUserInfo()}'s own fixed
  * result shape -- {@see UserInfo::toArray()}'s shape minus 5 keys
@@ -17,12 +20,12 @@ final readonly class DefaultUserInfo
      */
     public function __construct(
         public int $nbImagePage,
-        public string $language,
+        public ?LangCode $language,
         public bool $expand,
         public bool $showNbComments,
         public bool $showNbHits,
         public int $recentPeriod,
-        public string $theme,
+        public ?ThemeId $theme,
         public bool $enabledHigh,
         public int $level,
         public ?string $activationKey,
@@ -49,12 +52,12 @@ final readonly class DefaultUserInfo
 
         return new self(
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
-            language: is_string($row['language'] ?? null) ? $row['language'] : '',
+            language: LangCode::tryFrom($row['language'] ?? null),
             expand: (bool) ($row['expand'] ?? false),
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
             recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 0,
-            theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
+            theme: ThemeId::tryFrom($row['theme'] ?? null),
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             activationKey: is_string($row['activation_key'] ?? null) ? $row['activation_key'] : null,
@@ -67,23 +70,24 @@ final readonly class DefaultUserInfo
     }
 
     /**
-     * {@see \Piwigo\Users\UserService::createUserInfos()} array_merge()s
-     * this with caller-supplied overrides -- unbox to array at that
-     * boundary. `getDefaultTheme()`/`getDefaultLanguage()`
-     * read `$theme`/`$language` directly as typed properties instead.
+     * {@see \Piwigo\Users\UserService::createUserInfos()} reads this
+     * object's fields directly to build its own UserInfoInsertRow --
+     * unbox to array only at this method's own template/legacy-array
+     * boundary. `getDefaultTheme()`/`getDefaultLanguage()` read
+     * `$theme`/`$language` directly as typed properties instead.
      *
-     * @return array{nb_image_page: int, language: string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null}
+     * @return array{nb_image_page: int, language: ?string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: ?string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null}
      */
     public function toArray(): array
     {
         return [
             'nb_image_page' => $this->nbImagePage,
-            'language' => $this->language,
+            'language' => $this->language?->value,
             'expand' => $this->expand,
             'show_nb_comments' => $this->showNbComments,
             'show_nb_hits' => $this->showNbHits,
             'recent_period' => $this->recentPeriod,
-            'theme' => $this->theme,
+            'theme' => $this->theme?->value,
             'enabled_high' => $this->enabledHigh,
             'level' => $this->level,
             'activation_key' => $this->activationKey,

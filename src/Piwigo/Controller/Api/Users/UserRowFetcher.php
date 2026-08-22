@@ -9,10 +9,10 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\DateHelper;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryEntity;
 use Piwigo\Sort\UserSortField;
+use Piwigo\Users\Projection\UserListRow;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
 
@@ -102,11 +102,12 @@ final readonly class UserRowFetcher
 
         $users = [];
         foreach ($paginated->rows as $row) {
-            $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            $registrationDate = is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null;
+            $listRow = UserListRow::fromRow($row);
+            $id = $listRow->id;
+            $registrationDate = $listRow->registrationDate;
 
-            $lastVisit = is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null;
-            if (! SqlDialect::getBoolean($row['last_visit_from_history'] ?? null) && in_array($lastVisit, [null, ''], true)) {
+            $lastVisit = $listRow->lastVisit;
+            if (! $listRow->lastVisitFromHistory && in_array($lastVisit, [null, ''], true)) {
                 $lastVisit = $this->authService->getUserLastVisitFromHistory(
                     $id,
                     $this->entityManager->getRepository(HistoryEntity::class),
@@ -116,25 +117,25 @@ final readonly class UserRowFetcher
 
             $users[$id] = [
                 'id' => $id,
-                'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
-                'email' => is_string($row['email'] ?? null) ? $row['email'] : null,
-                'status' => is_string($row['status'] ?? null) ? $row['status'] : null,
-                'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : null,
+                'username' => $listRow->username,
+                'email' => $listRow->email,
+                'status' => $listRow->status,
+                'level' => $listRow->level,
                 'groups' => [],
-                'language' => is_string($row['language'] ?? null) ? $row['language'] : null,
-                'theme' => is_string($row['theme'] ?? null) ? $row['theme'] : null,
+                'language' => $listRow->language,
+                'theme' => $listRow->theme,
                 'registrationDate' => $registrationDate,
                 'registrationDateString' => DateHelper::formatDate($registrationDate ?? false, ['day', 'month', 'year']),
                 'registrationDateSince' => DateHelper::timeSince($registrationDate ?? '', 'month'),
                 'lastVisit' => $lastVisit,
                 'lastVisitString' => DateHelper::formatDate($lastVisit ?? false, ['day', 'month', 'year']),
                 'lastVisitSince' => DateHelper::timeSince($lastVisit ?? '', 'day'),
-                'nbImagePage' => is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : null,
-                'recentPeriod' => is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : null,
-                'expand' => SqlDialect::getBoolean($row['expand'] ?? null),
-                'showNbComments' => SqlDialect::getBoolean($row['show_nb_comments'] ?? null),
-                'showNbHits' => SqlDialect::getBoolean($row['show_nb_hits'] ?? null),
-                'enabledHigh' => SqlDialect::getBoolean($row['enabled_high'] ?? null),
+                'nbImagePage' => $listRow->nbImagePage,
+                'recentPeriod' => $listRow->recentPeriod,
+                'expand' => $listRow->expand,
+                'showNbComments' => $listRow->showNbComments,
+                'showNbHits' => $listRow->showNbHits,
+                'enabledHigh' => $listRow->enabledHigh,
             ];
         }
 

@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\LanguageListRow;
 use Piwigo\Admin\Projection\LanguagesInstalledView;
 use Piwigo\Admin\Request\LanguagesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
@@ -114,42 +115,44 @@ final readonly class LanguagesInstalledPageRenderer
         $tpl_languages = [];
 
         foreach ($fs_languages as $language_id => $language) {
-            $tpl_language = [
-                'name' => $language->name,
-                'code' => $language->code,
-                'version' => $language->version,
-                'uri' => $language->uri,
-                'author' => $language->author,
-            ];
-
-            $tpl_language['u_action'] = $this->urlService->addUrlParams($base_url, [
+            $uAction = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
                 'pwg_token' => $this->csrfService
                     ->getToken(),
             ]);
 
+            $deactivable = true;
+            $deactivateTooltip = null;
+
             if (in_array($language_id, array_keys($db_languages), true)) {
-                $tpl_language['state'] = 'active';
-                $tpl_language['deactivable'] = true;
+                $state = 'active';
 
                 if (count($db_languages) <= 1) {
-                    $tpl_language['deactivable'] = false;
-                    $tpl_language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, you need at least one language.');
+                    $deactivable = false;
+                    $deactivateTooltip = $this->lang->t('Impossible to deactivate this language, you need at least one language.');
                 }
 
                 if ($language_id === $default_language) {
-                    $tpl_language['deactivable'] = false;
-                    $tpl_language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, first set another language as default.');
+                    $deactivable = false;
+                    $deactivateTooltip = $this->lang->t('Impossible to deactivate this language, first set another language as default.');
                 }
             } else {
-                $tpl_language['state'] = 'inactive';
+                $state = 'inactive';
             }
 
-            if ($language_id === $default_language) {
-                $tpl_language['is_default'] = true;
+            $isDefault = $language_id === $default_language;
+            $tpl_language = new LanguageListRow(
+                name: $language->name,
+                uAction: $uAction,
+                state: $state,
+                deactivable: $deactivable,
+                deactivateTooltip: $deactivateTooltip,
+                isDefault: $isDefault,
+            );
+
+            if ($isDefault) {
                 array_unshift($tpl_languages, $tpl_language);
             } else {
-                $tpl_language['is_default'] = false;
                 $tpl_languages[] = $tpl_language;
             }
         }
@@ -165,7 +168,7 @@ final readonly class LanguagesInstalledPageRenderer
         }
 
         $adminContent = $this->renderer->render(new LanguagesInstalledView(
-            languages: $tpl_languages,
+            languages: array_map(static fn (LanguageListRow $language): array => $language->toArray(), $tpl_languages),
             isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));

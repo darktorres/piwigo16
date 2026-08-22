@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Http\Middleware;
 
 use Override;
-use Piwigo\Session\Session;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -15,8 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Starts the PHP session (skipping if the bootstrap phase already started
  * one -- `Http\Middleware\ConfigBootstrapMiddleware`, earlier in this same
  * pipeline, already registers `SessionHandler` as the save handler via
- * `Http\SessionBootstrap::register()`), then hydrates/persists a Session VO
- * as a request attribute.
+ * `Http\SessionBootstrap::register()`).
  *
  * Deliberately does not register a save handler itself -- one may
  * already be registered (see `SessionBootstrap::register()` above), and
@@ -38,12 +36,6 @@ final class SessionMiddleware implements MiddlewareInterface
         }
         $_SESSION ??= [];
 
-        $session = Session::fromSuperglobal($_SESSION);
-
-        $response = $handler->handle($request->withAttribute(Session::class, $session));
-
-        $session->persistInto($_SESSION);
-
-        return $response;
+        return $handler->handle($request);
     }
 }

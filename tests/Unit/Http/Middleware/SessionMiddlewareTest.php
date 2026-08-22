@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Http\Middleware\SessionMiddleware;
-use Piwigo\Session\Session;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -28,16 +27,12 @@ function sessionMiddlewareCapturingHandler(): RequestHandlerInterface
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
-            $session = $request->getAttribute(Session::class);
-            expect($session)
-                ->toBeInstanceOf(Session::class);
-
             return new Response(200, [], 'ok');
         }
     };
 }
 
-test('attaches a Session VO as a request attribute and passes the response through', function (): void {
+test('passes the request through and returns the handler response', function (): void {
     $response = new SessionMiddleware()
         ->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
 
@@ -62,7 +57,7 @@ test('does not error when a session is already reported active', function (): vo
 });
 
 test('activates a session when none is active yet', function (): void {
-    // Kills line 38's IfNegated/NotIdenticalToIdentical and line 39's
+    // Kills line 34's IfNegated/NotIdenticalToIdentical and line 35's
     // RemoveFunctionCall. Forces the "not active" precondition via
     // session_write_close() (genuinely resets session_status() to NONE,
     // confirmed live) regardless of what earlier tests in this shared
@@ -79,7 +74,7 @@ test('activates a session when none is active yet', function (): void {
 });
 
 test('does not wipe pre-existing $_SESSION data when a session is already active', function (): void {
-    // Kills line 41's CoalesceEqualToEqual (`$_SESSION = []` instead of
+    // Kills line 37's CoalesceEqualToEqual (`$_SESSION = []` instead of
     // `??=`). session_start() itself resets $_SESSION when it actually
     // runs, so this must force the "already active" precondition first
     // (session_start() skips re-starting, matching the "already
@@ -98,12 +93,3 @@ test('does not wipe pre-existing $_SESSION data when a session is already active
 
     expect($_SESSION['marker'])->toBe('preexisting-value');
 });
-
-/**
- * Confirmed-equivalent: line 47's RemoveMethodCall (dropping
- * `$session->persistInto($_SESSION);`). Session::persistInto()'s own
- * body is currently empty -- "zero typed slots... nothing to write
- * back" per its own docblock -- so calling it has no observable effect
- * at all today. This will become a real, closable gap once a future
- * phase adds the first typed slot; not now.
- */

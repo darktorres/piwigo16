@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Calendar\Projection\CalendarNavAdjacent;
+use Piwigo\Calendar\Projection\CalendarNavBarEntry;
+use Piwigo\Calendar\Projection\ChronologyNavBarRow;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
@@ -123,7 +126,7 @@ abstract class CalendarBase
      * result via {@see self::getChronologyNavigationBars()} once every
      * buildNavBar()/buildNextPrev() call for this render has run.
      *
-     * @var list<array<string, mixed>>
+     * @var list<ChronologyNavBarRow>
      */
     private array $chronologyNavigationBars = [];
 
@@ -140,7 +143,7 @@ abstract class CalendarBase
      * buildNavBar()/buildNextPrev() call made so far during this
      * render -- read once generateCategoryContent() returns.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ChronologyNavBarRow>
      */
     public function getChronologyNavigationBars(): array
     {
@@ -262,7 +265,7 @@ abstract class CalendarBase
      * @param bool $show_any - adds any link to the end of the bar
      * @param bool $show_empty - shows all labels even those without items
      * @param array<int|string, int|string>|null $labels - optional labels for items (e.g. Jan,Feb,... or day numbers)
-     * @return array<int, array<string, mixed>>
+     * @return list<CalendarNavBarEntry>
      */
     protected function getNavBarFromItems(
         array $date_components,
@@ -288,9 +291,7 @@ abstract class CalendarBase
                 $label = $labels[$item];
             }
             if ($nb_images === -1) {
-                $tmp_datas = [
-                    'LABEL' => $label,
-                ];
+                $url = null;
             } else {
                 $url = $this->urlService->duplicateIndexUrl(
                     [
@@ -298,16 +299,12 @@ abstract class CalendarBase
                     ],
                     ['start']
                 );
-                $tmp_datas = [
-                    'LABEL' => $label,
-                    'URL' => $url,
-                ];
             }
-            if ($nb_images > 0) {
-                $tmp_datas['NB_IMAGES'] = $nb_images;
-            }
-            $nav_bar_datas[] = $tmp_datas;
-
+            $nav_bar_datas[] = new CalendarNavBarEntry(
+                label: $label,
+                url: $url,
+                nbImages: $nb_images > 0 ? $nb_images : null,
+            );
         }
 
         if ($this->currentConfig->calendarShowAny and $show_any and count($items) > 1 and
@@ -318,10 +315,11 @@ abstract class CalendarBase
                 ],
                 ['start']
             );
-            $nav_bar_datas[] = [
-                'LABEL' => $this->lang->t('All'),
-                'URL' => $url,
-            ];
+            $nav_bar_datas[] = new CalendarNavBarEntry(
+                label: $this->lang->t('All'),
+                url: $url,
+                nbImages: null,
+            );
         }
 
         return $nav_bar_datas;
@@ -380,9 +378,7 @@ abstract class CalendarBase
             $labels ?? $this->calendar_levels[$level]['labels']
         );
 
-        $this->chronologyNavigationBars[] = [
-            'items' => $nav_bar,
-        ];
+        $this->chronologyNavigationBars[] = new ChronologyNavBarRow(items: $nav_bar);
     }
 
     /**
@@ -391,7 +387,6 @@ abstract class CalendarBase
      */
     protected function buildNextPrev(): void
     {
-        $prev = $next = null;
         if ($this->chronology_date === []) {
             return;
         }
@@ -432,51 +427,55 @@ abstract class CalendarBase
         }
         $current_rank = $upper_items_rank[$current];
 
-        $tpl_var = [];
+        $previous = null;
+        $next = null;
 
         if ($current_rank > 0) { // has previous
             $prev = $upper_items[$current_rank - 1] ?? null;
             if ($prev !== null) {
                 $chronology_date = explode('-', $prev);
-                $tpl_var['previous'] =
-                  [
-                      'LABEL' => $this->getDateNiceName($prev),
-                      'URL' => $this->urlService->duplicateIndexUrl(
-                          [
-                              'chronology_date' => $chronology_date,
-                          ],
-                          ['start']
-                      ),
-                  ];
+                $previous = new CalendarNavAdjacent(
+                    label: $this->getDateNiceName($prev),
+                    url: $this->urlService->duplicateIndexUrl(
+                        [
+                            'chronology_date' => $chronology_date,
+                        ],
+                        ['start']
+                    ),
+                );
             }
         }
 
         if ($current_rank < count($upper_items) - 1) { // has next
-            $next = $upper_items[$current_rank + 1] ?? null;
-            if ($next !== null) {
-                $chronology_date = explode('-', $next);
-                $tpl_var['next'] =
-                  [
-                      'LABEL' => $this->getDateNiceName($next),
-                      'URL' => $this->urlService->duplicateIndexUrl(
-                          [
-                              'chronology_date' => $chronology_date,
-                          ],
-                          ['start']
-                      ),
-                  ];
+            $next_date = $upper_items[$current_rank + 1] ?? null;
+            if ($next_date !== null) {
+                $chronology_date = explode('-', $next_date);
+                $next = new CalendarNavAdjacent(
+                    label: $this->getDateNiceName($next_date),
+                    url: $this->urlService->duplicateIndexUrl(
+                        [
+                            'chronology_date' => $chronology_date,
+                        ],
+                        ['start']
+                    ),
+                );
             }
         }
 
-        if ($tpl_var !== []) {
+        if ($previous !== null || $next !== null) {
             // Patches the *last* row buildNavBar() accumulated so far
             // this render (real cross-method shared state -- see this
             // property's own docblock), rather than adding a new row.
             if ($this->chronologyNavigationBars !== []) {
                 $last_index = count($this->chronologyNavigationBars) - 1;
-                $this->chronologyNavigationBars[$last_index] = array_merge($this->chronologyNavigationBars[$last_index], $tpl_var);
+                $lastRow = $this->chronologyNavigationBars[$last_index];
+                $this->chronologyNavigationBars[$last_index] = new ChronologyNavBarRow(
+                    items: $lastRow->items,
+                    previous: $previous ?? $lastRow->previous,
+                    next: $next ?? $lastRow->next,
+                );
             } else {
-                $this->chronologyNavigationBars[] = $tpl_var;
+                $this->chronologyNavigationBars[] = new ChronologyNavBarRow(previous: $previous, next: $next);
             }
         }
     }

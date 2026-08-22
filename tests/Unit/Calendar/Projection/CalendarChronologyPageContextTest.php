@@ -3,17 +3,18 @@
 declare(strict_types=1);
 
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
+use Piwigo\Calendar\Projection\CalendarNavBarEntry;
+use Piwigo\Calendar\Projection\ChronologyNavBarRow;
 
 test('toArray nests the chronology title, flattens the file view, and includes the navigation bars, omitting chronology_views when null', function (): void {
     $context = new CalendarChronologyPageContext(
         fileChronologyView: 'month_calendar.latte',
         chronologyTitle: '<a href="/index.php">2026</a>',
-        chronologyNavigationBars: [[
-            'items' => [[
-                'LABEL' => '2026',
-                'URL' => '/index.php?/calendar/2026',
-            ]],
-        ]],
+        chronologyNavigationBars: [
+            new ChronologyNavBarRow(items: [
+                new CalendarNavBarEntry(label: '2026', url: '/index.php?/calendar/2026', nbImages: null),
+            ]),
+        ],
         chronologyViews: null,
     );
 

@@ -26,7 +26,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class CalendarChronologyPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array<string, mixed>> $chronologyNavigationBars
+     * @param list<ChronologyNavBarRow> $chronologyNavigationBars
      * @param list<array{VALUE: string, CONTENT: string, SELECTED: bool}>|null $chronologyViews
      */
     public function __construct(
@@ -47,7 +47,7 @@ final readonly class CalendarChronologyPageContext implements TemplatePageContex
             'chronology' => [
                 'TITLE' => $this->chronologyTitle,
             ],
-            'chronology_navigation_bars' => $this->chronologyNavigationBars,
+            'chronology_navigation_bars' => array_map(static fn (ChronologyNavBarRow $row): array => $row->toArray(), $this->chronologyNavigationBars),
         ];
 
         if ($this->chronologyViews !== null) {

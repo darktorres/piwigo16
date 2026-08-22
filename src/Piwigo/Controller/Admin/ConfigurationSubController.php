@@ -22,6 +22,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\FilterViewsSelection;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
+use Piwigo\Controller\Admin\Projection\ConfigurationCommentsData;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayView;
@@ -193,6 +194,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'original_resize',
         ];
 
+        // Only used by the POST-handling save path below (normalizing
+        // submitted checkbox values) -- the render-time display no longer
+        // routes through checkboxValue()'s dispatcher for this tab, see
+        // ConfigurationCommentsData's own construction below.
         $comments_checkboxes = [
             'activate_comments',
             'comments_forall',
@@ -583,18 +588,26 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'comments':
 
-                $comments = [
-                    'NB_COMMENTS_PAGE' => $this->currentConfig->nbCommentPage,
-                    'comments_order' => $this->currentConfig->commentsOrder,
-                    'comments_order_options' => $comments_order,
-                ];
-
-                foreach ($comments_checkboxes as $checkbox) {
-                    $comments[$checkbox] = $this->checkboxValue($checkbox);
-                }
+                $comments = new ConfigurationCommentsData(
+                    nbCommentsPage: $this->currentConfig->nbCommentPage,
+                    commentsOrder: $this->currentConfig->commentsOrder,
+                    commentsOrderOptions: $comments_order,
+                    activateComments: $this->currentConfig->activateComments,
+                    commentsForall: $this->currentConfig->commentsForall,
+                    commentsValidation: $this->currentConfig->commentsValidation,
+                    emailAdminOnComment: $this->currentConfig->emailAdminOnComment,
+                    emailAdminOnCommentValidation: $this->currentConfig->emailAdminOnCommentValidation,
+                    userCanDeleteComment: $this->currentConfig->userCanDeleteComment,
+                    userCanEditComment: $this->currentConfig->userCanEditComment,
+                    emailAdminOnCommentEdition: $this->currentConfig->emailAdminOnCommentEdition,
+                    emailAdminOnCommentDeletion: $this->currentConfig->emailAdminOnCommentDeletion,
+                    commentsAuthorMandatory: $this->currentConfig->commentsAuthorMandatory,
+                    commentsEmailMandatory: $this->currentConfig->commentsEmailMandatory,
+                    commentsEnableWebsite: $this->currentConfig->commentsEnableWebsite,
+                );
 
                 $view = new ConfigurationCommentsView(
-                    comments: $comments,
+                    comments: $comments->toArray(),
                     fAction: $action,
                     saveSuccess: $save_success,
                     isWebmaster: $is_webmaster,
@@ -881,18 +894,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'history_guest' => $this->currentConfig->historyGuest,
             'upload_detect_duplicate' => $this->currentConfig->uploadDetectDuplicate,
             'original_resize' => $this->currentConfig->originalResize,
-            'activate_comments' => $this->currentConfig->activateComments,
-            'comments_forall' => $this->currentConfig->commentsForall,
-            'comments_validation' => $this->currentConfig->commentsValidation,
-            'email_admin_on_comment' => $this->currentConfig->emailAdminOnComment,
-            'email_admin_on_comment_validation' => $this->currentConfig->emailAdminOnCommentValidation,
-            'user_can_delete_comment' => $this->currentConfig->userCanDeleteComment,
-            'user_can_edit_comment' => $this->currentConfig->userCanEditComment,
-            'email_admin_on_comment_edition' => $this->currentConfig->emailAdminOnCommentEdition,
-            'email_admin_on_comment_deletion' => $this->currentConfig->emailAdminOnCommentDeletion,
-            'comments_author_mandatory' => $this->currentConfig->commentsAuthorMandatory,
-            'comments_email_mandatory' => $this->currentConfig->commentsEmailMandatory,
-            'comments_enable_website' => $this->currentConfig->commentsEnableWebsite,
             'menubar_filter_icon' => $this->currentConfig->menubarFilterIcon,
             'index_search_in_set_button' => $this->currentConfig->indexSearchInSetButton,
             'index_search_in_set_action' => $this->currentConfig->indexSearchInSetAction,

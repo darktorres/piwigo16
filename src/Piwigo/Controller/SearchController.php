@@ -20,6 +20,12 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Search\Projection\AllwordsRule;
+use Piwigo\Search\Projection\AuthorRule;
+use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\DateRule;
+use Piwigo\Search\Projection\SearchRules;
+use Piwigo\Search\Projection\TagsRule;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -64,10 +70,7 @@ final readonly class SearchController implements ControllerInterface
 
         $this->eventDispatcher->dispatch(new SearchPageRendering());
 
-        $search = [
-            'mode' => 'AND',
-            'fields' => [],
-        ];
+        $rules = new SearchRules();
 
         // list of filters in user preferences
         $filters_views = $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews;
@@ -116,15 +119,15 @@ final readonly class SearchController implements ControllerInterface
         $words = [];
         $q = $searchQuery->q;
         if ($q !== '' and $q !== '0') {
-            $words = SearchService::splitAllwords($q) ?? [];
+            $words = array_values(SearchService::splitAllwords($q) ?? []);
         }
 
         if (count($words) > 0 or in_array('allwords', $fields, true)) {
-            $search['fields']['allwords'] = [
-                'words' => $words,
-                'mode' => 'AND',
-                'fields' => ['file', 'name', 'comment', 'tags', 'author', 'cat-title', 'cat-desc'],
-            ];
+            $rules->allwords = new AllwordsRule(
+                words: $words,
+                mode: 'AND',
+                fields: ['file', 'name', 'comment', 'tags', 'author', 'cat-title', 'cat-desc'],
+            );
         }
 
         $cat_ids = [];
@@ -150,10 +153,7 @@ final readonly class SearchController implements ControllerInterface
         }
 
         if (count($cat_ids) > 0 or in_array('cat', $fields, true)) {
-            $search['fields']['cat'] = [
-                'words' => $cat_ids,
-                'sub_inc' => true,
-            ];
+            $rules->cat = new CategoryRule(words: $cat_ids, subInc: true);
         }
 
         $tagService = $this->tagService;
@@ -171,10 +171,7 @@ final readonly class SearchController implements ControllerInterface
             }
 
             if (count($tag_ids) > 0 or in_array('tags', $fields, true)) {
-                $search['fields']['tags'] = [
-                    'words' => $tag_ids,
-                    'mode' => 'AND',
-                ];
+                $rules->tags = new TagsRule(words: $tag_ids, mode: 'AND');
             }
         }
 
@@ -185,32 +182,53 @@ final readonly class SearchController implements ControllerInterface
             );
 
             if ($has_author) {
-                $search['fields']['author'] = [
-                    'words' => [],
-                    'mode' => 'OR',
-                ];
+                $rules->author = new AuthorRule(words: []);
             }
         }
 
-        foreach (['added_by', 'filetypes', 'ratios', 'ratings'] as $field) {
-            if (in_array($field, $fields, true)) {
-                $search['fields'][$field] = [];
-            }
+        if (in_array('added_by', $fields, true)) {
+            $rules->addedBy = [];
+        }
+        if (in_array('filetypes', $fields, true)) {
+            $rules->filetypes = [];
+        }
+        if (in_array('ratios', $fields, true)) {
+            $rules->ratios = [];
+        }
+        if (in_array('ratings', $fields, true)) {
+            $rules->ratings = [];
         }
 
-        foreach (['date_posted', 'date_created'] as $field) {
-            if (in_array($field, $fields, true)) {
-                $search['fields'][$field] = [
-                    'preset' => '',
-                ];
-            }
+        if (in_array('date_posted', $fields, true)) {
+            $rules->datePosted = new DateRule();
+        }
+        if (in_array('date_created', $fields, true)) {
+            $rules->dateCreated = new DateRule();
         }
 
-        foreach (['filesize_min', 'filesize_max', 'width_min', 'width_max', 'height_min', 'height_max'] as $field) {
-            if (in_array($field, $fields, true)) {
-                $search['fields'][$field] = '';
-            }
+        if (in_array('filesize_min', $fields, true)) {
+            $rules->filesizeMin = '';
         }
+        if (in_array('filesize_max', $fields, true)) {
+            $rules->filesizeMax = '';
+        }
+        if (in_array('width_min', $fields, true)) {
+            $rules->widthMin = '';
+        }
+        if (in_array('width_max', $fields, true)) {
+            $rules->widthMax = '';
+        }
+        if (in_array('height_min', $fields, true)) {
+            $rules->heightMin = '';
+        }
+        if (in_array('height_max', $fields, true)) {
+            $rules->heightMax = '';
+        }
+
+        $search = [
+            'mode' => 'AND',
+            'fields' => $rules->toArray(),
+        ];
 
         [$search_uuid, $search_url] = $searchService->saveSearch($search, $this->urlService);
         $this->redirectService->redirect($search_url);

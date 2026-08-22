@@ -17,10 +17,12 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -68,6 +70,38 @@ final class SearchControllerTestFakeCapturingRedirectService implements Redirect
     }
 }
 
+/**
+ * Captures the URL {@see \Piwigo\Controller\SearchController::__invoke()}'s
+ * own final `redirect()` call passes -- same capture-then-throw-a-marker
+ * convention as {@see SearchControllerTestFakeCapturingRedirectService}
+ * above, kept as a separate class so this one's `redirect()` override
+ * doesn't change that class's own existing pageNotFound-scoped
+ * expectations.
+ */
+final class SearchControllerTestFakeCapturingRedirect implements RedirectServiceInterface
+{
+    public ?string $capturedUrl = null;
+
+    #[Override]
+    public function redirectHttp(string $url, int $status = 302): never
+    {
+        throw new LogicException('not used by this test');
+    }
+
+    #[Override]
+    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
+    {
+        throw new LogicException('not used by this test');
+    }
+
+    #[Override]
+    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
+    {
+        $this->capturedUrl = $url;
+        throw new RuntimeException('SEARCH_CONTROLLER_TEST_REDIRECT_MARKER');
+    }
+}
+
 final class SearchControllerTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
@@ -96,6 +130,7 @@ final class SearchControllerTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         unset($_GET['cat_id']);
+        DbConnection::build()->executeStatement('DELETE FROM search');
         Kernel::reset();
         parent::tearDown();
     }
@@ -153,5 +188,98 @@ final class SearchControllerTest extends IntegrationTestCase
         self::assertInstanceOf(RuntimeException::class, $caught);
         self::assertNotInstanceOf(ResponseReadyException::class, $caught);
         self::assertStringContainsString('SEARCH_CONTROLLER_TEST_PAGE_NOT_FOUND_MARKER', $caught->getMessage());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function invokeAndFetchSavedFields(ServerRequest $request): array
+    {
+        $redirectService = new SearchControllerTestFakeCapturingRedirect();
+        $controller = $this->buildController($redirectService);
+
+        $caught = null;
+        try {
+            $controller($request);
+        } catch (Throwable $e) {
+            $caught = $e;
+        }
+
+        self::assertInstanceOf(RuntimeException::class, $caught);
+        self::assertStringContainsString('SEARCH_CONTROLLER_TEST_REDIRECT_MARKER', $caught->getMessage());
+        self::assertIsString($redirectService->capturedUrl);
+
+        // makeIndexUrl(['section' => 'search', 'search' => $uuid]) embeds
+        // the uuid as a path segment (`.../search/<uuid>`), not a query
+        // param -- see UrlService::makeSectionInUrl()'s own 'search' case.
+        $matched = preg_match('#/search/([^/?]+)#', $redirectService->capturedUrl, $matches);
+        self::assertSame(1, $matched, 'redirected URL must contain a /search/<uuid> segment');
+        $searchUuid = $matches[1];
+
+        $searchRepository = $this->resolve(SearchRepository::class);
+        $search = $searchRepository->findSavedSearchByUuid($searchUuid);
+        self::assertNotNull($search);
+
+        $fields = $search->rules['fields'] ?? null;
+        self::assertIsArray($fields);
+
+        $result = [];
+        foreach ($fields as $key => $value) {
+            self::assertIsString($key);
+            $result[$key] = $value;
+        }
+
+        return $result;
+    }
+
+    /**
+     * A fresh CurrentConfig's own filtersViews falls back to
+     * defaultFiltersViews (lastFiltersConf is null -> false), which
+     * always forces $fields = $default_fields regardless of the current
+     * user's own status -- out of the box, exactly `words`/
+     * `creation_date`/`album` (renamed to `allwords`/`date_created`/
+     * `cat`) default to on, see CurrentConfig::DEFAULT_FILTERS_VIEWS.
+     */
+    public function testInvokeSeedsExactlyTheDefaultActiveFilters(): void
+    {
+        $fields = $this->invokeAndFetchSavedFields(new ServerRequest('GET', '/search.php'));
+
+        self::assertSame([
+            'words' => [],
+            'mode' => 'AND',
+            'fields' => ['file', 'name', 'comment', 'tags', 'author', 'cat-title', 'cat-desc'],
+        ], $fields['allwords']);
+        self::assertSame([
+            'words' => [],
+            'sub_inc' => true,
+        ], $fields['cat']);
+        self::assertSame([
+            'preset' => '',
+            'custom' => [],
+        ], $fields['date_created']);
+        self::assertArrayNotHasKey('tags', $fields);
+        self::assertArrayNotHasKey('author', $fields);
+    }
+
+    public function testInvokeSplitsARealQIntoAllwordsWords(): void
+    {
+        $_GET['q'] = 'sunset beach';
+
+        $fields = $this->invokeAndFetchSavedFields(new ServerRequest('GET', '/search.php?q=sunset+beach'));
+
+        self::assertIsArray($fields['allwords']);
+        self::assertSame(['sunset', 'beach'], $fields['allwords']['words']);
+
+        unset($_GET['q']);
+    }
+
+    public function testInvokeSeedsCatFromARealCatId(): void
+    {
+        $_GET['cat_id'] = '1';
+
+        $fields = $this->invokeAndFetchSavedFields(new ServerRequest('GET', '/search.php?cat_id=1'));
+
+        self::assertIsArray($fields['cat']);
+        self::assertSame(['1'], $fields['cat']['words']);
     }
 }

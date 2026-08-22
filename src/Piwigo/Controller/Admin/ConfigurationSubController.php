@@ -28,6 +28,7 @@ use Piwigo\Controller\Admin\Projection\ConfigurationDisplayData;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayView;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainData;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainView;
+use Piwigo\Controller\Admin\Projection\ConfigurationSearchTabData;
 use Piwigo\Controller\Admin\Projection\ConfigurationSearchView;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabData;
@@ -864,15 +865,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'search':
 
+                $search = new ConfigurationSearchTabData(
+                    filtersViews: array_map(
+                        static fn (FilterViewDefinition $d): array => $d->toArray(),
+                        $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
+                    ),
+                    lastFiltersConf: $this->currentConfig->filtersViews->lastFiltersConf ?? false,
+                    filtersNames: $filters_names_checkboxes,
+                );
+
                 $view = new ConfigurationSearchView(
-                    search: [
-                        'filters_views' => array_map(
-                            static fn (FilterViewDefinition $d): array => $d->toArray(),
-                            $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
-                        ),
-                        'last_filters_conf' => $this->currentConfig->filtersViews->lastFiltersConf ?? false,
-                        'filters_names' => $filters_names_checkboxes,
-                    ],
+                    search: $search->toArray(),
                     showFilterRatings: $this->currentConfig->rateEnabled,
                     fAction: $action,
                     saveSuccess: $save_success,

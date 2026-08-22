@@ -11,6 +11,7 @@ use Piwigo\Admin\Event\CatModifyPageRendered;
 use Piwigo\Admin\Event\CatModifyPageRendering;
 use Piwigo\Admin\Projection\CatModifyView;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
@@ -37,65 +38,51 @@ use Piwigo\Users\CurrentUser;
 final class CatModifyPageRenderer
 {
     /**
-     * $category starts as AlbumSubController::handle()'s own
-     * {@see \Piwigo\Category\Projection\Category::toArray()} result (same
-     * as AlbumNotificationPageRenderer/CatPermPageRenderer's own $category)
-     * -- but unlike those two siblings, this method both widens 2 of its
-     * core fields' types (the "nullable fields" loop below turns
-     * site_id/id_uppercat from ?int into int|string by substituting ''
-     * for null) and adds 5 brand new keys (is_virtual/has_images/
-     * nb_subcats/nb_images_recursive/cat_full_dir) -- genuinely outgrows
-     * the Projection's own shape as this method progresses, same "risk of
-     * untested retype" call as PictureModifyPageRenderer's own $row.
-     *
-     * @param array<string, mixed> $category
+     * $category is AlbumSubController::handle()'s own real
+     * {@see \Piwigo\Category\Projection\Category} instance (same as
+     * AlbumNotificationPageRenderer/CatPermPageRenderer's own $category).
+     * `Category` is `readonly`, so this method's own view-only computed
+     * fields (is_virtual/has_images/nb_subcats/nb_images_recursive/
+     * cat_full_dir -- the original array's own spliced-on keys) are tracked
+     * as local variables instead of being written back into the object,
+     * same pattern as this campaign's other "real row + spliced view-only
+     * fields" conversions.
      */
-    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
+    public function render(Lang $lang, UrlServiceInterface $urlService, Category $category, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, CsrfService $csrfService, ActivityService $activityService, CategoryService $categoryService, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): AdminPageResult
     {
         $eventDispatcher->dispatch(new CatModifyPageRendering());
 
-        // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
-        // own fetchAssociative() call (one file over the include boundary PHPStan
-        // can't see into) always returns it as numeric. Narrow once here and reuse
-        // throughout the rest of this method's many uses of the category id.
-        //
-        // This replaces a real bug: the original `isset($_GET['cat_id']) &&
-        // is_numeric(...)` check logged a fatal signal (ErrorCollector::
-        // recordFatal(), see HtmlService::fatalError()'s own docblock for
-        // why that never actually halts) on failure without a following
-        // throw, so that check never actually halted anything. The very
-        // next line then concatenated raw $_GET['cat_id']
-        // directly into SQL with zero escaping -- a real, if
-        // Administrator-gated, SQL injection shape. $category['id'] (this
-        // method's own $category parameter, already the real DB row
-        // AlbumSubController loaded via a validated cat_id) is the actual
-        // source of truth for this same value, so $category_id is derived
-        // once here, up front, and used everywhere below instead of
-        // re-reading $_GET.
-        $category_id = is_numeric($category['id']) ? (int) $category['id'] : 0;
+        // $category->id (this method's own $category parameter, already the
+        // real DB row AlbumSubController loaded via a validated cat_id) is
+        // the actual source of truth for the category id -- derived once
+        // here, up front, and used everywhere below.
+        $category_id = $category->id->value;
 
         // --------------------------------------------------------- form criteria check
 
-        // nullable fields
-        foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
-            /** @var array<string, mixed> $category */
-            if (! isset($category[$nullable])) {
-                $category[$nullable] = '';
-            }
-        }
+        // nullable fields -- Category's own $comment/$dir/$siteId/$idUppercat
+        // are real ?string/?string/?int/?int; null becomes '' here for
+        // display, same as the original array's own per-key isset() loop.
+        $category_comment = $category->comment ?? '';
+        $category_dir = $category->dir ?? '';
+        $category_site_id = $category->siteId ?? '';
+        $category_id_uppercat = $category->idUppercat ?? '';
 
-        /** @var array<string, mixed> $category */
-        $category['is_virtual'] = in_array($category['dir'], [null, false, 0, '0', '', []], true) ? true : false;
+        // $category_dir is a real string (never null/false/0/[] once
+        // narrowed above) -- only an empty or literal '0' value can mean
+        // "no dir" now, matching the original array's own defensive
+        // multi-type haystack collapsed to what's actually reachable.
+        $is_virtual = in_array($category_dir, ['0', ''], true) ? true : false;
 
-        $category['has_images'] = $categoryService->hasImages($category_id);
+        $has_images = $categoryService->hasImages($category_id);
 
         // number of sub-categories
         $subcat_ids = $categoryService->getSubcatIds([$category_id]);
 
-        $category['nb_subcats'] = count($subcat_ids) - 1;
+        $nb_subcats = count($subcat_ids) - 1;
 
         // Navigation path
-        $category_uppercats = is_string($category['uppercats']) ? $category['uppercats'] : '';
+        $category_uppercats = $category->uppercats;
         $navigation = $htmlRenderer->getCatDisplayNameCache(
             $category_uppercats,
             $urlService->getRootUrl() . 'admin.php?page=album-'
@@ -116,21 +103,12 @@ final class CatModifyPageRenderer
         // ----------------------------------------------------- template initialization
         $base_url = $urlService->getRootUrl() . 'admin.php?page=';
 
-        // 'id_uppercat' is one of the nullable fields normalized to '' above
-        // (root category); otherwise it is the parent category id.
-        //
-        // $category comes from Category\Projection\Category::toArray()
-        // (see this method's own top-of-file docblock), whose
-        // 'id_uppercat' key is a real ?int, not a numeric string -- accept
-        // int or string here, same pattern this file's own site_id
-        // handling uses just below (representative_picture_id decision,
-        // ~L299). $category_id_uppercat and PARENT_CAT_ID (below) feed
-        // cat_modify.latte's own `var parent_album`/`related_categories_ids`
-        // JS globals, which the move-album jstree widget
-        // (themes/admin/default/js/cat_modify.js) uses to preselect the
-        // album's current parent.
-        $category_id_uppercat_raw = $category['id_uppercat'];
-        $category_id_uppercat = (is_int($category_id_uppercat_raw) || is_string($category_id_uppercat_raw)) ? $category_id_uppercat_raw : '';
+        // $category_id_uppercat ('' for a root category, otherwise the
+        // parent category id -- see its own computation above) and
+        // PARENT_CAT_ID (below) feed cat_modify.latte's own `var
+        // parent_album`/`related_categories_ids` JS globals, which the
+        // move-album jstree widget (themes/admin/default/js/cat_modify.js)
+        // uses to preselect the album's current parent.
 
         // We show or hide this warning in JS
         $pageState->addWarning($lang->t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . $lang->t('Unlock it') . '</span>');
@@ -139,20 +117,20 @@ final class CatModifyPageRenderer
         $categories_parent_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation));
         $u_jumpto = $urlService->makeIndexUrl(
             [
-                'category' => $category,
+                'category' => $category->toArray(),
             ]
         );
 
         $cat_commentable = null;
         if ($currentConfig->activateComments) {
-            $cat_commentable = (bool) $category['commentable'];
+            $cat_commentable = $category->commentable;
         }
 
         // manage album elements link
         $image_count = 0;
         $info_title = '';
         $u_manage_elements = null;
-        if ($category['has_images']) {
+        if ($has_images) {
             $u_manage_elements = $base_url . 'batch_manager&amp;filter=album-' . $category_id;
 
             $row = $categoryService->getPhotoCountAndDateRange($category_id);
@@ -185,7 +163,7 @@ final class CatModifyPageRenderer
         // total number of images under this category (including sub-categories)
         $image_ids_recursive = $categoryService->getDistinctImageIdsInCategories($subcat_ids);
 
-        $category['nb_images_recursive'] = count($image_ids_recursive);
+        $nb_images_recursive = count($image_ids_recursive);
 
         // date creation
         $occured_on = $activityService
@@ -206,70 +184,62 @@ final class CatModifyPageRenderer
             $nb_direct_sub
         );
 
-        // lastmodified is a NOT NULL DATETIME column, but the driver still types
-        // every fetched value as string|null; narrow with real fallbacks (matching
-        // the min_date/max_date/occured_on pattern above) rather than assuming.
-        $category_lastmodified = is_string($category['lastmodified']) ? $category['lastmodified'] : null;
-        $info_last_modified_since = DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true);
-        $info_last_modified = DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']);
+        // lastmodified is a real, always-populated string on Category
+        // (fromRow()'s own narrowing already resolved the driver's
+        // string|null uncertainty once, at the repository layer).
+        $category_lastmodified = $category->lastmodified;
+        $info_last_modified_since = DateHelper::timeSince($category_lastmodified, 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true);
+        $info_last_modified = DateHelper::formatDate($category_lastmodified, ['day', 'month', 'year']);
         $info_images_recursive = $lang->t(
             '%d including sub-albums',
-            $category['nb_images_recursive']
+            $nb_images_recursive
         );
         $info_subcats = $lang->t(
             '%d in whole branch',
-            $category['nb_subcats']
+            $nb_subcats
         );
 
         $cat_full_dir = null;
         $cat_dir_name = null;
         $cat_min_dir = null;
         $u_sync = null;
-        if (! (bool) $category['is_virtual']) {
-            $category['cat_full_dir'] = $this->getCompleteDir($category_id, $categoryService, $entityManager);
-            $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
-            $cat_full_dir = $category_full_dir;
-            $cat_dir_name = basename((string) $category_full_dir);
-            $cat_min_dir = $this->getMinLocalDir($category_full_dir);
+        if (! $is_virtual) {
+            $cat_full_dir_raw = $this->getCompleteDir($category_id, $categoryService, $entityManager);
+            $cat_full_dir = preg_replace('/\/$/', '', $cat_full_dir_raw);
+            $cat_dir_name = basename((string) $cat_full_dir);
+            $cat_min_dir = $this->getMinLocalDir($cat_full_dir);
 
             if ($currentConfig->enableSynchronization) {
-                $category_site_id = $category['site_id'];
-                $category_site_id = (is_int($category_site_id) || is_string($category_site_id)) ? $category_site_id : '';
                 $u_sync = $base_url . 'site_update&amp;site=' . $category_site_id . '&amp;cat_id=' . $category_id;
             }
 
         }
 
         // representant management
-        // 'representative_picture_id' is a nullable FK column; DBAL's native
-        // int/float casting (MYSQLI_OPT_INT_AND_FLOAT_NATIVE) means the
-        // driver can hand back either a native int or a string depending on
-        // which controller populated $GLOBALS['category'], so accept both
-        // rather than assuming string|null.
-        $category_representative_picture_id_raw = $category['representative_picture_id'];
-        $category_representative_picture_id = (is_int($category_representative_picture_id_raw) || is_string($category_representative_picture_id_raw)) ? $category_representative_picture_id_raw : 0;
+        // 'representative_picture_id' is a real ?int on Category.
+        $category_representative_picture_id = $category->representativePictureId ?? 0;
         $representant = null;
-        if ($category['has_images'] or ! in_array($category_representative_picture_id, [0, '0', ''], true)) {
+        if ($has_images or $category_representative_picture_id !== 0) {
             $tpl_representant = [];
 
             // picture to display : the identified representant or the generic random
             // representant ?
-            if (! in_array($category_representative_picture_id, [0, '0', ''], true)) {
+            if ($category_representative_picture_id !== 0) {
                 $tpl_representant['picture'] = $categoryService->getCategoryRepresentantProperties($category_representative_picture_id, $urlService, $entityManager, ImageStdParams::MEDIUM);
             }
 
             // can the admin choose to set a new random representant ?
-            $tpl_representant['ALLOW_SET_RANDOM'] = ($category['has_images'] ? true : false);
+            $tpl_representant['ALLOW_SET_RANDOM'] = ($has_images ? true : false);
 
             // can the admin delete the current representant ?
             // the outer `if` above already guarantees
             // !empty($category_representative_picture_id) whenever
-            // !$category['has_images'], since that's the only way its own
+            // !$has_images, since that's the only way its own
             // has_images-or-!empty(...) condition could be true here.
             if (
-                ($category['has_images']
+                ($has_images
                  and $currentConfig->allowRandomRepresentative)
-                or ! $category['has_images']) {
+                or ! $has_images) {
                 $tpl_representant['ALLOW_DELETE'] = true;
             }
             $representant = $tpl_representant;
@@ -280,9 +250,9 @@ final class CatModifyPageRenderer
             categoriesParentNav: $categories_parent_nav,
             parentCatId: $category_id_uppercat !== '' ? $category_id_uppercat : 0,
             catId: $category_id,
-            catName: is_string($category['name']) ? $category['name'] : '',
-            catComment: is_string($category['comment']) ? $category['comment'] : '',
-            isVisible: (bool) $category['visible'],
+            catName: $category->name,
+            catComment: $category_comment,
+            isVisible: $category->visible,
             catAdminAccess: $categoryService->catAdminAccess($category_id, $currentUser),
             uDelete: $base_url . 'albums',
             uJumpto: $u_jumpto,
@@ -300,7 +270,7 @@ final class CatModifyPageRenderer
             infoLastModified: $info_last_modified,
             infoImagesRecursive: $info_images_recursive,
             infoSubcats: $info_subcats,
-            nbSubcats: $category['nb_subcats'],
+            nbSubcats: $nb_subcats,
             catFullDir: $cat_full_dir,
             catDirName: $cat_dir_name,
             catMinDir: $cat_min_dir,

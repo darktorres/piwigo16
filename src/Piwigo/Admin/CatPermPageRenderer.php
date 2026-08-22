@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\CatPermView;
 use Piwigo\Admin\Request\CatPermSubmitRequest;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
@@ -49,27 +50,26 @@ final readonly class CatPermPageRenderer
     ) {}
 
     /**
-     * $category is AlbumSubController::handle()'s own
-     * {@see \Piwigo\Category\Projection\Category::toArray()} result, shared
-     * verbatim with AlbumNotificationPageRenderer/CatModifyPageRenderer's
-     * own render() calls from that same dispatch site. Unlike
-     * CatModifyPageRenderer, this method's own 'status' reassignment below
-     * stays the same string type, so the full Projection shape applies
-     * safely throughout.
-     *
-     * @param array{id: int, name: string, id_uppercat: ?int, comment: ?string,
-     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
-     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
-     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string} $category
+     * $category is AlbumSubController::handle()'s own real
+     * {@see \Piwigo\Category\Projection\Category} instance, shared verbatim
+     * with AlbumNotificationPageRenderer/CatModifyPageRenderer's own
+     * render() calls from that same dispatch site. `Category` is
+     * `readonly`, so the post-permission-update 'status' value this method
+     * used to write back into the array is tracked as a local `$status`
+     * variable instead, seeded from `$category->status` and reassigned
+     * after the update -- read at every site that used to read the
+     * post-mutation array value.
      */
-    public function render(string $admin_album_base_url, array $category): AdminPageResult
+    public function render(string $admin_album_base_url, Category $category): AdminPageResult
     {
         // $page is a local scratch array for this method's own body only.
         /** @var array<string, mixed> $page */
         $page = [];
         $template = $this->currentTemplate->get();
 
-        $page['cat'] = $category['id'];
+        $page['cat'] = $category->id->value;
+
+        $status = $category->status;
 
         $save_success = null;
         $catPermSubmit = CatPermSubmitRequest::fromGlobals();
@@ -78,14 +78,14 @@ final readonly class CatPermPageRenderer
                 ->checkOrFail($this->htmlService, $this->redirectService);
 
             $post_status = $catPermSubmit->status;
-            $current_status = $category['status'];
+            $current_status = $status;
             $apply_on_sub = $catPermSubmit->applyOnSub;
 
             $post_groups = $catPermSubmit->groups;
             $post_users = $catPermSubmit->users;
 
             $this->categoryAdminService->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
-            $category['status'] = $post_status;
+            $status = $post_status;
 
             $save_success = $this->lang->t('Album updated successfully');
         }
@@ -156,7 +156,7 @@ final readonly class CatPermPageRenderer
 
         $adminContent = $this->renderer->render(new CatPermView(
             fAction: $admin_album_base_url . '-permissions',
-            private: ($category['status'] === 'private'),
+            private: ($status === 'private'),
             groups: $groups,
             groupsSelected: $group_granted_ids,
             usersSelected: $user_granted_direct_ids,

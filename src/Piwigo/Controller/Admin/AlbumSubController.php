@@ -82,13 +82,12 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         $this->coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $categoryRow = new CategoryRepository($this->entityManager, $this->currentConfig)
+        $category = new CategoryRepository($this->entityManager, $this->currentConfig)
             ->findById($cat_id);
-        if (! $categoryRow instanceof Category) {
+        if (! $category instanceof Category) {
             $this->htmlRenderer
                 ->fatalError('unknown album');
         }
-        $category = $categoryRow->toArray();
 
         $tab_param = $query_params['tab'] ?? null;
         $tab = is_string($tab_param) && in_array($tab_param, self::KNOWN_TABS, true) ? $tab_param : 'properties';
@@ -98,9 +97,9 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
-        $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));
+        $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category->name, 'get_cat_display_name_cache'));
         $category_name = $nameEvent->categoryName;
-        $category_id_display = (string) $category['id'];
+        $category_id_display = (string) $category->id->value;
         $template->assignContext(new AlbumSubControllerPageContext(
             adminPageTitle: $this->lang->t('Edit album') . ' <strong>' . $category_name . '</strong>',
             adminPageObjectId: '#' . $category_id_display,

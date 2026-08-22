@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Category\Projection\PermalinkMatch;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -505,12 +506,8 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
         $matches = permalinkRepoTest()
             ->findPermalinkMatches(['old-sample-album', $slug]);
 
-        // id/is_old come back as native int under this project's mysqli
-        // driver config (unlike varchar columns like 'permalink').
-        expect($matches['old-sample-album']['id'])->toBe(1)
-            ->and($matches['old-sample-album']['is_old'])->toBe(1)
-            ->and($matches[$slug]['id'])->toBe($catId)
-            ->and($matches[$slug]['is_old'])->toBe(0);
+        expect($matches['old-sample-album'])->toEqual(new PermalinkMatch(catId: 1, isOld: true))
+            ->and($matches[$slug])->toEqual(new PermalinkMatch(catId: $catId, isOld: false));
     } finally {
         permalinkRepoTestDeleteCategory($catId);
     }

@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
+use Piwigo\Category\Projection\PermalinkMatch;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
@@ -193,12 +194,8 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
         $matches = $this->repo->findPermalinkMatches(['old-sample-album', 'sample-album']);
 
-        // id/is_old come back as native int under this project's mysqli
-        // driver config (unlike varchar columns like 'permalink').
-        self::assertSame(1, $matches['old-sample-album']['id']);
-        self::assertSame(1, $matches['old-sample-album']['is_old']);
-        self::assertSame(1, $matches['sample-album']['id']);
-        self::assertSame(0, $matches['sample-album']['is_old']);
+        self::assertEquals(new PermalinkMatch(catId: 1, isOld: true), $matches['old-sample-album']);
+        self::assertEquals(new PermalinkMatch(catId: 1, isOld: false), $matches['sample-album']);
 
         $this->conn->executeStatement('UPDATE categories SET permalink = NULL WHERE id = 1');
     }

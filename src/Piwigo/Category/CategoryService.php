@@ -413,8 +413,8 @@ final readonly class CategoryService
 
             $idx = $i;
             $match = $permaHash[$permalinks[$i]];
-            $catId = $match['id'];
-            if ((bool) $match['is_old']) {
+            $catId = $match->catId;
+            if ($match->isOld) {
                 $oldPermalinkRepo->touchOldPermalinkHit($permalinks[$i], $catId);
             }
 

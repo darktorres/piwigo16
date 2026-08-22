@@ -10,6 +10,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\OldPermalinkLookupInterface;
+use Piwigo\Category\Projection\PermalinkMatch;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -330,11 +331,10 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
                 continue;
             }
 
-            $byPermalink[$permalink] = [
-                'id' => $idValue,
-                'permalink' => $permalink,
-                'is_old' => (int) $isOld,
-            ];
+            $byPermalink[$permalink] = new PermalinkMatch(
+                catId: $idValue,
+                isOld: (bool) $isOld,
+            );
         }
 
         return $byPermalink;

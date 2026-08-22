@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Projection\PermalinkMatch;
+
 /**
  * Seam {@see CategoryService}'s own `findCategoryIdFromPermalinks()`/
  * `deleteCategories()` methods take as an explicit parameter (not
@@ -27,7 +29,7 @@ interface OldPermalinkLookupInterface
      * touchOldPermalinkHit()).
      *
      * @param  list<string>  $permalinks
-     * @return array<string, array{id: int, permalink: string, is_old: int}>
+     * @return array<string, PermalinkMatch>
      */
     public function findPermalinkMatches(array $permalinks): array;
 

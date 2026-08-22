@@ -11,6 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Calendar\CalendarQueryScope;
     use Piwigo\Calendar\CalendarRepository;
     use Piwigo\Calendar\CalendarWeekly;
+    use Piwigo\Calendar\Projection\ChronologyNavBarRow;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Core\UrlServiceInterface;
@@ -171,6 +172,20 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
+         * getChronologyNavigationBars() returns real ChronologyNavBarRow
+         * objects; dig()/digArray() above only walk arrays, matching the
+         * original array-shaped $chronology_navigation_bars template
+         * variable -- convert back to that exact shape at this one test
+         * boundary rather than reworking dig() itself.
+         *
+         * @return list<array<string, mixed>>
+         */
+        private function navBarsAsArrays(CalendarBase $calendar): array
+        {
+            return array_map(static fn (ChronologyNavBarRow $row): array => $row->toArray(), $calendar->getChronologyNavigationBars());
+        }
+
+        /**
          * CurrentConfig::weekStartsOn() governs which SQL fragments
          * initialize() builds for the week/day levels -- monday-start uses
          * WEEK(date,5) (ISO-ish, week 1 = first week containing a Monday) and
@@ -241,7 +256,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertFalse($calendar->generateCategoryContent($template));
 
-            $navVars = $calendar->getChronologyNavigationBars();
+            $navVars = $this->navBarsAsArrays($calendar);
             self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
             self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
             self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
@@ -264,7 +279,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertFalse($calendar->generateCategoryContent($template));
 
-            $navVars = $calendar->getChronologyNavigationBars();
+            $navVars = $this->navBarsAsArrays($calendar);
             self::assertSame(11, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
             self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
             self::assertSame(12, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
@@ -281,7 +296,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertFalse($calendar->generateCategoryContent($template));
 
-            $navVars = $calendar->getChronologyNavigationBars();
+            $navVars = $this->navBarsAsArrays($calendar);
             // WEEKDAY(2025-01-20) = 0 (Monday, image 4), WEEKDAY(2025-01-25) = 5 (Saturday, image 5).
             self::assertSame(0, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
             self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
@@ -305,7 +320,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
+            $nav = $this->digArray($this->navBarsAsArrays($calendar), [0]);
             self::assertArrayNotHasKey('previous', $nav);
             // Fixed: correctly advances to '2025', not '2024' (the period
             // already being viewed).

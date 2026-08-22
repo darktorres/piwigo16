@@ -506,7 +506,7 @@ namespace Piwigo\Tests\Integration {
         {
             $common = $this->service->getCommonCategories([1, 2, 3], null, [], false);
 
-            self::assertSame(3, $common['1']['counter']);
+            self::assertSame(3, $common[1]->counter);
         }
 
         public function testGetRelatedCategoriesMenuSetsCountImagesForDirectlyLinkedCategories(): void
@@ -515,14 +515,11 @@ namespace Piwigo\Tests\Integration {
 
             $byId = [];
             foreach ($cats as $cat) {
-                $catId = $cat['id'];
-                if (is_int($catId) || is_string($catId)) {
-                    $byId[$catId] = $cat;
-                }
+                $byId[$cat->id] = $cat;
             }
 
-            self::assertSame(3, $byId['1']['count_images']);
-            self::assertArrayHasKey('LEVEL', $byId['1']);
+            self::assertSame(3, $byId[1]->countImages);
+            self::assertGreaterThanOrEqual(1, $byId[1]->level);
         }
 
         public function testGetRelatedCategoriesMenuReturnsEmptyForNoItems(): void
@@ -570,7 +567,7 @@ namespace Piwigo\Tests\Integration {
 
             $common = $this->service->getCommonCategories([1, 2, 3], null, [4, 5], true);
 
-            self::assertSame(3, $common['1']['counter']);
+            self::assertSame(3, $common[1]->counter);
         }
 
         public function testGetRelatedCategoriesMenuWithPermissionsBuildsValidSql(): void
@@ -694,13 +691,10 @@ namespace Piwigo\Tests\Integration {
 
                 $byId = [];
                 foreach ($cats as $cat) {
-                    $catId = $cat['id'];
-                    if (is_int($catId) || is_string($catId)) {
-                        $byId[$catId] = $cat;
-                    }
+                    $byId[$cat->id] = $cat;
                 }
 
-                self::assertSame(1, $byId['1']['count_categories']);
+                self::assertSame(1, $byId[1]->countCategories);
             } finally {
                 $this->conn->executeStatement("UPDATE categories SET uppercats = '1,2' WHERE id = 2");
             }

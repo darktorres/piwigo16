@@ -13,7 +13,6 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Common\ValueObject\Email;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -22,7 +21,6 @@ use Piwigo\Controller\Event\SaveProfileFromPost;
 use Piwigo\Controller\Projection\ProfileFormData;
 use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
-use Piwigo\Core\AppInfo;
 use Piwigo\Core\ConnectedWith;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\DateHelper;
@@ -40,6 +38,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 
 /**
@@ -72,10 +71,9 @@ final readonly class ProfileFormHandler
     ) {}
 
     /**
-     * @param array<string, mixed> $userdata
      * @param array<int, string> $errors
      */
-    public function saveFromPost(array $userdata, array &$errors): bool
+    public function saveFromPost(User $user, array &$errors): bool
     {
         $errors = [];
 
@@ -94,13 +92,9 @@ final readonly class ProfileFormHandler
 
         $conn = DbConnection::build();
 
-        // $userdata['id'] is always the current session user's numeric id
-        // (built in include/user.inc.php from \Piwigo\Config\CurrentConfig::guestId() or
-        // $_SESSION['pwg_uid'], never a raw untyped value); narrow once here
-        // for reuse below.
-        $user_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
+        $user_id = $user->id->value;
 
-        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
+        $special_user = in_array($user_id, [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
         if ($special_user) {
             unset(
                 $post['username'],
@@ -153,7 +147,7 @@ final readonly class ProfileFormHandler
         }
 
         if (isset($post['mail_address'])) {
-            // if $_POST and $userdata have are same email
+            // if $_POST and $user have are same email
             // validate_mail_address allows, however, to check email
             $mail_address_input = is_string($post['mail_address']) ? $post['mail_address'] : null;
             $mail_error = $this->userService->validateMailAddress(UserId::tryFrom($user_id), $mail_address_input);
@@ -218,15 +212,15 @@ final readonly class ProfileFormHandler
                     if (! $usernameVo instanceof Username) {
                         $this->pageState->addError($this->lang->t('invalid login format'));
                         unset($post['redirect']);
-                    } elseif ($username !== $userdata['username'] and $this->userService->getUserId($usernameVo) instanceof UserId) {
+                    } elseif ($username !== $user->username?->value and $this->userService->getUserId($usernameVo) instanceof UserId) {
                         $this->pageState->addError($this->lang->t('this login is already used'));
                         unset($post['redirect']);
                     } else {
                         $username_update = $usernameVo;
 
                         // send email to the user
-                        if ($username !== $userdata['username']) {
-                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : $this->userService->getDefaultLanguage();
+                        if ($username !== $user->username?->value) {
+                            $notification_language = $user->language->value;
                             $this->mailService
                                 ->switchLangTo($notification_language);
 
@@ -254,7 +248,7 @@ final readonly class ProfileFormHandler
 
                 $this->userService->updateAccountFields(UserId::from($user_id), $username_update, $password_update, Email::tryFrom($mail_address));
 
-                if ($mail_address !== $userdata['email']) {
+                if ($mail_address !== $user->email?->value) {
                     $this->authService->deactivatePasswordResetKey($user_id);
                 }
 
@@ -273,7 +267,7 @@ final readonly class ProfileFormHandler
                 }
 
                 $data = [];
-                $data['user_id'] = $userdata['id'];
+                $data['user_id'] = $user_id;
 
                 // expand/show_nb_hits/show_nb_comments post as the literal
                 // strings 'true'/'false' ({html_radios} in
@@ -319,17 +313,15 @@ final readonly class ProfileFormHandler
      * Computes the profile-edition-page data shared by both real
      * callers -- `ProfileController` and `Controller\Admin\
      * ConfigurationSubController`'s "default" (Guest settings) tab.
-     *
-     * @param array<string, mixed> $userdata
      */
-    public function loadIntoTemplate(string $url_action, string $url_redirect, array $userdata): ProfileFormData
+    public function loadIntoTemplate(string $url_action, string $url_redirect, User $user): ProfileFormData
     {
         $radio_options = [
             'true' => $this->lang->t('Yes'),
             'false' => $this->lang->t('No'),
         ];
 
-        $template_selection = ThemeId::tryFrom($userdata['theme'] ?? null) ?? ThemeId::from(AppInfo::DEFAULT_TEMPLATE);
+        $template_selection = $user->theme;
         $template_options = ThemeCatalog::getPwgThemes($this->paths, $this->currentConfig, $this->lang, $this->entityManager);
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
@@ -337,13 +329,13 @@ final readonly class ProfileFormHandler
         $language_selection = null;
         $language_options = [];
         foreach (LangService::getLanguages($this->paths, $this->entityManager) as $language_code => $language_name) {
-            if ($profileFormSubmitRequest->isSubmitPresent or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
+            if ($profileFormSubmitRequest->isSubmitPresent or $user->language->value === $language_code) {
                 $language_selection = $language_code;
             }
             $language_options[$language_code] = $language_name;
         }
 
-        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
+        $special_user = in_array($user->id->value, [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
 
         // api key expiration choice
         $conn = DbConnection::build();
@@ -380,18 +372,18 @@ final readonly class ProfileFormHandler
           : $this->lang->t('You have no email address, so you will not be notified when your API key is about to expire.');
 
         // allow plugins to add their own form data to content
-        $this->eventDispatcher->dispatch(new LoadProfileInTemplate($userdata));
+        $this->eventDispatcher->dispatch(new LoadProfileInTemplate($user));
 
         return new ProfileFormData(
-            username: is_string($userdata['username']) ? $userdata['username'] : '',
-            email: Email::tryFrom($userdata['email'] ?? null),
+            username: $user->username->value ?? '',
+            email: $user->email,
             allowUserCustomization: $this->currentConfig->allowUserCustomization,
             activateComments: $this->currentConfig->activateComments,
-            nbImagePage: is_numeric($userdata['nb_image_page'] ?? null) ? (int) $userdata['nb_image_page'] : 0,
-            recentPeriod: is_numeric($userdata['recent_period'] ?? null) ? (int) $userdata['recent_period'] : 0,
-            expand: (bool) $userdata['expand'] ? 'true' : 'false',
-            nbComments: (bool) $userdata['show_nb_comments'] ? 'true' : 'false',
-            nbHits: (bool) $userdata['show_nb_hits'] ? 'true' : 'false',
+            nbImagePage: $user->nbImagePage,
+            recentPeriod: $user->recentPeriod,
+            expand: $user->expand ? 'true' : 'false',
+            nbComments: $user->showNbComments ? 'true' : 'false',
+            nbHits: $user->showNbHits ? 'true' : 'false',
             redirect: $url_redirect,
             fAction: $url_action,
             radioOptions: $radio_options,

@@ -8,6 +8,7 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\AppInfo;
+use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -26,6 +27,11 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
             'show_tags' => 'yes',
             0 => 'dropped',
         ],
+        'nb_image_page' => '30',
+        'recent_period' => '14',
+        'expand' => '1',
+        'show_nb_comments' => '1',
+        'show_nb_hits' => '1',
     ]);
 
     expect($user->id->value)
@@ -50,6 +56,16 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
         ->toBe([
             'show_tags' => 'yes',
         ])
+        ->and($user->nbImagePage)
+        ->toBe(30)
+        ->and($user->recentPeriod)
+        ->toBe(14)
+        ->and($user->expand)
+        ->toBeTrue()
+        ->and($user->showNbComments)
+        ->toBeTrue()
+        ->and($user->showNbHits)
+        ->toBeTrue()
         ->and($user->rawAttributes)
         ->toHaveKey('id');
 });
@@ -84,7 +100,17 @@ test('fromUserArray degrades safely on a missing/malformed non-id field', functi
         ->and($user->level)
         ->toBe(0)
         ->and($user->preferences)
-        ->toBe([]);
+        ->toBe([])
+        ->and($user->nbImagePage)
+        ->toBe(0)
+        ->and($user->recentPeriod)
+        ->toBe(0)
+        ->and($user->expand)
+        ->toBeFalse()
+        ->and($user->showNbComments)
+        ->toBeFalse()
+        ->and($user->showNbHits)
+        ->toBeFalse();
 });
 
 test('fromUserArray falls back to Guest for an unrecognized status value', function (): void {
@@ -198,6 +224,106 @@ test('withEnabledHigh returns a new immutable instance and syncs rawAttributes',
         ->toBe([
             'enabled_high' => false,
         ]);
+});
+
+test('withDefaultsFrom overlays the 5 site-default fields, leaves theme/language untouched', function (): void {
+    $original = new User(
+        id: UserId::from(1),
+        username: Username::from('bob'),
+        email: null,
+        language: LangCode::from('en_UK'),
+        theme: ThemeId::from('modus'),
+        status: UserStatus::Normal,
+        enabledHigh: false,
+        nbImagePage: 15,
+        recentPeriod: 7,
+        expand: false,
+        showNbComments: false,
+        showNbHits: false,
+    );
+
+    $defaults = DefaultUserInfo::fromArray([
+        'nb_image_page' => 30,
+        'language' => 'fr_FR',
+        'theme' => 'default',
+        'recent_period' => 14,
+        'expand' => true,
+        'show_nb_comments' => true,
+        'show_nb_hits' => true,
+        'lastmodified' => '2026-01-01 00:00:00',
+    ]);
+
+    $updated = $original->withDefaultsFrom($defaults);
+
+    expect($updated->nbImagePage)
+        ->toBe(30)
+        ->and($updated->recentPeriod)
+        ->toBe(14)
+        ->and($updated->expand)
+        ->toBeTrue()
+        ->and($updated->showNbComments)
+        ->toBeTrue()
+        ->and($updated->showNbHits)
+        ->toBeTrue()
+        ->and($updated->language)
+        ->toEqual(LangCode::from('en_UK'))
+        ->and($updated->theme)
+        ->toEqual(ThemeId::from('modus'))
+        ->and($original->nbImagePage)
+        ->toBe(15)
+        ->and($original->expand)
+        ->toBeFalse();
+});
+
+/**
+ * Regression test for a real bug found while porting this class from
+ * the reference tree: none of the 7 pre-existing wither methods
+ * (withLanguage/withUsername/withLevel/withPreferences/withEnabledHigh/
+ * withStatus/withRawAttribute) propagated the 5 fields added by
+ * withDefaultsFrom() above -- calling any of them would silently reset
+ * nbImagePage/recentPeriod/expand/showNbComments/showNbHits back to
+ * their constructor defaults.
+ */
+test('every existing wither propagates the 5 site-default fields unchanged', function (): void {
+    $original = new User(
+        id: UserId::from(1),
+        username: Username::from('bob'),
+        email: null,
+        language: LangCode::from('en_UK'),
+        theme: ThemeId::from('modus'),
+        status: UserStatus::Normal,
+        enabledHigh: false,
+        nbImagePage: 15,
+        recentPeriod: 7,
+        expand: true,
+        showNbComments: true,
+        showNbHits: true,
+    );
+
+    $withers = [
+        $original->withLanguage(LangCode::from('fr_FR')),
+        $original->withUsername(Username::from('robert')),
+        $original->withLevel(8),
+        $original->withPreferences([
+            'a' => 'b',
+        ]),
+        $original->withEnabledHigh(true),
+        $original->withStatus(UserStatus::Admin),
+        $original->withRawAttribute('key', 'value'),
+    ];
+
+    foreach ($withers as $updated) {
+        expect($updated->nbImagePage)
+            ->toBe(15)
+            ->and($updated->recentPeriod)
+            ->toBe(7)
+            ->and($updated->expand)
+            ->toBeTrue()
+            ->and($updated->showNbComments)
+            ->toBeTrue()
+            ->and($updated->showNbHits)
+            ->toBeTrue();
+    }
 });
 
 test('withRawAttribute adds a key without disturbing the rest of the array', function (): void {

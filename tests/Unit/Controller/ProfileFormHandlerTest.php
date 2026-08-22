@@ -108,9 +108,9 @@ test('saveFromPost returns false immediately when the form was never submitted',
         $handler = profileFormHandlerTestSubject();
         $errors = [];
 
-        $result = $handler->saveFromPost([
+        $result = $handler->saveFromPost(User::fromUserArray([
             'id' => 1,
-        ], $errors);
+        ]), $errors);
 
         expect($result)
             ->toBeFalse()
@@ -140,7 +140,7 @@ test('loadIntoTemplate returns the real profile form data', function (): void {
 
         $handler = profileFormHandlerTestSubject();
 
-        $formData = $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
+        $formData = $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', User::fromUserArray([
             'id' => 1,
             'username' => 'fixture_user',
             'email' => null,
@@ -151,7 +151,7 @@ test('loadIntoTemplate returns the real profile form data', function (): void {
             'expand' => false,
             'show_nb_comments' => false,
             'show_nb_hits' => false,
-        ]);
+        ]));
 
         expect($formData->username)
             ->toBe('fixture_user')
@@ -200,12 +200,12 @@ test('saveFromPost accepts the default theme even though it has no themes-table 
         $handler = profileFormHandlerTestSubject();
         $errors = [];
 
-        $result = $handler->saveFromPost([
+        $result = $handler->saveFromPost(User::fromUserArray([
             'id' => 1,
             'username' => 'fixture_admin',
             'email' => null,
             'language' => 'en_UK',
-        ], $errors);
+        ]), $errors);
 
         expect($result)
             ->toBeTrue()
@@ -255,7 +255,7 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
 
         $handler = profileFormHandlerTestSubject();
 
-        $formData = $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', [
+        $formData = $handler->loadIntoTemplate('admin.php?page=user_list', 'admin.php?page=user_list', User::fromUserArray([
             'id' => 1,
             'username' => 'fixture_user',
             'email' => null,
@@ -266,7 +266,7 @@ test('loadIntoTemplate includes the default theme as a real, selectable dropdown
             'expand' => false,
             'show_nb_comments' => false,
             'show_nb_hits' => false,
-        ]);
+        ]));
 
         expect($formData->templateOptions)
             ->toBe([

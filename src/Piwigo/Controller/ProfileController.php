@@ -115,9 +115,9 @@ final readonly class ProfileController implements ControllerInterface
         }
 
         // Load language if cookie is set from login/register/password pages.
-        // Runs before $userdata is built and before any rendering, so the
-        // whole response (including $userdata's own 'language' field)
-        // consistently reflects the just-switched language.
+        // Runs before $user is built and before any rendering, so the
+        // whole response (including $user's own language) consistently
+        // reflects the just-switched language.
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language->value !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
@@ -140,24 +140,15 @@ final readonly class ProfileController implements ControllerInterface
             ]);
         }
 
-        $userdata = $this->currentUser->get()
-            ->toUserArray();
+        $user = $this->currentUser->get();
 
         $this->eventDispatcher->dispatch(new ProfilePageRendering());
 
-        $fields = [
-            'nb_image_page', 'expand',
-            'show_nb_comments', 'show_nb_hits', 'recent_period', 'show_nb_hits',
-        ];
-
         // Get the Guest custom settings -- UserService::getDefaultUserInfo()
         // already provides this exact row (process-cached, expand/
-        // show_nb_comments/show_nb_hits already real bool), narrowed back
-        // down to $fields so no extra column (activation_key included)
-        // leaks into the $userdata merge below, matching this method's own
-        // original raw-query column list.
+        // show_nb_comments/show_nb_hits already real bool); it feeds both
+        // $default_user_for_template below and $user->withDefaultsFrom().
         $defaultUserInfo = $this->userService->getDefaultUserInfo();
-        $default_user = $defaultUserInfo instanceof DefaultUserInfo ? array_intersect_key($defaultUserInfo->toArray(), array_flip($fields)) : [];
 
         // profile.latte's inline JS (preferencesDefaultValues) interpolates
         // expand/show_nb_comments/show_nb_hits bare/unquoted, relying on the
@@ -165,10 +156,7 @@ final readonly class ProfileController implements ControllerInterface
         // tokens true/false -- a real bool would render as PHP's own `1`/``
         // instead, so render the same JS-literal string explicitly, matching
         // ProfileFormHandler::loadIntoTemplate()'s existing convention for
-        // the identical case. Built directly from $defaultUserInfo's own
-        // typed properties, not derived from $default_user -- that plain
-        // array still feeds the $userdata merge below as real bool, a
-        // separate, unrelated consumer.
+        // the identical case.
         $default_user_for_template = $defaultUserInfo instanceof DefaultUserInfo
             ? new DefaultUserProfileValues(
                 nbImagePage: $defaultUserInfo->nbImagePage,
@@ -179,21 +167,21 @@ final readonly class ProfileController implements ControllerInterface
             )
             : null;
         // Reset to default (Guest) custom settings
-        if ($profileAction->resetToDefault) {
-            $userdata = array_merge($userdata, $default_user);
+        if ($profileAction->resetToDefault && $defaultUserInfo instanceof DefaultUserInfo) {
+            $user = $user->withDefaultsFrom($defaultUserInfo);
         }
 
         $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
         $page_errors = $this->pageState->errors;
-        $profileFormHandler->saveFromPost($userdata, $page_errors);
+        $profileFormHandler->saveFromPost($user, $page_errors);
         $this->pageState->errors = array_values($page_errors);
 
         $this->layoutState->setBodyId('theProfilePage');
         $formData = $profileFormHandler->loadIntoTemplate(
             $this->urlService->getRootUrl() . 'profile.php', // action
             $this->urlService->makeIndexUrl(), // for redirect
-            $userdata
+            $user
         );
         $profileContent = $this->renderer->render(new ProfileFormView(
             fAction: $formData->fAction,

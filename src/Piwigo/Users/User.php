@@ -11,15 +11,17 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\AppInfo;
+use Piwigo\Users\Projection\DefaultUserInfo;
 
 /**
  * Typed user entity. `rawAttributes` carries the full legacy `$user`
  * array for keys with no dedicated named property.
  *
  * `id`/`username`/`email`/`language`/`theme`/`status`/`enabledHigh`/
- * `forbiddenCategories`/`level`/`preferences` are named properties;
- * lower-frequency keys (`recent_period`, `nb_available_tags`, etc.) stay
- * in `rawAttributes`.
+ * `forbiddenCategories`/`level`/`preferences`/`nbImagePage`/
+ * `recentPeriod`/`expand`/`showNbComments`/`showNbHits` are named
+ * properties; lower-frequency keys (`nb_available_tags`, etc.) stay in
+ * `rawAttributes`.
  */
 final readonly class User
 {
@@ -52,6 +54,11 @@ final readonly class User
         public array $preferences = [],
         public array $internalStatus = [],
         public array $rawAttributes = [],
+        public int $nbImagePage = 0,
+        public int $recentPeriod = 0,
+        public bool $expand = false,
+        public bool $showNbComments = false,
+        public bool $showNbHits = false,
     ) {}
 
     /**
@@ -79,6 +86,11 @@ final readonly class User
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             preferences: is_array($preferences) ? array_filter($preferences, is_string(...), ARRAY_FILTER_USE_KEY) : [],
             rawAttributes: $row,
+            nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
+            recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 0,
+            expand: (bool) ($row['expand'] ?? false),
+            showNbComments: (bool) ($row['show_nb_comments'] ?? false),
+            showNbHits: (bool) ($row['show_nb_hits'] ?? false),
         );
     }
 
@@ -104,7 +116,49 @@ final readonly class User
             'forbidden_categories' => $this->forbiddenCategories,
             'level' => $this->level,
             'preferences' => $this->preferences,
+            'nb_image_page' => $this->nbImagePage,
+            'recent_period' => $this->recentPeriod,
+            'expand' => $this->expand,
+            'show_nb_comments' => $this->showNbComments,
+            'show_nb_hits' => $this->showNbHits,
         ]);
+    }
+
+    /**
+     * Overlays the site-default `user_infos` preferences onto this
+     * instance -- {@see \Piwigo\Controller\ProfileController}'s "reset to
+     * default (Guest) custom settings" action, the only real caller.
+     * `theme`/`language` are deliberately NOT part of this overlay: the
+     * original caller's own `$fields` list never included them either.
+     */
+    public function withDefaultsFrom(DefaultUserInfo $defaults): self
+    {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['nb_image_page'] = $defaults->nbImagePage;
+        $rawAttributes['recent_period'] = $defaults->recentPeriod;
+        $rawAttributes['expand'] = $defaults->expand;
+        $rawAttributes['show_nb_comments'] = $defaults->showNbComments;
+        $rawAttributes['show_nb_hits'] = $defaults->showNbHits;
+
+        return new self(
+            id: $this->id,
+            username: $this->username,
+            email: $this->email,
+            language: $this->language,
+            theme: $this->theme,
+            status: $this->status,
+            enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            preferences: $this->preferences,
+            internalStatus: $this->internalStatus,
+            rawAttributes: $rawAttributes,
+            nbImagePage: $defaults->nbImagePage,
+            recentPeriod: $defaults->recentPeriod,
+            expand: $defaults->expand,
+            showNbComments: $defaults->showNbComments,
+            showNbHits: $defaults->showNbHits,
+        );
     }
 
     public function withLanguage(LangCode $language): self
@@ -125,6 +179,11 @@ final readonly class User
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 
@@ -146,6 +205,11 @@ final readonly class User
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 
@@ -167,6 +231,11 @@ final readonly class User
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 
@@ -191,6 +260,11 @@ final readonly class User
             preferences: $preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 
@@ -212,6 +286,11 @@ final readonly class User
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 
@@ -233,6 +312,11 @@ final readonly class User
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 
@@ -260,6 +344,11 @@ final readonly class User
             preferences: $this->preferences,
             internalStatus: $this->internalStatus,
             rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
         );
     }
 }

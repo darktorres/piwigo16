@@ -3531,35 +3531,75 @@ as the theme-by-theme index (every cited commit hash is directly
 `git show`-able from this worktree too, since both share the same
 `.git` object database -- no fetch needed).
 
-**In progress.** Sections 1-2 (standalone conversions, AuthService),
-Section 4 (small utility VOs, clusters 14/17/18/20), and Section 12
-(the `SearchRules` VO family mini-campaign — foundation commit plus
-all 5 adoption sites: `HistorySearchController`,
+**Effectively complete.** Sections 1-2 (standalone conversions,
+AuthService), Section 4 (small utility VOs, clusters 14/17/18/20),
+Section 12 (the `SearchRules` VO family mini-campaign — foundation
+commit plus all 5 adoption sites: `HistorySearchController`,
 `ImageFilteredSearchCreateController`, `SearchController`,
-`SearchService`, `SearchFilterRenderer`) are **fully landed**, one
-commit per themed item, each independently PHPStan/ECS/deptrac/
-Unit+Integration+Browser-verified. One Section-1 item
-(`MailerInterface::mail()`'s `$args`/`$tpl` → `MailArgs`/`MailOptions`,
-cluster 7) deliberately **deferred**: this branch's own prior,
-independent View-typing work already converted half of that cluster's
-motivation (the `$tpl['filename']` runtime-template mechanism now
-resolves through `buildRuntimeTemplateView()` → typed
-`NotificationAdminView`/`CatGroupInfoView`, superseding the
-reference's own `MailOptions`+`$extra` approach) — converting just the
-remaining `$args` half alone would be a large, high-risk rewrite of
-core mail-sending logic for comparatively low remaining value; revisit
-as its own deliberate decision, not silently folded into this pass.
-One item confirmed **moot**: `Script::$extra` (the target classes were
-already deleted by this branch's own earlier P41-G/H asset-pipeline
-swap).
+`SearchService`, `SearchFilterRenderer`) were already fully landed.
+This session additionally landed **Sections 3, 5, 6, 7 in full** (one
+commit per themed item, each PHPStan/ECS/Unit+Integration+Browser-
+verified), correcting an earlier gap in this very entry — the previous
+text never mentioned these 4 sections in either its "landed" or
+"remaining" list, an oversight discovered and resolved by direct code
+verification rather than trusting the stale claim:
 
-Remaining: Sections 8-10 (the big `PageContext` → VO batch, described
-by the handoff doc as the bulk of the diff and safe to parallelize
-across files), Section 13 (the ~19-item signature-narrowing sweep),
-Section 14 (`Session\Session` VO-scaffold removal — needs a
-`17.x-rewrite`-side check first, per the handoff's own caution), and
-Section 15 (Psalm-suppression cleanup — likely moot here, see
-`feedback_no_psalm_gating.md`).
+- **Section 3 (Users domain, 9 items)**: computed-category rollup row,
+  `getRelatedCategoriesMenu()` row typing, `UserRepository::
+  insertUserInfos()` → `UserInfoInsertRow`, `ProfileFormHandler`'s
+  `$userdata` → `User`, the `CategoryCatsRenderer` bug fix (folded into
+  item 1's own commit), `RegisterUserCheck`/`RegisterUser` event
+  payloads, `UserRowFetcher` → `UserListRow`, `SrcImage`/
+  `DerivativeImage`'s `$infos` → `SrcImageInfo`/`DerivativePathInfo`
+  (2 commits — the main conversion plus a follow-up eliminating 6
+  remaining `toArray()`-then-`fromRow()` round trips).
+- **Sections 5, 6, 7**: cluster-8 write-map typing, the
+  `image_category` id-narrowing chain, and the Category/calendar/rank
+  helpers cluster — all landed exactly as scoped by the handoff doc.
+
+**Sections 8-11 and 13-14 turned out to already be done**, verified by
+checking every named class/method from the handoff doc against this
+tree directly (not assumed from the doc's own framing, which is what
+missed Sections 3/5/6/7 above) — completed independently by this
+branch's own earlier P40 View/Renderer campaign and prior signature-
+narrowing work, just under a different naming convention (e.g. the
+handoff's `Configuration*PageContext` family is this branch's own
+split `Configuration*Data`/`Configuration*View` pairs;
+`*InstalledPageContext` is `*InstalledView`). Confirmed present:
+`NotificationByMailUserRow`, `SiteRow`, `MenubarBlockConfigRow`,
+`CategoryListRow`, `PictureFormatRow`, `CategoryChildRow`,
+`MetadataPanel`, `GroupListRow`, `ImageThumbUrl`, `RatingReportRow`/
+`RatingReportRateRow`, `DebugInfo`, `AnomalyRow`,
+`ConfigurationCommentsData`/`ConfigurationMainData`/
+`ConfigurationDisplayData`/`ConfigurationSizesTabData`/
+`ConfigurationSearchTabData`/`ConfigurationWatermarkResult`,
+`LanguagesInstalledView`/`ThemesInstalledView`/`PluginsInstalledView`/
+`PictureModifyView`/`ProfileView`, `BatchManagerFilterOptionsPageContext`
+(already VO-typed), `findDistinctFilesizes(): list<int>`,
+`CommentApiListRow`, and ~17 of Section 13's ~19 signature-narrowing
+items (already narrowed to their target type — `int`/`?int`/`string`/
+`list<int>`/`list<string>` as specified). The 2 Section-13 items that
+don't exist under their cited names (`UpdatesPwg` step chain,
+`ExtendForTemplatesPageContext`) and Section 14's `Session\Session`
+scaffold (never existed on this branch) are moot — nothing to convert
+or remove.
+
+**Only remaining, open item: Section 15** (Psalm-suppression cleanup)
+— genuinely unrelated to the array-to-object pattern per the handoff
+doc's own framing ("Not part of the VO campaign"), likely moot here
+per `feedback_no_psalm_gating.md` (Psalm isn't a gate on this branch).
+Not yet formally closed out either way.
+
+**Deferred full-repo validation** (`composer analyse:phpstan`,
+`composer lint:php`, `vendor/bin/deptrac analyse`, full
+`composer test -- --testsuite=Unit,Arch`, `composer test:browser`,
+`composer test:golden-html`/`composer test:visual` given the volume of
+template-touching changes) has not yet run end-to-end since Section 3
+landed — a full `composer analyse:phpstan` + `composer lint:php` pass
+partway through this session (before Section 3's last 2 items) was
+clean after fixing 2 real cross-file findings (a dead `User::
+toUserArray()` method and a test assertion made vacuously true by an
+earlier retype); nothing has re-validated the tree since.
 
 **P43 — Typed contributions + plugin-owned routes.**
 

@@ -1066,7 +1066,7 @@ final readonly class CategoryService
      * field, run through dispatch(new RenderCategoryName(...)).
      *
      * @param  array<int, int|string>  $items
-     * @param  array<int, int|string>  $excludedCatIds
+     * @param  list<int>  $excludedCatIds
      * @param  array<string, mixed>|null  $category
      * @param  list<array<string, mixed>>|null  $combinedCategories
      * @return list<array<string, mixed>>
@@ -1075,7 +1075,7 @@ final readonly class CategoryService
     {
         $cats = $this->getRelatedCategoriesMenu(
             array_values(array_map(intval(...), $items)),
-            array_values(array_map(intval(...), $excludedCatIds))
+            $excludedCatIds
         );
 
         foreach ($cats as $idx => $cat) {

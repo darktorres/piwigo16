@@ -34,10 +34,10 @@ final readonly class CacheSizeController implements ControllerInterface
         $result = $this->cacheSizeCalculator->calculate();
 
         return ResponseFactory::json([
-            'cacheSize' => $result['cacheSize'],
-            'msizes' => $result['msizes'],
-            'templatesSize' => $result['templatesSize'],
-            'lastDateCalc' => $result['lastDateCalc'],
+            'cacheSize' => $result->cacheSize,
+            'msizes' => $result->msizes,
+            'templatesSize' => $result->tsizes,
+            'lastDateCalc' => $result->lastDateCalc,
         ]);
     }
 }

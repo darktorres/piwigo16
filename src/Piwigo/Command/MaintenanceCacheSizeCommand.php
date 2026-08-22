@@ -32,10 +32,10 @@ final class MaintenanceCacheSizeCommand extends Command
     {
         $result = $this->cacheSizeCalculator->calculate();
 
-        $output->writeln('Cache size: ' . self::describe($result['cacheSize']));
-        $output->writeln('Compiled templates size: ' . self::describe($result['templatesSize']));
+        $output->writeln('Cache size: ' . self::describe($result->cacheSize));
+        $output->writeln('Compiled templates size: ' . self::describe($result->tsizes));
         $output->writeln('Derivative sizes:');
-        foreach ($result['msizes'] as $type => $bytes) {
+        foreach ($result->msizes as $type => $bytes) {
             $output->writeln("  {$type}: " . self::describe($bytes));
         }
 

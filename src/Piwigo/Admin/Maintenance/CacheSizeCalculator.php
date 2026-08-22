@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
@@ -31,10 +32,7 @@ final readonly class CacheSizeCalculator
         private ConfigService $configService,
     ) {}
 
-    /**
-     * @return array{cacheSize: ?int, msizes: array<string, int>, templatesSize: ?int, lastDateCalc: string}
-     */
-    public function calculate(): array
+    public function calculate(): CacheSizesSnapshot
     {
         $dataLocation = $this->currentConfig->dataLocation;
         $root = $this->paths->root;
@@ -97,26 +95,25 @@ final readonly class CacheSizeCalculator
 
         $lastDateCalc = date('Y-m-d H:i:s');
 
-        $this->persist($cacheSize, $msizes, $templatesSize, $lastDateCalc);
+        $snapshot = new CacheSizesSnapshot(
+            cacheSize: $cacheSize,
+            msizes: $msizes,
+            tsizes: $templatesSize,
+            lastDateCalc: $lastDateCalc,
+        );
 
-        return [
-            'cacheSize' => $cacheSize,
-            'msizes' => $msizes,
-            'templatesSize' => $templatesSize,
-            'lastDateCalc' => $lastDateCalc,
-        ];
+        $this->persist($snapshot);
+
+        return $snapshot;
     }
 
-    /**
-     * @param array<string, int> $msizes
-     */
-    private function persist(?int $cacheSize, array $msizes, ?int $templatesSize, string $lastDateCalc): void
+    private function persist(CacheSizesSnapshot $snapshot): void
     {
         $infos = [
-            'cache_size' => $cacheSize,
-            'msizes' => $msizes,
-            'tsizes' => $templatesSize,
-            'last_date_calc' => $lastDateCalc,
+            'cache_size' => $snapshot->cacheSize,
+            'msizes' => $snapshot->msizes,
+            'tsizes' => $snapshot->tsizes,
+            'last_date_calc' => $snapshot->lastDateCalc,
         ];
 
         $rows = [];

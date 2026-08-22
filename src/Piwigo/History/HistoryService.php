@@ -13,6 +13,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\PageState;
 use Piwigo\History\Event\LogAllowed;
 use Piwigo\History\Event\LogUpdateLastVisit;
+use Piwigo\History\Projection\HistorySearchCriteria;
 use Piwigo\History\Projection\HistorySummaryCursor;
 use Piwigo\History\Projection\HistorySummaryRow;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -240,35 +241,14 @@ final readonly class HistoryService
      * Performs a history search.
      *
      * @param array<int, array<string, mixed>> $data
-     * @param array<string, mixed> $search $search['fields'] comes from
-     *   unserialize()'d search rules (see ws_history_search()), so it's
-     *   only provably an array, not that its values have the expected
-     *   scalar/array shapes -- narrowed on use, same as the original.
      * @param list<string> $types every possible image_type value + 'none'
      * @return array<int, array<string, mixed>>
      */
-    public function getHistory(array $data, array $search, array $types): array
+    public function getHistory(array $data, HistorySearchCriteria $criteria, array $types): array
     {
-        $fields = isset($search['fields']) && is_array($search['fields']) ? $search['fields'] : [];
+        $imageIdsFromFilename = $criteria->filename !== null ? $this->repo->findImageIdsByFilename($criteria->filename) : null;
 
-        $filename = isset($fields['filename']) && is_string($fields['filename']) ? $fields['filename'] : null;
-        $imageIdsFromFilename = $filename !== null ? $this->repo->findImageIdsByFilename($filename) : null;
-
-        $dateAfter = isset($fields['date-after']) && is_string($fields['date-after']) ? $fields['date-after'] : null;
-        $dateBefore = isset($fields['date-before']) && is_string($fields['date-before']) ? $fields['date-before'] : null;
-
-        $imageTypes = null;
-        if (isset($fields['types']) && is_array($fields['types'])) {
-            $imageTypes = array_values(array_filter($fields['types'], is_string(...)));
-        }
-
-        $userId = isset($fields['user']) && is_numeric($fields['user']) && (int) $fields['user'] !== -1
-            ? (int) $fields['user']
-            : null;
-        $imageId = isset($fields['image_id']) && is_numeric($fields['image_id']) ? (int) $fields['image_id'] : null;
-        $ip = isset($fields['ip']) && is_string($fields['ip']) ? $fields['ip'] : null;
-
-        $rows = $this->repo->search($dateAfter, $dateBefore, $imageTypes, $types, $userId, $imageId, $imageIdsFromFilename, $ip);
+        $rows = $this->repo->search($criteria->dateAfter, $criteria->dateBefore, $criteria->imageTypes, $types, $criteria->userId, $criteria->imageId, $imageIdsFromFilename, $criteria->ip);
 
         foreach ($rows as $row) {
             $data[] = $row->toArray();

@@ -12,6 +12,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\History\HistoryImageType;
 use Piwigo\History\HistoryService;
+use Piwigo\History\Projection\HistorySearchCriteria;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
@@ -91,29 +92,18 @@ final readonly class HistorySearchController implements ControllerInterface
             HistoryImageType::cases()
         ));
 
-        $fields = [];
-        if ($input->start !== null) {
-            $fields['date-after'] = $input->start;
-        }
-        if ($input->end !== null) {
-            $fields['date-before'] = $input->end;
-        }
-        $fields['types'] = $input->types === [] ? $allTypes : array_values(array_intersect($input->types, $allTypes));
-        $fields['user'] = $input->userId;
-        if ($input->imageId !== null) {
-            $fields['image_id'] = $input->imageId;
-        }
-        if ($input->filename !== null) {
-            $fields['filename'] = str_replace('*', '%', $input->filename);
-        }
-        if ($input->ip !== null) {
-            $fields['ip'] = str_replace('*', '%', $input->ip);
-        }
+        $criteria = new HistorySearchCriteria(
+            filename: $input->filename !== null ? str_replace('*', '%', $input->filename) : null,
+            dateAfter: $input->start,
+            dateBefore: $input->end,
+            imageTypes: $input->types === [] ? $allTypes : array_values(array_intersect($input->types, $allTypes)),
+            userId: $input->userId !== -1 ? $input->userId : null,
+            imageId: $input->imageId,
+            ip: $input->ip !== null ? str_replace('*', '%', $input->ip) : null,
+        );
 
         /** @var list<array{date: ?string, time: string, user_id: int, IP: string, section: ?string, category_id: ?int, search_id: ?int, tag_ids: ?string, image_id: ?int, image_type: ?string}> $rows */
-        $rows = $this->historyService->getHistory([], [
-            'fields' => $fields,
-        ], $allTypes);
+        $rows = $this->historyService->getHistory([], $criteria, $allTypes);
         usort($rows, $this->historyService->historyCompare(...));
 
         /** @var array<int, true> $userIds */

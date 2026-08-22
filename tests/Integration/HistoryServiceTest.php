@@ -18,6 +18,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryService;
+use Piwigo\History\Projection\HistorySearchCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -132,11 +133,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         $data = [[
             'seed' => true,
         ]];
-        $result = $this->service->getHistory($data, [
-            'fields' => [
-                'user' => 1,
-            ],
-        ], []);
+        $result = $this->service->getHistory($data, new HistorySearchCriteria(userId: 1), []);
 
         self::assertCount(2, $result);
         self::assertTrue($result[0]['seed']);
@@ -148,7 +145,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(3, '2026-07-12', '03:00:00');
 
-        $result = $this->service->getHistory([], [], []);
+        $result = $this->service->getHistory([], new HistorySearchCriteria(), []);
 
         self::assertCount(2, $result);
     }
@@ -187,11 +184,7 @@ final class HistoryServiceTest extends IntegrationTestCase
             'image_type' => null,
         ]);
 
-        $result = $this->service->getHistory([], [
-            'fields' => [
-                'types' => ['picture'],
-            ],
-        ], ['none', 'picture', 'high']);
+        $result = $this->service->getHistory([], new HistorySearchCriteria(imageTypes: ['picture']), ['none', 'picture', 'high']);
 
         self::assertSame(['picture'], array_column($result, 'image_type'));
     }

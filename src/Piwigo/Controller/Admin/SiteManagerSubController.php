@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Event\GetAdminsSiteLinks;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\SiteManagerView;
+use Piwigo\Controller\Admin\Projection\SiteRow;
 use Piwigo\Controller\Admin\Request\SiteManagerRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -169,30 +170,23 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             $update_url .= '?page=site_update';
             $update_url .= '&amp;site=' . $id;
 
-            $tpl_var =
-              [
-                  'NAME' => $galleries_url,
-                  'TYPE' => $this->lang->t($is_remote ? 'Remote' : 'Local'),
-                  'CATEGORIES' => $sites_detail[$id_int]->categories ?? 0,
-                  'IMAGES' => $sites_detail[$id_int]->images ?? 0,
-                  'U_SYNCHRONIZE' => $update_url,
-              ];
-
-            if ((int) $id !== 1) {
-                $tpl_var['U_DELETE'] = $base_url . 'delete';
-            }
-
-            // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
-            $tpl_var['plugin_links'] = $this->eventDispatcher->dispatch(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
-
-            $tpl_sites[] = $tpl_var;
+            $tpl_sites[] = new SiteRow(
+                name: $galleries_url,
+                type: $this->lang->t($is_remote ? 'Remote' : 'Local'),
+                categories: $sites_detail[$id_int]->categories ?? 0,
+                images: $sites_detail[$id_int]->images ?? 0,
+                uSynchronize: $update_url,
+                uDelete: (int) $id !== 1 ? $base_url . 'delete' : null,
+                // plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
+                pluginLinks: $this->eventDispatcher->dispatch(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks,
+            );
         }
 
         $adminContent = $this->renderer->render(new SiteManagerView(
             formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
             csrfToken: $this->csrfService
                 ->getToken(),
-            sites: $tpl_sites,
+            sites: array_map(static fn (SiteRow $site): array => $site->toArray(), $tpl_sites),
         ));
 
         return new AdminPageResult(

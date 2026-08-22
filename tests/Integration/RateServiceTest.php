@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Rate\Projection\RatingScoreSummary;
     use Piwigo\Rate\RateEntity;
     use Piwigo\Rate\RateService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -119,9 +120,9 @@ namespace Piwigo\Tests\Integration {
             try {
                 $result = $this->service->rate(5, 4, EntityManagerFactory::build($this->conn));
 
-                self::assertIsArray($result);
-                self::assertSame(4.0, $result['average']);
-                self::assertSame(1, $result['count']);
+                self::assertInstanceOf(RatingScoreSummary::class, $result);
+                self::assertSame(4.0, $result->average);
+                self::assertSame(1, $result->count);
                 self::assertSame('4', $this->fetchRate(5, 3));
             } finally {
                 $this->conn->createQueryBuilder()
@@ -143,8 +144,8 @@ namespace Piwigo\Tests\Integration {
                 $this->service->rate(5, 2, EntityManagerFactory::build($this->conn));
                 $result = $this->service->rate(5, 5, EntityManagerFactory::build($this->conn));
 
-                self::assertIsArray($result);
-                self::assertSame(1, $result['count'], 'the second rate must replace, not add to, the first');
+                self::assertInstanceOf(RatingScoreSummary::class, $result);
+                self::assertSame(1, $result->count, 'the second rate must replace, not add to, the first');
                 self::assertSame('5', $this->fetchRate(5, 3));
             } finally {
                 $this->conn->createQueryBuilder()
@@ -170,7 +171,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $result = $this->service->rate(5, 3, EntityManagerFactory::build($this->conn));
 
-                self::assertIsArray($result);
+                self::assertInstanceOf(RatingScoreSummary::class, $result);
                 self::assertSame('10.20.30', $_COOKIE['pwg_anonymous_rater'] ?? null);
 
                 $anonymousId = $this->conn->createQueryBuilder()
@@ -203,12 +204,8 @@ namespace Piwigo\Tests\Integration {
 
         public function testUpdateRatingScoreReturnsZeroCountForAnElementWithNoRates(): void
         {
-            self::assertSame(
-                [
-                    'score' => null,
-                    'average' => null,
-                    'count' => 0,
-                ],
+            self::assertEquals(
+                new RatingScoreSummary(score: null, average: null, count: 0),
                 $this->service->updateRatingScore(EntityManagerFactory::build($this->conn), 5)
             );
         }
@@ -250,7 +247,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $result = $this->service->rate(5, 3, EntityManagerFactory::build($this->conn));
 
-                self::assertIsArray($result);
+                self::assertInstanceOf(RatingScoreSummary::class, $result);
                 self::assertSame(['10.20.30'], $this->fetchAnonymousIdsForElement(4, 2));
                 self::assertSame('10.20.30', $_COOKIE['pwg_anonymous_rater']);
             } finally {

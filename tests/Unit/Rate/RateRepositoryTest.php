@@ -13,6 +13,7 @@ use Piwigo\Rate\Projection\RaterInfo;
 use Piwigo\Rate\Projection\RateSummary;
 use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Rate\Projection\RatingReportRow;
+use Piwigo\Rate\Projection\RatingScoreUpdate;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
@@ -273,10 +274,7 @@ test('updateRatingScores() persists the given score', function (): void {
 
     try {
         rateTestRepo()->updateRatingScores([
-            [
-                'id' => $imageId,
-                'ratingScore' => 4.75,
-            ],
+            new RatingScoreUpdate(id: $imageId, ratingScore: 4.75),
         ]);
 
         expect(rateTestFetchRatingScore($conn, $imageId))
@@ -304,10 +302,7 @@ test('updateRatingScores() clears the identity map, so a later find() sees the r
             ->not->toBeNull();
 
         $repo->updateRatingScores([
-            [
-                'id' => $imageId,
-                'ratingScore' => 4.75,
-            ],
+            new RatingScoreUpdate(id: $imageId, ratingScore: 4.75),
         ]);
 
         $refetched = $em->find(ImageEntity::class, $imageIdVo);

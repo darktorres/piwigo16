@@ -18,6 +18,7 @@ use Piwigo\Rate\Projection\RaterInfo;
 use Piwigo\Rate\Projection\RateSummary;
 use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Rate\Projection\RatingReportRow;
+use Piwigo\Rate\Projection\RatingScoreUpdate;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 
@@ -184,10 +185,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
         try {
             $this->repo->updateRatingScores([
-                [
-                    'id' => 1,
-                    'ratingScore' => 4.75,
-                ],
+                new RatingScoreUpdate(id: 1, ratingScore: 4.75),
             ]);
 
             self::assertSame(4.75, $this->fetchRatingScore(1));

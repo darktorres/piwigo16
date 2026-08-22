@@ -20,6 +20,7 @@ use Piwigo\Rate\Projection\RaterInfo;
 use Piwigo\Rate\Projection\RateSummary;
 use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Rate\Projection\RatingReportRow;
+use Piwigo\Rate\Projection\RatingScoreUpdate;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserStatus;
@@ -170,7 +171,7 @@ final class RateRepository extends EntityRepository
     }
 
     /**
-     * @param list<array{id: int, ratingScore: float}> $updates
+     * @param list<RatingScoreUpdate> $updates
      */
     public function updateRatingScores(array $updates): void
     {
@@ -184,8 +185,8 @@ final class RateRepository extends EntityRepository
                 ->update(ImageEntity::class, 'i')
                 ->set('i.ratingScore', ':score')
                 ->where('i.id = :id')
-                ->setParameter('score', $update['ratingScore'])
-                ->setParameter('id', $update['id'])
+                ->setParameter('score', $update->ratingScore)
+                ->setParameter('id', $update->id)
                 ->getQuery()
                 ->execute();
         }

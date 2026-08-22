@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Event\CatListPageRendering;
+use Piwigo\Admin\Projection\CategoryListRow;
 use Piwigo\Admin\Projection\CatListView;
 use Piwigo\Admin\Request\CatListRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -206,40 +207,36 @@ final readonly class CatListPageRenderer
             }
 
             $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category['name'], 'admin_cat_list'));
-            $tpl_cat =
-              [
-                  'NAME' => $nameEvent->categoryName,
-                  'NB_PHOTOS' => $nb_photos_in[$cat_id] ?? 0,
-                  'NB_SUB_PHOTOS' => $nb_sub_photos[$cat_id] ?? 0,
-                  'NB_SUB_ALBUMS' => isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,
-                  'ID' => $cat_id,
-                  'RANK' => is_numeric($category['rank']) ? ((int) $category['rank']) * 10 : 0,
 
-                  'U_JUMPTO' => $this->urlService->makeIndexUrl(
-                      [
-                          'category' => $category,
-                      ]
-                  ),
-
-                  'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $cat_id,
-                  'U_EDIT' => $base_url . 'album-' . $cat_id,
-                  'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $cat_id,
-                  'U_MOVE' => $base_url . 'albums#cat-' . $cat_id,
-
-                  'IS_VIRTUAL' => in_array($category['dir'], [null, '', '0'], true),
-                  'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($cat_id, $this->currentUser),
-              ];
-
+            $u_delete = null;
+            $u_sync = null;
             if (in_array($category['dir'], [null, '', '0'], true)) {
-                $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
-                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . $this->csrfService->getToken();
-            } else {
-                if ($this->currentConfig->enableSynchronization) {
-                    $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
-                }
+                $u_delete = $self_url . '&amp;delete=' . $cat_id . '&amp;pwg_token=' . $this->csrfService->getToken();
+            } elseif ($this->currentConfig->enableSynchronization) {
+                $u_sync = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
             }
 
-            $tpl_categories[] = $tpl_cat;
+            $tpl_categories[] = new CategoryListRow(
+                name: $nameEvent->categoryName,
+                nbPhotos: $nb_photos_in[$cat_id] ?? 0,
+                nbSubPhotos: $nb_sub_photos[$cat_id] ?? 0,
+                nbSubAlbums: isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,
+                id: $cat_id,
+                rank: is_numeric($category['rank']) ? ((int) $category['rank']) * 10 : 0,
+                uJumpto: $this->urlService->makeIndexUrl(
+                    [
+                        'category' => $category,
+                    ]
+                ),
+                uChildren: $cat_list_url . '&amp;parent_id=' . $cat_id,
+                uEdit: $base_url . 'album-' . $cat_id,
+                uAddPhotosAlbum: $base_url . 'photos_add&amp;album=' . $cat_id,
+                uMove: $base_url . 'albums#cat-' . $cat_id,
+                isVirtual: in_array($category['dir'], [null, '', '0'], true),
+                catAdminAccess: $categoryService->catAdminAccess($cat_id, $this->currentUser),
+                uDelete: $u_delete,
+                uSync: $u_sync,
+            );
         }
 
         $adminContent = $this->renderer->render(new CatListView(
@@ -247,7 +244,7 @@ final readonly class CatListPageRenderer
             formAction: $form_action,
             csrfToken: $this->csrfService
                 ->getToken(),
-            categories: $tpl_categories,
+            categories: array_map(static fn (CategoryListRow $category): array => $category->toArray(), $tpl_categories),
         ));
 
         return new AdminPageResult(

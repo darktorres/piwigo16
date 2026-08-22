@@ -1784,6 +1784,52 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Overrides `sites` id=1's own `galleries_url` to a fixed, portable
+     * value, right before a visual-regression screenshot of a route that
+     * renders it (admin-site-manager, admin-site-update). Normal fixture
+     * loading (FixtureNormalizer::apply()) deliberately seeds this column
+     * with THIS checkout's own real absolute path -- the same
+     * "environment-injected, never fixture-baked" treatment
+     * PIWIGO_TEST_NOW gets, needed so other tests (sync/upload) get a
+     * real, working on-disk path -- but that means the rendered page
+     * differs byte-for-byte (and pixel-for-pixel) between two different
+     * checkouts of this same repo, since each one's own real path is a
+     * different length/string. Confirmed live: a baseline captured under
+     * one worktree failed under another on nothing but this one value.
+     * Freezing it here, not excluding the page or widening the diff
+     * tolerance, matches this file's own freezeImageHits()/
+     * truncateHistory() precedent.
+     */
+    public static function freezeGalleriesUrl(string $value): void
+    {
+        $db = self::connect();
+        self::dbQuery($db, sprintf("UPDATE sites SET galleries_url = '%s' WHERE id = 1", self::dbEscape($db, $value)));
+        self::dbClose($db);
+    }
+
+    /**
+     * Reads `sites` id=1's own current `galleries_url` -- pairs with
+     * freezeGalleriesUrl() so a caller can snapshot the real,
+     * environment-injected value before overriding it and restore it
+     * exactly afterward (later needsAuth routes in the same suite
+     * invocation, e.g. admin-site-update, render this same column and
+     * must not see the frozen placeholder leak into their own baseline).
+     */
+    public static function galleriesUrl(): string
+    {
+        $db = self::connect();
+        $row = self::dbFetchAssoc($db, 'SELECT galleries_url FROM sites WHERE id = 1');
+        self::dbClose($db);
+
+        $value = is_array($row) ? $row['galleries_url'] ?? null : null;
+        if (! is_string($value)) {
+            throw new RuntimeException('sites id=1 has no readable galleries_url');
+        }
+
+        return $value;
+    }
+
+    /**
      * Reads a single `config`.`value` cell (the raw JSON-encoded string
      * ConfigService::confUpdateParam() stores, not the decoded value) --
      * for asserting a real DB write happened after an adminPost()-driven

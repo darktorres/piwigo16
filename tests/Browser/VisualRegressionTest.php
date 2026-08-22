@@ -100,97 +100,124 @@ $routes = require __DIR__ . '/Helpers/VisualRegressionRoutes.php';
 
 foreach ($routes as $name => [$path, $needsAuth]) {
     it("{$name} matches its visual baseline", function () use ($name, $path, $needsAuth): void {
-        if ($needsAuth) {
-            if ($name === 'admin-user-activity') {
-                // See H::truncateGuestActivity()'s own docblock: every
-                // needsAuth route's H::loginAsAdmin() call does a real,
-                // fresh login, and each one logs a real `activity` row --
-                // so this page's row count (and rendered height) depends
-                // on how many other needsAuth routes ran earlier in this
-                // same suite invocation, not on this test's own baseline,
-                // without this. Deliberately BEFORE H::loginAsAdmin()
-                // below, not after (unlike admin-history's truncateHistory()
-                // call): the baseline includes this test's own login row,
-                // so only the *other* routes' accumulated rows get wiped.
-                H::truncateGuestActivity();
-            }
+        // Only admin-site-manager needs this restored -- see its own
+        // freezeGalleriesUrl() call below for why, and
+        // H::galleriesUrl()'s own docblock for why a later route in this
+        // same suite invocation (admin-site-update) would otherwise see
+        // the frozen placeholder leak into its own baseline.
+        $originalGalleriesUrl = $name === 'admin-site-manager' ? H::galleriesUrl() : null;
 
-            $page = H::loginAsAdmin($this);
+        try {
+            if ($needsAuth) {
+                if ($name === 'admin-user-activity') {
+                    // See H::truncateGuestActivity()'s own docblock: every
+                    // needsAuth route's H::loginAsAdmin() call does a real,
+                    // fresh login, and each one logs a real `activity` row --
+                    // so this page's row count (and rendered height) depends
+                    // on how many other needsAuth routes ran earlier in this
+                    // same suite invocation, not on this test's own baseline,
+                    // without this. Deliberately BEFORE H::loginAsAdmin()
+                    // below, not after (unlike admin-history's truncateHistory()
+                    // call): the baseline includes this test's own login row,
+                    // so only the *other* routes' accumulated rows get wiped.
+                    H::truncateGuestActivity();
+                }
+
+                $page = H::loginAsAdmin($this);
+
+                if ($name === 'admin-history') {
+                    // See the class-level docblock: wipe the table this page
+                    // queries — AFTER logging in (the login itself logs a
+                    // history row) and BEFORE navigating there (its JS fires
+                    // the search AJAX call on document.ready) — so the
+                    // default (today, unfiltered) search is always empty.
+                    H::truncateHistory();
+                }
+
+                $page = H::navigateOk($page, $path);
+            } else {
+                $page = H::visitPwg($this, $path);
+                H::assertNoServerErrors($page, $path);
+            }
 
             if ($name === 'admin-history') {
-                // See the class-level docblock: wipe the table this page
-                // queries — AFTER logging in (the login itself logs a
-                // history row) and BEFORE navigating there (its JS fires
-                // the search AJAX call on document.ready) — so the
-                // default (today, unfiltered) search is always empty.
-                H::truncateHistory();
+                H::waitUntilHidden($page, '.loading');
             }
 
-            $page = H::navigateOk($page, $path);
-        } else {
-            $page = H::visitPwg($this, $path);
-            H::assertNoServerErrors($page, $path);
-        }
+            if ($name === 'admin-tags') {
+                // themes/admin/default/js/tags.js fires an automatic pagination
+                // click on document.ready (restoring the "per page" cookie),
+                // which drives a purely client-side ~1.8s .pageLoad fade-in/
+                // fade-out + tag-box fade sequence — no network call involved,
+                // but still a genuine race against assertScreenshotMatches().
+                H::waitUntilHidden($page, '.pageLoad');
+            }
 
-        if ($name === 'admin-history') {
-            H::waitUntilHidden($page, '.loading');
-        }
+            if ($name === 'admin-site-manager') {
+                // See H::freezeGalleriesUrl()'s own docblock: the fixture's
+                // real, checkout-specific galleries_url would otherwise make
+                // this baseline fail on any checkout but the one it was
+                // captured under. A synthetic, obviously-fake path -- not
+                // tied to any real user/worktree -- so the baseline is
+                // portable everywhere, not just wherever it happened to be
+                // (re)captured; the listing view this route renders never
+                // touches the filesystem for this value (no is_dir()/
+                // file_exists() call on this code path), so it doesn't need
+                // to resolve to a real directory.
+                H::freezeGalleriesUrl('/srv/piwigo-vr-baseline/galleries/');
+            }
 
-        if ($name === 'admin-tags') {
-            // themes/admin/default/js/tags.js fires an automatic pagination
-            // click on document.ready (restoring the "per page" cookie),
-            // which drives a purely client-side ~1.8s .pageLoad fade-in/
-            // fade-out + tag-box fade sequence — no network call involved,
-            // but still a genuine race against assertScreenshotMatches().
-            H::waitUntilHidden($page, '.pageLoad');
-        }
+            if ($name === 'admin-comments') {
+                // Comment thumbnails are lazily-generated derivatives (i.php,
+                // generated on first request) -- a genuine client-side loading
+                // race against assertScreenshotMatches()'s own networkidle
+                // wait, which resolves once outstanding requests finish, not
+                // once every <img> has actually painted.
+                H::waitUntilImagesLoaded($page, 10.0, '.comment-img');
+            }
 
-        if ($name === 'admin-comments') {
-            // Comment thumbnails are lazily-generated derivatives (i.php,
-            // generated on first request) -- a genuine client-side loading
-            // race against assertScreenshotMatches()'s own networkidle
-            // wait, which resolves once outstanding requests finish, not
-            // once every <img> has actually painted.
-            H::waitUntilImagesLoaded($page, 10.0, '.comment-img');
-        }
+            if ($name === 'admin-themes-standard-pages') {
+                // The 5 color-theme mini-previews plus the 2 large light/dark
+                // mode previews are real static <img> elements
+                // (themes/standard_pages/skins/*.jpg, scaled down via CSS
+                // object-fit) -- the same "networkidle fires before every <img>
+                // has actually painted" race as admin-comments above, not
+                // font/animation rendering non-determinism (that's already
+                // handled by assertScreenshotMatches()'s own addStyleTag()).
+                H::waitUntilImagesLoaded($page, 10.0, '.std_pgs_mini_previews img, .std_pgs_selected_preview img');
+            }
 
-        if ($name === 'admin-themes-standard-pages') {
-            // The 5 color-theme mini-previews plus the 2 large light/dark
-            // mode previews are real static <img> elements
-            // (themes/standard_pages/skins/*.jpg, scaled down via CSS
-            // object-fit) -- the same "networkidle fires before every <img>
-            // has actually painted" race as admin-comments above, not
-            // font/animation rendering non-determinism (that's already
-            // handled by assertScreenshotMatches()'s own addStyleTag()).
-            H::waitUntilImagesLoaded($page, 10.0, '.std_pgs_mini_previews img, .std_pgs_selected_preview img');
-        }
+            if (in_array($name, ['admin-cat-list', 'admin-themes-new'], true)) {
+                // Playwright's virtual mouse cursor doesn't reset on navigate --
+                // it's still wherever loginAsAdmin()'s own click('login') left
+                // it. On admin-cat-list that position can land on a .categoryBox
+                // tile, whose real jQuery .hover() binding (cat_list.js's
+                // AddHoverOnAlbumActions(), unrelated to any P38 change) then
+                // fires a genuine mouseenter and reveals the tile's action menu.
+                // admin-themes-new has the same hazard with a different target:
+                // the theme-preview grid's own hover zoom effect on whichever
+                // thumbnail the stale cursor happens to land on (confirmed via
+                // the saved failure screenshot -- a hover circle over the
+                // "Pure_grey_plastic" tile, deterministic on that route/cursor
+                // combination, reproduced in isolation on an unmodified P38-F
+                // baseline, so a pre-existing race, not a rendering bug). Both
+                // are the same class: hovering <body> (always singular, present
+                // on every route, no hover styling of its own) moves the real
+                // cursor away from the grid before the screenshot. "html>body",
+                // not "body" -- GuessLocator::for() only treats a selector as
+                // literal CSS when it carries a CSS special char
+                // (Support\Selector::isExplicit()); a bare tag name falls
+                // through to a by-text lookup instead and times out finding no
+                // element with the text "body".
+                H::rawWebpage($page)->hover('html>body');
+            }
 
-        if (in_array($name, ['admin-cat-list', 'admin-themes-new'], true)) {
-            // Playwright's virtual mouse cursor doesn't reset on navigate --
-            // it's still wherever loginAsAdmin()'s own click('login') left
-            // it. On admin-cat-list that position can land on a .categoryBox
-            // tile, whose real jQuery .hover() binding (cat_list.js's
-            // AddHoverOnAlbumActions(), unrelated to any P38 change) then
-            // fires a genuine mouseenter and reveals the tile's action menu.
-            // admin-themes-new has the same hazard with a different target:
-            // the theme-preview grid's own hover zoom effect on whichever
-            // thumbnail the stale cursor happens to land on (confirmed via
-            // the saved failure screenshot -- a hover circle over the
-            // "Pure_grey_plastic" tile, deterministic on that route/cursor
-            // combination, reproduced in isolation on an unmodified P38-F
-            // baseline, so a pre-existing race, not a rendering bug). Both
-            // are the same class: hovering <body> (always singular, present
-            // on every route, no hover styling of its own) moves the real
-            // cursor away from the grid before the screenshot. "html>body",
-            // not "body" -- GuessLocator::for() only treats a selector as
-            // literal CSS when it carries a CSS special char
-            // (Support\Selector::isExplicit()); a bare tag name falls
-            // through to a by-text lookup instead and times out finding no
-            // element with the text "body".
-            H::rawWebpage($page)->hover('html>body');
+            $page->assertScreenshotMatches();
+        } finally {
+            if ($originalGalleriesUrl !== null) {
+                H::freezeGalleriesUrl($originalGalleriesUrl);
+            }
         }
-
-        $page->assertScreenshotMatches();
     })->group('visual-regression');
 }
 

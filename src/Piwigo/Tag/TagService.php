@@ -644,7 +644,7 @@ final readonly class TagService
             return [];
         }
 
-        $imageIds = array_map(intval(...), $imageIds);
+        $imageIds = array_values(array_map(intval(...), $imageIds));
 
         $tagsOf = array_fill_keys($imageIds, []);
         foreach ($this->repo->findTagIdsByImageIds($imageIds) as $imageTag) {

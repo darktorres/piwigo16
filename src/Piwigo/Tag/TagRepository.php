@@ -455,7 +455,7 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * @param array<int, int|string> $imageIds
+     * @param list<int> $imageIds
      * @return list<ImageTagLink>
      */
     public function findTagIdsByImageIds(array $imageIds): array
@@ -469,7 +469,7 @@ final class TagRepository extends EntityRepository
             ->select('it')
             ->from(ImageTagEntity::class, 'it')
             ->where('it.imageId IN (:imageIds)')
-            ->setParameter('imageIds', array_map(intval(...), $imageIds), ArrayParameterType::INTEGER)
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 

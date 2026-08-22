@@ -17,6 +17,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\CategoryImagesCriteria;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteria;
@@ -751,11 +752,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         // Every fixture image shares width=200/height=150 -- exactly one
         // distinct pair, proving the query + the int/int narrowing.
-        self::assertSame([
-            [
-                'width' => 200,
-                'height' => 150,
-            ],
+        self::assertEquals([
+            new Dimensions(200, 150),
         ], $this->repo->findDistinctDimensions());
     }
 

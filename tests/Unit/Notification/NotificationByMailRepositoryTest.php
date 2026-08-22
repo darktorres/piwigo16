@@ -8,6 +8,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\Projection\UserMailNotification;
+use Piwigo\Notification\Projection\UserWithoutNotificationRow;
 use Piwigo\Notification\UserMailNotificationEntity;
 
 /**
@@ -253,20 +254,15 @@ test('findUsersWithoutNotificationRow() returns only users with a real email and
             ->findUsersWithoutNotificationRow();
         $byId = [];
         foreach ($result as $row) {
-            $userId = $row['user_id'];
-            if (! is_int($userId)) {
-                throw new RuntimeException('Expected a real int user_id.');
-            }
-
-            $byId[$userId] = $row;
+            $byId[$row->userId] = $row;
         }
 
         // user 1 already has a notification row -- excluded.
         // user 2/3 have no real email -- excluded.
         expect(array_keys($byId))
             ->toBe([4])
-            ->and($byId[4]['username'])->toBe('power_user')
-            ->and($byId[4]['mail_address'])->toBe('power.user@example.test');
+            ->and($byId[4])
+            ->toEqual(new UserWithoutNotificationRow(userId: 4, username: 'power_user', mailAddress: 'power.user@example.test'));
     } finally {
         $conn->createQueryBuilder()
             ->update('users')

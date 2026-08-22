@@ -6,6 +6,7 @@ namespace Piwigo\Notification;
 
 use Piwigo\Db\SqlDialect;
 use Piwigo\Notification\Projection\UserMailNotification;
+use Piwigo\Notification\Projection\UserWithoutNotificationRow;
 use Piwigo\Session\SessionService;
 
 /**
@@ -80,7 +81,7 @@ final readonly class NotificationByMailService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<UserWithoutNotificationRow>
      */
     public function getUsersWithoutNotificationRow(): array
     {

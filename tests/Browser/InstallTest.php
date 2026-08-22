@@ -102,11 +102,13 @@ it('completes a fresh install end-to-end', function (): void {
         H::assertNoServerErrors($page, 'install success page');
     } finally {
         // InstallWizard::performInstall() itself touch()es a fresh
-        // local/.installed.test on success (InstallWizard.php:511) -- the
-        // real one, not our backup, so only fall back to restoring the
-        // backup (or creating a fresh flag, if none existed before) when
-        // that never happened: an earlier assertion failed, or the
-        // install itself errored, before performInstall() reached that
+        // local/.installed.test on success, at the very end of the method
+        // (after schema migration, config.sql seeding, extension
+        // activation, the sites row, and webmaster/guest user creation all
+        // succeeded) -- the real one, not our backup, so only fall back to
+        // restoring the backup (or creating a fresh flag, if none existed
+        // before) when that never happened: an earlier assertion failed, or
+        // the install itself errored, before performInstall() reached that
         // point.
         if (! file_exists($flagPath)) {
             if ($flagMoved) {

@@ -771,6 +771,13 @@ final class InstallWizardTest extends IntegrationTestCase
         // comment) so a caller's later render() shows the initial form with
         // this error, not a false "installation succeeded" page.
         self::assertSame(1, $this->reflectPrivate($wizard, 'step'));
+        // Regression: the install stamp used to be touch()ed right after
+        // .env was written, before schema migration even ran -- a failure
+        // here left RequestBootstrap.php's own file_exists() check treating
+        // this site as installed despite no schema existing. The stamp is
+        // now only written at the very end of performInstall(), after every
+        // step (including this migration run) has succeeded.
+        self::assertFileDoesNotExist($this->paths->siteLocal . Env::testModeInstalledStamp());
     }
 
     public function testPerformInstallRecordsAnErrorWhenTheEnvFileCannotBeWritten(): void
@@ -809,6 +816,12 @@ final class InstallWizardTest extends IntegrationTestCase
         }
 
         self::assertStringContainsString('Could not write', $this->reflectErrorsJoined($wizard));
+        // The DB-backed steps after the failed .env write still run to
+        // completion (this test's own comment above), but the install
+        // stamp must stay absent -- an unwritten .env means DbCredentials
+        // can't reload on the next real request even though the DB itself
+        // is now fully seeded.
+        self::assertFileDoesNotExist($this->paths->siteLocal . Env::testModeInstalledStamp());
     }
 
     // ------------------------------------------------------------- boot()

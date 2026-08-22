@@ -520,11 +520,6 @@ final class InstallWizard
         }
         $this->dbCredentials->reload();
 
-        // Create install sentinel stamp file.
-        if (count($this->errors) === 0) {
-            touch($this->paths->siteLocal . Env::testModeInstalledStamp());
-        }
-
         // tables creation, driven by the real Doctrine Migrations baseline
         // (src/Piwigo/Migrations/) instead of a static SQL file -- see
         // this class's own constructor docblock for why the
@@ -660,6 +655,22 @@ final class InstallWizard
 
         $this->userService($conn)
             ->createUserInfos([UserId::from(1), UserId::from(2)], LangCode::from($this->language));
+
+        // Create install sentinel stamp file -- moved here (after schema
+        // migration, config.sql seeding, extension activation, the sites
+        // row, and webmaster/guest user creation all succeeded) instead of
+        // right after .env is written, so a mid-install failure (the
+        // migration-failure early return above, or an uncaught exception
+        // from any step since) never leaves RequestBootstrap.php's own
+        // file_exists() check treating a partially-completed install as
+        // done. Still gated on $this->errors staying empty: the one other
+        // failure mode that reaches this point without returning early is
+        // a failed .env write above, which would otherwise leave
+        // DbCredentials unable to reload on the next real request even
+        // though the DB itself is now fully seeded.
+        if (count($this->errors) === 0) {
+            touch($this->paths->siteLocal . Env::testModeInstalledStamp());
+        }
     }
 
     /**

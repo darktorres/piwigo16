@@ -306,14 +306,32 @@ final readonly class HttpClientService implements ClientInterface
         $body = (string) $request->getBody();
 
         for ($redirects = 0; true; $redirects++) {
-            $this->assertUrlIsSafe($uri, $request);
+            $resolvedIp = $this->assertUrlIsSafe($uri, $request);
+
+            $requestOptions = [
+                'headers' => $headers,
+                'body' => $body,
+                'max_redirects' => 0,
+            ] + $extraOptions;
+
+            // [P44-J] Pin the connection to the exact IP assertUrlIsSafe()
+            // just validated -- without this, Symfony's transport performs
+            // its own independent DNS resolution at connect time, a classic
+            // TOCTOU/DNS-rebinding bypass (validate a public IP, then
+            // connect to whatever a second, later lookup returns). $ip is
+            // null only for the $trustedSelfHost exemption, which needs no
+            // pinning -- it's never attacker-influenceable to begin with.
+            if ($resolvedIp !== null) {
+                $uriParts = parse_url($uri);
+                $host = $uriParts['host'] ?? '';
+                $port = $uriParts['port'] ?? 443;
+                $requestOptions['resolve'] = [
+                    $host . ':' . $port => $resolvedIp,
+                ];
+            }
 
             try {
-                $response = $this->client->request($method, $uri, [
-                    'headers' => $headers,
-                    'body' => $body,
-                    'max_redirects' => 0,
-                ] + $extraOptions);
+                $response = $this->client->request($method, $uri, $requestOptions);
                 $status = $response->getStatusCode();
             } catch (TransportExceptionInterface $e) {
                 throw new HttpClientNetworkException($e->getMessage(), $request, $e);
@@ -341,8 +359,15 @@ final readonly class HttpClientService implements ClientInterface
      * [SEC-23] https-only scheme, and the hostname must not resolve to a
      * private/reserved IP range. Applied to the initial URL and to every
      * redirect target the loop above follows.
+     *
+     * [P44-J] Returns the exact IP this validation resolved and checked, so
+     * the caller can pin the actual connection to it (see guardedRequest()'s
+     * own `resolve` option) rather than letting the transport re-resolve
+     * DNS independently at connect time. Returns null only for the
+     * $trustedSelfHost exemption -- that request needs no pinning, since
+     * it's never attacker-influenceable to begin with.
      */
-    private function assertUrlIsSafe(string $url, RequestInterface $request): void
+    private function assertUrlIsSafe(string $url, RequestInterface $request): ?string
     {
         $parts = parse_url($url);
         if ($parts === false || ! isset($parts['scheme'], $parts['host']) || $parts['host'] === '') {
@@ -358,7 +383,7 @@ final readonly class HttpClientService implements ClientInterface
             // "localhost:8080" install).
             $hostAndPort = $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '');
             if ($hostAndPort === $this->trustedSelfHost) {
-                return;
+                return null;
             }
         }
 
@@ -372,6 +397,8 @@ final readonly class HttpClientService implements ClientInterface
         if (filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE) === false) {
             throw new HttpClientSsrfException('Target host resolves to a private/reserved IP range: ' . $url, $request);
         }
+
+        return $ip;
     }
 
     /**

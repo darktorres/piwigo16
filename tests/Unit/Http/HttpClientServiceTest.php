@@ -208,6 +208,88 @@ test('sendRequest allows a public IP host and returns the response body', functi
         ->toBe('hello world');
 });
 
+test('sendRequest pins the connection to the exact IP assertUrlIsSafe() validated, via the resolve option (P44-J)', function (): void {
+    // Without this, Symfony's own transport performs a second, independent
+    // DNS resolution at connect time -- a classic TOCTOU/DNS-rebinding
+    // bypass (validate a public IP, then connect to whatever a later
+    // lookup returns). The host here is already a literal IP, so
+    // assertUrlIsSafe()'s own $ip is that same literal -- deterministic,
+    // no real DNS involved, matching this file's own established
+    // literal-public-IP convention.
+    $seenOptions = null;
+    $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$seenOptions): MockResponse {
+        $seenOptions = $options;
+
+        return new MockResponse('ok', [
+            'http_code' => 200,
+        ]);
+    });
+    $service = new HttpClientService($client);
+
+    $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/ok'));
+
+    expect($seenOptions)
+        ->not->toBeNull();
+    assert(is_array($seenOptions));
+    expect($seenOptions['resolve'] ?? null)
+        ->toBe([
+            '93.184.216.34:443' => '93.184.216.34',
+        ]);
+});
+
+test('sendRequest pins each redirect hop to its own resolved IP, not the original hop\'s', function (): void {
+    $seen = [];
+    $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$seen): MockResponse {
+        $seen[] = $options;
+        if (count($seen) === 1) {
+            return new MockResponse('', [
+                'http_code' => 302,
+                'response_headers' => [
+                    'Location' => 'https://93.184.216.35/step2',
+                ],
+            ]);
+        }
+
+        return new MockResponse('done', [
+            'http_code' => 200,
+        ]);
+    });
+    $service = new HttpClientService($client);
+
+    $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start'));
+
+    expect($seen)
+        ->toHaveCount(2);
+    expect($seen[0]['resolve'] ?? null)
+        ->toBe([
+            '93.184.216.34:443' => '93.184.216.34',
+        ]);
+    expect($seen[1]['resolve'] ?? null)
+        ->toBe([
+            '93.184.216.35:443' => '93.184.216.35',
+        ]);
+});
+
+test('sendRequest does not pin a connection at all for a trustedSelfHost-exempted request', function (): void {
+    $seenOptions = null;
+    $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$seenOptions): MockResponse {
+        $seenOptions = $options;
+
+        return new MockResponse('ok', [
+            'http_code' => 200,
+        ]);
+    });
+    $service = new HttpClientService($client, 'my-self-host.test');
+
+    $service->sendRequest(makeHttpRequest('GET', 'http://my-self-host.test/ok'));
+
+    expect($seenOptions)
+        ->not->toBeNull();
+    assert(is_array($seenOptions));
+    expect($seenOptions)
+        ->not->toHaveKey('resolve');
+});
+
 test('sendRequest forwards every response header, including multiple values for the same header, onto the PSR-7 response', function (): void {
     // Kills lines 414/415's ForeachEmptyIterable (both the outer
     // header-name loop and the inner per-value loop in toPsrResponse())

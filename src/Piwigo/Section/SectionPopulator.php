@@ -210,10 +210,10 @@ final readonly class SectionPopulator
             // and that we are displaying images related to a tag.
             //
             // In case of incompatibility, the session stored image_order is removed.
-            if ($orders[$image_order_id][2]) {
+            if ($orders[$image_order_id]->visible) {
                 $order_by = str_replace(
                     'ORDER BY ',
-                    'ORDER BY ' . $orders[$image_order_id][1] . ',',
+                    'ORDER BY ' . $orders[$image_order_id]->orderBy . ',',
                     $order_by
                 );
                 $page['super_order_by'] = true;

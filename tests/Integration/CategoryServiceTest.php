@@ -14,6 +14,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryService;
     use Piwigo\Category\Event\DeleteSite;
     use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
+    use Piwigo\Category\Projection\ImageOrderPreference;
     use Piwigo\Category\Projection\RandomImageCategoryQuery;
     use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\ConfigLoader;
@@ -357,10 +358,10 @@ namespace Piwigo\Tests\Integration {
             $orders = $this->service->getPreferredImageOrders();
 
             self::assertNotEmpty($orders);
-            self::assertSame('', $orders[0][1]);
+            self::assertSame('', $orders[0]->orderBy);
             // 'Permissions' (level DESC) is only visible to admins.
-            $permissionsOrder = array_values(array_filter($orders, static fn (array $o): bool => $o[1] === 'level DESC'));
-            self::assertFalse($permissionsOrder[0][2]);
+            $permissionsOrder = array_values(array_filter($orders, static fn (ImageOrderPreference $o): bool => $o->orderBy === 'level DESC'));
+            self::assertFalse($permissionsOrder[0]->visible);
         }
 
         public function testGetPreferredImageOrdersPermissionsOptionVisibleToAdmin(): void
@@ -372,8 +373,8 @@ namespace Piwigo\Tests\Integration {
 
             $orders = $this->service->getPreferredImageOrders();
 
-            $permissionsOrder = array_values(array_filter($orders, static fn (array $o): bool => $o[1] === 'level DESC'));
-            self::assertTrue($permissionsOrder[0][2]);
+            $permissionsOrder = array_values(array_filter($orders, static fn (ImageOrderPreference $o): bool => $o->orderBy === 'level DESC'));
+            self::assertTrue($permissionsOrder[0]->visible);
         }
 
         public function testGetSubcategoryIdsIncludesTheCategoryAndItsChildren(): void
@@ -610,7 +611,7 @@ namespace Piwigo\Tests\Integration {
                 EventDispatcherTestFactory::get()->reset();
             }
 
-            self::assertSame([['Real Order', 'hit DESC', true]], $orders);
+            self::assertEquals([new ImageOrderPreference('Real Order', 'hit DESC', true)], $orders);
         }
 
         public function testFindCategoryIdFromPermalinksSkipsANonMatchBeforeFindingAnOlderMatch(): void

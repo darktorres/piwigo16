@@ -519,16 +519,16 @@ final readonly class GalleryController implements ControllerInterface
             $order_selected = false;
 
             foreach ($preferred_image_orders as $order_id => $order) {
-                if ($order[2]) {
+                if ($order->visible) {
                     // force select if the field is the first field
                     // of order_by
-                    if (! $order_selected && $order[1] === $first_order) {
+                    if (! $order_selected && $order->orderBy === $first_order) {
                         $order_idx = $order_id;
                         $order_selected = true;
                     }
 
                     $tpl_orders[$order_id] = new ImageOrderOption(
-                        display: $order[0],
+                        display: $order->label,
                         url: $url . $order_id,
                         selected: (string) $order_idx === (string) $order_id,
                     );

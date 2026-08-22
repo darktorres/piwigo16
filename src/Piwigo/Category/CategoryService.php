@@ -40,6 +40,7 @@ use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\GroupCategoryPair;
+use Piwigo\Category\Projection\ImageOrderPreference;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
@@ -347,7 +348,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @return array<int, array{0: string, 1: string, 2: bool}>
+     * @return array<int, ImageOrderPreference>
      */
     public function getPreferredImageOrders(): array
     {
@@ -375,7 +376,7 @@ final readonly class CategoryService
 
             $visible = $order[2];
             $visible = is_scalar($visible) ? (bool) $visible : true;
-            $result[] = [$order[0], $order[1], $visible];
+            $result[] = new ImageOrderPreference($order[0], $order[1], $visible);
         }
 
         return $result;

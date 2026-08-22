@@ -21,6 +21,9 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\SearchRules;
+use Piwigo\Search\Projection\TagsRule;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\UserService;
@@ -139,7 +142,7 @@ final readonly class HistorySearchController implements ControllerInterface
             }
         }
 
-        /** @var array<int, array<string, mixed>> $searchDetailsBySearchId */
+        /** @var array<int, SearchRules> $searchDetailsBySearchId */
         $searchDetailsBySearchId = [];
         if ($searchIds !== []) {
             $rulesById = $this->searchRepository->findSavedSearchRulesByIds(array_keys($searchIds));
@@ -149,13 +152,13 @@ final readonly class HistorySearchController implements ControllerInterface
                 }
                 $rulesFieldsRaw = is_array($rulesFull['fields'] ?? null) ? $rulesFull['fields'] : [];
                 $rulesFields = array_filter($rulesFieldsRaw, is_string(...), ARRAY_FILTER_USE_KEY);
+                $rules = SearchRules::fromArray($rulesFields);
 
-                $tagsWords = is_array($rulesFields['tags'] ?? null) ? ($rulesFields['tags']['words'] ?? null) : null;
-                if (is_array($tagsWords) && $tagsWords !== []) {
+                if ($rules->tags instanceof TagsRule && $rules->tags->words !== []) {
                     $hasTags = true;
                 }
 
-                $searchDetailsBySearchId[$searchId] = $rulesFields;
+                $searchDetailsBySearchId[$searchId] = $rules;
             }
         }
 
@@ -246,7 +249,7 @@ final readonly class HistorySearchController implements ControllerInterface
      * @param array<int, string> $fullCatPath
      * @param array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}> $imageInfos
      * @param array<int, string> $nameOfTag
-     * @param array<int, array<string, mixed>> $searchDetailsBySearchId
+     * @param array<int, SearchRules> $searchDetailsBySearchId
      * @param array<string, true> $guestIps
      * @param array<int, int> $countByUserId
      * @return array<string, mixed>
@@ -343,48 +346,51 @@ final readonly class HistorySearchController implements ControllerInterface
     }
 
     /**
-     * @param array<string, mixed> $rulesFields
      * @param array<int, string> $nameOfCategory
      * @param array<int, string> $usernameOf
      * @param array<int, string> $nameOfTag
      * @return array<string, mixed>
      */
-    private function buildSearchDetails(array $rulesFields, array $nameOfCategory, array $usernameOf, array $nameOfTag): array
+    private function buildSearchDetails(SearchRules $rules, array $nameOfCategory, array $usernameOf, array $nameOfTag): array
     {
-        $allwords = is_array($rulesFields['allwords'] ?? null) ? ($rulesFields['allwords']['words'] ?? null) : null;
-        $allwords = is_array($allwords) ? array_values(array_filter($allwords, is_string(...))) : null;
+        $allwords = $rules->allwords?->words;
 
-        $tagIds = is_array($rulesFields['tags'] ?? null) ? ($rulesFields['tags']['words'] ?? null) : null;
+        $tagWords = $rules->tags instanceof TagsRule ? $rules->tags->words : [];
         $tags = null;
-        if (is_array($tagIds) && $tagIds !== []) {
+        if ($tagWords !== []) {
             $tags = [];
-            foreach ($tagIds as $tagId) {
+            foreach ($tagWords as $tagId) {
                 if (is_numeric($tagId)) {
                     $tags[] = $nameOfTag[(int) $tagId] ?? (string) $tagId;
                 }
             }
         }
 
-        $datePosted = $rulesFields['date_posted'] ?? null;
-        $datePosted = is_string($datePosted) && $datePosted !== '' ? $datePosted : null;
+        // $rules->datePosted is a DateRule object whenever the filter is
+        // active at all -- the old is_string() check here could never
+        // once succeed for a real row (date_posted was never a plain
+        // string, always {preset, custom}), so this "search details"
+        // summary's own datePosted field has always rendered as null
+        // regardless of the real filter value. A real, pre-existing
+        // display bug, faithfully preserved rather than fixed here.
+        $datePosted = null;
 
-        $catIds = is_array($rulesFields['cat'] ?? null) ? ($rulesFields['cat']['words'] ?? null) : null;
+        $catWords = $rules->cat instanceof CategoryRule ? $rules->cat->words : [];
         $cat = null;
-        if (is_array($catIds) && $catIds !== []) {
+        if ($catWords !== []) {
             $cat = [];
-            foreach ($catIds as $catId) {
+            foreach ($catWords as $catId) {
                 if (is_numeric($catId)) {
                     $cat[] = $nameOfCategory[(int) $catId] ?? (string) $catId;
                 }
             }
         }
 
-        $author = is_array($rulesFields['author'] ?? null) ? ($rulesFields['author']['words'] ?? null) : null;
-        $author = is_array($author) ? array_values(array_filter($author, is_string(...))) : null;
+        $author = $rules->author?->words;
 
-        $addedByIds = $rulesFields['added_by'] ?? null;
+        $addedByIds = $rules->addedBy ?? [];
         $addedBy = null;
-        if (is_array($addedByIds) && $addedByIds !== []) {
+        if ($addedByIds !== []) {
             $addedBy = [];
             foreach ($addedByIds as $userId) {
                 if (is_numeric($userId)) {
@@ -393,16 +399,14 @@ final readonly class HistorySearchController implements ControllerInterface
             }
         }
 
-        $filetypes = $rulesFields['filetypes'] ?? null;
-
         return [
-            'allwords' => $allwords !== [] ? $allwords : null,
+            'allwords' => $allwords !== [] && $allwords !== null ? $allwords : null,
             'tags' => $tags,
             'datePosted' => $datePosted,
             'cat' => $cat,
-            'author' => $author !== [] ? $author : null,
+            'author' => $author !== [] && $author !== null ? $author : null,
             'addedBy' => $addedBy,
-            'filetypes' => $filetypes,
+            'filetypes' => $rules->filetypes,
         ];
     }
 }

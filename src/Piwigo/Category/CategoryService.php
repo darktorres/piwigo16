@@ -2273,7 +2273,7 @@ final readonly class CategoryService
     }
 
     /**
-     * @param list<int|string> $ids
+     * @param list<string> $ids
      * @return array<int, ?string> keyed by id
      */
     public function getDirsByIds(array $ids): array

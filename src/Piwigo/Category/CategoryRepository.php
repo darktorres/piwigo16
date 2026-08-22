@@ -1133,7 +1133,7 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int|string>  $values
+     * @param  list<string>  $values
      *
      * `$target` is {@see CategoryOrphanTarget}'s bounded enum, not an
      * arbitrary runtime entity/property pair.
@@ -1148,7 +1148,7 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->delete($entityClass, 't')
             ->where("t.{$property} IN (:values)")
-            ->setParameter('values', array_map(static fn (int|string $v): int => is_numeric($v) ? (int) $v : 0, $values), ArrayParameterType::INTEGER)
+            ->setParameter('values', array_map(static fn (string $v): int => is_numeric($v) ? (int) $v : 0, $values), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();

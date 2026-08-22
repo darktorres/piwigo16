@@ -14,6 +14,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\DoubleSelectView;
+use Piwigo\Controller\Admin\Projection\NotificationByMailUserRow;
 use Piwigo\Controller\Admin\Projection\NotificationByMailView;
 use Piwigo\Controller\Admin\Request\NotificationByMailRequest;
 use Piwigo\Core\AccessLevel;
@@ -264,13 +265,11 @@ final readonly class NotificationByMailSubController implements AdminSubControll
 
             case 'send':
 
-                $tpl_var = [
-                    'users' => [],
-                ];
+                $tpl_users = [];
 
                 $data_users = $nbmSender->sendMailNotifications('list_to_send');
 
-                $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
+                $customize_mail_content =
                   (isset($post['send_customize_mail_content']) and is_string($post['send_customize_mail_content']))
                     ? $post['send_customize_mail_content']
                     : $this->currentConfig->nbmComplementaryMailContent;
@@ -285,17 +284,16 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                             (! $must_repost) or // Not timeout, normal treatment
                             in_array($nbm_user->checkKey, $post_send_selection, true)  // Must be repost, show only user to send
                         ) {
-                            $tpl_var['users'][] =
-                              [
-                                  'ID' => $nbm_user->checkKey,
-                                  'CHECKED' => ( // not check if not selected,  on init select<all
-                                      isset($post['send_selection']) and // not init
-                                      ! in_array($nbm_user->checkKey, $post_send_selection, true) // not selected
-                                  ) ? '' : 'checked="checked"',
-                                  'USERNAME' => $nbm_user->username,
-                                  'EMAIL' => $nbm_user->mailAddress,
-                                  'LAST_SEND' => $nbm_user->lastSend,
-                              ];
+                            $tpl_users[] = new NotificationByMailUserRow(
+                                id: $nbm_user->checkKey,
+                                checked: ( // not check if not selected,  on init select<all
+                                    isset($post['send_selection']) and // not init
+                                    ! in_array($nbm_user->checkKey, $post_send_selection, true) // not selected
+                                ) ? '' : 'checked="checked"',
+                                username: $nbm_user->username,
+                                email: $nbm_user->mailAddress,
+                                lastSend: $nbm_user->lastSend,
+                            );
                         }
                     }
                 }
@@ -311,8 +309,8 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                 }
 
                 $sendData = [
-                    'users' => $tpl_var['users'],
-                    'CUSTOMIZE_MAIL_CONTENT' => $tpl_var['CUSTOMIZE_MAIL_CONTENT'],
+                    'users' => array_map(static fn (NotificationByMailUserRow $user): array => $user->toArray(), $tpl_users),
+                    'CUSTOMIZE_MAIL_CONTENT' => $customize_mail_content,
                 ];
 
                 break;

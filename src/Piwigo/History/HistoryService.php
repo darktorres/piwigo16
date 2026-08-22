@@ -93,7 +93,7 @@ final readonly class HistoryService
     public function logVisit(
         ?int $imageId = null,
         ?string $imageType = null,
-        int|string|null $formatId = null,
+        ?int $formatId = null,
         ?string $section = null,
         ?int $categoryId = null,
         ?array $tagIds = null,

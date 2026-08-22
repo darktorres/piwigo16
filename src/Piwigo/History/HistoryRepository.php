@@ -810,7 +810,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * @param array{
      *   userId: int, ip: string, section: ?string, categoryId: ?int,
      *   searchId: ?int, imageId: ?int, imageType: ?string,
-     *   formatId: int|string|null, authKeyId: ?int, tagsString: ?string,
+     *   formatId: ?int, authKeyId: ?int, tagsString: ?string,
      * } $data
      */
     public function insert(array $data): int

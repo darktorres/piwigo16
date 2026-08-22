@@ -1557,6 +1557,49 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same real in-browser fetch() technique as rawGet(), but also
+     * returns $headerName's own response header value (or null if the
+     * header wasn't sent) -- rawGet() only ever surfaces {status, body},
+     * which can't prove anything about a response header (e.g.
+     * Content-Disposition) on its own.
+     *
+     * @return array{status: int, body: string, header: ?string}
+     */
+    public static function rawGetWithHeader(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path, string $headerName): array
+    {
+        $url = self::baseUrl() . '/' . ltrim($path, '/');
+        $headerNameJs = json_encode($headerName, JSON_THROW_ON_ERROR);
+        $js = <<<JS
+        fetch('{$url}', {
+            method: 'GET',
+            redirect: 'manual',
+            cache: 'no-store',
+        }).then(async r => JSON.stringify({status: r.status, body: await r.text(), header: r.headers.get({$headerNameJs})}))
+        JS;
+
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new ExpectationFailedException(
+                "rawGetWithHeader to {$path} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded) || ! is_int($decoded['status'] ?? null) || ! is_string($decoded['body'] ?? null)) {
+            throw new ExpectationFailedException(
+                "rawGetWithHeader to {$path} did not return the expected {status, body, header} shape: " . var_export($result, true)
+            );
+        }
+        $header = $decoded['header'] ?? null;
+
+        return [
+            'status' => $decoded['status'],
+            'body' => $decoded['body'],
+            'header' => is_string($header) ? $header : null,
+        ];
+    }
+
+    /**
      * Polls in-browser (via script(), which awaits the returned promise —
      * see apiFetch()) until $selector is absent or hidden, instead of racing a
      * single check against an async request. Neither assertSee() nor

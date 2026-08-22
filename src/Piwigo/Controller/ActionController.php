@@ -232,9 +232,21 @@ final readonly class ActionController implements ControllerInterface
 
         $http_headers['Content-Type'] = $ctype;
 
-        if ($actionRequest->downloadPresent) {
-            $http_headers['Content-Disposition'] = 'attachment; filename="' . htmlspecialchars_decode($element_info['file']) . '";';
-            $http_headers['Content-Transfer-Encoding'] = 'binary';
+        // [P44-I] SVG/HTML-typed originals are always forced to
+        // 'attachment', regardless of $downloadPresent: this is the real
+        // replacement for the SEC-21 web-server rule that can no longer
+        // fire now that upload/ lives outside the document root (see
+        // docs/PLAN.md) -- it's also the one control here that doesn't
+        // depend on the upload-time SVG sanitizer having caught
+        // everything, and the only one that helps at all for a non-SVG
+        // file (e.g. .html) that was never sanitized in the first place.
+        $isForcedAttachmentType = in_array($ctype, ['image/svg+xml', 'image/svg', 'text/html'], true);
+        if ($actionRequest->downloadPresent || $isForcedAttachmentType) {
+            $filename = $actionRequest->downloadPresent ? htmlspecialchars_decode($element_info['file']) : basename($file);
+            $http_headers['Content-Disposition'] = 'attachment; filename="' . $filename . '";';
+            if ($actionRequest->downloadPresent) {
+                $http_headers['Content-Transfer-Encoding'] = 'binary';
+            }
         } else {
             $http_headers['Content-Disposition'] = 'inline; filename="'
                       . basename($file) . '";';

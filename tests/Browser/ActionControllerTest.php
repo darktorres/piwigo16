@@ -174,10 +174,71 @@ it('sends a Content-Disposition attachment header when download is requested', f
     @unlink($image);
 
     try {
-        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e&download');
+        $result = H::rawGetWithHeader($page, '/action.php?id=' . $imageId . '&part=e&download', 'Content-Disposition');
 
         expect($result['status'])->toBe(200);
+        expect($result['header'])->toStartWith('attachment;');
     } finally {
+        H::deleteCategory($page, [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
+});
+
+it('forces Content-Disposition: attachment for an SVG-typed original regardless of the download param (P44-I)', function (): void {
+    // ActionController's own MIME sniff (mime_content_type()) reads the
+    // real on-disk file content, not the DB extension/upload path -- so
+    // swapping a normal upload's own file to point at a real SVG exercises
+    // the exact same served-file code path a genuine SVG upload would,
+    // without needing uploadFormAllTypes enabled for this whole shared
+    // dev server (same technique PictureControllerTest.php's own PDF
+    // viewer test already establishes).
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Action Controller SVG Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller SVG Photo');
+    @unlink($image);
+
+    $relativePath = H::imagePath($imageId);
+    $root = dirname(__DIR__, 2) . '/';
+    $absoluteJpgPath = $root . $relativePath;
+    $absoluteSvgPath = preg_replace('/\.[^.\/]+$/', '.svg', $absoluteJpgPath);
+    $relativeSvgPath = preg_replace('/\.[^.\/]+$/', '.svg', $relativePath);
+    if (! is_string($absoluteSvgPath) || ! is_string($relativeSvgPath)) {
+        throw new RuntimeException('preg_replace() failed to build the .svg path');
+    }
+    file_put_contents($absoluteSvgPath, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="1"/></svg>');
+    @unlink($absoluteJpgPath);
+
+    // representative_ext = 'svg' routes SrcImage's own constructor into
+    // its "representative" branch (ImagePathHelper::originalToRepresentative(),
+    // pure string manipulation) instead of its "mimetype icon" fallback
+    // branch, which calls getimagesize() on the file itself and throws
+    // for a real SVG (not a raster format PHP's getimagesize() reads) --
+    // an unrelated, pre-existing SrcImage quirk this test must route
+    // around, not something P44-I's own fix needs to touch. The
+    // "representative" branch falls back to the row's own (untouched,
+    // still-valid) width/height columns instead of reading the file.
+    $svgFilename = basename($relativeSvgPath);
+    $db = actionDbConnect();
+    H::dbQuery($db, sprintf("UPDATE images SET file = '%s', path = '%s', representative_ext = 'svg' WHERE id = %d", H::dbEscape($db, $svgFilename), H::dbEscape($db, $relativeSvgPath), $imageId));
+    H::dbClose($db);
+
+    try {
+        $result = H::rawGetWithHeader($page, '/action.php?id=' . $imageId . '&part=e', 'Content-Disposition');
+
+        expect($result['status'])->toBe(200);
+        expect($result['header'])->toStartWith('attachment;');
+    } finally {
+        @unlink($absoluteSvgPath);
         H::deleteCategory($page, [
             'category_id' => $albumId,
             'photo_deletion_mode' => 'force_delete',

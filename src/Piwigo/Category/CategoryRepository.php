@@ -1834,11 +1834,11 @@ final readonly class CategoryRepository
      * nothing matches), so getSingleScalarResult() can't throw
      * NoResultException here.
      */
-    public function findMaxRankForParent(int|string|null $parentId): ?int
+    public function findMaxRankForParent(?int $parentId): ?int
     {
-        // Matches the original's own empty($parent_id) semantics (null, 0,
-        // '0', and '' all mean "no parent" / root level).
-        $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
+        // Matches the original's own empty($parent_id) semantics (null and
+        // 0 both mean "no parent" / root level).
+        $parentIsEmpty = $parentId === null || $parentId === 0;
 
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('MAX(c.rank)');
@@ -1862,7 +1862,7 @@ final readonly class CategoryRepository
      * Single-table, id is the PK. `visible` is a real bool column on
      * CategoryEntity -- DQL hydrates it as bool.
      */
-    public function findParentCategoryForCreate(int|string $parentId): ?ParentCategoryForCreate
+    public function findParentCategoryForCreate(int $parentId): ?ParentCategoryForCreate
     {
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats', 'c.globalRank AS global_rank', 'c.visible', 'c.status')

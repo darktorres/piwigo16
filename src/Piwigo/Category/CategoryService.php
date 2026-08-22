@@ -1924,9 +1924,6 @@ final readonly class CategoryService
     }
 
     /**
-     * @param int|string|null $parentId ws_categories_add() passes null by
-     *   default (unset by the caller), admin/cat_list.php
-     *   passes a raw, unvalidated $_GET['parent_id'] string
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
      *   `Controller\Api\Categories\CategoryCreateController` (the real
      *   caller populating this) -- visible/commentable are real bool
@@ -1944,7 +1941,7 @@ final readonly class CategoryService
      * row that exists but has no uppercats path, or a private album
      * created without the permissions it was supposed to inherit.
      */
-    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, EntityManagerInterface $entityManager, int|string|null $parentId = null, array $options = []): CategoryCreateOutcome
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, EntityManagerInterface $entityManager, ?int $parentId = null, array $options = []): CategoryCreateOutcome
     {
 
         // is the given category name only containing blank spaces ?
@@ -2000,8 +1997,8 @@ final readonly class CategoryService
             $insert['comment'] = ($this->currentConfig->allowHtmlDescriptions) ? $options['comment'] : strip_tags($options['comment']);
         }
 
-        $parentIdIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
-        if (! $parentIdIsEmpty && is_numeric($parentId)) {
+        $parentIdIsEmpty = $parentId === null || $parentId === 0;
+        if (! $parentIdIsEmpty) {
             $parent = $this->repo->findParentCategoryForCreate($parentId);
             if (! $parent instanceof ParentCategoryForCreate) {
                 return CategoryCreateOutcome::failure($this->lang->t('The parent album does not exist'));

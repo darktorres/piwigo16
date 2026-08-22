@@ -14,6 +14,7 @@ use Piwigo\Comment\Projection\CommentInsertData;
 use Piwigo\Comment\Projection\CommentListRow;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
+use Piwigo\Comment\Projection\CommentUpdateData;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\Email;
@@ -375,20 +376,16 @@ final readonly class CommentService
 
         $this->invalidateNbCommentsCache();
 
-        // EventDispatcher/emailAdmin() are cross-boundary sinks (plugin
-        // events, a generic untyped $comment array) -- unwrap ->value
-        // explicitly rather than rely on Stringable, same rule as every
-        // other Latte/JSON/plugin-event boundary in this codebase.
+        // Unwrap ->value explicitly rather than rely on Stringable, same
+        // rule as every other Latte/JSON/plugin-event boundary in this
+        // codebase.
         $rawCommentId = is_array($commentId)
             ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
             : $commentId->value;
 
         $username = $this->currentUser->get()
             ->username;
-        $this->emailAdmin('delete', [
-            'author' => $username,
-            'comment_id' => $rawCommentId,
-        ]);
+        $this->emailAdminOnDelete($username->value ?? '', $rawCommentId);
 
         return true;
     }
@@ -469,11 +466,11 @@ final readonly class CommentService
             // false) the original's own `?? 0` default produced.
             $updated = $commentId instanceof CommentId && $this->repo->update(
                 $commentId,
-                [
-                    'content' => $content,
-                    'websiteUrl' => $websiteUrl,
-                    'validated' => $commentAction === 'validate',
-                ],
+                new CommentUpdateData(
+                    content: $content,
+                    websiteUrl: $websiteUrl,
+                    validated: $commentAction === 'validate',
+                ),
                 $authorId
             );
 
@@ -497,10 +494,7 @@ final readonly class CommentService
                 );
             } elseif ($updated) {
                 // just mail admin
-                $this->emailAdmin('edit', [
-                    'author' => $username,
-                    'content' => $content,
-                ]);
+                $this->emailAdminOnEdit($username, $content);
             }
         }
 
@@ -508,40 +502,47 @@ final readonly class CommentService
     }
 
     /**
-     * Notifies admins about an updated or deleted comment. Only used when
-     * no validation is needed, otherwise pwg_mail_notification_admins() is
-     * called directly from insertComment()/updateComment().
-     *
-     * Same cross-domain generic-row-reader rationale as
-     * Category\CategoryService::compareByGlobalRank() -- called from both
-     * insertComment()'s (structured) and updateComment()'s (raw request
-     * input, see that method's own docblock) $comment locals.
-     *
-     * @param array<string, mixed> $comment
+     * Notifies admins about an edited comment. Only used when no
+     * validation is needed, otherwise pwg_mail_notification_admins() is
+     * called directly from updateComment() itself.
      */
-    public function emailAdmin(string $action, array $comment): void
+    public function emailAdminOnEdit(string $author, string $content): void
     {
-        if (! in_array($action, ['edit', 'delete'], true)
-            || ($action === 'edit' && ! $this->currentConfig->emailAdminOnCommentEdition)
-            || ($action === 'delete' && ! $this->currentConfig->emailAdminOnCommentDeletion)) {
+        if (! $this->currentConfig->emailAdminOnCommentEdition) {
             return;
-        }
-
-        $author = is_string($comment['author'] ?? null) ? $comment['author'] : '';
-        $keyargsContent = [
-            $this->lang->buildArgs('Author: %s', $author),
-        ];
-
-        if ($action === 'delete') {
-            $keyargsContent[] = $this->lang->buildArgs('This author removed the comment with id %d', $comment['comment_id']);
-        } else {
-            $keyargsContent[] = $this->lang->buildArgs('This author modified following comment:');
-            $keyargsContent[] = $this->lang->buildArgs('Comment: %s', $comment['content']);
         }
 
         $this->mailer->mailNotificationAdmins(
             $this->lang->buildArgs('Comment by %s', $author),
-            $keyargsContent
+            [
+                $this->lang->buildArgs('Author: %s', $author),
+                $this->lang->buildArgs('This author modified following comment:'),
+                $this->lang->buildArgs('Comment: %s', $content),
+            ]
+        );
+    }
+
+    /**
+     * Notifies admins about a deleted comment.
+     *
+     * @param int|list<int> $commentId matches deleteComment()'s own
+     *   single-id/multi-id duality -- Lang::buildArgs()'s own array
+     *   handling already treats a list the same way a single id is
+     *   treated (one positional %d arg either way), so no special-casing
+     *   is needed here.
+     */
+    public function emailAdminOnDelete(string $author, int|array $commentId): void
+    {
+        if (! $this->currentConfig->emailAdminOnCommentDeletion) {
+            return;
+        }
+
+        $this->mailer->mailNotificationAdmins(
+            $this->lang->buildArgs('Comment by %s', $author),
+            [
+                $this->lang->buildArgs('Author: %s', $author),
+                $this->lang->buildArgs('This author removed the comment with id %d', $commentId),
+            ]
         );
     }
 

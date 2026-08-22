@@ -176,7 +176,7 @@ final readonly class AuthRepository
         return is_array($row) ? AuthKeyDetails::fromRow($row) : null;
     }
 
-    public function touchAuthKeyLastUsed(int|string $userId, string $authKey, DateTimeInterface $lastUsedOn): void
+    public function touchAuthKeyLastUsed(string $userId, string $authKey, DateTimeInterface $lastUsedOn): void
     {
         $this->em->createQueryBuilder()
             ->update(UserAuthKeyEntity::class, 'uak')

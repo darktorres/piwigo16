@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -14,13 +16,9 @@ use Piwigo\Core\TemplatePageContext;
  */
 final readonly class BatchManagerFilterOptionsPageContext implements TemplatePageContext
 {
-    /**
-     * @param array<string, mixed> $dimensions
-     * @param array<string, mixed> $filesize
-     */
     public function __construct(
-        public array $dimensions,
-        public array $filesize,
+        public DimensionFilterOptions $dimensions,
+        public FilesizeFilterOptions $filesize,
     ) {}
 
     /**
@@ -30,8 +28,8 @@ final readonly class BatchManagerFilterOptionsPageContext implements TemplatePag
     public function toArray(): array
     {
         return [
-            'dimensions' => $this->dimensions,
-            'filesize' => $this->filesize,
+            'dimensions' => $this->dimensions->toArray(),
+            'filesize' => $this->filesize->toArray(),
         ];
     }
 }

@@ -9,8 +9,13 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
+use Piwigo\Admin\BatchManager\Projection\DimensionBounds;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeBounds;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\RatioRange;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\CoreTabs;
@@ -661,50 +666,53 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         return $current_set;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function computeDimensionOptions(DimensionFilter $dimension): array
+    private function computeDimensionOptions(DimensionFilter $dimension): DimensionFilterOptions
     {
         $widths = [];
         $heights = [];
         $ratios = [];
-        $dimensions = [];
 
         // get all width, height and ratios
         foreach ($this->imageService->getDistinctDimensions() as $dims) {
             if ($dims->width > 0 && $dims->height > 0) {
-                $widths[] = $dims->width;
-                $heights[] = $dims->height;
+                // ImageRepository::findDistinctDimensions() only ever
+                // yields real ints -- Dimensions::$width/$height stay
+                // int|float for the class's other, genuinely-float
+                // callers.
+                $widths[] = (int) $dims->width;
+                $heights[] = (int) $dims->height;
                 $ratios[] = floor($dims->width / $dims->height * 100.0) / 100.0;
             }
         }
-        if ($widths === []) { // arbitrary values, only used when no photos on the gallery
+        // arbitrary values, only used when no photos on the gallery -- the 3
+        // arrays are always populated in lockstep by the loop above, but
+        // each gets its own guard so PHPStan can prove each is non-empty
+        // independently, not just $widths.
+        if ($widths === []) {
             $widths = [600, 1920, 3500];
+        }
+        if ($heights === []) {
             $heights = [480, 1080, 2300];
+        }
+        if ($ratios === []) {
             $ratios = [1.25, 1.52, 1.78];
         }
 
-        $dimension_arrays = [
-            'widths' => &$widths,
-            'heights' => &$heights,
-            'ratios' => &$ratios,
-        ];
-        foreach ($dimension_arrays as $type => &$dimension_values) {
-            $dimension_values = array_unique($dimension_values);
-            sort($dimension_values);
-            $dimensions[$type] = implode(',', $dimension_values);
-        }
-        unset($dimension_values);
+        $widths = array_unique($widths);
+        sort($widths);
+        $heights = array_unique($heights);
+        sort($heights);
+        $ratios = array_unique($ratios);
+        sort($ratios);
 
-        $dimensions['bounds'] = [
-            'min_width' => $widths[0],
-            'max_width' => end($widths),
-            'min_height' => $heights[0],
-            'max_height' => end($heights),
-            'min_ratio' => $ratios[0],
-            'max_ratio' => end($ratios),
-        ];
+        $bounds = new DimensionBounds(
+            minWidth: $widths[0],
+            maxWidth: end($widths),
+            minHeight: $heights[0],
+            maxHeight: end($heights),
+            minRatio: $ratios[0],
+            maxRatio: end($ratios),
+        );
 
         // find ratio categories
         $ratio_categories = [
@@ -726,40 +734,40 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             }
         }
 
+        $ratio_ranges = [];
         foreach ($ratio_categories as $type => $category) {
-            if (count($category) > 0) {
-                $dimensions['ratio_' . $type] = [
-                    'min' => $category[0],
-                    'max' => end($category),
-                ];
-            }
+            $ratio_ranges[$type] = $category === [] ? null : new RatioRange(
+                min: $category[0],
+                max: end($category),
+            );
         }
 
         // selected=bound if nothing selected
-        $selected_dimension = [
-            'min_width' => $dimension->minWidth,
-            'max_width' => $dimension->maxWidth,
-            'min_height' => $dimension->minHeight,
-            'max_height' => $dimension->maxHeight,
-            'min_ratio' => $dimension->minRatio,
-            'max_ratio' => $dimension->maxRatio,
-        ];
-        foreach (array_keys($dimensions['bounds']) as $type) {
-            $dimensions['selected'][$type] = $selected_dimension[$type]
-              ?? $dimensions['bounds'][$type]
-            ;
-        }
+        $selected = new DimensionBounds(
+            minWidth: $dimension->minWidth ?? $bounds->minWidth,
+            maxWidth: $dimension->maxWidth ?? $bounds->maxWidth,
+            minHeight: $dimension->minHeight ?? $bounds->minHeight,
+            maxHeight: $dimension->maxHeight ?? $bounds->maxHeight,
+            minRatio: $dimension->minRatio ?? $bounds->minRatio,
+            maxRatio: $dimension->maxRatio ?? $bounds->maxRatio,
+        );
 
-        return $dimensions;
+        return new DimensionFilterOptions(
+            widths: implode(',', $widths),
+            heights: implode(',', $heights),
+            ratios: implode(',', $ratios),
+            bounds: $bounds,
+            ratioPortrait: $ratio_ranges['portrait'],
+            ratioSquare: $ratio_ranges['square'],
+            ratioLandscape: $ratio_ranges['landscape'],
+            ratioPanorama: $ratio_ranges['panorama'],
+            selected: $selected,
+        );
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function computeFilesizeOptions(FilesizeFilter $filesizeFilter): array
+    private function computeFilesizeOptions(FilesizeFilter $filesizeFilter): FilesizeFilterOptions
     {
         $filesizes = [];
-        $filesize = [];
 
         foreach ($this->imageService->getDistinctFilesizes() as $filesizeValue) {
             $filesizes[] = sprintf('%.1f', $filesizeValue / 1024.0);
@@ -772,24 +780,21 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $filesizes = array_unique($filesizes);
         sort($filesizes);
 
-        $filesize['list'] = implode(',', $filesizes);
-
-        $filesize['bounds'] = [
-            'min' => $filesizes[0],
-            'max' => end($filesizes),
-        ];
+        $bounds = new FilesizeBounds(
+            min: $filesizes[0],
+            max: end($filesizes),
+        );
 
         // selected=bound if nothing selected
-        $selected_filesize = [
-            'min' => $filesizeFilter->min,
-            'max' => $filesizeFilter->max,
-        ];
-        foreach (array_keys($filesize['bounds']) as $type) {
-            $filesize['selected'][$type] = $selected_filesize[$type]
-              ?? $filesize['bounds'][$type]
-            ;
-        }
+        $selected = new FilesizeBounds(
+            min: $filesizeFilter->min ?? $bounds->min,
+            max: $filesizeFilter->max ?? $bounds->max,
+        );
 
-        return $filesize;
+        return new FilesizeFilterOptions(
+            list: implode(',', $filesizes),
+            bounds: $bounds,
+            selected: $selected,
+        );
     }
 }

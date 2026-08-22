@@ -8,7 +8,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
-use Doctrine\ORM\QueryBuilder;
 use InvalidArgumentException;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\ValueObject\NumericId;
@@ -16,6 +15,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Notification\Projection\NotificationQueryBuild;
 use Piwigo\Notification\Projection\RecentCategoryForDate;
 use Piwigo\Notification\Projection\RecentPostDate;
 use Piwigo\Permission\SqlCondition;
@@ -47,9 +47,9 @@ final readonly class NotificationRepository
 
     public function countByType(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): int
     {
-        [$qb, $fieldId] = $this->buildQuery($type, $start, $end, $restrictCondition);
+        $built = $this->buildQuery($type, $start, $end, $restrictCondition);
 
-        $count = $qb->select('COUNT(DISTINCT ' . $fieldId . ')')
+        $count = $built->queryBuilder->select('COUNT(DISTINCT ' . $built->fieldId . ')')
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -61,9 +61,9 @@ final readonly class NotificationRepository
      */
     public function findIdsByType(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): array
     {
-        [$qb, $fieldId] = $this->buildQuery($type, $start, $end, $restrictCondition);
+        $built = $this->buildQuery($type, $start, $end, $restrictCondition);
 
-        $ids = $qb->select($fieldId)
+        $ids = $built->queryBuilder->select($built->fieldId)
             ->distinct()
             ->getQuery()
             ->getSingleColumnResult();
@@ -88,10 +88,7 @@ final readonly class NotificationRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
-    /**
-     * @return array{0: QueryBuilder, 1: string}
-     */
-    private function buildQuery(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): array
+    private function buildQuery(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): NotificationQueryBuild
     {
         $qb = $this->em->createQueryBuilder();
 
@@ -162,7 +159,7 @@ final readonly class NotificationRepository
 
         $restrictCondition->applyTo($qb);
 
-        return [$qb, $fieldId];
+        return new NotificationQueryBuild($qb, $fieldId);
     }
 
     /**

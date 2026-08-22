@@ -6,6 +6,7 @@ namespace Piwigo\Auth;
 
 use Exception;
 use Piwigo\Auth\Projection\ApiKeyCreated;
+use Piwigo\Auth\Projection\ApiKeyInsertRow;
 use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Username;
@@ -51,16 +52,16 @@ final readonly class ApiKeyService
         $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');
         $createdOn = $now->format('Y-m-d H:i:s');
 
-        $key = [
-            'auth_key' => $key_id,
-            'apikey_secret' => $this->passwordService->hash($key_secret),
-            'apikey_name' => $keyName,
-            'user_id' => $userId,
-            'created_on' => $createdOn,
-            'duration' => $duration,
-            'key_type' => 'api_key',
-            'expired_on' => $expiration,
-        ];
+        $key = new ApiKeyInsertRow(
+            authKey: $key_id,
+            apikeySecret: $this->passwordService->hash($key_secret),
+            apikeyName: $keyName,
+            userId: $userId,
+            createdOn: $createdOn,
+            duration: $duration,
+            expiredOn: $expiration,
+            keyType: 'api_key',
+        );
 
         $this->repo->insert($key);
 

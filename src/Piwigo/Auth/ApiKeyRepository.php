@@ -7,6 +7,7 @@ namespace Piwigo\Auth;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\ApiKey;
+use Piwigo\Auth\Projection\ApiKeyInsertRow;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
@@ -27,24 +28,17 @@ final readonly class ApiKeyRepository
         private EntityManagerInterface $em,
     ) {}
 
-    /**
-     * @param array{
-     *   auth_key: string, apikey_secret: string, apikey_name: string,
-     *   user_id: int, created_on: string, duration: ?int, expired_on: string,
-     *   key_type: string,
-     * } $key
-     */
-    public function insert(array $key): void
+    public function insert(ApiKeyInsertRow $key): void
     {
         $entity = new UserAuthKeyEntity(
-            authKey: $key['auth_key'],
-            apikeySecret: $key['apikey_secret'],
-            userId: UserId::from($key['user_id']),
-            createdOn: SqlDateTime::from($key['created_on']),
-            duration: $key['duration'],
-            expiredOn: SqlDateTime::from($key['expired_on']),
-            apikeyName: $key['apikey_name'],
-            keyType: $key['key_type'],
+            authKey: $key->authKey,
+            apikeySecret: $key->apikeySecret,
+            userId: UserId::from($key->userId),
+            createdOn: SqlDateTime::from($key->createdOn),
+            duration: $key->duration,
+            expiredOn: SqlDateTime::from($key->expiredOn),
+            apikeyName: $key->apikeyName,
+            keyType: $key->keyType,
         );
 
         $this->em->persist($entity);

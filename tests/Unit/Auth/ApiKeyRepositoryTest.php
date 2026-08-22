@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\Projection\ApiKey;
+use Piwigo\Auth\Projection\ApiKeyInsertRow;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -27,12 +28,11 @@ function apiKeyTestRepo(): ApiKeyRepository
 }
 
 /**
- * @param array{auth_key?: string, apikey_secret?: string, apikey_name?: string, user_id?: int, created_on?: string, duration?: ?int, expired_on?: string, key_type?: string} $overrides
- * @return array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: ?int, expired_on: string, key_type: string}
+ * @param array{auth_key?: string, apikey_secret?: string, apikey_name?: string, user_id?: int, created_on?: string, duration?: int, expired_on?: string, key_type?: string} $overrides
  */
-function apiKeyTestRow(array $overrides = []): array
+function apiKeyTestRow(array $overrides = []): ApiKeyInsertRow
 {
-    return array_merge([
+    $merged = array_merge([
         'auth_key' => 'ut-authkey-' . bin2hex(random_bytes(8)),
         'apikey_secret' => 'ut-secret',
         'apikey_name' => 'unit test key',
@@ -42,6 +42,17 @@ function apiKeyTestRow(array $overrides = []): array
         'expired_on' => '2026-09-01 12:00:00',
         'key_type' => 'api_key',
     ], $overrides);
+
+    return new ApiKeyInsertRow(
+        authKey: $merged['auth_key'],
+        apikeySecret: $merged['apikey_secret'],
+        apikeyName: $merged['apikey_name'],
+        userId: $merged['user_id'],
+        createdOn: $merged['created_on'],
+        duration: $merged['duration'],
+        expiredOn: $merged['expired_on'],
+        keyType: $merged['key_type'],
+    );
 }
 
 function apiKeyTestDelete(Connection $conn, string $authKey): void
@@ -64,12 +75,12 @@ test('insert() persists every column as given', function (): void {
             ->select('auth_key', 'apikey_secret', 'apikey_name', 'user_id', 'created_on', 'duration', 'expired_on', 'key_type')
             ->from('user_auth_keys')
             ->where('auth_key = :authKey')
-            ->setParameter('authKey', $row['auth_key'])
+            ->setParameter('authKey', $row->authKey)
             ->fetchAssociative();
 
         expect($stored)
             ->toBe([
-                'auth_key' => $row['auth_key'],
+                'auth_key' => $row->authKey,
                 'apikey_secret' => 'ut-secret',
                 'apikey_name' => 'unit test key',
                 'user_id' => API_KEY_TEST_USER_ID,
@@ -79,7 +90,7 @@ test('insert() persists every column as given', function (): void {
                 'key_type' => 'api_key',
             ]);
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -102,12 +113,14 @@ test('countByAuthKeyAndUser() counts only rows matching both the auth key and th
         $repo = apiKeyTestRepo();
         $repo->insert($row);
 
-        expect($repo->countByAuthKeyAndUser($row['auth_key'], API_KEY_TEST_USER_ID))->toBe(1)
-            ->and($repo->countByAuthKeyAndUser($row['auth_key'], 999999))->toBe(0)
+        expect($repo->countByAuthKeyAndUser($row->authKey, API_KEY_TEST_USER_ID))
+            ->toBe(1)
+            ->and($repo->countByAuthKeyAndUser($row->authKey, 999999))
+            ->toBe(0)
             ->and($repo->countByAuthKeyAndUser('nonexistent-key', API_KEY_TEST_USER_ID))
             ->toBe(0);
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -119,13 +132,13 @@ test('revoke() sets revoked_on and leaves every other column untouched', functio
         $repo = apiKeyTestRepo();
         $repo->insert($row);
 
-        $repo->revoke($row['auth_key'], API_KEY_TEST_USER_ID, new DateTimeImmutable('2026-08-05 10:00:00'));
+        $repo->revoke($row->authKey, API_KEY_TEST_USER_ID, new DateTimeImmutable('2026-08-05 10:00:00'));
 
         $stored = $conn->createQueryBuilder()
             ->select('revoked_on', 'apikey_name', 'duration')
             ->from('user_auth_keys')
             ->where('auth_key = :authKey')
-            ->setParameter('authKey', $row['auth_key'])
+            ->setParameter('authKey', $row->authKey)
             ->fetchAssociative();
 
         expect($stored)
@@ -135,7 +148,7 @@ test('revoke() sets revoked_on and leaves every other column untouched', functio
                 'duration' => 30,
             ]);
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -150,21 +163,21 @@ test('revoke() clears the EntityManager identity map, so a later read reflects t
         // Hydrates and caches the entity in this EntityManager's own
         // identity map (revokedOn still null at this point).
         $before = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
+        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row->authKey));
         expect($beforeMatch[0]->revokedOn)->toBeNull();
 
         // revoke() updates the DB via a bulk DQL UPDATE, which bypasses
         // entity hydration entirely -- without its own em->clear(), the
         // identity map above would still hand back the same, now-stale
         // PHP object on the next read.
-        $repo->revoke($row['auth_key'], API_KEY_TEST_USER_ID, new DateTimeImmutable('2026-08-05 10:00:00'));
+        $repo->revoke($row->authKey, API_KEY_TEST_USER_ID, new DateTimeImmutable('2026-08-05 10:00:00'));
 
         $after = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
+        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row->authKey));
 
         expect($afterMatch[0]->revokedOn)->toBe('2026-08-05 10:00:00');
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -176,19 +189,19 @@ test('updateName() renames only the row matching both the auth key and the user'
         $repo = apiKeyTestRepo();
         $repo->insert($row);
 
-        $repo->updateName($row['auth_key'], API_KEY_TEST_USER_ID, 'renamed key');
+        $repo->updateName($row->authKey, API_KEY_TEST_USER_ID, 'renamed key');
 
         $name = $conn->createQueryBuilder()
             ->select('apikey_name')
             ->from('user_auth_keys')
             ->where('auth_key = :authKey')
-            ->setParameter('authKey', $row['auth_key'])
+            ->setParameter('authKey', $row->authKey)
             ->fetchOne();
 
         expect($name)
             ->toBe('renamed key');
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -201,17 +214,17 @@ test('updateName() clears the EntityManager identity map, so a later read reflec
         $repo->insert($row);
 
         $before = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
+        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row->authKey));
         expect($beforeMatch[0]->apikeyName)->toBe('unit test key');
 
-        $repo->updateName($row['auth_key'], API_KEY_TEST_USER_ID, 'renamed key');
+        $repo->updateName($row->authKey, API_KEY_TEST_USER_ID, 'renamed key');
 
         $after = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
+        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row->authKey));
 
         expect($afterMatch[0]->apikeyName)->toBe('renamed key');
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -223,19 +236,19 @@ test('updateName() accepts null to clear the name', function (): void {
         $repo = apiKeyTestRepo();
         $repo->insert($row);
 
-        $repo->updateName($row['auth_key'], API_KEY_TEST_USER_ID, null);
+        $repo->updateName($row->authKey, API_KEY_TEST_USER_ID, null);
 
         $name = $conn->createQueryBuilder()
             ->select('apikey_name')
             ->from('user_auth_keys')
             ->where('auth_key = :authKey')
-            ->setParameter('authKey', $row['auth_key'])
+            ->setParameter('authKey', $row->authKey)
             ->fetchOne();
 
         expect($name)
             ->toBeNull();
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -248,17 +261,17 @@ test('updateLastNotifiedOn() clears the EntityManager identity map, so a later r
         $repo->insert($row);
 
         $before = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
+        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row->authKey));
         expect($beforeMatch[0]->lastNotifiedOn)->toBeNull();
 
-        $repo->updateLastNotifiedOn($row['auth_key'], API_KEY_TEST_USER_ID, '2026-08-06 08:00:00');
+        $repo->updateLastNotifiedOn($row->authKey, API_KEY_TEST_USER_ID, '2026-08-06 08:00:00');
 
         $after = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
+        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row->authKey));
 
         expect($afterMatch[0]->lastNotifiedOn)->toBe('2026-08-06 08:00:00');
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -270,19 +283,19 @@ test('updateLastNotifiedOn() records when the near-expiration email was sent', f
         $repo = apiKeyTestRepo();
         $repo->insert($row);
 
-        $repo->updateLastNotifiedOn($row['auth_key'], API_KEY_TEST_USER_ID, '2026-08-06 08:00:00');
+        $repo->updateLastNotifiedOn($row->authKey, API_KEY_TEST_USER_ID, '2026-08-06 08:00:00');
 
         $lastNotifiedOn = $conn->createQueryBuilder()
             ->select('last_notified_on')
             ->from('user_auth_keys')
             ->where('auth_key = :authKey')
-            ->setParameter('authKey', $row['auth_key'])
+            ->setParameter('authKey', $row->authKey)
             ->fetchOne();
 
         expect($lastNotifiedOn)
             ->toBe('2026-08-06 08:00:00');
     } finally {
-        apiKeyTestDelete($conn, $row['auth_key']);
+        apiKeyTestDelete($conn, $row->authKey);
     }
 });
 
@@ -304,16 +317,16 @@ test('findByUser() returns only api_key-typed rows for that user, not auth_key-t
         $foundAuthKeys = array_map(static fn (ApiKey $k): string => $k->authKey, $found);
 
         expect($foundAuthKeys)
-            ->toContain($apiRow['auth_key'])
+            ->toContain($apiRow->authKey)
             ->and($foundAuthKeys)
-            ->not->toContain($loginRow['auth_key'])
+            ->not->toContain($loginRow->authKey)
             // Not just duck-typed by a same-named property -- proves
             // findByUser() really maps through ApiKey::fromEntity(),
             // not the raw UserAuthKeyEntity (which also happens to
             // expose ->authKey).
             ->and($found[0])->toBeInstanceOf(ApiKey::class);
     } finally {
-        apiKeyTestDelete($conn, $apiRow['auth_key']);
-        apiKeyTestDelete($conn, $loginRow['auth_key']);
+        apiKeyTestDelete($conn, $apiRow->authKey);
+        apiKeyTestDelete($conn, $loginRow->authKey);
     }
 });

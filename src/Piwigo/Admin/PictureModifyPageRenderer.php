@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\PictureModifyBeforeUpdate;
 use Piwigo\Admin\Event\PictureModifyPageRendered;
+use Piwigo\Admin\Projection\PictureIntroVars;
 use Piwigo\Admin\Projection\PictureModifyView;
 use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
@@ -305,27 +306,18 @@ final readonly class PictureModifyPageRenderer
         $row_file = is_string($row['file']) ? $row['file'] : '';
         $extTab = explode('.', $row_file);
 
-        $intro_vars = [
-            'file' => $this->lang->t('%s', $row_file),
-            'date' => $this->lang->t('Posted the %s', DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
-            'age' => $this->lang->t(ucfirst(DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
-            'added_by' => $this->lang->t('Added by %s', $row['added_by']),
-            'size' => $this->lang->t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
-            'stats' => $this->lang->t('Visited %d times', $row['hit']),
-            'id' => $this->lang->t(is_string($row['id']) ? $row['id'] : ''),
-            'ext' => $this->lang->t('%s file type', strtoupper(end($extTab))),
-            'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
-        ];
+        $intro_stats = $this->lang->t('Visited %d times', $row['hit']);
 
         if ($this->currentConfig->rateEnabled && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
             $row['nb_rates'] = $this->rateService->countRatesForElement(ImageId::from($image_id));
 
-            $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
+            $intro_stats .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
         $formats = $this->entityManager->getRepository(ImageEntity::class)
             ->findFormatsForImage(ImageId::from($image_id));
 
+        $intro_formats = null;
         if ($formats !== []) {
             $format_strings = [];
 
@@ -333,8 +325,21 @@ final readonly class PictureModifyPageRenderer
                 $format_strings[] = sprintf('%s (%.2fMB)', $format->ext, ((float) ($format->filesize ?? 0)) / 1024.0);
             }
 
-            $intro_vars['formats'] = $this->lang->t('Formats: %s', implode(', ', $format_strings));
+            $intro_formats = $this->lang->t('Formats: %s', implode(', ', $format_strings));
         }
+
+        $intro_vars = new PictureIntroVars(
+            file: $this->lang->t('%s', $row_file),
+            date: $this->lang->t('Posted the %s', DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
+            age: $this->lang->t(ucfirst(DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
+            addedBy: $this->lang->t('Added by %s', $row['added_by']),
+            size: $this->lang->t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
+            stats: $intro_stats,
+            id: $this->lang->t(is_string($row['id']) ? $row['id'] : ''),
+            ext: $this->lang->t('%s file type', strtoupper(end($extTab))),
+            isSvg: strtoupper(end($extTab)) === 'SVG',
+            formats: $intro_formats,
+        );
 
         // image level options
         $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
@@ -437,7 +442,7 @@ final readonly class PictureModifyPageRenderer
             dateCreation: $date_creation,
             description: $comment_value,
             fAction: $f_action,
-            introVars: $intro_vars,
+            introVars: $intro_vars->toArray(),
             levelOptions: $level_options,
             levelOptionsSelected: [$selected_level],
             relatedCategories: $related_categories,

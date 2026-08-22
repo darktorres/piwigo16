@@ -15,6 +15,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\Enum\Section;
@@ -1170,7 +1171,10 @@ final readonly class PictureController implements ControllerInterface
             // (get_cat_display_name_from_id()) for the same
             // 'upper_names' shape.
             $related_categories_display[] = $this->htmlService
-                ->getCatDisplayName($page_category->upperNames);
+                ->getCatDisplayName(array_map(
+                    static fn (CategoryIdNamePermalink $row): array => $row->toArray(),
+                    $page_category->upperNames
+                ));
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids

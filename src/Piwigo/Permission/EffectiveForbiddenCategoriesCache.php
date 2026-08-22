@@ -116,8 +116,8 @@ final readonly class EffectiveForbiddenCategoriesCache
         if (! $this->accessLevelChecker->isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
             $zeroImageIds = [];
             foreach ($computedCategories['categories'] as $cat) {
-                if ($cat['count_images'] === 0) {
-                    $zeroImageIds[] = (string) $cat['cat_id'];
+                if ($cat->countImages === 0) {
+                    $zeroImageIds[] = (string) $cat->catId;
                 }
             }
 

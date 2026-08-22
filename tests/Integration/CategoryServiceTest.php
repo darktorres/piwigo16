@@ -15,6 +15,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\Event\DeleteSite;
     use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
     use Piwigo\Category\Projection\CategoryIdNamePermalink;
+    use Piwigo\Category\Projection\ComputedCategoryRow;
     use Piwigo\Category\Projection\ImageOrderPreference;
     use Piwigo\Category\Projection\RandomImageCategoryQuery;
     use Piwigo\Common\ValueObject\CategoryId;
@@ -443,9 +444,9 @@ namespace Piwigo\Tests\Integration {
 
             // category 1 (root) should count its own 3 images plus category
             // 2's 2 images in its subtree total.
-            self::assertSame(5, $cats[1]['count_images']);
-            self::assertSame(1, $cats[1]['count_categories']);
-            self::assertSame(2, $cats[2]['count_images']);
+            self::assertSame(5, $cats[1]->countImages);
+            self::assertSame(1, $cats[1]->countCategories);
+            self::assertSame(2, $cats[2]->countImages);
             self::assertNotNull($result['lastPhotoDate']);
         }
 
@@ -461,40 +462,36 @@ namespace Piwigo\Tests\Integration {
         public function testRemoveComputedCategoryDecrementsParentCounters(): void
         {
             $cats = [
-                1 => [
-                    'cat_id' => 1,
-                    'id_uppercat' => null,
-                    'global_rank' => null,
-                    'rank' => null,
-                    'date_last' => null,
-                    'nb_images' => 3,
-                    'user_id' => 1,
-                    'nb_categories' => 1,
-                    'count_images' => 5,
-                    'count_categories' => 1,
-                    'max_date_last' => null,
-                ],
-                2 => [
-                    'cat_id' => 2,
-                    'id_uppercat' => 1,
-                    'global_rank' => null,
-                    'rank' => null,
-                    'date_last' => null,
-                    'nb_images' => 2,
-                    'user_id' => 1,
-                    'nb_categories' => 0,
-                    'count_images' => 2,
-                    'count_categories' => 0,
-                    'max_date_last' => null,
-                ],
+                1 => new ComputedCategoryRow(
+                    catId: 1,
+                    idUppercat: null,
+                    globalRank: null,
+                    rank: null,
+                    dateLast: null,
+                    nbImages: 3,
+                    userId: 1,
+                    nbCategories: 1,
+                    countCategories: 1,
+                    countImages: 5,
+                ),
+                2 => new ComputedCategoryRow(
+                    catId: 2,
+                    idUppercat: 1,
+                    globalRank: null,
+                    rank: null,
+                    dateLast: null,
+                    nbImages: 2,
+                    userId: 1,
+                    countImages: 2,
+                ),
             ];
 
             CategoryService::removeComputedCategory($cats, $cats[2]);
 
             self::assertArrayNotHasKey(2, $cats);
-            self::assertSame(0, $cats[1]['nb_categories']);
-            self::assertSame(3, $cats[1]['count_images']);
-            self::assertSame(0, $cats[1]['count_categories']);
+            self::assertSame(0, $cats[1]->nbCategories);
+            self::assertSame(3, $cats[1]->countImages);
+            self::assertSame(0, $cats[1]->countCategories);
         }
 
         public function testGetImageIdsForCategoriesReturnsImages(): void
@@ -674,11 +671,11 @@ namespace Piwigo\Tests\Integration {
                 $result = $this->service->getComputedCategories(1, 0, '');
                 $cats = $result['categories'];
 
-                self::assertSame(1, $cats[$grandchildId]['count_images']);
-                self::assertSame(3, $cats[2]['count_images']); // own 2 + grandchild's 1
-                self::assertSame(1, $cats[2]['count_categories']);
-                self::assertSame(6, $cats[1]['count_images']); // own 3 + cat2's 2 + grandchild's 1
-                self::assertSame(2, $cats[1]['count_categories']); // cat2 + grandchild
+                self::assertSame(1, $cats[$grandchildId]->countImages);
+                self::assertSame(3, $cats[2]->countImages); // own 2 + grandchild's 1
+                self::assertSame(1, $cats[2]->countCategories);
+                self::assertSame(6, $cats[1]->countImages); // own 3 + cat2's 2 + grandchild's 1
+                self::assertSame(2, $cats[1]->countCategories); // cat2 + grandchild
             } finally {
                 $this->conn->executeStatement("DELETE FROM categories WHERE id = {$grandchildId}");
             }

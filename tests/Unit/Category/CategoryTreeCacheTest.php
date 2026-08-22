@@ -83,8 +83,11 @@ test('getForUser computes and caches a real value on a cache miss', function ():
     $item = $pool->getItem('tree_999999');
     expect($item->isHit())
         ->toBeTrue()
+        // ->toBe() is identity (===): ArrayAdapter round-trips the cached
+        // value through a fresh clone, so the cached ComputedCategoryRow
+        // objects are equal but never the *same* instances as $result's.
         ->and($item->get())
-        ->toBe($result);
+        ->toEqual($result);
 });
 
 test('getForUser returns the cached value verbatim on a cache hit, without recomputing it', function (): void {

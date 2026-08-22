@@ -12,6 +12,7 @@ use Piwigo\Category\Event\GetCategoryPreferredImageOrders;
 use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\CategoryRepresentantProperties;
+use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\ImageOrderPreference;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -352,11 +353,11 @@ test('getComputedCategories() rolls up child counts into the parent', function (
 
     // category 1 (root) should count its own 3 images plus category
     // 2's 2 images in its subtree total.
-    expect($cats[1]['count_images'])
+    expect($cats[1]->countImages)
         ->toBe(5)
-        ->and($cats[1]['count_categories'])
+        ->and($cats[1]->countCategories)
         ->toBe(1)
-        ->and($cats[2]['count_images'])
+        ->and($cats[2]->countImages)
         ->toBe(2)
         ->and($result['lastPhotoDate'])
         ->not->toBeNull();
@@ -374,43 +375,39 @@ test('getComputedCategories() prunes categories with no recent activity', functi
 
 test('removeComputedCategory() decrements parent counters', function (): void {
     $cats = [
-        1 => [
-            'cat_id' => 1,
-            'id_uppercat' => null,
-            'global_rank' => null,
-            'rank' => null,
-            'date_last' => null,
-            'nb_images' => 3,
-            'user_id' => 1,
-            'nb_categories' => 1,
-            'count_images' => 5,
-            'count_categories' => 1,
-            'max_date_last' => null,
-        ],
-        2 => [
-            'cat_id' => 2,
-            'id_uppercat' => 1,
-            'global_rank' => null,
-            'rank' => null,
-            'date_last' => null,
-            'nb_images' => 2,
-            'user_id' => 1,
-            'nb_categories' => 0,
-            'count_images' => 2,
-            'count_categories' => 0,
-            'max_date_last' => null,
-        ],
+        1 => new ComputedCategoryRow(
+            catId: 1,
+            idUppercat: null,
+            globalRank: null,
+            rank: null,
+            dateLast: null,
+            nbImages: 3,
+            userId: 1,
+            nbCategories: 1,
+            countCategories: 1,
+            countImages: 5,
+        ),
+        2 => new ComputedCategoryRow(
+            catId: 2,
+            idUppercat: 1,
+            globalRank: null,
+            rank: null,
+            dateLast: null,
+            nbImages: 2,
+            userId: 1,
+            countImages: 2,
+        ),
     ];
 
     CategoryService::removeComputedCategory($cats, $cats[2]);
 
     expect($cats)
         ->not->toHaveKey(2);
-    expect($cats[1]['nb_categories'])
+    expect($cats[1]->nbCategories)
         ->toBe(0)
-        ->and($cats[1]['count_images'])
+        ->and($cats[1]->countImages)
         ->toBe(3)
-        ->and($cats[1]['count_categories'])
+        ->and($cats[1]->countCategories)
         ->toBe(0);
 });
 
@@ -621,15 +618,15 @@ test('getComputedCategories() walks up through more than one ancestor level', fu
             ->getComputedCategories(1, 0, '');
         $cats = $result['categories'];
 
-        expect($cats[$grandchildId]['count_images'])
+        expect($cats[$grandchildId]->countImages)
             ->toBe(1)
-            ->and($cats[2]['count_images'])
+            ->and($cats[2]->countImages)
             ->toBe(3) // own 2 + grandchild's 1
-            ->and($cats[2]['count_categories'])
+            ->and($cats[2]->countCategories)
             ->toBe(1)
-            ->and($cats[1]['count_images'])
+            ->and($cats[1]->countImages)
             ->toBe(6) // own 3 + cat2's 2 + grandchild's 1
-            ->and($cats[1]['count_categories'])
+            ->and($cats[1]->countCategories)
             ->toBe(2); // cat2 + grandchild
     } finally {
         if ($grandchildId !== null) {

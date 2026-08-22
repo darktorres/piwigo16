@@ -14,6 +14,7 @@ use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Category\Projection\CategoryCatsResult;
 use Piwigo\Category\Projection\CategoryInfo;
+use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -125,35 +126,33 @@ final readonly class CategoryCatsRenderer
             $lastPhotoDate = is_string($user->rawAttributes['last_photo_date'] ?? null) ? $user->rawAttributes['last_photo_date'] : null;
             $now = DateTimeImmutable::createFromMutable(Env::now());
 
-            $filtered = array_filter($tree, static function (array $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
-                $countImages = $row['count_images'];
-                if ($countImages <= 0) {
+            $filtered = array_filter($tree, static function (ComputedCategoryRow $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
+                if ($row->countImages <= 0) {
                     return false;
                 }
 
-                $dateLast = is_string($row['date_last']) ? $row['date_last'] : null;
-
-                return CategoryService::isRecentCategory($dateLast, $recentPeriod, $lastPhotoDate, $now);
+                return CategoryService::isRecentCategory($row->dateLast, $recentPeriod, $lastPhotoDate, $now);
             });
         } else {
             $targetId = $category?->id;
 
-            $filtered = array_filter($tree, static function (array $row) use ($targetId): bool {
-                $countImages = $row['count_images'];
-                if ($countImages <= 0) {
+            $filtered = array_filter($tree, static function (ComputedCategoryRow $row) use ($targetId): bool {
+                if ($row->countImages <= 0) {
                     return false;
                 }
 
-                $rowUppercat = $row['id_uppercat'];
-
-                return $targetId === null ? $rowUppercat === null : $rowUppercat === $targetId;
+                return $targetId === null ? $row->idUppercat === null : $row->idUppercat === $targetId;
             });
         }
 
+        // Small inline comparators, not CategoryService::compareByGlobalRank()/
+        // compareByRank() -- those stay generic-array-shaped (a separate,
+        // larger scope spanning many unrelated call sites), same reasoning
+        // as CategoryService::getComputedCategories()'s own uasort() above it.
         if ($isRecentCats) {
-            usort($filtered, CategoryService::compareByGlobalRank(...));
+            usort($filtered, static fn (ComputedCategoryRow $a, ComputedCategoryRow $b): int => strnatcasecmp($a->globalRank ?? '', $b->globalRank ?? ''));
         } else {
-            usort($filtered, CategoryService::compareByRank(...));
+            usort($filtered, static fn (ComputedCategoryRow $a, ComputedCategoryRow $b): int => ($a->rank ?? 0) - ($b->rank ?? 0));
         }
 
         $totalCategories = count($filtered);
@@ -164,7 +163,7 @@ final readonly class CategoryCatsRenderer
 
         $catIds = [];
         foreach ($pageRows as $row) {
-            $catIds[] = $row['cat_id'];
+            $catIds[] = $row->catId;
         }
 
         // findFullCategoriesByIds() returns typed Category
@@ -182,7 +181,7 @@ final readonly class CategoryCatsRenderer
         $datesOfCategory = [];
 
         foreach ($pageRows as $row) {
-            $catId = $row['cat_id'];
+            $catId = $row->catId;
 
             // Category was deleted between the rollup and the full-row
             // fetch a moment later -- vanishingly rare (two queries, no
@@ -192,12 +191,12 @@ final readonly class CategoryCatsRenderer
             }
 
             $merged = array_merge($fullById[$catId], [
-                'nb_images' => $row['nb_images'],
-                'date_last' => $row['date_last'],
-                'max_date_last' => $row['max_date_last'],
-                'count_images' => $row['count_images'],
-                'nb_categories' => $row['nb_categories'],
-                'count_categories' => $row['count_categories'],
+                'nb_images' => $row->nbImages,
+                'date_last' => $row->dateLast,
+                'max_date_last' => $row->maxDateLast,
+                'count_images' => $row->countImages,
+                'nb_categories' => $row->nbCategories,
+                'count_categories' => $row->countCategories,
             ]);
 
             $maxDateLast = $merged['max_date_last'];

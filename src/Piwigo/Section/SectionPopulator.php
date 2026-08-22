@@ -12,6 +12,7 @@ use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryDescription;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\IpAddress;
@@ -269,7 +270,10 @@ final readonly class SectionPopulator
                 );
                 $page['title'] = $this->htmlRenderer->getCombinedCategoriesContentTitle($page_category?->toArray(), $combined_categories_for_title);
             } elseif ($page_category !== null) {
-                $upper_names = $page_category->upperNames;
+                $upper_names = array_map(
+                    static fn (CategoryIdNamePermalink $row): array => $row->toArray(),
+                    $page_category->upperNames
+                );
 
                 $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription($page_category->comment, 'main_page_category_description'));
 

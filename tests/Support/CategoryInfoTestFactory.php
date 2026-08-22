@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryInfo;
 
 /**
@@ -14,7 +15,7 @@ use Piwigo\Category\Projection\CategoryInfo;
 final class CategoryInfoTestFactory
 {
     /**
-     * @param list<array{id: int, name: string, permalink: ?string}> $upperNames
+     * @param list<CategoryIdNamePermalink> $upperNames
      */
     public static function build(
         int $id = 1,

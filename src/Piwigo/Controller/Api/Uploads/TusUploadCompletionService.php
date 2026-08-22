@@ -39,10 +39,7 @@ final readonly class TusUploadCompletionService
         private TusUploadStore $tusUploadStore,
     ) {}
 
-    /**
-     * @return ResponseInterface|array{imageId: int, addStatus: string}
-     */
-    public function complete(TusUploadSession $session): ResponseInterface|array
+    public function complete(TusUploadSession $session): ResponseInterface|TusUploadCompletionResult
     {
         $dataFilePath = $this->tusUploadStore->dataFilePath($session->id);
 
@@ -53,10 +50,7 @@ final readonly class TusUploadCompletionService
         return $this->completePhoto($session, $dataFilePath);
     }
 
-    /**
-     * @return ResponseInterface|array{imageId: int, addStatus: string}
-     */
-    private function completeFormat(TusUploadSession $session, string $dataFilePath): ResponseInterface|array
+    private function completeFormat(TusUploadSession $session, string $dataFilePath): ResponseInterface|TusUploadCompletionResult
     {
         if (! $this->currentConfig->isFormatsEnabled) {
             return ResponseFactory::problem('Forbidden', 403, 'Formats are disabled.');
@@ -83,16 +77,13 @@ final readonly class TusUploadCompletionService
 
         $addStatus = $this->uploadService->addFormat($dataFilePath, $formatExt, $imageRow->id->value);
 
-        return [
-            'imageId' => $imageRow->id->value,
-            'addStatus' => $addStatus,
-        ];
+        return new TusUploadCompletionResult(
+            imageId: $imageRow->id->value,
+            addStatus: $addStatus,
+        );
     }
 
-    /**
-     * @return ResponseInterface|array{imageId: int, addStatus: string}
-     */
-    private function completePhoto(TusUploadSession $session, string $dataFilePath): ResponseInterface|array
+    private function completePhoto(TusUploadSession $session, string $dataFilePath): ResponseInterface|TusUploadCompletionResult
     {
         try {
             $imageId = $this->uploadService->addUploadedFile(
@@ -125,9 +116,9 @@ final readonly class TusUploadCompletionService
 
         PermissionCacheInvalidator::invalidate();
 
-        return [
-            'imageId' => $imageId,
-            'addStatus' => $session->imageId !== null ? 'update' : 'add',
-        ];
+        return new TusUploadCompletionResult(
+            imageId: $imageId,
+            addStatus: $session->imageId !== null ? 'update' : 'add',
+        );
     }
 }

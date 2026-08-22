@@ -10,7 +10,13 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Search\Projection\AllwordsRule;
+use Piwigo\Search\Projection\AuthorRule;
+use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\DateRule;
 use Piwigo\Search\Projection\Search;
+use Piwigo\Search\Projection\SearchRules;
+use Piwigo\Search\Projection\TagsRule;
 use Piwigo\Search\SearchService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -55,13 +61,9 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             }
         }
 
-        $search = [
-            'mode' => 'AND',
-            'fields' => [
-                'date_posted' => [],
-                'date_created' => [],
-            ],
-        ];
+        $rules = new SearchRules();
+        $datePostedRule = new DateRule();
+        $dateCreatedRule = new DateRule();
 
         if ($input->allwords !== null) {
             $allwordsMode = $input->allwordsMode ?? 'AND';
@@ -77,18 +79,17 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 }
             }
 
-            $search['fields']['allwords'] = [
-                'mode' => $allwordsMode,
-                'fields' => $allwordsFields,
-                'words' => SearchService::splitAllwords($input->allwords),
-            ];
+            $rules->allwords = new AllwordsRule(
+                words: array_values(SearchService::splitAllwords($input->allwords) ?? []),
+                mode: $allwordsMode,
+                fields: $allwordsFields,
+            );
         }
 
         if ($input->tags !== null) {
-            foreach ($input->tags as $tagId) {
-                if (! is_scalar($tagId) || preg_match('/^\d+$/', (string) $tagId) !== 1) {
-                    return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter tags.');
-                }
+            $tagWords = self::intOrStringList($input->tags);
+            if ($tagWords === null) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter tags.');
             }
 
             $tagsMode = $input->tagsMode ?? 'AND';
@@ -96,23 +97,16 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter tagsMode.');
             }
 
-            $search['fields']['tags'] = [
-                'words' => $input->tags,
-                'mode' => $tagsMode,
-            ];
+            $rules->tags = new TagsRule(words: $tagWords, mode: $tagsMode);
         }
 
         if ($input->categories !== null) {
-            foreach ($input->categories as $catId) {
-                if (! is_scalar($catId) || preg_match('/^\d+$/', (string) $catId) !== 1) {
-                    return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter categories.');
-                }
+            $catWords = self::intOrStringList($input->categories);
+            if ($catWords === null) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter categories.');
             }
 
-            $search['fields']['cat'] = [
-                'words' => $input->categories,
-                'sub_inc' => $input->categoriesWithsubs,
-            ];
+            $rules->cat = new CategoryRule(words: $catWords, subInc: $input->categoriesWithsubs);
         }
 
         if ($input->authors !== null) {
@@ -121,10 +115,7 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 $authors[] = strip_tags(is_string($author) ? $author : '');
             }
 
-            $search['fields']['author'] = [
-                'words' => $authors,
-                'mode' => 'OR',
-            ];
+            $rules->author = new AuthorRule(words: $authors);
         }
 
         if ($input->filetypes !== null) {
@@ -134,29 +125,32 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 }
             }
 
-            $search['fields']['filetypes'] = $input->filetypes;
+            $rules->filetypes = array_values(array_filter($input->filetypes, is_string(...)));
         }
 
         if ($input->addedBy !== null) {
-            foreach ($input->addedBy as $userId) {
-                if (! is_scalar($userId) || preg_match('/^\d+$/', (string) $userId) !== 1) {
-                    return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter addedBy.');
-                }
+            $addedByIds = self::intOrStringList($input->addedBy);
+            if ($addedByIds === null) {
+                return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter addedBy.');
             }
 
-            $search['fields']['added_by'] = $input->addedBy;
+            $rules->addedBy = $addedByIds;
         }
 
-        foreach ([['datePostedPreset', 'datePostedCustom', 'date_posted', '24h|7d|30d|3m|6m|custom'], ['dateCreatedPreset', 'dateCreatedCustom', 'date_created', '7d|30d|3m|6m|12m|custom']] as [$presetKey, $customKey, $fieldsKey, $presetPattern]) {
+        foreach ([
+            ['datePostedPreset', 'datePostedCustom', 'date_posted', '24h|7d|30d|3m|6m|custom'],
+            ['dateCreatedPreset', 'dateCreatedCustom', 'date_created', '7d|30d|3m|6m|12m|custom'],
+        ] as [$presetKey, $customKey, $fieldsKey, $presetPattern]) {
             $preset = $presetKey === 'datePostedPreset' ? $input->datePostedPreset : $input->dateCreatedPreset;
             $custom = $customKey === 'datePostedCustom' ? $input->datePostedCustom : $input->dateCreatedCustom;
+            $dateRule = $fieldsKey === 'date_posted' ? $datePostedRule : $dateCreatedRule;
 
             if ($preset !== null) {
                 if (! is_string($preset) || preg_match('/^(' . $presetPattern . '|)$/', $preset) !== 1) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, 'Invalid parameter ' . $presetKey . '.');
                 }
 
-                $search['fields'][$fieldsKey]['preset'] = $preset;
+                $dateRule->preset = $preset;
 
                 if ($preset === 'custom' && ($custom === null || $custom === [])) {
                     return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ' is missing.');
@@ -164,7 +158,7 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             }
 
             if ($custom !== null) {
-                if (($search['fields'][$fieldsKey]['preset'] ?? null) !== 'custom') {
+                if ($dateRule->preset !== 'custom') {
                     return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ' provided but ' . $presetKey . ' is not custom.');
                 }
 
@@ -177,7 +171,7 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                         return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ', invalid option ' . (is_string($date) ? $date : '') . '.');
                     }
 
-                    $search['fields'][$fieldsKey]['custom'][] = $date;
+                    $dateRule->custom[] = $date;
                 }
             }
         }
@@ -189,7 +183,7 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 }
             }
 
-            $search['fields']['ratios'] = $input->ratios;
+            $rules->ratios = array_values(array_filter($input->ratios, is_string(...)));
         }
 
         if ($this->currentConfig->rateEnabled && $input->ratings !== null) {
@@ -213,21 +207,23 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 }
             }
 
-            $search['fields']['ratings'] = $input->ratings;
+            $rules->ratings = array_values(array_filter($input->ratings, is_string(...)));
         }
 
-        foreach ([
-            'filesize_min' => $input->filesizeMin,
-            'filesize_max' => $input->filesizeMax,
-            'width_min' => $input->widthMin,
-            'width_max' => $input->widthMax,
-            'height_min' => $input->heightMin,
-            'height_max' => $input->heightMax,
-        ] as $fieldKey => $value) {
-            if ($value !== null) {
-                $search['fields'][$fieldKey] = $value;
-            }
-        }
+        $rules->datePosted = $datePostedRule;
+        $rules->dateCreated = $dateCreatedRule;
+
+        $rules->filesizeMin = $input->filesizeMin;
+        $rules->filesizeMax = $input->filesizeMax;
+        $rules->widthMin = $input->widthMin;
+        $rules->widthMax = $input->widthMax;
+        $rules->heightMin = $input->heightMin;
+        $rules->heightMax = $input->heightMax;
+
+        $search = [
+            'mode' => 'AND',
+            'fields' => $rules->toArray(),
+        ];
 
         $forkedFrom = $searchInfo?->id;
         // saveSearch()'s own makeIndexUrl() call builds an HTML-embeddable
@@ -247,6 +243,31 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
             'searchId' => $searchUuid,
             'searchUrl' => $searchUrl,
         ], 201);
+    }
+
+    /**
+     * Validates every element is an all-digits scalar (same regex every
+     * real caller already used inline) without casting it -- the JSON
+     * payload's own int-vs-numeric-string distinction is preserved,
+     * matching {@see \Piwigo\Search\Projection\CategoryRule}/
+     * {@see \Piwigo\Search\Projection\TagsRule}'s own `int|string` words.
+     * Returns null on the first invalid element.
+     *
+     * @param array<array-key, mixed> $values
+     * @return ?list<int|string>
+     */
+    private static function intOrStringList(array $values): ?array
+    {
+        $result = [];
+        foreach ($values as $v) {
+            if (! is_scalar($v) || preg_match('/^\d+$/', (string) $v) !== 1) {
+                return null;
+            }
+
+            $result[] = is_int($v) ? $v : (string) $v;
+        }
+
+        return $result;
     }
 
     private static function isValidCustomDate(string $date): bool

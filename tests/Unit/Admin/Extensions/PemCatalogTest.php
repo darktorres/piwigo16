@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -831,14 +832,24 @@ test('getIncompatibleExtensions flags an fs extension whose installed version ha
         $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
 
         $fsExtensions = [
-            'stale_local_plugin' => [
-                'extension' => '200',
-                'version' => '1.0',
-            ],
-            'current_local_plugin' => [
-                'extension' => '200',
-                'version' => '2.0',
-            ],
+            'stale_local_plugin' => new PluginScanRow(
+                name: '',
+                version: '1.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+                extension: '200',
+            ),
+            'current_local_plugin' => new PluginScanRow(
+                name: '',
+                version: '2.0',
+                uri: '',
+                description: '',
+                author: '',
+                hasSettings: false,
+                extension: '200',
+            ),
         ];
 
         $incompatible = $catalog->getIncompatibleExtensions(ExtensionType::Plugin, $fsExtensions, [], true);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use DateInterval;
-use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -29,7 +28,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -63,8 +61,6 @@ final readonly class PluginsNewPageRenderer
         private CsrfService $csrfService,
         private CurrentUser $currentUser,
         private Paths $paths,
-        private EventDispatcher $eventDispatcher,
-        private EntityManagerInterface $entityManager,
         private Renderer $renderer,
     ) {}
 
@@ -120,11 +116,11 @@ final readonly class PluginsNewPageRenderer
                     $this->pageState->addInfo('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>');
 
                     $installed_plugin_id = $pluginsNewRequest->pluginId;
-                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager)[$installed_plugin_id] ?? null) : null;
+                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
                         $this->activityService->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
-                            'version' => $installed_fs_plugin['version'],
+                            'version' => $installed_fs_plugin->version,
                         ]);
                     }
                     break;
@@ -169,10 +165,9 @@ final readonly class PluginsNewPageRenderer
         $pem_base_url = RequestBootstrap::pemUrl(ExtensionType::Plugin);
 
         $fs_plugin_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager) as $fs_plugin) {
-            $extension = $fs_plugin['extension'] ?? null;
-            if (is_scalar($extension)) {
-                $fs_plugin_ids[] = (string) $extension;
+        foreach ($extension_scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig) as $fs_plugin) {
+            if ($fs_plugin->extension !== null) {
+                $fs_plugin_ids[] = $fs_plugin->extension;
             }
         }
 

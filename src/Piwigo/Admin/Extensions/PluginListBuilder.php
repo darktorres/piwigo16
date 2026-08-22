@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Core\UrlServiceInterface;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -21,13 +18,9 @@ use Piwigo\Users\CurrentUser;
 final readonly class PluginListBuilder
 {
     public function __construct(
-        private UrlServiceInterface $urlService,
-        private Lang $lang,
-        private HtmlRenderingInterface $htmlRenderer,
         private CurrentConfig $currentConfig,
         private Paths $paths,
         private CurrentUser $currentUser,
-        private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
     ) {}
 
@@ -36,17 +29,14 @@ final readonly class PluginListBuilder
      */
     public function build(): array
     {
-        // ExtensionScanner::scan()'s own declared return type is a generic
-        // array<string, array<string, mixed>> dispatch shape (by design --
-        // see that method's own docblock), but every real entry for
-        // ExtensionType::Plugin is actually scanPlugin()'s own precise shape.
-        /** @var array<string, array{name: string, version: string, uri: string,
-         *   description: string, author: string, hasSettings: bool,
-         *   'author uri'?: string, extension?: string}> $fs_plugins
-         */
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig, $this->entityManager);
-        uasort($fs_plugins, $this->htmlRenderer->nameCompare(...));
+            ->scanPlugins($this->paths, $this->currentUser, $this->currentConfig);
+        // Piwigo\Html\HtmlService::nameCompare() (HtmlRenderingInterface's
+        // own real, still-generic array<string, mixed> $a/$b contract)
+        // doesn't fit a real PluginScanRow object directly -- inlined here
+        // rather than wrapping each row back into an array just to satisfy
+        // that signature, same strcmp()-on-strtolower() logic.
+        uasort($fs_plugins, static fn (PluginScanRow $a, PluginScanRow $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
         $db_plugins_by_id = new ExtensionRepository($this->entityManager)
             ->findAll(ExtensionType::Plugin);
         $plugin_list = [];
@@ -60,10 +50,10 @@ final readonly class PluginListBuilder
 
             $plugin_list[] = [
                 'id' => $plugin_id,
-                'name' => $fs_plugin['name'],
-                'version' => $fs_plugin['version'],
+                'name' => $fs_plugin->name,
+                'version' => $fs_plugin->version,
                 'state' => $state,
-                'description' => $fs_plugin['description'],
+                'description' => $fs_plugin->description,
             ];
         }
 

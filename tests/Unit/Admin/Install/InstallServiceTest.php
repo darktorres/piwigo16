@@ -381,7 +381,7 @@ test('activateCorePlugins() scans but auto-activates nothing, even when a real f
     ], JSON_THROW_ON_ERROR));
 
     try {
-        InstallService::activateCorePlugins(LangTestFactory::get(), Paths::fromRoot($root), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+        InstallService::activateCorePlugins(Paths::fromRoot($root), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         $conn = DbConnection::build();
         expect($conn->fetchAssociative('SELECT id FROM plugins WHERE id = ' . $conn->quote($pluginId)))->toBeFalse();
@@ -397,7 +397,7 @@ test('activateCorePlugins() is a no-op for an empty plugins directory', function
     mkdir($root . 'plugins', 0o777, true);
 
     try {
-        InstallService::activateCorePlugins(LangTestFactory::get(), Paths::fromRoot($root), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+        InstallService::activateCorePlugins(Paths::fromRoot($root), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         // No fs entry to even scan -- the same "no-op by design" behavior
         // via a different, simpler route (nothing found at all, rather

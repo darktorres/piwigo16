@@ -301,9 +301,9 @@ test('getMissingExtensions excludes a bundled default plugin id but flags a genu
     expect($missing)
         ->toHaveKey('plugin')
         ->and($missing['plugin'])->toHaveCount(1)
-        ->and($missing['plugin'][0]['name'])->toBe('Custom Gallery Widget')
-        ->and($missing['plugin'][0]['version'])->toBe('0.9.2')
-        ->and($missing['plugin'][0]['extension'])->toBe('777');
+        ->and($missing['plugin'][0]->name)->toBe('Custom Gallery Widget')
+        ->and($missing['plugin'][0]->version)->toBe('0.9.2')
+        ->and($missing['plugin'][0]->extension)->toBe('777');
 });
 
 test('getMissingExtensions never reports a language type at all -- language entries carry no PEM extension id', function () use (&$fixtureRoot): void {
@@ -347,8 +347,8 @@ test('getMissingExtensions keeps scanning later types after skipping an earlier 
     expect($missing)
         ->toHaveKey('theme')
         ->and($missing['theme'])->toHaveCount(1)
-        ->and($missing['theme'][0]['name'])->toBe('Custom Theme')
-        ->and($missing['theme'][0]['extension'])->toBe('888');
+        ->and($missing['theme'][0]->name)->toBe('Custom Theme')
+        ->and($missing['theme'][0]->extension)->toBe('888');
 });
 
 test('checkUpdatedExtensions is a no-op and never re-triggers checkExtensions when the cache has no pending-update record', function (): void {

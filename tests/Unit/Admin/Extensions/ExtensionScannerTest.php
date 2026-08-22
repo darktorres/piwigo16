@@ -94,18 +94,18 @@ function extensionScannerTestEntityManager(): EntityManagerInterface
 
 test('scan finds the real bundled en_UK language via its common.po header', function (): void {
     $found = new ExtensionScanner()
-        ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+        ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
     expect($found)
         ->toHaveKey('en_UK')
-        ->and($found['en_UK']['name'])->toBe('English (Great Britain)')
-        ->and($found['en_UK']['code'])->toBe('en_UK')
-        ->and($found['en_UK']['version'])->not->toBe('0');
+        ->and($found['en_UK']->name)->toBe('English (Great Britain)')
+        ->and($found['en_UK']->code)->toBe('en_UK')
+        ->and($found['en_UK']->version)->not->toBe('0');
 });
 
 test('scan skips a language directory with no common.po', function (): void {
     $found = new ExtensionScanner()
-        ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+        ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
     // index.php sits alongside the real locale directories under language/
     // but isn't itself an extension -- also fails the [a-zA-Z0-9-_]+ id
@@ -210,7 +210,7 @@ test('scan returns an empty array when the scan directory itself does not exist'
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
             $found = new ExtensionScanner()
-                ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+                ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
         } finally {
             restore_error_handler();
         }
@@ -228,7 +228,7 @@ test('scan skips a plugin directory with no plugin.json', function (): void {
         mkdir($root . 'plugins/no_main_plugin', 0o777, true);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->not->toHaveKey('no_main_plugin');
@@ -250,7 +250,7 @@ test('scan skips a plugin directory whose plugin.json is not valid JSON', functi
         file_put_contents($dir . '/plugin.json', '{not valid json');
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->not->toHaveKey('malformed_plugin');
@@ -303,7 +303,7 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
         }
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->toHaveCount(20, 'break instead of continue on the invalid-id check would stop the scan early and miss some valid entries');
@@ -326,21 +326,27 @@ test('scan defaults name/version/uri/description/author for a plugin whose plugi
         extensionScannerWriteJson($root . 'plugins/headerless_plugin/plugin.json', []);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->toHaveKey('headerless_plugin');
         $plugin = $found['headerless_plugin'];
-        expect($plugin['name'])->toBe('headerless_plugin')
-            ->and($plugin['version'])->toBe('0')
-            ->and($plugin['uri'])->toBe('')
-            ->and($plugin['description'])->toBe('')
-            ->and($plugin['author'])->toBe('')
-            ->and($plugin['hasSettings'])->toBeFalse()
-            ->and($plugin)
-            ->not->toHaveKey('author uri')
-            ->and($plugin)
-            ->not->toHaveKey('extension');
+        expect($plugin->name)
+            ->toBe('headerless_plugin')
+            ->and($plugin->version)
+            ->toBe('0')
+            ->and($plugin->uri)
+            ->toBe('')
+            ->and($plugin->description)
+            ->toBe('')
+            ->and($plugin->author)
+            ->toBe('')
+            ->and($plugin->hasSettings)
+            ->toBeFalse()
+            ->and($plugin->authorUri)
+            ->toBeNull()
+            ->and($plugin->extension)
+            ->toBeNull();
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -369,7 +375,7 @@ test('scan skips a plugin whose plugin.json cannot be read', function (): void {
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
             $found = new ExtensionScanner()
-                ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+                ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         } finally {
             restore_error_handler();
             chmod($manifestFile, 0o644);
@@ -392,18 +398,18 @@ test('scan reports hasSettings=true for a webmaster-gated plugin when the curren
         ]));
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->toHaveKey('webmaster_gated_plugin')
-            ->and($found['webmaster_gated_plugin']['hasSettings'])->toBeTrue()
-            ->and($found['webmaster_gated_plugin']['name'])->toBe('Full Fixture Plugin')
-            ->and($found['webmaster_gated_plugin']['version'])->toBe('2.3.4')
-            ->and($found['webmaster_gated_plugin']['uri'])->toBe('https://example.com/extension_view.php?eid=777')
-            ->and($found['webmaster_gated_plugin']['extension'])->toBe('777')
-            ->and($found['webmaster_gated_plugin']['author'])->toBe('Fixture Author')
-            ->and($found['webmaster_gated_plugin']['description'])->toBe('A fixture plugin description for coverage.')
-            ->and($found['webmaster_gated_plugin']['author uri'])->toBe('https://example.com/author');
+            ->and($found['webmaster_gated_plugin']->hasSettings)->toBeTrue()
+            ->and($found['webmaster_gated_plugin']->name)->toBe('Full Fixture Plugin')
+            ->and($found['webmaster_gated_plugin']->version)->toBe('2.3.4')
+            ->and($found['webmaster_gated_plugin']->uri)->toBe('https://example.com/extension_view.php?eid=777')
+            ->and($found['webmaster_gated_plugin']->extension)->toBe('777')
+            ->and($found['webmaster_gated_plugin']->author)->toBe('Fixture Author')
+            ->and($found['webmaster_gated_plugin']->description)->toBe('A fixture plugin description for coverage.')
+            ->and($found['webmaster_gated_plugin']->authorUri)->toBe('https://example.com/author');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -419,7 +425,7 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
         ]));
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         // Real security-relevant behaviour, not just a line-coverage
         // formality: a non-webmaster user must never see hasSettings=true
@@ -427,7 +433,7 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
         // settings page behind webmaster status.
         expect($found)
             ->toHaveKey('webmaster_gated_plugin_normal_user')
-            ->and($found['webmaster_gated_plugin_normal_user']['hasSettings'])->toBeFalse();
+            ->and($found['webmaster_gated_plugin_normal_user']->hasSettings)->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -446,11 +452,11 @@ test('scan escapes special HTML characters in every string field it returns', fu
         ]);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->toHaveKey('xss_plugin')
-            ->and($found['xss_plugin']['name'])->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
+            ->and($found['xss_plugin']->name)->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -464,28 +470,35 @@ test('scan defaults id/name/version/uri/description/author for a theme whose the
         file_put_contents($root . 'themes/headerless_theme/screenshot.png', 'fixture');
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanThemes(UrlServiceTestFactory::build(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
 
         expect($found)
             ->toHaveKey('headerless_theme');
         $theme = $found['headerless_theme'];
-        expect($theme['id'])->toBe('headerless_theme')
-            ->and($theme['name'])->toBe('headerless_theme')
-            ->and($theme['version'])->toBe('0')
-            ->and($theme['uri'])->toBe('')
-            ->and($theme['description'])->toBe('')
-            ->and($theme['author'])->toBe('')
-            ->and($theme['mobile'])->toBeFalse()
-            ->and($theme)
-            ->not->toHaveKey('author uri')
-            ->and($theme)
-            ->not->toHaveKey('extension')
-            ->and($theme)
-            ->not->toHaveKey('parent')
-            ->and($theme)
-            ->not->toHaveKey('activable')
-            ->and($theme)
-            ->not->toHaveKey('use_standard_pages');
+        expect($theme->id)
+            ->toBe('headerless_theme')
+            ->and($theme->name)
+            ->toBe('headerless_theme')
+            ->and($theme->version)
+            ->toBe('0')
+            ->and($theme->uri)
+            ->toBe('')
+            ->and($theme->description)
+            ->toBe('')
+            ->and($theme->author)
+            ->toBe('')
+            ->and($theme->mobile)
+            ->toBeFalse()
+            ->and($theme->authorUri)
+            ->toBeNull()
+            ->and($theme->extension)
+            ->toBeNull()
+            ->and($theme->parent)
+            ->toBeNull()
+            ->and($theme->activable)
+            ->toBeNull()
+            ->and($theme->useStandardPages)
+            ->toBeNull();
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -507,7 +520,7 @@ test('scan skips a theme whose theme.json cannot be read', function (): void {
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
             $found = new ExtensionScanner()
-                ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+                ->scanThemes(UrlServiceTestFactory::build(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
         } finally {
             restore_error_handler();
             chmod($manifestFile, 0o644);
@@ -526,38 +539,50 @@ test('scan extracts every optional theme manifest field from a fully-populated t
         extensionScannerFixtureTheme($root, 'full_fixture_theme');
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanThemes(UrlServiceTestFactory::build(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
 
         expect($found)
             ->toHaveKey('full_fixture_theme');
         $theme = $found['full_fixture_theme'];
-        expect($theme['name'])->toBe('Full Fixture Theme')
-            ->and($theme['version'])->toBe('3.1.4')
-            ->and($theme['author'])->toBe('Fixture Theme Author')
-            ->and($theme['uri'])->toBe('https://example.com/extension_view.php?eid=999')
-            ->and($theme['description'])->toBe('A fixture theme description for coverage.')
-            ->and($theme['author uri'])->toBe('https://example.com/theme-author')
+        expect($theme->name)
+            ->toBe('Full Fixture Theme')
+            ->and($theme->version)
+            ->toBe('3.1.4')
+            ->and($theme->author)
+            ->toBe('Fixture Theme Author')
+            ->and($theme->uri)
+            ->toBe('https://example.com/extension_view.php?eid=999')
+            ->and($theme->description)
+            ->toBe('A fixture theme description for coverage.')
+            ->and($theme->authorUri)
+            ->toBe('https://example.com/theme-author')
             // extractExtensionId() parses the eid straight out of the URI
             // above -- real end-to-end behaviour, not a separately-mocked
             // value.
-            ->and($theme['extension'])->toBe('999')
-            ->and($theme['parent'])->toBe('parent_theme_id')
+            ->and($theme->extension)
+            ->toBe('999')
+            ->and($theme->parent)
+            ->toBe('parent_theme_id')
             // ThemeManifest has no 'activable' field at all (never set),
             // and 'mobile' is always false (no manifest equivalent either,
             // see ThemeManifest's own docblock) -- both real, permanent
             // differences from the old header-comment format, not gaps.
-            ->and($theme)
-            ->not->toHaveKey('activable')
-            ->and($theme['mobile'])->toBeFalse()
-            ->and($theme['use_standard_pages'])->toBeTrue()
+            ->and($theme->activable)
+            ->toBeNull()
+            ->and($theme->mobile)
+            ->toBeFalse()
+            ->and($theme->useStandardPages)
+            ->toBeTrue()
             // Real string, not a bool -- htmlspecialchars() escaping (the
             // "IMPORTANT SECURITY!" pass) turns '&' into '&amp;', so this
             // deliberately checks for a substring rather than an exact
             // scheme-and-host string that would depend on the untouched
             // request-scoped RootPathOverride/SectionContextRegistry
             // state this bare Unit test never seeds.
-            ->and($theme['admin_uri'])->toContain('admin.php?page=theme&amp;theme=full_fixture_theme')
-            ->and($theme['screenshot'])->toBe($root . 'themes/full_fixture_theme/screenshot.png');
+            ->and($theme->adminUri)
+            ->toContain('admin.php?page=theme&amp;theme=full_fixture_theme')
+            ->and($theme->screenshot)
+            ->toBe($root . 'themes/full_fixture_theme/screenshot.png');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -605,7 +630,7 @@ test('scan skips a language whose common.po cannot be read', function (): void {
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
             $found = new ExtensionScanner()
-                ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+                ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
         } finally {
             restore_error_handler();
             chmod($poFile, 0o644);
@@ -639,11 +664,11 @@ test('scan does not append an empty, whitespace-only X-Piwigo-Country to the lan
             PO);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+            ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
         expect($found)
             ->toHaveKey('blank_country_lang')
-            ->and($found['blank_country_lang']['name'])->toBe('Blank Country Language');
+            ->and($found['blank_country_lang']->name)->toBe('Blank Country Language');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -687,7 +712,7 @@ test('scan sorts languages by name via nameCompare, not raw directory listing or
             PO);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+            ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
         expect(array_keys($found))
             ->toBe(['zzz_dir', 'mmm_dir', 'aaa_dir']);
@@ -712,7 +737,7 @@ test('scan rejects a plugin directory that is a symlink even when its target is 
         symlink($targetDir, $linkPath);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->not->toHaveKey('symlinked_plugin')
@@ -749,11 +774,11 @@ test('scan only gates hasSettings on the exact literal string "webmaster", not a
         ]));
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanPlugins(CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         expect($found)
             ->toHaveKey('capitalized_webmaster_plugin')
-            ->and($found['capitalized_webmaster_plugin']['hasSettings'])->toBeFalse();
+            ->and($found['capitalized_webmaster_plugin']->hasSettings)->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -768,7 +793,7 @@ test('scan skips a theme directory with no theme.json', function (): void {
         mkdir($root . 'themes/no_conf_theme', 0o777, true);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanThemes(UrlServiceTestFactory::build(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
 
         expect($found)
             ->not->toHaveKey('no_conf_theme');
@@ -796,14 +821,13 @@ test('scan reports use_standard_pages as an explicitly present false, not just a
         file_put_contents($dir . '/screenshot.png', 'fixture');
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanThemes(UrlServiceTestFactory::build(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
 
         expect($found)
             ->toHaveKey('false_flags_theme');
         $theme = $found['false_flags_theme'];
-        expect($theme)
-            ->toHaveKey('use_standard_pages')
-            ->and($theme['use_standard_pages'])->toBeFalse();
+        expect($theme->useStandardPages)
+            ->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -826,11 +850,11 @@ test('scan omits admin_uri for a theme with no admin/admin.inc.php', function ()
         file_put_contents($dir . '/screenshot.png', 'fixture');
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanThemes(UrlServiceTestFactory::build(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
 
         expect($found)
             ->toHaveKey('no_admin_theme')
-            ->and($found['no_admin_theme'])->not->toHaveKey('admin_uri');
+            ->and($found['no_admin_theme']->adminUri)->toBeNull();
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -860,11 +884,11 @@ test('scan prefixes admin_uri with the real root url, not just the relative admi
         $urlService = UrlServiceTestFactory::build(rootPathOverride: $rootPathOverride);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService, LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager());
+            ->scanThemes($urlService, CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), extensionScannerTestEntityManager());
 
         expect($found)
             ->toHaveKey('admin_uri_theme')
-            ->and($found['admin_uri_theme']['admin_uri'])->toBe('https://example.com/piwigo/admin.php?page=theme&amp;theme=admin_uri_theme');
+            ->and($found['admin_uri_theme']->adminUri)->toBe('https://example.com/piwigo/admin.php?page=theme&amp;theme=admin_uri_theme');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -889,7 +913,7 @@ test('scan rejects a language directory that is a symlink even when its target i
         symlink($targetDir, $linkPath);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+            ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
         expect($found)
             ->not->toHaveKey('symlinked_lang')
@@ -921,7 +945,7 @@ test('scan actually uses the caller-supplied targetCharset, not just the default
             PO);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'iso-8859-1');
+            ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'iso-8859-1');
 
         expect($found)
             ->toHaveKey('iso_charset_lang')
@@ -931,8 +955,8 @@ test('scan actually uses the caller-supplied targetCharset, not just the default
             // test here -- only that the conversion demonstrably
             // happened at all, changing the bytes away from the
             // untouched, still-valid-UTF-8 'café'.
-            ->and($found['iso_charset_lang']['name'])->not->toBe('café')
-            ->and($found['iso_charset_lang']['name'])->toStartWith('caf');
+            ->and($found['iso_charset_lang']->name)->not->toBe('café')
+            ->and($found['iso_charset_lang']->name)->toStartWith('caf');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -951,16 +975,21 @@ test('scan defaults uri/author for a language whose common.po has no matching La
         file_put_contents($root . 'language/headerless_lang/common.po', "msgid \"\"\nmsgstr \"\"\n");
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+            ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
         expect($found)
             ->toHaveKey('headerless_lang');
         $language = $found['headerless_lang'];
-        expect($language['name'])->toBe('headerless_lang')
-            ->and($language['code'])->toBe('headerless_lang')
-            ->and($language['version'])->toBe(AppInfo::VERSION)
-            ->and($language['uri'])->toBe('')
-            ->and($language['author'])->toBe('');
+        expect($language->name)
+            ->toBe('headerless_lang')
+            ->and($language->code)
+            ->toBe('headerless_lang')
+            ->and($language->version)
+            ->toBe(AppInfo::VERSION)
+            ->and($language->uri)
+            ->toBe('')
+            ->and($language->author)
+            ->toBe('');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -995,14 +1024,14 @@ test('scan does not corrupt language name/country when charset conversion fails 
         set_error_handler(static fn (): bool => true, E_WARNING);
         try {
             $found = new ExtensionScanner()
-                ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'totally-bogus-charset-xyz');
+                ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'totally-bogus-charset-xyz');
         } finally {
             restore_error_handler();
         }
 
         expect($found)
             ->toHaveKey('bogus_charset_lang')
-            ->and($found['bogus_charset_lang']['name'])->toBe('Padded Language Name (Padded Country)');
+            ->and($found['bogus_charset_lang']->name)->toBe('Padded Language Name (Padded Country)');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -1025,11 +1054,11 @@ test('scan escapes special HTML characters in a language name', function (): voi
             PO);
 
         $found = new ExtensionScanner()
-            ->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
+            ->scanLanguages(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), extensionScannerTestEntityManager(), 'utf-8');
 
         expect($found)
             ->toHaveKey('xss_lang')
-            ->and($found['xss_lang']['name'])->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
+            ->and($found['xss_lang']->name)->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
     } finally {
         FilesystemHelper::deltree($root);
     }

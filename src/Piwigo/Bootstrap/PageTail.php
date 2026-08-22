@@ -74,7 +74,7 @@ final class PageTail
      */
     private static function renderer(): PageTailRenderer
     {
-        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(RequestBootstrap::lang(), self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::requestMetrics(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest());
+        return new PageTailRenderer(self::accessLevelChecker(), new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService(), RequestBootstrap::currentConfig(), self::paths(), RequestBootstrap::currentUser(), self::eventDispatcher(), RequestBootstrap::entityManager()), self::urlService(), self::eventDispatcher(), self::requestMetrics(), self::currentTemplate(), RequestBootstrap::currentConfig(), RequestBootstrap::sessionService(), RequestBootstrap::entityManager(), self::viteManifest());
     }
 
     /**

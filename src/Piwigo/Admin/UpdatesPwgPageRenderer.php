@@ -6,6 +6,9 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\Projection\UpdatesPwgView;
 use Piwigo\Admin\Request\UpdatesPwgRequest;
 use Piwigo\Auth\AccessControl;
@@ -123,7 +126,21 @@ final readonly class UpdatesPwgPageRenderer
             }
 
             $extension_update_checker = $this->extensionUpdateChecker;
-            $missing = $extension_update_checker->getMissingExtensions($upgrade_to);
+            // updates_pwg.latte only ever reads ['uri']/['name'] off each
+            // row (the "may not be compatible" plugin/theme link lists) --
+            // the template boundary, converted here rather than carrying
+            // the real PluginScanRow|ThemeScanRow|LanguageScanRow objects
+            // any further.
+            $missing = array_map(
+                static fn (array $rows): array => array_map(
+                    static fn (PluginScanRow|ThemeScanRow|LanguageScanRow $row): array => [
+                        'uri' => $row->uri,
+                        'name' => $row->name,
+                    ],
+                    $rows
+                ),
+                $extension_update_checker->getMissingExtensions($upgrade_to)
+            );
         }
 
         $minor_release_php_required = null;

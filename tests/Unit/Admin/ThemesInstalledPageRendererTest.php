@@ -7,6 +7,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Auth\AccessLevelChecker;
@@ -303,11 +304,10 @@ test('a non-string NAME on either side is treated as the empty string, not a cra
 // ---------------------------------------------------------------------
 
 /**
- * @param  array<string, mixed>  $fs_theme
  * @param  list<string>  $db_theme_ids
  * @return array<string, mixed>
  */
-function callBuildTplTheme(string $theme_id, array $fs_theme, array $db_theme_ids, string $default_theme, ExtensionLifecycle $lifecycle): array
+function callBuildTplTheme(string $theme_id, ThemeScanRow $fs_theme, array $db_theme_ids, string $default_theme, ExtensionLifecycle $lifecycle): array
 {
     $method = new ReflectionMethod(ThemesInstalledPageRenderer::class, 'buildTplTheme');
     $instance = new ReflectionClass(ThemesInstalledPageRenderer::class)->newInstanceWithoutConstructor();
@@ -328,24 +328,38 @@ function callBuildTplTheme(string $theme_id, array $fs_theme, array $db_theme_id
 
 /**
  * Minimal fs_theme entry matching ExtensionScanner::scanTheme()'s own
- * guaranteed-key shape (id/name/version/uri/description/author/mobile/
+ * guaranteed-field shape (id/name/version/uri/description/author/mobile/
  * screenshot always present, see that method's own docblock) -- every
  * buildTplTheme() read below stays within that documented contract.
+ * $overrides keys match ThemeScanRow's own constructor parameter names
+ * ('author uri' is the one exception, kept as the array-era key here
+ * purely so every call site below didn't need touching for the
+ * array-to-object conversion).
  *
  * @param  array<string, mixed>  $overrides
- * @return array<string, mixed>
  */
-function fsThemeEntry(array $overrides = []): array
+function fsThemeEntry(array $overrides = []): ThemeScanRow
 {
-    return array_merge([
-        'name' => 'Test Theme',
-        'version' => '1.0',
-        'uri' => '',
-        'description' => '',
-        'author' => '',
-        'mobile' => false,
-        'screenshot' => '',
-    ], $overrides);
+    $authorUri = $overrides['author uri'] ?? $overrides['authorUri'] ?? null;
+    $useStandardPages = $overrides['use_standard_pages'] ?? $overrides['useStandardPages'] ?? null;
+    $adminUri = $overrides['admin_uri'] ?? $overrides['adminUri'] ?? null;
+
+    return new ThemeScanRow(
+        id: is_string($overrides['id'] ?? null) ? $overrides['id'] : 'test-theme',
+        name: is_string($overrides['name'] ?? null) ? $overrides['name'] : 'Test Theme',
+        version: is_string($overrides['version'] ?? null) ? $overrides['version'] : '1.0',
+        uri: is_string($overrides['uri'] ?? null) ? $overrides['uri'] : '',
+        description: is_string($overrides['description'] ?? null) ? $overrides['description'] : '',
+        author: is_string($overrides['author'] ?? null) ? $overrides['author'] : '',
+        mobile: (bool) ($overrides['mobile'] ?? false),
+        screenshot: is_string($overrides['screenshot'] ?? null) ? $overrides['screenshot'] : '',
+        authorUri: is_string($authorUri) ? $authorUri : null,
+        extension: is_string($overrides['extension'] ?? null) ? $overrides['extension'] : null,
+        parent: is_string($overrides['parent'] ?? null) ? $overrides['parent'] : null,
+        activable: is_bool($overrides['activable'] ?? null) ? $overrides['activable'] : null,
+        useStandardPages: is_bool($useStandardPages) ? $useStandardPages : null,
+        adminUri: is_string($adminUri) ? $adminUri : null,
+    );
 }
 
 /**

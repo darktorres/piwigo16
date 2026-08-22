@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Projection\PluginsInstalledView;
 use Piwigo\Admin\Request\PluginsInstalledDisplayRequest;
@@ -30,6 +31,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserStatus;
 
 /**
  * Ported from admin/plugins_installed.php (the "installed" tab of the
@@ -61,13 +63,8 @@ final class PluginsInstalledPageRenderer
 
         $extension_repository = new ExtensionRepository($entityManager);
         $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger, $paths, $currentConfig);
-        // ExtensionScanner::scan()'s own declared return type is a generic
-        // array<string, array<string, mixed>> dispatch shape by design (see
-        // that method's own docblock) -- every $fs_plugin read below
-        // follows its documented convention and reads specific keys
-        // defensively instead.
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService, $lang, $paths, $currentUser, $eventDispatcher, $currentConfig, $entityManager);
+            ->scanPlugins($paths, $currentUser, $currentConfig);
 
         // ExtensionScanner::scanPlugin() reads plugin.json directly -- the
         // same marker file $pluginRegistry->getAllManifests() itself
@@ -81,19 +78,29 @@ final class PluginsInstalledPageRenderer
             if (isset($fs_plugins[$manifestId])) {
                 continue;
             }
-            $fs_plugins[$manifestId] = [
-                'name' => $manifest->name,
-                'version' => $manifest->version,
-                'description' => $manifest->description,
-                'author' => $manifest->author ?? '',
-                'author uri' => $manifest->authorUri,
-                'uri' => $manifest->homepage ?? '',
-                'hasSettings' => $manifest->hasSettings,
-                'extension' => null,
-            ];
+            // Same webmaster-gated resolution as ExtensionScanner::
+            // scanPlugin()'s own $data['hasSettings'] handling --
+            // PluginManifest::$hasSettings carries the same bool|'webmaster'
+            // union un-resolved.
+            $hasSettings = $manifest->hasSettings === true
+                || ($manifest->hasSettings === 'webmaster' && $currentUser->get()->status === UserStatus::Webmaster);
+            $fs_plugins[$manifestId] = new PluginScanRow(
+                name: $manifest->name,
+                version: $manifest->version,
+                uri: $manifest->homepage ?? '',
+                description: $manifest->description,
+                author: $manifest->author ?? '',
+                hasSettings: $hasSettings,
+                authorUri: $manifest->authorUri,
+            );
         }
 
-        uasort($fs_plugins, $htmlRenderer->nameCompare(...));
+        // Piwigo\Html\HtmlService::nameCompare() (HtmlRenderingInterface's
+        // own real, still-generic array<string, mixed> $a/$b contract)
+        // doesn't fit a real PluginScanRow object directly -- inlined here
+        // rather than wrapping each row back into an array just to satisfy
+        // that signature, same strcmp()-on-strtolower() logic.
+        uasort($fs_plugins, static fn (PluginScanRow $a, PluginScanRow $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
         if ($pluginsDisplay->isIncompatiblePluginsRequest) {
@@ -156,7 +163,7 @@ final class PluginsInstalledPageRenderer
             $incompatible_plugins_session = $_SESSION['incompatible_plugins'] ?? null;
             if (is_array($incompatible_plugins_session)
               and isset($incompatible_plugins_session[$plugin_id])) {
-                $fs_version = $fs_plugin['version'];
+                $fs_version = $fs_plugin->version;
                 $session_version = $incompatible_plugins_session[$plugin_id];
                 $session_version = is_scalar($session_version) ? (string) $session_version : '';
 
@@ -169,7 +176,7 @@ final class PluginsInstalledPageRenderer
             $setting_url = '';
             if (isset($settings_url_for_plugin_deprec[$plugin_id])) { // old version
                 $setting_url = $settings_url_for_plugin_deprec[$plugin_id];
-            } elseif ((bool) $fs_plugin['hasSettings']) { // new version
+            } elseif ($fs_plugin->hasSettings) { // new version
                 $setting_url = 'admin.php?page=plugin-' . $plugin_id;
 
                 if ((bool) preg_match('/^piwigo-(videojs|openstreetmap)$/', $plugin_id)) {
@@ -181,18 +188,17 @@ final class PluginsInstalledPageRenderer
                 'http://piwigo.org/ext',
                 'https://piwigo.org/ext',
             ];
-            $fs_plugin_uri = is_string($fs_plugin['uri'] ?? null) ? $fs_plugin['uri'] : '';
             $pem_url = RequestBootstrap::pemUrl();
-            $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin_uri);
+            $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin->uri);
 
             $tpl_plugin = [
                 'ID' => $plugin_id,
-                'NAME' => $fs_plugin['name'],
+                'NAME' => $fs_plugin->name,
                 'VISIT_URL' => $visit_url,
-                'VERSION' => $fs_plugin['version'],
-                'DESC' => $fs_plugin['description'],
-                'AUTHOR' => $fs_plugin['author'],
-                'AUTHOR_URL' => $fs_plugin['author uri'] ?? null,
+                'VERSION' => $fs_plugin->version,
+                'DESC' => $fs_plugin->description,
+                'AUTHOR' => $fs_plugin->author,
+                'AUTHOR_URL' => $fs_plugin->authorUri,
                 'SETTINGS_URL' => $setting_url,
             ];
 
@@ -204,8 +210,8 @@ final class PluginsInstalledPageRenderer
             }
             $tpl_plugin['STATE'] = $plugin_state;
 
-            $fs_plugin_extension = $fs_plugin['extension'] ?? null;
-            if (is_string($fs_plugin_extension) and isset($merged_extensions[$fs_plugin_extension])) {
+            $fs_plugin_extension = $fs_plugin->extension;
+            if ($fs_plugin_extension !== null and isset($merged_extensions[$fs_plugin_extension])) {
                 // Deactivate manually plugin from database
                 $extension_repository->updatePluginState($plugin_id, 'inactive');
 

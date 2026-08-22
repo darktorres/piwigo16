@@ -5,24 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
+use Piwigo\Admin\Extensions\Projection\PluginScanRow;
+use Piwigo\Admin\Extensions\Projection\ThemeScanRow;
 use Piwigo\Admin\PluginLoader;
-use Piwigo\Cache\CacheFactory;
-use Piwigo\Cache\TranslationsCachePool;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CharsetHelper;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
-use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
-use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Html\HtmlService;
-use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
@@ -49,34 +42,107 @@ use Piwigo\Users\UserStatus;
 final class ExtensionScanner
 {
     /**
-     * Each of the 3 real entry shapes (scanPlugin()/scanTheme()/
-     * scanLanguage()'s own precise return types) is genuinely different --
-     * a 3-way `$type is X ? ... : ...` conditional return type here would
-     * just repeat all 3 shapes a second time for no reader benefit; every
-     * real caller already reads specific keys defensively (`?? null` +
-     * an is_*() check), the same cross-domain generic-row-reader pattern
-     * used elsewhere for a dispatched-by-type heterogeneous return.
+     * Dispatch-by-type entry point for the handful of real callers that
+     * genuinely don't know $type statically (Admin\Extensions\
+     * ExtensionUpdateChecker's own cross-ExtensionType update-checking
+     * loops) -- every other real caller already knows which type it wants
+     * and should call scanPlugins()/scanThemes()/scanLanguages() directly
+     * instead.
      *
-     * @return array<string, array<string, mixed>> keyed by extension id
-     *   (directory name)
-     *
-     * $lang is vestigial (scanPlugin()/scanTheme() no longer load a
-     * description.txt or read any other legacy header-comment format) --
-     * kept on this public signature rather than removed, matching the
-     * same "stable seam" precedent `PemCatalog` already established:
-     * ~20 real call sites construct this method's arguments today, and a
-     * bare
-     * unused parameter costs nothing to keep vs. a 20-file blast radius
-     * to drop.
+     * @return array<string, PluginScanRow|ThemeScanRow|LanguageScanRow>
+     *   keyed by extension id (directory name)
      */
     public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, Paths $paths, CurrentUser $currentUser, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ?string $targetCharset = null): array
+    {
+        return match ($type) {
+            ExtensionType::Plugin => $this->scanPlugins($paths, $currentUser, $currentConfig),
+            ExtensionType::Theme => $this->scanThemes($urlService, $paths, $eventDispatcher, $currentConfig, $currentUser, $entityManager),
+            ExtensionType::Language => $this->scanLanguages($paths, $currentConfig, $entityManager, $targetCharset),
+        };
+    }
+
+    /**
+     * @return array<string, PluginScanRow> keyed by extension id (directory name)
+     */
+    public function scanPlugins(Paths $paths, CurrentUser $currentUser, CurrentConfig $currentConfig): array
+    {
+        $found = [];
+        foreach ($this->scanDirectoryEntries(ExtensionType::Plugin, $paths, $currentConfig) as $file) {
+            $entry = $this->scanPlugin($file, $paths, $currentUser);
+            if ($entry !== null) {
+                $found[$file] = $entry;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * @return array<string, ThemeScanRow> keyed by extension id (directory name)
+     */
+    public function scanThemes(UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, EntityManagerInterface $entityManager): array
+    {
+        $found = [];
+        foreach ($this->scanDirectoryEntries(ExtensionType::Theme, $paths, $currentConfig) as $file) {
+            $entry = $this->scanTheme($file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser, $entityManager);
+            if ($entry !== null) {
+                $found[$file] = $entry;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * $lang is vestigial (scanLanguage() reads common.po's own header
+     * fields directly, never anything from Lang) -- kept on this public
+     * signature rather than removed, matching the same "stable seam"
+     * precedent `PemCatalog` already established: real callers construct
+     * this method's arguments identically to scanPlugins()/scanThemes(),
+     * and a bare unused parameter costs nothing to keep vs. a multi-file
+     * blast radius to drop. $entityManager is likewise now unused here --
+     * kept for the same reason, since it stays required on scanThemes()'s
+     * own signature and every real caller already constructs both scan
+     * methods' arguments identically.
+     *
+     * @return array<string, LanguageScanRow> keyed by extension id (directory name)
+     */
+    public function scanLanguages(Paths $paths, CurrentConfig $currentConfig, EntityManagerInterface $entityManager, ?string $targetCharset = null): array
+    {
+        $found = [];
+        foreach ($this->scanDirectoryEntries(ExtensionType::Language, $paths, $currentConfig) as $file) {
+            $entry = $this->scanLanguage($file, $targetCharset, $paths);
+            if ($entry !== null) {
+                $found[$file] = $entry;
+            }
+        }
+
+        // Piwigo\Html\HtmlService::nameCompare() is the shared cross-domain
+        // comparator every other real name-sort call site in this codebase
+        // uses (Category rows, plugin/theme rows, ...) -- but it takes
+        // `array<string, mixed> $a/$b` (Core\HtmlRenderingInterface's own
+        // real, still-generic contract), so it doesn't fit a real
+        // LanguageScanRow object directly. Inlined here rather than
+        // wrapping each row back into an array just to satisfy that
+        // signature -- same strcmp()-on-strtolower() logic, no behavior
+        // change.
+        uasort($found, static fn (LanguageScanRow $a, LanguageScanRow $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
+
+        return $found;
+    }
+
+    /**
+     * @return list<string> valid directory-entry names under $type's own
+     *   scan directory, already filtered by the shared name-regex check
+     */
+    private function scanDirectoryEntries(ExtensionType $type, Paths $paths, CurrentConfig $currentConfig): array
     {
         $dir = opendir($type->scanDirectory($paths, $currentConfig));
         if ($dir === false) {
             return [];
         }
 
-        $found = [];
+        $entries = [];
         while (($file = readdir($dir)) !== false) {
             if ($file === '.' || $file === '..') {
                 continue;
@@ -84,42 +150,11 @@ final class ExtensionScanner
             if (! (bool) preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
                 continue;
             }
-
-            $entry = match ($type) {
-                ExtensionType::Plugin => $this->scanPlugin($file, $paths, $currentUser),
-                ExtensionType::Theme => $this->scanTheme($file, $urlService, $paths, $eventDispatcher, $currentConfig, $currentUser, $entityManager),
-                ExtensionType::Language => $this->scanLanguage($file, $targetCharset, $paths),
-            };
-
-            if ($entry !== null) {
-                $found[$file] = $entry;
-            }
+            $entries[] = $file;
         }
         closedir($dir);
 
-        if ($type === ExtensionType::Language) {
-            // Deliberately not \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-            // -- this class is designed to be Unit-testable without a full
-            // app bootstrap (see ExtensionScannerTest's own docblock).
-            // HtmlService has 8 required constructor collaborators, but
-            // nameCompare() itself is a pure strcmp()-on-strtolower()
-            // comparator that touches none of them, so bare/throwaway
-            // instances are harmless here.
-            @uasort($found, new HtmlService(
-                new CurrentConfig(),
-                new EventDispatcher(),
-                new ProcessCache(),
-                new ErrorCollector(new DeploymentPolicy(), $paths),
-                new CurrentUser(new CurrentConfig()),
-                new CurrentTemplate(),
-                new PageState(),
-                new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
-                new CategoryRepository($entityManager, new CurrentConfig()),
-                $entityManager,
-            )->nameCompare(...));
-        }
-
-        return $found;
+        return $entries;
     }
 
     /**
@@ -131,10 +166,8 @@ final class ExtensionScanner
      * PluginRegistry::install()`/`activate()`, and a malformed
      * `plugin.json` here should degrade to "not found" rather than break
      * a whole admin listing page.
-     *
-     * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|null
      */
-    private function scanPlugin(string $pluginId, Paths $paths, CurrentUser $currentUser): ?array
+    private function scanPlugin(string $pluginId, Paths $paths, CurrentUser $currentUser): ?PluginScanRow
     {
         $path = PluginLoader::pluginsPath($paths) . $pluginId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/plugin.json')) {
@@ -147,40 +180,32 @@ final class ExtensionScanner
             return null;
         }
 
-        $plugin = [
-            'name' => is_string($data['name'] ?? null) ? $data['name'] : $pluginId,
-            'version' => is_string($data['version'] ?? null) ? $data['version'] : '0',
-            'uri' => is_string($data['homepage'] ?? null) ? $data['homepage'] : '',
-            'description' => is_string($data['description'] ?? null) ? $data['description'] : '',
-            'author' => is_string($data['author'] ?? null) ? $data['author'] : '',
-            'hasSettings' => false,
-        ];
+        $name = is_string($data['name'] ?? null) ? $data['name'] : $pluginId;
+        $version = is_string($data['version'] ?? null) ? $data['version'] : '0';
+        $uri = is_string($data['homepage'] ?? null) ? $data['homepage'] : '';
+        $description = is_string($data['description'] ?? null) ? $data['description'] : '';
+        $author = is_string($data['author'] ?? null) ? $data['author'] : '';
 
         $hasSettingsRaw = $data['hasSettings'] ?? false;
-        if ($hasSettingsRaw === true) {
-            $plugin['hasSettings'] = true;
-        } elseif ($hasSettingsRaw === 'webmaster' && $currentUser->get()->status === UserStatus::Webmaster) {
-            $plugin['hasSettings'] = true;
-        }
+        $hasSettings = $hasSettingsRaw === true
+            || ($hasSettingsRaw === 'webmaster' && $currentUser->get()->status === UserStatus::Webmaster);
 
-        if (is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '') {
-            $plugin['author uri'] = $data['authorUri'];
-        }
-
-        $extension = $this->extractExtensionId($plugin['uri']);
-        if ($extension !== null) {
-            $plugin['extension'] = $extension;
-        }
+        $authorUri = is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '' ? $data['authorUri'] : null;
+        $extension = $this->extractExtensionId($uri);
 
         // IMPORTANT SECURITY! hasSettings is bool, not a display string --
-        // exclude it from the escaping pass and restore it afterwards.
-        $hasSettings = $plugin['hasSettings'];
-        unset($plugin['hasSettings']);
-        $plugin = array_map(htmlspecialchars(...), $plugin);
-        $plugin['hasSettings'] = $hasSettings;
-
-        /** @var array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string} $plugin */
-        return $plugin;
+        // every other field here is HTML-escaped before reaching a real
+        // caller.
+        return new PluginScanRow(
+            name: htmlspecialchars($name),
+            version: htmlspecialchars($version),
+            uri: htmlspecialchars($uri),
+            description: htmlspecialchars($description),
+            author: htmlspecialchars($author),
+            hasSettings: $hasSettings,
+            authorUri: $authorUri !== null ? htmlspecialchars($authorUri) : null,
+            extension: $extension !== null ? htmlspecialchars($extension) : null,
+        );
     }
 
     /**
@@ -191,25 +216,8 @@ final class ExtensionScanner
      * `activable` is never set here (no `ThemeManifest` equivalent, see
      * below) -- stays declared `?:` for callers that already read it
      * defensively.
-     *
-     * @return array{
-     *   id: string,
-     *   name: string,
-     *   version: string,
-     *   uri: string,
-     *   description: string,
-     *   author: string,
-     *   mobile: bool,
-     *   screenshot: string,
-     *   'author uri'?: string,
-     *   extension?: string,
-     *   parent?: string,
-     *   activable?: bool,
-     *   use_standard_pages?: bool,
-     *   admin_uri?: string,
-     * }|null
      */
-    private function scanTheme(string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, EntityManagerInterface $entityManager): ?array
+    private function scanTheme(string $themeId, UrlServiceInterface $urlService, Paths $paths, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, EntityManagerInterface $entityManager): ?ThemeScanRow
     {
         $path = ExtensionType::Theme->scanDirectory($paths, $currentConfig) . $themeId;
         if (! is_dir($path) || ! file_exists($path . '/theme.json')) {
@@ -222,83 +230,58 @@ final class ExtensionScanner
             return null;
         }
 
-        $theme = [
-            'id' => $themeId,
-            'name' => is_string($data['name'] ?? null) ? $data['name'] : $themeId,
-            'version' => is_string($data['version'] ?? null) ? $data['version'] : '0',
-            'uri' => is_string($data['homepage'] ?? null) ? $data['homepage'] : '',
-            'description' => is_string($data['description'] ?? null) ? $data['description'] : '',
-            'author' => is_string($data['author'] ?? null) ? $data['author'] : '',
-            // ThemeManifest deliberately has no 'mobile' field (see its own
-            // docblock) -- "which installed theme serves mobile" stays a
-            // pure admin/config pairing, never a manifest-declared fact.
-            'mobile' => false,
-        ];
+        $name = is_string($data['name'] ?? null) ? $data['name'] : $themeId;
+        $version = is_string($data['version'] ?? null) ? $data['version'] : '0';
+        $uri = is_string($data['homepage'] ?? null) ? $data['homepage'] : '';
+        $description = is_string($data['description'] ?? null) ? $data['description'] : '';
+        $author = is_string($data['author'] ?? null) ? $data['author'] : '';
 
-        if (is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '') {
-            $theme['author uri'] = $data['authorUri'];
-        }
-        $extension = $this->extractExtensionId($theme['uri']);
-        if ($extension !== null) {
-            $theme['extension'] = $extension;
-        }
-        if (is_string($data['parent'] ?? null)) {
-            $theme['parent'] = $data['parent'];
-        }
-        if (is_bool($data['useStandardPages'] ?? null)) {
-            $theme['use_standard_pages'] = $data['useStandardPages'];
-        }
+        $authorUri = is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '' ? $data['authorUri'] : null;
+        $extension = $this->extractExtensionId($uri);
+        $parent = is_string($data['parent'] ?? null) ? $data['parent'] : null;
+        $useStandardPages = is_bool($data['useStandardPages'] ?? null) ? $data['useStandardPages'] : null;
         // ThemeManifest has no 'activable' field either -- no bundled or
         // ported theme has ever needed it, and ThemesInstalledPageRenderer's
         // own registry-merge fallback already defaults an unset key to
-        // "activable", matching a real theme.json-scanned entry's
-        // behavior here exactly.
+        // "activable", matching a real theme.json-scanned entry's own
+        // always-null $activable here exactly.
 
         $screenshotPath = $path . '/screenshot.png';
         if (file_exists($screenshotPath)) {
-            $theme['screenshot'] = $screenshotPath;
+            $screenshot = $screenshotPath;
         } else {
             $adminTheme = new PreferencesService(new UserRepository($entityManager, $eventDispatcher, $currentConfig), $currentUser)
                 ->getAdminThemePref() ?? $currentConfig->adminTheme;
-            $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
+            $screenshot = $urlService->getRootUrl() . 'themes/admin/'
                 . $adminTheme
                 . '/images/missing_screenshot.png';
         }
 
-        if (file_exists($path . '/admin/admin.inc.php')) {
-            $theme['admin_uri'] = $urlService->getRootUrl() . 'admin.php?page=theme&theme=' . $themeId;
-        }
+        $adminUri = file_exists($path . '/admin/admin.inc.php')
+            ? $urlService->getRootUrl() . 'admin.php?page=theme&theme=' . $themeId
+            : null;
 
         // IMPORTANT SECURITY! (only string fields -- mobile/activable/
-        // use_standard_pages are real bools, which htmlspecialchars() can't
+        // useStandardPages are real bools, which htmlspecialchars() can't
         // accept under strict_types)
-        foreach ($theme as $key => $value) {
-            if (is_string($value)) {
-                $theme[$key] = htmlspecialchars($value);
-            }
-        }
-
-        // Same re-assertion as scanPlugin()'s own $plugin cast above -- the
-        // dynamic $key write above loses the precise shape from PHPStan's
-        // perspective even though every value stays the same type.
-        /** @var array{
-         *   id: string,
-         *   name: string,
-         *   version: string,
-         *   uri: string,
-         *   description: string,
-         *   author: string,
-         *   mobile: bool,
-         *   screenshot: string,
-         *   'author uri'?: string,
-         *   extension?: string,
-         *   parent?: string,
-         *   activable?: bool,
-         *   use_standard_pages?: bool,
-         *   admin_uri?: string,
-         * } $theme
-         */
-        return $theme;
+        return new ThemeScanRow(
+            id: htmlspecialchars($themeId),
+            name: htmlspecialchars($name),
+            version: htmlspecialchars($version),
+            uri: htmlspecialchars($uri),
+            description: htmlspecialchars($description),
+            author: htmlspecialchars($author),
+            // ThemeManifest deliberately has no 'mobile' field (see its own
+            // docblock) -- "which installed theme serves mobile" stays a
+            // pure admin/config pairing, never a manifest-declared fact.
+            mobile: false,
+            screenshot: htmlspecialchars($screenshot),
+            authorUri: $authorUri !== null ? htmlspecialchars($authorUri) : null,
+            extension: $extension !== null ? htmlspecialchars($extension) : null,
+            parent: $parent !== null ? htmlspecialchars($parent) : null,
+            useStandardPages: $useStandardPages,
+            adminUri: $adminUri !== null ? htmlspecialchars($adminUri) : null,
+        );
     }
 
     /**
@@ -314,10 +297,8 @@ final class ExtensionScanner
      * old '0' placeholder, since "0" would incorrectly flag every bundled
      * language as "outdated" the moment ExtensionUpdateChecker compares it
      * against any real PEM revision.
-     *
-     * @return array{name: string, code: string, version: string, uri: string, author: string}|null
      */
-    private function scanLanguage(string $languageId, ?string $targetCharset, Paths $paths): ?array
+    private function scanLanguage(string $languageId, ?string $targetCharset, Paths $paths): ?LanguageScanRow
     {
         $path = $paths->root . 'language/' . $languageId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/common.po')) {
@@ -326,13 +307,7 @@ final class ExtensionScanner
 
         $targetCharset = strtolower($targetCharset ?? 'utf-8');
 
-        $language = [
-            'name' => $languageId,
-            'code' => $languageId,
-            'version' => AppInfo::VERSION,
-            'uri' => '',
-            'author' => '',
-        ];
+        $name = $languageId;
         $lines = file($path . '/common.po');
         if ($lines === false) {
             return null;
@@ -340,10 +315,10 @@ final class ExtensionScanner
         $data = implode('', $lines);
 
         if ((bool) preg_match('/"X-Piwigo-Language-Name:\s*(.+?)\\\\n"/', $data, $val)) {
-            $language['name'] = trim($val[1]);
-            $converted = CharsetHelper::convertCharset($language['name'], 'utf-8', $targetCharset);
+            $name = trim($val[1]);
+            $converted = CharsetHelper::convertCharset($name, 'utf-8', $targetCharset);
             if ($converted !== false) {
-                $language['name'] = $converted;
+                $name = $converted;
             }
         }
         // The old common.lang.php convention crammed regional
@@ -360,18 +335,18 @@ final class ExtensionScanner
                 $country = $convertedCountry;
             }
             if ($country !== '') {
-                $language['name'] .= ' (' . $country . ')';
+                $name .= ' (' . $country . ')';
             }
         }
 
         // IMPORTANT SECURITY!
-        // Same re-assertion as scanPlugin()'s own $plugin cast above --
-        // array_map() doesn't preserve the precise shape from PHPStan's
-        // perspective even though every value stays a string.
-        /** @var array{name: string, code: string, version: string, uri: string, author: string} $result */
-        $result = array_map(htmlspecialchars(...), $language);
-
-        return $result;
+        return new LanguageScanRow(
+            name: htmlspecialchars($name),
+            code: htmlspecialchars($languageId),
+            version: htmlspecialchars(AppInfo::VERSION),
+            uri: '',
+            author: '',
+        );
     }
 
     private function extractExtensionId(string $uri): ?string

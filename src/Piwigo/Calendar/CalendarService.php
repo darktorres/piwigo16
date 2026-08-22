@@ -47,7 +47,7 @@ final readonly class CalendarService
      *
      * @param  list<bool|float|int|string>  $items  used only when $section !== 'categories'
      */
-    public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?CalendarQueryScope
+    public function buildInnerSql(string $section, bool $hasCategoryContext, ?int $categoryId, string $forbiddenCategories, array $items): ?CalendarQueryScope
     {
         $sql = <<<SQL
              FROM images

@@ -109,7 +109,15 @@ final class RatingUserPageRenderer
             $params = $imageStdParams->getByType(ImageStdParams::SQUARE);
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
                 $image_urls[$thumb_row->id] = new ImageThumbUrl(
-                    tn: DerivativeImage::url($params, SrcImageInfo::fromRow($thumb_row->toArray())),
+                    // ImageThumbInfo's own producing DQL never selects width/
+                    // height at all (see RateRepository::findImageThumbInfoByIds()),
+                    // matching SrcImageInfo's own "dimensions never given" state.
+                    tn: DerivativeImage::url($params, new SrcImageInfo(
+                        id: $thumb_row->id,
+                        path: $thumb_row->path,
+                        representativeExt: $thumb_row->representativeExt,
+                        dimensionsUnavailable: true,
+                    )),
                     page: $urlService->makePictureUrl([
                         'image_id' => $thumb_row->id,
                         'image_file' => $thumb_row->file,

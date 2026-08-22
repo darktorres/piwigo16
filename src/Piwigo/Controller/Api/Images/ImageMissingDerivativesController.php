@@ -108,7 +108,20 @@ final readonly class ImageMissingDerivativesController implements ControllerInte
 
             foreach ($rows as $imageRow) {
                 $startId = $imageRow->id;
-                $srcImage = new SrcImage(SrcImageInfo::fromRow($imageRow->toArray()));
+                // MissingDerivativeRow's own producing DQL always selects
+                // width/height (see ImageRepository::findForMissingDerivatives()),
+                // so "both non-null" is the only real "given" gate left --
+                // never the array_key_exists()-style "column never
+                // selected" state.
+                $dimensionsGiven = $imageRow->width !== null && $imageRow->height !== null;
+                $srcImage = new SrcImage(new SrcImageInfo(
+                    id: $imageRow->id,
+                    path: $imageRow->path ?? '',
+                    representativeExt: $imageRow->representativeExt,
+                    width: $dimensionsGiven ? $imageRow->width : null,
+                    height: $dimensionsGiven ? $imageRow->height : null,
+                    rotation: $imageRow->rotation,
+                ));
                 if ($srcImage->isMimetype()) {
                     continue;
                 }

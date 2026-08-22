@@ -127,7 +127,15 @@ final class RatingPageRenderer
 
         $tpl_images = [];
         foreach ($images as $image) {
-            $thumbnail_src = DerivativeImage::thumbUrl(SrcImageInfo::fromRow($image->toArray()));
+            // RatingReportRow's own producing DQL never selects width/height
+            // at all (see RateRepository::findRatingReport()), matching
+            // SrcImageInfo's own "dimensions never given" state exactly.
+            $thumbnail_src = DerivativeImage::thumbUrl(new SrcImageInfo(
+                id: $image->id,
+                path: $image->path,
+                representativeExt: $image->representativeExt,
+                dimensionsUnavailable: true,
+            ));
 
             $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image->id;
 

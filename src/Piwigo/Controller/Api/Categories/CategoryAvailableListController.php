@@ -249,7 +249,16 @@ final readonly class CategoryAvailableListController implements ControllerInterf
 
             foreach ($this->imageService->getPathsAndLevelForIds($imageIds) as $pathRow) {
                 if ($pathRow->level <= $currentUser->level) {
-                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, SrcImageInfo::fromRow($pathRow->toArray()));
+                    // PathRepresentativeExtLevel's own producing DQL never
+                    // selects width/height at all (see ImageRepository::
+                    // findPathsAndLevelForIds()), matching SrcImageInfo's
+                    // own "dimensions never given" state.
+                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, new SrcImageInfo(
+                        id: $pathRow->id,
+                        path: $pathRow->path,
+                        representativeExt: $pathRow->representativeExt,
+                        dimensionsUnavailable: true,
+                    ));
 
                     continue;
                 }
@@ -281,8 +290,16 @@ final readonly class CategoryAvailableListController implements ControllerInterf
             }
 
             if ($newImageIds !== []) {
+                // PathRepresentativeExt's own producing DQL never selects
+                // width/height either (see ImageRepository::
+                // findPathsForFileDeletion()).
                 foreach ($this->imageService->getPathsForFileDeletion($newImageIds) as $pathRow) {
-                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, SrcImageInfo::fromRow($pathRow->toArray()));
+                    $thumbnailSrcOf[$pathRow->id] = DerivativeImage::url($thumbnailSize, new SrcImageInfo(
+                        id: $pathRow->id,
+                        path: $pathRow->path,
+                        representativeExt: $pathRow->representativeExt,
+                        dimensionsUnavailable: true,
+                    ));
                 }
             }
         }

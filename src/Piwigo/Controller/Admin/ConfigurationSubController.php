@@ -35,6 +35,7 @@ use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabData;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesView;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView;
+use Piwigo\Controller\Admin\Projection\WatermarkFormValues;
 use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
@@ -827,17 +828,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $position = 'custom';
                     }
 
-                    $watermark = [
-                        'file' => $wm->file,
-                        'minw' => $wm->min_size[0],
-                        'minh' => $wm->min_size[1],
-                        'xpos' => $wm->xpos,
-                        'ypos' => $wm->ypos,
-                        'xrepeat' => $wm->xrepeat,
-                        'yrepeat' => $wm->yrepeat,
-                        'opacity' => $wm->opacity,
-                        'position' => $position,
-                    ];
+                    $watermark = new WatermarkFormValues(
+                        file: $wm->file,
+                        minw: $wm->min_size[0],
+                        minh: $wm->min_size[1],
+                        xpos: $wm->xpos,
+                        ypos: $wm->ypos,
+                        xrepeat: $wm->xrepeat,
+                        yrepeat: $wm->yrepeat,
+                        opacity: $wm->opacity,
+                        position: $position,
+                    )->toArray();
                 }
 
                 // $watermarkResult and its own ->watermark field are both

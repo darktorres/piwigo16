@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Projection\RatingReportImageRow;
+use Piwigo\Admin\Projection\RatingReportRateRow;
 use Piwigo\Admin\Projection\RatingView;
 use Piwigo\Admin\Request\RatingRequest;
 use Piwigo\Auth\AccessControl;
@@ -131,20 +133,7 @@ final class RatingPageRenderer
             $rates = $rate_repository->findRateRowsForElement(ImageId::from($image->id));
             $nb_rates = count($rates);
 
-            $tpl_image =
-              [
-                  'id' => $image->id,
-                  'U_THUMB' => $thumbnail_src,
-                  'U_URL' => $image_url,
-                  'SCORE_RATE' => $image->score,
-                  'AVG_RATE' => $image->avgRates,
-                  'SUM_RATE' => $image->sumRates,
-                  'NB_RATES' => $image->nbRates,
-                  'NB_RATES_TOTAL' => $nb_rates,
-                  'FILE' => $image->file,
-                  'rates' => [],
-              ];
-
+            $tpl_rates = [];
             foreach ($rates as $rate_row) {
                 if (isset($users[$rate_row->userId->value])) {
                     $user_rate = $users[$rate_row->userId->value];
@@ -155,12 +144,28 @@ final class RatingPageRenderer
                     $user_rate .= '(' . $rate_row->anonymousId . ')';
                 }
 
-                $tpl_image['rates'][] = [
-                    ...$rate_row->toArray(),
-                    'USER' => $user_rate,
-                ];
+                $tpl_rates[] = new RatingReportRateRow(
+                    userId: $rate_row->userId->value,
+                    elementId: $rate_row->elementId->value,
+                    anonymousId: $rate_row->anonymousId,
+                    rate: $rate_row->rate,
+                    date: $rate_row->date,
+                    user: $user_rate,
+                );
             }
-            $tpl_images[] = $tpl_image;
+
+            $tpl_images[] = new RatingReportImageRow(
+                id: $image->id,
+                uThumb: $thumbnail_src,
+                uUrl: $image_url,
+                scoreRate: $image->score,
+                avgRate: $image->avgRates,
+                sumRate: $image->sumRates,
+                nbRates: $image->nbRates,
+                nbRatesTotal: $nb_rates,
+                file: $image->file,
+                rates: $tpl_rates,
+            );
         }
 
         $adminContent = $renderer->render(new RatingView(
@@ -174,7 +179,7 @@ final class RatingPageRenderer
             userOptions: $user_options,
             userOptionsSelected: [$ratingRequest->usersRaw],
             orderByOptions: $order_by_options,
-            images: $tpl_images,
+            images: array_map(static fn (RatingReportImageRow $image): array => $image->toArray(), $tpl_images),
             csrfToken: $csrfService->getToken(),
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $urlService->getRootUrl(),

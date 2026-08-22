@@ -49,11 +49,17 @@ use Piwigo\Users\CurrentUser;
 /**
  * [SEC-21] The SVG upload branch validates that the sniffed MIME type
  * matches the ".svg" extension, and sanitizeSvgIfNeeded() strips
- * <script> elements and on*= event-handler attributes from the SVG (via
- * DOMDocument, LIBXML_NONET, DOCTYPE stripped first) before the file is
- * written to permanent storage. Content-Disposition: attachment for
- * uploaded SVG/HTML is enforced at the web-server level, see
- * upload/.htaccess.
+ * <script> elements, on*= event-handler attributes, javascript:/data:
+ * -scheme href/xlink:href values, and SMIL animation elements from the
+ * SVG (via DOMDocument, LIBXML_NONET, DOCTYPE stripped first) before the
+ * file is written to permanent storage -- a file that can't be parsed
+ * and verified is rejected outright, not stored untouched (P44-I).
+ * Content-Disposition: attachment for served SVG/HTML originals is
+ * enforced by ActionController itself (P44-I) -- upload/ has lived
+ * outside the web-servable document root since the "web-root isolation"
+ * hardening (docs/PLAN.md), so a web-server-level rule keyed on an
+ * `/upload/...` URL shape (the previous approach here) can no longer
+ * ever match a real request.
  *
  * [SEC-16] Every exec() call in this file (PDF/HEIC/TIFF/video/PSD/EPS
  * representative generation) builds its command string with
@@ -428,15 +434,35 @@ final readonly class UploadService
                     }
                     $finfo_type = finfo_file($finfo, $source_filepath);
 
+                    // [P44-I] Extends the extension-vs-sniffed-MIME cross
+                    // -check SVG already had to any upload finfo sniffs as
+                    // HTML-ish too, matching it with at least as much
+                    // scrutiny as SVG (previously the only extension in
+                    // this whole branch that got any cross-check at all).
                     if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                         unlink($source_filepath);
                         $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
                         throw new UnsupportedMediaTypeException($error_msg);
                     }
+                    if (in_array($finfo_type, ['text/html', 'text/plain'], true) and ! in_array($original_extension, ['html', 'htm', 'txt'], true)) {
+                        unlink($source_filepath);
+                        $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
+                        throw new UnsupportedMediaTypeException($error_msg);
+                    }
 
-                    // [SEC-21] strip <script>/event-handler content from a
-                    // genuinely-matching SVG before it ever reaches storage.
-                    $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null);
+                    // [SEC-21] strip <script>/event-handler/dangerous-URI
+                    // content from a genuinely-matching SVG before it ever
+                    // reaches storage -- fails closed (P44-I): a file that
+                    // can't be parsed and verified is rejected outright,
+                    // not stored untouched. Every other extension in
+                    // $conf_file_ext below (including html/htm, if an
+                    // admin has added either) gets no content sanitization
+                    // of any kind -- there is no equivalent for a general
+                    // HTML file the way there is for SVG.
+                    if (! $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null)) {
+                        unlink($source_filepath);
+                        throw new UnsupportedMediaTypeException('unable to verify uploaded SVG is safe to store');
+                    }
 
                     $conf_file_ext = $this->currentConfig->fileExtensions;
                     if (in_array($original_extension, $conf_file_ext, true)) {
@@ -664,65 +690,95 @@ final readonly class UploadService
     }
 
     /**
-     * [SEC-21] Strips <script> elements and on*= event-handler attributes
-     * from a genuinely-sniffed SVG before it's written to permanent
-     * storage -- the caller already confirmed the extension matches the
-     * MIME type; this closes the remaining "genuinely-named .svg with
-     * embedded script" stored-XSS gap. Same safe-parsing shape as
-     * MetadataService::parseSvgDimensions() (SEC-20): strip
-     * <!DOCTYPE> first, then DOMDocument with LIBXML_NONET so no external
-     * entity/network fetch can happen during parsing. A file that fails to
-     * parse as XML is left untouched (finfo already confirmed it isn't a
-     * real SVG in that case, so nothing to sanitize -- the caller's own
-     * mismatch check further up handles genuinely wrong content).
+     * [SEC-21] Strips <script> elements, on*= event-handler attributes,
+     * javascript:/data:-scheme href/xlink:href attribute values, and SMIL
+     * animation elements (<animate>/<set>/<animateTransform>/
+     * <animateMotion> -- no legitimate use in an untrusted upload) from a
+     * genuinely-sniffed SVG before it's written to permanent storage --
+     * the caller already confirmed the extension matches the MIME type;
+     * this closes the remaining "genuinely-named .svg with embedded
+     * script" stored-XSS gap. Same safe-parsing shape as
+     * MetadataService::parseSvgDimensions() (SEC-20): strip <!DOCTYPE>
+     * first (a bracketed internal subset is consumed correctly, not just
+     * up to its own first '>' -- P44-I), then DOMDocument with
+     * LIBXML_NONET so no external entity/network fetch can happen during
+     * parsing.
+     *
+     * Returns false (reject the upload entirely) for a file that fails to
+     * parse as XML -- deliberately fail-closed (P44-I), not "leave the
+     * file untouched": a file this method can't parse and verify is not a
+     * file it can certify sanitized, and finfo already confirmed it's
+     * genuinely SVG-typed by this point, so a parse failure here is a
+     * malformed/adversarial file, not a legitimate non-SVG one slipping
+     * through (that case is filtered by the caller's own MIME check,
+     * which never reaches this method at all).
      */
-    private function sanitizeSvgIfNeeded(string $source_filepath, ?string $finfo_type): void
+    private function sanitizeSvgIfNeeded(string $source_filepath, ?string $finfo_type): bool
     {
         if (! in_array($finfo_type, ['image/svg', 'image/svg+xml'], true)) {
-            return;
+            return true;
         }
 
         $xml = file_get_contents($source_filepath);
         if ($xml === false) {
-            return;
+            return false;
         }
 
-        $xml = preg_replace('/<!DOCTYPE[^>]*>/i', '', $xml);
+        // Consumes an optional bracketed internal subset (the shape
+        // needed to declare a custom entity/attlist) before the
+        // DOCTYPE's own closing '>' -- the naive `[^>]*` this replaces
+        // stopped at the *first* '>', which can sit inside that internal
+        // subset, leaving a mangled ']>' remnant that used to make the
+        // parse below fail silently (and, before P44-I, store the file
+        // untouched instead of rejecting it).
+        $xml = preg_replace('/<!DOCTYPE[^>\[]*(\[[^\]]*\])?[^>]*>/is', '', $xml);
         if ($xml === null || $xml === '') {
-            return;
+            return false;
         }
 
         // libxml_use_internal_errors() (not @) so a malformed upload
         // doesn't surface as a PHP-level warning at all -- parse errors
-        // are just discarded, matching the "leave untouched" fallback below.
+        // are just discarded, matching the reject-the-upload fallback
+        // below.
         $previous_use_errors = libxml_use_internal_errors(true);
         $dom = new DOMDocument();
         $loaded = $dom->loadXML($xml, LIBXML_NONET);
         libxml_clear_errors();
         libxml_use_internal_errors($previous_use_errors);
         if (! $loaded || ! $dom->documentElement instanceof DOMElement) {
-            return;
+            return false;
         }
 
         $xpath = new DOMXPath($dom);
 
         // DOMXPath::query() only returns false for a malformed XPath
-        // *expression* string -- both expressions below are fixed,
-        // always-syntactically-valid literals, never user input, so the
+        // *expression* string -- every expression below is a fixed,
+        // always-syntactically-valid literal, never user input, so the
         // `false` branch of each ternary is unreachable in practice: an
         // actual DOMNodeList is the only value either can ever produce
         // here. That makes `!== false` and `!== true` equivalent for both
         // (a DOMNodeList is !== either boolean).
         $scriptNodes = $xpath->query('//*[local-name()="script"]');
-        // Every instanceof check in this loop and the next is a PHPStan-
-        // narrowing guard over a case the DOM API itself already
-        // guarantees: every $scriptNode here comes from a live query
-        // result, so it's always a real DOMNode, and its parentNode is
-        // never null for an attached node (even a document-root element's
-        // "parent" is the owning DOMDocument, itself a DOMNode).
+        // Every instanceof check in this loop and the next few is a
+        // PHPStan-narrowing guard over a case the DOM API itself already
+        // guarantees: every node here comes from a live query result, so
+        // it's always a real DOMNode, and its parentNode is never null
+        // for an attached node (even a document-root element's "parent"
+        // is the owning DOMDocument, itself a DOMNode).
         foreach (iterator_to_array($scriptNodes !== false ? $scriptNodes : new ArrayIterator([])) as $scriptNode) {
             if ($scriptNode instanceof DOMNode && $scriptNode->parentNode instanceof DOMNode) {
                 $scriptNode->parentNode->removeChild($scriptNode);
+            }
+        }
+
+        // SMIL animation elements can rewrite a safe attribute (e.g. a
+        // benign href) to a dangerous URI at runtime, entirely outside
+        // any attribute this sanitizer inspects statically -- removed
+        // outright, not just neutralized.
+        $smilNodes = $xpath->query('//*[local-name()="animate" or local-name()="set" or local-name()="animateTransform" or local-name()="animateMotion"]');
+        foreach (iterator_to_array($smilNodes !== false ? $smilNodes : new ArrayIterator([])) as $smilNode) {
+            if ($smilNode instanceof DOMNode && $smilNode->parentNode instanceof DOMNode) {
+                $smilNode->parentNode->removeChild($smilNode);
             }
         }
 
@@ -730,15 +786,30 @@ final readonly class UploadService
         // Same PHPStan-narrowing shape: a '//@*' XPath query only ever
         // yields DOMAttr nodes by definition.
         foreach (iterator_to_array($attrNodes !== false ? $attrNodes : new ArrayIterator([])) as $attrNode) {
-            if ($attrNode instanceof DOMAttr && stripos($attrNode->nodeName, 'on') === 0) {
+            if (! $attrNode instanceof DOMAttr) {
+                continue;
+            }
+            if (stripos($attrNode->nodeName, 'on') === 0) {
+                $attrNode->ownerElement?->removeAttributeNode($attrNode);
+                continue;
+            }
+            // 'href'/'xlink:href' specifically (not every attribute
+            // containing "href" as a substring) -- DOMAttr::$localName is
+            // the unprefixed name, so this matches both the plain SVG2
+            // `href` and the legacy `xlink:href` form regardless of
+            // namespace prefix.
+            if (strtolower($attrNode->localName ?? '') === 'href'
+                and (bool) preg_match('/^\s*(javascript|data)\s*:/i', $attrNode->value)) {
                 $attrNode->ownerElement?->removeAttributeNode($attrNode);
             }
         }
 
         $sanitized = $dom->saveXML();
-        if ($sanitized !== false) {
-            file_put_contents($source_filepath, $sanitized);
+        if ($sanitized === false) {
+            return false;
         }
+        file_put_contents($source_filepath, $sanitized);
+        return true;
     }
 
     /**

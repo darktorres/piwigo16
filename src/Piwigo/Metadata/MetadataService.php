@@ -492,7 +492,14 @@ final readonly class MetadataService
      * `<!DOCTYPE ...>` declaration before parsing (defense in depth,
      * independent of the running libxml2 version's own external-entity
      * defaults) and never passes `LIBXML_NOENT`/`LIBXML_DTDLOAD` (the
-     * flags that would re-enable entity substitution).
+     * flags that would re-enable entity substitution). Consumes a
+     * bracketed internal subset correctly (P44-I) -- the previous
+     * `[^>]*` stopped at the first `>`, which can sit inside that
+     * subset, leaving a mangled remnant that failed to parse. Unlike
+     * `UploadService::sanitizeSvgIfNeeded()`'s sibling fix, a parse
+     * failure here stays a benign "no dimensions extracted" (`null`),
+     * not a security decision -- this method never decides whether an
+     * upload is safe to store.
      */
     private function parseSvgDimensions(string $file): ?SvgDimensions
     {
@@ -501,7 +508,7 @@ final readonly class MetadataService
             return null;
         }
 
-        $xml = preg_replace('/<!DOCTYPE[^>]*>/i', '', $xml);
+        $xml = preg_replace('/<!DOCTYPE[^>\[]*(\[[^\]]*\])?[^>]*>/is', '', $xml);
         if ($xml === null) {
             return null;
         }

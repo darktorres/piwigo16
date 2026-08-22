@@ -779,6 +779,39 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame($countBefore, $countAfter);
     }
 
+    /**
+     * P44-I: addUploadedFile() itself now rejects (deletes the source
+     * file, throws) an upload whose finfo-confirmed SVG content
+     * sanitizeSvgIfNeeded() can't parse and verify -- the fail-closed
+     * caller-level change, distinct from sanitizeSvgIfNeeded()'s own
+     * Unit-level return-value coverage (UploadServiceTest.php, which
+     * covers the bracketed-internal-subset-DOCTYPE bypass this fix's
+     * regex change specifically targets). This uses plain unparseable
+     * XML instead, since a bracketed-subset DOCTYPE now parses correctly
+     * post-fix and would no longer exercise the reject-the-upload path.
+     */
+    public function testAddUploadedFileRejectsAnUnparseableSvgAndDeletesTheSourceFile(): void
+    {
+        CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
+
+        $source = $this->marker . '/malformed.svg';
+        file_put_contents($source, '<svg xmlns="http://www.w3.org/2000/svg"><unclosed>');
+
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
+
+        $threw = null;
+        try {
+            new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get(), ImageStdParamsTestFactory::get(), $this->permissionService)->addUploadedFile($source, $this->urlService, 'malformed.svg');
+        } catch (UnsupportedMediaTypeException $e) {
+            $threw = $e;
+        }
+
+        self::assertNotNull($threw, 'addUploadedFile() should have thrown for an SVG sanitizeSvgIfNeeded() could not verify');
+        self::assertFileDoesNotExist($source);
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
+        self::assertSame($countBefore, $countAfter);
+    }
+
     public function testAddUploadedFileRejectsAnExtensionAbsentFromFileExtensionsEvenWhenAllTypesAreAllowed(): void
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = true;

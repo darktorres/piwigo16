@@ -171,11 +171,16 @@ afterEach(function (): void {
     upload_service_rrmdir(upload_service_test_marker());
 });
 
-function upload_service_call_sanitize(string $path, ?string $finfoType): void
+function upload_service_call_sanitize(string $path, ?string $finfoType): bool
 {
     $service = upload_service_test_make();
     $method = new ReflectionMethod($service, 'sanitizeSvgIfNeeded');
-    $method->invoke($service, $path, $finfoType);
+    $result = $method->invoke($service, $path, $finfoType);
+    if (! is_bool($result)) {
+        throw new LogicException('sanitizeSvgIfNeeded() did not return a bool: ' . var_export($result, true));
+    }
+
+    return $result;
 }
 
 /**
@@ -246,37 +251,125 @@ test('sanitizeSvgIfNeeded leaves a clean SVG intact', function (): void {
         ->toContain('fill="red"');
 });
 
-test('sanitizeSvgIfNeeded does nothing for a non-SVG MIME type', function (): void {
+test('sanitizeSvgIfNeeded does nothing and returns true for a non-SVG MIME type', function (): void {
     $path = upload_service_test_marker() . '/photo.jpg';
     file_put_contents($path, 'not-really-a-jpeg-but-that-does-not-matter-here');
 
-    upload_service_call_sanitize($path, 'image/jpeg');
+    $ok = upload_service_call_sanitize($path, 'image/jpeg');
 
-    expect(file_get_contents($path))
+    expect($ok)
+        ->toBeTrue()
+        ->and(file_get_contents($path))
         ->toBe('not-really-a-jpeg-but-that-does-not-matter-here');
 });
 
-test('sanitizeSvgIfNeeded does nothing when finfo type is null', function (): void {
+test('sanitizeSvgIfNeeded does nothing and returns true when finfo type is null', function (): void {
     $path = upload_service_test_marker() . '/unknown.bin';
     file_put_contents($path, 'raw-bytes');
 
-    upload_service_call_sanitize($path, null);
+    $ok = upload_service_call_sanitize($path, null);
 
-    expect(file_get_contents($path))
+    expect($ok)
+        ->toBeTrue()
+        ->and(file_get_contents($path))
         ->toBe('raw-bytes');
 });
 
-test('sanitizeSvgIfNeeded leaves malformed XML untouched rather than throwing', function (): void {
+test('sanitizeSvgIfNeeded rejects malformed XML rather than storing it untouched (P44-I, fail-closed)', function (): void {
     $path = upload_service_test_marker() . '/broken.svg';
     file_put_contents($path, '<svg><unclosed>');
 
-    upload_service_call_sanitize($path, 'image/svg+xml');
+    $ok = upload_service_call_sanitize($path, 'image/svg+xml');
 
-    expect(file_get_contents($path))
+    // The file on disk is left exactly as-is either way (this method
+    // never writes on failure) -- the real, security-relevant change is
+    // the return value: the caller (addUploadedFile()) now rejects the
+    // whole upload when this is false, instead of silently proceeding
+    // with an unsanitized file.
+    expect($ok)
+        ->toBeFalse()
+        ->and(file_get_contents($path))
         ->toBe('<svg><unclosed>');
 });
 
-test('sanitizeSvgIfNeeded returns without modifying anything when the source file cannot be read', function (): void {
+test('sanitizeSvgIfNeeded rejects a DOCTYPE with a bracketed internal subset wrapping a live <script> tag (P44-I)', function (): void {
+    // The naive `[^>]*` regex this replaces stopped at the FIRST '>',
+    // which sits inside the internal subset here -- leaving a mangled
+    // ']>' remnant that failed to parse, and (before P44-I's fail-closed
+    // change) stored the raw, unsanitized <script> tag untouched. The
+    // fixed regex consumes the whole bracketed subset correctly, so this
+    // now parses and sanitizes successfully instead.
+    $path = upload_service_test_marker() . '/doctype-internal-subset.svg';
+    file_put_contents($path, '<!DOCTYPE svg [<!ATTLIST svg x CDATA #IMPLIED>]><svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><circle r="5"/></svg>');
+
+    $ok = upload_service_call_sanitize($path, 'image/svg+xml');
+
+    $result = file_get_contents($path);
+    expect($ok)
+        ->toBeTrue()
+        ->and($result)
+        ->not->toContain('<script')
+        ->and($result)
+        ->not->toContain('alert(1)')
+        ->and($result)
+        ->toContain('circle');
+});
+
+test('sanitizeSvgIfNeeded strips a javascript:-scheme href attribute', function (): void {
+    $path = upload_service_test_marker() . '/js-href.svg';
+    file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(1)"><circle r="5"/></a></svg>');
+
+    $ok = upload_service_call_sanitize($path, 'image/svg+xml');
+
+    $result = file_get_contents($path);
+    expect($ok)
+        ->toBeTrue()
+        ->and($result)
+        ->not->toContain('javascript:')
+        ->and($result)
+        ->toContain('circle');
+});
+
+test('sanitizeSvgIfNeeded strips a data:-scheme xlink:href attribute', function (): void {
+    // The data: URI payload is base64-encoded here specifically because a
+    // literal '<script>' inside a double-quoted XML attribute value would
+    // itself be malformed XML (an unescaped '<' inside an attribute
+    // value) -- a real attacker would encode it the same way for the
+    // same reason, so this is the realistic shape of the attack, not a
+    // simplification.
+    $payload = base64_encode('<script>alert(1)</script>');
+    $path = upload_service_test_marker() . '/data-href.svg';
+    file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><a xlink:href="data:text/html;base64,' . $payload . '"><circle r="5"/></a></svg>');
+
+    $ok = upload_service_call_sanitize($path, 'image/svg+xml');
+
+    $result = file_get_contents($path);
+    expect($ok)
+        ->toBeTrue()
+        ->and($result)
+        ->not->toContain('data:text/html')
+        ->and($result)
+        ->toContain('circle');
+});
+
+test('sanitizeSvgIfNeeded removes SMIL animation elements outright', function (): void {
+    $path = upload_service_test_marker() . '/smil.svg';
+    file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5" fill="red"><animate attributeName="fill" to="javascript:alert(1)"/><set attributeName="fill" to="blue"/></circle></svg>');
+
+    $ok = upload_service_call_sanitize($path, 'image/svg+xml');
+
+    $result = file_get_contents($path);
+    expect($ok)
+        ->toBeTrue()
+        ->and($result)
+        ->not->toContain('<animate')
+        ->and($result)
+        ->not->toContain('<set')
+        ->and($result)
+        ->toContain('circle');
+});
+
+test('sanitizeSvgIfNeeded returns false without modifying anything when the source file cannot be read', function (): void {
     // A real, unreadable file (0000, torres owns it but no read bit for
     // anyone) -- file_get_contents() genuinely returns false here, not a
     // mock, matching this suite's own filesystem-safety convention (see
@@ -294,13 +387,15 @@ test('sanitizeSvgIfNeeded returns without modifying anything when the source fil
     // addUploadedFile's own md5_file()-read-failure test further down.
     set_error_handler(static fn (): bool => true);
     try {
-        upload_service_call_sanitize($path, 'image/svg+xml');
+        $ok = upload_service_call_sanitize($path, 'image/svg+xml');
     } finally {
         restore_error_handler();
         chmod($path, 0o644);
     }
 
-    expect(file_get_contents($path))
+    expect($ok)
+        ->toBeFalse()
+        ->and(file_get_contents($path))
         ->toContain('circle');
 });
 

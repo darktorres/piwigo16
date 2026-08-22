@@ -1021,6 +1021,25 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($result);
         }
 
+        public function testParseSvgDimensionsConsumesABracketedInternalSubsetDoctypeCorrectly(): void
+        {
+            $method = new ReflectionMethod(MetadataService::class, 'parseSvgDimensions');
+            $path = $this->scratchDir . '/bracketed-doctype.svg';
+            file_put_contents(
+                $path,
+                '<?xml version="1.0"?><!DOCTYPE svg [<!ATTLIST svg x CDATA #IMPLIED>]>'
+                . '<svg xmlns="http://www.w3.org/2000/svg" width="42" height="24"></svg>'
+            );
+
+            $result = $method->invoke($this->service, $path);
+
+            // Before the P44-I regex fix, `[^>]*` stopped at the `>` inside
+            // the brackets, leaving a mangled `]>` remnant that failed to
+            // parse -- silently returning null instead of the real
+            // dimensions below.
+            self::assertEquals(new SvgDimensions(42, 24), $result);
+        }
+
         // parseSvgDimensions()'s `$attributes === null` guard is not exercised
         // here -- SimpleXMLElement::attributes() only returns null for a
         // handful of internal-error conditions that don't occur once

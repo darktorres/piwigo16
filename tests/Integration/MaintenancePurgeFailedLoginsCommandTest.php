@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use LogicException;
 use Override;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Auth\PasswordResetRequestEntity;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Config\ConfigLoader;
@@ -42,21 +43,25 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    public function testPurgesOldFailedLoginsAndStaleIntegrityIgnoresButKeepsRecentOnes(): void
+    public function testPurgesOldFailedLoginsResetRequestsAndStaleIntegrityIgnoresButKeepsRecentOnes(): void
     {
         $conn = DbConnection::build();
         $em = EntityManagerFactory::build($conn);
         $failedLoginRepo = $em->getRepository(UserFailedLoginEntity::class);
+        $passwordResetRequestRepo = $em->getRepository(PasswordResetRequestEntity::class);
         $ignoredAnomalyRepo = $em->getRepository(IntegrityIgnoredAnomalyEntity::class);
 
         $failedLoginRepo->recordFailure(1, '203.0.113.10', '2000-01-01 00:00:00');
         $failedLoginRepo->recordFailure(1, '203.0.113.10', date('Y-m-d H:i:s'));
 
+        $passwordResetRequestRepo->recordRequest(1, '203.0.113.10', '2000-01-01 00:00:00');
+        $passwordResetRequestRepo->recordRequest(1, '203.0.113.10', date('Y-m-d H:i:s'));
+
         $ignoredAnomalyRepo->syncForVersion('16.0.0', ['old-anomaly'], '2000-01-01 00:00:00');
         $ignoredAnomalyRepo->syncForVersion('99.0.0', ['recent-anomaly'], date('Y-m-d H:i:s'));
 
         try {
-            $command = new MaintenancePurgeFailedLoginsCommand($failedLoginRepo, $ignoredAnomalyRepo);
+            $command = new MaintenancePurgeFailedLoginsCommand($failedLoginRepo, $passwordResetRequestRepo, $ignoredAnomalyRepo);
             $tester = new CommandTester($command);
 
             $exitCode = $tester->execute([]);
@@ -66,6 +71,9 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
             $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1');
             self::assertSame(1, $remainingFailedLogins);
 
+            $remainingResetRequests = $conn->fetchOne('SELECT COUNT(*) FROM password_reset_requests WHERE user_id = 1');
+            self::assertSame(1, $remainingResetRequests);
+
             $remainingOld = $conn->fetchOne('SELECT COUNT(*) FROM integrity_ignored_anomalies' . " WHERE anomaly_id = 'old-anomaly'");
             self::assertSame(0, $remainingOld);
 
@@ -73,6 +81,7 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
             self::assertSame(1, $remainingRecent);
         } finally {
             $conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
+            $conn->executeStatement('DELETE FROM password_reset_requests WHERE user_id = 1');
             $conn->executeStatement("DELETE FROM integrity_ignored_anomalies WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
         }
     }

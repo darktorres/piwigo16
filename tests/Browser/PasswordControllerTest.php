@@ -698,6 +698,40 @@ it('sends a real verification-code email for a resolvable user with a real email
     }
 });
 
+it('rate-limits password-reset-code requests per account after the configured ceiling, using the same generic message (P44-L)', function (): void {
+    $snapshot = H::snapshotConfig(['password_reset_request_max_attempts']);
+    $email = 'ct-pwlost-ratelimit-' . uniqid() . '@example.test';
+    $fixture = passwordInsertNormalUserWithEmail($email);
+    $userId = $fixture['userId'];
+
+    try {
+        H::setConfigValue('password_reset_request_max_attempts', '1');
+
+        // 1st request: within the (lowered, for this test) ceiling --
+        // succeeds normally, recording one row for this real user_id.
+        $page = H::gotoOk($this, '/password.php');
+        $page = $page->fill('username_or_email', $email);
+        H::clickWithTimeout($page, 'submit');
+        $page->assertSee('If your account exists, a verification code has been sent to your email address.');
+        $page->assertPresent('input[name="user_code"]');
+
+        // 2nd request, fresh session (no pending-code short-circuit) --
+        // crosses the account-scoped ceiling (now 1), rejected with the
+        // same generic, enumeration-safe message the IP-scoped and
+        // per-code lockouts already use, and never reaches the
+        // code-entry step.
+        $freshPage = H::gotoOk($this, '/password.php');
+        $freshPage = $freshPage->fill('username_or_email', $email);
+        H::clickWithTimeout($freshPage, 'submit');
+        $freshPage->assertSee('Too many attempts, please try later..');
+        $freshPage->assertPresent('input[name="username_or_email"]');
+        H::assertNoServerErrors($freshPage, 'password reset-request account rate limit');
+    } finally {
+        passwordDeleteUser($userId);
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('expires a pending reset code once its configured duration has elapsed', function (): void {
     $snapshot = H::snapshotConfig(['password_reset_code_duration']);
 

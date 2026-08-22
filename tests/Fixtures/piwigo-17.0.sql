@@ -731,6 +731,34 @@ INSERT INTO `old_permalinks` VALUES (1,'old-sample-album','2026-08-01 00:00:00',
 UNLOCK TABLES;
 
 --
+-- Table structure for table `password_reset_requests`
+--
+
+DROP TABLE IF EXISTS `password_reset_requests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `password_reset_requests` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `user_id` int DEFAULT NULL COMMENT 'targeted user id, if the submitted username/email resolved to a real account',
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'REMOTE_ADDR the reset-code request came from',
+  `requested_at` datetime NOT NULL COMMENT 'when the reset-code request occurred',
+  PRIMARY KEY (`id`),
+  KEY `idx_password_reset_requests_user_time` (`user_id`,`requested_at`),
+  KEY `idx_password_reset_requests_ip_time` (`ip`,`requested_at`),
+  CONSTRAINT `fk_password_reset_requests_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='password-reset-code requests, read and written by PasswordController::processVerificationCode() via PasswordResetRequestRepository to rate-limit how often a fresh code can be requested';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `password_reset_requests`
+--
+
+LOCK TABLES `password_reset_requests` WRITE;
+/*!40000 ALTER TABLE `password_reset_requests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `password_reset_requests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `plugin_migrations`
 --
 

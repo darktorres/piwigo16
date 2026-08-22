@@ -12,9 +12,11 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
+use Piwigo\Auth\PasswordResetRequestRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -26,6 +28,7 @@ use Piwigo\Controller\Projection\PasswordView;
 use Piwigo\Controller\Request\PasswordRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
@@ -81,6 +84,7 @@ final class PasswordController implements ControllerInterface
         private readonly UserService $userService,
         private readonly PasswordService $passwordService,
         private readonly AuthService $authService,
+        private readonly PasswordResetRequestRepository $passwordResetRequestRepo,
         private readonly PreferencesService $preferencesService,
         private readonly ApiKeyService $apiKeyService,
         private readonly HtmlService $htmlService,
@@ -334,6 +338,24 @@ final class PasswordController implements ControllerInterface
             return true;
         }
 
+        // [P44-L] RATE LIMIT (IP-scoped): checked before the username/email
+        // is even resolved, so a fast reject here can never leak whether
+        // the submitted value resolves to a real account -- mirrors
+        // AuthService::pwgLogin()'s own IP-then-user two-tier lockout
+        // ordering. See IpAddress's own docblock for why this is a plain
+        // -> (not ?->) before the ??.
+        $ip = IpAddress::fromRemoteAddr()->value ?? '';
+        $now = Env::now();
+        $nowFormatted = $now->format('Y-m-d H:i:s');
+        $windowStart = (clone $now)->modify('-' . $this->currentConfig->passwordResetRequestWindowMinutes . ' minutes')->format('Y-m-d H:i:s');
+        $maxRequestAttempts = $this->currentConfig->passwordResetRequestMaxAttempts;
+        $maxIpRequestAttempts = $this->currentConfig->passwordResetRequestIpMaxAttempts;
+
+        if ($ip !== '' && $this->passwordResetRequestRepo->countRecentByIp($ip, $windowStart) >= $maxIpRequestAttempts) {
+            $this->errors['password_form_error'] = $this->lang->t('Too many attempts, please try later..');
+            return false;
+        }
+
         // empty param
         $username_or_email = trim($this->request->usernameOrEmail);
         if ($username_or_email === '') {
@@ -384,6 +406,15 @@ final class PasswordController implements ControllerInterface
                 $this->errors['password_form_error'] = $this->lang->t('Too many attempts, please try later..');
                 return false;
             }
+
+            // [P44-L] RATE LIMIT (account-scoped): the request-scoped
+            // sibling to the per-code 3-attempt lockout above -- that one
+            // only ever triggers once a code has already been requested
+            // and guessed wrong; this limits the request step itself.
+            if ($this->passwordResetRequestRepo->countRecentByUserId($user_id->value, $windowStart) >= $maxRequestAttempts) {
+                $this->errors['password_form_error'] = $this->lang->t('Too many attempts, please try later..');
+                return false;
+            }
         }
 
         // check if we want to skip email sending if user is guest, generic
@@ -408,6 +439,12 @@ final class PasswordController implements ControllerInterface
         }
         $this->mailService
             ->switchLangBack();
+
+        // Recorded regardless of $is_user_found -- a null user_id row
+        // still counts against the IP-scoped ceiling above, same
+        // enumeration-safe shape as UserFailedLoginRepository::recordFailure()'s
+        // own null-user_id rows for an unresolved username.
+        $this->passwordResetRequestRepo->recordRequest($is_user_found ? $user_id->value : null, $ip, $nowFormatted);
 
         $_SESSION['reset_password_code'] = [
             'secret' => $user_code['secret'],

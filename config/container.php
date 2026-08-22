@@ -20,6 +20,8 @@ use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
+use Piwigo\Auth\PasswordResetRequestEntity;
+use Piwigo\Auth\PasswordResetRequestRepository;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\RedirectService;
@@ -479,6 +481,8 @@ return [
     ExtensionIgnoredUpdateRepository::class => factory(static fn (EntityManagerInterface $em): ExtensionIgnoredUpdateRepository => $em->getRepository(ExtensionIgnoredUpdateEntity::class)),
 
     UserFailedLoginRepository::class => factory(static fn (EntityManagerInterface $em): UserFailedLoginRepository => $em->getRepository(UserFailedLoginEntity::class)),
+
+    PasswordResetRequestRepository::class => factory(static fn (EntityManagerInterface $em): PasswordResetRequestRepository => $em->getRepository(PasswordResetRequestEntity::class)),
 
     IntegrityIgnoredAnomalyRepository::class => factory(static fn (EntityManagerInterface $em): IntegrityIgnoredAnomalyRepository => $em->getRepository(IntegrityIgnoredAnomalyEntity::class)),
 

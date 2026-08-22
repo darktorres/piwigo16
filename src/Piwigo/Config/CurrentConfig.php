@@ -959,6 +959,39 @@ final class CurrentConfig
      */
     public private(set) int $passwordResetDuration = 3600;
 
+    // === password_reset_request_ip_max_attempts ===
+    /**
+     * [P44-L] The IP-scoped sibling to passwordResetRequestMaxAttempts --
+     * deliberately much looser than the per-account ceiling, same
+     * reasoning as most IP-based abuse limits: a shared office/household
+     * IP can legitimately request resets for several different accounts
+     * within one window, so this is a backstop against one source
+     * flooding many different targets, not the primary defense (that's
+     * the tighter per-account ceiling, which catches "one victim's inbox
+     * is being flooded" directly).
+     */
+    public int $passwordResetRequestIpMaxAttempts = 20;
+
+    // === password_reset_request_max_attempts ===
+    /**
+     * [P44-L] Verification-code *requests* allowed per account within the
+     * rolling window before PasswordController::processVerificationCode()
+     * starts rejecting outright -- the request-scoped sibling to
+     * loginLockoutMaxAttempts, closing the gap where nothing previously
+     * limited how often a fresh code could be requested (only the
+     * per-code 3-attempt guess lockout was limited). See
+     * passwordResetRequestIpMaxAttempts for the separate, looser
+     * IP-scoped ceiling.
+     */
+    public int $passwordResetRequestMaxAttempts = 3;
+
+    // === password_reset_request_window_minutes ===
+    /**
+     * Rolling window, in minutes, over which reset-code requests are
+     * counted towards passwordResetRequestMaxAttempts.
+     */
+    public private(set) int $passwordResetRequestWindowMinutes = 60;
+
     // === pdf_jpg_quality ===
     /**
      * JPEG quality used when Imagick renders a PDF's representative image.

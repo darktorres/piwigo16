@@ -8,6 +8,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\Event\UserCommentCheck;
 use Piwigo\Comment\Event\UserCommentValidation;
+use Piwigo\Comment\Projection\CommentApiListRow;
 use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentInsertData;
 use Piwigo\Comment\Projection\CommentListRow;
@@ -82,10 +83,7 @@ final readonly class CommentService
     }
 
     /**
-     * @return list<array{id: int|string, image_id: int|string, date: ?string,
-     *   author: ?string, author_id: int|string|null, username: ?string,
-     *   status: ?string, content: ?string, path: string, representative_ext: ?string,
-     *   file: string, date_available: ?string, validated: bool|int, anonymous_id: string}>
+     * @return list<CommentApiListRow>
      */
     public function getList(
         CommentApiCriteria $criteria,

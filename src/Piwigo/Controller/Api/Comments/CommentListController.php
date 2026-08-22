@@ -119,41 +119,37 @@ final readonly class CommentListController implements ControllerInterface
 
         $comments = [];
         foreach ($this->commentService->getList($criteria, $perPage * $page, $perPage) as $row) {
-            $rowImageId = $row['image_id'];
-
             $mediumDerivative = DerivativeImage::getOne(ImageStdParams::MEDIUM, [
-                'id' => $rowImageId,
-                'path' => $row['path'],
-                'representative_ext' => $row['representative_ext'],
+                'id' => $row->imageId,
+                'path' => $row->path,
+                'representative_ext' => $row->representativeExt,
             ]);
             assert($mediumDerivative instanceof DerivativeImage);
 
-            $rowAuthor = is_string($row['author']) ? $row['author'] : null;
-            if (! is_numeric($row['author_id']) || (int) $row['author_id'] === 0 || (int) $row['author_id'] === $this->currentConfig->guestId) {
-                $authorName = $rowAuthor;
+            if (! is_numeric($row->authorId) || (int) $row->authorId === 0 || (int) $row->authorId === $this->currentConfig->guestId) {
+                $authorName = $row->author;
             } else {
-                $rowUsername = $row['username'];
-                $authorName = (is_string($rowUsername) ? $rowUsername : null) ?? $rowAuthor ?? $this->lang->t('guest');
+                $authorName = $row->username ?? $row->author ?? $this->lang->t('guest');
             }
 
-            $commentDate = is_string($row['date']) ? $row['date'] : false;
-            $commentDateAvailable = is_string($row['date_available']) ? $row['date_available'] : false;
+            $commentDate = $row->date ?? false;
+            $commentDateAvailable = $row->dateAvailable ?? false;
 
             $authorEvent = $this->eventDispatcher->dispatch(new RenderCommentAuthor($authorName ?? ''));
-            $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent(is_string($row['content']) ? $row['content'] : ''));
+            $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent($row->content ?? ''));
 
             $comments[] = [
-                'id' => $row['id'],
-                'adminLink' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . (string) $rowImageId,
+                'id' => $row->id,
+                'adminLink' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . (string) $row->imageId,
                 'mediumUrl' => $mediumDerivative->getUrl(),
-                'file' => $row['file'],
+                'file' => $row->file,
                 'imageDateAvailable' => DateHelper::formatDate($commentDateAvailable, ['day_name', 'day', 'month', 'year', 'time']),
                 'author' => $authorEvent->commentAuthor,
-                'authorStatus' => is_numeric($row['author_id']) && $this->currentConfig->webmasterId === (int) $row['author_id'] ? 'main_user' : $row['status'],
+                'authorStatus' => is_numeric($row->authorId) && $this->currentConfig->webmasterId === (int) $row->authorId ? 'main_user' : $row->status,
                 'date' => DateHelper::formatDate($commentDate, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => $contentEvent->commentContent,
-                'contentRaw' => $row['content'],
-                'isPending' => ! SqlDialect::getBoolean($row['validated']),
+                'contentRaw' => $row->content,
+                'isPending' => ! SqlDialect::getBoolean($row->validated),
             ];
         }
 

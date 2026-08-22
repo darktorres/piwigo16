@@ -705,9 +705,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findList(new CommentApiCriteria(search: $marker), 0, 10);
 
         self::assertCount(1, $rows);
-        self::assertSame($id->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
-        self::assertArrayHasKey('username', $rows[0]);
-        self::assertArrayHasKey('status', $rows[0]);
+        self::assertSame($id->value, is_numeric($rows[0]->id) ? (int) $rows[0]->id : null);
+        // authorId 1 is the fixture's own webmaster (fixture_admin) --
+        // proves the users/user_infos LEFT JOINs are real, not just
+        // present-but-unused columns.
+        self::assertSame('fixture_admin', $rows[0]->username);
+        self::assertSame('webmaster', $rows[0]->status);
     }
 
     public function testFindListAppliesTheStatusFilter(): void
@@ -737,7 +740,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findList(new CommentApiCriteria(search: $marker, status: 'pending'), 0, 10);
 
         self::assertCount(1, $rows);
-        self::assertSame($pendingId->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
+        self::assertSame($pendingId->value, is_numeric($rows[0]->id) ? (int) $rows[0]->id : null);
     }
 
     public function testFindDateRangeReturnsMinAndMaxMatchingDates(): void

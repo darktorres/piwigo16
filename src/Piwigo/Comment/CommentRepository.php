@@ -13,6 +13,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Comment\Projection\Comment;
+use Piwigo\Comment\Projection\CommentApiListRow;
 use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentListRow;
 use Piwigo\Comment\Projection\CommentSummary;
@@ -921,11 +922,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * `file` are ImageEntity's own non-nullable columns (INNER JOIN, so
      * always present); `date`/`date_available`/`representative_ext`/
      * `author`/`content` are nullable on their respective entities.
+     * `anonymous_id` isn't selected -- CommentListController, the one real
+     * caller, never reads it.
      *
-     * @return list<array{id: int|string, image_id: int|string, date: ?string,
-     *   author: ?string, author_id: int|string|null, username: ?string,
-     *   status: ?string, content: ?string, path: string, representative_ext: ?string,
-     *   file: string, date_available: ?string, validated: bool|int, anonymous_id: string}>
+     * @return list<CommentApiListRow>
      */
     public function findList(
         CommentApiCriteria $criteria,
@@ -949,7 +949,6 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'i.file',
                 'i.date_available',
                 'validated',
-                'c.anonymous_id',
             )
             ->from('comments', 'c')
             ->innerJoin('c', 'images', 'i', 'i.id = c.image_id')
@@ -973,30 +972,28 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             $path = $row['path'] ?? null;
             $file = $row['file'] ?? null;
             $validated = $row['validated'] ?? null;
-            $anonymousId = $row['anonymous_id'] ?? null;
             if ((! is_int($id) && ! is_string($id))
                 || (! is_int($imageId) && ! is_string($imageId))
                 || (! is_bool($validated) && ! is_int($validated))
-                || ! is_string($path) || ! is_string($file) || ! is_string($anonymousId)) {
+                || ! is_string($path) || ! is_string($file)) {
                 continue;
             }
 
-            $rows[] = [
-                'id' => $id,
-                'image_id' => $imageId,
-                'date' => is_string($row['date'] ?? null) ? $row['date'] : null,
-                'author' => is_string($row['author'] ?? null) ? $row['author'] : null,
-                'author_id' => (is_int($authorId) || is_string($authorId)) ? $authorId : null,
-                'username' => is_string($row['username'] ?? null) ? $row['username'] : null,
-                'status' => is_string($row['status'] ?? null) ? $row['status'] : null,
-                'content' => is_string($row['content'] ?? null) ? $row['content'] : null,
-                'path' => $path,
-                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-                'file' => $file,
-                'date_available' => is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
-                'validated' => $validated,
-                'anonymous_id' => $anonymousId,
-            ];
+            $rows[] = new CommentApiListRow(
+                id: $id,
+                imageId: $imageId,
+                date: is_string($row['date'] ?? null) ? $row['date'] : null,
+                author: is_string($row['author'] ?? null) ? $row['author'] : null,
+                authorId: (is_int($authorId) || is_string($authorId)) ? $authorId : null,
+                username: is_string($row['username'] ?? null) ? $row['username'] : null,
+                status: is_string($row['status'] ?? null) ? $row['status'] : null,
+                content: is_string($row['content'] ?? null) ? $row['content'] : null,
+                path: $path,
+                representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                file: $file,
+                dateAvailable: is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
+                validated: $validated,
+            );
         }
 
         return $rows;

@@ -804,8 +804,8 @@ final class ImageRepository extends EntityRepository
      * back as plain scalars under array hydration, not as
      * {@see ImageId}/{@see CategoryId} instances.
      *
-     * @param array<int|string> $images real callers don't guarantee a list
-     * @param array<int|string> $categories
+     * @param array<int> $images real callers don't guarantee a list
+     * @param array<int> $categories
      * @return array<int, int[]> category_id => list of already-associated image ids
      */
     public function findExistingAssociations(array $images, array $categories): array
@@ -818,8 +818,8 @@ final class ImageRepository extends EntityRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.image IN (:images)')
             ->andWhere('ic.category IN (:categories)')
-            ->setParameter('images', array_map(intval(...), $images), ArrayParameterType::INTEGER)
-            ->setParameter('categories', array_map(intval(...), $categories), ArrayParameterType::INTEGER)
+            ->setParameter('images', $images, ArrayParameterType::INTEGER)
+            ->setParameter('categories', $categories, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -965,8 +965,8 @@ final class ImageRepository extends EntityRepository
      * single move/associate action), so N small DELETEs costs nothing
      * meaningful over one multi-row statement.
      *
-     * @param array<int, int|string> $images
-     * @param array<int, int|string> $categories
+     * @param array<int> $images
+     * @param array<int> $categories
      */
     public function deleteNonStorageCategoryLinks(array $images, array $categories): void
     {
@@ -976,7 +976,7 @@ final class ImageRepository extends EntityRepository
             ->select('i.id', 'IDENTITY(i.storageCategory) AS storageCategoryId')
             ->from(ImageEntity::class, 'i')
             ->where('i.id IN (:images)')
-            ->setParameter('images', array_map(intval(...), $images), ArrayParameterType::INTEGER)
+            ->setParameter('images', $images, ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -992,7 +992,7 @@ final class ImageRepository extends EntityRepository
 
             if ($categories !== []) {
                 $qb->andWhere('ic.category NOT IN (:categories)')
-                    ->setParameter('categories', array_map(intval(...), $categories), ArrayParameterType::INTEGER);
+                    ->setParameter('categories', $categories, ArrayParameterType::INTEGER);
             }
 
             // storage_category_id IS NULL -- every link for this image is

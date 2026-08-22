@@ -479,8 +479,9 @@ final readonly class ImageService
      * Associate a list of images to a list of categories.
      * The function will not duplicate links and will preserve ranks.
      *
-     * @param array<int|string> $images
-     * @param array<int|string> $categories real callers don't guarantee a list
+     * @param array<int> $images real callers don't guarantee a list -- key
+     *   type is never read below, only values
+     * @param array<int> $categories real callers don't guarantee a list
      *   (e.g. UploadService's own int[]|null $categories) -- key type is
      *   never read below, only values
      */
@@ -504,12 +505,7 @@ final readonly class ImageService
             }
 
             foreach ($images as $imageId) {
-                // $existing[$categoryId] is a guaranteed int[] (repo casts every
-                // value); $imageId may be a numeric string (real callers pass
-                // both shapes) -- cast before the strict in_array() so a
-                // numeric-string id still matches its equivalent int entry,
-                // matching the original's own loose in_array() semantics.
-                if (! in_array((int) $imageId, $existing[$categoryId], true)) {
+                if (! in_array($imageId, $existing[$categoryId], true)) {
                     $rank = ++$currentRankOf[$categoryId];
 
                     $inserts[] = new ImageCategoryPair(
@@ -554,18 +550,11 @@ final readonly class ImageService
      * associate to new categories.
      * This function will preserve ranks.
      *
-     * @param array<int, int|string> $images
-     * @param array<int, int|string>|string $categories kept as a union for
-     *   defensive callers -- Piwigo\Admin\PictureModifyPageRenderer itself
-     *   now always passes the `list<int>` guaranteed by
-     *   Request\PictureModifyRequest::$associate, never a raw scalar
+     * @param array<int> $images
+     * @param array<int> $categories
      */
-    public function moveImagesToCategories(array $images, array|string $categories): ?false
+    public function moveImagesToCategories(array $images, array $categories): ?false
     {
-        if (! is_array($categories)) {
-            $categories = [];
-        }
-
         if ($images === []) {
             return false;
         }

@@ -35,6 +35,7 @@ use Piwigo\Category\Projection\CategoryMoveDetailRow;
 use Piwigo\Category\Projection\CategoryNextRankByParentRow;
 use Piwigo\Category\Projection\CategoryPermalinkDisplayRow;
 use Piwigo\Category\Projection\CategoryRankInfoRow;
+use Piwigo\Category\Projection\CategoryRepresentantProperties;
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
@@ -1701,10 +1702,7 @@ final readonly class CategoryService
         $this->repo->updateImageOrderForDescendants($uppercatsPrefix, $imageOrder);
     }
 
-    /**
-     * @return array{src: string|array<int|string, mixed>, url: string}
-     */
-    public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, EntityManagerInterface $entityManager, ?string $size = null): array
+    public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, EntityManagerInterface $entityManager, ?string $size = null): CategoryRepresentantProperties
     {
         $imageIdVo = ImageId::tryFrom($imageId);
         $row = $imageIdVo instanceof ImageId ? $entityManager->getRepository(ImageEntity::class)->findById($imageIdVo) : null;
@@ -1722,10 +1720,7 @@ final readonly class CategoryService
         }
         $url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $imageId;
 
-        return [
-            'src' => $src,
-            'url' => $url,
-        ];
+        return new CategoryRepresentantProperties(src: $src, url: $url);
     }
 
     /**

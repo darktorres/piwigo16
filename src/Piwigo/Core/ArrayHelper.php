@@ -7,23 +7,6 @@ namespace Piwigo\Core;
 final class ArrayHelper
 {
     /**
-     * Apply unserialize() on a value only if it is a string. Return type
-     * mirrors PHP's own unserialize(): genuinely any PHP value, by design --
-     * no narrower contract is possible without knowing what was serialized.
-     *
-     * @param array<int|string, mixed>|string $value
-     * @return mixed the unserialized value, false if $value is a malformed
-     *   serialized string, or $value itself unchanged if it isn't a string
-     */
-    public static function safeUnserialize(array|string $value): mixed
-    {
-        if (is_string($value)) {
-            return unserialize($value);
-        }
-        return $value;
-    }
-
-    /**
      * Apply json_decode() on a value only if it is a string
      *
      * @param array<int|string, mixed>|string $value

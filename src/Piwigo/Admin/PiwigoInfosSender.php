@@ -196,10 +196,19 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         // contract is an array of {eid: {...}} extension records, but a
         // malformed/unexpected response must degrade to the retry-later path
         // instead of crashing on a foreach/array-access of something else.
+        // [P44-K] allowed_classes: false -- $result is a remote HTTPS
+        // response body (compromised-catalog/MITM threat model only, see
+        // HttpClientService's own SSRF guard), and this codebase only ever
+        // reads the decoded value back as a plain array (the is_array()
+        // check right below) -- disabling object instantiation entirely
+        // costs nothing functionally and closes off PHP Object Injection
+        // via any autoloadable class's __wakeup()/__destruct().
         $pemExtensions = [];
         $pemDecodeOk = false;
         if (is_string($result = HttpClientService::fetch($url, $this->currentConfig))) {
-            $decodedExtensions = @unserialize($result);
+            $decodedExtensions = @unserialize($result, [
+                'allowed_classes' => false,
+            ]);
             if (is_array($decodedExtensions) and $decodedExtensions !== []) {
                 $pemDecodeOk = true;
                 foreach ($decodedExtensions as $decodedEid => $decodedExt) {
@@ -417,10 +426,9 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
             // `details` round-trips through ActivityRepository::
             // findCoreUpdateHistory()'s own json_encode() re-serialization
             // (the entity's real column Type is Doctrine's `json`) --
-            // decoded here with safeJsonDecode(), not
-            // safeUnserialize() (a stale PHP unserialize() call that
-            // predates the column becoming JSON-typed and would silently
-            // fail against every real row).
+            // decoded here with safeJsonDecode(), matching that column's
+            // real JSON encoding rather than the deleted (P44-K)
+            // safeUnserialize()'s stale PHP-serialize() assumption.
             $details = ArrayHelper::safeJsonDecode($updateDetails);
 
             if (isset($details['from_version']) and isset($details['to_version'])) {

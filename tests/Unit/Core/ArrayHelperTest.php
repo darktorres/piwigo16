@@ -6,45 +6,14 @@ use Piwigo\Core\ArrayHelper;
 
 /**
  * Piwigo\Core\ArrayHelper -- had zero dedicated coverage despite
- * safeJsonDecode()/safeUnserialize() being used constantly throughout the
- * codebase (every real caller passes a string, so the array-passthrough
- * branch of each was never hit; prependAppendArrayItems() is genuinely
- * unused in production today, tested anyway for completeness).
+ * safeJsonDecode() being used constantly throughout the codebase (every
+ * real caller passes a string, so the array-passthrough branch is never
+ * hit; prependAppendArrayItems() is genuinely unused in production
+ * today, tested anyway for completeness). safeUnserialize() itself was
+ * deleted (P44-K) -- zero real call sites remained once
+ * PiwigoInfosSender.php/CoreUpdateService.php's own unserialize() calls
+ * moved to `['allowed_classes' => false]` directly.
  */
-test('safeUnserialize unserializes a real serialized string', function (): void {
-    expect(ArrayHelper::safeUnserialize(serialize([
-        'a' => 1,
-        'b' => 2,
-    ])))->toBe([
-        'a' => 1,
-        'b' => 2,
-    ]);
-});
-
-test('safeUnserialize passes a non-string array through unchanged', function (): void {
-    expect(ArrayHelper::safeUnserialize([
-        'a' => 1,
-    ]))->toBe([
-        'a' => 1,
-    ]);
-});
-
-test('safeUnserialize returns false for a malformed serialized string', function (): void {
-    // unserialize() itself emits a PHP warning on malformed input (this
-    // project's phpunit.xml sets failOnWarning="true") -- a plain @ does
-    // NOT stop PHPUnit's ErrorHandler from surfacing it regardless
-    // (confirmed: @ only affects error_reporting(), not whether the
-    // handler chain runs), so a real no-op error handler for the duration
-    // of this one expected-to-warn call is the only reliable way to
-    // swallow it, matching ImageGdTest's own established pattern.
-    set_error_handler(static fn (): bool => true);
-    try {
-        expect(ArrayHelper::safeUnserialize('not valid serialized data'))->toBeFalse();
-    } finally {
-        restore_error_handler();
-    }
-});
-
 test('safeJsonDecode decodes a real JSON object string', function (): void {
     expect(ArrayHelper::safeJsonDecode('{"a":1}'))->toBe([
         'a' => 1,

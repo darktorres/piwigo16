@@ -11,8 +11,8 @@ namespace Piwigo\Activity\Projection;
  *
  * `$details` stays a JSON-re-encoded `?string`, not a decoded array -- see
  * that repository method's own docblock for why (the one real consumer
- * only needs it to round-trip through `json_decode()`/(historically)
- * `safeUnserialize()`, not stay a typed value here).
+ * only needs it to round-trip through `json_decode()`, not stay a typed
+ * value here).
  */
 final readonly class CoreUpdateHistoryRow
 {

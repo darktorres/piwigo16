@@ -292,8 +292,15 @@ final readonly class CoreUpdateService
 
         while (! $end) {
             $chunkNum++;
+            // [P44-K] allowed_classes: false -- $result is a remote HTTPS
+            // response body (compromised-upstream/MITM threat model only),
+            // and $input is only ever read back as a plain array below --
+            // disabling object instantiation entirely costs nothing
+            // functionally and closes off PHP Object Injection.
             if (is_string($result = @HttpClientService::fetch(AppInfo::URL . '/download/dlcounter.php?code=' . $dlCode . '&chunk_num=' . $chunkNum, $this->currentConfig))
-              and (bool) ($input = @unserialize($result))) {
+              and (bool) ($input = @unserialize($result, [
+                  'allowed_classes' => false,
+              ]))) {
                 if (is_array($input)) {
                     $remaining = $input['remaining'] ?? null;
                     if (is_numeric($remaining) && (int) $remaining === 0) {

@@ -22,8 +22,12 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Search\Projection\AuthorRule;
+use Piwigo\Search\Projection\CategoryRule;
 use Piwigo\Search\Projection\SearchFilterData;
 use Piwigo\Search\Projection\SearchFilterResult;
+use Piwigo\Search\Projection\SearchRules;
+use Piwigo\Search\Projection\TagsRule;
 use Piwigo\Section\SectionContext;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -173,12 +177,8 @@ final readonly class SearchFilterRenderer
             // fallback keeping the rest of this method array-typed.
             $mySearch = [];
         }
-        if (! isset($mySearch['fields']) || ! is_array($mySearch['fields'])) {
-            $mySearch['fields'] = [];
-        }
-
-        /** @var array<string, mixed> $searchFields */
-        $searchFields = &$mySearch['fields'];
+        $rawSearchFields = $mySearch['fields'] ?? null;
+        $rules = SearchRules::fromArray(is_array($rawSearchFields) ? array_filter($rawSearchFields, is_string(...), ARRAY_FILTER_USE_KEY) : []);
 
         // 'forbidden' is a SqlCondition -- getClauseForFilter() below
         // combines it via SqlCondition::combine() instead of string
@@ -194,11 +194,11 @@ final readonly class SearchFilterRenderer
         // 4-call combination here.
         $page['search_details']['forbidden'] = $this->searchService->forbiddenCondition();
 
-        if (isset($searchFields['allwords']) and ! ((bool) $displayFilters['words']['access'])) {
-            unset($searchFields['allwords']);
+        if ($rules->allwords !== null and ! ((bool) $displayFilters['words']['access'])) {
+            $rules->allwords = null;
         }
 
-        if (isset($searchFields['tags']) and (bool) $displayFilters['tags']['access']) {
+        if ($rules->tags instanceof TagsRule and (bool) $displayFilters['tags']['access']) {
             $filterTags = [];
 
             // Known limitation: TagService::getAvailableTags() below isn't
@@ -206,18 +206,7 @@ final readonly class SearchFilterRenderer
             // have run once for other purposes (e.g. building the menu) --
             // a real but non-blocking optimization opportunity on
             // large-gallery installs, not a defect.
-            if (! is_array($searchFields['tags'])) {
-                $searchFields['tags'] = [];
-            }
-
-            $tagWords = [];
-            if (is_array($searchFields['tags']['words'] ?? null)) {
-                foreach ($searchFields['tags']['words'] as $tagWord) {
-                    if (is_int($tagWord) || is_string($tagWord)) {
-                        $tagWords[] = $tagWord;
-                    }
-                }
-            }
+            $tagWords = $rules->tags->words;
 
             /**
              * @param array<int, array<string, mixed>> $tags
@@ -269,20 +258,20 @@ final readonly class SearchFilterRenderer
 
             // in case the search has forbidden tags for current user, we
             // need to filter the search rule
-            $searchFields['tags']['words'] = array_intersect($tagWords, $filterTagIds);
-        } elseif (isset($searchFields['tags'])) {
-            unset($searchFields['tags']);
+            $rules->tags->words = array_values(array_intersect($tagWords, $filterTagIds));
+        } elseif ($rules->tags instanceof TagsRule) {
+            $rules->tags = null;
         }
 
-        if (isset($searchFields['expert'])) {
+        if ($rules->expert !== null) {
             if (! (bool) $displayFilters['expert']['access']) {
-                unset($searchFields['expert']);
+                $rules->expert = null;
             } else {
                 $this->lang->load('help_quick_search.lang');
             }
         }
 
-        if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
+        if ($rules->author instanceof AuthorRule and (bool) $displayFilters['author']['access']) {
             $filterClause = $this->getClauseForFilter('author', $page);
             $filterCondition = $filterClause->condition;
             $groupCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.author IS NOT NULL'));
@@ -315,27 +304,16 @@ final readonly class SearchFilterRenderer
                     $authorNames[] = $authorName;
                 }
             }
-            if (! is_array($searchFields['author'])) {
-                $searchFields['author'] = [];
-            }
-
-            $authorWords = [];
-            if (is_array($searchFields['author']['words'] ?? null)) {
-                foreach ($searchFields['author']['words'] as $authorWord) {
-                    if (is_string($authorWord)) {
-                        $authorWords[] = $authorWord;
-                    }
-                }
-            }
+            $authorWords = $rules->author->words;
 
             // in case the search has forbidden authors for current user, we
             // need to filter the search rule
-            $searchFields['author']['words'] = array_intersect($authorWords, $authorNames);
-        } elseif (isset($searchFields['author'])) {
-            unset($searchFields['author']);
+            $rules->author->words = array_values(array_intersect($authorWords, $authorNames));
+        } elseif ($rules->author instanceof AuthorRule) {
+            $rules->author = null;
         }
 
-        if (isset($searchFields['date_posted']) and (bool) $displayFilters['post_date']['access']) {
+        if ($rules->datePosted !== null and (bool) $displayFilters['post_date']['access']) {
             $dateFilterResult = $this->renderDateFilter(
                 $langMonth,
                 $userId,
@@ -352,11 +330,11 @@ final readonly class SearchFilterRenderer
             );
             $listDatePosted = $dateFilterResult['listOfDates'];
             $datePosted = $dateFilterResult['counters'];
-        } elseif (isset($searchFields['date_posted'])) {
-            unset($searchFields['date_posted']);
+        } elseif ($rules->datePosted !== null) {
+            $rules->datePosted = null;
         }
 
-        if (isset($searchFields['date_created']) and (bool) $displayFilters['creation_date']['access']) {
+        if ($rules->dateCreated !== null and (bool) $displayFilters['creation_date']['access']) {
             $dateFilterResult = $this->renderDateFilter(
                 $langMonth,
                 $userId,
@@ -373,11 +351,11 @@ final readonly class SearchFilterRenderer
             );
             $listDateCreated = $dateFilterResult['listOfDates'];
             $dateCreated = $dateFilterResult['counters'];
-        } elseif (isset($searchFields['date_created'])) {
-            unset($searchFields['date_created']);
+        } elseif ($rules->dateCreated !== null) {
+            $rules->dateCreated = null;
         }
 
-        if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
+        if ($rules->addedBy !== null and (bool) $displayFilters['added_by']['access']) {
             $filterClause = $this->getClauseForFilter('added_by', $page);
             $filterCondition = $filterClause->condition;
 
@@ -432,31 +410,17 @@ final readonly class SearchFilterRenderer
                 }
             }
 
-            $addedByIds = [];
-            if (is_array($searchFields['added_by'])) {
-                foreach ($searchFields['added_by'] as $addedByWord) {
-                    if (is_int($addedByWord) || is_string($addedByWord)) {
-                        $addedByIds[] = $addedByWord;
-                    }
-                }
-            }
+            $addedByIds = $rules->addedBy;
 
             // in case the search has forbidden added_by users for current
             // user, we need to filter the search rule
-            $searchFields['added_by'] = array_intersect($addedByIds, $userIds);
-        } elseif (isset($searchFields['added_by'])) {
-            unset($searchFields['added_by']);
+            $rules->addedBy = array_values(array_intersect($addedByIds, $userIds));
+        } elseif ($rules->addedBy !== null) {
+            $rules->addedBy = null;
         }
 
-        if (isset($searchFields['cat']) and (bool) $displayFilters['album']['access']) {
-            $catWords = [];
-            if (is_array($searchFields['cat']) && is_array($searchFields['cat']['words'] ?? null)) {
-                foreach ($searchFields['cat']['words'] as $catWord) {
-                    if (is_int($catWord) || is_string($catWord)) {
-                        $catWords[] = $catWord;
-                    }
-                }
-            }
+        if ($rules->cat instanceof CategoryRule and (bool) $displayFilters['album']['access']) {
+            $catWords = $rules->cat->words;
 
             if (count($catWords) > 0) {
                 $fullnameOf = [];
@@ -498,19 +462,15 @@ final readonly class SearchFilterRenderer
 
                 $fullname_of_json = json_encode($fullnameOf);
 
-                if (! is_array($searchFields['cat'])) {
-                    $searchFields['cat'] = [];
-                }
-
                 // in case the search has forbidden albums for current user,
                 // we need to filter the search rule
-                $searchFields['cat']['words'] = array_intersect($catWords, array_keys($fullnameOf));
+                $rules->cat->words = array_values(array_intersect($catWords, array_keys($fullnameOf)));
             }
-        } elseif (isset($searchFields['cat'])) {
-            unset($searchFields['cat']);
+        } elseif ($rules->cat instanceof CategoryRule) {
+            $rules->cat = null;
         }
 
-        if (isset($searchFields['filetypes']) and (bool) $displayFilters['file_type']['access']) {
+        if ($rules->filetypes !== null and (bool) $displayFilters['file_type']['access']) {
             $filterClause = $this->getClauseForFilter('filetypes', $page);
             $filterCondition = $filterClause->condition;
 
@@ -562,15 +522,15 @@ final readonly class SearchFilterRenderer
             } else {
                 $filetypes = $allExts;
             }
-        } elseif (isset($searchFields['filetypes'])) {
-            unset($searchFields['filetypes']);
+        } elseif ($rules->filetypes !== null) {
+            $rules->filetypes = null;
         }
 
         // For rating
         if ($this->currentConfig->rateEnabled) {
             $show_filter_ratings = true;
 
-            if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {
+            if ($rules->ratings !== null and (bool) $displayFilters['rating']['access']) {
                 $filterClause = $this->getClauseForFilter('ratings', $page);
                 $filterCondition = $filterClause->condition;
 
@@ -610,18 +570,16 @@ final readonly class SearchFilterRenderer
                     }
                 }
                 $rating = $ratings;
-            } elseif (isset($searchFields['ratings'])) {
-                unset($searchFields['ratings']);
+            } elseif ($rules->ratings !== null) {
+                $rules->ratings = null;
             }
         } else {
             $show_filter_ratings = false;
-            if (isset($searchFields['ratings'])) {
-                unset($searchFields['ratings']);
-            }
+            $rules->ratings = null;
         }
 
         // For filesize
-        if (isset($searchFields['filesize_min']) && isset($searchFields['filesize_max']) and (bool) $displayFilters['file_size']['access']) {
+        if ($rules->filesizeMin !== null && $rules->filesizeMax !== null and (bool) $displayFilters['file_size']['access']) {
             $filterClause = $this->getClauseForFilter('filesize', $page);
             $filterCondition = $filterClause->condition;
 
@@ -649,8 +607,8 @@ final readonly class SearchFilterRenderer
             $uniqueFilesizes = array_keys($filesizes);
             sort($uniqueFilesizes, SORT_NUMERIC);
 
-            $filesizeMin = $searchFields['filesize_min'];
-            $filesizeMax = $searchFields['filesize_max'];
+            $filesizeMin = $rules->filesizeMin;
+            $filesizeMax = $rules->filesizeMax;
 
             // warning: we will (hopefully) have smarter values for filters.
             // The min/max of the current search won't always be the
@@ -668,12 +626,12 @@ final readonly class SearchFilterRenderer
                 ],
             ];
 
-        } elseif (isset($searchFields['filesize_min']) && isset($searchFields['filesize_max']) and ! ((bool) $displayFilters['file_size']['access'])) {
-            unset($searchFields['filesize_min']);
-            unset($searchFields['filesize_max']);
+        } elseif ($rules->filesizeMin !== null && $rules->filesizeMax !== null and ! ((bool) $displayFilters['file_size']['access'])) {
+            $rules->filesizeMin = null;
+            $rules->filesizeMax = null;
         }
 
-        if (isset($searchFields['ratios']) and (bool) $displayFilters['ratio']['access']) {
+        if ($rules->ratios !== null and (bool) $displayFilters['ratio']['access']) {
             $filterClause = $this->getClauseForFilter('ratios', $page);
             $filterCondition = $filterClause->condition;
 
@@ -724,11 +682,11 @@ final readonly class SearchFilterRenderer
                     $this->cacheSet($cacheKey, $ratios);
                 }
             }
-        } elseif (isset($searchFields['ratios'])) {
-            unset($searchFields['ratios']);
+        } elseif ($rules->ratios !== null) {
+            $rules->ratios = null;
         }
 
-        if (isset($searchFields['height_min']) and isset($searchFields['height_max']) and (bool) $displayFilters['height']['access']) {
+        if ($rules->heightMin !== null and $rules->heightMax !== null and (bool) $displayFilters['height']['access']) {
             $filterClause = $this->getClauseForFilter('height', $page);
             $filterCondition = $filterClause->condition;
 
@@ -756,8 +714,8 @@ final readonly class SearchFilterRenderer
                 }
             }
 
-            $heightMin = $searchFields['height_min'];
-            $heightMax = $searchFields['height_max'];
+            $heightMin = $rules->heightMin;
+            $heightMax = $rules->heightMax;
 
             $height = [
                 'list' => implode(',', $heights),
@@ -766,17 +724,17 @@ final readonly class SearchFilterRenderer
                     'max' => end($heights),
                 ],
                 'selected' => [
-                    'min' => (is_scalar($heightMin) && $heightMin !== '' && $heightMin !== 0) ? $heightMin : ($heights[0] ?? null),
-                    'max' => (is_scalar($heightMax) && $heightMax !== '' && $heightMax !== 0) ? $heightMax : end($heights),
+                    'min' => ($heightMin !== '' && $heightMin !== 0) ? $heightMin : ($heights[0] ?? null),
+                    'max' => ($heightMax !== '' && $heightMax !== 0) ? $heightMax : end($heights),
                 ],
             ];
 
-        } elseif (isset($searchFields['height_min']) && isset($searchFields['height_max']) and ! ((bool) $displayFilters['height']['access'])) {
-            unset($searchFields['height_min']);
-            unset($searchFields['height_max']);
+        } elseif ($rules->heightMin !== null && $rules->heightMax !== null and ! ((bool) $displayFilters['height']['access'])) {
+            $rules->heightMin = null;
+            $rules->heightMax = null;
         }
 
-        if (isset($searchFields['width_min']) and isset($searchFields['width_max']) and (bool) $displayFilters['width']['access']) {
+        if ($rules->widthMin !== null and $rules->widthMax !== null and (bool) $displayFilters['width']['access']) {
             $filterClause = $this->getClauseForFilter('width', $page);
             $filterCondition = $filterClause->condition;
 
@@ -804,8 +762,8 @@ final readonly class SearchFilterRenderer
                 }
             }
 
-            $widthMin = $searchFields['width_min'];
-            $widthMax = $searchFields['width_max'];
+            $widthMin = $rules->widthMin;
+            $widthMax = $rules->widthMax;
 
             $width = [
                 'list' => implode(',', $widths),
@@ -814,14 +772,14 @@ final readonly class SearchFilterRenderer
                     'max' => end($widths),
                 ],
                 'selected' => [
-                    'min' => (is_scalar($widthMin) && $widthMin !== '' && $widthMin !== 0) ? $widthMin : ($widths[0] ?? null),
-                    'max' => (is_scalar($widthMax) && $widthMax !== '' && $widthMax !== 0) ? $widthMax : end($widths),
+                    'min' => ($widthMin !== '' && $widthMin !== 0) ? $widthMin : ($widths[0] ?? null),
+                    'max' => ($widthMax !== '' && $widthMax !== 0) ? $widthMax : end($widths),
                 ],
             ];
 
-        } elseif (isset($searchFields['width_min']) && isset($searchFields['width_max']) and ! ((bool) $displayFilters['width']['access'])) {
-            unset($searchFields['width_min']);
-            unset($searchFields['width_max']);
+        } elseif ($rules->widthMin !== null && $rules->widthMax !== null and ! ((bool) $displayFilters['width']['access'])) {
+            $rules->widthMin = null;
+            $rules->widthMax = null;
         }
 
         $search_id = $page['search'] ?? null;
@@ -836,6 +794,8 @@ final readonly class SearchFilterRenderer
             $albumsFound = $this->renderAlbumsFound($page, $userId);
             $tagsFound = $this->renderTagsFound($page);
         }
+
+        $mySearch['fields'] = $rules->toArray();
 
         return new SearchFilterResult(
             resolvedSearchId: $resolvedSearchId,

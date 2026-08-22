@@ -296,7 +296,7 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getCompleteDir(22) returns "./galleries/pets/rex/1_year_old/"
      */
-    private function getCompleteDir(int|string $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
+    private function getCompleteDir(int $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
     {
         return $this->getSiteUrl($category_id, $categoryService, $entityManager) . $this->getLocalDir($category_id, $categoryService);
     }
@@ -307,14 +307,14 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getLocalDir(22) returns "pets/rex/1_year_old/"
      */
-    private function getLocalDir(int|string $category_id, CategoryService $categoryService): string
+    private function getLocalDir(int $category_id, CategoryService $categoryService): string
     {
         $local_dir = '';
 
         // A $page['plain_structure'] category-structure cache key shortcut
         // would be dead code -- nothing in the codebase ever populates
         // it -- so this always takes the DB-lookup path.
-        $uppercats = $categoryService->getCategoryUppercatsById((int) $category_id);
+        $uppercats = $categoryService->getCategoryUppercatsById($category_id);
         if ($uppercats === null) {
             throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
@@ -336,7 +336,7 @@ final class CatModifyPageRenderer
      * retrieving the site url : "http://domain.com/gallery/" or
      * simply "./galleries/"
      */
-    private function getSiteUrl(int|string $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
+    private function getSiteUrl(int $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
     {
         $siteGalleriesUrlLookup = $entityManager->getRepository(SiteEntity::class);
         $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id, $siteGalleriesUrlLookup);

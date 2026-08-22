@@ -25,6 +25,7 @@ use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsData;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultView;
+use Piwigo\Controller\Admin\Projection\ConfigurationDisplayData;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayView;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainData;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainView;
@@ -661,15 +662,37 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'display':
 
-                $display = [];
-                foreach ($display_checkboxes as $checkbox) {
-                    $display[$checkbox] = $this->checkboxValue($checkbox);
-                }
-                $display['picture_informations'] = $this->currentConfig->pictureInformations;
-                $display['NB_CATEGORIES_PAGE'] = $this->currentConfig->nbCategoriesPage;
+                $display = new ConfigurationDisplayData(
+                    menubarFilterIcon: $this->currentConfig->menubarFilterIcon,
+                    indexSearchInSetButton: $this->currentConfig->indexSearchInSetButton,
+                    indexSearchInSetAction: $this->currentConfig->indexSearchInSetAction,
+                    indexSortOrderInput: $this->currentConfig->indexSortOrderInput,
+                    indexFlatIcon: $this->currentConfig->indexFlatIcon,
+                    indexPostedDateIcon: $this->currentConfig->indexPostedDateIcon,
+                    indexCreatedDateIcon: $this->currentConfig->indexCreatedDateIcon,
+                    indexSlideshowIcon: $this->currentConfig->indexSlideshowIcon,
+                    indexSizesIcon: $this->currentConfig->indexSizesIcon,
+                    indexNewIcon: $this->currentConfig->indexNewIcon,
+                    indexEditIcon: $this->currentConfig->indexEditIcon,
+                    indexCaddieIcon: $this->currentConfig->indexCaddieIcon,
+                    displayFromto: $this->currentConfig->displayFromto,
+                    pictureMetadataIcon: $this->currentConfig->pictureMetadataIcon,
+                    pictureSlideshowIcon: $this->currentConfig->pictureSlideshowIcon,
+                    pictureFavoriteIcon: $this->currentConfig->pictureFavoriteIcon,
+                    pictureSizesIcon: $this->currentConfig->pictureSizesIcon,
+                    pictureDownloadIcon: $this->currentConfig->pictureDownloadIcon,
+                    pictureEditIcon: $this->currentConfig->pictureEditIcon,
+                    pictureCaddieIcon: $this->currentConfig->pictureCaddieIcon,
+                    pictureRepresentativeIcon: $this->currentConfig->pictureRepresentativeIcon,
+                    pictureNavigationIcons: $this->currentConfig->pictureNavigationIcons,
+                    pictureNavigationThumb: $this->currentConfig->pictureNavigationThumb,
+                    pictureMenu: $this->currentConfig->pictureMenu,
+                    pictureInformations: $this->currentConfig->pictureInformations,
+                    nbCategoriesPage: $this->currentConfig->nbCategoriesPage,
+                );
 
                 $view = new ConfigurationDisplayView(
-                    display: $display,
+                    display: $display->toArray(),
                     fAction: $action,
                     saveSuccess: $save_success,
                     isWebmaster: $is_webmaster,
@@ -874,56 +897,23 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     }
 
     /**
-     * Local dispatcher for this page's own render-time `$display_checkboxes`/
-     * `$sizes_checkboxes` loops (the `'main'`/`'comments'` tabs now read
-     * their own checkboxes' `CurrentConfig` properties directly by name in
+     * Local dispatcher for this page's own render-time `$sizes_checkboxes`
+     * loop (the `'main'`/`'comments'`/`'display'` tabs now read their own
+     * checkboxes' `CurrentConfig` properties directly by name in
      * `handle()`'s own `switch`, once each tab's display data took named
      * properties instead of a spliced array -- see
-     * `ConfigurationMainData`/`ConfigurationCommentsData`).
-     * `$main_checkboxes`/`$comments_checkboxes` themselves stay: the
-     * POST-handling save path still normalizes submitted values by
-     * iterating the same literal key lists. Kept as a local match() rather
-     * than a generic CurrentConfig::all()-style accessor (Config generic-
-     * accessor removal, design #6): many individually-named calls to
-     * replace a template-building loop would be strictly worse for
-     * maintainability with no real safety gain, and this keeps the
-     * string-keyed surface contained to the one file that actually needs
-     * it.
-     *
-     * Every branch is a real bool checkbox except 'index_search_in_set_action'
-     * (CurrentConfig::indexSearchInSetAction()), a 'results'|'filter' string
-     * config value grouped here anyway since this dispatcher only cares
-     * about the key set, not a strict boolean contract, matching each
-     * delegate method's own return type.
+     * `ConfigurationMainData`/`ConfigurationCommentsData`/
+     * `ConfigurationDisplayData`). `$main_checkboxes`/`$comments_checkboxes`/
+     * `$display_checkboxes` themselves stay: the POST-handling save path
+     * still normalizes submitted values by iterating the same literal key
+     * lists. Down to its one real remaining checkbox (`original_resize`) --
+     * worth removing entirely once the `'sizes'` tab gets the same
+     * treatment.
      */
-    private function checkboxValue(string $checkbox): bool|string
+    private function checkboxValue(string $checkbox): bool
     {
         return match ($checkbox) {
             'original_resize' => $this->currentConfig->originalResize,
-            'menubar_filter_icon' => $this->currentConfig->menubarFilterIcon,
-            'index_search_in_set_button' => $this->currentConfig->indexSearchInSetButton,
-            'index_search_in_set_action' => $this->currentConfig->indexSearchInSetAction,
-            'index_sort_order_input' => $this->currentConfig->indexSortOrderInput,
-            'index_flat_icon' => $this->currentConfig->indexFlatIcon,
-            'index_posted_date_icon' => $this->currentConfig->indexPostedDateIcon,
-            'index_created_date_icon' => $this->currentConfig->indexCreatedDateIcon,
-            'index_slideshow_icon' => $this->currentConfig->indexSlideshowIcon,
-            'index_sizes_icon' => $this->currentConfig->indexSizesIcon,
-            'index_new_icon' => $this->currentConfig->indexNewIcon,
-            'index_edit_icon' => $this->currentConfig->indexEditIcon,
-            'index_caddie_icon' => $this->currentConfig->indexCaddieIcon,
-            'display_fromto' => $this->currentConfig->displayFromto,
-            'picture_metadata_icon' => $this->currentConfig->pictureMetadataIcon,
-            'picture_slideshow_icon' => $this->currentConfig->pictureSlideshowIcon,
-            'picture_favorite_icon' => $this->currentConfig->pictureFavoriteIcon,
-            'picture_sizes_icon' => $this->currentConfig->pictureSizesIcon,
-            'picture_download_icon' => $this->currentConfig->pictureDownloadIcon,
-            'picture_edit_icon' => $this->currentConfig->pictureEditIcon,
-            'picture_caddie_icon' => $this->currentConfig->pictureCaddieIcon,
-            'picture_representative_icon' => $this->currentConfig->pictureRepresentativeIcon,
-            'picture_navigation_icons' => $this->currentConfig->pictureNavigationIcons,
-            'picture_navigation_thumb' => $this->currentConfig->pictureNavigationThumb,
-            'picture_menu' => $this->currentConfig->pictureMenu,
             default => throw new LogicException("checkboxValue(): unknown checkbox key '{$checkbox}'."),
         };
     }

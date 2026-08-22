@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\Projection\PluginScanRow;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\PluginListRow;
 use Piwigo\Admin\Projection\PluginsInstalledView;
 use Piwigo\Admin\Request\PluginsInstalledDisplayRequest;
 use Piwigo\Auth\AccessControl;
@@ -191,24 +192,13 @@ final class PluginsInstalledPageRenderer
             $pem_url = RequestBootstrap::pemUrl();
             $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin->uri);
 
-            $tpl_plugin = [
-                'ID' => $plugin_id,
-                'NAME' => $fs_plugin->name,
-                'VISIT_URL' => $visit_url,
-                'VERSION' => $fs_plugin->version,
-                'DESC' => $fs_plugin->description,
-                'AUTHOR' => $fs_plugin->author,
-                'AUTHOR_URL' => $fs_plugin->authorUri,
-                'SETTINGS_URL' => $setting_url,
-            ];
-
             if (isset($db_plugins_by_id[$plugin_id])) {
                 $db_plugin_state = $db_plugins_by_id[$plugin_id]['state'] ?? null;
                 $plugin_state = is_string($db_plugin_state) ? $db_plugin_state : 'inactive';
             } else {
                 $plugin_state = 'inactive';
             }
-            $tpl_plugin['STATE'] = $plugin_state;
+            $desc = $fs_plugin->description;
 
             $fs_plugin_extension = $fs_plugin->extension;
             if ($fs_plugin_extension !== null and isset($merged_extensions[$fs_plugin_extension])) {
@@ -216,13 +206,22 @@ final class PluginsInstalledPageRenderer
                 $extension_repository->updatePluginState($plugin_id, 'inactive');
 
                 $plugin_state = 'merged';
-                $tpl_plugin['STATE'] = $plugin_state;
-                $tpl_plugin['DESC'] = $lang->t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
+                $desc = $lang->t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
             }
 
             $count_types_plugins[$plugin_state]++;
 
-            $tpl_plugins[] = $tpl_plugin;
+            $tpl_plugins[] = new PluginListRow(
+                id: $plugin_id,
+                name: $fs_plugin->name,
+                visitUrl: $visit_url,
+                version: $fs_plugin->version,
+                desc: $desc,
+                author: $fs_plugin->author,
+                authorUrl: $fs_plugin->authorUri,
+                settingsUrl: $setting_url,
+                state: $plugin_state,
+            );
         }
 
         $missing_plugin_ids = array_diff(
@@ -232,19 +231,24 @@ final class PluginsInstalledPageRenderer
 
         if (count($missing_plugin_ids) > 0) {
             foreach ($missing_plugin_ids as $plugin_id) {
-                $tpl_plugins[] = [
-                    'NAME' => $plugin_id,
-                    'ID' => $plugin_id,
-                    'VERSION' => $db_plugins_by_id[$plugin_id]['version'],
-                    'DESC' => $lang->t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
-                    'STATE' => 'missing',
-                ];
+                $missing_version = $db_plugins_by_id[$plugin_id]['version'] ?? null;
+                $tpl_plugins[] = new PluginListRow(
+                    id: $plugin_id,
+                    name: $plugin_id,
+                    visitUrl: '',
+                    version: is_string($missing_version) ? $missing_version : '',
+                    desc: $lang->t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
+                    author: '',
+                    authorUrl: null,
+                    settingsUrl: '',
+                    state: 'missing',
+                );
                 $count_types_plugins['missing']++;
             }
         }
 
         $adminContent = $renderer->render(new PluginsInstalledView(
-            plugins: $tpl_plugins,
+            plugins: array_map(static fn (PluginListRow $plugin): array => $plugin->toArray(), $tpl_plugins),
             countTypesPlugins: $count_types_plugins,
             csrfToken: $pwg_token,
             showDetails: $show_details,

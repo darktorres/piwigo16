@@ -4,142 +4,56 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Admin;
 
-use DateMalformedStringException;
 use DateTime;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Admin\StatsPageRenderer;
+use Piwigo\History\Projection\HistorySummaryRow;
 
 /**
  * StatsPageRenderer::getDateObject()/setMissingValues() are pure functions,
- * no DB/globals needed.
+ * no DB/globals needed. Both take a real HistorySummaryRow now (not a raw
+ * array) -- year/month/day/hour/nbPages are already narrowed to their real
+ * types by HistorySummaryRow::fromRow() at the repository boundary (see
+ * HistorySummaryRowTest for that coercion's own coverage), so the
+ * non-numeric/malformed-input cases this file used to cover here no longer
+ * exist as reachable states for these two methods.
  */
 final class StatsPageRendererDateHelpersTest extends TestCase
 {
     public function testGetDateObjectYearOnlyRowDefaultsToFirstOfYear(): void
     {
-        $date = StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => null,
-            'day' => null,
-            'hour' => null,
-        ]);
+        $date = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: null, day: null, hour: null, nbPages: 0));
 
         self::assertSame('2026-01-01', $date->format('Y-m-d'));
     }
 
     public function testGetDateObjectYearMonthRowDefaultsToFirstOfMonth(): void
     {
-        $date = StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => '3',
-            'day' => null,
-            'hour' => null,
-        ]);
+        $date = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 3, day: null, hour: null, nbPages: 0));
 
         self::assertSame('2026-03-01', $date->format('Y-m-d'));
     }
 
     public function testGetDateObjectYearMonthDayRowHasNoTimeComponent(): void
     {
-        $date = StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => '3',
-            'day' => '17',
-            'hour' => null,
-        ]);
+        $date = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 3, day: 17, hour: null, nbPages: 0));
 
         self::assertSame('2026-03-17 00:00:00', $date->format('Y-m-d H:i:s'));
     }
 
     public function testGetDateObjectFullRowIncludesTheHour(): void
     {
-        $date = StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => '3',
-            'day' => '17',
-            'hour' => '14',
-        ]);
+        $date = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 3, day: 17, hour: 14, nbPages: 0));
 
         self::assertSame('2026-03-17 14:00:00', $date->format('Y-m-d H:i:s'));
     }
 
-    public function testGetDateObjectSilentlyIgnoresANonNumericYearWhenMonthIsPresent(): void
-    {
-        // '' (real is_numeric()-false fallback for year) concatenated with
-        // '-3' gives '-3', which PHP's DateTime constructor happens to
-        // parse as a no-op relative modifier (not an absolute date) rather
-        // than throwing -- documenting this actual (surprising) behavior
-        // also proves the fallback is genuinely '', not some other
-        // placeholder text, which DateTime can't parse at all.
-        $date = StatsPageRenderer::getDateObject([
-            'year' => 'not-a-year',
-            'month' => '3',
-            'day' => null,
-            'hour' => null,
-        ]);
-
-        // getDateObject()'s own return type already guarantees the class --
-        // what's actually under test is the surprising behavior documented
-        // above: this malformed input doesn't throw.
-        // @phpstan-ignore staticMethod.alreadyNarrowedType
-        self::assertInstanceOf(DateTime::class, $date);
-    }
-
-    public function testGetDateObjectRejectsANonNumericMonth(): void
-    {
-        // The year-month separator produces a literal '2026-' (empty
-        // month) when the fallback is genuinely '' -- DateTime's own parse
-        // failure message echoes the exact malformed string back, so this
-        // also proves the fallback isn't some non-empty placeholder (which
-        // would embed extra characters between the dashes).
-        $this->expectException(DateMalformedStringException::class);
-        $this->expectExceptionMessageIsOrContains('(2026-)');
-
-        StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => 'not-a-month',
-            'day' => null,
-            'hour' => null,
-        ]);
-    }
-
-    public function testGetDateObjectRejectsANonNumericDay(): void
-    {
-        $this->expectException(DateMalformedStringException::class);
-        $this->expectExceptionMessageIsOrContains('(2026-3-)');
-
-        StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => '3',
-            'day' => 'not-a-day',
-            'hour' => null,
-        ]);
-    }
-
-    public function testGetDateObjectRejectsANonNumericHour(): void
-    {
-        $this->expectException(DateMalformedStringException::class);
-        $this->expectExceptionMessageIsOrContains('(2026-3-17 :00)');
-
-        StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => '3',
-            'day' => '17',
-            'hour' => 'not-an-hour',
-        ]);
-    }
-
     public function testGetDateObjectTreatsHourZeroAsPresentNotAbsent(): void
     {
-        // hour '0' (midnight) must be read as a real hour value, not
+        // hour 0 (midnight) must be read as a real hour value, not
         // treated the same as a NULL hour.
-        $date = StatsPageRenderer::getDateObject([
-            'year' => '2026',
-            'month' => '3',
-            'day' => '17',
-            'hour' => '0',
-        ]);
+        $date = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 3, day: 17, hour: 0, nbPages: 0));
 
         self::assertSame('2026-03-17 00:00:00', $date->format('Y-m-d H:i:s'));
     }
@@ -149,13 +63,7 @@ final class StatsPageRendererDateHelpersTest extends TestCase
         $result = StatsPageRenderer::setMissingValues(
             'day',
             [
-                [
-                    'year' => '2026',
-                    'month' => '1',
-                    'day' => '3',
-                    'hour' => null,
-                    'nb_pages' => '7',
-                ],
+                new HistorySummaryRow(year: 2026, month: 1, day: 3, hour: null, nbPages: 7),
             ],
             new DateTime('2026-01-01'),
             new DateTime('2026-01-03')
@@ -179,20 +87,8 @@ final class StatsPageRendererDateHelpersTest extends TestCase
         $result = StatsPageRenderer::setMissingValues(
             'month',
             [
-                [
-                    'year' => '2026',
-                    'month' => '3',
-                    'day' => null,
-                    'hour' => null,
-                    'nb_pages' => '9',
-                ],
-                [
-                    'year' => '2026',
-                    'month' => '1',
-                    'day' => null,
-                    'hour' => null,
-                    'nb_pages' => '4',
-                ],
+                new HistorySummaryRow(year: 2026, month: 3, day: null, hour: null, nbPages: 9),
+                new HistorySummaryRow(year: 2026, month: 1, day: null, hour: null, nbPages: 4),
             ]
         );
 
@@ -230,13 +126,7 @@ final class StatsPageRendererDateHelpersTest extends TestCase
         $result = StatsPageRenderer::setMissingValues(
             'year',
             [
-                [
-                    'year' => '2026',
-                    'month' => null,
-                    'day' => null,
-                    'hour' => null,
-                    'nb_pages' => '11',
-                ],
+                new HistorySummaryRow(year: 2026, month: null, day: null, hour: null, nbPages: 11),
             ],
             new DateTime('2024-01-01'),
             new DateTime('2026-01-01')
@@ -265,49 +155,15 @@ final class StatsPageRendererDateHelpersTest extends TestCase
         );
     }
 
-    public function testSetMissingValuesIgnoresARowWithANonNumericNbPages(): void
-    {
-        $result = StatsPageRenderer::setMissingValues(
-            'day',
-            [
-                [
-                    'year' => '2026',
-                    'month' => '1',
-                    'day' => '2',
-                    'hour' => null,
-                    'nb_pages' => 'not-a-number',
-                ],
-            ],
-            new DateTime('2026-01-01'),
-            new DateTime('2026-01-03')
-        );
-
-        self::assertSame(
-            [
-                '2026-01-01' => 0,
-                '2026-01-02' => 0,
-                '2026-01-03' => 0,
-            ],
-            $result
-        );
-    }
-
     public function testSetMissingValuesIgnoresARowWhoseDateFallsOutsideTheRequestedRange(): void
     {
-        // isset($result[$str]) must be checked independently of
-        // is_numeric($nb_pages) -- a row for a date outside [date, date_end]
-        // has no matching key in the pre-filled $result at all, and must
-        // not silently create one.
+        // isset($result[$str]) must be checked independently -- a row for a
+        // date outside [date, date_end] has no matching key in the
+        // pre-filled $result at all, and must not silently create one.
         $result = StatsPageRenderer::setMissingValues(
             'day',
             [
-                [
-                    'year' => '2020',
-                    'month' => '1',
-                    'day' => '1',
-                    'hour' => null,
-                    'nb_pages' => '5',
-                ],
+                new HistorySummaryRow(year: 2020, month: 1, day: 1, hour: null, nbPages: 5),
             ],
             new DateTime('2026-01-01'),
             new DateTime('2026-01-03')
@@ -321,27 +177,5 @@ final class StatsPageRendererDateHelpersTest extends TestCase
             ],
             $result
         );
-    }
-
-    public function testSetMissingValuesTruncatesAFractionalNbPagesToAnInt(): void
-    {
-        $result = StatsPageRenderer::setMissingValues(
-            'day',
-            [
-                [
-                    'year' => '2026',
-                    'month' => '1',
-                    'day' => '1',
-                    'hour' => null,
-                    'nb_pages' => '5.9',
-                ],
-            ],
-            new DateTime('2026-01-01'),
-            new DateTime('2026-01-01')
-        );
-
-        self::assertSame([
-            '2026-01-01' => 5,
-        ], $result);
     }
 }

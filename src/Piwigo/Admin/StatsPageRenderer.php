@@ -17,6 +17,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\History\HistoryService;
+use Piwigo\History\Projection\HistorySummaryRow;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -152,7 +153,7 @@ final class StatsPageRenderer
     /**
      * Get the last unit of time for years, months, days and hours.
      *
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<HistorySummaryRow>
      */
     private static function getLast(HistoryService $historyService, int $last_number = 60, string $type = 'year'): array
     {
@@ -215,13 +216,13 @@ final class StatsPageRenderer
 
         $actual_date = Env::now();
         if (! isset($months[$actual_date->format('Y/m/1')])) {
-            @$months[$actual_date->format('Y/m/1')][] = [
-                'year' => $actual_date->format('Y'),
-                'month' => $actual_date->format('n'),
-                'day' => null,
-                'hour' => null,
-                'nb_pages' => 0,
-            ];
+            @$months[$actual_date->format('Y/m/1')][] = new HistorySummaryRow(
+                year: (int) $actual_date->format('Y'),
+                month: (int) $actual_date->format('n'),
+                day: null,
+                hour: null,
+                nbPages: 0,
+            );
         }
 
         foreach ($months as $key => $val) {
@@ -251,7 +252,7 @@ final class StatsPageRenderer
      * oldest, which is why the no-explicit-dates fallback below reads from
      * those two ends.
      *
-     * @param array<int, array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> $data
+     * @param array<int, HistorySummaryRow> $data
      * @return float[]|int[]
      */
     public static function setMissingValues(string $unit, array $data, ?DateTime $firstDate = null, ?DateTime $lastDate = null): array
@@ -289,9 +290,8 @@ final class StatsPageRenderer
         foreach ($data as $value) {
             $str = self::getDateObject($value)
                 ->format($date_format);
-            $nb_pages = $value['nb_pages'];
-            if (isset($result[$str]) && is_numeric($nb_pages)) {
-                $result[$str] += (int) $nb_pages;
+            if (isset($result[$str])) {
+                $result[$str] += $value->nbPages;
             }
         }
 
@@ -304,37 +304,19 @@ final class StatsPageRenderer
      * year-only summary row, a NULL day means a year+month row, etc.), so
      * this cascades through them in order rather than reading all 4
      * unconditionally.
-     *
-     * year/month/day/hour are smallint/tinyint columns (schema), so a raw
-     * fetched value is int|string (native int under DBAL's mysqli driver,
-     * numeric string under its pgsql driver -- see DbConnection::params()),
-     * never a genuine string -- each value below is checked with
-     * is_numeric(), matching HistoryRepository's own read of this same
-     * column.
-     *
-     * @param array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages?: int|string|null} $row
      */
-    public static function getDateObject(array $row): DateTime
+    public static function getDateObject(HistorySummaryRow $row): DateTime
     {
-        // Every (string) cast below (on the is_numeric()-true branch only)
-        // is redundant: $year/$month/$day/$hour are int|string per this
-        // method's own docblock, and `.` concatenation stringifies an int
-        // operand identically to an explicit (string) cast -- removing the
-        // cast can't change the built $date_string.
-        $year = $row['year'];
-        $date_string = is_numeric($year) ? (string) $year : '';
+        $date_string = (string) $row->year;
 
-        $month = $row['month'];
-        if ($month !== null) {
-            $date_string = $date_string . '-' . (is_numeric($month) ? (string) $month : '');
+        if ($row->month !== null) {
+            $date_string = $date_string . '-' . $row->month;
 
-            $day = $row['day'];
-            if ($day !== null) {
-                $date_string = $date_string . '-' . (is_numeric($day) ? (string) $day : '');
+            if ($row->day !== null) {
+                $date_string = $date_string . '-' . $row->day;
 
-                $hour = $row['hour'];
-                if ($hour !== null) {
-                    $date_string = $date_string . ' ' . (is_numeric($hour) ? (string) $hour : '') . ':00';
+                if ($row->hour !== null) {
+                    $date_string = $date_string . ' ' . $row->hour . ':00';
                 }
             }
         } else {

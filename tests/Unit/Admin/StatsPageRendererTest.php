@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\StatsPageRenderer;
+use Piwigo\History\Projection\HistorySummaryRow;
 
 /**
  * Piwigo\Admin\StatsPageRenderer::render() itself needs a real HistoryService
@@ -19,82 +20,30 @@ use Piwigo\Admin\StatsPageRenderer;
  * doesn't" split.
  */
 test('getDateObject builds a year-only DateTime when month is null', function (): void {
-    $date = StatsPageRenderer::getDateObject([
-        'year' => 2026,
-        'month' => null,
-        'day' => null,
-        'hour' => null,
-        'nb_pages' => 5,
-    ]);
+    $date = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: null, day: null, hour: null, nbPages: 5));
 
     expect($date->format('Y-m-d'))
         ->toBe('2026-01-01');
 });
 
 test('getDateObject cascades through month/day/hour as each is provided', function (): void {
-    $monthOnly = StatsPageRenderer::getDateObject([
-        'year' => 2026,
-        'month' => 7,
-        'day' => null,
-        'hour' => null,
-        'nb_pages' => 5,
-    ]);
+    $monthOnly = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 7, day: null, hour: null, nbPages: 5));
     expect($monthOnly->format('Y-m-d'))
         ->toBe('2026-07-01');
 
-    $dayOnly = StatsPageRenderer::getDateObject([
-        'year' => 2026,
-        'month' => 7,
-        'day' => 12,
-        'hour' => null,
-        'nb_pages' => 5,
-    ]);
+    $dayOnly = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 7, day: 12, hour: null, nbPages: 5));
     expect($dayOnly->format('Y-m-d'))
         ->toBe('2026-07-12');
 
-    $withHour = StatsPageRenderer::getDateObject([
-        'year' => 2026,
-        'month' => 7,
-        'day' => 12,
-        'hour' => 14,
-        'nb_pages' => 5,
-    ]);
+    $withHour = StatsPageRenderer::getDateObject(new HistorySummaryRow(year: 2026, month: 7, day: 12, hour: 14, nbPages: 5));
     expect($withHour->format('Y-m-d H:i'))
-        ->toBe('2026-07-12 14:00');
-});
-
-test('getDateObject accepts numeric-string columns the same as native ints', function (): void {
-    // The pgsql driver returns smallint/tinyint columns as numeric
-    // strings, not native ints -- confirmed equivalent handling matters
-    // for real cross-driver correctness, not just a defensive cast.
-    $date = StatsPageRenderer::getDateObject([
-        'year' => '2026',
-        'month' => '7',
-        'day' => '12',
-        'hour' => '14',
-        'nb_pages' => '5',
-    ]);
-
-    expect($date->format('Y-m-d H:i'))
         ->toBe('2026-07-12 14:00');
 });
 
 test('setMissingValues fills every day bucket between first and last date with zero, then overlays real rows', function (): void {
     $data = [
-        [
-            'year' => 2026,
-            'month' => 7,
-            'day' => 12,
-            'hour' => null,
-            'nb_pages' => 10,
-        ],
-        [
-            'year' => 2026,
-            'month' => 7,
-            'day' => 10,
-            'hour' => null,
-            'nb_pages' => 4,
-        ],
+        new HistorySummaryRow(year: 2026, month: 7, day: 12, hour: null, nbPages: 10),
+        new HistorySummaryRow(year: 2026, month: 7, day: 10, hour: null, nbPages: 4),
     ];
 
     $result = StatsPageRenderer::setMissingValues('day', $data, new DateTime('2026-07-10'), new DateTime('2026-07-12'));
@@ -109,20 +58,8 @@ test('setMissingValues fills every day bucket between first and last date with z
 
 test('setMissingValues sums multiple real rows landing in the same bucket', function (): void {
     $data = [
-        [
-            'year' => 2026,
-            'month' => 7,
-            'day' => 10,
-            'hour' => 14,
-            'nb_pages' => 3,
-        ],
-        [
-            'year' => 2026,
-            'month' => 7,
-            'day' => 10,
-            'hour' => 15,
-            'nb_pages' => 5,
-        ],
+        new HistorySummaryRow(year: 2026, month: 7, day: 10, hour: 14, nbPages: 3),
+        new HistorySummaryRow(year: 2026, month: 7, day: 10, hour: 15, nbPages: 5),
     ];
 
     // Both rows fall in the same 'month' bucket (2026-07) -- proves the
@@ -140,20 +77,8 @@ test('setMissingValues defaults first/last date from the data itself when neithe
     // own real ordering) -- $data[0] is the most recent, $data[count-1] the
     // oldest, which is exactly what the no-explicit-dates fallback reads.
     $data = [
-        [
-            'year' => 2026,
-            'month' => null,
-            'day' => null,
-            'hour' => null,
-            'nb_pages' => 9,
-        ],
-        [
-            'year' => 2024,
-            'month' => null,
-            'day' => null,
-            'hour' => null,
-            'nb_pages' => 3,
-        ],
+        new HistorySummaryRow(year: 2026, month: null, day: null, hour: null, nbPages: 9),
+        new HistorySummaryRow(year: 2024, month: null, day: null, hour: null, nbPages: 3),
     ];
 
     $result = StatsPageRenderer::setMissingValues('year', $data);
@@ -167,12 +92,8 @@ test('setMissingValues defaults first/last date from the data itself when neithe
 });
 
 test('setMissingValues throws for an unrecognized unit', function (): void {
-    expect(fn (): array => StatsPageRenderer::setMissingValues('century', [[
-        'year' => 2026,
-        'month' => null,
-        'day' => null,
-        'hour' => null,
-        'nb_pages' => 1,
-    ]], new DateTime('2026-01-01'), new DateTime('2026-01-01')))
+    expect(fn (): array => StatsPageRenderer::setMissingValues('century', [
+        new HistorySummaryRow(year: 2026, month: null, day: null, hour: null, nbPages: 1),
+    ], new DateTime('2026-01-01'), new DateTime('2026-01-01')))
         ->toThrow(InvalidArgumentException::class, 'Invalid unit: century');
 });

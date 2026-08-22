@@ -12,11 +12,9 @@ namespace Piwigo\History\Projection;
  * all 3 select the identical `year`/`month`/`day`/`hour`/`nb_pages`
  * columns, filtered/ordered differently. All 3 feed
  * `Admin\StatsPageRenderer`'s own chart-data queries, which build/merge
- * synthetic filler rows of this exact array shape internally --
- * {@see \Piwigo\History\HistoryService}'s own
- * pass-through methods convert back to the plain array shape via
- * `toArray()` before returning, so `StatsPageRenderer` itself needs no
- * changes.
+ * synthetic filler rows of this same shape internally -- {@see
+ * \Piwigo\History\HistoryService}'s own pass-through methods hand this
+ * object straight through, and `StatsPageRenderer` reads it by property.
  */
 final readonly class HistorySummaryRow
 {

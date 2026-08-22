@@ -456,36 +456,27 @@ final readonly class HistoryService
     }
 
     /**
-     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nb_pages: int}>
+     * @return list<HistorySummaryRow>
      */
     public function getLastByType(string $type, int $limit): array
     {
-        return array_map(
-            static fn (HistorySummaryRow $row): array => $row->toArray(),
-            $this->repo->findLastByType($type, $limit)
-        );
+        return $this->repo->findLastByType($type, $limit);
     }
 
     /**
-     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nb_pages: int}>
+     * @return list<HistorySummaryRow>
      */
     public function getMonthlyRows(?int $limit): array
     {
-        return array_map(
-            static fn (HistorySummaryRow $row): array => $row->toArray(),
-            $this->repo->findMonthlyRows($limit)
-        );
+        return $this->repo->findMonthlyRows($limit);
     }
 
     /**
-     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nb_pages: int}>
+     * @return list<HistorySummaryRow>
      */
     public function getDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
     {
-        return array_map(
-            static fn (HistorySummaryRow $row): array => $row->toArray(),
-            $this->repo->findDailyRowsForMonths($year1, $month1, $year2, $month2, $year3, $month3)
-        );
+        return $this->repo->findDailyRowsForMonths($year1, $month1, $year2, $month2, $year3, $month3);
     }
 
     public function getAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float

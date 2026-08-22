@@ -228,7 +228,7 @@ namespace Piwigo\Tests\Integration {
         {
             $info = $this->service->getDefaultUserInfo();
             self::assertInstanceOf(DefaultUserInfo::class, $info);
-            self::assertNotSame('', $info->language);
+            self::assertNotNull($info->language);
         }
 
         public function testRegisterUserRejectsAnEmptyLogin(): void

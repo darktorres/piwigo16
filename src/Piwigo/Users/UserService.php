@@ -645,10 +645,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * Finds informations related to the user identifier. Same as
      * getUserData() but with additional guest-normalization + theme checks.
-     * Same "full user data bag" rationale as User::toUserArray()/
-     * $rawAttributes -- a growing merge of many heterogeneous sources
-     * (UserInfo row, computed theme/status fields, ...), not a single
-     * reusable domain shape.
+     * Same "full user data bag" rationale as User::$rawAttributes -- a
+     * growing merge of many heterogeneous sources (UserInfo row, computed
+     * theme/status fields, ...), not a single reusable domain shape.
      *
      * @return array<string, mixed>
      */

@@ -9,7 +9,6 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
-use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
@@ -245,20 +244,13 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         $fsPlugins = new ExtensionScanner()
             ->scanPlugins($this->paths, $this->currentUser, $this->currentConfig);
         $dbPluginsById = new ExtensionRepository($this->entityManager)
-            ->findAll(ExtensionType::Plugin);
+            ->findAllPlugins();
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
         foreach ($dbPluginsById as $plugin) {
-            // plugins.state is `enum(...) NOT NULL` in the schema -- a
-            // genuine row here always carries a string.
-            assert(is_string($plugin['state']));
-            if ($plugin['state'] === 'active') {
-                // plugins.id/version are `varchar(...) NOT NULL` in the
-                // schema — a genuine row here always carries strings.
-                $pluginId = $plugin['id'];
-                assert(is_string($pluginId));
-                $pluginVersion = $plugin['version'];
-                assert(is_string($pluginVersion));
+            if ($plugin->state === 'active') {
+                $pluginId = $plugin->id;
+                $pluginVersion = $plugin->version;
 
                 $eid = null;
                 if (isset($fsPlugins[$pluginId])) {
@@ -298,7 +290,7 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         $fsThemes = new ExtensionScanner()
             ->scanThemes($urlService, $this->paths, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->entityManager);
         $dbThemesById = new ExtensionRepository($this->entityManager)
-            ->findAll(ExtensionType::Theme);
+            ->findAllThemes();
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];
         $privateThemes = [];
@@ -307,12 +299,8 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
         // plugins, a theme is only in this table while active, so every row
         // here is implicitly active.
         foreach ($dbThemesById as $theme) {
-            // themes.id/version are `varchar(...) NOT NULL` in the
-            // schema — a genuine row here always carries strings.
-            $themeId = $theme['id'];
-            assert(is_string($themeId));
-            $themeVersion = $theme['version'];
-            assert(is_string($themeVersion));
+            $themeId = $theme->id;
+            $themeVersion = $theme->version;
 
             $eid = null;
             if (isset($fsThemes[$themeId])) {

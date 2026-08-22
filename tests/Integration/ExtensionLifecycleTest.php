@@ -201,10 +201,10 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            $row = $this->repo->find(ExtensionType::Plugin, $id);
+            $row = $this->repo->findPlugin($id);
             self::assertNotNull($row);
-            self::assertSame('inactive', $row['state']);
-            self::assertSame('1.0', $row['version']);
+            self::assertSame('inactive', $row->state);
+            self::assertSame('1.0', $row->version);
             self::assertSame(['1.0'], $this->findMigrationVersions($id), 'a successful install must record a plugin_migrations row');
         }
 
@@ -230,11 +230,11 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            $row = $this->repo->find(ExtensionType::Plugin, $id);
+            $row = $this->repo->findPlugin($id);
             self::assertNotNull($row);
             // version stays '1.0' -- the second install() call broke early
             // (dbRow !== null), never reaching the INSERT.
-            self::assertSame('1.0', $row['version']);
+            self::assertSame('1.0', $row->version);
         }
 
         public function testPluginActivateWhenNotInstalledImplicitlyInstallsFirst(): void
@@ -251,9 +251,9 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            $row = $this->repo->find(ExtensionType::Plugin, $id);
+            $row = $this->repo->findPlugin($id);
             self::assertNotNull($row);
-            self::assertSame('active', $row['state']);
+            self::assertSame('active', $row->state);
         }
 
         public function testPluginActivateWhenAlreadyActiveIsANoop(): void
@@ -302,9 +302,9 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            $row = $this->repo->find(ExtensionType::Plugin, $id);
+            $row = $this->repo->findPlugin($id);
             self::assertNotNull($row);
-            self::assertSame('inactive', $row['state']);
+            self::assertSame('inactive', $row->state);
         }
 
         public function testPluginDeactivateWhenNotInstalledReturnsNoErrorsDespiteFailing(): void
@@ -340,7 +340,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+            self::assertNull($this->repo->findPlugin($id));
         }
 
         public function testPluginUninstallWhenNotInstalledReturnsNoErrors(): void
@@ -378,9 +378,9 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            $row = $this->repo->find(ExtensionType::Plugin, $id);
+            $row = $this->repo->findPlugin($id);
             self::assertNotNull($row);
-            self::assertSame('active', $row['state']);
+            self::assertSame('active', $row->state);
             self::assertSame(['1.0'], $this->findMigrationVersions($id), 'restoring at the same version must upsert the ledger row, not duplicate or fail');
         }
 
@@ -399,7 +399,7 @@ namespace Piwigo\Tests\Integration {
             $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, null);
 
             self::assertSame([], $errors);
-            self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+            self::assertNull($this->repo->findPlugin($id));
         }
 
         public function testPluginDeleteWithAFilesystemEntryAlsoRemovesThePluginDirectory(): void
@@ -430,7 +430,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+            self::assertNull($this->repo->findPlugin($id));
         }
 
         public function testDeleteWhenExtensionsInstallIsDisabledFatallyErrors(): void
@@ -483,7 +483,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            self::assertNull($this->repo->find(ExtensionType::Theme, 'default'));
+            self::assertNull($this->repo->findTheme('default'));
         }
 
         public function testThemeActivateRejectsAMissingParentTheme(): void
@@ -504,7 +504,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertCount(1, $errors);
             self::assertStringContainsString('totally-fake-nonexistent-theme-xyz', $errors[0]);
-            self::assertNull($this->repo->find(ExtensionType::Theme, $id));
+            self::assertNull($this->repo->findTheme($id));
         }
 
         public function testThemeActivateAllowsDefaultAsParent(): void
@@ -524,7 +524,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            self::assertNotNull($this->repo->find(ExtensionType::Theme, $id));
+            self::assertNotNull($this->repo->findTheme($id));
         }
 
         public function testThemeActivateRejectsASecondMobileTheme(): void
@@ -568,7 +568,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertNotSame([], $errors);
-            self::assertNull($this->repo->find(ExtensionType::Theme, $second));
+            self::assertNull($this->repo->findTheme($second));
         }
 
         public function testThemeDeactivateRefusesToRemoveTheLastTheme(): void
@@ -597,7 +597,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertNotSame([], $errors);
-            self::assertNotNull($this->repo->find(ExtensionType::Theme, $id));
+            self::assertNotNull($this->repo->findTheme($id));
         }
 
         public function testThemeDeactivateOfANonDefaultThemeSucceedsWhenAnotherThemeExists(): void
@@ -637,8 +637,8 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            self::assertNull($this->repo->find(ExtensionType::Theme, $remove));
-            self::assertNotNull($this->repo->find(ExtensionType::Theme, $keep));
+            self::assertNull($this->repo->findTheme($remove));
+            self::assertNotNull($this->repo->findTheme($keep));
         }
 
         public function testThemeDeleteIsBlockedWhileInstalled(): void
@@ -683,7 +683,7 @@ namespace Piwigo\Tests\Integration {
             ));
 
             self::assertSame([], $errors);
-            self::assertNotNull($this->repo->find(ExtensionType::Language, $id));
+            self::assertNotNull($this->repo->findLanguage($id));
 
             $this->repo->delete(ExtensionType::Language, $id);
         }
@@ -712,7 +712,7 @@ namespace Piwigo\Tests\Integration {
             $errors = $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'en_UK', null);
 
             self::assertSame(['CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE'], $errors);
-            self::assertNotNull($this->repo->find(ExtensionType::Language, 'en_UK'));
+            self::assertNotNull($this->repo->findLanguage('en_UK'));
         }
 
         public function testLanguageDeactivateWhenNotActiveReturnsTheExactLegacyMessage(): void
@@ -1159,7 +1159,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertCount(1, $errors);
                 self::assertStringContainsString('does not exist', $errors[0]);
-                self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+                self::assertNull($this->repo->findPlugin($id));
                 self::assertSame([], $this->findMigrationVersions($id), 'a failed install must not record a plugin_migrations row either');
             } finally {
                 $this->removePluginManifest($id);
@@ -1200,9 +1200,9 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertCount(1, $errors);
                 self::assertStringContainsString('does not exist', $errors[0]);
-                $row = $this->repo->find(ExtensionType::Plugin, $id);
+                $row = $this->repo->findPlugin($id);
                 self::assertNotNull($row);
-                self::assertSame('inactive', $row['state']);
+                self::assertSame('inactive', $row->state);
             } finally {
                 $this->removePluginManifest($id);
             }
@@ -1254,7 +1254,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertCount(1, $errors);
                 self::assertStringContainsString('Child Theme', $errors[0]);
-                self::assertNull($this->repo->find(ExtensionType::Theme, $parent));
+                self::assertNull($this->repo->findTheme($parent));
             } finally {
                 $this->removeThemeDir($child);
             }
@@ -1293,7 +1293,7 @@ namespace Piwigo\Tests\Integration {
                 );
 
                 self::assertSame([], $errors);
-                self::assertNull($this->repo->find(ExtensionType::Theme, $id));
+                self::assertNull($this->repo->findTheme($id));
             } finally {
                 // deltree() already removed the real directory on success;
                 // this is a safe no-op if so (removeThemeDir()'s own
@@ -1482,7 +1482,7 @@ namespace Piwigo\Tests\Integration {
                 ));
 
                 self::assertSame([], $errors);
-                self::assertNull($this->repo->find(ExtensionType::Theme, $default));
+                self::assertNull($this->repo->findTheme($default));
                 $reassigned = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = ?', [$defaultUserId]);
                 self::assertSame($other, $reassigned, 'deactivating the real default theme must pick the remaining installed theme as the new default');
             } finally {

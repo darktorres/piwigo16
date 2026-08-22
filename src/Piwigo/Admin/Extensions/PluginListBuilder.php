@@ -38,15 +38,11 @@ final readonly class PluginListBuilder
         // that signature, same strcmp()-on-strtolower() logic.
         uasort($fs_plugins, static fn (PluginScanRow $a, PluginScanRow $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
         $db_plugins_by_id = new ExtensionRepository($this->entityManager)
-            ->findAll(ExtensionType::Plugin);
+            ->findAllPlugins();
         $plugin_list = [];
 
         foreach ($fs_plugins as $plugin_id => $fs_plugin) {
-            if (isset($db_plugins_by_id[$plugin_id]) && is_string($db_plugins_by_id[$plugin_id]['state'])) {
-                $state = $db_plugins_by_id[$plugin_id]['state'];
-            } else {
-                $state = 'uninstalled';
-            }
+            $state = $db_plugins_by_id[$plugin_id]->state ?? 'uninstalled';
 
             $plugin_list[] = [
                 'id' => $plugin_id,

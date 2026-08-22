@@ -102,7 +102,7 @@ final class PluginsInstalledPageRenderer
         // rather than wrapping each row back into an array just to satisfy
         // that signature, same strcmp()-on-strtolower() logic.
         uasort($fs_plugins, static fn (PluginScanRow $a, PluginScanRow $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
-        $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
+        $db_plugins_by_id = $extension_repository->findAllPlugins();
 
         if ($pluginsDisplay->isIncompatiblePluginsRequest) {
             $incompatible_plugins_raw = $pem_catalog->getIncompatibleExtensions(ExtensionType::Plugin, $fs_plugins, ExtensionType::Plugin->defaultIds());
@@ -192,12 +192,7 @@ final class PluginsInstalledPageRenderer
             $pem_url = RequestBootstrap::pemUrl();
             $visit_url = str_replace($url_to_replace, $pem_url, $fs_plugin->uri);
 
-            if (isset($db_plugins_by_id[$plugin_id])) {
-                $db_plugin_state = $db_plugins_by_id[$plugin_id]['state'] ?? null;
-                $plugin_state = is_string($db_plugin_state) ? $db_plugin_state : 'inactive';
-            } else {
-                $plugin_state = 'inactive';
-            }
+            $plugin_state = $db_plugins_by_id[$plugin_id]->state ?? 'inactive';
             $desc = $fs_plugin->description;
 
             $fs_plugin_extension = $fs_plugin->extension;
@@ -231,12 +226,11 @@ final class PluginsInstalledPageRenderer
 
         if (count($missing_plugin_ids) > 0) {
             foreach ($missing_plugin_ids as $plugin_id) {
-                $missing_version = $db_plugins_by_id[$plugin_id]['version'] ?? null;
                 $tpl_plugins[] = new PluginListRow(
                     id: $plugin_id,
                     name: $plugin_id,
                     visitUrl: '',
-                    version: is_string($missing_version) ? $missing_version : '',
+                    version: $db_plugins_by_id[$plugin_id]->version ?? '',
                     desc: $lang->t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
                     author: '',
                     authorUrl: null,

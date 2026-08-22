@@ -9,6 +9,9 @@ use LogicException;
 use Override;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\Projection\LanguageDbRow;
+use Piwigo\Admin\Extensions\Projection\PluginDbRow;
+use Piwigo\Admin\Extensions\Projection\ThemeDbRow;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
@@ -65,36 +68,35 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
 
     public function testFindAllReturnsTheFixtureLanguage(): void
     {
-        $rows = $this->repo->findAll(ExtensionType::Language);
+        $rows = $this->repo->findAllLanguages();
 
         self::assertArrayHasKey('en_UK', $rows);
-        self::assertSame('English (Great Britain)', $rows['en_UK']['name']);
+        self::assertSame('English (Great Britain)', $rows['en_UK']->name);
     }
 
-    // findAll()'s `if (! is_string($id)) { continue; }` guard (its own
-    // line 63) is left uncovered deliberately, not by oversight: `id` is
-    // the literal PRIMARY KEY on all 3 tables (plugins/themes/languages,
-    // confirmed via install/piwigo_structure-mysql.sql), and MySQL forces
-    // every PRIMARY KEY column NOT NULL regardless of its own nullability
-    // declaration -- there is no way to INSERT a NULL id even by dropping
-    // down to raw SQL against a real schema-conformant DB, and DBAL never
-    // returns a VARCHAR column as anything but a PHP string. A row this
-    // branch would `continue` past cannot exist in any real, constraint-
-    // enforced database. Pure static-analysis narrowing for `$row['id']`
-    // (raw DBAL rows type as `array<string, mixed>`), not a real runtime
-    // guard.
+    // findAllLanguages()'s `if (! is_string($id)) { continue; }` guard is
+    // left uncovered deliberately, not by oversight: `id` is the literal
+    // PRIMARY KEY on all 3 tables (plugins/themes/languages, confirmed via
+    // install/piwigo_structure-mysql.sql), and MySQL forces every PRIMARY
+    // KEY column NOT NULL regardless of its own nullability declaration --
+    // there is no way to INSERT a NULL id even by dropping down to raw SQL
+    // against a real schema-conformant DB, and DBAL never returns a
+    // VARCHAR column as anything but a PHP string. A row this branch
+    // would `continue` past cannot exist in any real, constraint-enforced
+    // database. Pure static-analysis narrowing for `$row['id']` (raw DBAL
+    // rows type as `array<string, mixed>`), not a real runtime guard.
 
     public function testFindReturnsASingleRow(): void
     {
-        $row = $this->repo->find(ExtensionType::Language, 'en_UK');
+        $row = $this->repo->findLanguage('en_UK');
 
-        self::assertIsArray($row);
-        self::assertSame('17.0.0', $row['version']);
+        self::assertInstanceOf(LanguageDbRow::class, $row);
+        self::assertSame('17.0.0', $row->version);
     }
 
     public function testFindReturnsNullForAMissingRow(): void
     {
-        self::assertNull($this->repo->find(ExtensionType::Plugin, 'no-such-plugin'));
+        self::assertNull($this->repo->findPlugin('no-such-plugin'));
     }
 
     public function testInsertNamedCreatesAThemeRow(): void
@@ -102,10 +104,10 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         $this->repo->insertNamed(ExtensionType::Theme, 'test-theme', '2.0.0', 'Test Theme');
 
         try {
-            $row = $this->repo->find(ExtensionType::Theme, 'test-theme');
-            self::assertIsArray($row);
-            self::assertSame('2.0.0', $row['version']);
-            self::assertSame('Test Theme', $row['name']);
+            $row = $this->repo->findTheme('test-theme');
+            self::assertInstanceOf(ThemeDbRow::class, $row);
+            self::assertSame('2.0.0', $row->version);
+            self::assertSame('Test Theme', $row->name);
         } finally {
             $this->repo->delete(ExtensionType::Theme, 'test-theme');
         }
@@ -127,9 +129,9 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         try {
             $this->repo->updatePluginState('test-plugin-state', 'active');
 
-            $row = $this->repo->find(ExtensionType::Plugin, 'test-plugin-state');
-            self::assertIsArray($row);
-            self::assertSame('active', $row['state']);
+            $row = $this->repo->findPlugin('test-plugin-state');
+            self::assertInstanceOf(PluginDbRow::class, $row);
+            self::assertSame('active', $row->state);
         } finally {
             $this->repo->delete(ExtensionType::Plugin, 'test-plugin-state');
         }
@@ -142,9 +144,9 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         try {
             $this->repo->updateVersion(ExtensionType::Theme, 'test-theme-version', '1.5.0');
 
-            $row = $this->repo->find(ExtensionType::Theme, 'test-theme-version');
-            self::assertIsArray($row);
-            self::assertSame('1.5.0', $row['version']);
+            $row = $this->repo->findTheme('test-theme-version');
+            self::assertInstanceOf(ThemeDbRow::class, $row);
+            self::assertSame('1.5.0', $row->version);
         } finally {
             $this->repo->delete(ExtensionType::Theme, 'test-theme-version');
         }

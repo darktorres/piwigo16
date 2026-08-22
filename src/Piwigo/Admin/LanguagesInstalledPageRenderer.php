@@ -92,7 +92,7 @@ final readonly class LanguagesInstalledPageRenderer
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->paths, $this->currentUser, $this->eventDispatcher, $this->pluginRegistry, $this->themeRegistry, $this->entityManager);
 
         $fs_languages = $extension_scanner->scanLanguages($this->paths, $this->currentConfig, $this->entityManager);
-        $db_languages = $extension_repository->findAll(ExtensionType::Language);
+        $db_languages = $extension_repository->findAllLanguages();
 
         // --------------------------------------------------perform requested actions
         $languagesAction = LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/', $this->inputValidator);

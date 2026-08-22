@@ -138,7 +138,7 @@ final readonly class ExtensionLifecycle
      */
     private function performPluginAction(string $action, string $id, ?PluginScanRow $fsEntry, array $options): array
     {
-        $dbRow = $this->repo->find(ExtensionType::Plugin, $id);
+        $dbRow = $this->repo->findPlugin($id);
         $errors = [];
         // Entity-agnostic accumulator handed to ActivityService::record()'s
         // own genuinely-arbitrary $details param -- same rationale as
@@ -219,7 +219,7 @@ final readonly class ExtensionLifecycle
             case 'activate':
                 if ($dbRow === null) {
                     $errors = $this->performPluginAction('install', $id, $fsEntry, $options);
-                    $dbRow = $this->repo->find(ExtensionType::Plugin, $id);
+                    $dbRow = $this->repo->findPlugin($id);
                     if ($dbRow === null) {
                         // The 'install' delegation above was itself a safe
                         // no-op (pluginExistsOnDisk() is false -- see that
@@ -232,7 +232,7 @@ final readonly class ExtensionLifecycle
                         // that was never scanned off disk).
                         break;
                     }
-                } elseif ($dbRow['state'] === 'active') {
+                } elseif ($dbRow->state === 'active') {
                     break;
                 }
 
@@ -252,7 +252,7 @@ final readonly class ExtensionLifecycle
                 break;
 
             case 'deactivate':
-                if ($dbRow === null || ($dbRow['state'] ?? null) !== 'active') {
+                if ($dbRow === null || $dbRow->state !== 'active') {
                     $activityDetails['result'] = 'error';
                     break;
                 }
@@ -265,9 +265,7 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                if (isset($dbRow['version'])) {
-                    $activityDetails['version'] = $dbRow['version'];
-                }
+                $activityDetails['version'] = $dbRow->version;
                 break;
 
             case 'uninstall':
@@ -277,11 +275,9 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                if (isset($dbRow['version'])) {
-                    $activityDetails['version'] = $dbRow['version'];
-                }
+                $activityDetails['version'] = $dbRow->version;
 
-                if (($dbRow['state'] ?? null) === 'active') {
+                if ($dbRow->state === 'active') {
                     $this->performPluginAction('deactivate', $id, $fsEntry, $options);
                 }
 
@@ -300,9 +296,7 @@ final readonly class ExtensionLifecycle
 
             case 'delete':
                 if ($dbRow !== null) {
-                    if (isset($dbRow['version'])) {
-                        $activityDetails['db_version'] = $dbRow['version'];
-                    }
+                    $activityDetails['db_version'] = $dbRow->version;
                     $this->performPluginAction('uninstall', $id, $fsEntry, $options);
                 }
                 if (! $this->pluginExistsOnDisk($id, $fsEntry)) {
@@ -325,7 +319,7 @@ final readonly class ExtensionLifecycle
     private function performThemeAction(string $action, string $id, ?ThemeScanRow $fsEntry): array
     {
 
-        $dbRow = $this->repo->find(ExtensionType::Theme, $id);
+        $dbRow = $this->repo->findTheme($id);
         $errors = [];
         // Same rationale as performPluginAction()'s own $activityDetails.
         /** @var array<string, mixed> $activityDetails */
@@ -451,7 +445,7 @@ final readonly class ExtensionLifecycle
     private function performLanguageAction(string $action, string $id, ?LanguageScanRow $fsEntry): array
     {
 
-        $dbRow = $this->repo->find(ExtensionType::Language, $id);
+        $dbRow = $this->repo->findLanguage($id);
         $conn = DbConnection::build();
         $errors = [];
 

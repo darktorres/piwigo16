@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Extensions\Projection\LanguageDbRow;
+use Piwigo\Admin\Extensions\Projection\PluginDbRow;
+use Piwigo\Admin\Extensions\Projection\ThemeDbRow;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Core\Env;
 use Piwigo\Users\UserInfoEntity;
@@ -48,38 +51,102 @@ final readonly class ExtensionRepository
     ) {}
 
     /**
-     * @return array<string, array<string, string|null>> keyed by id
+     * @return array<string, PluginDbRow> keyed by id
      */
-    public function findAll(ExtensionType $type): array
+    public function findAllPlugins(): array
     {
-        $rows = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('*')
-            ->from($type->table())
-            ->executeQuery()
-            ->fetchAllAssociative();
-
         $byId = [];
-        foreach ($rows as $row) {
-            $id = $row['id'] ?? null;
-            if (! is_string($id)) {
+        foreach ($this->fetchAllRawRows(ExtensionType::Plugin) as $row) {
+            // id is the literal PRIMARY KEY on all 3 tables -- MySQL forces
+            // every PRIMARY KEY column NOT NULL regardless of its own
+            // nullability declaration, so a real row can never fail this
+            // check; kept for the same static-analysis-narrowing reason
+            // the original findAll() had it.
+            if (! is_string($row['id'] ?? null)) {
                 continue;
             }
-            /** @var array<string, string|null> $row */
-            $byId[$id] = $row;
+
+            $dbRow = PluginDbRow::fromRow($row);
+            $byId[$dbRow->id] = $dbRow;
         }
 
         return $byId;
     }
 
     /**
-     * Same `SELECT *` shape as findAll() above (all 3 tables' columns are
-     * string|null -- no int/enum-as-int columns on any of plugins/themes/
-     * languages, confirmed via install/piwigo_structure-mysql.sql).
-     *
-     * @return array<string, string|null>|null
+     * @return array<string, ThemeDbRow> keyed by id
      */
-    public function find(ExtensionType $type, string $id): ?array
+    public function findAllThemes(): array
+    {
+        $byId = [];
+        foreach ($this->fetchAllRawRows(ExtensionType::Theme) as $row) {
+            if (! is_string($row['id'] ?? null)) {
+                continue;
+            }
+
+            $dbRow = ThemeDbRow::fromRow($row);
+            $byId[$dbRow->id] = $dbRow;
+        }
+
+        return $byId;
+    }
+
+    /**
+     * @return array<string, LanguageDbRow> keyed by id
+     */
+    public function findAllLanguages(): array
+    {
+        $byId = [];
+        foreach ($this->fetchAllRawRows(ExtensionType::Language) as $row) {
+            if (! is_string($row['id'] ?? null)) {
+                continue;
+            }
+
+            $dbRow = LanguageDbRow::fromRow($row);
+            $byId[$dbRow->id] = $dbRow;
+        }
+
+        return $byId;
+    }
+
+    public function findPlugin(string $id): ?PluginDbRow
+    {
+        $row = $this->fetchOneRawRow(ExtensionType::Plugin, $id);
+
+        return $row === null ? null : PluginDbRow::fromRow($row);
+    }
+
+    public function findTheme(string $id): ?ThemeDbRow
+    {
+        $row = $this->fetchOneRawRow(ExtensionType::Theme, $id);
+
+        return $row === null ? null : ThemeDbRow::fromRow($row);
+    }
+
+    public function findLanguage(string $id): ?LanguageDbRow
+    {
+        $row = $this->fetchOneRawRow(ExtensionType::Language, $id);
+
+        return $row === null ? null : LanguageDbRow::fromRow($row);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function fetchAllRawRows(ExtensionType $type): array
+    {
+        return $this->em->getConnection()
+            ->createQueryBuilder()
+            ->select('*')
+            ->from($type->table())
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function fetchOneRawRow(ExtensionType $type, string $id): ?array
     {
         $row = $this->em->getConnection()
             ->createQueryBuilder()
@@ -90,7 +157,6 @@ final readonly class ExtensionRepository
             ->executeQuery()
             ->fetchAssociative();
 
-        /** @var array<string, string|null>|false $row */
         return $row === false ? null : $row;
     }
 

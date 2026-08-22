@@ -153,7 +153,7 @@ final readonly class ThemesInstalledPageRenderer
         $default_theme = $this->userService
             ->getDefaultTheme();
 
-        $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));
+        $db_theme_ids = array_keys($extension_repository->findAllThemes());
 
         $tpl_themes = [];
 

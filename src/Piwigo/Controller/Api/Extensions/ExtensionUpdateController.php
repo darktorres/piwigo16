@@ -121,8 +121,8 @@ final readonly class ExtensionUpdateController implements ControllerInterface
         );
 
         if ($type === ExtensionType::Plugin) {
-            $dbPluginsById = $repo->findAll(ExtensionType::Plugin);
-            $wasActive = isset($dbPluginsById[$extensionId]) && $dbPluginsById[$extensionId]['state'] === 'active';
+            $dbPluginsById = $repo->findAllPlugins();
+            $wasActive = ($dbPluginsById[$extensionId] ?? null)?->state === 'active';
 
             if ($wasActive) {
                 $fsEntry = $scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$extensionId] ?? null;

@@ -361,6 +361,21 @@ it('submits a quick-search prefilter', function (): void {
     expect($result['body'])->not->toContain('Fatal error');
 });
 
+it('single-escapes an HTML-special-character-bearing quick-search query, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, '/admin.php?page=batch_manager');
+
+    $result = bmPost($page, [
+        'submitFilter' => '1',
+        'filter_search_use' => '1',
+        'q' => 'Photo & "Test"',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('value=" Photo &amp; &quot;Test&quot;"');
+    expect($result['body'])->not->toContain('&amp;amp;');
+});
+
 it('submitting the filter form with nothing checked resets to the default filter', function (): void {
     $page = H::loginAsAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
@@ -1272,6 +1287,23 @@ it('renders unmatched search terms as "No results for" alongside real matched it
     expect($result['body'])->not->toContain('Fatal error');
     expect($result['body'])->toContain('No results for');
     expect($result['body'])->toContain('quxfrobnicate42');
+});
+
+it('single-escapes an HTML-special-character-bearing unmatched search term, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, '/admin.php?page=batch_manager');
+
+    $result = bmPost($page, [
+        'submitFilter' => '1',
+        'filter_search_use' => '1',
+        'q' => 'Sample nature qux"frob&nicate44',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('No results for');
+    expect($result['body'])->toContain('qux&quot;frob&amp;nicate44');
+    expect($result['body'])->not->toContain('&amp;quot;')
+        ->not->toContain('&amp;amp;');
 });
 
 it('aggregates portrait/square/panorama ratio buckets from real distinct image dimensions', function (): void {

@@ -232,9 +232,9 @@ final readonly class RegisterController implements ControllerInterface
                 ->generate(6);
         }
 
-        $login = $registerSubmit->login !== '' && $registerSubmit->login !== '0' ? htmlspecialchars($registerSubmit->login) : '';
+        $login = $registerSubmit->login !== '' && $registerSubmit->login !== '0' ? $registerSubmit->login : '';
 
-        $email = $registerSubmit->mailAddress !== null && $registerSubmit->mailAddress !== '' && $registerSubmit->mailAddress !== '0' ? htmlspecialchars($registerSubmit->mailAddress) : '';
+        $email = $registerSubmit->mailAddress !== null && $registerSubmit->mailAddress !== '' && $registerSubmit->mailAddress !== '0' ? $registerSubmit->mailAddress : '';
 
         $urlService = $this->urlService;
 

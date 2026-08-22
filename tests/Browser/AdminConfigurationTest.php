@@ -369,6 +369,47 @@ it('saves the main tab and persists real config values', function (): void {
     }
 });
 
+it('main tab: single-escapes HTML-special-character-bearing gallery_title/page_banner, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('main'));
+    $token = H::pwgToken($page);
+
+    $snapshot = H::snapshotConfig(array_merge(
+        ['gallery_title', 'page_banner', 'order_by', 'order_by_inside_category', 'email_admin_on_new_user'],
+        ctMainCheckboxes()
+    ));
+
+    try {
+        $result = H::adminPost($page, ctConfigSection('main'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'gallery_title' => 'Title & "Quote"',
+            'page_banner' => 'Banner & "Quote"',
+            'order_by' => ['id ASC'],
+            'email_admin_on_new_user' => '1',
+            'email_admin_on_new_user_filter' => 'all',
+        ]);
+        expect($result['status'])->toBe(200);
+
+        $page = H::navigateOk($page, ctConfigSection('main'));
+        $body = H::rawWebpage($page)->content();
+
+        // CONF_GALLERY_TITLE is an <input value="...">, attribute
+        // position (escapeAttr() encodes both & and "). CONF_PAGE_BANNER
+        // is a <textarea>...</textarea>, element-text position
+        // (escapeText() only encodes &, quotes stay literal).
+        expect($body)
+            ->toContain('value="Title &amp; &quot;Quote&quot;"');
+        expect($body)
+            ->toContain('Banner &amp; "Quote"</textarea>');
+        expect($body)
+            ->not->toContain('&amp;amp;')
+            ->not->toContain('&amp;quot;');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('main tab: rejects a submission with no order field selected', function (): void {
     $page = H::loginAsAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));

@@ -649,8 +649,8 @@ final readonly class CommentsController implements ControllerInterface
         $commentsView = new CommentsView(
             homeUrl: $this->urlService->makeIndexUrl(),
             fAction: $this->urlService->getRootUrl() . 'comments.php',
-            fKeyword: $keyword_param !== null ? htmlspecialchars($keyword_param) : '',
-            fAuthor: $author_param !== null ? htmlspecialchars($author_param) : '',
+            fKeyword: $keyword_param ?? '',
+            fAuthor: $author_param ?? '',
             sinceOptions: $since_options_tpl,
             sinceOptionsSelected: $since,
             sortByOptions: $sort_by,

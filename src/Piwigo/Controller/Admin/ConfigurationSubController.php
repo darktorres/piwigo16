@@ -544,8 +544,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $lang_day = $this->lang->days();
 
                 $main = [
-                    'CONF_GALLERY_TITLE' => htmlspecialchars($conf_gallery_title),
-                    'CONF_PAGE_BANNER' => htmlspecialchars($conf_page_banner),
+                    'CONF_GALLERY_TITLE' => $conf_gallery_title,
+                    'CONF_PAGE_BANNER' => $conf_page_banner,
                     'week_starts_on_options' => [
                         'sunday' => $lang_day[0] ?? '',
                         'monday' => $lang_day[1] ?? '',

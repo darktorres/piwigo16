@@ -41,6 +41,32 @@ it('shows the real photo/sub-album counts for a parent album with sub-albums', f
     $page->assertSeeIn('.cat-albums .cat-modify-info-subcontent', '1 in whole branch');
 });
 
+it('single-escapes an HTML-special-character-bearing category name/comment, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Cat Modify Escaping Album & "Quote" ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+
+    $db = H::connect();
+    H::dbQuery($db, sprintf("UPDATE categories SET comment = 'Comment & \"Quote\"' WHERE id = %d", $albumId));
+    H::dbClose($db);
+
+    $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
+    $page->assertNoJavaScriptErrors();
+
+    // WebDriver's own .value getter returns the browser-decoded string --
+    // double-escaping would leave a literal '&amp;'/'&quot;' in this value
+    // instead of the real '&'/'"' characters.
+    expect($page->value('#cat-name'))
+        ->toContain('Album & "Quote"');
+    expect($page->value('#cat-comment'))
+        ->toBe('Comment & "Quote"');
+});
+
 it('shows the real photo count and zero sub-albums for a leaf album', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=2&tab=properties');

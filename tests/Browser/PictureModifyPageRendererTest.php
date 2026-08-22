@@ -339,6 +339,41 @@ it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports 
         ->toBeTrue();
 });
 
+it('single-escapes an HTML-special-character-bearing author/description, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Photo Modify Escaping Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Original Name');
+    @unlink($image);
+
+    H::updateImageInfo($page, [
+        'image_id' => $imageId,
+        'author' => 'Author & "Quote"',
+        'comment' => 'Description & "Quote"',
+    ]);
+
+    $page = H::navigateOk($page, '/admin.php?page=photo-' . $imageId);
+
+    // #author is an <input value="...">, attribute position -- escapeAttr()
+    // encodes both & and " (WebDriver's own .value getter decodes back to
+    // the real characters). #description is a <textarea>...</textarea>,
+    // element-text position -- escapeText() only encodes &, leaving the
+    // quote literal, hence the plain-content assertion below instead.
+    expect($page->value('input[name="author"]'))
+        ->toBe('Author & "Quote"');
+    $body = H::rawWebpage($page)->content();
+    expect($body)
+        ->toContain('Description &amp; "Quote"</textarea>');
+    expect($body)
+        ->not->toContain('Description &amp;amp;');
+});
+
 it('rejects a photo-modify submission with a missing CSRF token', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::createCategory($page, [

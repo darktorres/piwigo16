@@ -123,6 +123,21 @@ it('lists, paginates and keyword-filters real comments for an admin', function (
         ->toBe(0);
 });
 
+it('single-escapes HTML-special-character-bearing keyword/author filter values, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $page = H::navigateOk($page, '/comments.php?author=' . urlencode('Author & "Quote"') . '&keyword=' . urlencode('Key & "Word"'));
+    $body = H::rawWebpage($page)->content();
+
+    expect($body)
+        ->toContain('value="Key &amp; &quot;Word&quot;"');
+    expect($body)
+        ->toContain('value="Author &amp; &quot;Quote&quot;"');
+    expect($body)
+        ->not->toContain('&amp;amp;')
+        ->not->toContain('&amp;quot;');
+});
+
 it('lets an admin validate and delete a comment via comments.php\'s own moderation actions', function (): void {
     $page = H::loginAsAdmin($this);
     $pwgToken = H::pwgToken($page);

@@ -455,6 +455,32 @@ final readonly class NotificationByMailSubController implements AdminSubControll
     /**
      * Apply global functions to mail content
      * return customize mail content rendered
+     *
+     * [P44-F investigated, not fixed] This transformed value feeds
+     * `NotificationByMailView::$customMailContent`, read by BOTH
+     * `mail/text/html/notification_by_mail.latte` (correctly `|noescape`'d
+     * -- real HTML by this point) and, on paper,
+     * `mail/text/plain/notification_by_mail.latte`'s own un-noescape'd
+     * `{$customMailContent}` (a double-escape symptom, since Latte's own
+     * auto-escape would run again there). Traced fully: that plain-text
+     * template site is unreachable dead code for this real caller.
+     * `NotificationByMailSender::sendMailNotifications()` only ever calls
+     * `Template::renderView()` once, against whichever single format
+     * `$emailFormat` resolves to (`getMailTemplate('text/html')` when
+     * `nbmSendHtmlMail` is on, matching this method's own gate above) --
+     * `MailService::mail()` derives the OTHER format's body itself,
+     * afterward, via `strip_tags($contentInput)` applied to the *entire*
+     * already-rendered HTML page (header/footer/CSS included), never by
+     * rendering the plain-text `.latte` file a second time. That
+     * derivation has its own, broader gap (it doesn't `html_entity_decode()`
+     * the stripped result, so literal `&amp;`-shaped artifacts can leak
+     * into a derived plain-text body) -- a real finding, but one that
+     * lives entirely inside `MailService::mail()`'s own text/html<->
+     * text/plain conversion, affects every HTML-formatted mail this app
+     * sends (not just this one field), and is a mail-readability
+     * question, not a security bug (nothing here is attacker-reachable
+     * markup in a context that executes). Out of scope for this
+     * targeted campaign; recorded here rather than silently dropped.
      */
     private function renderGlobalCustomizeMailContent(NbmRenderGlobalCustomizeMailContent $event): NbmRenderGlobalCustomizeMailContent
     {

@@ -248,7 +248,7 @@ final class PasswordController implements ControllerInterface
             $title = $this->lang->t('Forgot your password?');
 
             if ($this->request->usernameOrEmailPresent) {
-                $username_or_email_value = htmlspecialchars($this->request->usernameOrEmail);
+                $username_or_email_value = $this->request->usernameOrEmail;
             }
         } elseif ($action === 'reset' and $first_login) {
             $title = $this->lang->t('Welcome');

@@ -64,6 +64,53 @@ it('renders the per-image thumbnail grid for a real category filter', function (
     H::assertNoServerErrors($page, 'batch_manager unit-mode thumbnail grid');
 });
 
+it('single-escapes HTML-special-character-bearing NAME/AUTHOR/DESCRIPTION fields, not double-escaped (P44-F)', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Batch Unit Escaping Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Name & "Quote"');
+    @unlink($image);
+
+    H::updateImageInfo($page, [
+        'image_id' => $imageId,
+        'author' => 'Author & "Quote"',
+        'comment' => 'Comment & "Quote"',
+    ]);
+
+    $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
+        'pwg_token' => H::pwgToken($page),
+        'submitFilter' => '1',
+        'filter_category_use' => '1',
+        'filter_category' => (string) $albumId,
+    ]);
+    expect($filterResult['status'])->toBe(200);
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
+    $body = H::rawWebpage($page)->content();
+
+    expect($body)
+        ->toContain('value="Name &amp; &quot;Quote&quot;"');
+    expect($body)
+        ->toContain('value="Author &amp; &quot;Quote&quot;"');
+    // DESCRIPTION prints in element-text position (inside <textarea>...
+    // </textarea>), not attribute position -- Latte's escapeText() (unlike
+    // escapeAttr()) doesn't encode quotes, since they're harmless as plain
+    // text content. Literal '"Quote"' here, not '&quot;Quote&quot;', is the
+    // correct single-escaped output.
+    expect($body)
+        ->toContain('Comment &amp; "Quote"</textarea>');
+    expect($body)
+        ->not->toContain('&amp;amp;')
+        ->not->toContain('&amp;quot;');
+    $page->assertNoJavaScriptErrors();
+});
+
 it('submits the unit-mode edit form for a whole_set selection and mass-updates every field', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::createCategory($page, [

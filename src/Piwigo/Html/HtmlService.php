@@ -862,7 +862,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $title .= ' ' . substr($comment, 0, 100) . (strlen($comment) > 100 ? '...' : '');
         }
 
-        $title = htmlspecialchars(strip_tags($title));
+        $title = strip_tags($title);
 
         return $title;
     }

@@ -518,6 +518,37 @@ it("surfaces registerUser()'s own validation errors (invalid email format) and d
     @unlink($jar);
 });
 
+it('single-escapes an HTML-special-character-bearing formEmail on a failed registration, not double-escaped (P44-F)', function (): void {
+    // Same "invalid email format" failure branch as the test above --
+    // login stays a plain, Username-VO-valid string (that VO now rejects
+    // <>&"' outright, P44-H), while mail_address carries the HTML-special
+    // characters this test actually checks the echo-back escaping of.
+    $jar = registerFreshCookieJar();
+    $get = registerCurl($jar, '/register.php');
+    $key = registerExtractKey($get['body']);
+    sleep(7);
+
+    $username = 'browser_reg_escaping_' . uniqid();
+
+    $result = registerCurl($jar, '/register.php', [
+        'login' => $username,
+        'password' => 'SomePassword123!',
+        'password_conf' => 'SomePassword123!',
+        'mail_address' => 'not-an-email & "quote"',
+        'key' => $key,
+        'submit' => 'Register',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('mail address must be like');
+    expect($result['body'])->toContain('value="not-an-email &amp; &quot;quote&quot;"');
+    expect($result['body'])->not->toContain('&amp;amp;');
+    expect(registerUserExists($username))
+        ->toBeFalse();
+
+    @unlink($jar);
+});
+
 it('treats a non-string lang cookie (PHP array syntax) as an invalid request parameter and returns a fatal 500', function (): void {
     // `Cookie: lang[]=x` parses into $_COOKIE['lang'] as a genuine PHP
     // array (PHP applies the same bracket-name parsing to cookies as it

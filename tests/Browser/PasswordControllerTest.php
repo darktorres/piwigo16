@@ -732,6 +732,33 @@ it('rate-limits password-reset-code requests per account after the configured ce
     }
 });
 
+it('single-escapes an HTML-special-character-bearing username_or_email echoed back on the lost step, not double-escaped (P44-F)', function (): void {
+    // Forcing the IP-scoped ceiling to 0 rejects every request outright,
+    // regardless of whether it resolves to a real account -- the
+    // simplest way to keep __invoke()'s own action at 'lost' (so
+    // username_or_email gets echoed back into the form) instead of
+    // transitioning to 'lost_code' on a real success.
+    $snapshot = H::snapshotConfig(['password_reset_request_ip_max_attempts']);
+
+    try {
+        H::setConfigValue('password_reset_request_ip_max_attempts', '0');
+
+        $page = H::gotoOk($this, '/password.php');
+        $page = $page->fill('username_or_email', 'not-an-account & "quote"@example.test');
+        H::clickWithTimeout($page, 'submit');
+
+        $page->assertSee('Too many attempts, please try later..');
+        $body = H::rawWebpage($page)->content();
+        expect($body)
+            ->toContain('value="not-an-account &amp; &quot;quote&quot;@example.test"');
+        expect($body)
+            ->not->toContain('&amp;amp;')
+            ->not->toContain('&amp;quot;');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('expires a pending reset code once its configured duration has elapsed', function (): void {
     $snapshot = H::snapshotConfig(['password_reset_code_duration']);
 

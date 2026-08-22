@@ -943,7 +943,7 @@ test('getTagsContentTitle builds the exact link markup, prefixed by the real roo
     }
 });
 
-test('getThumbnailTitle appends visit/comment counts and a truncated comment, HTML-escaped', function (): void {
+test('getThumbnailTitle appends visit/comment counts and a truncated, tag-stripped comment', function (): void {
     $service = HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle([
@@ -1164,16 +1164,18 @@ test('getThumbnailTitle does not append an ellipsis at exactly the 100-character
     expect($service->getThumbnailTitle([], 'Title', $exactly101))->toBe('Title ' . $exactly100 . '...');
 });
 
-test('getThumbnailTitle escapes a literal & surviving tag-stripping in the final title', function (): void {
-    // Kills line 742's UnwrapHtmlspecialchars -- every other test's
-    // title/comment is free of HTML-special characters, so an unwrapped
-    // htmlspecialchars() call is otherwise invisible.
+test('getThumbnailTitle leaves a literal & surviving tag-stripping unescaped (P44-F, thumbnails.latte trusts Latte auto-escape)', function (): void {
+    // This method used to also htmlspecialchars() the result -- deleted
+    // (P44-F) since its one real consumer, thumbnails.latte:37's
+    // {$thumbnail['TN_TITLE']}, has no |noescape and already gets
+    // escaped once by Latte's own auto-escaper; keeping the PHP-side
+    // call too was a real double-escape bug.
     $service = HtmlServiceTestFactory::build();
 
     $title = $service->getThumbnailTitle([], 'Fish & Chips');
 
     expect($title)
-        ->toBe('Fish &amp; Chips');
+        ->toBe('Fish & Chips');
 });
 
 test('getThumbnailTitle strips real tag markup out of the final title, not just the comment', function (): void {

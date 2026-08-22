@@ -14,6 +14,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Comment\CommentEntity;
     use Piwigo\Comment\CommentService;
     use Piwigo\Comment\Event\UserCommentCheck;
+    use Piwigo\Comment\Projection\CommentInsertData;
     use Piwigo\Common\ValueObject\CommentId;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfig;
@@ -394,8 +395,8 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * $comm['ip'] is a by-ref out-param (insertComment() writes it
-         * back into the caller's array) -- asserted directly here since
+         * $comm->ip is written by insertComment() (object mutation, not
+         * a by-ref param) -- asserted directly here since
          * no existing helper fetches the `anonymous_id` column. A real,
          * valid REMOTE_ADDR
          * (rather than baseComm()'s ambient empty/unset one) is what
@@ -413,7 +414,7 @@ namespace Piwigo\Tests\Integration {
 
                 $this->service->insertComment($comm, $this->validKey(), $infos);
 
-                self::assertSame('203.0.113.42', $comm['ip']);
+                self::assertSame('203.0.113.42', $comm->ip);
             } finally {
                 if ($originalRemoteAddr === null) {
                     unset($_SERVER['REMOTE_ADDR']);
@@ -440,7 +441,7 @@ namespace Piwigo\Tests\Integration {
 
                 $this->service->insertComment($comm, $this->validKey(), $infos);
 
-                self::assertSame('', $comm['ip']);
+                self::assertSame('', $comm->ip);
             } finally {
                 if ($originalRemoteAddr !== null) {
                     $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
@@ -449,7 +450,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * $comm['agent'] is a by-ref out-param -- HTTP_USER_AGENT only
+         * $comm->agent is written by insertComment() -- HTTP_USER_AGENT only
          * reaches it via the `?? null` coalesce and the is_string()
          * ternary just below it, both otherwise unexercised since no
          * other test in this file ever sets
@@ -466,7 +467,7 @@ namespace Piwigo\Tests\Integration {
 
                 $this->service->insertComment($comm, $this->validKey(), $infos);
 
-                self::assertSame('PiwigoTestClient/1.0', $comm['agent']);
+                self::assertSame('PiwigoTestClient/1.0', $comm->agent);
             } finally {
                 if ($originalUserAgent === null) {
                     unset($_SERVER['HTTP_USER_AGENT']);
@@ -479,7 +480,7 @@ namespace Piwigo\Tests\Integration {
         /**
          * Without HTTP_USER_AGENT at all (the ambient state every other
          * test in this file already relies on), $http_user_agent is
-         * null -- is_string(null) is false, so $comm['agent'] falls to
+         * null -- is_string(null) is false, so $comm->agent falls to
          * the ternary's own '' branch, not $http_user_agent itself.
          */
         public function testInsertCommentDefaultsAgentToEmptyStringWithoutAUserAgent(): void
@@ -493,7 +494,7 @@ namespace Piwigo\Tests\Integration {
 
                 $this->service->insertComment($comm, $this->validKey(), $infos);
 
-                self::assertSame('', $comm['agent']);
+                self::assertSame('', $comm->agent);
             } finally {
                 if ($originalUserAgent !== null) {
                     $_SERVER['HTTP_USER_AGENT'] = $originalUserAgent;
@@ -504,12 +505,12 @@ namespace Piwigo\Tests\Integration {
         public function testInsertCommentRejectsEmptyContent(): void
         {
             $comm = $this->baseComm();
-            $comm['content'] = '';
+            $comm->content = '';
             $key = $this->validKey();
             $infos = [];
 
             self::assertSame('reject', $this->service->insertComment($comm, $key, $infos));
-            self::assertArrayNotHasKey('id', $comm);
+            self::assertNull($comm->id);
         }
 
         public function testInsertCommentRejectsAnInvalidKey(): void
@@ -519,7 +520,7 @@ namespace Piwigo\Tests\Integration {
 
             self::assertSame('reject', $this->service->insertComment($comm, 'not-a-real-key', $infos));
             self::assertContains('key', $this->postCr());
-            self::assertArrayNotHasKey('id', $comm);
+            self::assertNull($comm->id);
         }
 
         public function testInsertCommentRejectsAGuestImpersonatingAnExistingUsername(): void
@@ -527,7 +528,7 @@ namespace Piwigo\Tests\Integration {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Guest));
 
             $comm = $this->baseComm();
-            $comm['author'] = 'fixture_admin';
+            $comm->author = 'fixture_admin';
             $key = $this->validKey();
             $infos = [];
 
@@ -540,7 +541,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigTestFactory::get()->commentsEnableWebsite = false;
 
             $comm = $this->baseComm();
-            $comm['website_url'] = 'http://spam.example';
+            $comm->websiteUrl = 'http://spam.example';
             $key = $this->validKey();
             $infos = [];
 
@@ -551,7 +552,7 @@ namespace Piwigo\Tests\Integration {
         public function testInsertCommentRejectsAMalformedEmail(): void
         {
             $comm = $this->baseComm();
-            $comm['email'] = 'not-an-email';
+            $comm->email = 'not-an-email';
             $key = $this->validKey();
             $infos = [];
 
@@ -564,7 +565,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
-            $comm['email'] = '';
+            $comm->email = '';
             $key = $this->validKey();
             $infos = [];
 
@@ -657,7 +658,7 @@ namespace Piwigo\Tests\Integration {
             // is never reused as a comment author anywhere else in this
             // file. (It happens to be this file's own
             // configured guestId(), but insertComment() only ever *writes*
-            // guestId() into $comm['author_id'] for a real guest poster,
+            // guestId() into $comm->authorId for a real guest poster,
             // never *compares* against it, so status: 'normal' here takes
             // the classic-user branch cleanly regardless.)
             CurrentUserTestFactory::get()->set(User::fromUserArray([
@@ -726,7 +727,7 @@ namespace Piwigo\Tests\Integration {
         /**
          * Non-classic (guest) poster, empty author, comment_author_mandatory
          * on: rejected with the exact "Username is mandatory" message, and
-         * (by-ref) $comm['author'] is still defaulted to 'guest' even
+         * $comm->author is still defaulted to 'guest' even
          * though the comment itself is rejected.
          */
         public function testInsertCommentRejectsAMissingAuthorWhenMandatory(): void
@@ -745,12 +746,12 @@ namespace Piwigo\Tests\Integration {
 
             self::assertSame('reject', $action);
             self::assertContains('Username is mandatory', $infos);
-            self::assertSame('guest', $comm['author']);
+            self::assertSame('guest', $comm->author);
         }
 
         /**
          * Same empty-author guest post, but comment_author_mandatory is off
-         * (the default): no rejection, $comm['author'] still defaults to
+         * (the default): no rejection, $comm->author still defaults to
          * 'guest', and that literal value is what lands in the `author`
          * column.
          */
@@ -769,7 +770,7 @@ namespace Piwigo\Tests\Integration {
             $action = $this->service->insertComment($comm, $this->validKey(), $infos);
 
             self::assertSame('validate', $action);
-            self::assertSame('guest', $comm['author']);
+            self::assertSame('guest', $comm->author);
             self::assertSame('guest', $this->fetchColumn($this->insertedId($comm), 'author'));
         }
 
@@ -785,7 +786,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
-            $comm['website_url'] = 'example.test/<b>promo</b>';
+            $comm->websiteUrl = 'example.test/<b>promo</b>';
             $infos = [];
 
             $action = $this->service->insertComment($comm, $this->validKey(), $infos);
@@ -804,7 +805,7 @@ namespace Piwigo\Tests\Integration {
         public function testInsertCommentRejectsAMalformedWebsiteUrl(): void
         {
             $comm = $this->baseComm();
-            $comm['website_url'] = '"><script>alert(1)</script>';
+            $comm->websiteUrl = '"><script>alert(1)</script>';
             $infos = [];
 
             $action = $this->service->insertComment($comm, $this->validKey(), $infos);
@@ -814,11 +815,11 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * `?? null` only matters for an omitted key (`website_url?:
-         * string` in this method's own @param) -- baseComm() always
-         * sets it to '', which already exercises
+         * `?? null` only matters for a genuinely null $websiteUrl
+         * (`?string $websiteUrl = null` on CommentInsertData) --
+         * baseComm() always sets it to '', which already exercises
          * self::emptyValue('') but never the null branch this coalesce
-         * actually guards. Without a real key, emptyValue() must still
+         * actually guards. With a null value, emptyValue() must still
          * treat this as empty (matching empty()'s own null semantics)
          * and skip the honeypot/URL-validation block entirely.
          */
@@ -827,7 +828,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
-            unset($comm['website_url']);
+            $comm->websiteUrl = null;
             $infos = [];
 
             $action = $this->service->insertComment($comm, $this->validKey(), $infos);
@@ -1388,12 +1389,11 @@ namespace Piwigo\Tests\Integration {
             return UrlServiceTestFactory::build()->getAbsoluteRootUrl();
         }
 
-        private function insertedId(mixed $comm): int
+        private function insertedId(CommentInsertData $comm): int
         {
-            self::assertIsArray($comm);
-            self::assertIsInt($comm['id'] ?? null);
+            self::assertIsInt($comm->id);
 
-            return $comm['id'];
+            return $comm->id;
         }
 
         /**
@@ -1420,18 +1420,15 @@ namespace Piwigo\Tests\Integration {
             return (int) $this->conn->lastInsertId();
         }
 
-        /**
-         * @return array{author: string, content: string, website_url: string, email: string, image_id: int}
-         */
-        private function baseComm(int $imageId = 1): array
+        private function baseComm(int $imageId = 1): CommentInsertData
         {
-            return [
-                'author' => '',
-                'content' => 'A perfectly fine comment.',
-                'website_url' => '',
-                'email' => '',
-                'image_id' => $imageId,
-            ];
+            return new CommentInsertData(
+                author: '',
+                content: 'A perfectly fine comment.',
+                imageId: $imageId,
+                websiteUrl: '',
+                email: '',
+            );
         }
 
         /**

@@ -9,6 +9,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\Event\UserCommentCheck;
 use Piwigo\Comment\Event\UserCommentValidation;
 use Piwigo\Comment\Projection\CommentDateRange;
+use Piwigo\Comment\Projection\CommentInsertData;
 use Piwigo\Comment\Projection\CommentListRow;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
@@ -180,41 +181,38 @@ final readonly class CommentService
 
     /**
      * Tries to insert a user comment and returns the action to perform.
+     * Mutates $comm in place (object identity, not a by-ref param) --
+     * augments it with ip/agent (always) and author_id/(on success) id.
      *
-     * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comm in: caller-supplied fields
-     * @param-out array{author: string, content: string, image_id: int, website_url?: string, email?: string, ip: string, agent: string, author_id?: int, id?: int} $comm out: augmented with ip/agent (always) and author_id/(on success) id
      * @param list<string> $infos out: user-facing validation messages
      * @return string validate, moderate, reject
      */
-    public function insertComment(array &$comm, string $key, array &$infos): string
+    public function insertComment(CommentInsertData $comm, string $key, array &$infos): string
     {
-
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $comm = [
-            'ip' => IpAddress::fromRemoteAddr()->value ?? '',
-            'agent' => is_string($http_user_agent) ? $http_user_agent : '',
-        ] + $comm;
+        $comm->ip = IpAddress::fromRemoteAddr()->value ?? '';
+        $comm->agent = is_string($http_user_agent) ? $http_user_agent : '';
 
         $infos = [];
         $commentAction = (! $this->currentConfig->commentsValidation || $this->accessLevelChecker->isAdmin()) ? 'validate' : 'moderate';
 
         if (! $this->accessLevelChecker->isClassicUser()) {
-            if (self::emptyValue($comm['author'])) {
+            if (self::emptyValue($comm->author)) {
                 if ($this->currentConfig->commentsAuthorMandatory) {
                     $infos[] = $this->lang->t('Username is mandatory');
                     $commentAction = 'reject';
                 }
 
-                $comm['author'] = 'guest';
+                $comm->author = 'guest';
             }
 
             $guestId = $this->currentConfig->guestId;
-            $comm['author_id'] = $guestId;
+            $comm->authorId = $guestId;
 
             // if a guest tries to use the name of an already existing user,
             // they must be rejected
-            if ($comm['author'] !== 'guest') {
-                $authorName = $comm['author'];
+            if ($comm->author !== 'guest') {
+                $authorName = $comm->author;
 
                 if ($this->repo->usernameExists($authorName)) {
                     $infos[] = $this->lang->t('This login is already used by another user');
@@ -223,15 +221,15 @@ final readonly class CommentService
             }
         } else {
             $user = $this->currentUser->get();
-            $comm['author'] = $user->username->value ?? '';
-            $comm['author_id'] = $user->id->value;
+            $comm->author = $user->username->value ?? '';
+            $comm->authorId = $user->id->value;
         }
 
-        if (self::emptyValue($comm['content'])) {
+        if (self::emptyValue($comm->content)) {
             $commentAction = 'reject';
         }
 
-        $imageId = $comm['image_id'];
+        $imageId = $comm->imageId;
         $imageIdRaw = (string) $imageId;
 
         if (! $this->ephemeralKeys->verify($key, $imageIdRaw)) {
@@ -240,18 +238,18 @@ final readonly class CommentService
         }
 
         // website
-        if (! self::emptyValue($comm['website_url'] ?? null)) {
+        if (! self::emptyValue($comm->websiteUrl)) {
             if (! $this->currentConfig->commentsEnableWebsite) { // honeypot: if the field is disabled, it should be empty !
                 $commentAction = 'reject';
                 $this->pushCrReason('website_url');
             } else {
-                $websiteUrl = is_string($comm['website_url'] ?? null) ? $comm['website_url'] : '';
+                $websiteUrl = $comm->websiteUrl ?? '';
                 $websiteUrl = strip_tags($websiteUrl);
                 if (preg_match('/^https?/i', $websiteUrl) !== 1) {
                     $websiteUrl = 'http://' . $websiteUrl;
                 }
 
-                $comm['website_url'] = $websiteUrl;
+                $comm->websiteUrl = $websiteUrl;
                 if (! InputValidator::checkUrlFormat($websiteUrl)) {
                     $infos[] = $this->lang->t('Your website URL is invalid');
                     $commentAction = 'reject';
@@ -260,17 +258,17 @@ final readonly class CommentService
         }
 
         // email
-        if (self::emptyValue($comm['email'] ?? null)) {
+        if (self::emptyValue($comm->email)) {
             $currentUserEmail = $this->currentUser->get()
                 ->email;
             if ($currentUserEmail instanceof Email) {
-                $comm['email'] = $currentUserEmail->value;
+                $comm->email = $currentUserEmail->value;
             } elseif ($this->currentConfig->commentsEmailMandatory) {
                 $infos[] = $this->lang->t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
         } else {
-            $email = is_string($comm['email'] ?? null) ? $comm['email'] : null;
+            $email = $comm->email;
             if (! InputValidator::checkEmailFormat($email)) {
                 $infos[] = $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
                 $commentAction = 'reject';
@@ -279,20 +277,18 @@ final readonly class CommentService
 
         // Trimmed IP (drops the last octet), used only as the anti-flood
         // LIKE prefix below -- the `anonymous_id` column itself stores the
-        // full, untrimmed $comm['ip'] (see the INSERT below), not this
+        // full, untrimmed $comm->ip (see the INSERT below), not this
         // trimmed value.
-        // $comm['ip'] was set to a string unconditionally at the top of
-        // this method.
-        $ipComponents = explode('.', $comm['ip']);
+        $ipComponents = explode('.', $comm->ip);
         if (count($ipComponents) > 3) {
             array_pop($ipComponents);
         }
 
         $trimmedIp = implode('.', $ipComponents);
 
-        // $comm['author_id'] was set to an int unconditionally in both
+        // $comm->authorId was set to an int unconditionally in both
         // branches above.
-        $authorId = $comm['author_id'];
+        $authorId = $comm->authorId;
 
         $antiFloodTime = $this->currentConfig->antiFloodTime;
 
@@ -307,26 +303,26 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $commentAction = $this->eventDispatcher->dispatch(new UserCommentCheck($commentAction, $comm))
+        $commentAction = $this->eventDispatcher->dispatch(new UserCommentCheck($commentAction, $comm->toArray()))
             ->commentAction;
 
         if ($commentAction !== 'reject') {
-            $author = $comm['author'];
-            $content = $comm['content'];
-            $websiteUrl = ! self::emptyValue($comm['website_url'] ?? null) && is_string($comm['website_url'] ?? null) ? $comm['website_url'] : null;
-            $email = ! self::emptyValue($comm['email'] ?? null) && is_string($comm['email'] ?? null) ? $comm['email'] : null;
+            $author = $comm->author;
+            $content = $comm->content;
+            $websiteUrl = ! self::emptyValue($comm->websiteUrl) ? $comm->websiteUrl : null;
+            $email = ! self::emptyValue($comm->email) ? $comm->email : null;
 
             $id = $this->repo->insert([
                 'author' => $author,
                 'authorId' => $authorId,
-                'anonymousId' => $comm['ip'],
+                'anonymousId' => $comm->ip,
                 'content' => $content,
                 'validated' => $commentAction === 'validate',
                 'imageId' => $imageId,
                 'websiteUrl' => $websiteUrl,
                 'email' => $email,
             ]);
-            $comm['id'] = $id->value;
+            $comm->id = $id->value;
 
             $this->invalidateNbCommentsCache();
 
@@ -412,11 +408,10 @@ final readonly class CommentService
      * $comment is still only known as array<string, mixed> here even
      * though both real callers (CommentsController/PictureController) now
      * build it from their own validated Request\CommentsRequest/
-     * Request\PictureRequest DTO fields rather than raw
-     * $_GET/$_POST -- kept a generic array (matching insertComment()'s
-     * own $comm shape) since this method's own defensive is_scalar()/
-     * is_string() narrowing below already treats every field as
-     * untrusted, same as any other external-boundary array.
+     * Request\PictureRequest DTO fields rather than raw $_GET/$_POST --
+     * kept a generic array since this method's own defensive
+     * is_scalar()/is_string() narrowing below already treats every
+     * field as untrusted, same as any other external-boundary array.
      *
      * @param array<string, mixed> $comment
      * @return string validate, moderate, reject

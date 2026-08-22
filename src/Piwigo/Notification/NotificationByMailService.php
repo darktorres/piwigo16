@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Db\SqlDialect;
+use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Notification\Projection\UserWithoutNotificationRow;
 use Piwigo\Session\SessionService;
@@ -97,7 +98,7 @@ final readonly class NotificationByMailService
     }
 
     /**
-     * @param array<int, array{user_id: mixed, check_key: string, enabled: int}> $inserts
+     * @param list<NotificationInsertRow> $inserts
      */
     public function insertNotifications(array $inserts): void
     {

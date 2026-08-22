@@ -14,6 +14,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\UserMailNotificationEntity;
 
 /**
@@ -134,11 +135,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         // user 2 (guest) has no notification row in the fixture -- see
         // this class's own docblock.
         $this->repo->insertNotifications([
-            [
-                'user_id' => 2,
-                'check_key' => $checkKey,
-                'enabled' => 0,
-            ],
+            new NotificationInsertRow(userId: 2, checkKey: $checkKey, enabled: 0),
         ]);
         self::assertSame(1, $this->repo->countByCheckKey($checkKey));
 

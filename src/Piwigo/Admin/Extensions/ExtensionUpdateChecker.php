@@ -176,7 +176,19 @@ final readonly class ExtensionUpdateChecker
                 $typeNeedUpdate[$extId] = is_string($revisionNameRaw) ? $revisionNameRaw : '';
             }
 
-            $extensionsNeedUpdate[$type->value] = $typeNeedUpdate;
+            // Only set once genuinely non-empty -- matches updates.class.php::
+            // check_extensions()'s own behavior, where $_SESSION['extensions_need_update'][$type]
+            // is only ever auto-vivified by an actual assignment inside the
+            // pending-update branch above, never pre-seeded to an empty array.
+            // CheckUpdatesController's own `$extNeedUpdate !== []` check (mirroring
+            // the legacy `!empty($_SESSION['extensions_need_update'])`) depends on
+            // this: an unconditional per-type assignment here would make the
+            // cached structure carry a key for every reachable type regardless of
+            // whether anything is actually pending, permanently tripping that
+            // check the moment the PEM server is reachable at all.
+            if ($typeNeedUpdate !== []) {
+                $extensionsNeedUpdate[$type->value] = $typeNeedUpdate;
+            }
 
             // Matches the original blob-based behavior exactly: an ignored
             // id that's no longer pending (the extension caught up, or was

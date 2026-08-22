@@ -55,6 +55,21 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 // trivial "cache reset, nothing else happens" no-op path, not the
 // actual repository interaction this migration added.
 //
+// Same limitation blocks direct coverage of a real bug fixed in
+// checkExtensions() itself: it used to write $extensionsNeedUpdate[
+// $type->value] = $typeNeedUpdate unconditionally for every reachable
+// type, even when $typeNeedUpdate was [] -- so the cached structure
+// always carried a key per reachable type the moment PEM answered at
+// all, tripping Controller\Api\Extensions\CheckUpdatesController's own
+// `$extNeedUpdate !== []` check (which mirrors legacy updates.class.php's
+// `!empty($_SESSION['extensions_need_update'])`) permanently true even
+// with zero real pending updates. The fix (only assign the type's key
+// when $typeNeedUpdate is genuinely non-empty, matching legacy's own
+// auto-vivification-only-on-real-assignment behavior) needs $pending to
+// be a real, reachable-but-empty array for at least one type -- exactly
+// the branch this whole file's docblock already establishes as
+// PEM-unreachable-and-therefore-untestable here.
+//
 // ExtensionType::scanDirectory() for Plugin/Language both resolve
 // against CurrentPaths (like ExtensionScannerTest already relies on for
 // Language); Theme resolves against CurrentConfig::themesDir(), which

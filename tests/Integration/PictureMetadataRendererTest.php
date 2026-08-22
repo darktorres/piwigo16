@@ -220,7 +220,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
-        self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
+        self::assertSame('EXIF Metadata', $metadata[0]->title);
         self::assertSame([
             'Translated Artist' => 'Jane Photographer',
             'ImageDescription' => 'A test photo',
@@ -229,7 +229,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             // scalar result, coercing this int (from exif_read_data()'s
             // own real COMPUTED.Height key) into a string.
             'Height' => '6',
-        ], $metadata[0]['lines']);
+        ], $metadata[0]->lines);
     }
 
     public function testRenderTranslatesACompositeExifFieldWhenATranslationExistsForItsSecondToken(): void
@@ -261,10 +261,10 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
-        self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
+        self::assertSame('EXIF Metadata', $metadata[0]->title);
         self::assertSame([
             'Hauteur' => '6',
-        ], $metadata[0]['lines']);
+        ], $metadata[0]->lines);
     }
 
     public function testRenderAppendsNothingForExifWhenNoConfiguredFieldMatches(): void
@@ -317,11 +317,11 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
-        self::assertSame('IPTC Metadata', $metadata[0]['TITLE']);
+        self::assertSame('IPTC Metadata', $metadata[0]->title);
         self::assertSame([
             'title' => 'Sunset Over The Bay',
             'By-line' => 'Jane Photographer',
-        ], $metadata[0]['lines']);
+        ], $metadata[0]->lines);
     }
 
     public function testRenderAppendsBothExifAndIptcMetadataAs2SeparateEntries(): void
@@ -349,7 +349,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         self::assertIsArray($metadata);
         self::assertCount(2, $metadata);
-        self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
-        self::assertSame('IPTC Metadata', $metadata[1]['TITLE']);
+        self::assertSame('EXIF Metadata', $metadata[0]->title);
+        self::assertSame('IPTC Metadata', $metadata[1]->title);
     }
 }

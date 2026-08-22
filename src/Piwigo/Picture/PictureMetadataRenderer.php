@@ -12,6 +12,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Picture\Projection\MetadataPanel;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -27,7 +28,7 @@ final class PictureMetadataRenderer
 {
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
-     * @return list<array{TITLE: string, lines: array<string, mixed>}>|null
+     * @return list<MetadataPanel>|null
      */
     public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, Paths $paths, EntityManagerInterface $entityManager): ?array
     {
@@ -46,10 +47,7 @@ final class PictureMetadataRenderer
             $exif = $metadataService->getExifData($picture['current']['src_image']->getPath(), $exifMapping);
 
             if (count($exif) > 0) {
-                $tplMeta = [
-                    'TITLE' => $lang->t('EXIF Metadata'),
-                    'lines' => [],
-                ];
+                $lines = [];
 
                 foreach ($showExifFields as $field) {
                     if (! str_contains($field, ';')) {
@@ -58,7 +56,7 @@ final class PictureMetadataRenderer
                             if ($lang->has('exif_field_' . $field)) {
                                 $key = $lang->t('exif_field_' . $field);
                             }
-                            $tplMeta['lines'][$key] = $exif[$field];
+                            $lines[$key] = $exif[$field];
                         }
                     } else {
                         $tokens = explode(';', $field);
@@ -67,11 +65,11 @@ final class PictureMetadataRenderer
                             if ($lang->has('exif_field_' . $key)) {
                                 $key = $lang->t('exif_field_' . $key);
                             }
-                            $tplMeta['lines'][$key] = $exif[$field];
+                            $lines[$key] = $exif[$field];
                         }
                     }
                 }
-                $metadata = [$tplMeta];
+                $metadata = [new MetadataPanel(title: $lang->t('EXIF Metadata'), lines: $lines)];
             }
         }
 
@@ -81,20 +79,17 @@ final class PictureMetadataRenderer
             $iptc = $metadataService->getIptcData($picture['current']['src_image']->getPath(), $showIptcMapping, ', ');
 
             if (count($iptc) > 0) {
-                $tplMeta = [
-                    'TITLE' => $lang->t('IPTC Metadata'),
-                    'lines' => [],
-                ];
+                $lines = [];
 
                 foreach ($iptc as $field => $value) {
                     $key = $field;
                     if ($lang->has($field)) {
                         $key = $lang->t($field);
                     }
-                    $tplMeta['lines'][$key] = $value;
+                    $lines[$key] = $value;
                 }
                 $metadata ??= [];
-                $metadata[] = $tplMeta;
+                $metadata[] = new MetadataPanel(title: $lang->t('IPTC Metadata'), lines: $lines);
             }
         }
 

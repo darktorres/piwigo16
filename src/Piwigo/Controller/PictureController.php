@@ -70,6 +70,7 @@ use Piwigo\Picture\Event\FilterPictureDisplayInfo;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Picture\Projection\MetadataPanel;
 use Piwigo\Picture\Projection\PictureCommentsResult;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
@@ -1332,7 +1333,7 @@ final readonly class PictureController implements ControllerInterface
             'cookiePath' => new CookieService()
                 ->cookiePath(),
             'uOriginal' => $u_original,
-            'metadata' => $metadata,
+            'metadata' => $metadata !== null ? array_map(static fn (MetadataPanel $panel): array => $panel->toArray(), $metadata) : null,
             'rateSummary' => $rateResult->rateSummary,
             'rating' => $rateResult->rating,
             'commentsOrderUrl' => $commentsResult->commentsOrderUrl,

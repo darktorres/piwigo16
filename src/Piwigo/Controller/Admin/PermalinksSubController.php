@@ -11,6 +11,8 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
+use Piwigo\Controller\Admin\Projection\DeletedPermalinkRow;
+use Piwigo\Controller\Admin\Projection\PermalinkListRow;
 use Piwigo\Controller\Admin\Projection\PermalinksView;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -109,6 +111,15 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             usort($categories, CategoryService::compareByGlobalRank(...));
         }
 
+        $categories = array_map(
+            static fn (array $row): PermalinkListRow => new PermalinkListRow(
+                id: $row['id'],
+                name: $row['name'],
+                permalink: $row['permalink'],
+            ),
+            $categories
+        );
+
         $sortResult = $this->parseSortVariables(
             ['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'],
             null,
@@ -126,17 +137,21 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $sortField = count($sort_by) > 0 ? OldPermalinkSortField::fromToken($sort_by[0]) : null;
         $deleted_permalinks = [];
         foreach (new PermalinkRepository($this->entityManager)->findAllOrderedBy($sortField) as $permalinkRow) {
-            $row = $permalinkRow->toArray();
-            $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
-            $row['U_DELETE'] =
-                $this->urlService->addUrlParams(
+            $deleted_permalinks[] = new DeletedPermalinkRow(
+                catId: $permalinkRow->catId->value,
+                permalink: $permalinkRow->permalink->value,
+                dateDeleted: $permalinkRow->dateDeleted,
+                lastHit: $permalinkRow->lastHit,
+                hit: $permalinkRow->hit,
+                name: $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId),
+                uDelete: $this->urlService->addUrlParams(
                     $url_del_base,
                     [
                         'delete_permanent' => $permalinkRow->permalink->value,
                         'pwg_token' => $pwg_token,
                     ]
-                );
-            $deleted_permalinks[] = $row;
+                ),
+            );
         }
 
         $adminContent = $this->renderer->render(new PermalinksView(
@@ -144,14 +159,14 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             sortId: $sortHeaders['SORT_ID'],
             sortName: $sortHeaders['SORT_NAME'],
             sortPermalink: $sortHeaders['SORT_PERMALINK'],
-            permalinks: $categories,
+            permalinks: array_map(static fn (PermalinkListRow $row): array => $row->toArray(), $categories),
             sortOldCatId: $oldSortHeaders['SORT_OLD_CAT_ID'],
             sortOldPermalink: $oldSortHeaders['SORT_OLD_PERMALINK'],
             sortOldDateDeleted: $oldSortHeaders['SORT_OLD_DATE_DELETED'],
             sortOldLastHit: $oldSortHeaders['SORT_OLD_LAST_HIT'],
             sortOldHit: $oldSortHeaders['SORT_OLD_HIT'],
             csrfToken: $pwg_token,
-            deletedPermalinks: $deleted_permalinks,
+            deletedPermalinks: array_map(static fn (DeletedPermalinkRow $row): array => $row->toArray(), $deleted_permalinks),
             categoriesOptions: $categories_options,
         ));
 

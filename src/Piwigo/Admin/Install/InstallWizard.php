@@ -842,7 +842,13 @@ final class InstallWizard
             fDbPort: $this->dbport,
             fAdmin: $this->adminName,
             fAdminEmail: $this->adminMail,
-            email: '<span class="adminEmail">' . $this->adminMail . '</span>',
+            // [P44-A] $this->adminMail is the raw, just-submitted install
+            // form field, echoed back into this live-preview <span> --
+            // assembled as a raw HTML string entirely in PHP, outside any
+            // single Latte print, so it needs its own escaping here (Latte
+            // never sees the dynamic part separately once this whole
+            // fragment is wrapped Html/noescape'd downstream).
+            email: '<span class="adminEmail">' . htmlspecialchars($this->adminMail) . '</span>',
             fNewsletterSubscribe: $this->isNewsletterSubscribe,
             lInstallHelp: $this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
             install: $install_value,

@@ -512,6 +512,37 @@ final class InstallWizardTest extends IntegrationTestCase
     }
 
     /**
+     * [P44-A] render()'s own newsletter-subscribe label echoes admin_mail
+     * back as a raw HTML fragment ('<span class="adminEmail">' . $email .
+     * '</span>', assembled entirely in PHP, outside any single Latte
+     * print) -- previously unescaped, a real reflected-XSS gap reachable
+     * on the very first install.php submission, before any
+     * authentication exists at all.
+     */
+    public function testRenderEscapesAnHtmlSpecialCharacterBearingAdminMailInTheNewsletterLabel(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => 'submitted-host',
+            'dbuser' => 'submitted-user',
+            'dbname' => 'submitted-db',
+            'admin_mail' => '"><script>alert(1)</script>',
+        ]);
+
+        ob_start();
+        $wizard->render();
+        $output = ob_get_clean();
+
+        self::assertIsString($output);
+        self::assertStringNotContainsString('<script>alert(1)</script>', $output);
+        self::assertStringContainsString(
+            '<span class="adminEmail">&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;</span>',
+            $output
+        );
+    }
+
+    /**
      * render()'s own `if (count($this->errors) !== 0)` guard -- every
      * other render() test in this file either has zero errors (a fresh
      * step-1 form) or asserts hasErrors() is false before ever calling

@@ -73,7 +73,7 @@
       target="_blank"
       class="badge-release icon-blue icon-tags"
     >{$majorVersion}</a>
-    {='This is a major update, with <a href="%s">new exciting features</a>.'|translate:$majorReleaseUrl|noescape}
+    {='This is a major update, with <a href="%s">new exciting features</a>.'|translate:($majorReleaseUrl|htmlspecialchars)|noescape}
     {='Some themes and plugins may be not available yet.'|translate}
     {if isset($majorReleasePhpRequired)}
       <span
@@ -150,7 +150,7 @@
   </p>
   <p>
     {='A new version of Piwigo is available.'|translate}<br>
-    {='This is a major update, with <a href="%s">new exciting features</a>.'|translate:$majorReleaseUrl|noescape} {='Some themes and plugins may be not available yet.'|translate}
+    {='This is a major update, with <a href="%s">new exciting features</a>.'|translate:($majorReleaseUrl|htmlspecialchars)|noescape} {='Some themes and plugins may be not available yet.'|translate}
   </p>
   <form action="" method="post">
     <fieldset>

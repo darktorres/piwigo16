@@ -173,8 +173,8 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
               [
                   'NAME' => $galleries_url,
                   'TYPE' => $this->lang->t($is_remote ? 'Remote' : 'Local'),
-                  'CATEGORIES' => $sites_detail[$id_int]['nb_categories'] ?? 0,
-                  'IMAGES' => $sites_detail[$id_int]['nb_images'] ?? 0,
+                  'CATEGORIES' => $sites_detail[$id_int]->categories ?? 0,
+                  'IMAGES' => $sites_detail[$id_int]->images ?? 0,
                   'U_SYNCHRONIZE' => $update_url,
               ];
 

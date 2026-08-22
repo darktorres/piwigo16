@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\SiteGalleriesUrlLookupInterface;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Site\Projection\Site;
+use Piwigo\Site\Projection\SiteCategoryImageCounts;
 
 /**
  * Persistence layer for the site/gallery-root domain.
@@ -166,7 +167,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      * "attribute to the question, not every table touched" precedent as
      * {@see \Piwigo\Permission\PermissionRepository}.
      *
-     * @return array<int, array{nb_categories: int, nb_images: int}> keyed by site_id
+     * @return array<int, SiteCategoryImageCounts> keyed by site_id
      */
     public function findCategoryAndImageCountsBySite(): array
     {
@@ -201,10 +202,10 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
             $nbCategories = $row['nb_categories'] ?? null;
             $nbImages = $row['nb_images'] ?? null;
             if (is_numeric($siteId) && is_numeric($nbCategories) && is_numeric($nbImages)) {
-                $bySiteId[(int) $siteId] = [
-                    'nb_categories' => (int) $nbCategories,
-                    'nb_images' => (int) $nbImages,
-                ];
+                $bySiteId[(int) $siteId] = new SiteCategoryImageCounts(
+                    categories: (int) $nbCategories,
+                    images: (int) $nbImages,
+                );
             }
         }
 

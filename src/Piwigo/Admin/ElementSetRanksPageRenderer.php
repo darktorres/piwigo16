@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Projection\ElementSetRanksView;
+use Piwigo\Admin\Projection\ElementSetThumbnailRow;
 use Piwigo\Admin\Request\ElementSetRanksRequest;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
@@ -158,19 +159,19 @@ final readonly class ElementSetRanksPageRenderer
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row), $this->currentConfig);
 
                 if (! in_array($row['name'], [null, false, 0, '0', '', []], true)) {
-                    $thumbnail_name = $row['name'];
+                    $thumbnail_name = is_string($row['name']) ? $row['name'] : '';
                 } else {
                     $file_wo_ext = is_string($row['file']) ? StringHelper::getFilenameWoExtension($row['file']) : '';
                     $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
                 }
                 $current_rank++;
-                $thumbnails[] = [
-                    'ID' => $row['id'],
-                    'NAME' => $thumbnail_name,
-                    'TN_SRC' => $derivative->getUrl(),
-                    'RANK' => $current_rank * 10,
-                    'SIZE' => $derivative->getSize(),
-                ];
+                $thumbnails[] = new ElementSetThumbnailRow(
+                    id: is_numeric($row['id']) ? (int) $row['id'] : 0,
+                    name: $thumbnail_name,
+                    tnSrc: $derivative->getUrl(),
+                    rank: $current_rank * 10,
+                    size: $derivative->getSize(),
+                );
             }
         }
         // image order management
@@ -187,7 +188,7 @@ final readonly class ElementSetRanksPageRenderer
                 ->getToken(),
             imageOrderOptions: $sort_fields,
             imageOrderChoice: $image_order_choice,
-            thumbnails: $thumbnails,
+            thumbnails: array_map(static fn (ElementSetThumbnailRow $thumbnail): array => $thumbnail->toArray(), $thumbnails),
             imageOrder: $image_order_tpl,
             saveSuccess: $save_success,
         ));

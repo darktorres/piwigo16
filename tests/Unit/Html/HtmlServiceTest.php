@@ -1250,6 +1250,38 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
         );
 });
 
+test('getCatDisplayName escapes an HTML-special-character-bearing category name without disturbing the link href (P44-D)', function (): void {
+    $service = HtmlServiceTestFactory::build();
+    $cat = [
+        'id' => 3,
+        'name' => '<script>alert(1)</script> & "Nature"',
+        'permalink' => null,
+    ];
+
+    $urlService = UrlServiceTestFactory::build($service);
+    $link = $urlService->makeIndexUrl([
+        'category' => $cat,
+    ]);
+
+    $result = $service->getCatDisplayName([$cat], '');
+
+    expect($result)
+        ->toBe('<a href="' . $link . '">&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Nature&quot;</a>')
+        ->not->toContain('<script>alert(1)</script>');
+});
+
+test('getCatDisplayName escapes an HTML-special-character-bearing category name in unlinked (null url) output too', function (): void {
+    $service = HtmlServiceTestFactory::build();
+
+    $result = $service->getCatDisplayName([[
+        'id' => 3,
+        'name' => '<script>alert(1)</script>',
+    ]], null);
+
+    expect($result)
+        ->toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+});
+
 test('getCatDisplayName defaults a non-string category name to empty string before dispatching the rename event', function (): void {
     // Kills line 215's EmptyStringToNotEmpty ($cat['name'] fallback fed
     // into the RenderCategoryName event). With no handler registered,
@@ -1283,6 +1315,21 @@ test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separato
 
     expect($result)
         ->toBe('Nature<span> / </span>Portraits');
+});
+
+test('getCatDisplayNameCache escapes an HTML-special-character-bearing category name (P44-D)', function (): void {
+    htmlServiceTestProcessCache()
+        ->set('cat_names', [
+            '3' => new CategoryIdNamePermalink(3, '<script>alert(1)</script> & "Nature"', null),
+        ]);
+    $service = HtmlServiceTestFactory::build();
+    $urlService = UrlServiceTestFactory::build($service);
+
+    $result = $service->getCatDisplayNameCache('3', 'index.php?/category/');
+
+    expect($result)
+        ->toBe("\n<a href=\"" . $urlService->getRootUrl() . 'index.php?/category/3">&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Nature&quot;</a>')
+        ->not->toContain('<script>alert(1)</script>');
 });
 
 test('getCatDisplayNameCache defaults a non-string category name to empty string before dispatching the rename event', function (): void {

@@ -214,6 +214,10 @@ final readonly class HtmlService implements HtmlRenderingInterface
         foreach ($catInformations as $cat) {
             $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', 'get_cat_display_name'));
             $cat['name'] = $nameEvent->categoryName;
+            // Escaped only for the HTML text this method builds below --
+            // $cat['name'] itself stays raw for makeIndexUrl()'s own
+            // 'id-name'-style permalink slug generation (P44-D).
+            $cat_name_html = htmlspecialchars($cat['name']);
 
             if ($is_first) {
                 $is_first = false;
@@ -222,7 +226,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             }
 
             if (! isset($url)) {
-                $output .= $cat['name'];
+                $output .= $cat_name_html;
             } elseif ($url === '') {
                 $output .= '<a href="'
                       . $this->urlService()->makeIndexUrl(
@@ -231,11 +235,11 @@ final readonly class HtmlService implements HtmlRenderingInterface
                           ],
                       )
                       . '">';
-                $output .= $cat['name'] . '</a>';
+                $output .= $cat_name_html . '</a>';
             } else {
                 $cat_id = is_scalar($cat['id']) ? (string) $cat['id'] : '';
                 $output .= '<a href="' . $this->urlService()->getRootUrl() . $url . $cat_id . '">';
-                $output .= $cat['name'] . '</a>';
+                $output .= $cat_name_html . '</a>';
             }
         }
 
@@ -291,6 +295,10 @@ final readonly class HtmlService implements HtmlRenderingInterface
 
             $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
             $cat['name'] = $nameEvent->categoryName;
+            // Escaped only for the HTML text this method builds below --
+            // $cat['name'] itself stays raw for makeIndexUrl()'s own
+            // 'id-name'-style permalink slug generation (P44-D).
+            $cat_name_html = htmlspecialchars($cat['name']);
 
             if ($is_first) {
                 $is_first = false;
@@ -299,7 +307,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             }
 
             if (! isset($url) or $singleLink) {
-                $output .= $cat['name'];
+                $output .= $cat_name_html;
             } elseif ($url === '') {
                 $output .= '
 <a href="'
@@ -312,10 +320,10 @@ final readonly class HtmlService implements HtmlRenderingInterface
                         ),
                     $add_url_params,
                 )
-                . '">' . $cat['name'] . '</a>';
+                . '">' . $cat_name_html . '</a>';
             } else {
                 $output .= '
-<a href="' . $this->urlService()->getRootUrl() . $url . $category_id . '">' . $cat['name'] . '</a>';
+<a href="' . $this->urlService()->getRootUrl() . $url . $category_id . '">' . $cat_name_html . '</a>';
             }
         }
 

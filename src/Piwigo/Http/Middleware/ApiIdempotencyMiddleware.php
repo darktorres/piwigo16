@@ -90,12 +90,12 @@ final readonly class ApiIdempotencyMiddleware implements MiddlewareInterface
 
         $item = $this->idempotencyCachePool->getItem($cacheKey);
         if ($item->isHit()) {
-            $stored = self::narrowStored($item->get());
-            if ($stored !== null && $stored['bodyHash'] === $bodyHash) {
-                return new Response($stored['status'], $stored['headers'], $stored['body']);
+            $stored = $item->get();
+            if ($stored instanceof ApiIdempotencyCachedResponse && $stored->bodyHash === $bodyHash) {
+                return new Response($stored->status, $stored->headers, $stored->body);
             }
 
-            if ($stored !== null) {
+            if ($stored instanceof ApiIdempotencyCachedResponse) {
                 return ResponseFactory::problem(
                     'Bad Request',
                     400,
@@ -106,47 +106,15 @@ final readonly class ApiIdempotencyMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request);
 
-        $captured = [
-            'bodyHash' => $bodyHash,
-            'status' => $response->getStatusCode(),
-            'headers' => $response->getHeaders(),
-            'body' => (string) $response->getBody(),
-        ];
+        $captured = new ApiIdempotencyCachedResponse(
+            bodyHash: $bodyHash,
+            status: $response->getStatusCode(),
+            headers: $response->getHeaders(),
+            body: (string) $response->getBody(),
+        );
         $item->set($captured);
         $this->idempotencyCachePool->save($item);
 
-        return new Response($captured['status'], $captured['headers'], $captured['body']);
-    }
-
-    /**
-     * `CacheItemInterface::get()` is `mixed` by interface -- this class is
-     * the only writer of this cache entry, so the shallow per-field
-     * narrowing here is the real shape (same depth as
-     * `ExtensionUpdateChecker::checkUpdatedExtensions()`'s own read of a
-     * self-produced cache value).
-     *
-     * @return array{bodyHash: string, status: int, headers: array<string, list<string>>, body: string}|null
-     */
-    private static function narrowStored(mixed $stored): ?array
-    {
-        if (
-            ! is_array($stored)
-            || ! is_string($stored['bodyHash'] ?? null)
-            || ! is_int($stored['status'] ?? null)
-            || ! is_array($stored['headers'] ?? null)
-            || ! is_string($stored['body'] ?? null)
-        ) {
-            return null;
-        }
-
-        /** @var array<string, list<string>> $headers */
-        $headers = $stored['headers'];
-
-        return [
-            'bodyHash' => $stored['bodyHash'],
-            'status' => $stored['status'],
-            'headers' => $headers,
-            'body' => $stored['body'],
-        ];
+        return new Response($captured->status, $captured->headers, $captured->body);
     }
 }

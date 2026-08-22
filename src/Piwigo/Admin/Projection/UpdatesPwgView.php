@@ -35,7 +35,7 @@ final readonly class UpdatesPwgView implements View, HasPageAssets
         public ?array $missing,
         public ?string $minorReleasePhpRequired,
         public ?string $majorReleasePhpRequired,
-        public int|string $step,
+        public int $step,
         public string $piwigoCurrentVersion,
         public string $upgradeTo,
         public string $csrfToken,

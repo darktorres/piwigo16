@@ -249,7 +249,7 @@ final readonly class CoreUpdateService
         );
     }
 
-    public function upgradeTo(string $upgradeTo, int|string &$step, bool $checkCurrentVersion = true): void
+    public function upgradeTo(string $upgradeTo, int &$step, bool $checkCurrentVersion = true): void
     {
         $template = $this->currentTemplate->get();
 
@@ -392,14 +392,14 @@ final readonly class CoreUpdateService
     }
 
     /**
-     * $step is int|string (numeric GET/POST values reach this class
-     * un-normalized), so a plain === against an int literal would miss the
-     * string-numeric case -- strict-compare against both representations
-     * instead of the legacy `==`.
+     * $step's own real value always originates from UpdatesPwgRequest::
+     * $step, already normalized to int at that request-parsing boundary --
+     * upgradeTo()'s own by-ref $step (this method's only real caller)
+     * likewise only ever writes a real int back into it.
      */
-    private function stepIs(int|string $step, int $target): bool
+    private function stepIs(int $step, int $target): bool
     {
-        return is_int($step) ? $step === $target : $step === (string) $target;
+        return $step === $target;
     }
 
     private function processObsoleteList(string $file): void

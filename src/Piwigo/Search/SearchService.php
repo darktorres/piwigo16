@@ -31,7 +31,14 @@ use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
 use Piwigo\Search\Event\QsearchPre;
 use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
+use Piwigo\Search\Projection\AllwordsRule;
+use Piwigo\Search\Projection\AuthorRule;
+use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\DateRule;
+use Piwigo\Search\Projection\ExpertRule;
 use Piwigo\Search\Projection\Search;
+use Piwigo\Search\Projection\SearchRules;
+use Piwigo\Search\Projection\TagsRule;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\Event\RenderTagName;
 use Piwigo\Tag\TagService;
@@ -227,36 +234,28 @@ final readonly class SearchService
         }
 
         $rawSearchFields = $search['fields'] ?? null;
-        $searchFields = is_array($rawSearchFields) ? $rawSearchFields : [];
+        $rules = SearchRules::fromArray(is_array($rawSearchFields) ? array_filter($rawSearchFields, is_string(...), ARRAY_FILTER_USE_KEY) : []);
 
         // expert
-        $expertField = $searchFields['expert'] ?? null;
-        $expertString = (is_array($expertField) && is_string($expertField['string'] ?? null)) ? $expertField['string'] : null;
-        if (isset($searchFields['expert']) && $expertString !== null && $expertString !== '' && ($displayFilters['expert']['access'] ?? false)) {
+        $expertRule = $rules->expert;
+        $expertString = $expertRule instanceof ExpertRule ? $expertRule->string : null;
+        if ($expertRule instanceof ExpertRule && $expertString !== null && $expertString !== '' && ($displayFilters['expert']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $expertItems = $this->getQuickSearchResults($expertString, [])['items'];
             $imageIdsForFilter['expert'] = is_array($expertItems) ? array_values(array_map(intval(...), array_filter($expertItems, is_numeric(...)))) : [];
         }
 
         // allwords
-        $allwordsField = $searchFields['allwords'] ?? null;
-        $allwordsWords = is_array($allwordsField) && is_array($allwordsField['words'] ?? null)
-            ? array_values(array_filter($allwordsField['words'], is_string(...)))
-            : [];
-        $allwordsSearchFields = is_array($allwordsField) && is_array($allwordsField['fields'] ?? null)
-            ? array_values(array_filter($allwordsField['fields'], is_string(...)))
-            : [];
-        if (isset($searchFields['allwords']) && is_array($allwordsField) && $allwordsWords !== [] && $allwordsSearchFields !== [] && ($displayFilters['words']['access'] ?? false)) {
+        $allwordsRule = $rules->allwords;
+        if ($allwordsRule instanceof AllwordsRule && $allwordsRule->words !== [] && $allwordsRule->fields !== [] && ($displayFilters['words']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            [$imageIdsForFilter['allwords'], $matchingCatIds, $matchingTagIds] = $this->searchAllwords($allwordsField, $allwordsWords, $allwordsSearchFields, $forbidden);
+            [$imageIdsForFilter['allwords'], $matchingCatIds, $matchingTagIds] = $this->searchAllwords($allwordsRule, $forbidden);
         }
 
         // author
-        $authorField = $searchFields['author'] ?? null;
-        $authorWords = is_array($authorField) && is_array($authorField['words'] ?? null)
-            ? array_values(array_filter($authorField['words'], is_string(...)))
-            : [];
-        if (isset($searchFields['author']) && $authorWords !== [] && ($displayFilters['author']['access'] ?? false)) {
+        $authorRule = $rules->author;
+        $authorWords = $authorRule instanceof AuthorRule ? $authorRule->words : [];
+        if ($authorRule instanceof AuthorRule && $authorWords !== [] && ($displayFilters['author']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['author'] = $this->queryImageIdsFor(
                 SqlCondition::fromRawSql('i.author IN (:authorWords)', [
@@ -269,8 +268,7 @@ final readonly class SearchService
         }
 
         // filetypes
-        $filetypesField = $searchFields['filetypes'] ?? null;
-        $filetypes = is_array($filetypesField) ? array_values(array_filter($filetypesField, is_string(...))) : [];
+        $filetypes = $rules->filetypes ?? [];
         if ($filetypes !== [] && ($displayFilters['file_type']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
@@ -284,8 +282,7 @@ final readonly class SearchService
         }
 
         // added_by
-        $addedByField = $searchFields['added_by'] ?? null;
-        $addedByIds = is_array($addedByField) ? array_values(array_map(intval(...), array_filter($addedByField, is_numeric(...)))) : [];
+        $addedByIds = array_values(array_map(intval(...), array_filter($rules->addedBy ?? [], is_numeric(...))));
         if ($addedByIds !== [] && ($displayFilters['added_by']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['added_by'] = $this->queryImageIdsFor(
@@ -299,18 +296,18 @@ final readonly class SearchService
         }
 
         // cat
-        $catField = $searchFields['cat'] ?? null;
+        $catRule = $rules->cat;
         $catWords = [];
-        if (is_array($catField) && is_array($catField['words'] ?? null)) {
-            foreach ($catField['words'] as $catWord) {
+        if ($catRule instanceof CategoryRule) {
+            foreach ($catRule->words as $catWord) {
                 if (is_numeric($catWord)) {
                     $catWords[] = (int) $catWord;
                 }
             }
         }
-        if (isset($searchFields['cat']) && $catWords !== [] && ($displayFilters['album']['access'] ?? false)) {
+        if ($catRule instanceof CategoryRule && $catWords !== [] && ($displayFilters['album']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $catIds = (is_array($catField) && (bool) ($catField['sub_inc'] ?? false))
+            $catIds = $catRule->subInc
                 ? $this->categoryService->getSubcatIds($catWords)
                 : $catWords;
 
@@ -327,11 +324,11 @@ final readonly class SearchService
         }
 
         // date_posted
-        $datePostedField = $searchFields['date_posted'] ?? null;
-        $datePostedPreset = is_array($datePostedField) && is_string($datePostedField['preset'] ?? null) ? $datePostedField['preset'] : null;
+        $datePostedRule = $rules->datePosted;
+        $datePostedPreset = $datePostedRule instanceof DateRule ? $datePostedRule->preset : null;
         if ($datePostedPreset !== null && $datePostedPreset !== '' && ($displayFilters['post_date']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $condition = $this->dateFilterClause('i.dateAvailable', $datePostedPreset, $datePostedField, [
+            $condition = $this->dateFilterClause('i.dateAvailable', $datePostedPreset, $datePostedRule, [
                 '24h' => [24, 'HOUR'],
                 '7d' => [7, 'DAY'],
                 '30d' => [30, 'DAY'],
@@ -342,11 +339,11 @@ final readonly class SearchService
         }
 
         // date_created
-        $dateCreatedField = $searchFields['date_created'] ?? null;
-        $dateCreatedPreset = is_array($dateCreatedField) && is_string($dateCreatedField['preset'] ?? null) ? $dateCreatedField['preset'] : null;
+        $dateCreatedRule = $rules->dateCreated;
+        $dateCreatedPreset = $dateCreatedRule instanceof DateRule ? $dateCreatedRule->preset : null;
         if ($dateCreatedPreset !== null && $dateCreatedPreset !== '' && ($displayFilters['creation_date']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $condition = $this->dateFilterClause('i.dateCreation', $dateCreatedPreset, $dateCreatedField, [
+            $condition = $this->dateFilterClause('i.dateCreation', $dateCreatedPreset, $dateCreatedRule, [
                 '7d' => [7, 'DAY'],
                 '30d' => [30, 'DAY'],
                 '3m' => [3, 'MONTH'],
@@ -357,8 +354,7 @@ final readonly class SearchService
         }
 
         // ratios
-        $ratiosField = $searchFields['ratios'] ?? null;
-        $ratios = is_array($ratiosField) ? array_values(array_filter($ratiosField, is_string(...))) : [];
+        $ratios = $rules->ratios ?? [];
         if ($ratios !== [] && ($displayFilters['ratio']['access'] ?? false)) {
             $hasFiltersFilled = true;
             // `i.width`/`i.height` are both plain integer columns. MySQL's
@@ -415,8 +411,7 @@ final readonly class SearchService
         }
 
         // ratings
-        $ratingsField = $searchFields['ratings'] ?? null;
-        $ratings = is_array($ratingsField) ? array_values(array_filter($ratingsField, is_string(...))) : [];
+        $ratings = $rules->ratings ?? [];
         if ($this->currentConfig->rateEnabled && $ratings !== [] && ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
@@ -435,8 +430,8 @@ final readonly class SearchService
         }
 
         // filesize
-        $filesizeMinRaw = $searchFields['filesize_min'] ?? null;
-        $filesizeMaxRaw = $searchFields['filesize_max'] ?? null;
+        $filesizeMinRaw = $rules->filesizeMin;
+        $filesizeMaxRaw = $rules->filesizeMax;
         if ($filesizeMinRaw !== null && $filesizeMinRaw !== 0 && $filesizeMaxRaw !== null && $filesizeMaxRaw !== 0 && is_numeric($filesizeMinRaw) && is_numeric($filesizeMaxRaw) && ($displayFilters['file_size']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['filesize'] = $this->queryImageIdsFor(
@@ -449,9 +444,9 @@ final readonly class SearchService
         }
 
         // height
-        $heightMinRaw = $searchFields['height_min'] ?? null;
-        $heightMaxRaw = $searchFields['height_max'] ?? null;
-        if ($heightMinRaw !== null && $heightMinRaw !== 0 && $heightMaxRaw !== null && $heightMaxRaw !== 0 && is_scalar($heightMinRaw) && is_scalar($heightMaxRaw) && ($displayFilters['height']['access'] ?? false)) {
+        $heightMinRaw = $rules->heightMin;
+        $heightMaxRaw = $rules->heightMax;
+        if ($heightMinRaw !== null && $heightMinRaw !== 0 && $heightMaxRaw !== null && $heightMaxRaw !== 0 && ($displayFilters['height']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['height'] = $this->queryImageIdsFor(
                 SqlCondition::fromRawSql('i.height BETWEEN :heightMin AND :heightMax', [
@@ -463,9 +458,9 @@ final readonly class SearchService
         }
 
         // width
-        $widthMinRaw = $searchFields['width_min'] ?? null;
-        $widthMaxRaw = $searchFields['width_max'] ?? null;
-        if ($widthMinRaw !== null && $widthMinRaw !== 0 && $widthMaxRaw !== null && $widthMaxRaw !== 0 && is_scalar($widthMinRaw) && is_scalar($widthMaxRaw) && ($displayFilters['width']['access'] ?? false)) {
+        $widthMinRaw = $rules->widthMin;
+        $widthMaxRaw = $rules->widthMax;
+        if ($widthMinRaw !== null && $widthMinRaw !== 0 && $widthMaxRaw !== null && $widthMaxRaw !== 0 && ($displayFilters['width']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['width'] = $this->queryImageIdsFor(
                 SqlCondition::fromRawSql('i.width BETWEEN :widthMin AND :widthMax', [
@@ -477,17 +472,17 @@ final readonly class SearchService
         }
 
         // tags
-        $tagsField = $searchFields['tags'] ?? null;
+        $tagsRule = $rules->tags;
         $tagsWords = [];
-        if (is_array($tagsField) && is_array($tagsField['words'] ?? null)) {
-            foreach ($tagsField['words'] as $tagWord) {
+        if ($tagsRule instanceof TagsRule) {
+            foreach ($tagsRule->words as $tagWord) {
                 if (is_numeric($tagWord)) {
                     $tagsWords[] = (int) $tagWord;
                 }
             }
         }
-        $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
-        if (isset($searchFields['tags']) && $tagsWords !== [] && ($displayFilters['tags']['access'] ?? false)) {
+        $tagsMode = $tagsRule instanceof TagsRule ? $tagsRule->mode : 'AND';
+        if ($tagsRule instanceof TagsRule && $tagsWords !== [] && ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($this->tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
@@ -629,7 +624,7 @@ final readonly class SearchService
      *
      * @param  array<string, array{0: int, 1: string}>  $presetOptions
      */
-    private function dateFilterClause(string $dqlColumn, string $preset, mixed $field, array $presetOptions): SqlCondition
+    private function dateFilterClause(string $dqlColumn, string $preset, ?DateRule $field, array $presetOptions): SqlCondition
     {
         if (isset($presetOptions[$preset])) {
             [$amount, $unit] = $presetOptions[$preset];
@@ -642,16 +637,7 @@ final readonly class SearchService
             );
         }
 
-        $custom = [];
-        if (is_array($field) && is_array($field['custom'] ?? null)) {
-            foreach ($field['custom'] as $v) {
-                if (is_string($v)) {
-                    $custom[] = $v;
-                } elseif (is_int($v)) {
-                    $custom[] = (string) $v;
-                }
-            }
-        }
+        $custom = $field instanceof DateRule ? $field->custom : [];
 
         if ($preset === 'custom' && $custom !== []) {
             $subconditions = [];
@@ -722,14 +708,11 @@ final readonly class SearchService
      * dateFilterClause()'s own custom-range branch also needs its outer
      * parens for.
      *
-     * @param  array<array-key, mixed>  $allwordsField
-     * @param  list<string>  $words
-     * @param  list<string>  $searchFields
      * @return array{0: list<int>, 1: ?list<int>, 2: ?list<int>}
      */
-    private function searchAllwords(array $allwordsField, array $words, array $searchFields, SqlCondition $forbidden): array
+    private function searchAllwords(AllwordsRule $allwordsRule, SqlCondition $forbidden): array
     {
-        $fields = array_intersect(['file', 'name', 'comment', 'author'], $searchFields);
+        $fields = array_intersect(['file', 'name', 'comment', 'author'], $allwordsRule->fields);
         $dqlFieldsByColumn = [
             'file' => 'i.file',
             'name' => 'i.name',
@@ -741,7 +724,7 @@ final readonly class SearchService
             'cat-title' => 'name',
             'cat-desc' => 'comment',
         ];
-        $catFields = array_intersect(array_keys($catFieldsDictionary), $searchFields);
+        $catFields = array_intersect(array_keys($catFieldsDictionary), $allwordsRule->fields);
 
         $wordConditions = [];
         $catIdsByWord = [];
@@ -752,10 +735,10 @@ final readonly class SearchService
         // CategoryService/TagService (which own those tables) instead of
         // SearchRepository's own raw-DBAL image lookups -- cross-domain
         // sub-lookups, not a genuine search-domain query shape.
-        $searchesTags = in_array('tags', $searchFields, true);
+        $searchesTags = in_array('tags', $allwordsRule->fields, true);
         $tagService = $searchesTags ? $this->tagService : null;
 
-        foreach ($words as $wordIndex => $word) {
+        foreach ($allwordsRule->words as $wordIndex => $word) {
             $fieldClauses = [];
             $params = [];
             $types = [];
@@ -803,11 +786,7 @@ final readonly class SearchService
             }
         }
 
-        $allwordsMode = (is_string($allwordsField['mode'] ?? null) && in_array($allwordsField['mode'], ['OR', 'AND'], true))
-            ? $allwordsField['mode']
-            : 'AND';
-
-        $combined = SqlCondition::combine($allwordsMode, ...$wordConditions);
+        $combined = SqlCondition::combine($allwordsRule->mode, ...$wordConditions);
         $filterCondition = $combined->isEmpty() ? $combined : SqlCondition::fromRawSql('(' . (string) $combined->expr . ')', $combined->parameters, $combined->types);
 
         $imageIds = $this->repo->findImageIdsMatching(SqlCondition::combine('AND', $filterCondition, $forbidden));

@@ -161,14 +161,14 @@ final readonly class LanguageMiddleware implements MiddlewareInterface
         if ($notify_api_key_expiration !== null && $notify_username instanceof Username && $notify_email instanceof Email) {
             $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
             $is_mail_send = new ApiKeyService($this->lang, $this->mailer, $apiKeyRepo, $this->passwordService($conn), $this->urlService, $this->sessionService, $this->currentConfig)
-                ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
+                ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration->daysLeft);
 
             if ($is_mail_send) {
                 $apiKeyRepo->updateLastNotifiedOn(
-                    $notify_api_key_expiration['auth_key'],
+                    $notify_api_key_expiration->authKey,
                     $this->currentUser->get()
                         ->id->value,
-                    $notify_api_key_expiration['dbnow'],
+                    $notify_api_key_expiration->dbnow,
                 );
             }
 

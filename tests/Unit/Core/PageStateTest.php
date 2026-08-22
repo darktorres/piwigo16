@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\ApiKeyExpirationNotice;
 use Piwigo\Tests\Support\PageStateTestFactory;
 
 // Container-shared instance -- each test constructs its own fresh instance
@@ -118,11 +119,11 @@ test('reset clears every property back to its constructed default', function ():
     $state->setNbPhotosTotal(100);
     $state->setUpdatedVersion('17.1.0');
     $state->markAuthKeyInvalid();
-    $state->setNotifyApiKeyExpiration([
-        'days_left' => 3,
-        'dbnow' => '2026-08-18',
-        'auth_key' => 'key',
-    ]);
+    $state->setNotifyApiKeyExpiration(new ApiKeyExpirationNotice(
+        daysLeft: 3,
+        dbnow: '2026-08-18',
+        authKey: 'key',
+    ));
     $state->addCommentRejectionReason('spam');
 
     $state->reset();

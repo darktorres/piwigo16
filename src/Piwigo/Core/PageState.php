@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Core\Projection\ApiKeyExpirationNotice;
+
 /**
  * Typed reader/writer for the per-request page state.
  *
@@ -102,10 +104,7 @@ final class PageState
 
     public bool $authKeyInvalid = false;
 
-    /**
-     * @var array{days_left: int, dbnow: string, auth_key: string}|null
-     */
-    public ?array $notifyApiKeyExpiration = null;
+    public ?ApiKeyExpirationNotice $notifyApiKeyExpiration = null;
 
     /**
      * Comment domain's own anti-spam rejection reasons, accumulated here
@@ -237,10 +236,7 @@ final class PageState
         $this->authKeyInvalid = true;
     }
 
-    /**
-     * @param array{days_left: int, dbnow: string, auth_key: string} $data
-     */
-    public function setNotifyApiKeyExpiration(array $data): void
+    public function setNotifyApiKeyExpiration(ApiKeyExpirationNotice $data): void
     {
         $this->notifyApiKeyExpiration = $data;
     }

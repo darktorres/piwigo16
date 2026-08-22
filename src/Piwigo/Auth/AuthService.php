@@ -27,6 +27,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\ApiKeyExpirationNotice;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Lang\LangService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -575,11 +576,11 @@ final readonly class AuthService
                     or strtotime($key->lastNotifiedOn) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago
                 )
             ) {
-                $this->pageState->setNotifyApiKeyExpiration([
-                    'days_left' => $days_left,
-                    'dbnow' => $now->format('Y-m-d H:i:s'),
-                    'auth_key' => $key->authKey,
-                ]);
+                $this->pageState->setNotifyApiKeyExpiration(new ApiKeyExpirationNotice(
+                    daysLeft: $days_left,
+                    dbnow: $now->format('Y-m-d H:i:s'),
+                    authKey: $key->authKey,
+                ));
             }
         }
 

@@ -1912,11 +1912,10 @@ final class ImageRepository extends EntityRepository
     /**
      * Every distinct filesize among images that have one set --
      * Controller\Admin\BatchManagerSubController's own filesize-filter
-     * option aggregation.
+     * option aggregation. The WHERE clause below guarantees non-null
+     * (ImageEntity::$filesize is otherwise a nullable column).
      *
-     * @return list<array{filesize: int}> -- the WHERE clause below
-     *   guarantees non-null (ImageEntity::$filesize is otherwise a
-     *   nullable column)
+     * @return list<int>
      */
     public function findDistinctFilesizes(): array
     {
@@ -1928,9 +1927,7 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getArrayResult() as $row) {
             if (is_array($row) && is_int($row['filesize'] ?? null)) {
-                $result[] = [
-                    'filesize' => $row['filesize'],
-                ];
+                $result[] = $row['filesize'];
             }
         }
 

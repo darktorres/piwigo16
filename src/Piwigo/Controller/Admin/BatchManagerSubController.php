@@ -761,8 +761,8 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $filesizes = [];
         $filesize = [];
 
-        foreach ($this->imageService->getDistinctFilesizes() as $row) {
-            $filesizes[] = sprintf('%.1f', $row['filesize'] / 1024.0);
+        foreach ($this->imageService->getDistinctFilesizes() as $filesizeValue) {
+            $filesizes[] = sprintf('%.1f', $filesizeValue / 1024.0);
         }
 
         if ($filesizes === []) { // arbitrary values, only used when no photos on the gallery

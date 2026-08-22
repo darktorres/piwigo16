@@ -761,11 +761,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         // Every fixture image shares filesize=1 -- exactly one distinct
         // value, proving the query + the int narrowing.
-        self::assertSame([
-            [
-                'filesize' => 1,
-            ],
-        ], $this->repo->findDistinctFilesizes());
+        self::assertSame([1], $this->repo->findDistinctFilesizes());
     }
 
     public function testFindIdsAndDatesForBatchUnitSaveReturnsTheRealRows(): void

@@ -656,7 +656,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{filesize: int}>
+     * @return list<int>
      */
     public function getDistinctFilesizes(): array
     {

@@ -17,6 +17,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\Projection\ImageThumbUrl;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -106,13 +107,13 @@ final class RatingUserPageRenderer
         if (count($image_ids) > 0) {
             $params = $imageStdParams->getByType(ImageStdParams::SQUARE);
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
-                $image_urls[$thumb_row->id] = [
-                    'tn' => DerivativeImage::url($params, $thumb_row->toArray()),
-                    'page' => $urlService->makePictureUrl([
+                $image_urls[$thumb_row->id] = new ImageThumbUrl(
+                    tn: DerivativeImage::url($params, $thumb_row->toArray()),
+                    page: $urlService->makePictureUrl([
                         'image_id' => $thumb_row->id,
                         'image_file' => $thumb_row->file,
                     ]),
-                ];
+                );
             }
         }
 
@@ -202,7 +203,7 @@ final class RatingUserPageRenderer
             consensusTopNumber: $consensus_top_number,
             availableRates: $currentConfig->rateItems,
             ratings: $by_user_ratings,
-            imageUrls: $image_urls,
+            imageUrls: array_map(static fn (ImageThumbUrl $imageUrl): array => $imageUrl->toArray(), $image_urls),
             tnWidth: $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             nbElements: $nb_elements,
             orderByOptions: $order_by_options,

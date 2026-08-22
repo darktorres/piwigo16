@@ -134,7 +134,7 @@ Three structural changes produced that drift:
 | P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
 | P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
 | P43 | Typed contributions + plugin-owned routes | Done — all batches (A–G) landed. P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-F fully landed: introduced `Controller\Admin\Projection\AdminPageResult`, converted `AdminSubControllerInterface::handle()` and all 36 real implementers plus all 40 `Piwigo\Admin\*PageRenderer` classes from directly assigning `AdminContentPageContext` to returning `render(): AdminPageResult`, and `AdminDispatcher::dispatch()` is now the one place that turns that into the ambient `AdminContentPageContext` — closes the "76 real files" scope the batch's own plan text named. Along the way found and fixed 2 real regressions the migration itself introduced (a not-yet-converted parent `SubController` silently discarding an already-converted renderer's output in `ThemesSubController`/`PhotoSubController`), caught via golden-HTML diffs. P43-E fully landed: new `PluginConfig\PageRouteProviderInterface`/`Routing\PageRouteRegistrarInterface` (manifest `hasPageRoutes`) let an active plugin register real public-facing routes onto `RoutingMiddleware`'s own live `RouteCollection`, mirroring `ApiRouteProviderInterface`'s existing layered shape exactly; new `PluginConfig\AdminPageProviderInterface` (manifest `hasAdminPages`) lets an active plugin contribute its own `admin.php` `?page=` slug, aggregated by `PluginRegistry::adminPages()` and merged onto the static `config/admin_pages.php` map by a new `AdminDispatcher::pageMap()` — found and fixed a real gap the plan text itself hadn't named: `Admin\AdminShell` independently re-read the static config file for its own slug validation before ever reaching `AdminDispatcher`, so a plugin-contributed slug would have passed dispatch but still 404'd there without also fixing that call site. Also fixed a real P43-F regression found along the way (`PluginSettingsPageDispatchTest.php` still reading `ADMIN_CONTENT` via the old `getTemplateVars()` path after `PluginSubController::handle()` had already been converted to return `AdminPageResult`) | 2 |
-| P44 | Escaping campaign | Not started | 0 |
+| P44 | Escaping, Input Validation & Security Hardening Campaign | In progress — P44-B/C/D/F/H/I/J/K/L/M all landed (see below); P44-A (full `\|noescape` corpus reclassification sweep) not started; P44-G (this doc's own entry) kept current per batch | 10 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Not started | 0 |
 | P47 | `getPageData<T>()` typing + `any` reduction | Not started | 0 |
@@ -3950,12 +3950,67 @@ credential-timing quirk); wrapped in the same `try/catch (Exception) {}`
 pattern `Template`'s own constructor already used for the identical
 failure class.
 
-**P44 — Escaping campaign.** The residue after P38 removes the JS-context
-cases and P40 turns rendered-sub-template vars into `Html`-typed
-properties: the pre-escaped-URL population (`{$U_HOME|noescape}`,
-`{$F_ACTION|noescape}`, `{$ROOT_URL|noescape}`), not the full 988. **Size
-it after P40, not before.** Kept as its own phase so an escaping
-regression stays bisectable from a structural one; gated by golden-HTML
+**P44 — Escaping, Input Validation & Security Hardening Campaign.**
+Real, measured corpus (not the ~988 this entry originally guessed at,
+pre-P40): 494 `|noescape` occurrences across 95 templates, 333 distinct
+expressions. Broadened one verified finding at a time into 7
+dimensions beyond output escaping — input validation, file-upload
+serving, SSRF, deserialization, rate-limiting, cookie/transport
+security — since each complements the others (a value escaped
+correctly at output with no input-side character restriction; an
+upload sanitizer with no serving-side backstop; an SSRF guard
+connecting via a second, independent DNS resolution of what it just
+validated). Full investigation, findings, and batch definitions:
+`.claude/plans/validated-hopping-hamster.md` (session-local plan file,
+not committed).
+
+Landed: **P44-B** (12 confirmed bucket-1 `|noescape` removals —
+`MENUBAR`/`TABSHEET`, both `Html`-typed — plus 2 dead-code block
+deletions, `EXTRA_BODY_CONTENT`/`about.latte`'s `$about_msgs`,
+byte-identical golden-HTML modulo one incidental blank-line removal).
+**P44-C/D** (the Critical/High/Medium output-escaping findings: admin
+shell theme-switch link, `HtmlService::getCatDisplayName()`'s
+category-name XSS reaching front-end search, `page_refresh['U_REFRESH']`'s
+two independent producers, gallery thumbnail name, `SearchFilterRenderer`'s
+unescaped tag-name `sprintf()`, `MailService`'s unescaped username in
+raw-HTML mail bodies). **P44-F** (13 confirmed double-escape sites
+across 9 files — delete the redundant PHP-side `htmlspecialchars()`
+call, trust Latte's own auto-escape; one flagged, non-mechanical site,
+`NotificationByMailSubController`'s `CUSTOMIZE_MAIL_CONTENT`,
+investigated and documented rather than fixed — the apparent
+plain-text-template double-escape site is unreachable dead code for
+the real caller, and the actual gap it hints at (`MailService::mail()`'s
+own `strip_tags()`-without-`html_entity_decode()` text/plain
+derivation) is broader than one field and out of scope here). **P44-H**
+(`Username` VO now rejects `<>&"'` at construction; `CatPermSubmitRequest`
+allowlists `status`). **P44-I** (uploaded-SVG/HTML serving: `ActionController`
+forces `Content-Disposition: attachment` for `image/svg+xml`/`text/html`
+regardless of the `download` param; shared DOCTYPE-stripping regex now
+consumes a bracketed internal subset correctly;
+`sanitizeSvgIfNeeded()` fails closed instead of storing an unparseable
+SVG untouched; strips `javascript:`/`data:`-scheme `href`/`xlink:href`
+and SMIL animation elements; same MIME-vs-extension cross-check
+extended to `text/html`/`text/plain`). **P44-J** (`HttpClientService`
+pins the connection to the exact IP `assertUrlIsSafe()` validated, via
+Symfony's own `resolve` request option, closing a DNS-rebinding TOCTOU
+gap). **P44-K** (`unserialize($result, ['allowed_classes' => false])`
+at both remote-response call sites; deleted the now-fully-dead
+`ArrayHelper::safeUnserialize()`). **P44-L** (dual-scope — account and
+IP — rate limit on password-reset-code *requests*, not just per-code
+guesses; `PasswordResetRequestRepository`, new
+`password_reset_requests` table). **P44-M** (session cookie
+`secure`/`samesite` forced in `SessionBootstrap`/`InstallWizard`;
+`BaselineSecurityHeaders` sends `Strict-Transport-Security`
+unconditionally).
+
+Open: **P44-A** (the full reclassification sweep of the remaining
+`|noescape` corpus beyond the already-traced Critical/High/Medium
+findings and the 12+13 mechanically-classified sites above — the
+dominant remaining shape, sampled not exhaustively, is a hardcoded
+literal string with nothing dynamic to escape, but the sweep itself
+hasn't re-run over the full current tree). Every batch gated by
+`composer lint:latte`, PHPStan, deptrac, ECS, and the full Unit/Arch +
+Integration suites; escaping batches additionally gated by golden-HTML
 and VR.
 
 **P45 — Latte lint/format enforcement.** P32 built the tooling and gated

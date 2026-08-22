@@ -26,6 +26,7 @@ use Piwigo\Controller\Admin\Projection\ConfigurationCommentsData;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultView;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayView;
+use Piwigo\Controller\Admin\Projection\ConfigurationMainData;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainView;
 use Piwigo\Controller\Admin\Projection\ConfigurationSearchView;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesResult;
@@ -176,6 +177,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $page_section = $configurationRequest->section;
         $page['section'] = $page_section;
 
+        // Only used by the POST-handling save path below (normalizing
+        // submitted checkbox values) -- the render-time display no longer
+        // routes through checkboxValue()'s dispatcher for this tab, see
+        // ConfigurationMainData's own construction below.
         $main_checkboxes = [
             'allow_user_registration',
             'obligatory_user_mail_address',
@@ -548,23 +553,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $conf_email_admin_on_new_user = $this->currentConfig->emailAdminOnNewUser;
                 $lang_day = $this->lang->days();
 
-                $main = [
-                    'CONF_GALLERY_TITLE' => $conf_gallery_title,
-                    'CONF_PAGE_BANNER' => $conf_page_banner,
-                    'week_starts_on_options' => [
-                        'sunday' => $lang_day[0] ?? '',
-                        'monday' => $lang_day[1] ?? '',
-                    ],
-                    'week_starts_on_options_selected' => $this->currentConfig->weekStartsOn,
-                    'mail_theme' => $this->currentConfig->mailTheme,
-                    'mail_theme_options' => $mail_themes,
-                    'order_by' => $order_by,
-                    'order_by_options' => $sort_fields,
-                    'email_admin_on_new_user' => $conf_email_admin_on_new_user !== 'none',
-                    'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all'], true) ? 'all' : 'group',
-                    'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
-                ];
-
                 // list of groups
                 $groups = [];
                 foreach ($this->groupService->getAllBasic() as $group) {
@@ -572,12 +560,36 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
                 natcasesort($groups);
 
-                foreach ($main_checkboxes as $checkbox) {
-                    $main[$checkbox] = $this->checkboxValue($checkbox);
-                }
+                $main = new ConfigurationMainData(
+                    confGalleryTitle: $conf_gallery_title,
+                    confPageBanner: $conf_page_banner,
+                    weekStartsOnOptions: [
+                        'sunday' => $lang_day[0] ?? '',
+                        'monday' => $lang_day[1] ?? '',
+                    ],
+                    weekStartsOnOptionsSelected: $this->currentConfig->weekStartsOn,
+                    mailTheme: $this->currentConfig->mailTheme,
+                    mailThemeOptions: $mail_themes,
+                    orderBy: $order_by,
+                    orderByOptions: $sort_fields,
+                    emailAdminOnNewUser: $conf_email_admin_on_new_user !== 'none',
+                    emailAdminOnNewUserFilter: in_array($conf_email_admin_on_new_user, ['none', 'all'], true) ? 'all' : 'group',
+                    emailAdminOnNewUserFilterGroup: ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
+                    allowUserRegistration: $this->currentConfig->allowUserRegistration,
+                    obligatoryUserMailAddress: $this->currentConfig->obligatoryUserMailAddress,
+                    rate: $this->currentConfig->rateEnabled,
+                    rateAnonymous: $this->currentConfig->rateAnonymous,
+                    allowUserCustomization: $this->currentConfig->allowUserCustomization,
+                    log: $this->currentConfig->logConf,
+                    historyAdmin: $this->currentConfig->historyAdmin,
+                    historyGuest: $this->currentConfig->historyGuest,
+                    showMobileAppBannerInGallery: $this->currentConfig->showMobileAppBannerInGallery,
+                    showMobileAppBannerInAdmin: $this->currentConfig->showMobileAppBannerInAdmin,
+                    uploadDetectDuplicate: $this->currentConfig->uploadDetectDuplicate,
+                );
 
                 $view = new ConfigurationMainView(
-                    main: $main,
+                    main: $main->toArray(),
                     groupOptions: $groups,
                     fAction: $action,
                     saveSuccess: $save_success,
@@ -862,37 +874,31 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     }
 
     /**
-     * Local dispatcher for this page's own $main_checkboxes/
-     * $comments_checkboxes/$display_checkboxes/$sizes_checkboxes loops --
-     * each iterates a hardcoded literal array of key names declared right
-     * here in handle(), so the key set is fully enumerable and already
-     * visible in this exact file. Kept as a local match() rather than a
-     * generic CurrentConfig::all()-style accessor (Config generic-
-     * accessor removal, design #6): 40+ individually-named calls to
+     * Local dispatcher for this page's own render-time `$display_checkboxes`/
+     * `$sizes_checkboxes` loops (the `'main'`/`'comments'` tabs now read
+     * their own checkboxes' `CurrentConfig` properties directly by name in
+     * `handle()`'s own `switch`, once each tab's display data took named
+     * properties instead of a spliced array -- see
+     * `ConfigurationMainData`/`ConfigurationCommentsData`).
+     * `$main_checkboxes`/`$comments_checkboxes` themselves stay: the
+     * POST-handling save path still normalizes submitted values by
+     * iterating the same literal key lists. Kept as a local match() rather
+     * than a generic CurrentConfig::all()-style accessor (Config generic-
+     * accessor removal, design #6): many individually-named calls to
      * replace a template-building loop would be strictly worse for
      * maintainability with no real safety gain, and this keeps the
      * string-keyed surface contained to the one file that actually needs
      * it.
-     */
-    /**
+     *
      * Every branch is a real bool checkbox except 'index_search_in_set_action'
      * (CurrentConfig::indexSearchInSetAction()), a 'results'|'filter' string
      * config value grouped here anyway since this dispatcher only cares
-     * about the key set, not a strict boolean contract, matching each of
-     * the ~48 delegate methods' own return type.
+     * about the key set, not a strict boolean contract, matching each
+     * delegate method's own return type.
      */
     private function checkboxValue(string $checkbox): bool|string
     {
         return match ($checkbox) {
-            'allow_user_registration' => $this->currentConfig->allowUserRegistration,
-            'obligatory_user_mail_address' => $this->currentConfig->obligatoryUserMailAddress,
-            'rate' => $this->currentConfig->rateEnabled,
-            'rate_anonymous' => $this->currentConfig->rateAnonymous,
-            'allow_user_customization' => $this->currentConfig->allowUserCustomization,
-            'log' => $this->currentConfig->logConf,
-            'history_admin' => $this->currentConfig->historyAdmin,
-            'history_guest' => $this->currentConfig->historyGuest,
-            'upload_detect_duplicate' => $this->currentConfig->uploadDetectDuplicate,
             'original_resize' => $this->currentConfig->originalResize,
             'menubar_filter_icon' => $this->currentConfig->menubarFilterIcon,
             'index_search_in_set_button' => $this->currentConfig->indexSearchInSetButton,
@@ -918,8 +924,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'picture_navigation_icons' => $this->currentConfig->pictureNavigationIcons,
             'picture_navigation_thumb' => $this->currentConfig->pictureNavigationThumb,
             'picture_menu' => $this->currentConfig->pictureMenu,
-            'show_mobile_app_banner_in_gallery' => $this->currentConfig->showMobileAppBannerInGallery,
-            'show_mobile_app_banner_in_admin' => $this->currentConfig->showMobileAppBannerInAdmin,
             default => throw new LogicException("checkboxValue(): unknown checkbox key '{$checkbox}'."),
         };
     }

@@ -505,7 +505,7 @@ final readonly class BatchManagerUnitPageRenderer
      * @param array<array-key, mixed> $catNames
      * @return array{id: int, name: string, permalink: ?string}|array{}
      */
-    private static function categoryUrlParam(array $catNames, int|string $categoryId): array
+    private static function categoryUrlParam(array $catNames, string $categoryId): array
     {
         $cat = $catNames[$categoryId] ?? null;
 

@@ -630,7 +630,7 @@ final class MailService implements MailerInterface
      * @param bool $sendTechnicalDetails send user IP and browser
      */
     #[Override]
-    public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool
+    public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, ?string $groupId = null): bool
     {
         if ($subject === '' || $content === '') {
             return false;
@@ -687,7 +687,7 @@ final class MailService implements MailerInterface
      * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
      * @param array{filename?: string, assign?: array<string, mixed>} $tpl as in mail()
      */
-    public function mailAdmins(array $args = [], array $tpl = [], bool $excludeCurrentUser = true, bool $onlyWebmasters = false, int|string|null $groupId = null): bool
+    public function mailAdmins(array $args = [], array $tpl = [], bool $excludeCurrentUser = true, bool $onlyWebmasters = false, ?string $groupId = null): bool
     {
         if ((! isset($args['content']) || self::emptyValue($args['content'])) && $tpl === []) {
             return false;

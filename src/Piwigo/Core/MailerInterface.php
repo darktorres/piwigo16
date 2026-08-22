@@ -44,5 +44,5 @@ interface MailerInterface
      * @param string|array{key_args: array<int, mixed>} $subject
      * @param string|list<array{key_args: array<int, mixed>}> $content
      */
-    public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, int|string|null $groupId = null): bool;
+    public function mailNotificationAdmins(string|array $subject, string|array $content, bool $sendTechnicalDetails = true, ?string $groupId = null): bool;
 }

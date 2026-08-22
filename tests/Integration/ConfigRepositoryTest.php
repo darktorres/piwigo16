@@ -13,6 +13,7 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\Projection\ConfigValueUpdate;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 
@@ -171,10 +172,10 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $this->repo->upsert($paramB, self::jsonValue('original-b'));
 
         $this->repo->massUpdateValues([
-            [
-                'param' => $paramA,
-                'value' => self::jsonValue('updated-a'),
-            ],
+            new ConfigValueUpdate(
+                param: $paramA,
+                value: self::jsonValue('updated-a'),
+            ),
         ]);
 
         $fresh = $this->freshRepo();

@@ -173,10 +173,10 @@ test('getSize() delegates the fatal message to the installed HtmlRenderingInterf
         HtmlRenderingInterface::class => $renderer,
     ], function () use ($renderer): void {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 5,
+            'id' => 5,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         expect(fn (): ?array => $src->getSize())
             ->toThrow(SrcImageTestFatalSignal::class);
@@ -314,10 +314,10 @@ test('constructor finds a real per-extension mimetype icon, and getUrl() embelli
             srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
             $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+                'id' => 1,
                 'path' => 'upload/2026/07/file.zzz',
                 'file' => 'file.zzz',
-    ]));
+            ]));
 
             expect($src->isMimetype())
                 ->toBeTrue();
@@ -345,10 +345,10 @@ test('constructor falls back to the shared unknown.png icon when no icon exists 
 
     try {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-    ]));
+        ]));
 
         expect($src->isMimetype())
             ->toBeTrue();
@@ -370,10 +370,10 @@ test('constructor falls back to the original path for a .svg with no icon, then 
 
     try {
         expect(fn (): SrcImage => new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'upload/2026/07/vector.svg',
             'file' => 'vector.svg',
-    ])))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon upload/2026/07/vector.svg');
+        ])))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon upload/2026/07/vector.svg');
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -391,12 +391,12 @@ test('getSize() re-reads real dimensions from disk when width/height columns are
         // matching row instead of corrupting a real fixture row this
         // test doesn't otherwise care about.
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 999999,
+            'id' => 999999,
             'path' => 'upload/2026/07/synced-later.png',
             'file' => 'synced-later.png',
             'width' => null,
             'height' => null,
-    ]));
+        ]));
 
         expect($src->hasSize())
             ->toBeFalse();
@@ -467,10 +467,10 @@ test('constructor throws when neither the per-extension icon nor the shared unkn
 
     try {
         expect(fn (): SrcImage => new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-    ])))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
+        ])))->toThrow(Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -492,11 +492,11 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
         // ImageRepository::updateDimensions() side-effect concern as the
         // sibling test above.
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 999999,
+            'id' => 999999,
             'path' => 'upload/2026/07/width-only.png',
             'file' => 'width-only.png',
             'width' => 300,
-    ]));
+        ]));
 
         expect($src->hasSize())
             ->toBeFalse();
@@ -580,10 +580,10 @@ test('getUrl() for a real original image requests part "e" without download, thr
         UrlServiceInterface::class => $fakeUrlService,
     ], function () use ($fakeUrlService): void {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 7,
+            'id' => 7,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         expect($src->isOriginal())
             ->toBeTrue();
@@ -602,11 +602,11 @@ test('getUrl() for a real representative image requests part "r"', function (): 
         UrlServiceInterface::class => $fakeUrlService,
     ], function () use ($fakeUrlService): void {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 8,
+            'id' => 8,
             'path' => 'upload/2026/07/doc.pdf',
             'file' => 'doc.pdf',
             'representative_ext' => 'jpg',
-    ]));
+        ]));
 
         expect($src->isOriginal())
             ->toBeFalse();
@@ -660,12 +660,12 @@ test('getSize() persists the real, correctly-ordered width/height back onto the 
             ImageRepository::class => $repo,
         ], function () use ($imageId): void {
             $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => $imageId,
+                'id' => $imageId,
                 'path' => 'upload/2026/07/update-dimensions.jpg',
                 'file' => 'update-dimensions.jpg',
                 'width' => null,
                 'height' => null,
-    ]));
+            ]));
 
             expect($src->getSize())
                 ->toBe([77, 55]);
@@ -713,10 +713,10 @@ test('currentConfig() throws when the container returns an unexpected type for C
     // the extension), so it has to run entirely inside the override.
     expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function (): void {
         new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
     }))->toThrow(RuntimeException::class, 'SrcImage: no CurrentConfig set (RequestBootstrap not run yet?)');
 });
 
@@ -754,10 +754,10 @@ test('eventDispatcher() throws when the container returns an unexpected type for
         srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
         new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
-    ]));
+        ]));
     }))->toThrow(RuntimeException::class, 'SrcImage: no EventDispatcher set (RequestBootstrap not run yet?)');
 });
 
@@ -811,12 +811,12 @@ test('getSize() re-read skips the persistence call when the container returns an
             ImageRepository::class => new stdClass(),
         ], function (): ?array {
             $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+                'id' => 1,
                 'path' => 'upload/2026/07/skip-persist.png',
                 'file' => 'skip-persist.png',
                 'width' => null,
                 'height' => null,
-    ]));
+            ]));
 
             return $src->getSize();
         });

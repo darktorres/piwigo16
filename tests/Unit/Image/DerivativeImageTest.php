@@ -366,10 +366,10 @@ test('url() computes the derivative url via a real build() call, prefixed by the
         UrlServiceInterface::class => new DerivativeImageTestFakeUrlService('/gallery/'),
     ], function (): void {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
@@ -574,12 +574,12 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         $mysteryParams->use_watermark = true;
 
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 6,
+            'id' => 6,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 10,
             'height' => 10,
-    ]));
+        ]));
 
         $warnings = [];
         set_error_handler(function (int $errno, string $errstr) use (&$warnings): bool {
@@ -711,10 +711,10 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
         $params->last_mod_time = $mtime;
 
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         $derivative = new DerivativeImage($params, $src, $currentConfig);
 
@@ -763,12 +763,12 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         $mediumParams->use_watermark = $watermark->min_size[0] <= $mediumParams->maxWidth();
 
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 3,
+            'id' => 3,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 40,
             'height' => 40,
-    ]));
+        ]));
 
         $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
@@ -850,12 +850,12 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         $mediumParams->use_watermark = true;
 
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 4,
+            'id' => 4,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 10,
             'height' => 10,
-    ]));
+        ]));
 
         $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
@@ -878,10 +878,10 @@ test('build() routes through i.php and marks itself not cached when derivative_u
 
     try {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
@@ -907,10 +907,10 @@ test('build() links directly to a static file when derivative_url_style is auto 
         file_put_contents($root . '/_data/i/gallery/photo-cu_80x60_a.jpg', 'cached-bytes');
 
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
@@ -935,10 +935,10 @@ test('getUrl() prefixes the computed rel_url with the real root url', function (
         UrlServiceInterface::class => new DerivativeImageTestFakeUrlService('/gallery/'),
     ], function (): void {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
-    ]));
+        ]));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
@@ -986,12 +986,12 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
 
     try {
         $src = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 1,
+            'id' => 1,
             'path' => 'upload/2026/07/photo.jpg',
             'file' => 'photo.jpg',
             'width' => 400,
             'height' => 300,
-    ]));
+        ]));
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $src, CurrentConfigTestFactory::get());
 
         // 400x300 scaled to fit within 100x100: width is the binding
@@ -1015,12 +1015,12 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
         // instead of fatalError()-ing -- which fails silently (false, no
         // warning) against this deliberately-not-a-real-image file.
         $unknownSrc = new SrcImage(SrcImageInfo::fromRow([
-        'id' => 2,
+            'id' => 2,
             'path' => 'upload/2026/07/broken.jpg',
             'file' => 'broken.jpg',
             'width' => null,
             'height' => null,
-    ]));
+        ]));
         $unknownDerivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $unknownSrc, CurrentConfigTestFactory::get());
 
         expect($unknownDerivative->getSize())

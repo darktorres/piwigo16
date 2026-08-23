@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use Override;
+use Piwigo\Common\Contract\HasGlobalRank;
+
 /**
  * {@see \Piwigo\Category\CategoryService::getComputedCategories()}'s own
  * per-category rollup row, merged with `name`/`permalink` by
@@ -15,7 +18,7 @@ namespace Piwigo\Category\Projection;
  * (not a by-ref array trick) is what makes those in-place updates visible
  * through the `array<int, ComputedCategoryRow>` map that holds them.
  */
-final class ComputedCategoryRow
+final class ComputedCategoryRow implements HasGlobalRank
 {
     public function __construct(
         public readonly int $catId,
@@ -32,6 +35,12 @@ final class ComputedCategoryRow
         public ?string $name = null,
         public ?string $permalink = null,
     ) {}
+
+    #[Override]
+    public function getGlobalRank(): ?string
+    {
+        return $this->globalRank;
+    }
 
     /**
      * The `array<string, mixed>` template-variable-bag boundary --

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use Override;
+use Piwigo\Common\Contract\HasGlobalRank;
+
 /**
  * {@see \Piwigo\Category\CategoryRepository::findCategoriesByIds()}'s own
  * row shape -- a deliberately narrower 6-column contract than the full
@@ -13,9 +16,10 @@ namespace Piwigo\Category\Projection;
  * consumers (through {@see \Piwigo\Category\CategoryService}'s own
  * `getCategoriesByIds()`/`getRelatedCategoriesMenu()`) splice new keys onto
  * each row or pass the whole set through `array_column()`, both of which
- * need a plain array, not this DTO.
+ * need a plain array, not this DTO -- `setCatStatusWithinTransaction()` is
+ * the one real consumer that reads this object directly instead.
  */
-final readonly class CategoryListingRow
+final readonly class CategoryListingRow implements HasGlobalRank
 {
     public function __construct(
         public int $id,
@@ -25,6 +29,12 @@ final readonly class CategoryListingRow
         public string $uppercats,
         public ?string $globalRank,
     ) {}
+
+    #[Override]
+    public function getGlobalRank(): ?string
+    {
+        return $this->globalRank;
+    }
 
     /**
      * @return array{id: int, name: string, permalink: ?string, id_uppercat: ?int, uppercats: string, global_rank: ?string}

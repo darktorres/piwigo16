@@ -624,13 +624,7 @@ final readonly class PictureController implements ControllerInterface
             ImageId::from($image_id),
             $this->permissionService->getPermissionCriteria()
         );
-        // Flattened to plain arrays here, once: CategoryService::
-        // compareByGlobalRank() is a generic, cross-domain array-typed
-        // comparator shared by 8+ unrelated call sites (see
-        // VisibleCategoryRow's own docblock), and every real read below
-        // (including PictureCommentRenderer::render()'s own param) already
-        // expects a plain row.
-        $related_categories = array_map(static fn (VisibleCategoryRow $row): array => $row->toArray(), $relatedCategoryRows);
+        $related_categories = $relatedCategoryRows;
         usort($related_categories, CategoryService::compareByGlobalRank(...));
         $picture = [];
 
@@ -1162,7 +1156,7 @@ final readonly class PictureController implements ControllerInterface
         // never strings -- $page_category_id_for_compare used to be cast
         // from a $page_category['id'] array read via is_numeric(), the
         // same real int now available directly off the object.
-        $related_cat0_id = $related_categories[0]['id'] ?? null;
+        $related_cat0_id = ($related_categories[0] ?? null)?->id;
         $page_category_id_for_compare = $page_category?->id;
         $related_categories_display = [];
         if (count($related_categories) === 1 and
@@ -1179,13 +1173,13 @@ final readonly class PictureController implements ControllerInterface
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids
-                $ids = array_merge($ids, explode(',', $category['uppercats']));
+                $ids = array_merge($ids, explode(',', $category->uppercats));
             }
             $ids = array_unique($ids);
             $cat_map = $this->categoryService->getNamesByIds(array_values(array_map(intval(...), $ids)));
             foreach ($related_categories as $category) {
                 $cats = [];
-                foreach (explode(',', $category['uppercats']) as $id) {
+                foreach (explode(',', $category->uppercats) as $id) {
                     $cats[] = $cat_map[$id];
                 }
                 $related_categories_display[] = $this->htmlService->getCatDisplayName($cats);
@@ -1257,7 +1251,7 @@ final readonly class PictureController implements ControllerInterface
         $commentsResult = PictureCommentsResult::empty();
         if ($this->currentConfig->activateComments) {
             $commentsResult = new PictureCommentRenderer()
-                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->csrfService, $this->mailer, $this->htmlService, $this->entityManager, $this->renderer);
+                ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, array_map(static fn (VisibleCategoryRow $row): array => $row->toArray(), $related_categories), $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->csrfService, $this->mailer, $this->htmlService, $this->entityManager, $this->renderer);
         }
         $metadata = null;
         if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {

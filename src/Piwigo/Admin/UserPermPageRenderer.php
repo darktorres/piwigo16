@@ -92,13 +92,13 @@ final readonly class UserPermPageRenderer
             $cats = [];
             foreach ($group_rows as $row) {
                 $cats[] = $row;
-                $group_authorized[] = (string) $row['cat_id'];
+                $group_authorized[] = (string) $row->catId;
             }
             usort($cats, CategoryService::compareByGlobalRank(...));
 
             $categories_because_of_groups = [];
             foreach ($cats as $category) {
-                $categories_because_of_groups[] = $htmlRenderer->getCatDisplayNameCache($category['uppercats'], null);
+                $categories_because_of_groups[] = $htmlRenderer->getCatDisplayNameCache($category->uppercats, null);
             }
         }
 

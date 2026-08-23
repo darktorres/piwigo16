@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use Override;
+use Piwigo\Common\Contract\HasGlobalRank;
+
 /**
  * {@see \Piwigo\Image\ImageRepository::findVisibleCategoriesForImage()}'s
  * own row shape -- {@see \Piwigo\Controller\PictureController}'s own
- * "related categories" block, its only real consumer.
+ * "related categories" block, its only real consumer, which reads this
+ * object directly (including for its own `usort($related_categories,
+ * CategoryService::compareByGlobalRank(...))` call).
  *
  * `$status` is unwrapped from `CategoryEntity`'s own `CategoryStatus`
  * enum to its plain string value here, matching every other real
@@ -17,15 +22,8 @@ namespace Piwigo\Image\Projection;
  * sites) -- the original array-shaped version of this method left it as
  * a raw `CategoryStatus` instance instead, a real inconsistency nothing
  * ever observed since no real consumer reads this field.
- *
- * `toArray()` exists for `PictureController`'s own `usort($related_categories,
- * CategoryService::compareByGlobalRank(...))` call: that comparator is a
- * generic, cross-domain `array`-typed helper shared by 8+ unrelated call
- * sites (see {@see \Piwigo\Category\Projection\CategoryIdNameUppercatsRank}'s
- * own identical rationale), so this DTO is unwrapped to a plain array
- * once, right where it arrives, before the sort and every later read.
  */
-final readonly class VisibleCategoryRow
+final readonly class VisibleCategoryRow implements HasGlobalRank
 {
     public function __construct(
         public int $id,
@@ -35,6 +33,12 @@ final readonly class VisibleCategoryRow
         public string $status,
         public ?string $globalRank,
     ) {}
+
+    #[Override]
+    public function getGlobalRank(): ?string
+    {
+        return $this->globalRank;
+    }
 
     /**
      * @return array{id: int, uppercats: string, commentable: bool, visible: bool, status: string, global_rank: ?string}

@@ -64,11 +64,11 @@ final class PictureCommentRenderer
      * @param list<array<string, mixed>> $related_categories
      *   {@see \Piwigo\Image\Projection\VisibleCategoryRow::toArray()}'s own
      *   shape in production ({@see \Piwigo\Controller\PictureController}
-     *   flattens it before calling this, see that call site's own
-     *   docblock) -- `commentable` is a real `bool` there, but this
-     *   method's own type stays loose: its own mutation-kill tests below
-     *   deliberately construct a row missing the key entirely, to observe
-     *   the resulting "Undefined array key" warning.
+     *   flattens it right at this call) -- `commentable` is a real `bool`
+     *   there, but this method's own type stays loose: its own
+     *   mutation-kill tests below deliberately construct a row missing
+     *   the key entirely, to observe the resulting "Undefined array key"
+     *   warning.
      */
     public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentConfig $currentConfig, CsrfService $csrfService, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): PictureCommentsResult
     {

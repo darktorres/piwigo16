@@ -454,7 +454,7 @@ final readonly class CategoryCatsRenderer
                     ->createNavigationBar($this->urlService->duplicateIndexUrl([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
-            $template->assignContext(new CategoryCatsNavbarPageContext($catsNavigationBar->toArray()));
+            $template->assignContext(new CategoryCatsNavbarPageContext($catsNavigationBar));
         }
 
         TimingHelper::debug('end CategoryCatsRenderer::render()', $this->requestMetrics);

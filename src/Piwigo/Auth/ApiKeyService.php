@@ -17,6 +17,7 @@ use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Session\SessionService;
 
@@ -207,11 +208,11 @@ final readonly class ApiKeyService
 
         return $this->mailer->mail(
             $email->value,
-            [
-                'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Your API key will expire soon'),
-                'content' => $message,
-                'content_format' => 'text/html',
-            ]
+            new MailArgs(
+                subject: '[' . $gallery_title . '] ' . $this->lang->t('Your API key will expire soon'),
+                content: $message,
+                contentFormat: 'text/html',
+            )
         );
     }
 }

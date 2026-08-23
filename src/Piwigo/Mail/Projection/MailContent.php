@@ -17,16 +17,4 @@ final readonly class MailContent
         public string $content,
         public string $contentFormat,
     ) {}
-
-    /**
-     * @return array{subject: string, content: string, content_format: string}
-     */
-    public function toArray(): array
-    {
-        return [
-            'subject' => $this->subject,
-            'content' => $this->content,
-            'content_format' => $this->contentFormat,
-        ];
-    }
 }

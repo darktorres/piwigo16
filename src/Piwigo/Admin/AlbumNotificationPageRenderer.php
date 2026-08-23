@@ -16,6 +16,8 @@ use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -112,29 +114,32 @@ final readonly class AlbumNotificationPageRenderer
             $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($category->name, 'admin_cat_list'));
             $renderedCategoryName = $nameEvent->categoryName;
 
-            $args = [
-                'subject' => $this->lang->t('[%s] Visit album %s', $this->currentConfig->galleryTitle, $renderedCategoryName),
-            ];
+            $args = new MailArgs(
+                subject: $this->lang->t('[%s] Visit album %s', $this->currentConfig->galleryTitle, $renderedCategoryName),
+            );
 
             $mail_content = $albumNotificationSubmit->mailContent;
 
-            $tpl = [
-                'filename' => 'cat_group_info',
-                'assign' => [
+            $categoryLink = $this->urlService->makeIndexUrl(
+                [
+                    'category' => [
+                        'id' => $category->id->value,
+                        'name' => $renderedCategoryName,
+                        'permalink' => $category->permalink?->value,
+                    ],
+                ]
+            );
+            $imgLink = $img['link'] ?? null;
+
+            $tpl = new MailOptions(
+                filename: 'cat_group_info',
+                assign: [
                     'IMG' => $img,
                     'CAT_NAME' => $renderedCategoryName,
-                    'LINK' => $this->urlService->makeIndexUrl(
-                        [
-                            'category' => [
-                                'id' => $category->id->value,
-                                'name' => $renderedCategoryName,
-                                'permalink' => $category->permalink?->value,
-                            ],
-                        ]
-                    ),
+                    'LINK' => $categoryLink,
                     'CPL_CONTENT' => $mail_content === '' ? '' : $mail_content,
                 ],
-            ];
+            );
 
             if ($albumNotificationSubmit->who === 'users' and $albumNotificationSubmit->users !== []) {
                 // No real privacy issue sending this notification to a user
@@ -159,26 +164,28 @@ final readonly class AlbumNotificationPageRenderer
                     $authkey = $this->authService
                         ->createUserAuthKey($u->userId->value, $u->status);
 
-                    $user_tpl = $tpl;
+                    $user_tpl = clone $tpl;
 
                     if ($authkey !== false) {
-                        $user_tpl['assign']['LINK'] = $this->urlService->addUrlParams($tpl['assign']['LINK'], [
+                        $user_tpl->assign['LINK'] = $this->urlService->addUrlParams($categoryLink, [
                             'auth' => $authkey->authKey,
                         ]);
 
-                        if (isset($user_tpl['assign']['IMG']['link'])) {
-                            $user_tpl['assign']['IMG']['link'] = $this->urlService->addUrlParams(
-                                $user_tpl['assign']['IMG']['link'],
+                        if ($imgLink !== null) {
+                            $userImg = $img;
+                            $userImg['link'] = $this->urlService->addUrlParams(
+                                $imgLink,
                                 [
                                     'auth' => $authkey->authKey,
                                 ]
                             );
+                            $user_tpl->assign['IMG'] = $userImg;
                         }
                     }
 
-                    $user_args = $args;
+                    $user_args = clone $args;
                     if ($authkey !== false) {
-                        $user_args['auth_key'] = $authkey->authKey;
+                        $user_args->authKey = $authkey->authKey;
                     }
 
                     $user_language = $u->language ?? $this->userService->getDefaultLanguage();

@@ -10,6 +10,8 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -168,10 +170,8 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
      * this just reads the newest captured Email back off it.
      *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
-     * @param array{filename?: string, assign?: array<string, mixed>} $tpl
      */
-    private function mailCaptureBeforeSend(string|array $to, array $args = [], array $tpl = []): Email
+    private function mailCaptureBeforeSend(string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): Email
     {
         $countBefore = count($this->mailerSpy->sent);
 
@@ -213,19 +213,19 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
                 'name' => 'Fixture Recipient',
                 'email' => 'golden-html-recipient@example.test',
             ],
-            [
-                'subject' => '[Fixture Gallery] Visit album Sample Album',
-                'theme' => 'clear',
-            ],
-            [
-                'filename' => 'cat_group_info',
-                'assign' => [
+            new MailArgs(
+                subject: '[Fixture Gallery] Visit album Sample Album',
+                theme: 'clear',
+            ),
+            new MailOptions(
+                filename: 'cat_group_info',
+                assign: [
                     'IMG' => [],
                     'CAT_NAME' => 'Sample Album',
                     'LINK' => $this->rootUrl . 'index.php?/category/1',
                     'CPL_CONTENT' => 'A short note about this album.',
                 ],
-            ]
+            )
         );
 
         $emails['notification-admin'] = $this->mailNotificationAdminsCaptureBeforeSend(
@@ -269,12 +269,12 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
                 'name' => 'Fixture Recipient',
                 'email' => 'golden-html-nbm@example.test',
             ],
-            [
-                'subject' => '[Fixture Gallery] Subscribe to notification by mail',
-                'email_format' => 'text/html',
-                'content' => $mailTemplate->renderView('notification_by_mail.latte', $notificationView),
-                'content_format' => 'text/html',
-            ]
+            new MailArgs(
+                subject: '[Fixture Gallery] Subscribe to notification by mail',
+                emailFormat: 'text/html',
+                content: $mailTemplate->renderView('notification_by_mail.latte', $notificationView),
+                contentFormat: 'text/html',
+            )
         );
 
         $emails['dark-theme-css'] = $this->mailCaptureBeforeSend(
@@ -282,10 +282,10 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
                 'name' => 'Fixture Recipient',
                 'email' => 'golden-html-dark-theme@example.test',
             ],
-            [
-                'subject' => '[Fixture Gallery] Dark theme CSS coverage',
-                'theme' => 'dark',
-            ]
+            new MailArgs(
+                subject: '[Fixture Gallery] Dark theme CSS coverage',
+                theme: 'dark',
+            )
         );
 
         foreach ($emails as $name => $email) {

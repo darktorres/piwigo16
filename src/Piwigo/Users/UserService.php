@@ -43,6 +43,7 @@ use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SortRenderer;
@@ -549,16 +550,16 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $mailer->mail(
             $existing->email,
-            [
-                'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
-                'content' => $this->lang->args([
+            new MailArgs(
+                subject: '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
+                content: $this->lang->args([
                     $this->lang->buildArgs('Someone tried to create an account on %s using your username.', $gallery_title),
                     $this->lang->buildArgs('', ''),
                     $this->lang->buildArgs('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
                     $this->lang->buildArgs('If this was not you, no action is needed.', ''),
                 ]),
-                'content_format' => 'text/plain',
-            ]
+                contentFormat: 'text/plain',
+            )
         );
     }
 
@@ -610,11 +611,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $mailer->mail(
             $mailAddress,
-            [
-                'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
-                'content' => $this->lang->args($keyargsContent),
-                'content_format' => 'text/plain',
-            ]
+            new MailArgs(
+                subject: '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
+                content: $this->lang->args($keyargsContent),
+                contentFormat: 'text/plain',
+            )
         );
     }
 

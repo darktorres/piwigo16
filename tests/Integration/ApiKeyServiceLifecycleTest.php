@@ -18,6 +18,8 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\MailerInterface;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
@@ -36,16 +38,16 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 final class ApiKeyServiceLifecycleTestSpyMailer implements MailerInterface
 {
     /**
-     * @var list<array{to: string|array<int|string, mixed>, args: array<string, mixed>}>
+     * @var list<array{to: string|array<int|string, mixed>, args: MailArgs}>
      */
     public array $calls = [];
 
     #[Override]
-    public function mail(string|array $to, array $args = [], array $tpl = []): bool
+    public function mail(string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): bool
     {
         $this->calls[] = [
             'to' => $to,
-            'args' => $args,
+            'args' => $args ?? new MailArgs(),
         ];
 
         return true;
@@ -229,7 +231,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         self::assertTrue($result);
         self::assertCount(1, $mailer->calls);
         self::assertSame('fixture_admin@example.test', $mailer->calls[0]['to']);
-        $content = $mailer->calls[0]['args']['content'];
+        $content = $mailer->calls[0]['args']->content;
         self::assertIsString($content);
         self::assertStringContainsString('Your API key will expire in 5 days.', $content);
         self::assertStringNotContainsString('will expire in 5 day.', $content);
@@ -251,7 +253,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         $result = $service->notifyExpiration(Username::from('fixture_admin'), Email::from('fixture_admin@example.test'), 1);
 
         self::assertTrue($result);
-        $content = $mailer->calls[0]['args']['content'];
+        $content = $mailer->calls[0]['args']->content;
         self::assertIsString($content);
         self::assertStringContainsString('Your API key will expire in 1 day.', $content);
     }

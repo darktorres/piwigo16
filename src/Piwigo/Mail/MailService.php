@@ -27,6 +27,8 @@ use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\View;
 use Piwigo\Core\WebmasterMailProviderInterface;
@@ -230,28 +232,25 @@ final class MailService implements MailerInterface
      * internal $args value that never surfaces in the final Email itself
      * (mailAllowHtml=false skips the theme-specific CSS entirely).
      *
-     * @param array{theme?: string, ...} $args
      * @param array{mail_theme?: mixed, ...} $confMail
      */
-    private static function resolveMailTheme(array $args, array $confMail): string
+    private static function resolveMailTheme(MailArgs $args, array $confMail): string
     {
-        if (! isset($args['theme']) || self::emptyValue($args['theme']) || ! in_array($args['theme'], ['clear', 'dark'], true)) {
+        if ($args->theme === null || self::emptyValue($args->theme) || ! in_array($args->theme, ['clear', 'dark'], true)) {
             return is_string($confMail['mail_theme'] ?? null) ? $confMail['mail_theme'] : 'clear';
         }
 
-        return $args['theme'];
+        return $args->theme;
     }
 
     /**
-     * Resolves mail()'s own $args['content'] default -- same
+     * Resolves mail()'s own $args->content default -- same
      * directly-Reflection-testable extraction rationale as
      * resolveMailTheme() above.
-     *
-     * @param array{content?: string, ...} $args
      */
-    private static function resolveMailContent(array $args): string
+    private static function resolveMailContent(MailArgs $args): string
     {
-        return $args['content'] ?? '';
+        return $args->content ?? '';
     }
 
     public function getMailSenderName(): string
@@ -663,17 +662,17 @@ final class MailService implements MailerInterface
         $galleryTitle = $this->currentConfig->galleryTitle;
 
         return $this->mailAdmins(
-            [
-                'subject' => '[' . $galleryTitle . '] ' . $subject,
-                'mail_title' => $galleryTitle,
-                'mail_subtitle' => $subject,
-                'content' => $content,
-                'content_format' => 'text/plain',
-            ],
-            [
-                'filename' => 'notification_admin',
-                'assign' => $tplVars,
-            ],
+            new MailArgs(
+                subject: '[' . $galleryTitle . '] ' . $subject,
+                mailTitle: $galleryTitle,
+                mailSubtitle: $subject,
+                content: $content,
+                contentFormat: 'text/plain',
+            ),
+            new MailOptions(
+                filename: 'notification_admin',
+                assign: $tplVars,
+            ),
             true, // excludeCurrentUser
             false, // onlyWebmasters
             $groupId
@@ -684,12 +683,15 @@ final class MailService implements MailerInterface
      * Sends an email to all administrators. The current user (if admin) is
      * excluded.
      *
-     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail()
-     * @param array{filename?: string, assign?: array<string, mixed>} $tpl as in mail()
+     * @param MailArgs|null $args as in mail()
+     * @param MailOptions|null $tpl as in mail()
      */
-    public function mailAdmins(array $args = [], array $tpl = [], bool $excludeCurrentUser = true, bool $onlyWebmasters = false, ?string $groupId = null): bool
+    public function mailAdmins(?MailArgs $args = null, ?MailOptions $tpl = null, bool $excludeCurrentUser = true, bool $onlyWebmasters = false, ?string $groupId = null): bool
     {
-        if ((! isset($args['content']) || self::emptyValue($args['content'])) && $tpl === []) {
+        $args ??= new MailArgs();
+        $tpl ??= new MailOptions();
+
+        if (self::emptyValue($args->content) && $tpl->filename === null && $tpl->assign === []) {
             return false;
         }
 
@@ -727,20 +729,22 @@ final class MailService implements MailerInterface
     /**
      * Sends an email to a group.
      *
-     * @param array{language_selected?: string, from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args as in mail() -- language_selected filters users of the group by language
-     * @param array{filename?: string, assign?: array<string, mixed>} $tpl as in mail()
+     * @param MailArgs|null $args as in mail()
+     * @param MailOptions|null $tpl as in mail()
+     * @param ?string $languageSelected filters users of the group by language
      */
-    public function mailGroup(int $groupId, array $args = [], array $tpl = []): bool
+    public function mailGroup(int $groupId, ?MailArgs $args = null, ?MailOptions $tpl = null, ?string $languageSelected = null): bool
     {
-        if ($groupId === 0 || ((! isset($args['content']) || self::emptyValue($args['content'])) && $tpl === [])) {
+        $args ??= new MailArgs();
+        $tpl ??= new MailOptions();
+
+        if ($groupId === 0 || (self::emptyValue($args->content) && $tpl->filename === null && $tpl->assign === [])) {
             return false;
         }
 
         $return = true;
 
-        $languageSelected = isset($args['language_selected']) && ! self::emptyValue($args['language_selected'])
-            ? $args['language_selected']
-            : null;
+        $languageSelected = self::emptyValue($languageSelected) ? null : $languageSelected;
 
         $languages = $this->mailRecipientRepo
             ->findDistinctLanguagesInGroup(
@@ -775,15 +779,15 @@ final class MailService implements MailerInterface
                 $authkey = $this->authService
                     ->createUserAuthKey($u->userId, $u->status);
 
-                $userTpl = $tpl;
+                $userTpl = clone $tpl;
 
                 if ($authkey !== false) {
-                    $link = $tpl['assign']['LINK'] ?? null;
-                    $userTpl['assign']['LINK'] = $this->urlService->addUrlParams(is_string($link) ? $link : '', [
+                    $link = $tpl->assign['LINK'] ?? null;
+                    $userTpl->assign['LINK'] = $this->urlService->addUrlParams(is_string($link) ? $link : '', [
                         'auth' => $authkey->authKey,
                     ]);
 
-                    $img = $userTpl['assign']['IMG'] ?? null;
+                    $img = $userTpl->assign['IMG'] ?? null;
                     if (is_array($img) && isset($img['link']) && is_string($img['link'])) {
                         $img['link'] = $this->urlService->addUrlParams(
                             $img['link'],
@@ -791,17 +795,13 @@ final class MailService implements MailerInterface
                                 'auth' => $authkey->authKey,
                             ]
                         );
-                        $userTpl['assign']['IMG'] = $img;
+                        $userTpl->assign['IMG'] = $img;
                     }
                 }
 
-                $userArgs = $args;
-                // language_selected is this method's own filtering option
-                // (already consumed above to build the SQL query); mail()
-                // doesn't accept it.
-                unset($userArgs['language_selected']);
+                $userArgs = clone $args;
                 if ($authkey !== false) {
-                    $userArgs['auth_key'] = $authkey->authKey;
+                    $userArgs->authKey = $authkey->authKey;
                 }
 
                 $return = $this->mail($uEmail, $userArgs, $userTpl) && $return;
@@ -817,7 +817,7 @@ final class MailService implements MailerInterface
      * Sends an email, using Piwigo-specific information.
      *
      * @param string|array<int|string, mixed> $to
-     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
+     * @param MailArgs|null $args
      *        from: sender [default value webmaster email]
      *        reply_to_mail_address/reply_to_name: reply-to can differ from "from"
      *        Cc/Bcc: carbon-copy/blind-carbon-copy receivers
@@ -828,12 +828,15 @@ final class MailService implements MailerInterface
      *        theme: theme to use
      *        mail_title/mail_subtitle: header title/subtitle
      *        auth_key: authentication key to add on the footer link
-     * @param array{filename?: string, assign?: array<string, mixed>} $tpl custom content template
+     * @param MailOptions|null $tpl custom content template
      */
     #[Override]
-    public function mail(string|array $to, array $args = [], array $tpl = []): bool
+    public function mail(string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): bool
     {
-        if (self::emptyValue($to) && (! isset($args['Cc']) || self::emptyValue($args['Cc'])) && (! isset($args['Bcc']) || self::emptyValue($args['Bcc']))) {
+        $args ??= new MailArgs();
+        $tpl ??= new MailOptions();
+
+        if (self::emptyValue($to) && self::emptyValue($args->cc) && self::emptyValue($args->bcc)) {
             return true;
         }
 
@@ -850,35 +853,35 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         try {
-            if (! isset($args['from']) || self::emptyValue($args['from'])) {
+            if (self::emptyValue($args->from)) {
                 $from = new EmailRecipient(
                     is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
                     is_string($confMail['name_webmaster']) ? $confMail['name_webmaster'] : ''
                 );
             } else {
-                $from = $this->unformatEmail($args['from']);
+                $from = $this->unformatEmail($args->from ?? '');
             }
             $email->from(new Address($from->email, $from->name));
-            $replyToMail = $args['reply_to_mail_address'] ?? $from->email;
-            $replyToName = $args['reply_to_name'] ?? $from->name;
+            $replyToMail = $args->replyToMailAddress ?? $from->email;
+            $replyToName = $args->replyToName ?? $from->name;
             $email->replyTo(new Address($replyToMail, $replyToName));
 
             // Subject.
-            if (! isset($args['subject']) || self::emptyValue($args['subject'])) {
-                $args['subject'] = 'Piwigo';
+            if (self::emptyValue($args->subject)) {
+                $args->subject = 'Piwigo';
             }
-            $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $args['subject']));
-            $email->subject($args['subject']);
+            $args->subject = trim((string) preg_replace('#[\n\r]+#s', '', $args->subject ?? ''));
+            $email->subject($args->subject);
 
             // Cc.
-            if (isset($args['Cc']) && ! self::emptyValue($args['Cc'])) {
-                foreach ($this->getCleanRecipientsList($args['Cc']) as $recipient) {
+            if (! self::emptyValue($args->cc)) {
+                foreach ($this->getCleanRecipientsList($args->cc) as $recipient) {
                     $email->addCc(new Address($recipient->email, $recipient->name));
                 }
             }
 
             // Bcc.
-            $bcc = $this->getCleanRecipientsList($args['Bcc'] ?? null);
+            $bcc = $this->getCleanRecipientsList($args->bcc);
             if ($confMail['send_bcc_mail_webmaster'] === true) {
                 $bcc[] = new EmailRecipient($this->webmasterMailAddress(), '');
             }
@@ -887,32 +890,32 @@ final class MailService implements MailerInterface
             }
 
             // Theme.
-            $args['theme'] = self::resolveMailTheme($args, $confMail);
+            $args->theme = self::resolveMailTheme($args, $confMail);
 
             // Content.
-            $args['content'] = self::resolveMailContent($args);
+            $args->content = self::resolveMailContent($args);
 
             // Try to decompose subject like "[....] ....".
-            if (! isset($args['mail_title']) && ! isset($args['mail_subtitle'])) {
-                if (preg_match('#^\[(.*)\](.*)$#', $args['subject'], $matches) === 1) {
-                    $args['mail_title'] = $matches[1];
-                    $args['mail_subtitle'] = $matches[2];
+            if ($args->mailTitle === null && $args->mailSubtitle === null) {
+                if (preg_match('#^\[(.*)\](.*)$#', $args->subject, $matches) === 1) {
+                    $args->mailTitle = $matches[1];
+                    $args->mailSubtitle = $matches[2];
                 }
             }
-            if (! isset($args['mail_title'])) {
-                $args['mail_title'] = $this->currentConfig->galleryTitle;
+            if ($args->mailTitle === null) {
+                $args->mailTitle = $this->currentConfig->galleryTitle;
             }
-            if (! isset($args['mail_subtitle'])) {
-                $args['mail_subtitle'] = $args['subject'];
+            if ($args->mailSubtitle === null) {
+                $args->mailSubtitle = $args->subject;
             }
 
             // Content type.
-            if (! isset($args['content_format']) || self::emptyValue($args['content_format'])) {
-                $args['content_format'] = 'text/plain';
+            if (self::emptyValue($args->contentFormat)) {
+                $args->contentFormat = 'text/plain';
             }
 
             $contentTypeList = [];
-            if ($confMail['mail_allow_html'] === true && ($args['email_format'] ?? null) !== 'text/plain') {
+            if ($confMail['mail_allow_html'] === true && $args->emailFormat !== 'text/plain') {
                 $contentTypeList[] = 'text/html';
             }
             $contentTypeList[] = 'text/plain';
@@ -925,16 +928,16 @@ final class MailService implements MailerInterface
                 // Key composed of indexes which allow caching mail data. Must
                 // include theme -- a real bug otherwise: the cache entry
                 // built below (css file selection at "mail-css-{theme}.tpl") depends on
-                // $args['theme'], but the key itself didn't, so two mail()
+                // $args->theme, but the key itself didn't, so two mail()
                 // calls in the same request sharing contentType/langCode/
                 // auth_key but using DIFFERENT themes would silently reuse the
                 // first call's CSS. Present identically in the legacy
                 // procedural functions_mail.inc.php and 16.x-rewrite's own
                 // MailService -- a genuine, long-standing bug carried forward
                 // across all 3 codebases, not a regression introduced here.
-                $cacheKey = $contentType . '-' . $langCode . '-' . $args['theme'];
-                if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
-                    $cacheKey .= '-' . $args['auth_key'];
+                $cacheKey = $contentType . '-' . $langCode . '-' . $args->theme;
+                if (! self::emptyValue($args->authKey)) {
+                    $cacheKey .= '-' . $args->authKey;
                 }
 
                 if (! isset($this->templateCache[$cacheKey])) {
@@ -945,8 +948,8 @@ final class MailService implements MailerInterface
                     $this->eventDispatcher->dispatch(new BeforeParseMailTemplate($cacheKey, $contentType));
 
                     $addUrlParams = [];
-                    if (isset($args['auth_key']) && ! self::emptyValue($args['auth_key'])) {
-                        $addUrlParams['auth'] = $args['auth_key'];
+                    if (! self::emptyValue($args->authKey)) {
+                        $addUrlParams['auth'] = $args->authKey;
                     }
 
                     $galleryHomeUrl = $this->urlService
@@ -968,7 +971,7 @@ final class MailService implements MailerInterface
                             $template->assignVarFromTemplate('GLOBAL_MAIL_CSS', $globalMailCssFilename);
                         }
 
-                        $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args['theme']);
+                        $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args->theme);
                         if ($themeMailCssFilename !== null) {
                             $template->assignVarFromTemplate('MAIL_CSS', $themeMailCssFilename);
                         }
@@ -977,8 +980,8 @@ final class MailService implements MailerInterface
 
                 $template = $this->templateCache[$cacheKey]['theme'];
                 $template->assignContext(new MailTitlePageContext(
-                    mailTitle: $args['mail_title'],
-                    mailSubtitle: $args['mail_subtitle'],
+                    mailTitle: $args->mailTitle,
+                    mailSubtitle: $args->mailSubtitle,
                 ));
 
                 // Header.
@@ -986,9 +989,9 @@ final class MailService implements MailerInterface
 
                 // Content -- stored in a temp variable; if a content template is
                 // used it's assigned to CONTENT, otherwise appended to the mail.
-                $contentInput = $args['content'];
+                $contentInput = $args->content;
 
-                if ($args['content_format'] === 'text/plain' && $contentType === 'text/html') {
+                if ($args->contentFormat === 'text/plain' && $contentType === 'text/html') {
                     // Convert plain text to HTML.
                     $mailContent =
                         '<p>' .
@@ -1000,7 +1003,7 @@ final class MailService implements MailerInterface
                             )
                         ) .
                         '</p>';
-                } elseif ($args['content_format'] === 'text/html' && $contentType === 'text/plain') {
+                } elseif ($args->contentFormat === 'text/html' && $contentType === 'text/plain') {
                     // Convert HTML text to plain text.
                     $mailContent = strip_tags($contentInput);
                 } else {
@@ -1008,11 +1011,11 @@ final class MailService implements MailerInterface
                 }
 
                 // Runtime template.
-                if (isset($tpl['filename'])) {
-                    $assign = (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [];
-                    $runtimeView = self::buildRuntimeTemplateView($tpl['filename'], $assign, $mailContent);
+                if ($tpl->filename !== null) {
+                    $assign = self::emptyValue($tpl->assign) ? [] : $tpl->assign;
+                    $runtimeView = self::buildRuntimeTemplateView($tpl->filename, $assign, $mailContent);
                     $contents[$contentType] .= $runtimeView instanceof View
-                        ? $template->renderView($tpl['filename'] . '.latte', $runtimeView)
+                        ? $template->renderView($tpl->filename . '.latte', $runtimeView)
                         : $mailContent;
                 } else {
                     $contents[$contentType] .= $mailContent;
@@ -1150,10 +1153,8 @@ final class MailService implements MailerInterface
      * passed through unchanged after mail()'s own normalization pass has
      * already defaulted content_format -- so, unlike that method's own
      * docblock, content_format is non-optional here.
-     *
-     * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
      */
-    public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
+    public function sendMailTest(bool $success, Email $mail, MailArgs $args, ?string $errorMessage = null): void
     {
         $dataLocation = $this->currentConfig->dataLocation;
 
@@ -1165,7 +1166,7 @@ final class MailService implements MailerInterface
             $langCode = is_string($langCode) ? $langCode : '';
 
             $filename = $dir . '/mail.' . $username . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
-            $filename .= $args['content_format'] === 'text/plain' ? '.txt' : '.html';
+            $filename .= $args->contentFormat === 'text/plain' ? '.txt' : '.html';
 
             $file = fopen($filename, 'w+');
             if ($file === false) {

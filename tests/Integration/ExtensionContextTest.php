@@ -23,6 +23,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
@@ -376,10 +377,10 @@ final class ExtensionContextTest extends IntegrationTestCase
         $spyMailService = MailServiceTestTransportSwap::with($this->containerGet(MailService::class), $spy);
         $context = $this->buildContext(PluginId::from('test-plugin'), mailService: $spyMailService);
 
-        $context->mail('someone@example.test', [
-            'subject' => 'P27.13 test',
-            'content' => 'hello from ExtensionContext::mail()',
-        ]);
+        $context->mail('someone@example.test', new MailArgs(
+            subject: 'P27.13 test',
+            content: 'hello from ExtensionContext::mail()',
+        ));
 
         if ($spy->sent === []) {
             throw new RuntimeException('expected mail() to have sent through the spy transport');

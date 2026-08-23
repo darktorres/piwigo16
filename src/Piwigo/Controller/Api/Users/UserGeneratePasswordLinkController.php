@@ -12,6 +12,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
@@ -98,7 +99,11 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
 
             // Errors from mail() are suppressed deliberately -- a
             // failed send degrades to sendByMail: false, not a 5xx.
-            $sendByMailResponse = @$this->mailService->mail($userLostEmail, $emailParams->toArray())
+            $sendByMailResponse = @$this->mailService->mail($userLostEmail, new MailArgs(
+                subject: $emailParams->subject,
+                content: $emailParams->content,
+                contentFormat: $emailParams->contentFormat,
+            ))
                 ? 'Mail sent at : ' . $userLostEmail
                 : false;
         }

@@ -10,6 +10,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\Projection\MailArgs;
+use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Image\ImageStdParams;
@@ -137,11 +139,9 @@ function mail_service_with_fake_webmaster(): MailService
  * non-null Email without its own null-narrowing boilerplate.
  *
  * @param string|array<int|string, mixed> $to
- * @param array{from?: array{email: string, name?: string}|string, reply_to_mail_address?: string, reply_to_name?: string, Cc?: array{email: string, name?: string}|string, Bcc?: array{email: string, name?: string}|string, subject?: string, content?: string, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
- * @param array{filename?: string, assign?: array<string, mixed>} $tpl
  * @return array{return: bool, email: Email}
  */
-function mail_service_capture_send(MailService $service, string|array $to, array $args = [], array $tpl = []): array
+function mail_service_capture_send(MailService $service, string|array $to, ?MailArgs $args = null, ?MailOptions $tpl = null): array
 {
     // Same "don't clobber an already-established custom root" reasoning
     // as mail_service_test_build() above.
@@ -999,11 +999,11 @@ test('mail actually appends a real, non-falsy auth_key to the generated links', 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'auth_key' => 'REAL123',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        authKey: 'REAL123',
+    ));
 
     expect($result['email']->getTextBody())->toContain('auth=REAL123');
 });
@@ -1014,10 +1014,10 @@ test('mail builds a To address for every recipient in a comma-separated list', f
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test, jane@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test, jane@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     $toAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $result['email']->getTo());
     expect($toAddresses)
@@ -1031,10 +1031,10 @@ test('mail defaults the From address to the configured mail sender email/name wh
     CurrentConfigTestFactory::get()->mailSenderName = 'Test Sender';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getFrom()[0]->getAddress())->toBe('sender@example.test');
     expect($result['email']->getFrom()[0]->getName())->toBe('Test Sender');
@@ -1046,14 +1046,14 @@ test('mail uses an explicit args[from] instead of the configured default', funct
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'from' => [
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        from: [
             'email' => 'other@example.test',
             'name' => 'Other',
         ],
-    ]);
+    ));
 
     expect($result['email']->getFrom()[0]->getAddress())->toBe('other@example.test');
     expect($result['email']->getFrom()[0]->getName())->toBe('Other');
@@ -1066,10 +1066,10 @@ test('mail defaults reply-to to the same address/name it resolved for From', fun
     CurrentConfigTestFactory::get()->mailSenderName = 'Test Sender';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getReplyTo()[0]->getAddress())->toBe('sender@example.test');
     expect($result['email']->getReplyTo()[0]->getName())->toBe('Test Sender');
@@ -1081,12 +1081,12 @@ test('mail uses explicit reply_to_mail_address/reply_to_name instead of falling 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'reply_to_mail_address' => 'reply@example.test',
-        'reply_to_name' => 'Reply Guy',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        replyToMailAddress: 'reply@example.test',
+        replyToName: 'Reply Guy',
+    ));
 
     expect($result['email']->getReplyTo()[0]->getAddress())->toBe('reply@example.test');
     expect($result['email']->getReplyTo()[0]->getName())->toBe('Reply Guy');
@@ -1098,9 +1098,9 @@ test('mail defaults the subject to exactly "Piwigo" when absent', function (): v
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        content: 'y',
+    ));
 
     expect($result['email']->getSubject())->toBe('Piwigo');
 });
@@ -1111,10 +1111,10 @@ test('mail strips embedded newlines and surrounding whitespace from the subject 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => "  Hi\r\nBcc: evil@test  ",
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: "  Hi\r\nBcc: evil@test  ",
+        content: 'y',
+    ));
 
     expect($result['email']->getSubject())->toBe('HiBcc: evil@test');
 });
@@ -1125,11 +1125,11 @@ test('mail builds a Cc address when args[Cc] is a real, non-empty value', functi
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'Cc' => 'cc@example.test',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        cc: 'cc@example.test',
+    ));
 
     expect($result['email']->getCc())->toHaveCount(1);
     expect($result['email']->getCc()[0]->getAddress())->toBe('cc@example.test');
@@ -1141,10 +1141,10 @@ test('mail adds no Cc address at all when args[Cc] is absent', function (): void
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getCc())->toBe([]);
 });
@@ -1156,11 +1156,11 @@ test('mail Bcc\'s only the explicit recipient when send_bcc_mail_webmaster is fa
     CurrentConfigTestFactory::get()->sendBccMailWebmaster = false;
     $service = mail_service_with_fake_webmaster();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'Bcc' => 'bcc@example.test',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        bcc: 'bcc@example.test',
+    ));
 
     $bccAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $result['email']->getBcc());
     expect($bccAddresses)
@@ -1174,10 +1174,10 @@ test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, ev
     CurrentConfigTestFactory::get()->sendBccMailWebmaster = true;
     $service = mail_service_with_fake_webmaster();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     $bccAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $result['email']->getBcc());
     expect($bccAddresses)
@@ -1195,7 +1195,7 @@ test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, ev
 test('resolveMailTheme replaces an unset theme with the configured mail_theme', function (): void {
     $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    expect($resolveMailTheme->invoke(null, [], [
+    expect($resolveMailTheme->invoke(null, new MailArgs(), [
         'mail_theme' => 'dark',
     ]))
         ->toBe('dark');
@@ -1204,9 +1204,9 @@ test('resolveMailTheme replaces an unset theme with the configured mail_theme', 
 test('resolveMailTheme replaces an invalid theme with the configured mail_theme instead of leaving it as-is', function (): void {
     $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    expect($resolveMailTheme->invoke(null, [
-        'theme' => 'bogus',
-    ], [
+    expect($resolveMailTheme->invoke(null, new MailArgs(
+        theme: 'bogus',
+    ), [
         'mail_theme' => 'dark',
     ]))
         ->toBe('dark');
@@ -1215,9 +1215,9 @@ test('resolveMailTheme replaces an invalid theme with the configured mail_theme 
 test('resolveMailTheme preserves an explicit, valid theme ("clear")', function (): void {
     $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    expect($resolveMailTheme->invoke(null, [
-        'theme' => 'clear',
-    ], [
+    expect($resolveMailTheme->invoke(null, new MailArgs(
+        theme: 'clear',
+    ), [
         'mail_theme' => 'dark',
     ]))
         ->toBe('clear');
@@ -1226,9 +1226,9 @@ test('resolveMailTheme preserves an explicit, valid theme ("clear")', function (
 test('resolveMailTheme preserves an explicit, valid theme ("dark")', function (): void {
     $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    expect($resolveMailTheme->invoke(null, [
-        'theme' => 'dark',
-    ], [
+    expect($resolveMailTheme->invoke(null, new MailArgs(
+        theme: 'dark',
+    ), [
         'mail_theme' => 'clear',
     ]))
         ->toBe('dark');
@@ -1242,23 +1242,23 @@ test('resolveMailTheme falls back to "clear" when mail_theme itself is not a rea
     // method has no way to know that) was never exercised.
     $resolveMailTheme = new ReflectionMethod(MailService::class, 'resolveMailTheme');
 
-    expect($resolveMailTheme->invoke(null, [], []))
+    expect($resolveMailTheme->invoke(null, new MailArgs(), []))
         ->toBe('clear');
 });
 
 test('resolveMailContent defaults to an empty string when the key is entirely absent', function (): void {
     $resolveMailContent = new ReflectionMethod(MailService::class, 'resolveMailContent');
 
-    expect($resolveMailContent->invoke(null, []))
+    expect($resolveMailContent->invoke(null, new MailArgs()))
         ->toBe('');
 });
 
 test('resolveMailContent preserves an explicit, non-empty content value', function (): void {
     $resolveMailContent = new ReflectionMethod(MailService::class, 'resolveMailContent');
 
-    expect($resolveMailContent->invoke(null, [
-        'content' => 'hello',
-    ]))
+    expect($resolveMailContent->invoke(null, new MailArgs(
+        content: 'hello',
+    )))
         ->toBe('hello');
 });
 
@@ -1269,10 +1269,10 @@ test('mail decomposes a "[Title] Subtitle" subject into mail_title/mail_subtitle
     CurrentConfigTestFactory::get()->galleryTitle = 'My Gallery';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => '[Foo] Bar baz',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: '[Foo] Bar baz',
+        content: 'y',
+    ));
 
     expect($result['email']->getTextBody())->toContain("Foo\n Bar baz");
 });
@@ -1284,11 +1284,11 @@ test('mail does not decompose the subject when mail_title was already explicitly
     CurrentConfigTestFactory::get()->galleryTitle = 'My Gallery';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => '[Foo] Bar baz',
-        'content' => 'y',
-        'mail_title' => 'PresetTitle',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: '[Foo] Bar baz',
+        content: 'y',
+        mailTitle: 'PresetTitle',
+    ));
 
     // Since mail_title is preset, the decomposition guard's own `&&` never
     // runs at all; mail_subtitle (still unset) falls through to its own
@@ -1311,10 +1311,10 @@ test('mail includes the html part only when mail_allow_html is true and email_fo
     ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getHtmlBody())->not->toBeNull();
 });
@@ -1326,11 +1326,11 @@ test('mail omits the html part when mail_allow_html is true but email_format exp
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'email_format' => 'text/plain',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        emailFormat: 'text/plain',
+    ));
 
     expect($result['email']->getHtmlBody())->toBeNull();
 });
@@ -1342,10 +1342,10 @@ test('mail omits the html part entirely when mail_allow_html is false', function
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getHtmlBody())->toBeNull();
 });
@@ -1361,10 +1361,10 @@ test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, 
     ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => "Line one & <tag>\nLine two https://example.test/path more text",
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: "Line one & <tag>\nLine two https://example.test/path more text",
+    ));
 
     // A single exact fragment proves htmlspecialchars() escaping the raw
     // '&'/'<tag>' BEFORE link-ification runs (not after, which would
@@ -1388,11 +1388,11 @@ test('mail converts a text/html content into plain text (tags stripped) for the 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => '<strong>Bold</strong> text',
-        'content_format' => 'text/html',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: '<strong>Bold</strong> text',
+        contentFormat: 'text/html',
+    ));
 
     expect($result['email']->getTextBody())->toContain('Bold text');
     expect($result['email']->getTextBody())->not->toContain('<strong>');
@@ -1406,10 +1406,10 @@ test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/APP_URL/CONTACT_
     CurrentConfigTestFactory::get()->showVersion = true;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
     $body = $result['email']->getTextBody();
 
     expect($body)
@@ -1429,10 +1429,10 @@ test('mail omits the version number entirely from the footer when show_version i
     CurrentConfigTestFactory::get()->showVersion = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getTextBody())->toContain('Powered by "Piwigo" ')
         ->and($result['email']->getTextBody())->not->toContain('17.0.0');
@@ -1449,10 +1449,10 @@ test('mail assigns the real CONTENT_ENCODING charset into the html header\'s met
     ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getHtmlBody())->toContain('charset=utf-8');
 });
@@ -1479,10 +1479,10 @@ test('mail fires the before_parse_mail_template event with the real cache key an
     };
     EventDispatcherTestFactory::get()->addTypedHandler(BeforeParseMailTemplate::class, $handler);
     try {
-        mail_service_capture_send($service, 'bob@example.test', [
-            'subject' => 'x',
-            'content' => 'y',
-        ]);
+        mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+            subject: 'x',
+            content: 'y',
+        ));
     } finally {
         EventDispatcherTestFactory::get()->removeTypedHandler(BeforeParseMailTemplate::class, $handler);
     }
@@ -1499,16 +1499,16 @@ test('mail keys its per-request template cache by auth_key too, not reusing one 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result1 = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'auth_key' => 'AAA',
-    ]);
-    $result2 = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'auth_key' => 'BBB',
-    ]);
+    $result1 = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        authKey: 'AAA',
+    ));
+    $result2 = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        authKey: 'BBB',
+    ));
 
     expect($result1['email']->getTextBody())->toContain('auth=AAA')
         ->and($result1['email']->getTextBody())->not->toContain('auth=BBB')
@@ -1545,11 +1545,11 @@ test('mail keeps the html and plain-text cache entries of the SAME call separate
     ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'auth_key' => 'ZZZ',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        authKey: 'ZZZ',
+    ));
 
     expect($result['email']->getTextBody())->not->toContain('<html')
         ->and($result['email']->getTextBody())->not->toContain('<!DOCTYPE')
@@ -1566,19 +1566,19 @@ test('mail keys its per-request template cache by lang_info[code] too, not reusi
         'code' => 'en',
         'direction' => 'ltr',
     ]);
-    $result1 = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result1 = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     LangTestFactory::get()->setLangInfo([
         'code' => 'ar',
         'direction' => 'rtl',
     ]);
-    $result2 = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result2 = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result1['email']->getHtmlBody())->toContain('dir="ltr"');
     expect($result2['email']->getHtmlBody())->toContain('dir="rtl"');
@@ -1600,16 +1600,16 @@ test('mail keys its per-request template cache by theme too, not reusing one the
     ]);
     $service = mail_service_test_build();
 
-    $clearResult = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'theme' => 'clear',
-    ]);
-    $darkResult = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-        'theme' => 'dark',
-    ]);
+    $clearResult = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        theme: 'clear',
+    ));
+    $darkResult = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+        theme: 'dark',
+    ));
 
     $clearHtmlBody = $clearResult['email']->getHtmlBody();
     $darkHtmlBody = $darkResult['email']->getHtmlBody();
@@ -1639,10 +1639,10 @@ test('mail inlines the global mail CSS into the html part\'s elements, on top of
     ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getHtmlBody())->toContain('Verdana');
 });
@@ -1653,10 +1653,10 @@ test('mail computes GALLERY_URL as a genuine absolute URL (setMakeFullUrl active
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getTextBody())->toMatch('/Sent by "[^"]*" http/');
 });
@@ -1668,10 +1668,10 @@ test('mail Bcc\'s the webmaster with an explicitly empty name, not a null/missin
     CurrentConfigTestFactory::get()->sendBccMailWebmaster = true;
     $service = mail_service_with_fake_webmaster();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x',
-        'content' => 'y',
-    ]);
+    $result = mail_service_capture_send($service, 'bob@example.test', new MailArgs(
+        subject: 'x',
+        content: 'y',
+    ));
 
     expect($result['email']->getBcc()[0]->getName())->toBe('');
 });
@@ -1698,10 +1698,10 @@ test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" s
 
     try {
         $service = mail_service_test_build();
-        $service->mail('bob@example.test', [
-            'subject' => 'x',
-            'content' => 'y',
-        ]);
+        $service->mail('bob@example.test', new MailArgs(
+            subject: 'x',
+            content: 'y',
+        ));
     } finally {
         restore_error_handler();
     }
@@ -1721,10 +1721,10 @@ test('mail actually reaches a real Transport and sends when no before_send_mail 
 
     try {
         $service = mail_service_test_build();
-        $ret = $service->mail('bob@example.test', [
-            'subject' => 'x',
-            'content' => 'y',
-        ]);
+        $ret = $service->mail('bob@example.test', new MailArgs(
+            subject: 'x',
+            content: 'y',
+        ));
 
         // A default `true` `before_send_mail` result (no listener attached)
         // and $ret's own `true` initial value would be indistinguishable
@@ -1763,10 +1763,10 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
 
     try {
         $service = mail_service_test_build();
-        $ret = $service->mail('bob@example.test', [
-            'subject' => 'x',
-            'content' => 'y',
-        ]);
+        $ret = $service->mail('bob@example.test', new MailArgs(
+            subject: 'x',
+            content: 'y',
+        ));
 
         expect($ret)
             ->toBeFalse();

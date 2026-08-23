@@ -393,6 +393,14 @@ final readonly class PictureController implements ControllerInterface
         if ($current_rank !== $last_rank) {
             // caching next & last item : readability purpose
             $next_item = $items[$current_rank + 1];
+            /**
+             * @psalm-suppress InvalidArrayOffset $last_rank = count($items) - 1
+             *   is only ever -1 if $items is empty, but $rank_of[$image_id]
+             *   being isset (see the comment above $current_rank) already
+             *   guarantees $items contains at least $image_id's own entry --
+             *   Psalm can't trace that guarantee from a check on a
+             *   different variable ($rank_of, not $items) through to here.
+             */
             $last_item = $items[$last_rank];
         }
 
@@ -1180,6 +1188,13 @@ final readonly class PictureController implements ControllerInterface
             foreach ($related_categories as $category) {
                 $cats = [];
                 foreach (explode(',', $category->uppercats) as $id) {
+                    /**
+                     * @psalm-suppress InvalidArrayOffset $id is a numeric
+                     *   category id fragment from explode(), kept as a
+                     *   string; PHP canonicalises it back to an int array
+                     *   key at runtime regardless of Psalm's own static
+                     *   string typing here.
+                     */
                     $cats[] = $cat_map[$id];
                 }
                 $related_categories_display[] = $this->htmlService->getCatDisplayName($cats);

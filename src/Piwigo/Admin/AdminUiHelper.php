@@ -78,6 +78,12 @@ final class AdminUiHelper
         }
 
         $decimals = 1;
+        /**
+         * @psalm-suppress InvalidArrayOffset $index is clamped back into
+         *   $readable's own 3-element bound by the `$index--; break;` above
+         *   whenever the loop would otherwise overshoot it; Psalm doesn't
+         *   trace that loop-internal clamp through to here.
+         */
         if ($readable[$index] === '') {
             $decimals = 0;
         }

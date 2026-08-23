@@ -184,7 +184,7 @@ final class PageState
      * object would be stored by reference and could reflect a *later*
      * mutation instead of the value true at declaration time.
      *
-     * @param array<mixed> $value
+     * @param array<array-key, mixed>|string|int|float|bool|null $value
      */
     public function exposeData(string $key, string|int|float|bool|null|array $value): void
     {

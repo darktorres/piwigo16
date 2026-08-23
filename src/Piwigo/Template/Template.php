@@ -1257,7 +1257,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * docs/PLAN.md's P37 section for why the two functions below match
      * this method's own registration shape, not that one's).
      *
-     * @param array<mixed> $value
+     * @param array<array-key, mixed>|string|int|float|bool|null $value
      */
     public function exposeData(string $key, string|int|float|bool|null|array $value): void
     {

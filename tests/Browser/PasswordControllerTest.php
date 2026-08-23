@@ -315,7 +315,9 @@ function passwordSessionData(string $pwgIdCookieValue): string
     $row = H::dbFetchAssoc($db, sprintf("SELECT data FROM sessions WHERE id LIKE '%%%s'", H::dbEscape($db, $pwgIdCookieValue)));
     H::dbClose($db);
 
-    return is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
+    $data = is_array($row) ? $row['data'] ?? null : null;
+
+    return is_string($data) ? $data : '';
 }
 
 /**

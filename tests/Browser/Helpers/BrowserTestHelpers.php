@@ -1841,7 +1841,9 @@ final class BrowserTestHelpers
         $row = self::dbFetchAssoc($db, sprintf("SELECT value FROM config WHERE param = '%s'", self::dbEscape($db, $param)));
         self::dbClose($db);
 
-        return is_array($row) && is_string($row['value'] ?? null) ? $row['value'] : null;
+        $value = is_array($row) ? $row['value'] ?? null : null;
+
+        return is_string($value) ? $value : null;
     }
 
     /**
@@ -1858,7 +1860,9 @@ final class BrowserTestHelpers
         $row = self::dbFetchAssoc($db, sprintf('SELECT theme FROM user_infos WHERE user_id = %d', $userId));
         self::dbClose($db);
 
-        return is_array($row) && is_string($row['theme'] ?? null) ? $row['theme'] : null;
+        $theme = is_array($row) ? $row['theme'] ?? null : null;
+
+        return is_string($theme) ? $theme : null;
     }
 
     /**

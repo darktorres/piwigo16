@@ -326,6 +326,12 @@ final class CatModifyPageRenderer
             $database_dirs[$dir_row_id] = $dir ?? '';
         }
         foreach ($upper_array as $id) {
+            /**
+             * @psalm-suppress InvalidArrayOffset $id is a numeric category
+             *   id fragment from explode(), kept as a string; PHP
+             *   canonicalises it back to an int array key at runtime
+             *   regardless of Psalm's own static string typing here.
+             */
             $local_dir .= ($database_dirs[$id] ?? '') . '/';
         }
 
@@ -339,6 +345,14 @@ final class CatModifyPageRenderer
     private function getSiteUrl(int $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
     {
         $siteGalleriesUrlLookup = $entityManager->getRepository(SiteEntity::class);
+        /**
+         * @psalm-suppress InvalidArgument getRepository() always really
+         *   returns SiteEntity's own custom repositoryClass at runtime
+         *   (SiteRepository), which implements
+         *   SiteGalleriesUrlLookupInterface; Psalm's Doctrine plugin
+         *   doesn't narrow getRepository()'s return type per-entity's own
+         *   repositoryClass binding, only the generic EntityRepository<T>.
+         */
         $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id, $siteGalleriesUrlLookup);
         if ($galleries_url === null) {
             throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");

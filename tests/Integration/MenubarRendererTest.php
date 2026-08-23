@@ -202,6 +202,14 @@ final class MenubarRendererTest extends IntegrationTestCase
     public function testRenderAssignsAStopFilterLinkWhenTheRecentFilterIsActive(): void
     {
         CurrentConfigTestFactory::get()->menubarFilterIcon = true;
+        /**
+         * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's
+         *   own PHP 8.4 property-hook properties each have a `set(...)`
+         *   hook doing real sanitization/conversion (here: raw array ->
+         *   PageFilterFlags::fromArray()) before storage; Psalm checks an
+         *   assignment against the property's own declared/hooked type,
+         *   not the hook's own looser accepted input shape.
+         */
         CurrentConfigTestFactory::get()->filterPages = [
             'default' => [
                 'used' => true,
@@ -221,6 +229,14 @@ final class MenubarRendererTest extends IntegrationTestCase
     public function testRenderAssignsAStartFilterLinkWithTheUsersRecentPeriodWhenTheFilterIsInactive(): void
     {
         CurrentConfigTestFactory::get()->menubarFilterIcon = true;
+        /**
+         * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's
+         *   own PHP 8.4 property-hook properties each have a `set(...)`
+         *   hook doing real sanitization/conversion (here: raw array ->
+         *   PageFilterFlags::fromArray()) before storage; Psalm checks an
+         *   assignment against the property's own declared/hooked type,
+         *   not the hook's own looser accepted input shape.
+         */
         CurrentConfigTestFactory::get()->filterPages = [
             'default' => [
                 'used' => true,

@@ -181,6 +181,15 @@ final class PasswordController implements ControllerInterface
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $key_value = $key;
+                /**
+                 * @psalm-suppress InvalidArgument getRepository() always
+                 *   really returns ActivityEntity's own custom
+                 *   repositoryClass at runtime (ActivityRepository), which
+                 *   implements LoginActivityLookupInterface; Psalm's
+                 *   Doctrine plugin doesn't narrow getRepository()'s
+                 *   return type per-entity's own repositoryClass binding,
+                 *   only the generic EntityRepository<T>.
+                 */
                 $first_login = $this->authService->hasAlreadyLoggedIn($user_id, $this->entityManager->getRepository(ActivityEntity::class));
 
                 if ($this->action === null) {

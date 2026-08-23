@@ -37,6 +37,13 @@ function pageFilterHelperTestRestoreServerKeys(array $saved): void
 {
     foreach ($saved as $key => $value) {
         if ($value === null) {
+            /**
+             * @psalm-suppress InvalidArrayOffset Psalm's $_SERVER
+             *   superglobal stub is typed more pessimistically than
+             *   reality (non-empty-string keys only); $key always comes
+             *   from a real $_SERVER key captured elsewhere in this file,
+             *   never an empty string.
+             */
             unset($_SERVER[$key]);
         } else {
             $_SERVER[$key] = $value;
@@ -137,6 +144,14 @@ test('getFilterPageValue returns null when neither the page nor the default entr
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's own
+     *   PHP 8.4 property-hook properties each have a `set(...)` hook doing
+     *   real sanitization/conversion (here: raw array ->
+     *   PageFilterFlags::fromArray()) before storage; Psalm checks an
+     *   assignment against the property's own declared/hooked type, not
+     *   the hook's own looser accepted input shape.
+     */
     CurrentConfigTestFactory::get()->filterPages = [
         'picture' => [
             'show_thumbnail_caption' => true,
@@ -164,6 +179,14 @@ test('getFilterPageValue returns the page-specific value when configured, fallin
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's own
+     *   PHP 8.4 property-hook properties each have a `set(...)` hook doing
+     *   real sanitization/conversion (here: raw array ->
+     *   PageFilterFlags::fromArray()) before storage; Psalm checks an
+     *   assignment against the property's own declared/hooked type, not
+     *   the hook's own looser accepted input shape.
+     */
     CurrentConfigTestFactory::get()->filterPages = [
         'picture' => [
             'show_thumbnail_caption' => true,

@@ -271,11 +271,12 @@ function actionImagePath(int $imageId): string
     $db = actionDbConnect();
     $row = H::dbFetchAssoc($db, sprintf('SELECT path FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
-    if (! is_array($row) || ! is_string($row['path'] ?? null)) {
+    $path = is_array($row) ? $row['path'] ?? null : null;
+    if (! is_string($path)) {
         throw new RuntimeException("actionImagePath(): no path found for image {$imageId}");
     }
 
-    return $row['path'];
+    return $path;
 }
 
 /**

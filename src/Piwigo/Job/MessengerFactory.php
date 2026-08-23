@@ -59,6 +59,11 @@ final class MessengerFactory
      * this always really is a DoctrineTransport, which also implements
      * MessageCountAwareInterface (used by the round-trip integration
      * test to assert the transport's queue depth directly).
+     *
+     * @psalm-suppress InvalidReturnType Psalm doesn't resolve
+     *   DoctrineTransportFactory's own generic template (see above)
+     *   through createTransport()'s interface-declared TransportInterface
+     *   return type the way PHPStan does.
      */
     public static function transport(DbalConnection $connection, Paths $paths): TransportInterface&MessageCountAwareInterface
     {
@@ -103,6 +108,7 @@ final class MessengerFactory
             }
         };
 
+        /** @psalm-suppress InvalidReturnStatement see this method's own @psalm-suppress InvalidReturnType above */
         return new DoctrineTransportFactory($registry)
             ->createTransport(
                 'doctrine://default',

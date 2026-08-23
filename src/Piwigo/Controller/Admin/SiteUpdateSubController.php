@@ -268,6 +268,15 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             // get categort full directories in an array for comparison with file
             // system directory tree
             $siteGalleriesUrlLookup = $this->entityManager->getRepository(SiteEntity::class);
+            /**
+             * @psalm-suppress InvalidArgument getRepository() always really
+             *   returns SiteEntity's own custom repositoryClass at runtime
+             *   (SiteRepository), which implements
+             *   SiteGalleriesUrlLookupInterface; Psalm's Doctrine plugin
+             *   doesn't narrow getRepository()'s return type per-entity's
+             *   own repositoryClass binding, only the generic
+             *   EntityRepository<T>.
+             */
             $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)), $siteGalleriesUrlLookup);
 
             // what is the base directory to search file system sub-directories ?
@@ -365,6 +374,12 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                             $insert['visible'] = false;
                         }
                     } else {
+                        // No parent for this iteration's $fulldir -- $parent
+                        // is only assigned in the branch above, so it must be
+                        // reset here too, otherwise a later iteration's own
+                        // "no parent" case would silently inherit whichever
+                        // parent id an earlier iteration last assigned.
+                        $parent = null;
                         $insert['uppercats'] = $insert['id'];
                         $insert['rank'] = $next_rank['NULL']++;
                         $insert['global_rank'] = $insert['rank'];
@@ -380,7 +395,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                     $db_categories[$insert['id']] =
                       [
                           'id' => $insert['id'],
-                          'parent' => $parent ?? null,
+                          'parent' => $parent,
                           'status' => $insert['status'],
                           'visible' => $insert['visible'],
                           'uppercats' => $insert['uppercats'],

@@ -76,6 +76,14 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // 'used'=true (real default) + 'add_notes'=true, forced directly
         // rather than depending on PageFilterHelper::scriptBasename()'s own
         // $_SERVER-based page-name resolution in a CLI test process.
+        /**
+         * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's
+         *   own PHP 8.4 property-hook properties each have a `set(...)`
+         *   hook doing real sanitization/conversion (here: raw array ->
+         *   PageFilterFlags::fromArray()) before storage; Psalm checks an
+         *   assignment against the property's own declared/hooked type,
+         *   not the hook's own looser accepted input shape.
+         */
         $currentConfig->filterPages = [
             'default' => [
                 'used' => true,
@@ -261,6 +269,14 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
+        /**
+         * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's
+         *   own PHP 8.4 property-hook properties each have a `set(...)`
+         *   hook doing real sanitization/conversion (here: raw array ->
+         *   PageFilterFlags::fromArray()) before storage; Psalm checks an
+         *   assignment against the property's own declared/hooked type,
+         *   not the hook's own looser accepted input shape.
+         */
         $currentConfig->filterPages = [
             'default' => [
                 'used' => true,

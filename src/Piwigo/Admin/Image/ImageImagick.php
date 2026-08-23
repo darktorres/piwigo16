@@ -116,6 +116,25 @@ final class ImageImagick implements ImageInterface
         // request for a derivative with a configured sharpen level fatally
         // errored instead of degrading.
         $m = ImageBackend::getSharpenMatrix($amount);
+        /**
+         * @psalm-suppress TooFewArguments The bundled jetbrains/phpstorm-stubs
+         *   ImagickKernel::fromMatrix() declares $origin as a required 2nd
+         *   param, but this environment's real ext-imagick reflection
+         *   confirms the actual signature is
+         *   `fromMatrix(array $matrix, ?array $origin = null)`.
+         * @psalm-suppress InvalidArgument The bundled stub also types
+         *   Imagick::convolveImage()'s $kernel param as bare `array`, but
+         *   real ext-imagick 3.5+ requires an ImagickKernel object (see
+         *   this method's own comment above). Both are the bundled-stub
+         *   gaps phpstan-stubs/Imagick.stub.php already carries corrected
+         *   signatures for, via PHPStan's stubFiles: (which patches
+         *   individual members) -- Psalm's <stubs> loading doesn't merge
+         *   member-by-member across two files declaring the same class
+         *   (verified; a second declaration is simply ignored regardless
+         *   of load order), so patching just these methods here would
+         *   require fully re-declaring the entire bundled Imagick/
+         *   ImagickKernel API instead.
+         */
         return $this->image->convolveImage(ImagickKernel::fromMatrix($m));
     }
 

@@ -588,9 +588,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * instead of one `countForImage()` call per thumbnail).
      *
      * @param  list<int|string>  $imageIds
-     * @return array<int, int> keyed by image id -- PHP canonicalises a
-     *   numeric-string array key back to an int key, so this is always
-     *   int-keyed at runtime regardless of $imageIds' own element types.
+     * @return array<int, int> keyed by image id
      */
     #[Override]
     public function countValidatedByImageIds(array $imageIds): array
@@ -620,7 +618,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             $imageId = $row['imageId'] ?? null;
             $nbComments = $row['nbComments'] ?? null;
             if ($imageId instanceof ImageId && is_numeric($nbComments)) {
-                $byImageId[(string) $imageId->value] = (int) $nbComments;
+                $byImageId[$imageId->value] = (int) $nbComments;
             }
         }
 

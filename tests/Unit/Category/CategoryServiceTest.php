@@ -1158,6 +1158,14 @@ test('updatePath() rewrites image paths for storage-linked categories', function
         $conn->executeStatement("UPDATE categories SET dir = 'sample-album', site_id = 1 WHERE id = 1");
         $conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
+        /**
+         * @psalm-suppress InvalidArgument getRepository() always really
+         *   returns SiteEntity's own custom repositoryClass at runtime
+         *   (SiteRepository), which implements
+         *   SiteGalleriesUrlLookupInterface; Psalm's Doctrine plugin
+         *   doesn't narrow getRepository()'s return type per-entity's own
+         *   repositoryClass binding, only the generic EntityRepository<T>.
+         */
         categoryServiceTestService()
             ->updatePath(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class));
 

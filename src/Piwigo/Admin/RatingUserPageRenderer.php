@@ -178,6 +178,13 @@ final class RatingUserPageRenderer
 
         // filter
         foreach ($by_user_ratings as $id => $rating) {
+            /**
+             * @psalm-suppress InvalidArrayOffset Psalm loses the
+             *   'count'/'avg'/'cv'/'cd'/'cdtop' keys the by-ref foreach
+             *   above merged into every $by_user_ratings entry via
+             *   `$rating += [...]` -- a known by-ref-narrowing gap, not a
+             *   real missing key.
+             */
             if ($rating['count'] <= $filter_min_rates) {
                 unset($by_user_ratings[$id]);
             }
@@ -199,6 +206,11 @@ final class RatingUserPageRenderer
 
         $order_by_options = [];
         for ($i = 0; $i < count($available_order_by); $i++) {
+            /**
+             * @psalm-suppress InvalidArrayOffset Psalm can't prove $i stays
+             *   within $available_order_by's own literal 5-element bound
+             *   through a `count()`-based loop condition.
+             */
             $order_by_options[] = $available_order_by[$i][0];
         }
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);

@@ -248,6 +248,15 @@ namespace Piwigo\Tests\Integration {
             // Fixture user 4 (power_user) -- see this suite's own
             // fixture-shape memory notes; no login-activity rows exist for
             // it in the fixture, so countLoginActivity() === 0.
+            /**
+             * @psalm-suppress InvalidArgument getRepository() always really
+             *   returns ActivityEntity's own custom repositoryClass at
+             *   runtime (ActivityRepository), which implements
+             *   LoginActivityLookupInterface; Psalm's Doctrine plugin
+             *   doesn't narrow getRepository()'s return type per-entity's
+             *   own repositoryClass binding, only the generic
+             *   EntityRepository<T>.
+             */
             self::assertTrue($this->service->hasAlreadyLoggedIn(4, EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)));
         }
 
@@ -500,7 +509,11 @@ namespace Piwigo\Tests\Integration {
                 $count = $this->conn->fetchOne('SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1');
                 self::assertIsNumeric($count);
 
-                return $count;
+                // PHPStan already narrows $count to int here; Psalm only
+                // narrows assertIsNumeric() to `numeric`, so the cast
+                // stays for Psalm's sake.
+                // @phpstan-ignore cast.useless
+                return (int) $count;
             };
 
             $before = $countFailedLoginsForFixtureAdmin();
@@ -591,7 +604,11 @@ namespace Piwigo\Tests\Integration {
                 $count = $this->conn->fetchOne('SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1');
                 self::assertIsNumeric($count);
 
-                return $count;
+                // PHPStan already narrows $count to int here; Psalm only
+                // narrows assertIsNumeric() to `numeric`, so the cast
+                // stays for Psalm's sake.
+                // @phpstan-ignore cast.useless
+                return (int) $count;
             };
 
             try {

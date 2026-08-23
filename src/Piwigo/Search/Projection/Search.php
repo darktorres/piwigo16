@@ -74,7 +74,15 @@ final readonly class Search
             return null;
         }
 
-        return array_filter(ArrayHelper::safeJsonDecode($rulesRaw), is_string(...), ARRAY_FILTER_USE_KEY);
+        /**
+         * @var array<string, mixed> $decoded Psalm can't narrow
+         *   array_filter()'s key type from the ARRAY_FILTER_USE_KEY mode
+         *   + is_string() callback the way PHPStan does; this is exactly
+         *   what it filters down to at runtime.
+         */
+        $decoded = array_filter(ArrayHelper::safeJsonDecode($rulesRaw), is_string(...), ARRAY_FILTER_USE_KEY);
+
+        return $decoded;
     }
 
     /**

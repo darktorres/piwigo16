@@ -616,6 +616,14 @@ function upload_service_unset_key(array &$superglobal, string $key): void
 }
 
 test('addUploadError initializes uploads_error when it is missing or not an array', function (): void {
+    /**
+     * @psalm-suppress NullReference Same $_SESSION-narrowing gap as this
+     *   file's own project-wide test-suppression precedent: Psalm's
+     *   $_SESSION superglobal stub is typed more pessimistically than
+     *   runtime reality, this time via a by-ref helper
+     *   (upload_service_unset_key(), see its own header comment) rather
+     *   than a direct assignment.
+     */
     upload_service_unset_key($_SESSION, 'uploads_error');
     $service = upload_service_test_make();
 

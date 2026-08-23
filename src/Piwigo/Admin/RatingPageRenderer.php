@@ -108,6 +108,11 @@ final class RatingPageRenderer
 
         $order_by_options = [];
         for ($i = 0; $i < count($available_order_by); $i++) {
+            /**
+             * @psalm-suppress InvalidArrayOffset Psalm can't prove $i stays
+             *   within $available_order_by's own literal 8-element bound
+             *   through a `count()`-based loop condition.
+             */
             $order_by_options[] = $available_order_by[$i][0];
         }
         $user_options = [

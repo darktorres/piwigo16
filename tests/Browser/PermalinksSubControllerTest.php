@@ -39,7 +39,9 @@ function permalinksCategoryPermalink(mysqli|Connection $db, int $catId): ?string
 {
     $row = H::dbFetchAssoc($db, sprintf('SELECT permalink FROM categories WHERE id = %d', $catId));
 
-    return is_array($row) && is_string($row['permalink'] ?? null) ? $row['permalink'] : null;
+    $permalink = is_array($row) ? $row['permalink'] ?? null : null;
+
+    return is_string($permalink) ? $permalink : null;
 }
 
 /**

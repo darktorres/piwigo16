@@ -352,6 +352,13 @@ final class AlbumsPageRenderer
             // column's own real int|bool runtime type.
             $orderedCat['visible'] = SqlDialect::booleanToString((bool) $cat_row['visible']);
             $orderedCat['uppercats'] = is_scalar($cat_row_uppercats) ? (string) $cat_row_uppercats : '';
+            /**
+             * @psalm-suppress InvalidArrayOffset $cat_id is a numeric
+             *   category id kept as a string (see the cast above, for the
+             *   int|numeric-string DBAL/mysqli parity reasoning); PHP
+             *   canonicalises it back to an int array key at runtime
+             *   regardless of Psalm's own static string typing here.
+             */
             $orderedCat['nb_images'] = $nb_photos_in[$cat_id] ?? 0;
             // Always a DateHelper::timeSince() string by the time it reaches
             // here (reassigned above, before $album was stored into the

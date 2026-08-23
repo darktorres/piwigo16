@@ -135,6 +135,15 @@ test('setAvailablePermissionLevels falls back to the hardcoded default set when 
 });
 
 test('setDefaultFiltersViews replaces only well-shaped entries, falling back per-key for anything else', function (): void {
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's own
+     *   PHP 8.4 property-hook properties each have a `set(...)` hook doing
+     *   real sanitization/conversion before storage; Psalm checks an
+     *   assignment against the property's own declared/hooked type, not
+     *   the hook's own looser accepted input shape -- this test's whole
+     *   point is feeding a deliberately malformed entry in to verify the
+     *   hook falls back per-key correctly.
+     */
     CurrentConfigTestFactory::get()->defaultFiltersViews = [
         'words' => [
             'access' => 'admin_only',
@@ -153,6 +162,10 @@ test('setDefaultFiltersViews replaces only well-shaped entries, falling back per
 });
 
 test('setRandomIndexRedirect keeps only scalar values, stringified, keyed by stringified key', function (): void {
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue same property-hook
+     *   sanitization reasoning as the defaultFiltersViews test above.
+     */
     CurrentConfigTestFactory::get()->randomIndexRedirect = [
         'random' => 'random.php',
         7 => 42,

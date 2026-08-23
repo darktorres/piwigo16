@@ -646,6 +646,11 @@ final class ImageStdParams
     /**
      * Build 'type_map', 'all_type_map' and 'undefined_type_map'.
      */
+    /**
+     * @psalm-suppress InvalidArrayOffset Psalm can't prove $i/$j stay
+     *   within ALL_TYPES' own literal 11-element bound through a
+     *   `count()`-based loop condition.
+     */
     private function buildMaps(): void
     {
         foreach ($this->type_map as $type => $params) {

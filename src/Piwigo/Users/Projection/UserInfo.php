@@ -79,6 +79,15 @@ final readonly class UserInfo
     public static function fromRow(array $row): self
     {
         $preferencesRaw = $row['preferences'] ?? null;
+        /**
+         * @var array<string, mixed>|null $preferences Psalm can't narrow
+         *   array_filter()'s key type from the ARRAY_FILTER_USE_KEY mode
+         *   + is_string() callback the way PHPStan does; this is exactly
+         *   what it filters down to at runtime.
+         */
+        $preferences = is_string($preferencesRaw)
+            ? array_filter(ArrayHelper::safeJsonDecode($preferencesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
+            : null;
 
         $userId = UserId::tryFrom($row['user_id'] ?? null);
         if (! $userId instanceof UserId) {
@@ -115,9 +124,7 @@ final readonly class UserInfo
             lastmodified: ($row['lastmodified'] ?? null) instanceof SqlDateTime
                 ? $row['lastmodified']->value
                 : (is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : ''),
-            preferences: is_string($preferencesRaw)
-                ? array_filter(ArrayHelper::safeJsonDecode($preferencesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
-                : null,
+            preferences: $preferences,
         );
     }
 

@@ -132,8 +132,9 @@ function suImageTagNames(int $imageId): array
     $fetchedRows = H::dbFetchAll($db, sprintf('SELECT t.name FROM tags t INNER JOIN image_tag it ON it.tag_id = t.id WHERE it.image_id = %d ORDER BY t.name', $imageId));
     $names = [];
     foreach ($fetchedRows as $row) {
-        if (is_string($row['name'] ?? null)) {
-            $names[] = $row['name'];
+        $name = $row['name'] ?? null;
+        if (is_string($name)) {
+            $names[] = $name;
         }
     }
     H::dbClose($db);

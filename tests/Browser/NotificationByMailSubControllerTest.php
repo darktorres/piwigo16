@@ -75,7 +75,9 @@ function nbmUserMailAddress(int $userId): ?string
     $row = H::dbFetchAssoc($db, sprintf('SELECT mail_address FROM users WHERE id = %d', $userId));
     H::dbClose($db);
 
-    return is_array($row) && is_string($row['mail_address'] ?? null) ? $row['mail_address'] : null;
+    $mailAddress = is_array($row) ? $row['mail_address'] ?? null : null;
+
+    return is_string($mailAddress) ? $mailAddress : null;
 }
 
 function nbmSetUserMailAddress(int $userId, ?string $mailAddress): void

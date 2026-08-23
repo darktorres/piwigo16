@@ -168,6 +168,14 @@ test('prepareDisplay falls back to idx*50 positioning when a block\'s config val
     // "$idx * 50" fallback (distinct from the one on the line above that
     // only fires when the key is entirely absent from $mb_conf).
     $currentConfig = CurrentConfigTestFactory::get();
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's own
+     *   PHP 8.4 property-hook properties each have a `set(...)` hook doing
+     *   real sanitization/conversion before storage; Psalm checks an
+     *   assignment against the property's own declared/hooked type, not
+     *   the hook's own looser accepted input shape -- this test's whole
+     *   point is feeding a deliberately non-numeric value in.
+     */
     $currentConfig->blkMenubar = [
         'first' => 'not-a-number',
     ];
@@ -195,6 +203,12 @@ test('prepareDisplay casts a numeric-string config position to a real int', func
     // (untyped param) would happily store the string "5" instead of the
     // int 5, which the strict toBe(5) below would catch.
     $currentConfig = CurrentConfigTestFactory::get();
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue same property-hook
+     *   sanitization reasoning as the earlier "not-a-number" test above --
+     *   this test's whole point is feeding a numeric string in to verify
+     *   the hook stores a real int, not the string.
+     */
     $currentConfig->blkMenubar = [
         'cat' => '5',
     ];

@@ -117,6 +117,11 @@ test('doTimeoutTreatment computes a real, positive estimated-time when some (but
     $errors = PageStateTestFactory::get()->errors;
     expect(count($errors))
         ->toBe($errorCountBefore + 1);
+    /**
+     * @psalm-suppress InvalidArrayOffset count($errors) - 1 is only ever -1
+     *   if $errors is empty, but the toBe() assertion just above already
+     *   proves it has at least $errorCountBefore + 1 entries.
+     */
     $message = $errors[count($errors) - 1];
     // English plural, untranslated (no admin.lang loaded in this Unit
     // suite) source wording -- "[Estimated time: %d seconds]" with a
@@ -152,6 +157,11 @@ test('doTimeoutTreatment computes the exact ceil()\'d estimated-time, not floor(
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1', 't2']);
 
     $errors = PageStateTestFactory::get()->errors;
+    /**
+     * @psalm-suppress InvalidArrayOffset count($errors) - 1 is only ever -1
+     *   if $errors is empty, but the toBe() assertion just above already
+     *   proves it has at least $errorCountBefore + 1 entries.
+     */
     $message = $errors[count($errors) - 1];
     expect($message)
         ->toEndWith('[Estimated time: 11 seconds].');
@@ -176,6 +186,11 @@ test('doTimeoutTreatment leaves the estimated-time at exactly 0 when nobody has 
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, []);
 
     $errors = PageStateTestFactory::get()->errors;
+    /**
+     * @psalm-suppress InvalidArrayOffset count($errors) - 1 is only ever -1
+     *   if $errors is empty, but the toBe() assertion just above already
+     *   proves it has at least $errorCountBefore + 1 entries.
+     */
     $message = $errors[count($errors) - 1];
     expect($message)
         ->toEndWith('[Estimated time: 0 seconds].');

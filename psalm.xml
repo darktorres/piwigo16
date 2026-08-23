@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="8"
+    errorLevel="6"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
@@ -120,77 +120,6 @@
                 <directory name="."/>
             </errorLevel>
         </InvalidScope>
-        <!-- The bundled jetbrains/phpstorm-stubs ImagickKernel::fromMatrix()
-             declares $origin as a required 2nd param; this environment's
-             real ext-imagick reflection (ReflectionMethod::getParameters(),
-             verified live) confirms the actual signature is
-             `fromMatrix(array $matrix, ?array $origin = null)`, so the call
-             below is genuinely safe. phpstan-stubs/Imagick.stub.php already
-             carries the corrected signature for PHPStan's own stubFiles:
-             (which patches individual members), but Psalm's <stubs> loading
-             doesn't merge member-by-member across two files declaring the
-             same class — a second declaration is simply ignored, tested
-             both load orders — so patching this one method here would
-             require fully re-declaring the entire bundled Imagick/
-             ImagickKernel API instead of touching just the wrong method. -->
-        <TooFewArguments>
-            <errorLevel type="suppress">
-                <file name="src/Piwigo/Admin/Image/ImageImagick.php"/>
-            </errorLevel>
-        </TooFewArguments>
-        <!-- ECS bundles its own PHP-Scoper-prefixed copy of
-             squizlabs/php_codesniffer nested inside its own vendor/ dir;
-             CamelCapsMethodNameSniff resolves fine at ECS's own runtime
-             (verified: `vendor/bin/ecs check` runs clean with this exact
-             config) via ECS's internal class-alias/scoping machinery, but
-             the real, unprefixed class only lives under a nested vendor/
-             path Psalm's own <ignoreFiles> vendor exclusion can't see
-             into, and Composer's autoloader doesn't expose it either
-             (confirmed: class_exists() is false even with the project's
-             real autoloader loaded) — a Psalm/Composer visibility gap in
-             ECS's own boxing, not a broken config reference. -->
-        <UndefinedClass>
-            <errorLevel type="suppress">
-                <file name="ecs.php"/>
-            </errorLevel>
-        </UndefinedClass>
-        <!-- CheckIntegrity::check()'s own dispatchListCheckIntegrity()
-             docblock already documents the root cause for PHPStan: a
-             registered event handler may call back into this same instance
-             and mutate $retrieve_list via addAnomaly(), invisible to static
-             analysis through the dispatch() call. PHPStan is satisfied by
-             extracting that dispatch into its own method (forcing a
-             re-widen on any $this method call); Psalm's flow analysis
-             still collapses count($this->retrieve_list) inside the
-             `if (count(...) > 0)` body it's already inside to an
-             impossible/never type — same root cause, a stricter Psalm
-             narrowing quirk PHPStan doesn't share, not dead code (this
-             line executes on every real anomaly-detected request). -->
-        <NoValue>
-            <errorLevel type="suppress">
-                <file name="src/Piwigo/Admin/Integrity/CheckIntegrity.php"/>
-            </errorLevel>
-        </NoValue>
-        <!-- $_SESSION superglobal narrowing doesn't account for a called
-             method mutating it (same family as this project's own
-             documented $_POST/$_SERVER stub-optimism gaps): Psalm keeps
-             treating $_SESSION as the literal array{}/array assigned a few
-             lines earlier even after an intervening service-method call
-             that really does write to the real superglobal at runtime. -->
-        <EmptyArrayAccess>
-            <errorLevel type="suppress">
-                <file name="tests/Unit/Session/SessionServiceTest.php"/>
-            </errorLevel>
-        </EmptyArrayAccess>
-        <!-- Same $_SESSION-narrowing gap as above, but via a by-ref helper
-             (upload_service_unset_key()) rather than a direct assignment —
-             this file's own header comment on that helper already documents
-             the equivalent PHPStan narrowing workaround it exists for. -->
-        <NullReference>
-            <errorLevel type="suppress">
-                <file name="tests/Unit/Admin/Upload/UploadServiceTest.php"/>
-            </errorLevel>
-        </NullReference>
         <!-- tests/Arch/StructuralTest.php's own
              'findMissingOverrideAttributes() flags a missing #[\Override]'
              test deliberately constructs a fixture method WITHOUT the
@@ -208,5 +137,18 @@
                 <file name="tests/Arch/StructuralTest.php"/>
             </errorLevel>
         </MissingOverrideAttribute>
+        <!-- Pest\Expectation's fluent ->not property (returns a negated
+             Expectation for chains like ->not->toContain(...)) isn't
+             recognized by Psalm — no psalm-plugin-pest is installed to
+             teach Psalm Pest's own magic/mixin property declarations. Not
+             specific to any one test's own logic (13 call sites across 8
+             unrelated files, all the identical library-integration gap),
+             so scoped to the whole tests/ directory rather than repeating
+             the same explanation at each site individually. -->
+        <UndefinedPropertyFetch>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </UndefinedPropertyFetch>
     </issueHandlers>
 </psalm>

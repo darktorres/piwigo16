@@ -167,6 +167,7 @@ function imageExtImagickTestMake(string $path): ImageExtImagick
  */
 function imageExtImagickTestRealBinaryPath(string $commandName): string
 {
+    $out = [];
     exec('command -v ' . escapeshellarg($commandName), $out, $status);
     if ($status !== 0 || ! isset($out[0]) || $out[0] === '') {
         throw new RuntimeException("Unable to locate the real '{$commandName}' binary via \`command -v\`.");

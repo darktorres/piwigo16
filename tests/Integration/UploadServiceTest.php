@@ -1571,6 +1571,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     private function realExtImagickDir(): string
     {
+        $out = [];
         exec('command -v magick 2>/dev/null', $out, $status);
         if ($status !== 0 || ! isset($out[0]) || $out[0] === '') {
             $out = [];

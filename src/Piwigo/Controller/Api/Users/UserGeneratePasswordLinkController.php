@@ -80,6 +80,14 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
 
         $input = UserGeneratePasswordLinkInput::fromArray(JsonBody::decode($request));
 
+        /**
+         * @psalm-suppress InvalidArgument getRepository() always really
+         *   returns ActivityEntity's own custom repositoryClass at runtime
+         *   (ActivityRepository), which implements
+         *   LoginActivityLookupInterface; Psalm's Doctrine plugin doesn't
+         *   narrow getRepository()'s return type per-entity's own
+         *   repositoryClass binding, only the generic EntityRepository<T>.
+         */
         $firstLogin = $this->authService->hasAlreadyLoggedIn($lostUserId, $this->entityManager->getRepository(ActivityEntity::class));
         $sendByMailResponse = null;
         $userLostLanguage = is_string($userLost['language'] ?? null) ? $userLost['language'] : $this->userService->getDefaultLanguage();

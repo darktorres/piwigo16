@@ -112,7 +112,11 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $userId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
-        $this->userId = $userId;
+        // PHPStan already narrows $userId to int here; Psalm only narrows
+        // assertIsNumeric() to `numeric`, so the cast stays for Psalm's
+        // sake.
+        // @phpstan-ignore cast.useless
+        $this->userId = (int) $userId;
 
         $this->em = EntityManagerFactory::build($this->conn);
         $this->service = new ApiKeyService(

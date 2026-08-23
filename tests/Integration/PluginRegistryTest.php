@@ -492,6 +492,14 @@ final class PluginRegistryTest extends IntegrationTestCase
      *   fails if registration and boot ever end up running against two
      *   different object instances.
      */
+    /**
+     * @psalm-suppress InvalidPropertyFetch $classA/$classB are dynamically
+     *   built (uniqid()-suffixed) FQCN strings for fixture classes
+     *   generated at runtime purely for this test's own isolation; no
+     *   shared interface/base class to type them against for Psalm to
+     *   resolve their $handlerFired/$observedStateFromEvent static
+     *   properties through.
+     */
     public function testBootActiveUsesTheSameInstanceAcrossBothPassesAndRegistersBeforeAnyoneBoots(): void
     {
         $dir = $this->makeTempDir();
@@ -516,6 +524,14 @@ final class PluginRegistryTest extends IntegrationTestCase
         self::assertSame('booted-IdentityA' . $suffix, $classA::$observedStateFromEvent, 'A\'s own handler must observe A\'s own post-boot state, proving pass 1 and pass 2 ran against the same instance');
     }
 
+    /**
+     * @psalm-suppress InvalidPropertyFetch $className is a dynamically
+     *   built (uniqid()-suffixed) FQCN string for a fixture class
+     *   generated at runtime purely for this test's own isolation; no
+     *   shared interface/base class to type it against for Psalm to
+     *   resolve its $installed/$activated/$deactivated/$uninstalled/
+     *   $updatedFromTo/$receivedContext static properties through.
+     */
     public function testInstallActivateDeactivateUninstallRoundTrip(): void
     {
         $dir = $this->makeTempDir();
@@ -570,6 +586,14 @@ final class PluginRegistryTest extends IntegrationTestCase
         self::assertNotNull($className::$receivedContext, 'boot() must run before uninstall()');
     }
 
+    /**
+     * @psalm-suppress InvalidPropertyFetch $className is a dynamically
+     *   built (uniqid()-suffixed) FQCN string for a fixture class
+     *   generated at runtime purely for this test's own isolation; no
+     *   shared interface/base class to type it against for Psalm to
+     *   resolve its $updatedFromTo/$receivedContext static properties
+     *   through.
+     */
     public function testUpdateInvokesTheHookAndBumpsTheVersionOnlyWhenVersionsDiffer(): void
     {
         $dir = $this->makeTempDir();

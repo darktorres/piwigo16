@@ -15,24 +15,14 @@ use Doctrine\DBAL\Connection;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Extensions\ExtensionLifecycle;
-use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
-use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
-use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\Install\Projection\InstallView;
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Auth\PasswordService;
-use Piwigo\Bootstrap\CoreDomainAccessor;
-use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
-use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -43,17 +33,14 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -375,22 +362,16 @@ final class InstallWizard
      * which tests/Arch/StructuralTest.php's own
      * findDuplicateServiceConstructionChains() forbids verbatim within one
      * file). $conn defaults to a fresh DbConnection::build() rather than
-     * reusing $this->conn: analyzeForm()'s own call site can legitimately
-     * run after installDbConnect() returned null (a failed connection
-     * attempt), unlike the performInstall()/render() call sites, which
-     * always have a real connection by the time they run.
+     * reusing $this->conn: this is the only remaining call site
+     * (analyzeForm()), reachable even after installDbConnect() returned
+     * null (a failed connection attempt) -- InstallDataSeeder/
+     * InstallPostInstallSession call InstallServiceFactory directly for
+     * their own userService()/passwordService() needs, both always with a
+     * real connection by the time they run.
      */
     private function userService(?Connection $conn = null): UserService
     {
         return $this->installServiceFactory->userService($conn);
-    }
-
-    /**
-     * Delegates to InstallServiceFactory. Same reasoning as userService() above.
-     */
-    private function passwordService(Connection $conn): PasswordService
-    {
-        return $this->installServiceFactory->passwordService($conn);
     }
 
     /**
@@ -478,83 +459,8 @@ final class InstallWizard
             return;
         }
 
-        // We fill the tables with basic informations
-        InstallService::executeSqlfile(
-            $conn,
-            $this->paths->root . 'install/config.sql',
-        );
-
-        $configService = $this->currentConfigService->get();
-        $configService->confUpdateParam('secret_key', sha1(random_bytes(1000)));
-        $configService->confUpdateParam('gallery_title', $this->lang->t('Just another Piwigo gallery'));
-
-        $configService->confUpdateParam(
-            'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . $this->lang->t('Welcome to my photo gallery') . '</p>'
-        );
-
-        // fill languages table, only activate the current language
-        // Deliberately a fresh DbConnection::build(), not the outer $conn
-        // (still needed as $this->conn, unshadowed, by BatchWriter/
-        // PasswordRepository/userService() calls further down this same
-        // method) -- matches this call's own pre-existing "fresh
-        // connection" shape, just extended to the new repository too.
-        $urlService = PresentationAccessor::urlService();
-        $languageActivationConn = DbConnection::build();
-        new ExtensionLifecycle(
-            $this->lang,
-            new ExtensionRepository(EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor(), InstallBootstrap::currentLogger(), $this->paths, $this->currentConfig),
-            $urlService,
-            $configService,
-            ExtendedDomainAccessor::activityService(),
-            CoreDomainAccessor::userService(),
-            PresentationAccessor::htmlService(),
-            $this->currentConfig,
-            $this->paths,
-            $this->currentUser,
-            $this->eventDispatcher,
-            PresentationAccessor::pluginRegistry(),
-            PresentationAccessor::themeRegistry(),
-            EntityManagerFactory::build($languageActivationConn),
-        )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
-
-        // fill CurrentConfig::$data from the freshly-seeded config table
-        $configService->loadConfFromDb();
-
-        InstallService::activateCoreThemes($this->lang, $this->currentUser, $this->currentConfigService, $this->currentConfig, $this->paths, $this->eventDispatcher);
-        InstallService::activateCorePlugins($this->paths, $this->currentUser, $this->currentConfig);
-
-        $insert = [
-            'id' => 1,
-            'galleries_url' => $this->paths->root . 'galleries/',
-        ];
-        new BatchWriter($conn)
-            ->massInsert('sites', array_keys($insert), [$insert]);
-        new DbInfo($conn)
-            ->resyncIdentitySequence('sites');
-
-        // webmaster admin user
-        $inserts = [
-            [
-                'id' => 1, // must be the same value as webmaster_id in config.sql
-                'username' => $this->adminName,
-                'password' => $this->passwordService($conn)
-                    ->hash($this->adminPass1),
-                'mail_address' => $this->adminMail,
-            ],
-            [
-                'id' => 2,
-                'username' => 'guest',
-            ],
-        ];
-        new BatchWriter($conn)
-            ->massInsert('users', array_keys($inserts[0]), $inserts);
-        new DbInfo($conn)
-            ->resyncIdentitySequence('users');
-
-        $this->userService($conn)
-            ->createUserInfos([UserId::from(1), UserId::from(2)], LangCode::from($this->language));
+        new InstallDataSeeder($this->paths, $this->lang, $this->currentConfigService, $this->currentConfig, $this->currentUser, $this->eventDispatcher, $this->installServiceFactory)
+            ->seed($conn, $this->language, $this->fsLanguages[$this->language] ?? null, $this->adminName, $this->adminPass1, $this->adminMail);
 
         // Create install sentinel stamp file -- moved here (after schema
         // migration, config.sql seeding, extension activation, the sites

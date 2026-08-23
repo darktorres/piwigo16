@@ -173,9 +173,10 @@ namespace Piwigo\Tests\Integration {
             }
             ob_start();
             imagejpeg($img);
-            // ob_get_clean() can only return false when there's no active output
-            // buffer -- ob_start() immediately above guarantees one here.
             $base = ob_get_clean();
+            if ($base === false) {
+                throw new RuntimeException('ob_get_clean failed');
+            }
 
             return $base;
         }

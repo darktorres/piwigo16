@@ -285,7 +285,12 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         ob_start();
         imagepng($image);
 
-        return ob_get_clean();
+        $png = ob_get_clean();
+        if ($png === false) {
+            throw new RuntimeException('ob_get_clean failed');
+        }
+
+        return $png;
     }
 
     public function testMkgetdirFailureAssignsTheAddWriteAccessSprintfMessage(): void

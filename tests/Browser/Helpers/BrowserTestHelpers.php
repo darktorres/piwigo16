@@ -2353,7 +2353,12 @@ final class BrowserTestHelpers
         ob_start();
         imagepng($img);
 
-        return ob_get_clean();
+        $png = ob_get_clean();
+        if ($png === false) {
+            throw new ExpectationFailedException('ob_get_clean failed');
+        }
+
+        return $png;
     }
 
     /**

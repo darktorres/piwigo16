@@ -117,10 +117,18 @@ use SessionHandler;
  * tests/Unit/Core/CoverageCollectorTest.php's own docblock already
  * documents for CoverageCollector::registerIfActive()'s own
  * `! extension_loaded('pcov')` guard:
- *  - boot()'s `! extension_loaded('mysqli')` check: every test in this
- *    whole file already requires a real mysqli-backed DB connection in
- *    this exact PHP process, so the negation can never be true here
- *    (`php -m` lists mysqli).
+ *  - analyzeForm()'s `! extension_loaded($requiredExtension)` check
+ *    (moved here from boot() -- see InstallWizard's own analyzeForm()
+ *    docblock): every test in this whole file already requires a real
+ *    mysqli- or pgsql-backed DB connection in this exact PHP process
+ *    (both `php -m` lists mysqli and pgsql), so whichever of the two
+ *    `$requiredExtension` ever resolves to for a real submitted
+ *    `dbdriver` value, the negation can never be true here. No seam
+ *    exists to fake `extension_loaded()` itself (a PHP built-in, not an
+ *    injected collaborator) without forcing a state no real
+ *    InstallWizard call in this environment can ever actually be in --
+ *    the same reasoning this docblock already applies to the
+ *    `$login_user_id` branch below.
  *  - boot()'s `version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION,
  *    '<')` check: PHP_VERSION is fixed for this whole process's lifetime,
  *    and AppInfo::REQUIRED_PHP_VERSION is a compile-time class constant

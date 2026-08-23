@@ -254,13 +254,13 @@ final class InstallWizard
         // dblayer -- was unconditionally hardcoded to 'mysqli' regardless of
         // what the form submitted (the real reason a real pgsql install was
         // never reachable through this wizard before); now reflects the
-        // real chosen driver, extension-checked accordingly.
+        // real chosen driver. The required-extension check itself lives in
+        // analyzeForm() (see its own docblock) -- checking it here, on
+        // every request including the very first GET, made the install
+        // form itself unreachable on a server missing the *default*
+        // driver's extension, since a fresh page load has no real
+        // $_POST['dbdriver'] yet and always defaults to 'mysqli'.
         $this->dblayer = $this->request->dbdriver;
-        $requiredExtension = $this->dblayer === 'pgsql' ? 'pgsql' : 'mysqli';
-        if (! extension_loaded($requiredExtension)) {
-            PresentationAccessor::htmlService()
-                ->fatalError('PHP extension "' . $requiredExtension . '" is not loaded');
-        }
 
         $this->adminName = $this->request->adminName;
         $this->adminPass1 = $this->request->adminPass1;
@@ -378,13 +378,33 @@ final class InstallWizard
      * Former install.php "form analyze" validation block (DB connection
      * attempt + webmaster/password/mail checks). Only called when
      * $_POST['install'] is set.
+     *
+     * The dblayer PHP-extension check used to live in boot() instead,
+     * running unconditionally on every request (including the very first
+     * GET, before any driver was actually chosen) -- a hard fatalError()
+     * crash page there, not a normal validation error, meant a server
+     * missing the *default* driver's extension could never even reach the
+     * install form to pick a different one. Runs here instead: only once a
+     * real driver choice was actually submitted, as a normal $this->errors[]
+     * entry like every other check below.
      */
     public function analyzeForm(): void
     {
-        $this->conn = InstallService::installDbConnect($this->infos, $this->errors, $this->lang);
+        $requiredExtension = $this->dblayer === 'pgsql' ? 'pgsql' : 'mysqli';
+        if (! extension_loaded($requiredExtension)) {
+            // installDbConnect() below calls straight into `new mysqli()`/
+            // `pg_connect()` with no extension guard of its own -- a
+            // genuinely missing extension throws \Error there (undefined
+            // class/function), not \Exception, which its own
+            // `catch (Exception $e)` doesn't catch. Skip the attempt
+            // entirely rather than crash the request.
+            $this->errors[] = $this->lang->t('PHP extension "%s" is not loaded', $requiredExtension);
+        } else {
+            $this->conn = InstallService::installDbConnect($this->infos, $this->errors, $this->lang);
 
-        if (count($this->errors) > 0) {
-            print_r($this->errors);
+            if (count($this->errors) > 0) {
+                print_r($this->errors);
+            }
         }
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));

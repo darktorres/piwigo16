@@ -21,6 +21,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final readonly class TusUploadDeleteController implements ControllerInterface
 {
+    private const string TUS_VERSION = '1.0.0';
+
     public function __construct(
         private AdminGuard $adminGuard,
         private CsrfGuard $csrfGuard,
@@ -41,17 +43,26 @@ final readonly class TusUploadDeleteController implements ControllerInterface
             return $csrfDenied;
         }
 
+        if ($request->getHeaderLine('Tus-Resumable') !== self::TUS_VERSION) {
+            return $this->problem('Precondition Failed', 412, 'Tus-Resumable: ' . self::TUS_VERSION . ' is required.');
+        }
+
         $routeArgs = $request->getAttribute('route_args');
         $id = is_array($routeArgs) && is_string($routeArgs['id'] ?? null) ? $routeArgs['id'] : '';
 
         $session = $this->tusUploadStore->findOwnedBy($id, $this->currentUser->get()->id->value);
         if (! $session instanceof TusUploadSession) {
-            return ResponseFactory::problem('Not Found', 404, 'Unknown upload.')
-                ->withHeader('Tus-Resumable', '1.0.0');
+            return $this->problem('Not Found', 404, 'Unknown upload.');
         }
 
         $this->tusUploadStore->delete($session->id);
 
-        return ResponseFactory::noContent()->withHeader('Tus-Resumable', '1.0.0');
+        return ResponseFactory::noContent()->withHeader('Tus-Resumable', self::TUS_VERSION);
+    }
+
+    private function problem(string $title, int $status, string $detail): ResponseInterface
+    {
+        return ResponseFactory::problem($title, $status, $detail)
+            ->withHeader('Tus-Resumable', self::TUS_VERSION);
     }
 }

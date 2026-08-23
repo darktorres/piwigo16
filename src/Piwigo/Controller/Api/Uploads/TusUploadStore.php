@@ -97,12 +97,18 @@ final readonly class TusUploadStore
      * (tus's own conflict rule) -- checked and written under one
      * exclusive lock, closing the race a separate size-check-then-append
      * would leave open between two concurrent `PATCH`es for the same
-     * upload id. Returns the new offset, or null on a missing upload or an
-     * offset mismatch.
+     * upload id. Returns the new offset, or null on a missing upload, an
+     * offset mismatch, or a write that would exceed $uploadLength.
+     *
+     * $uploadLength is a defensive cap, not the primary defense --
+     * TusUploadPatchController already rejects an over-length PATCH up
+     * front via the Content-Length header, before ever calling this
+     * method. This only protects the on-disk invariant itself in case
+     * that header ever undercounts the real body.
      *
      * @param resource $stream
      */
-    public function appendChunk(string $id, int $expectedOffset, $stream): ?int
+    public function appendChunk(string $id, int $expectedOffset, $stream, int $uploadLength): ?int
     {
         $path = $this->dataPath($id);
         if (! self::isValidId($id) || ! is_file($path)) {
@@ -129,11 +135,24 @@ final readonly class TusUploadStore
             return null;
         }
 
+        $maxWrite = max(0, $uploadLength - $expectedOffset);
+
         fseek($out, 0, SEEK_END);
         $written = 0;
+        $overshoot = false;
         while (! feof($stream)) {
-            $buffer = fread($stream, 8192);
-            if ($buffer === false) {
+            $remaining = $maxWrite - $written;
+            if ($remaining <= 0) {
+                // Any further stream bytes would push the file past
+                // $uploadLength -- peek one byte to tell "stream was
+                // exactly at the cap" from "stream still has more".
+                $peek = fread($stream, 1);
+                $overshoot = is_string($peek) && $peek !== '';
+                break;
+            }
+
+            $buffer = fread($stream, min(8192, $remaining));
+            if ($buffer === false || $buffer === '') {
                 break;
             }
 
@@ -149,7 +168,7 @@ final readonly class TusUploadStore
         flock($out, LOCK_UN);
         fclose($out);
 
-        return $expectedOffset + $written;
+        return $overshoot ? null : $expectedOffset + $written;
     }
 
     public function dataFilePath(string $id): string

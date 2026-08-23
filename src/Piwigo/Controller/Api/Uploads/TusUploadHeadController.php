@@ -37,13 +37,16 @@ final readonly class TusUploadHeadController implements ControllerInterface
             return $denied;
         }
 
+        if ($request->getHeaderLine('Tus-Resumable') !== self::TUS_VERSION) {
+            return $this->problem('Precondition Failed', 412, 'Tus-Resumable: ' . self::TUS_VERSION . ' is required.');
+        }
+
         $routeArgs = $request->getAttribute('route_args');
         $id = is_array($routeArgs) && is_string($routeArgs['id'] ?? null) ? $routeArgs['id'] : '';
 
         $session = $this->tusUploadStore->findOwnedBy($id, $this->currentUser->get()->id->value);
         if (! $session instanceof TusUploadSession) {
-            return ResponseFactory::problem('Not Found', 404, 'Unknown upload.')
-                ->withHeader('Tus-Resumable', self::TUS_VERSION);
+            return $this->problem('Not Found', 404, 'Unknown upload.');
         }
 
         $offset = $this->tusUploadStore->offset($session->id) ?? 0;
@@ -54,5 +57,11 @@ final readonly class TusUploadHeadController implements ControllerInterface
             'Upload-Length' => (string) $session->uploadLength,
             'Cache-Control' => 'no-store',
         ]);
+    }
+
+    private function problem(string $title, int $status, string $detail): ResponseInterface
+    {
+        return ResponseFactory::problem($title, $status, $detail)
+            ->withHeader('Tus-Resumable', self::TUS_VERSION);
     }
 }

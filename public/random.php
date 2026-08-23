@@ -9,22 +9,16 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 use Doctrine\DBAL\ParameterType;
-use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Bootstrap\RequestPipeline;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Psr\Http\Message\ResponseInterface;
 
@@ -64,7 +58,7 @@ $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = DbConnection::build();
 
-$permissionCriteria = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), RequestBootstrap::currentUser(), RequestBootstrap::filterState(), new AccessLevelChecker(RequestBootstrap::currentUser(), RequestBootstrap::currentConfig()))->getPermissionCriteria();
+$permissionCriteria = RequestBootstrap::permissionService($conn)->getPermissionCriteria();
 $condition = SqlCondition::combine(
     'AND',
     $permissionCriteria->forbiddenCategoriesCondition('category_id'),

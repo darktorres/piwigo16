@@ -532,7 +532,7 @@ final class RequestBootstrap
         return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
     }
 
-    private static function permissionService(Connection $conn): PermissionService
+    public static function permissionService(Connection $conn): PermissionService
     {
         return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker());
     }

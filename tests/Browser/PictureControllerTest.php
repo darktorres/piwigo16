@@ -2339,6 +2339,11 @@ it('lets a plugin hide a display-info field via FilterPictureDisplayInfo', funct
 });
 
 it('dispatches PicturePageRendered with the real requested image id', function (): void {
+    // EXTRA_BODY_CONTENT (this test's original marker-delivery mechanism)
+    // was deleted as dead template code (P44-B, zero real producers) --
+    // captures the dispatched event's own imageId directly to a marker
+    // file instead of smuggling it through rendered HTML, sidestepping
+    // any dependency on a live template-injection point entirely.
     $page = H::loginAsAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Page Rendered Album ' . uniqid(),
@@ -2353,16 +2358,18 @@ it('dispatches PicturePageRendered with the real requested image id', function (
 
     $pluginId = 'pwgtest-picture-page-rendered';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
-    $marker = 'PWGTEST_PICTURE_PAGE_RENDERED_MARKER_' . uniqid();
+    // _data/tmp/, not sys_get_temp_dir(): Apache runs with systemd's
+    // PrivateTmp=yes, so a file the plugin writes into /tmp from inside
+    // the real web request is invisible to this CLI test process's own
+    // /tmp -- _data/tmp/ is a real, shared, world-writable project
+    // directory both processes actually see.
+    $markerFile = dirname(__DIR__, 2) . '/_data/tmp/pwgtest-picture-page-rendered-' . uniqid() . '.txt';
 
     pictureWriteFixturePlugin($pluginDir, <<<PHP
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Controller\\Event\\PicturePageRendered::class,
             static function (\\Piwigo\\Controller\\Event\\PicturePageRendered \$event) use (\$context): void {
-                \$context->template()->concat(
-                    'EXTRA_BODY_CONTENT',
-                    '<div id="picture-page-rendered-marker">{$marker}|' . \$event->imageId . '</div>'
-                );
+                file_put_contents('{$markerFile}', (string) \$event->imageId);
             }
         );
         PHP);
@@ -2373,15 +2380,17 @@ it('dispatches PicturePageRendered with the real requested image id', function (
 
     try {
         $renderedPage = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
-        $body = H::rawWebpage($renderedPage)->content();
 
-        expect($body)
-            ->toContain($marker . '|' . $imageId);
+        expect(file_exists($markerFile))
+            ->toBeTrue('PicturePageRendered handler never ran');
+        expect(file_get_contents($markerFile))
+            ->toBe((string) $imageId);
         $renderedPage->assertNoJavaScriptErrors();
     } finally {
         $cleanupDb = pictureDbConnect();
         H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
         pictureRemoveFixturePlugin($pluginDir);
+        @unlink($markerFile);
     }
 });

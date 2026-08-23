@@ -1609,6 +1609,15 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->saveEditContext('/some/section', 'not-a-number');
 
+                /**
+                 * @psalm-suppress InvalidScalarArgument Psalm tracks
+                 *   $_SESSION's literal shape across this test's own
+                 *   prior assignments, marking 'edit_context' as a
+                 *   possibly-undefined key -- a shape PHPUnit's
+                 *   assertArrayNotHasKey() signature (plain
+                 *   array<array-key, mixed>) doesn't accept, even though
+                 *   the assertion itself is checking that exact absence.
+                 */
                 self::assertArrayNotHasKey('edit_context', $_SESSION);
             } finally {
                 CurrentUserTestFactory::get()->reset();

@@ -80,9 +80,15 @@ final class QNumericRangeScope extends QSearchScope
             }
             if (is_numeric($val)) {
                 if ((bool) ($i ^ $strict[$i])) {
-                    $val += (float) $this->epsilon;
+                    // PHPStan already infers float here; Psalm's own
+                    // strict-binary-operands check needs the explicit
+                    // cast since it loses $val's narrowing through this
+                    // by-ref foreach loop variable.
+                    // @phpstan-ignore cast.useless
+                    $val = (float) $val + (float) $this->epsilon;
                 } else {
-                    $val -= (float) $this->epsilon;
+                    // @phpstan-ignore cast.useless
+                    $val = (float) $val - (float) $this->epsilon;
                 }
             }
         }

@@ -157,7 +157,7 @@ function introInsertActivityRows(array $rows): void
 function introDeleteActivityRows(): void
 {
     $db = introDbConnect();
-    H::dbQuery($db, sprintf("DELETE FROM activity WHERE session_idx = 'ct_intro_session'"));
+    H::dbQuery($db, "DELETE FROM activity WHERE session_idx = 'ct_intro_session'");
     H::dbClose($db);
 }
 

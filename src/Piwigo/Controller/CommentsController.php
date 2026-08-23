@@ -282,6 +282,13 @@ final readonly class CommentsController implements ControllerInterface
             // from email for management purpose (validate/delete)
             if (! $this->accessControl->isAdmin()) {
                 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+                /**
+                 * @psalm-suppress RedundantCondition
+                 * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
+                 *   superglobal stub is typed more optimistically than
+                 *   reality: REQUEST_URI is never guaranteed present or
+                 *   string the way Psalm's stub assumes.
+                 */
                 $request_uri = is_string($request_uri) ? $request_uri : '';
                 $login_url =
                   $this->urlService->getRootUrl() . 'identification.php?redirect='

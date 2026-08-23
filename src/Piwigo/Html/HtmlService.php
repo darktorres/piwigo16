@@ -493,6 +493,13 @@ final readonly class HtmlService implements HtmlRenderingInterface
         }
 
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+        /**
+         * @psalm-suppress RedundantCondition
+         * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
+         *   superglobal stub is typed more optimistically than reality:
+         *   REQUEST_URI is never guaranteed present or string the way
+         *   Psalm's stub assumes.
+         */
         $request_uri = is_string($request_uri) ? $request_uri : '';
         $redirectService->redirectHttp($this->urlService()->getRootUrl() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)));
     }
@@ -738,6 +745,13 @@ final readonly class HtmlService implements HtmlRenderingInterface
             };
         }
         $protocol = $_SERVER['SERVER_PROTOCOL'] ?? '';
+        /**
+         * @psalm-suppress RedundantCondition
+         * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
+         *   superglobal stub is typed more optimistically than reality:
+         *   SERVER_PROTOCOL is never guaranteed present or string the
+         *   way Psalm's stub assumes.
+         */
         $protocol = is_string($protocol) ? $protocol : '';
         if (($protocol !== 'HTTP/1.1') && ($protocol !== 'HTTP/1.0')) {
             $protocol = 'HTTP/1.0';

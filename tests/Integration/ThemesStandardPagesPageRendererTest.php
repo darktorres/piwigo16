@@ -372,6 +372,13 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             // recognized 'image/png' mime and reach the mkgetdir()-TRUE
             // branch, and that fopen() (2nd open) is the call that failed --
             // not a fluke of the wrapper never being read at all.
+            /**
+             * @psalm-suppress TypeDoesNotContainType Psalm can't see
+             *   ThemesStandardPagesLogoStreamWrapper::$opens get mutated
+             *   by PHP's real streams layer invoking this custom wrapper
+             *   during the render() call above -- exactly the behavior
+             *   this assertion verifies.
+             */
             self::assertSame(2, ThemesStandardPagesLogoStreamWrapper::$opens);
 
             $uploadDir = $fixtureRoot . 'logo';

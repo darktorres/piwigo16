@@ -200,7 +200,10 @@ final readonly class PictureModifyPageRenderer
                         }
                     }
                     $tag_ids = $tagService->getTagIds($raw_tags_post_strings);
-                } elseif (is_string($raw_tags_post)) {
+                } else {
+                    // $raw_tags_post is array|string|null (PictureModifyRequest
+                    // ::$tagsRaw) and the outer guard already excluded null;
+                    // is_array() was false above, so this is always string.
                     $tag_ids = $tagService->getTagIds($raw_tags_post);
                 }
             }

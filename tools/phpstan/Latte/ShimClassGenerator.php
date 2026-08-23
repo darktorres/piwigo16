@@ -190,6 +190,13 @@ final readonly class ShimClassGenerator
     {
         if ($param->isDefaultValueConstant()) {
             $constant = $param->getDefaultValueConstantName();
+            /**
+             * @psalm-suppress RedundantCondition Psalm's reflection stub
+             *   types getDefaultValueConstantName() as always non-null
+             *   once isDefaultValueConstant() is true, but the real PHP
+             *   API documents it as nullable independently of that
+             *   guard; kept defensive rather than trusting the stub.
+             */
             if ($constant !== null) {
                 // Global constants and Class::CONST references both need a
                 // leading backslash to survive the namespace change into

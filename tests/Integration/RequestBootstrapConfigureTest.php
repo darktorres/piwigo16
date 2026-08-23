@@ -47,6 +47,13 @@ final class RequestBootstrapConfigureTest extends IntegrationTestCase
 
         RequestBootstrap::configure(Paths::fromRoot(dirname(__DIR__, 2)), microtime(true));
 
+        /**
+         * @psalm-suppress RedundantCondition Provably true today from
+         *   the literal assignment above and RequestBootstrap::configure()
+         *   genuinely leaving PATH_INFO untouched (the behavior this test
+         *   name asserts) -- kept as a real regression guard, not
+         *   anything Psalm itself would otherwise flag.
+         */
         self::assertSame("O'Brien's/path", $_SERVER['PATH_INFO']);
         self::assertTrue(Kernel::isBooted());
         // The real project root's own local/.installed.test stamp exists

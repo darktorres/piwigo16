@@ -280,6 +280,14 @@ final readonly class CategoryAvailableListController implements ControllerInterf
                     if ($substituteImageId !== null && ! in_array($substituteImageId, $imageIds, true)) {
                         $newImageIds[] = $substituteImageId;
                     }
+                    /**
+                     * @psalm-suppress RedundantCondition Psalm over-narrows
+                     *   $category['id'] to int from line 271's ternary
+                     *   branch; CategoryService::getAvailableList() itself
+                     *   documents this row as staying `array<string,
+                     *   mixed>` by design, so 'id' is genuinely just mixed
+                     *   here and this guard is needed.
+                     */
                     if ($this->currentConfig->representativeCacheOnLevel && is_int($category['id'])) {
                         $userRepresentativeUpdatesFor[$category['id']] = $substituteImageId;
                     }

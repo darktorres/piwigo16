@@ -133,7 +133,7 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
     public function exposedPageData(): array
     {
         $id = $this->formatsOriginalInfo['id'] ?? -1;
-        $originalImageIdStr = ' ' . (is_scalar($id) ? $id : -1) . ' ';
+        $originalImageIdStr = ' ' . (is_scalar($id) ? (string) $id : -1) . ' ';
 
         return [
             'display_formats' => $this->displayFormats,

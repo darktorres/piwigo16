@@ -62,7 +62,7 @@ final class Totp
         $username = $currentUser->get()
             ->username;
         $url = substr($urlService->getAbsoluteRootUrl(), 0, -1);
-        return 'otpauth://totp/' . $username . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
+        return 'otpauth://totp/' . (string) $username . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 
     /**

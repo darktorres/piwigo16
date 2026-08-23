@@ -50,6 +50,13 @@ final class CookieService
      * If Piwigo is installed on:
      * http://domain.org/meeting/gallery/
      * it will return: "/meeting/gallery"
+     *
+     * @psalm-suppress RedundantCondition
+     * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER superglobal
+     *   stub is typed more optimistically than reality: REDIRECT_SCRIPT_NAME/
+     *   REDIRECT_URL/PATH_INFO are only conditionally set by the web server
+     *   (mod_rewrite/CGI-specific), never guaranteed present the way
+     *   Psalm's stub assumes.
      */
     public function cookiePath(): string
     {

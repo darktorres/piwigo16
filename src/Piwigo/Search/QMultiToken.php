@@ -85,6 +85,13 @@ class QMultiToken implements Stringable
         $crt_modifier = 0;
         $crt_scope = null;
 
+        /**
+         * @psalm-suppress RedundantCondition $stop is trivially false right
+         *   after its own for-loop init assignment (which is all Psalm
+         *   checks here), but it's set true further down in the loop body
+         *   on a real exit condition -- a working loop-exit flag, not dead
+         *   code.
+         */
         for ($stop = false; ! $stop && $qi < strlen($q); $qi++) {
             $ch = $q[$qi];
             if (($crt_modifier & QSingleToken::QST_QUOTED) === 0) {

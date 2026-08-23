@@ -199,6 +199,12 @@ final readonly class IdentificationController implements ControllerInterface
         // Load language if cookie is set from login/register/password
         // pages
         $lang_cookie = $_COOKIE['lang'] ?? null;
+        /**
+         * @psalm-suppress TypeDoesNotContainType Psalm's $_COOKIE
+         *   superglobal stub is typed more optimistically than reality:
+         *   cookie values can be arrays (e.g. `lang[x]=y` syntax), so
+         *   this is_string() guard is genuinely needed.
+         */
         if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language->value !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
                 $this->htmlService

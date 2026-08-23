@@ -22,6 +22,13 @@ declare(strict_types=1);
  * accept() and starve the real client that follows.
  */
 $argv = $_SERVER['argv'] ?? [];
+/**
+ * @psalm-suppress RedundantCondition
+ * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER superglobal
+ *   stub types 'argv' as always a list<string>, but it's only actually
+ *   populated when register_argc_argv is enabled -- this guard is
+ *   genuinely needed.
+ */
 if (! is_array($argv)) {
     fwrite(STDERR, "no argv\n");
     exit(1);

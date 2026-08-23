@@ -359,6 +359,12 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         self::assertIsString($existingPath);
         file_put_contents($freshPath, $normalized);
         file_put_contents($existingPath, $existing);
+        /**
+         * @psalm-suppress ForbiddenCode This golden-html-snapshot test
+         *   deliberately shells out to `diff` to render a human-readable
+         *   comparison when the snapshot mismatches -- never invoked
+         *   with user-controlled input.
+         */
         $diff = shell_exec('diff -u ' . escapeshellarg($existingPath) . ' ' . escapeshellarg($freshPath));
         unlink($freshPath);
         unlink($existingPath);

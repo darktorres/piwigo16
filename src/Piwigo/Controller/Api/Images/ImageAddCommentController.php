@@ -57,6 +57,15 @@ final readonly class ImageAddCommentController implements ControllerInterface
 
         $infos = [];
         $commentAction = $this->commentService->insertComment($comm, $input->key, $infos);
+        /**
+         * @psalm-suppress TypeDoesNotContainType Psalm narrows
+         *   $commentAction to just the last-listed candidate ('moderate')
+         *   for the match arm below's two-value case instead of the real
+         *   'validate'|'moderate' union both conditions actually match;
+         *   this comparison genuinely distinguishes the two real cases at
+         *   runtime.
+         */
+        $wasValidated = $commentAction === 'validate';
 
         return match ($commentAction) {
             'reject' => ResponseFactory::problem(
@@ -66,7 +75,7 @@ final readonly class ImageAddCommentController implements ControllerInterface
             ),
             'validate', 'moderate' => ResponseFactory::json([
                 'id' => $comm->id ?? 0,
-                'validated' => $commentAction === 'validate',
+                'validated' => $wasValidated,
             ], 201),
             default => ResponseFactory::problem('Internal Server Error', 500, 'Unknown comment action ' . $commentAction . '.'),
         };

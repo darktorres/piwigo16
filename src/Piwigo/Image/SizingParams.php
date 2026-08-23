@@ -101,14 +101,14 @@ final class SizingParams
                     $h = $destCrop->height() / $ratio_w;
                     if ($h < $minSize->height) {
                         $idealCropPx = $destCrop->width() - floor($destCrop->height() * (float) $this->ideal_size->width / (float) $minSize->height);
-                        $maxCropPx = round($this->max_crop * $destCrop->width());
+                        $maxCropPx = round((float) $this->max_crop * $destCrop->width());
                         $destCrop->cropH((int) min($idealCropPx, $maxCropPx), $coi);
                     }
                 } else {
                     $w = $destCrop->width() / $ratio_h;
                     if ($w < $minSize->width) {
                         $idealCropPx = $destCrop->height() - floor($destCrop->width() * (float) $this->ideal_size->height / (float) $minSize->width);
-                        $maxCropPx = round($this->max_crop * $destCrop->height());
+                        $maxCropPx = round((float) $this->max_crop * $destCrop->height());
                         $destCrop->cropV((int) min($idealCropPx, $maxCropPx), $coi);
                     }
                 }
@@ -121,9 +121,9 @@ final class SizingParams
         $ratio_h = $destCrop->height() / (float) $this->ideal_size->height;
         if ($ratio_w > 1 || $ratio_h > 1) {
             if ($ratio_w > $ratio_h) {
-                $scale_size = new Dimensions($this->ideal_size->width, (int) floor(1e-6 + $scale_size->height / $ratio_w));
+                $scale_size = new Dimensions($this->ideal_size->width, (int) floor(1e-6 + (float) $scale_size->height / $ratio_w));
             } else {
-                $scale_size = new Dimensions((int) floor(1e-6 + $scale_size->width / $ratio_h), $this->ideal_size->height);
+                $scale_size = new Dimensions((int) floor(1e-6 + (float) $scale_size->width / $ratio_h), $this->ideal_size->height);
             }
         } else {
             $scale_size = null;

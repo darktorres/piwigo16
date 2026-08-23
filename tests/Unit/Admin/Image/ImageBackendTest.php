@@ -487,7 +487,7 @@ test('getSharpenMatrix computes exact, real weight values for a known amount', f
     // individual cells.
     $matrix = ImageBackend::getSharpenMatrix(50);
 
-    expect($matrix[1][1] / $matrix[0][0])->toBe(-29.0);
+    expect((float) $matrix[1][1] / (float) $matrix[0][0])->toBe(-29.0);
     // The center/corner ratio alone can't tell a real normalization pass
     // from a skipped one (dividing -- or not -- every cell by the same
     // norm doesn't change their ratio to each other) -- the raw center

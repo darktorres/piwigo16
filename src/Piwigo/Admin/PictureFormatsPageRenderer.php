@@ -69,7 +69,7 @@ final class PictureFormatsPageRenderer
         }
 
         $adminContent = $renderer->render(new PictureFormatsView(
-            addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
+            addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id->value,
             imgSquareSrc: DerivativeImage::url($imageStdParams->getByType(ImageStdParams::SQUARE), $image),
             formats: array_map(static fn (PictureFormatRow $format): array => $format->toArray(), $formats),
             pwgToken: $csrfService

@@ -143,7 +143,7 @@ test('getInstallationDate falls back to the MIN registration_date across all use
         // 2001-09-01 origin, then insert one fresh, valid user whose
         // registration_date should become the real MIN() fallback.
         $conn->executeStatement("UPDATE user_infos SET registration_date = '1999-01-01 00:00:00'");
-        $conn->executeStatement(sprintf("INSERT INTO users (username, password, mail_address) VALUES ('installation-stats-fallback-user', NULL, NULL)"));
+        $conn->executeStatement("INSERT INTO users (username, password, mail_address) VALUES ('installation-stats-fallback-user', NULL, NULL)");
         $newUserId = (int) $conn->lastInsertId();
         $conn->executeStatement(sprintf(
             "INSERT INTO %s (user_id, status, registration_date) VALUES (%d, 'normal', '2023-03-10 08:00:00')",

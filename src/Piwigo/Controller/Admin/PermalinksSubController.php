@@ -197,6 +197,13 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         string $anchor = ''
     ): array {
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+        /**
+         * @psalm-suppress RedundantCondition
+         * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
+         *   superglobal stub is typed more optimistically than reality:
+         *   REQUEST_URI is never guaranteed present or string the way
+         *   Psalm's stub assumes.
+         */
         $request_uri = is_string($request_uri) ? $request_uri : '';
         $url_components = parse_url($request_uri);
         // REQUEST_URI is always a well-formed URI for a real HTTP request
@@ -211,6 +218,15 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
                 $base_url .= $is_first ? '?' : '&amp;';
                 $is_first = false;
 
+                /**
+                 * @psalm-suppress RedundantCondition Psalm loses $key's
+                 *   real per-iteration type through parse_str()'s by-ref
+                 *   $vars output parameter; PermalinksSubControllerTest's
+                 *   "fatal-errors on an unexpected URL GET key" test proves
+                 *   this allowlist genuinely gates non-listed keys (e.g.
+                 *   `page`, present on every real navigation, is not
+                 *   fatal-errored, while an arbitrary key is).
+                 */
                 if (! in_array((string) $key, ['page', 'psf', 'dpsf', 'pwg_token'], true)) {
                     $this->htmlRenderer
                         ->fatalError('unexpected URL get key');

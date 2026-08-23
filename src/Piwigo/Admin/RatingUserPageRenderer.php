@@ -145,12 +145,24 @@ final class RatingUserPageRenderer
             $consensus_dev_top = 0.0;
             $consensus_dev_top_count = 0;
             foreach ($rating['rates'] as $rate => $rates) {
+                // $rate is a rating-score array key (1-5); PHP always
+                // canonicalises a purely-numeric array key to int, so this
+                // is genuinely always int at runtime despite Psalm's own
+                // generic array-key typing here. PHPStan already infers
+                // int on its own (hence the ignore below), Psalm doesn't.
+                // @phpstan-ignore cast.useless
+                $rate = (int) $rate;
                 $ct = count($rates);
                 $c += $ct;
                 $s += $ct * $rate;
                 $ss += $ct * $rate * $rate;
                 foreach ($rates as $id_date) {
-                    $dev = abs((float) $rate - $all_img_sum[$id_date['id']]['avg']);
+                    // PHPStan already infers float here (hence the ignore
+                    // below); Psalm's own strictBinaryOperands check needs
+                    // the explicit cast to stop treating abs()'s result as
+                    // a wider int|float union.
+                    // @phpstan-ignore cast.useless
+                    $dev = (float) abs((float) $rate - $all_img_sum[$id_date['id']]['avg']);
                     $consensus_dev += $dev;
                     if (isset($best_rated[$id_date['id']])) {
                         $consensus_dev_top += $dev;

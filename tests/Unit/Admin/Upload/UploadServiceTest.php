@@ -1541,9 +1541,9 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
         [$w, $h] = upload_service_optimal_dimensions();
 
         expect($w)
-            ->toBe((int) (1234 * 1.5))
+            ->toBe((int) (1234.0 * 1.5))
             ->and($h)
-            ->toBe((int) (5678 * 1.5));
+            ->toBe((int) (5678.0 * 1.5));
     } finally {
         $typeMapProp->setValue($stdParams, $originalTypeMap);
         $disabledMapProp->setValue($stdParams, $originalDisabledMap);
@@ -1568,9 +1568,9 @@ test('getOptimalDimensionsForRepresentative also reads a disabled-by-default typ
         [$w, $h] = upload_service_optimal_dimensions();
 
         expect($w)
-            ->toBe((int) (222 * 1.5))
+            ->toBe((int) (222.0 * 1.5))
             ->and($h)
-            ->toBe((int) (444 * 1.5));
+            ->toBe((int) (444.0 * 1.5));
     } finally {
         $typeMapProp->setValue($stdParams, $originalTypeMap);
         $disabledMapProp->setValue($stdParams, $originalDisabledMap);

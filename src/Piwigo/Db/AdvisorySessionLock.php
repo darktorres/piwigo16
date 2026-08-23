@@ -111,7 +111,7 @@ final class AdvisorySessionLock
     private static function acquirePostgres(Connection $conn, string $lockName, int $timeoutSeconds): bool
     {
         $key = self::key($lockName);
-        $deadline = microtime(true) + $timeoutSeconds;
+        $deadline = microtime(true) + (float) $timeoutSeconds;
 
         while (true) {
             $acquired = (bool) $conn->fetchOne(<<<SQL
@@ -138,7 +138,7 @@ final class AdvisorySessionLock
             return false;
         }
 
-        $deadline = microtime(true) + $timeoutSeconds;
+        $deadline = microtime(true) + (float) $timeoutSeconds;
 
         while (! flock($handle, LOCK_EX | LOCK_NB)) {
             if (microtime(true) >= $deadline) {

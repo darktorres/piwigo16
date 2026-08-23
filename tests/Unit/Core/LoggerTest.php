@@ -607,7 +607,7 @@ test('getTimestamp computes a real, current sub-second microsecond value, not a 
         ->toMatch('/^\d{6}$/');
 
     $logged = (int) $loggedRaw;
-    $afterMicro = (int) round(fmod($after, 1) * 1_000_000);
+    $afterMicro = (int) round(fmod($after, 1) * 1_000_000.0);
     // 50ms tolerance: real drift between capture and file write is
     // consistently under 1ms in this environment; any of the mutations
     // above produce a difference of hundreds of thousands of

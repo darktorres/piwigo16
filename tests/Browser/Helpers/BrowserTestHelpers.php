@@ -442,6 +442,7 @@ final class BrowserTestHelpers
         string $text,
         int $timeoutMs = 30_000
     ): void {
+        /** @psalm-suppress InternalClass same @internal-marked Pest\Browser\Support\GuessLocator gap as the phpstan-ignore below. */
         // @phpstan-ignore new.internalClass, method.internalClass
         new GuessLocator(self::nativePage($page))
             ->for($text)

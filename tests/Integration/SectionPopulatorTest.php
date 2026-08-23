@@ -359,6 +359,14 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->makePopulator()
             ->populate();
 
+        /**
+         * @psalm-suppress InvalidScalarArgument Psalm tracks $_SESSION's
+         *   literal shape across this test's own prior assignments,
+         *   marking 'pwg_image_order' as a possibly-undefined key -- a
+         *   shape PHPUnit's assertArrayNotHasKey() signature (plain
+         *   array<array-key, mixed>) doesn't accept, even though the
+         *   assertion itself is checking that exact absence.
+         */
         self::assertArrayNotHasKey('pwg_image_order', $_SESSION);
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);

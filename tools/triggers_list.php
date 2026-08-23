@@ -1085,6 +1085,12 @@ foreach ($core as $trigger) {
             $files_html .= '<br>';
         }
         $f = 0;
+        /**
+         * @psalm-suppress RedundantCast Psalm infers $file as always
+         *   string here, but PHPStan infers string|null for the same
+         *   $trigger['files'] iteration and requires this cast for
+         *   preg_replace()'s $subject param.
+         */
         $files_html .= preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file);
     }
 

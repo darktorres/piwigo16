@@ -413,7 +413,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertNotNull($created);
         self::assertSame('Integration Test Album', $created['name']);
 
-        $this->conn->executeStatement('DELETE FROM categories WHERE id = ' . $result->categoryId);
+        $this->conn->executeStatement('DELETE FROM categories WHERE id = ' . $result->categoryId->value);
     }
 
     public function testSetCategoryPermissionsDeniesAGroupNoLongerInTheGrantList(): void

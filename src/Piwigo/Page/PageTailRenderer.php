@@ -100,8 +100,16 @@ final readonly class PageTailRenderer
         $toggleMobileThemeUrl = null;
         if (! self::emptyValue($this->currentConfig->mobileTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+            /**
+             * @psalm-suppress RedundantCondition
+             * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
+             *   superglobal stub is typed more optimistically than
+             *   reality: REQUEST_URI is never guaranteed present or
+             *   string the way Psalm's stub assumes.
+             */
+            $request_uri = is_string($request_uri) ? $request_uri : '';
             $toggleMobileThemeUrl = $this->urlService->addUrlParams(
-                htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
+                htmlspecialchars($request_uri),
                 [
                     'mobile' => DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig) ? 'false' : 'true',
                 ]

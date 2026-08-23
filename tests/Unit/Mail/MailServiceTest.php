@@ -601,7 +601,7 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     // Pointing CurrentPaths at a deliberately fake, cwd-mismatched root
     // still removes any such coincidence, so the technique is kept even
     // though the original failure modes it defended against are gone.
-    $fakeRoot = Paths::fromRoot('/tmp/piwigo-mailservice-test-fake-root-' . getmypid() . '/');
+    $fakeRoot = Paths::fromRoot('/tmp/piwigo-mailservice-test-fake-root-' . (string) getmypid() . '/');
     Kernel::boot($fakeRoot);
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
     $service = mail_service_test_build();
@@ -1961,7 +1961,7 @@ test('switchLangTo replays every plugin language file already loaded this reques
         'status' => 'normal',
         'language' => 'en_UK',
     ]));
-    $dir = sys_get_temp_dir() . '/piwigo-mailservice-plugin-test-' . getmypid() . '/';
+    $dir = sys_get_temp_dir() . '/piwigo-mailservice-plugin-test-' . (string) getmypid() . '/';
 
     try {
         mail_service_write_po($dir . 'language/fr_FR/plugin.po', 'Marqueur du plugin');

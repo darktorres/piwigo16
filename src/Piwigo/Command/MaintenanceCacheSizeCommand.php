@@ -44,6 +44,6 @@ final class MaintenanceCacheSizeCommand extends Command
 
     private static function describe(?int $bytes): string
     {
-        return $bytes === null ? 'unknown (exec() unavailable?)' : number_format($bytes / 1024 / 1024, 2) . ' MiB';
+        return $bytes === null ? 'unknown (exec() unavailable?)' : number_format((float) $bytes / 1024.0 / 1024.0, 2) . ' MiB';
     }
 }

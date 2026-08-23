@@ -432,6 +432,17 @@ final class PageAssets
                         continue;
                     }
                     $dependencyMode = $dependency->loadMode ?? LoadMode::Header;
+                    /**
+                     * @psalm-suppress TypeDoesNotContainType Psalm's flow
+                     *   analysis over this self-referencing
+                     *   `$this->scripts[$dependencyId] = ...` loop
+                     *   incorrectly narrows $dependencyMode to always
+                     *   LoadMode::Header; PageAssetsTest.php's own "a
+                     *   dependency is promoted to its dependent's stricter
+                     *   load mode" test proves $dependencyMode really can
+                     *   be Footer/Async here and this branch really does
+                     *   fire.
+                     */
                     if ($dependencyMode->value > $mode->value) {
                         $this->scripts[$dependencyId] = self::withLoadMode($dependency, $mode);
                         $changed = true;

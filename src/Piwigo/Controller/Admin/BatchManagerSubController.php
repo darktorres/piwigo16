@@ -681,7 +681,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                 // callers.
                 $widths[] = (int) $dims->width;
                 $heights[] = (int) $dims->height;
-                $ratios[] = floor($dims->width / $dims->height * 100.0) / 100.0;
+                $ratios[] = floor((float) $dims->width / (float) $dims->height * 100.0) / 100.0;
             }
         }
         // arbitrary values, only used when no photos on the gallery -- the 3
@@ -770,7 +770,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $filesizes = [];
 
         foreach ($this->imageService->getDistinctFilesizes() as $filesizeValue) {
-            $filesizes[] = sprintf('%.1f', $filesizeValue / 1024.0);
+            $filesizes[] = sprintf('%.1f', (float) $filesizeValue / 1024.0);
         }
 
         if ($filesizes === []) { // arbitrary values, only used when no photos on the gallery

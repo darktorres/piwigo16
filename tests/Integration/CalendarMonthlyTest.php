@@ -641,6 +641,13 @@ namespace Piwigo\Tests\Integration {
             self::assertFalse($ret);
             // Auto-narrowed from [2025] to [2025, 1]: buildNavBar(CMONTH)
             // found a single distinct month (January) across id 4 and 5.
+            /**
+             * @psalm-suppress TypeDoesNotContainType Psalm still tracks
+             *   $calendar->chronology_date's pre-call literal shape from
+             *   the assignment above generateCategoryContent(); it
+             *   doesn't see that call mutate the property internally,
+             *   which is exactly the auto-narrowing behavior under test.
+             */
             self::assertSame([2025, 1], $calendar->chronology_date);
             // buildNavBar() itself returned early, before appending anything
             // for the month level -- the only entry present comes from
@@ -800,6 +807,13 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
+            /**
+             * @psalm-suppress TypeDoesNotContainType Psalm still tracks
+             *   $calendar->chronology_date's pre-call literal shape ([])
+             *   from the assignment above; it doesn't see
+             *   generateCategoryContent() mutate the property internally,
+             *   which is exactly the auto-narrowing behavior under test.
+             */
             self::assertSame([2024], $calendar->chronology_date);
         }
 
@@ -819,6 +833,13 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
+            /**
+             * @psalm-suppress TypeDoesNotContainType Psalm still tracks
+             *   $calendar->chronology_date's pre-call literal shape
+             *   ([2025]) from the assignment above; it doesn't see
+             *   generateCategoryContent() mutate the property internally,
+             *   which is exactly the auto-narrowing behavior under test.
+             */
             self::assertSame([2025, 1], $calendar->chronology_date);
         }
 

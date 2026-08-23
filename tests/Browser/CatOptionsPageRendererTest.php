@@ -130,7 +130,7 @@ it('falsifies commentable for a chosen album via the falsify submission', functi
         expect($result['status'])->toBe(200);
 
         $db = H::connect();
-        $assoc = H::dbFetchAssoc($db, sprintf('SELECT commentable FROM categories WHERE id = 1'));
+        $assoc = H::dbFetchAssoc($db, 'SELECT commentable FROM categories WHERE id = 1');
         H::dbClose($db);
         expect(is_array($assoc) ? (H::dbToBool($assoc['commentable']) ? 1 : 0) : -1)->toBe(0);
     } finally {

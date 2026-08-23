@@ -831,7 +831,7 @@ it('switches to a valid, different lang cookie and shows the French translation'
         expect($result['body'])->toContain('Mot de passe oublié ?');
     } finally {
         $db2 = passwordDbConnect();
-        H::dbQuery($db2, sprintf("DELETE FROM languages WHERE id = 'fr_FR'"));
+        H::dbQuery($db2, "DELETE FROM languages WHERE id = 'fr_FR'");
         H::dbClose($db2);
     }
 });

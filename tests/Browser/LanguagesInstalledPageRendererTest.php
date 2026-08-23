@@ -72,7 +72,7 @@ it('reassigns users off a missing-from-disk language and deletes its stale db ro
     // `array_diff(db_languages, fs_languages)` cleanup loop reassigns any
     // user still set to it (to the gallery's default language) and deletes
     // the now-orphaned db row, every page load.
-    H::dbQuery($db, sprintf("INSERT INTO languages (id, version, name) VALUES ('xx_XX', '1.0', 'Missing Language')"));
+    H::dbQuery($db, "INSERT INTO languages (id, version, name) VALUES ('xx_XX', '1.0', 'Missing Language')");
 
     $username = 'languages_installed_missing_lang_' . uniqid();
     $password = 'a-strong-test-password-1';
@@ -88,13 +88,13 @@ it('reassigns users off a missing-from-disk language and deletes its stale db ro
     try {
         H::navigateOk($page, '/admin.php?page=languages');
 
-        $langAssoc = H::dbFetchAssoc($db, sprintf("SELECT COUNT(*) AS c FROM languages WHERE id = 'xx_XX'"));
+        $langAssoc = H::dbFetchAssoc($db, "SELECT COUNT(*) AS c FROM languages WHERE id = 'xx_XX'");
         expect(is_array($langAssoc) ? (int) $langAssoc['c'] : -1)->toBe(0);
 
         $userAssoc = H::dbFetchAssoc($db, sprintf('SELECT language FROM user_infos WHERE user_id = %d', $userId));
         expect(is_array($userAssoc) ? $userAssoc['language'] : 'MISSING')->toBe('en_UK');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM languages WHERE id = 'xx_XX'"));
+        H::dbQuery($db, "DELETE FROM languages WHERE id = 'xx_XX'");
         H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
         H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);

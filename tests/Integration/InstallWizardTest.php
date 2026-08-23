@@ -418,6 +418,13 @@ final class InstallWizardTest extends IntegrationTestCase
 
             $stringKeyed = [];
             foreach ($row as $key => $value) {
+                /**
+                 * @psalm-suppress RedundantCondition pg_fetch_assoc()'s
+                 *   stub already types this as array<string, mixed>, so
+                 *   Psalm sees $key as always string; this guard exists
+                 *   to catch a real PostgreSQL driver regression, not
+                 *   anything Psalm itself would flag.
+                 */
                 self::assertIsString($key, 'queryOne() expects string column names');
                 $stringKeyed[$key] = $value;
             }

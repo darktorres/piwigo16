@@ -129,7 +129,7 @@ final class Translator
 
         $mtime = filemtime($poFile);
         $pool = $mtime !== false ? $this->translationsCachePool : null;
-        $item = $pool?->getItem(md5($poFile . '_' . $mtime));
+        $item = $pool?->getItem(md5($poFile . '_' . (string) $mtime));
 
         if ($item instanceof CacheItemInterface && $item->isHit()) {
             /**

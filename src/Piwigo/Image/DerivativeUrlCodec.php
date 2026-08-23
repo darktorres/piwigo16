@@ -30,7 +30,7 @@ final class DerivativeUrlCodec
             return (int) $size->width;
         }
 
-        return $size->width . 'x' . $size->height;
+        return (string) $size->width . 'x' . (string) $size->height;
     }
 
     /**

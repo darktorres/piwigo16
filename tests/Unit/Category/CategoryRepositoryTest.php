@@ -1246,7 +1246,8 @@ test('findNextId() returns one more than the current max', function (): void {
     $maxId = DbConnection::build()->fetchOne('SELECT MAX(id) FROM categories');
 
     expect(categoryTestRepo()->findNextId())
-        ->toBe((is_numeric($maxId) ? $maxId : 0) + 1);
+        // @phpstan-ignore cast.useless
+        ->toBe((is_numeric($maxId) ? (int) $maxId : 0) + 1);
 });
 
 test('findPhotoCountsByCategory() counts direct images', function (): void {

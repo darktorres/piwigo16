@@ -1129,7 +1129,8 @@ namespace Piwigo\Tests\Integration {
             // isn't practically testable against this shared fixture DB).
             $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM categories');
 
-            self::assertSame((is_numeric($maxId) ? $maxId : 0) + 1, $this->repo->findNextId());
+            // @phpstan-ignore cast.useless
+            self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
         }
 
         public function testFindPhotoCountsByCategoryCountsDirectImages(): void

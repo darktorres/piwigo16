@@ -140,10 +140,19 @@ final class ContainerSmokeTest extends TestCase
         $container = Kernel::container();
 
         $definitions = require dirname(__DIR__, 2) . '/config/container.php';
+        /**
+         * @psalm-suppress RedundantCondition Psalm statically resolves
+         *   config/container.php's own current literal return shape
+         *   through this require, making both guards below provably
+         *   true today -- they exist to catch a future edit that
+         *   breaks the file's own array-of-string-keys contract, not to
+         *   catch anything Psalm itself would flag.
+         */
         self::assertIsArray($definitions);
 
         $failures = [];
         foreach (array_keys($definitions) as $id) {
+            /** @psalm-suppress RedundantCondition same as above. */
             self::assertIsString($id, 'Non-string key in config/container.php: ' . var_export($id, true));
             if (in_array($id, self::REQUEST_SCOPED_ONLY_ENTRIES, true)) {
                 continue;

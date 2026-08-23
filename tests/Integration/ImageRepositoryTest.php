@@ -1352,7 +1352,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // DB.
         $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM images');
 
-        self::assertSame((is_numeric($maxId) ? $maxId : 0) + 1, $this->repo->findNextId());
+        // @phpstan-ignore cast.useless
+        self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
     }
 
     public function testFindIdsNotInCategoriesExcludesLinkedImages(): void

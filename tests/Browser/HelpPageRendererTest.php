@@ -62,14 +62,14 @@ it('shows the French online-documentation message for a fr_ admin user', functio
     // request (then restoring it) is enough -- no separate user/session
     // needed, unlike the webmaster-required-warning tests elsewhere in this
     // batch.
-    H::dbQuery($db, sprintf("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 1"));
+    H::dbQuery($db, "UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 1");
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=help');
 
         $page->assertSee('Besoin d\'aide pour utiliser Piwigo');
     } finally {
-        H::dbQuery($db, sprintf("UPDATE user_infos SET language = 'en_UK' WHERE user_id = 1"));
+        H::dbQuery($db, "UPDATE user_infos SET language = 'en_UK' WHERE user_id = 1");
         H::dbClose($db);
     }
 });

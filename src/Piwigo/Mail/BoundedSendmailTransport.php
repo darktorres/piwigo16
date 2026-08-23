@@ -102,7 +102,7 @@ final class BoundedSendmailTransport extends AbstractTransport
         try {
             $process->run();
         } catch (ProcessTimedOutException $e) {
-            throw new TransportException('Sendmail process timed out after ' . $this->timeoutSeconds . 's: ' . $e->getMessage(), 0, $e);
+            throw new TransportException('Sendmail process timed out after ' . (string) $this->timeoutSeconds . 's: ' . $e->getMessage(), 0, $e);
         } catch (ProcessExceptionInterface $e) {
             // Normalized to TransportExceptionInterface -- MailService::
             // mail()'s own catch(TransportExceptionInterface) block is the
@@ -113,7 +113,7 @@ final class BoundedSendmailTransport extends AbstractTransport
         }
 
         if (! $process->isSuccessful()) {
-            throw new TransportException('Sendmail process failed with exit code ' . $process->getExitCode() . ': ' . $process->getErrorOutput());
+            throw new TransportException('Sendmail process failed with exit code ' . (string) $process->getExitCode() . ': ' . $process->getErrorOutput());
         }
     }
 }

@@ -625,7 +625,11 @@ final readonly class SectionPopulator
                         'items' => $this->repo->findTopRatedImageIds($forbiddenConditionDql, $top_number),
                     ]
                 );
-            } elseif ($section === Section::ListView) {
+            }
+            // ListView is the only Section case left unhandled here
+            // (Tags/Search/Favorites/RecentPics/RecentCats/MostVisited/
+            // BestRated above, Categories in the outer if/else).
+            else {
                 // parse_section_url() (functions_url.inc.php) always sets 'list'
                 // (a dummy [Db\NoMatchSentinel::ID] or a real id list)
                 // alongside 'section' => 'list'

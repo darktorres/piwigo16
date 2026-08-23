@@ -36,6 +36,19 @@ final class UserListCommand extends Command
         $table = new Table($output);
         $table->setHeaders(['ID', 'Username', 'Email', 'Status', 'Registered']);
         $table->setRows(array_map(
+            /**
+             * @psalm-suppress RedundantCondition
+             * @psalm-suppress TypeDoesNotContainType Psalm infers
+             *   $row->status as always non-null here, but
+             *   UserAdminListingRow's own docblock documents it as
+             *   genuinely nullable (a user row with no matching
+             *   `user_infos` row via the LEFT JOIN in
+             *   findAllForAdminListing()); PHP's property-read-on-null
+             *   semantics make plain `->` safe here (returns null rather
+             *   than throwing), which is what the trailing `?? ''` relies
+             *   on -- PHPStan flags a nullsafe `?->` on this same line as
+             *   unnecessary for the identical reason.
+             */
             static fn (UserAdminListingRow $row): array => [
                 $row->id->value,
                 $row->username->value,

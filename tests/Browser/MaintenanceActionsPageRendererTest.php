@@ -155,7 +155,7 @@ it('shows the empty-lounge link and counter when the upload lounge has real item
         // with every other concurrently-running Browser test in this
         // suite -- read the real total back rather than assuming this
         // insert is the only row, so this stays correct either way.
-        $countAssoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM lounge'));
+        $countAssoc = H::dbFetchAssoc($db, 'SELECT COUNT(*) AS c FROM lounge');
         $expectedCount = is_array($countAssoc) ? (int) $countAssoc['c'] : -1;
         expect($expectedCount)
             ->toBeGreaterThan(0);

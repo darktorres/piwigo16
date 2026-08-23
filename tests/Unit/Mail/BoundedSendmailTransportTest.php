@@ -252,7 +252,7 @@ test('doSend\'s timeout exception message concatenates the prefix, the configure
         expect($e->getPrevious())
             ->toBeInstanceOf(ProcessTimedOutException::class);
         expect($e->getMessage())
-            ->toBe('Sendmail process timed out after ' . $timeoutSeconds . 's: ' . ($e->getPrevious()?->getMessage() ?? ''));
+            ->toBe('Sendmail process timed out after ' . (string) $timeoutSeconds . 's: ' . ($e->getPrevious()?->getMessage() ?? ''));
         expect($e->getCode())
             ->toBe(0);
     }

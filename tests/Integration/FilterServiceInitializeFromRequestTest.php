@@ -289,10 +289,22 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), EntityManagerFactory::build($this->conn))->initializeFromRequest(LayoutStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertFalse($this->filterState->isEnabled());
+        /**
+         * @psalm-suppress InvalidScalarArgument Psalm tracks $_SESSION's
+         *   literal shape across this test's own prior assignments,
+         *   marking 'pwg_filter_enabled' as a possibly-undefined key --
+         *   a shape PHPUnit's assertArrayNotHasKey() signature (plain
+         *   array<array-key, mixed>) doesn't accept, even though the
+         *   assertion itself is checking that exact absence.
+         */
         self::assertArrayNotHasKey('pwg_filter_enabled', $_SESSION);
+        /** @psalm-suppress InvalidScalarArgument same as above. */
         self::assertArrayNotHasKey('pwg_filter_check_key', $_SESSION);
+        /** @psalm-suppress InvalidScalarArgument same as above. */
         self::assertArrayNotHasKey('pwg_filter_categories', $_SESSION);
+        /** @psalm-suppress InvalidScalarArgument same as above. */
         self::assertArrayNotHasKey('pwg_filter_visible_categories', $_SESSION);
+        /** @psalm-suppress InvalidScalarArgument same as above. */
         self::assertArrayNotHasKey('pwg_filter_visible_images', $_SESSION);
     }
 

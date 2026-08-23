@@ -706,7 +706,7 @@ test('compose dims the overlay alpha by exactly opacity/100 before compositing',
     // dim the overlay's alpha channel by opacity/100 before compositing at
     // the same integer x/y -- must land on byte-identical output.
     $rawOverlay = new Imagick($overlayPath);
-    $rawOverlay->evaluateImage(Imagick::EVALUATE_MULTIPLY, 37 / 100.0, Imagick::CHANNEL_ALPHA);
+    $rawOverlay->evaluateImage(Imagick::EVALUATE_MULTIPLY, 37.0 / 100.0, Imagick::CHANNEL_ALPHA);
     $rawBase = new Imagick($basePath);
     $rawBase->compositeImage($rawOverlay, Imagick::COMPOSITE_DISSOLVE, 0, 0);
     // Must replicate write()'s own setSamplingFactors() call -- it alters

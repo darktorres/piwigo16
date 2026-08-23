@@ -1054,7 +1054,7 @@ it('rejects a syntactically valid custom size that was never registered in the a
     // instead. (ImageStdParams::$custom is only ever populated by a real
     // Template::funcDefineDerivative() custom-size request elsewhere --
     // i.php itself never adds to it.)
-    $uniqueWidth = 700 + ((int) (microtime(true) * 1000) % 300);
+    $uniqueWidth = 700 + ((int) (microtime(true) * 1000.0) % 300);
     $uniqueHeight = $uniqueWidth - 137;
     $path = 'i.php?/ct_custom_unregistered_' . uniqid() . '-cu_s' . $uniqueWidth . 'x' . $uniqueHeight . '.jpg';
 
@@ -1322,7 +1322,7 @@ it('applies a configured non-zero sharpen amount when generating a standard-type
         expect(idcGet('i.php?/' . idcDerivativePath(H::imagePath($primeId), 'sq'))['status'])->toBe(200);
 
         $db = idcDb();
-        H::dbQuery($db, sprintf("UPDATE derivative_size SET sharpen = '0.5000' WHERE name = 'square'"));
+        H::dbQuery($db, "UPDATE derivative_size SET sharpen = '0.5000' WHERE name = 'square'");
         H::dbClose($db);
 
         $imageId = idcCreateTestPhoto($this, 'Derivative Sharpen Album');
@@ -1339,7 +1339,7 @@ it('clamps the JPEG compression quality to 75 when generating a 4xlarge derivati
     $snapshot = H::snapshotDerivativeConfig();
     try {
         $db = idcDb();
-        H::dbQuery($db, sprintf("UPDATE derivative_size SET enabled = 1 WHERE name = '4xlarge'"));
+        H::dbQuery($db, "UPDATE derivative_size SET enabled = 1 WHERE name = '4xlarge'");
         H::dbClose($db);
 
         // A real crop/scale change isn't needed to leave the "0 changes"

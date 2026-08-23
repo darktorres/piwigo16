@@ -107,11 +107,17 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
             return;
         }
 
-        $execId = UniqueExecLock::begins($logger, 'send_piwigo_infos');
-        if ($execId === false) {
+        $execAcquired = UniqueExecLock::begins($logger, 'send_piwigo_infos');
+        if ($execAcquired === false) {
             $logger->info('[' . __FUNCTION__ . '] another execution is running, abort');
             return;
         }
+        // UniqueExecLock::begins() only ever returns true or false, never a
+        // real per-call identifier, so every one of this method's own
+        // '[exec=...]' log segments below has always rendered a constant
+        // "exec=1", not a real execution-correlation value -- kept as an
+        // explicit literal here rather than silently implying otherwise.
+        $execId = 1;
 
         $conn = DbConnection::build();
         $dbInfo = new DbInfo($conn);
@@ -462,6 +468,17 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
                     // read below comes back mixed; narrow explicitly instead of
                     // bare-casting.
                     $currentCounter = $apps[$appName]['counter'] ?? 0;
+                    /**
+                     * Psalm tracks $apps' dynamic-key value type more
+                     * precisely than PHPStan (see the comment above) and
+                     * already knows $currentCounter is int by this point;
+                     * the is_numeric()/cast stays for PHPStan's own weaker
+                     * inference here, which genuinely needs it.
+                     *
+                     * @psalm-suppress RedundantCondition
+                     * @psalm-suppress RedundantCast
+                     * @psalm-suppress TypeDoesNotContainType
+                     */
                     $currentCounter = is_numeric($currentCounter) ? (int) $currentCounter : 0;
                     $apps[$appName]['counter'] = $currentCounter + $activity->counter;
 

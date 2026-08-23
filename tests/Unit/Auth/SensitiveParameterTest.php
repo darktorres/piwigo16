@@ -238,6 +238,12 @@ test('TryLogUser::__debugInfo() redacts the plaintext password from var_dump()-s
     $event = new TryLogUser(false, 'someuser', 'super-secret-plaintext', false);
 
     ob_start();
+    /**
+     * @psalm-suppress ForbiddenCode This test's whole point is verifying
+     *   __debugInfo() redacts the plaintext password from var_dump()'s
+     *   own output -- var_dump() itself is the thing under test, not a
+     *   real debug leftover.
+     */
     var_dump($event);
     $dumped = ob_get_clean();
 

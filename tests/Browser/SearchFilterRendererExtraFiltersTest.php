@@ -21,7 +21,7 @@ function extraFiltersSetImageAttrs(int $imageId, ?float $ratingScore = null, ?st
     $db = H::connect();
     $sets = [];
     if ($ratingScore !== null) {
-        $sets[] = 'rating_score = ' . $ratingScore;
+        $sets[] = 'rating_score = ' . (string) $ratingScore;
     }
     if ($dateCreation !== null) {
         $sets[] = "date_creation = '" . H::dbEscape($db, $dateCreation) . "'";

@@ -780,7 +780,7 @@ final class MailService implements MailerInterface
                 if ($authkey !== false) {
                     $link = $tpl['assign']['LINK'] ?? null;
                     $userTpl['assign']['LINK'] = $this->urlService->addUrlParams(is_string($link) ? $link : '', [
-                        'auth' => $authkey['auth_key'],
+                        'auth' => $authkey->authKey,
                     ]);
 
                     $img = $userTpl['assign']['IMG'] ?? null;
@@ -788,7 +788,7 @@ final class MailService implements MailerInterface
                         $img['link'] = $this->urlService->addUrlParams(
                             $img['link'],
                             [
-                                'auth' => $authkey['auth_key'],
+                                'auth' => $authkey->authKey,
                             ]
                         );
                         $userTpl['assign']['IMG'] = $img;
@@ -801,7 +801,7 @@ final class MailService implements MailerInterface
                 // doesn't accept it.
                 unset($userArgs['language_selected']);
                 if ($authkey !== false) {
-                    $userArgs['auth_key'] = $authkey['auth_key'];
+                    $userArgs['auth_key'] = $authkey->authKey;
                 }
 
                 $return = $this->mail($uEmail, $userArgs, $userTpl) && $return;

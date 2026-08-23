@@ -163,22 +163,22 @@ final readonly class AlbumNotificationPageRenderer
 
                     if ($authkey !== false) {
                         $user_tpl['assign']['LINK'] = $this->urlService->addUrlParams($tpl['assign']['LINK'], [
-                            'auth' => $authkey['auth_key'],
+                            'auth' => $authkey->authKey,
                         ]);
 
                         if (isset($user_tpl['assign']['IMG']['link'])) {
                             $user_tpl['assign']['IMG']['link'] = $this->urlService->addUrlParams(
                                 $user_tpl['assign']['IMG']['link'],
                                 [
-                                    'auth' => $authkey['auth_key'],
+                                    'auth' => $authkey->authKey,
                                 ]
                             );
                         }
                     }
 
                     $user_args = $args;
-                    if (isset($authkey['auth_key'])) {
-                        $user_args['auth_key'] = $authkey['auth_key'];
+                    if ($authkey !== false) {
+                        $user_args['auth_key'] = $authkey->authKey;
                     }
 
                     $user_language = $u->language ?? $this->userService->getDefaultLanguage();

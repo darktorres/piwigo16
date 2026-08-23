@@ -532,7 +532,7 @@ final class NotificationByMailSender
                             $authKey = $this->authService->createUserAuthKey($nbmUser->userId->value, $nbmUser->status);
 
                             if ($authKey !== false) {
-                                $auth = $authKey['auth_key'];
+                                $auth = $authKey->authKey;
                                 $addUrlParams['auth'] = $auth;
                             }
 

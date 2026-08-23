@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\Event\TryLogUser;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
+    use Piwigo\Auth\Projection\CreatedUserAuthKey;
     use Piwigo\Auth\Projection\FinalizeLoginDecision;
     use Piwigo\Auth\UserFailedLoginEntity;
     use Piwigo\Auth\UserFailedLoginRepository;
@@ -669,17 +670,17 @@ namespace Piwigo\Tests\Integration {
         public function testAuthKeyLoginRejectsAnExpiredAuthKey(): void
         {
             $created = $this->service->createUserAuthKey(4, 'normal');
-            self::assertIsArray($created);
+            self::assertInstanceOf(CreatedUserAuthKey::class, $created);
 
             $this->conn->executeStatement(
                 "UPDATE user_auth_keys SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
-                [$created['auth_key']]
+                [$created->authKey]
             );
 
             try {
-                self::assertFalse($this->service->authKeyLogin($created['auth_key']));
+                self::assertFalse($this->service->authKeyLogin($created->authKey));
             } finally {
-                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created->authKey]);
             }
         }
 
@@ -691,15 +692,15 @@ namespace Piwigo\Tests\Integration {
             // creation and its use -- exercises authKeyLogin()'s own
             // separate, defensive status re-check.
             $created = $this->service->createUserAuthKey(4, 'normal');
-            self::assertIsArray($created);
+            self::assertInstanceOf(CreatedUserAuthKey::class, $created);
 
             $this->conn->executeStatement("UPDATE user_infos SET status = 'admin' WHERE user_id = 4");
 
             try {
-                self::assertFalse($this->service->authKeyLogin($created['auth_key']));
+                self::assertFalse($this->service->authKeyLogin($created->authKey));
             } finally {
                 $this->conn->executeStatement("UPDATE user_infos SET status = 'normal' WHERE user_id = 4");
-                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created->authKey]);
             }
         }
 

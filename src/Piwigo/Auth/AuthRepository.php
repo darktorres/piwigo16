@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\Projection\AuthKeyDetails;
+use Piwigo\Auth\Projection\AuthKeyInsertRow;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Auth\Projection\UsernamePassword;
 use Piwigo\Common\ValueObject\AuthKeyId;
@@ -216,23 +217,17 @@ final readonly class AuthRepository
         return is_numeric($value) && (int) $value > 0;
     }
 
-    /**
-     * @param array{
-     *   auth_key: string, user_id: int, created_on: string, duration: int,
-     *   expired_on: string, key_type: string,
-     * } $key
-     */
-    public function insertAuthKey(array $key): string
+    public function insertAuthKey(AuthKeyInsertRow $key): string
     {
         $entity = new UserAuthKeyEntity(
-            authKey: $key['auth_key'],
+            authKey: $key->authKey,
             apikeySecret: null,
-            userId: UserId::from($key['user_id']),
-            createdOn: SqlDateTime::from($key['created_on']),
-            duration: $key['duration'],
-            expiredOn: SqlDateTime::from($key['expired_on']),
+            userId: UserId::from($key->userId),
+            createdOn: SqlDateTime::from($key->createdOn),
+            duration: $key->duration,
+            expiredOn: SqlDateTime::from($key->expiredOn),
             apikeyName: null,
-            keyType: $key['key_type'],
+            keyType: $key->keyType,
         );
 
         $this->em->persist($entity);

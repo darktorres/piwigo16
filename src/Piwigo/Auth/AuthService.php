@@ -12,8 +12,11 @@ use Piwigo\Auth\Event\LoginSuccess;
 use Piwigo\Auth\Event\TryLogUser;
 use Piwigo\Auth\Event\UserLogout;
 use Piwigo\Auth\Projection\AuthKeyDetails;
+use Piwigo\Auth\Projection\AuthKeyInsertRow;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Auth\Projection\AutoLoginKey;
+use Piwigo\Auth\Projection\CreatedUserAuthKey;
+use Piwigo\Auth\Projection\FakeUser;
 use Piwigo\Auth\Projection\FinalizeLoginDecision;
 use Piwigo\Auth\Projection\UsernamePassword;
 use Piwigo\Common\ValueObject\IpAddress;
@@ -385,8 +388,8 @@ final readonly class AuthService
         $fake_user = $this->generateFakeUser();
 
         // Verify password with fallback to fake user
-        $hash = $user_found->password ?? $fake_user['password'];
-        $verify_user_id = $user_found->id ?? $fake_user['id'];
+        $hash = $user_found->password ?? $fake_user->password;
+        $verify_user_id = $user_found->id ?? $fake_user->id;
         if ($verify_user_id !== null) {
             assert(is_numeric($verify_user_id));
             $verify_user_id = (int) $verify_user_id;
@@ -460,10 +463,8 @@ final readonly class AuthService
      * pwgLogin(). The fake user hash is cached per session to avoid
      * repeated hashing overhead while maintaining constant-time
      * authentication behavior.
-     *
-     * @return array{id: null, password: string} id and password
      */
-    public function generateFakeUser(): array
+    public function generateFakeUser(): FakeUser
     {
         // Generate once per session to avoid repeated hashing overhead.
         // Uses current password_hash algorithm to match real user verification costs.
@@ -480,10 +481,7 @@ final readonly class AuthService
         assert(array_key_exists('id', $fake_user) && $fake_user['id'] === null);
         assert(isset($fake_user['password']) && is_string($fake_user['password']));
 
-        return [
-            'id' => null,
-            'password' => $fake_user['password'],
-        ];
+        return new FakeUser(id: null, password: $fake_user['password']);
     }
 
     /**
@@ -608,9 +606,9 @@ final readonly class AuthService
     /**
      * Creates an authentication key.
      *
-     * @return array{auth_key: string, user_id: int, created_on: string, duration: int, expired_on: string, key_type: string, auth_key_id: string}|false false if auth keys are disabled or the user status is ineligible
+     * @return CreatedUserAuthKey|false false if auth keys are disabled or the user status is ineligible
      */
-    public function createUserAuthKey(int $userId, ?string $userStatus = null): array|false
+    public function createUserAuthKey(int $userId, ?string $userStatus = null): CreatedUserAuthKey|false
     {
         // auth_key_duration defaults to 3*24*60*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
@@ -640,18 +638,26 @@ final readonly class AuthService
             $now = Env::now();
             $expiration = (clone $now)->modify('+' . $auth_key_duration . ' seconds');
 
-            $key = [
-                'auth_key' => $candidate,
-                'user_id' => $userId,
-                'created_on' => $now->format('Y-m-d H:i:s'),
-                'duration' => $auth_key_duration,
-                'expired_on' => $expiration->format('Y-m-d H:i:s'),
-                'key_type' => 'auth_key',
-            ];
+            $insertRow = new AuthKeyInsertRow(
+                authKey: $candidate,
+                userId: $userId,
+                createdOn: $now->format('Y-m-d H:i:s'),
+                duration: $auth_key_duration,
+                expiredOn: $expiration->format('Y-m-d H:i:s'),
+                keyType: 'auth_key',
+            );
 
-            $key['auth_key_id'] = $this->repo->insertAuthKey($key);
+            $authKeyId = $this->repo->insertAuthKey($insertRow);
 
-            return $key;
+            return new CreatedUserAuthKey(
+                authKey: $insertRow->authKey,
+                userId: $insertRow->userId,
+                createdOn: $insertRow->createdOn,
+                duration: $insertRow->duration,
+                expiredOn: $insertRow->expiredOn,
+                keyType: $insertRow->keyType,
+                authKeyId: $authKeyId,
+            );
         } else {
             return $this->createUserAuthKey($userId, $userStatus);
         }

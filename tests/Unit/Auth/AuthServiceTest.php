@@ -14,6 +14,7 @@ use Piwigo\Auth\Event\TryLogUser;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Auth\Projection\CreatedUserAuthKey;
 use Piwigo\Auth\Projection\FinalizeLoginDecision;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Common\ValueObject\LangCode;
@@ -568,11 +569,11 @@ test('authKeyLogin() rejects an expired auth key', function (): void {
     $service = authServiceTestService();
     $created = $service->createUserAuthKey(4, 'normal');
     expect($created)
-        ->toBeArray();
-    if (! is_array($created)) {
+        ->toBeInstanceOf(CreatedUserAuthKey::class);
+    if (! $created instanceof CreatedUserAuthKey) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
-    $authKey = $created['auth_key'];
+    $authKey = $created->authKey;
 
     $conn->executeStatement(
         "UPDATE user_auth_keys SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
@@ -597,11 +598,11 @@ test('authKeyLogin() rejects an auth key whose user status is no longer eligible
     $service = authServiceTestService();
     $created = $service->createUserAuthKey(4, 'normal');
     expect($created)
-        ->toBeArray();
-    if (! is_array($created)) {
+        ->toBeInstanceOf(CreatedUserAuthKey::class);
+    if (! $created instanceof CreatedUserAuthKey) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
-    $authKey = $created['auth_key'];
+    $authKey = $created->authKey;
 
     $conn->executeStatement("UPDATE user_infos SET status = 'admin' WHERE user_id = 4");
 

@@ -30,17 +30,12 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
-use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
-use Piwigo\Cache\CacheFactory;
-use Piwigo\Cache\TranslationsCachePool;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
@@ -54,7 +49,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\ConnectedWith;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
-use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
@@ -71,15 +65,11 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Http\SessionBootstrap;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Lang\Translator;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
@@ -163,6 +153,8 @@ final class InstallWizard
 
     private int $step = 1;
 
+    private readonly InstallServiceFactory $installServiceFactory;
+
     /**
      * Deliberately does not take SessionService via constructor injection.
      * Unlike other callers, this class discovers its real DB credentials
@@ -195,7 +187,9 @@ final class InstallWizard
         private readonly UrlServiceInterface $urlService,
         private readonly HtmlRenderingInterface $htmlRenderer,
         private readonly ImageStdParams $imageStdParams,
-    ) {}
+    ) {
+        $this->installServiceFactory = new InstallServiceFactory($this->lang, $this->currentUser, $this->eventDispatcher, $this->deploymentPolicy, $this->currentConfig, $this->paths);
+    }
 
     /**
      * Everything the former install.php top level did before the
@@ -396,34 +390,28 @@ final class InstallWizard
     }
 
     /**
-     * Builds a UserService, matching the same "private helper takes the
-     * already-available Connection as a parameter" shape as
-     * Bootstrap\RequestBootstrap::activityService(). $conn defaults to a
-     * fresh DbConnection::build() rather than reusing $this->conn:
-     * analyzeForm()'s own call site can legitimately run after
-     * installDbConnect() returned null (a failed connection attempt),
-     * unlike the two performInstall() call sites below, which always
-     * have a real connection by the time they run.
+     * Delegates to InstallServiceFactory (extracted out of this class so
+     * InstallDataSeeder/InstallPostInstallSession can share it without
+     * repeating the same multi-dependency service construction chain,
+     * which tests/Arch/StructuralTest.php's own
+     * findDuplicateServiceConstructionChains() forbids verbatim within one
+     * file). $conn defaults to a fresh DbConnection::build() rather than
+     * reusing $this->conn: analyzeForm()'s own call site can legitimately
+     * run after installDbConnect() returned null (a failed connection
+     * attempt), unlike the performInstall()/render() call sites, which
+     * always have a real connection by the time they run.
      */
     private function userService(?Connection $conn = null): UserService
     {
-        $conn ??= DbConnection::build();
-        $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
-        $filterState = new FilterState();
-        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $filterState, $accessLevelChecker);
-
-        return new UserService($this->lang, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, new InstallationFlag(), new ProcessCache(), $this->paths, EntityManagerFactory::build($conn), $permissionService, new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)), $this->passwordService($conn));
+        return $this->installServiceFactory->userService($conn);
     }
 
     /**
-     * Builds a PasswordService. Same "private helper takes the
-     * already-available Connection as a parameter" shape as
-     * userService() above -- avoids a repeated multi-dependency
-     * construction chain, which an arch test forbids.
+     * Delegates to InstallServiceFactory. Same reasoning as userService() above.
      */
     private function passwordService(Connection $conn): PasswordService
     {
-        return new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy);
+        return $this->installServiceFactory->passwordService($conn);
     }
 
     /**

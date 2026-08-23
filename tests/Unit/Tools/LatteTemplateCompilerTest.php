@@ -75,51 +75,54 @@ it('rewrites filter property-invokes to shim static calls', function (): void {
 });
 
 it('strips the leading $this for non-Template-aware functions, keeping named args intact', function (): void {
-    // A dedicated fixture, not a real template (P38's own inline-JS-extraction
-    // campaign is steadily removing footerScript() from production templates,
-    // so pinning this compiler-behavior test to a real template's content
-    // would keep breaking as unrelated batches land) -- this only needs one
-    // combineScript() call and one footerScript() call to exercise the
-    // rewrite this test is actually about.
+    // A dedicated fixture, not a real template -- pinning this
+    // compiler-behavior test to a real template's content would keep
+    // breaking as unrelated batches land. `getCombinedScripts`/
+    // `getPageDataScript` are just two real, still-registered
+    // PiwigoExtension functions standing in for "some function"/"some
+    // other function" -- their own signatures/semantics aren't what this
+    // test is about (this generated PHP is never executed, only its
+    // source text is inspected), only that the rewrite this test is
+    // actually about applies.
     $fixture = $this->root . '/footerscript-fixture.latte';
     file_put_contents($fixture, <<<'LATTE'
-        {do combineScript(id: 'comments', load: 'footer', path: 'x.js')}
+        {do getCombinedScripts(id: 'comments', load: 'footer', path: 'x.js')}
         {capture $tmpFooterScript}
         console.log('x');
         {/capture}
-        {do footerScript($tmpFooterScript)}
+        {do getPageDataScript($tmpFooterScript)}
         LATTE);
 
     $result = $this->compiler->compile($fixture, []);
 
     $code = (string) file_get_contents($result->outputPath);
     expect($code)
-        ->toContain("LatteAnalysisShims::combineScript(id: 'comments'")
-        ->toContain('LatteAnalysisShims::footerScript($tmpFooterScript)')
-        ->not->toContain('combineScript($this');
+        ->toContain("LatteAnalysisShims::getCombinedScripts(id: 'comments'")
+        ->toContain('LatteAnalysisShims::getPageDataScript($tmpFooterScript)')
+        ->not->toContain('getCombinedScripts($this');
 });
 
 it('keeps the leading $this for functions declared Template-aware', function (): void {
     $fixture = $this->root . '/footerscript-fixture.latte';
     file_put_contents($fixture, <<<'LATTE'
-        {do combineScript(id: 'comments', load: 'footer', path: 'x.js')}
+        {do getCombinedScripts(id: 'comments', load: 'footer', path: 'x.js')}
         {capture $tmpFooterScript}
         console.log('x');
         {/capture}
-        {do footerScript($tmpFooterScript)}
+        {do getPageDataScript($tmpFooterScript)}
         LATTE);
 
     $compiler = new LatteTemplateCompiler(
         latte_template_compiler_test_engine(),
         $this->repoRoot,
         $this->outputDir,
-        templateAwareFunctions: ['footerScript'],
+        templateAwareFunctions: ['getPageDataScript'],
     );
 
     $result = $compiler->compile($fixture, []);
 
     expect((string) file_get_contents($result->outputPath))
-        ->toContain('LatteAnalysisShims::footerScript($this, $tmpFooterScript)');
+        ->toContain('LatteAnalysisShims::getPageDataScript($this, $tmpFooterScript)');
 });
 
 it('injects @var docblocks after every extract anchor, including block methods', function (): void {

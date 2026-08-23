@@ -37,7 +37,6 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\Env;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
@@ -353,7 +352,7 @@ final class RequestBootstrap
                 new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
                     ->getAdminThemePref() ?? self::currentConfig()->adminTheme
             );
-            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes/admin', $admin_theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
@@ -369,7 +368,7 @@ final class RequestBootstrap
             // before Template is constructed, so a theme's subscribedEvents()
             // are live before anything in the same request could fire them.
             self::themeRegistry($conn)->bootCurrent($theme);
-            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes', $theme);
+            $template = new Template(self::currentConfig(), self::lang(), self::eventDispatcher(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::urlService(), self::pageState(), self::htmlRenderer(), self::imageStdParams(), self::paths()->root . 'themes', $theme);
         }
 
         self::currentTemplate()->set($template);
@@ -391,7 +390,7 @@ final class RequestBootstrap
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
-            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::errorCollector(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()), self::pageState(), self::htmlRenderer(), self::imageStdParams())
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()), self::pageState(), self::htmlRenderer(), self::imageStdParams())
                 ->render();
         }
 
@@ -814,25 +813,6 @@ final class RequestBootstrap
         }
 
         return $entityManager;
-    }
-
-    /**
-     * Resolves the container-shared instance so that this method's own
-     * `install()` write (registering the real error handler/shutdown
-     * function) is visible to every other consumer holding the same
-     * shared instance. Public (unlike most resolver helpers here):
-     * public/install.php's own `new InstallWizard(...)` manual
-     * construction needs this to satisfy Template's own new required
-     * collaborators.
-     */
-    public static function errorCollector(): ErrorCollector
-    {
-        $errorCollector = Kernel::container()->get(ErrorCollector::class);
-        if (! $errorCollector instanceof ErrorCollector) {
-            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
-        }
-
-        return $errorCollector;
     }
 
     /**

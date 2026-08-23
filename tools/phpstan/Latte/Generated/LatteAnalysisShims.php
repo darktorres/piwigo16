@@ -114,14 +114,8 @@ final class LatteAnalysisShims
         'translate',
         'l10n',
         'translate_dec',
-        'combineScript',
         'getCombinedScripts',
-        'combineCss',
         'getCombinedCss',
-        'htmlHead',
-        'footerScript',
-        'exposeData',
-        'exposeString',
         'getPageDataScript',
         'once',
         'is_admin',
@@ -621,45 +615,12 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0'): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function getCombinedScripts(string $load): \Latte\Runtime\Html
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
     public static function getCombinedCss(): \Latte\Runtime\Html
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function htmlHead(\Latte\Runtime\Html|string $content): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function footerScript(\Latte\Runtime\Html|string $content, ?string $require = null): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public static function exposeData(string $key, array|string|int|float|bool|null $value): void
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function exposeString(string $translationKey): void
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

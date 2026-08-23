@@ -18,7 +18,6 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
@@ -83,10 +82,10 @@ use Symfony\Component\Mime\Email;
  * `AccessLevelChecker` has no `MailerInterface` dependency of its own, so
  * it's built directly from this class's own already-required
  * currentUser/currentConfig rather than resolved from the container.
- * `ErrorCollector`/`ProcessCache`/`CurrentConfigService` are resolved
- * lazily from the container instead, purely to pass through to
- * getMailTemplate()'s own `new Template(...)` call -- see errorCollector()'s
- * own docblock for why they stay lazy.
+ * `ProcessCache`/`CurrentConfigService` are resolved lazily from the
+ * container instead, purely to pass through to getMailTemplate()'s own
+ * `new Template(...)` call -- see processCache()'s own docblock for why
+ * they stay lazy.
  *
  * Implements `Piwigo\Core\MailerInterface` so L2aCoreDomain/L2bExtendedDomain
  * classes that may not depend on this class directly (this file is
@@ -145,7 +144,7 @@ final class MailService implements MailerInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- these 3 exist
+     * Container resolve, not a constructor property -- these 2 exist
      * purely to pass through to getMailTemplate()'s own
      * `new Template(...)` call (Template's own required collaborators),
      * not read by MailService itself. Resolving `Piwigo\Auth\AccessControl`
@@ -157,16 +156,6 @@ final class MailService implements MailerInterface
      * mean every such resolution also pays that cost. Kept lazy so nothing
      * forces it outside an actual getMailTemplate() call.
      */
-    private function errorCollector(): ErrorCollector
-    {
-        $errorCollector = Kernel::container()->get(ErrorCollector::class);
-        if (! $errorCollector instanceof ErrorCollector) {
-            throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
-        }
-
-        return $errorCollector;
-    }
-
     private function processCache(): ProcessCache
     {
         $processCache = Kernel::container()->get(ProcessCache::class);
@@ -423,7 +412,7 @@ final class MailService implements MailerInterface
      */
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector(), $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
+        return new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->processCache(), $this->currentConfigService(), $this->paths, $this->accessLevelChecker(), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', ThemeId::from('default'), 'template/mail/' . $emailFormat);
     }
 
     /**

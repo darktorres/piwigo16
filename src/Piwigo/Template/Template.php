@@ -35,7 +35,6 @@ use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HeadLink;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -304,7 +303,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         private readonly CurrentConfig $currentConfig,
         private readonly Lang $lang,
         private readonly EventDispatcher $eventDispatcher,
-        private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
         private readonly Paths $paths,
@@ -1131,43 +1129,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * `{do combineScript(...)}` -- registers a script with `PageAssets`.
-     * `$id` has no default, so a `.latte` template omitting it gets a real
-     * PHP `ArgumentCountError` at the call site: real, required arguments
-     * backed by PHP's own type system, not a behavior gap -- no real
-     * converted template omits it.
-     */
-    public function combineScript(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0'): void
-    {
-        $loadMode = LoadMode::Header;
-        if ($load !== null) {
-            $loadMode = match ($load) {
-                'header' => LoadMode::Header,
-                'footer' => LoadMode::Footer,
-                'async' => LoadMode::Async,
-                default => null,
-            };
-            if ($loadMode === null) {
-                $this->errorCollector->recordFatal("combineScript: invalid 'load' parameter");
-                $loadMode = LoadMode::Header;
-            }
-        }
-
-        $dependsOn = $require !== null && $require !== '' ? explode(',', $require) : [];
-
-        $this->pageAssets->add(AssetContribution::script(
-            id: $id,
-            path: $path ?? '',
-            loadMode: $loadMode,
-            dependsOn: $dependsOn,
-            version: $version,
-        ));
-    }
-
-    /**
-     * `{=getCombinedScripts(...)}` -- returns `Latte\Runtime\Html` (not a
-     * plain string), since this one (unlike `combineScript()`) prints real
-     * markup at its own call site and would otherwise be HTML-escaped by
+     * Returns `Latte\Runtime\Html` (not a plain string), since this prints
+     * real markup at its own call site (`{=getCombinedScripts(...)}` in
+     * every real `layout.latte`) and would otherwise be HTML-escaped by
      * Latte's auto-escaping (see docs/PLAN.md's P31 section,
      * "Auto-escaping"). Both loads return a placeholder now -- resolved
      * together, later, in `finalizeHtml()` (P41-G, docs/PLAN.md).
@@ -1175,16 +1139,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function getCombinedScripts(string $load): Html
     {
         return new Html($load === 'header' ? self::COMBINED_SCRIPTS_TAG : self::COMBINED_FOOTER_SCRIPTS_TAG);
-    }
-
-    /**
-     * `{do combineCss(...)}` -- registers a CSS file with `PageAssets`.
-     * `$path` has no default, same reasoning as `combineScript()`'s `$id`
-     * above.
-     */
-    public function combineCss(string $path, ?string $id = null, string|false $version = '0', int $order = 0): void
-    {
-        $this->pageAssets->add(AssetContribution::css($path, id: $id, order: $order, version: $version));
     }
 
     /**
@@ -1240,26 +1194,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * `{capture $v}...{/capture}{do htmlHead($v)}` -- Latte's own native
-     * tags compose the open/close content-capture Smarty's own
-     * `html_head` block plugin API used to give, so no custom Latte tag is
-     * needed; see docs/PLAN.md's P31 section, "Blocks/functions".
-     */
-    public function htmlHead(string|Html $content): void
-    {
-        $trimmed = trim((string) $content);
-        if ($trimmed !== '') {
-            $this->htmlHeadElements[] = $trimmed;
-        }
-    }
-
-    /**
      * `Renderer::render()`'s own entry point for a `HasHeadLinks` View's
      * declared `<link>` elements (docs/PLAN.md's P42) -- builds the same
      * `rel`/`type`/`title`/`href` attribute order the old
-     * `{do htmlHead(...)}` call sites hand-wrote, then reuses `htmlHead()`
-     * above so both mechanisms share one placeholder/dedup path until the
-     * final P42 batch replaces it with direct resolution.
+     * `{do htmlHead(...)}` call sites hand-wrote.
      */
     public function registerHeadLink(HeadLink $link): void
     {
@@ -1274,20 +1212,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $tag .= ' href="' . $link->href . '">';
 
-        $this->htmlHead($tag);
-    }
-
-    /**
-     * Same `{capture}`+`{do}` composition as `htmlHead()` above, registering
-     * an `AssetKind::InlineScript` contribution with `PageAssets`.
-     */
-    public function footerScript(string|Html $content, ?string $require = null): void
-    {
-        $trimmed = trim((string) $content);
-        if ($trimmed !== '') {
-            $dependsOn = $require !== null && $require !== '' ? explode(',', $require) : [];
-            $this->pageAssets->add(AssetContribution::inlineScript($trimmed, $dependsOn));
-        }
+        $this->htmlHeadElements[] = $tag;
     }
 
     /**
@@ -1314,13 +1239,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             }
             $f = $siteLocalDir . 'css/' . $id . '-rules.css';
             if (file_exists($this->paths->root . $f)) {
-                $this->combineCss($f, order: 10);
+                $this->pageAssets->add(AssetContribution::css($f, order: 10));
             }
         }
 
         $f = $siteLocalDir . 'css/rules.css';
         if (file_exists($this->paths->root . $f)) {
-            $this->combineCss($f, order: 10);
+            $this->pageAssets->add(AssetContribution::css($f, order: 10));
         }
     }
 
@@ -1530,10 +1455,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR;
         $link = json_encode('#' . $action->id . 'Link', $flags);
         $box = json_encode('#' . $action->id . 'Box', $flags);
-        $this->footerScript(
+        $this->pageAssets->add(AssetContribution::inlineScript(
             "window.SwitchBox=window.SwitchBox||[];window.SwitchBox.push({$link},{$box});",
-            'core.switchbox'
-        );
+            ['core.switchbox']
+        ));
     }
 
     /**

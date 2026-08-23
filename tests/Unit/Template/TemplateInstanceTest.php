@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Latte\Runtime\Html;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\Event\GetPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\AuthButton;
@@ -18,7 +19,6 @@ use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HeadLink;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -1077,25 +1077,7 @@ test('parse fatal-errors for an unresolvable filename', function (): void {
     }
 })->throws(ResponseReadyException::class);
 
-// --- combineScript / getCombinedScripts --------------------------------
-
-/**
- * combineScript()/getCombinedScripts() log via
- * $this->errorCollector->recordFatal() (a real required constructor
- * collaborator; TemplateTestFactory::build() resolves the same
- * container-shared instance when Kernel is booted) -- resolved here the
- * same way, so drain() reads what Template's own call just wrote instead
- * of a disconnected fresh instance.
- */
-function templateInstanceTestErrorCollector(): ErrorCollector
-{
-    $errorCollector = Kernel::container()->get(ErrorCollector::class);
-    if (! $errorCollector instanceof ErrorCollector) {
-        throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
-    }
-
-    return $errorCollector;
-}
+// --- registerPageAssets (scripts) / getCombinedScripts -------------------
 
 /**
  * Same "throw instead of returning false" shape as
@@ -1132,25 +1114,11 @@ function templateInstanceTestScriptTags(Template $t): array
     ];
 }
 
-test('combineScript records a fatal error for an invalid load value', function (): void {
-    $this->expectErrorLog();
-    $t = TemplateTestFactory::build();
-    templateInstanceTestErrorCollector()
-        ->drain();
-
-    $t->combineScript('x', load: 'bogus');
-
-    $collected = templateInstanceTestErrorCollector()
-        ->drain();
-    expect($collected)
-        ->toBe(["[ERROR] combineScript: invalid 'load' parameter"]);
-});
-
-test('combineScript defaults load to header, rendered at the header placeholder', function (): void {
+test('registerPageAssets defaults a script to header load, rendered at the header placeholder', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
-    $t->combineScript('x', path: 'x.js');
+    $t->registerPageAssets([AssetContribution::script('x', 'x.js')]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
@@ -1159,11 +1127,11 @@ test('combineScript defaults load to header, rendered at the header placeholder'
         ->toBe('');
 });
 
-test('combineScript maps load="footer" to the footer placeholder as a plain script tag', function (): void {
+test('registerPageAssets maps LoadMode::Footer to the footer placeholder as a plain script tag', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
-    $t->combineScript('x', load: 'footer', path: 'x.js');
+    $t->registerPageAssets([AssetContribution::script('x', 'x.js', LoadMode::Footer)]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['footer'])
@@ -1172,10 +1140,10 @@ test('combineScript maps load="footer" to the footer placeholder as a plain scri
         ->toBe('');
 });
 
-test('combineScript maps load="async" to the footer placeholder via the dynamic-script bootstrap', function (): void {
+test('registerPageAssets maps LoadMode::Async to the footer placeholder via the dynamic-script bootstrap', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/async.js', 'console.log(1);');
-    $t->combineScript('async-script', load: 'async', path: 'async.js');
+    $t->registerPageAssets([AssetContribution::script('async-script', 'async.js', LoadMode::Async)]);
 
     $tags = templateInstanceTestScriptTags($t);
 
@@ -1191,14 +1159,16 @@ test('combineScript maps load="async" to the footer placeholder via the dynamic-
         ->toBe('');
 });
 
-test('combineScript explodes a comma-separated require string and orders dependencies first', function (): void {
+test('registerPageAssets orders a script\'s dependencies first', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/a.js', 'console.log("a");');
     file_put_contents(CurrentPathsTestFactory::get()->root . '/b.js', 'console.log("b");');
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log("x");');
-    $t->combineScript('a', path: 'a.js');
-    $t->combineScript('b', path: 'b.js');
-    $t->combineScript('x', require: 'a,b', path: 'x.js');
+    $t->registerPageAssets([
+        AssetContribution::script('a', 'a.js'),
+        AssetContribution::script('b', 'b.js'),
+        AssetContribution::script('x', 'x.js', dependsOn: ['a', 'b']),
+    ]);
 
     $tags = templateInstanceTestScriptTags($t);
 
@@ -1212,44 +1182,33 @@ test('combineScript explodes a comma-separated require string and orders depende
         ->toBeLessThan(templateInstanceTestStrpos($tags['header'], 'x.js'));
 });
 
-test('combineScript treats a null or empty-string require as no requirements', function (): void {
+test('registerPageAssets defaults a script\'s version to "0" (falsy), so makeAssetSrc falls back to AppInfo::VERSION', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
-    $t->combineScript('x', require: '', path: 'x.js');
-
-    $tags = templateInstanceTestScriptTags($t);
-    expect($tags['header'])
-        ->toContain('x.js');
-});
-
-test('combineScript defaults version to "0" (falsy), so makeAssetSrc falls back to AppInfo::VERSION', function (): void {
-    $t = TemplateTestFactory::build();
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
-
-    $t->combineScript('x', path: 'x.js');
+    $t->registerPageAssets([AssetContribution::script('x', 'x.js')]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
         ->toContain('?v' . AppInfo::VERSION);
 });
 
-test('combineScript keeps a real string version', function (): void {
+test('registerPageAssets keeps a real string version', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
-    $t->combineScript('x', path: 'x.js', version: '3.2');
+    $t->registerPageAssets([AssetContribution::script('x', 'x.js', version: '3.2')]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
         ->toContain('?v3.2');
 });
 
-test('combineScript keeps version=false as-is, omitting the version query string entirely', function (): void {
+test('registerPageAssets keeps version=false as-is, omitting the version query string entirely', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
-    $t->combineScript('x', path: 'x.js', version: false);
+    $t->registerPageAssets([AssetContribution::script('x', 'x.js', version: false)]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
@@ -1268,7 +1227,7 @@ test('getCombinedScripts returns a placeholder for both the header and footer lo
 test('getCombinedScripts prefixes the root URL onto the script src, in the correct order', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/sync.js', 'console.log(1);');
-    $t->combineScript('sync-script', load: 'footer', path: 'sync.js');
+    $t->registerPageAssets([AssetContribution::script('sync-script', 'sync.js', LoadMode::Footer)]);
     template_instance_test_root_path_override()
         ->push('http://example.test/root/');
     try {
@@ -1283,7 +1242,7 @@ test('getCombinedScripts prefixes the root URL onto the script src, in the corre
 
 test('makeAssetSrc (via getCombinedScripts) uses a remote script\'s own path verbatim, with no root URL prefix or version suffix', function (): void {
     $t = TemplateTestFactory::build();
-    $t->combineScript('remote-script', load: 'footer', path: 'https://cdn.example.com/foo.js');
+    $t->registerPageAssets([AssetContribution::script('remote-script', 'https://cdn.example.com/foo.js', LoadMode::Footer)]);
 
     $tags = templateInstanceTestScriptTags($t);
 
@@ -1291,63 +1250,56 @@ test('makeAssetSrc (via getCombinedScripts) uses a remote script\'s own path ver
         ->toBe('<script type="text/javascript" src="https://cdn.example.com/foo.js"></script>');
 });
 
-// --- footerScript --------------------------------------------------------
+// --- registerPageAssets (inline scripts) ---------------------------------
 
-test('footerScript registers an inline script once its own required script is already known', function (): void {
+test('registerPageAssets registers an inline script once its own required script is already known', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/foo.js', 'console.log(0);');
-    $t->combineScript('foo', path: 'foo.js');
-
-    $t->footerScript('console.log(1);', require: 'foo');
-
-    $tags = templateInstanceTestScriptTags($t);
-    expect($tags['footer'])
-        ->toContain('console.log(1);');
-});
-
-test('footerScript is a no-op for empty or whitespace-only content', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->footerScript('');
-    $t->footerScript("   \n");
-
-    $tags = templateInstanceTestScriptTags($t);
-    expect($tags['footer'])
-        ->toBe('');
-});
-
-test('footerScript treats a null require as no requirements', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->footerScript('console.log(1);');
+    $t->registerPageAssets([
+        AssetContribution::script('foo', 'foo.js'),
+        AssetContribution::inlineScript('console.log(1);', ['foo']),
+    ]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['footer'])
         ->toContain('console.log(1);');
 });
 
-test('footerScript explodes a comma-separated require string', function (): void {
+test('registerPageAssets treats an inline script with no dependsOn as no requirements', function (): void {
+    $t = TemplateTestFactory::build();
+
+    $t->registerPageAssets([AssetContribution::inlineScript('console.log(1);')]);
+
+    $tags = templateInstanceTestScriptTags($t);
+    expect($tags['footer'])
+        ->toContain('console.log(1);');
+});
+
+test('registerPageAssets orders an inline script\'s multiple dependencies', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/a.js', 'console.log("a");');
     file_put_contents(CurrentPathsTestFactory::get()->root . '/b.js', 'console.log("b");');
-    $t->combineScript('a', path: 'a.js');
-    $t->combineScript('b', path: 'b.js');
-
-    $t->footerScript('console.log(1);', require: 'a,b');
+    $t->registerPageAssets([
+        AssetContribution::script('a', 'a.js'),
+        AssetContribution::script('b', 'b.js'),
+        AssetContribution::inlineScript('console.log(1);', ['a', 'b']),
+    ]);
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['footer'])
         ->toContain('console.log(1);');
 });
 
-// --- combineCss / getCombinedCss ----------------------------------------
+// --- registerPageAssets (css) / getCombinedCss ---------------------------
 
-test('combineCss forwards a custom order through to sorting, real range -999 to 100', function (): void {
+test('registerPageAssets forwards a css contribution\'s custom order through to sorting, real range -999 to 100', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/a.css', 'body{}');
     file_put_contents(CurrentPathsTestFactory::get()->root . '/b.css', 'body{}');
-    $t->combineCss('b.css', order: 10);
-    $t->combineCss('a.css', order: -10);
+    $t->registerPageAssets([
+        AssetContribution::css('b.css', order: 10),
+        AssetContribution::css('a.css', order: -10),
+    ]);
 
     $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
@@ -1367,7 +1319,7 @@ test('getCombinedCss returns the combined-css placeholder', function (): void {
 test('finalizeHtml appends a version query string for a truthy combined_css version', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-    $t->combineCss('style.css', version: '7');
+    $t->registerPageAssets([AssetContribution::css('style.css', version: '7')]);
 
     $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
@@ -1378,7 +1330,7 @@ test('finalizeHtml appends a version query string for a truthy combined_css vers
 test('finalizeHtml does not append a version query string when combined_css version is exactly false', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-    $t->combineCss('style.css', version: false);
+    $t->registerPageAssets([AssetContribution::css('style.css', version: false)]);
 
     $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
@@ -1392,7 +1344,7 @@ test('finalizeHtml builds the combined-css href by prefixing the root URL onto t
     template_instance_test_root_path_override()
         ->push('http://example.test/root/');
     try {
-        $t->combineCss('style.css', version: false);
+        $t->registerPageAssets([AssetContribution::css('style.css', version: false)]);
 
         $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
     } finally {
@@ -1406,7 +1358,7 @@ test('finalizeHtml builds the combined-css href by prefixing the root URL onto t
 test('finalizeHtml clears the CSS registrations so a second call does not re-emit already-flushed CSS', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/style.css', 'body{}');
-    $t->combineCss('style.css', version: false);
+    $t->registerPageAssets([AssetContribution::css('style.css', version: false)]);
     $first = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
 
     $second = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
@@ -1439,7 +1391,7 @@ test('finalizeHtml does not reprocess the combined-footer-scripts tag on a secon
 
 test('finalizeHtml injects head elements before </head> when the source contains that anchor', function (): void {
     $t = TemplateTestFactory::build();
-    $t->htmlHead('<meta a>');
+    $t->htmlHeadElements[] = '<meta a>';
 
     $result = $t->finalizeHtml("<head>\n</head>\nbody");
 
@@ -1458,7 +1410,7 @@ test('finalizeHtml does not touch </head> when no head elements were registered'
 
 test('finalizeHtml does not inject head elements when the source has no </head> anchor', function (): void {
     $t = TemplateTestFactory::build();
-    $t->htmlHead('<meta a>');
+    $t->htmlHeadElements[] = '<meta a>';
 
     $result = $t->finalizeHtml('no head tag here');
 
@@ -1466,21 +1418,9 @@ test('finalizeHtml does not inject head elements when the source has no </head> 
         ->toBe('no head tag here');
 });
 
-// --- htmlHead ---------------------------------------------------------
-
-test('htmlHead is a no-op for empty or whitespace-only content', function (): void {
-    $t = TemplateTestFactory::build();
-
-    $t->htmlHead('');
-    $t->htmlHead("   \n");
-
-    expect($t->htmlHeadElements)
-        ->toBe([]);
-});
-
 // --- registerHeadLink (P42) ------------------------------------------
 
-test('registerHeadLink builds the rel/type/title/href attribute order and reuses htmlHead', function (): void {
+test('registerHeadLink builds the rel/type/title/href attribute order', function (): void {
     $t = TemplateTestFactory::build();
 
     $t->registerHeadLink(new HeadLink(rel: 'alternate', href: '/feed.php', type: 'application/rss+xml', title: 'Complete RSS feed'));
@@ -1567,7 +1507,7 @@ test('dispatchPageAssetsOnce merges a plugin-contributed asset into the resolved
 
 // --- localCssRules ----------------------------------------------------
 
-test('localCssRules registers a combineCss entry for a real theme-specific rules file', function (): void {
+test('localCssRules registers a css entry for a real theme-specific rules file', function (): void {
     mkdir(CurrentPathsTestFactory::get()->root . '/local/css', 0o777, true);
     file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/mytheme-rules.css', 'body{}');
     $t = TemplateTestFactory::build();
@@ -1590,7 +1530,7 @@ test('localCssRules registers a combineCss entry for a real theme-specific rules
         ->toContain('local/css/mytheme-rules.css');
 });
 
-test('localCssRules registers a combineCss entry for a real site-wide rules.css', function (): void {
+test('localCssRules registers a css entry for a real site-wide rules.css', function (): void {
     mkdir(CurrentPathsTestFactory::get()->root . '/local/css', 0o777, true);
     file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/rules.css', 'body{}');
     $t = TemplateTestFactory::build();

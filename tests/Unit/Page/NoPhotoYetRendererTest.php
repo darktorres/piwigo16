@@ -8,10 +8,8 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiContext;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
@@ -93,7 +91,6 @@ function noPhotoYetTestRenderer(AdminContext $adminContext, ApiContext $apiConte
         CurrentUserTestFactory::get(),
         CurrentTemplateTestFactory::get(),
         CurrentConfigTestFactory::get(),
-        new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
         new ProcessCache(),
         CurrentConfigServiceTestFactory::get(),
         new Renderer(CurrentTemplateTestFactory::get()),

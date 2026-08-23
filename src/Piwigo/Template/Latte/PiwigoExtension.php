@@ -48,13 +48,18 @@ use Piwigo\Template\Template;
  *    via `{=implode(',', $arr)}` instead (Latte's own print-expression
  *    tag), since a filter's piped value has to be the wrapped function's
  *    first argument and those don't fit that shape.
- *  - **Stateful asset/page functions** -- `combineScript`/`combineCss`/
- *    `getCombinedScripts`/`getCombinedCss`/`htmlHead`/`footerScript`/
- *    `exposeData`/`exposeString`/`getPageDataScript` all delegate to the
- *    owning `Template` instance's own (renamed, same-body) methods --
- *    reusing its already-correct `PageAssets`/`PageState` validation
- *    logic directly rather than re-deriving it here (the last three
- *    accumulate into `PageState`, docs/PLAN.md's P37). Smarty's
+ *  - **Stateful page-output functions** -- `getCombinedScripts`/
+ *    `getCombinedCss`/`getPageDataScript` delegate to the owning
+ *    `Template` instance's own methods, printing the placeholder tags
+ *    `finalizeHtml()` later substitutes (docs/PLAN.md's P41-G/P37). The
+ *    write-side imperative registration functions these used to pair
+ *    with (`combineScript`/`combineCss`/`htmlHead`/`footerScript`/
+ *    `exposeData`/`exposeString`) were deleted once every real template
+ *    call site migrated to a View's declarative `HasPageAssets`/
+ *    `ExposesPageData`/`HasHeadLinks` (docs/PLAN.md's P42's own final
+ *    step) -- `Template::exposeData()`/`exposeString()` themselves
+ *    survive as the real methods `Renderer::render()` now calls directly
+ *    from PHP, just no longer Latte-callable. Smarty's
  *    `html_options`/`html_radios` plugins were similarly ported once,
  *    fully replaced (P43-B) by plain `{foreach}` loops over `<option>`/
  *    radio `<label>` markup directly in templates -- no runtime port
@@ -181,14 +186,8 @@ final class PiwigoExtension extends Extension
             'translate' => $this->translate(...),
             'l10n' => $this->translate(...),
             'translate_dec' => $this->translateDec(...),
-            'combineScript' => $this->template->combineScript(...),
             'getCombinedScripts' => $this->template->getCombinedScripts(...),
-            'combineCss' => $this->template->combineCss(...),
             'getCombinedCss' => $this->template->getCombinedCss(...),
-            'htmlHead' => $this->template->htmlHead(...),
-            'footerScript' => $this->template->footerScript(...),
-            'exposeData' => $this->template->exposeData(...),
-            'exposeString' => $this->template->exposeString(...),
             'getPageDataScript' => $this->template->getPageDataScript(...),
             'once' => $this->template->once(...),
             // Also registered as filters above, same names -- same

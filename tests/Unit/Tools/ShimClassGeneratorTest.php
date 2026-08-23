@@ -59,19 +59,29 @@ final class ShimClassGeneratorTestEdgeCaseFixture
     {
         return explode($delimiter !== '' ? $delimiter : ',', $text);
     }
+
+    /**
+     * Same shape `Template::combineScript()` used to have (multiple
+     * optional string|null params plus a `string|false` one) -- kept
+     * here as a dedicated fixture once combineScript() itself was
+     * deleted (P42's own final step, docs/PLAN.md), since the generator
+     * itself must keep handling this real-default-value shape correctly
+     * whether or not any *current* registration happens to exhibit it.
+     */
+    public static function withDefaults(string $id, ?string $load = null, ?string $require = null, ?string $path = null, string|false $version = '0'): void {}
 }
 
 /**
  * Isolated from `shim_generator_test_engine()`'s real, production
- * PiwigoExtension registrations on purpose: these 3 tests exercise
+ * PiwigoExtension registrations on purpose: these 4 tests exercise
  * generator mechanics (untyped/by-ref internal-function params,
- * control-character default escaping, docblock-line copying) that
- * happened to be demonstrated by real `PiwigoExtension` registrations
- * once, but the generator itself must keep handling correctly whether
- * or not any *current* registration happens to exhibit them --
- * `array_key_exists`/`preg_match`/`trim` are plain PHP internal
- * functions here, not tied to whatever PiwigoExtension currently
- * registers.
+ * control-character default escaping, docblock-line copying,
+ * multiple-real-default-values) that happened to be demonstrated by
+ * real `PiwigoExtension` registrations once, but the generator itself
+ * must keep handling correctly whether or not any *current*
+ * registration happens to exhibit them -- `array_key_exists`/
+ * `preg_match`/`trim` are plain PHP internal functions here, not tied
+ * to whatever PiwigoExtension currently registers.
  */
 function shim_generator_test_edge_case_engine(): Engine
 {
@@ -95,6 +105,7 @@ function shim_generator_test_edge_case_engine(): Engine
         {
             return [
                 'preg_match' => preg_match(...),
+                'withDefaults' => ShimClassGeneratorTestEdgeCaseFixture::withDefaults(...),
             ];
         }
     };
@@ -126,11 +137,15 @@ afterEach(function (): void {
     }
 });
 
-it('emits combineScript with the real signature including real default values', function (): void {
-    expect($this->generated)->toContain(
-        'public static function combineScript(string $id, ?string $load = null, ?string $require = null, '
-        . "?string \$path = null, string|false \$version = '0'): void",
-    );
+it('emits a function with multiple optional params, including real default values', function (): void {
+    $generated = new ShimClassGenerator(shim_generator_test_edge_case_engine())
+        ->generate();
+
+    expect($generated)
+        ->toContain(
+            'public static function withDefaults(string $id, ?string $load = null, ?string $require = null, '
+                . "?string \$path = null, string|false \$version = '0'): void",
+        );
 });
 
 it('emits variadic union types with FQCN class members', function (): void {

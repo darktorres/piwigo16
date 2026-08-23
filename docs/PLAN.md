@@ -131,8 +131,8 @@ Three structural changes produced that drift:
 | P38 | Inline JS extraction | Done — all 7 batches (P38-A–G) | 7 |
 | P39 | Inline CSS extraction | Done — all 5 batches (P39-A–E) | 5 |
 | P40 | Typed view objects + `Template` split | Done — Batches 1–9 + the 3 include-only-partials + the Mail domain batch all landed and fully validated (see below); every remaining `TemplatePageContext` class confirmed either P41 shell scope or a permanent ambient wrapper, exhausting P40's own actual scope. The physical `Renderer`/`TemplateLocator`/`ThemeChain` class split was never P40's own work — this section's own "Scope correction" note reassigned it to P41's one-time cutover from the start | 2 |
-| P41 | Shell-last rendering + `PageState` split | Part 1 done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) proposed, then superseded before landing by P42's own declarative redesign (see below) | 8 |
-| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | In progress — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step (delete the 6 Latte functions, `finalizeHtml()`) not started | 6 |
+| P41 | Shell-last rendering + `PageState` split | Done — Batches A–E landed (see above). Part 2 (P41-G/H, asset-pipeline swap) landed too — `CssLoader`/`ScriptLoader`/`FileCombiner` replaced by `PageAssets`/`AssetContribution`, file-combining intentionally dropped (Vite migration replaces it later), 6 dead `header.latte`/`footer.latte` files removed; P41-I (capture-based, more-idiomatic-Latte follow-up replacing the placeholder-tag mechanism) never landed under its own name — superseded by P42's own declarative redesign instead (see below), which is where its scope actually completed | 8 |
+| P42 | Declarative page assets & exposed data (View-level, supersedes P41-I) | Done — mechanism + P42-A (11-partial conversion + 4 theme-base pieces) fully landed; P42-B (945-call-site migration) fully landed, including the MenubarBlockView/MonthCalendarView design gap (see below); final step landed too — `combineScript`/`combineCss`/`htmlHead`/`footerScript` (0 remaining real callers, template or PHP) deleted from `Template`/`PiwigoExtension`, `exposeData`/`exposeString` kept as real PHP-only methods (`Renderer::render()`/`AdminShell` still call them directly, just no longer Latte-callable). `finalizeHtml()` itself was **not** deletable, correcting this entry's own prior claim — it's permanent, load-bearing architecture with ~20 real controller callers, and `getCombinedScripts()`/`getCombinedCss()`/`getPageDataScript()` stay real, live Latte functions every `layout.latte` calls directly (see below) | 6 |
 | P43 | Typed contributions + plugin-owned routes | Done — all batches (A–G) landed. P43-G landed (constructor-inject `Template`'s 4 hidden `Kernel::container()`-resolved dependencies, plus a hardened `ImageStdParams` container factory). P43-B landed (`math()`/`eval()` removal, 22 zero-use `PiwigoExtension` registrations pruned, `cat`/`count`/`join`/`strip_tags` migrated onto Latte builtins, `htmlOptions`/`htmlRadios` replaced by native `{foreach}`). P43-A fully landed: `ButtonContribution`/`ActionContribution`/`PanelLink`/`PictureInfoRow`/`ProfileField`+`FieldType`/`AuthButton`/`ThumbnailOverlay`/`MenuItem`/`FieldOverride`/`FormProvider` (`Piwigo\Contribution\`), replacing every real `addIndexButton()`/`addPictureButton()`/`concat('PLUGIN_INDEX_ACTIONS'\|'PLUGIN_PICTURE_ACTIONS')`/`set_prefilter(...)` mechanism (also deleted a dead `$PLUGINS_PROFILE`/dynamic-`{include}` mechanism along the way). P43-C landed (`data-image-id`/`data-category-id` stable DOM hooks + indexed rating-button ids across the picture/thumbnail family, plus deletion of 6 more confirmed-dead raw-HTML plugin hooks). P43-D landed (`ExtensionContext::render(View): Html`, `SettingsPageInterface::handleSettingsRequest()` now returns `View`; also fixed 2 real P43-B regressions found via full Browser verification — a `stripTags`/`replace` filter-chain-order bug and a stale test assertion). P43-F fully landed: introduced `Controller\Admin\Projection\AdminPageResult`, converted `AdminSubControllerInterface::handle()` and all 36 real implementers plus all 40 `Piwigo\Admin\*PageRenderer` classes from directly assigning `AdminContentPageContext` to returning `render(): AdminPageResult`, and `AdminDispatcher::dispatch()` is now the one place that turns that into the ambient `AdminContentPageContext` — closes the "76 real files" scope the batch's own plan text named. Along the way found and fixed 2 real regressions the migration itself introduced (a not-yet-converted parent `SubController` silently discarding an already-converted renderer's output in `ThemesSubController`/`PhotoSubController`), caught via golden-HTML diffs. P43-E fully landed: new `PluginConfig\PageRouteProviderInterface`/`Routing\PageRouteRegistrarInterface` (manifest `hasPageRoutes`) let an active plugin register real public-facing routes onto `RoutingMiddleware`'s own live `RouteCollection`, mirroring `ApiRouteProviderInterface`'s existing layered shape exactly; new `PluginConfig\AdminPageProviderInterface` (manifest `hasAdminPages`) lets an active plugin contribute its own `admin.php` `?page=` slug, aggregated by `PluginRegistry::adminPages()` and merged onto the static `config/admin_pages.php` map by a new `AdminDispatcher::pageMap()` — found and fixed a real gap the plan text itself hadn't named: `Admin\AdminShell` independently re-read the static config file for its own slug validation before ever reaching `AdminDispatcher`, so a plugin-contributed slug would have passed dispatch but still 404'd there without also fixing that call site. Also fixed a real P43-F regression found along the way (`PluginSettingsPageDispatchTest.php` still reading `ADMIN_CONTENT` via the old `getTemplateVars()` path after `PluginSubController::handle()` had already been converted to return `AdminPageResult`) | 2 |
 | P44 | Escaping, Input Validation & Security Hardening Campaign | Complete — all of P44-A/B/C/D/F/H/I/J/K/L/M landed (see below); P44-A's full `\|noescape` corpus reclassification sweep found and fixed 2 previously-unknown XSS bugs (`InstallWizard`, `NoPhotoYetRenderer`) across 3 rounds; P44-G (this doc's own entry) kept current per batch | 11 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
@@ -3518,7 +3518,11 @@ zero remaining `{do combineCss}`/`{do combineScript}`/`{do exposeData}`/
 `{do exposeString}`/`{do footerScript}`/`{do htmlHead}` calls anywhere
 -- 945 of 945 call sites migrated.**
 
-**Final step of P42, once every batch above lands**: reimplement the
+**Array-to-object campaign reimplementation** (labeled "final step of
+P42" in this entry's own earlier draft — a naming collision with the
+*actual* mechanism-cleanup final step below, which is a separate,
+unrelated piece of work that happens to share the same label; both are
+now done, see each one's own completion note): reimplement the
 `17.x-rewrite-3` worktree's own independent array-to-object campaign
 (124 commits, 614 files, `$array['field']` access converted to typed
 `$object->field` access, plus a loose-union signature-narrowing sweep)
@@ -3590,16 +3594,76 @@ doc's own framing ("Not part of the VO campaign"), likely moot here
 per `feedback_no_psalm_gating.md` (Psalm isn't a gate on this branch).
 Not yet formally closed out either way.
 
-**Deferred full-repo validation** (`composer analyse:phpstan`,
-`composer lint:php`, `vendor/bin/deptrac analyse`, full
-`composer test -- --testsuite=Unit,Arch`, `composer test:browser`,
-`composer test:golden-html`/`composer test:visual` given the volume of
-template-touching changes) has not yet run end-to-end since Section 3
-landed — a full `composer analyse:phpstan` + `composer lint:php` pass
-partway through this session (before Section 3's last 2 items) was
-clean after fixing 2 real cross-file findings (a dead `User::
-toUserArray()` method and a test assertion made vacuously true by an
-earlier retype); nothing has re-validated the tree since.
+**Full-repo validation re-run and confirmed clean** after every item
+above landed (including the Dimensions VO fix, the last of this
+stretch's commits): full `vendor/bin/phpstan analyse` (0 errors),
+`vendor/bin/ecs check` (0 errors), `vendor/bin/deptrac analyse` (0
+violations), full `composer test -- --testsuite=Unit,Arch` (5516
+passed), and full `composer test:integration` (2161 passed) all green.
+`composer test:browser`/`test:golden-html`/`test:visual` weren't
+separately re-run in this pass (no template-visible behavior change in
+this stretch — the array-to-object work is internal typing only).
+
+**The real final step of P42 (Status table's own label): delete the 6
+now-dead imperative Latte functions once every real call site had
+migrated — done.** With the 945-call-site migration (P42-B, above)
+complete, a project-wide grep confirmed zero remaining `{do
+combineCss}`/`{do combineScript}`/`{do exposeData}`/`{do exposeString}`/
+`{do footerScript}`/`{do htmlHead}` calls in any `.latte` file. Deleted
+`Template::combineScript()`/`combineCss()`/`htmlHead()`/`footerScript()`
+outright (each had zero remaining internal PHP callers too, once their
+own last 4 internal call sites — `Template::localCssRules()` x2,
+`registerHeadLink()`, `registerActionSwitchBox()` — were inlined to
+build the `PageAssets`/`$htmlHeadElements` registration directly instead
+of routing through the now-dead method) and removed all 6 from
+`PiwigoExtension::getFunctions()`'s registration list.
+`combineScript()`'s own `$errorCollector`-backed invalid-`load`-value
+validation had no successor (the declarative replacement,
+`AssetContribution::script()`, takes a real `LoadMode` enum, making an
+invalid load value a compile-time impossibility rather than a runtime
+check) — its own now-orphaned `ErrorCollector` constructor param/DI
+wiring was removed from `Template` and cleaned up through 7 real
+`new Template(...)`/`new NoPhotoYetRenderer(...)`/`new
+InstallWizard(...)` construction sites (`NoPhotoYetRenderer`,
+`InstallWizard`, `public/install.php`, `RequestBootstrap` x3,
+`RedirectService` x2, `MailService`) plus their own now-dead
+`errorCollector()` factory helpers.
+
+**`exposeData()`/`exposeString()` survive as real PHP-only methods** —
+`Renderer::render()`'s own pre-population step and `AdminShell.php`
+still call them directly; only their Latte-function registration (no
+longer reachable from any template) was removed.
+
+**`finalizeHtml()` itself was *not* deletable — corrects this entry's
+own prior claim.** It's real, permanent, load-bearing architecture with
+~20 real controller callers (every page-rendering controller calls
+`$template->finalizeHtml((string) $html)` after `Renderer::render()`),
+and `getCombinedScripts()`/`getCombinedCss()`/`getPageDataScript()`
+remain real, live Latte functions every real `layout.latte` (`default`/
+`admin/default`/`standard_pages`, plus `install.latte`) calls directly
+via `{=getCombinedScripts('header')}`/`{=getCombinedCss()}`/
+`{=getPageDataScript()}` — these print the placeholder tags
+`finalizeHtml()` substitutes, a permanent pattern, not a migration
+artifact.
+
+Regenerated the checked-in `tools/phpstan/Latte/Generated/
+LatteAnalysisShims.php` via `composer generate:latte-shims` (its own
+dedicated test, `ShimClassGeneratorTest.php`, catches drift between
+this file and `PiwigoExtension`'s real registrations). Updated 7 test
+files that directly exercised the deleted methods
+(`TemplateInstanceTest.php`, `PiwigoExtensionTest.php`,
+`LatteEngineWiringTest.php`, `LatteTemplateCompilerTest.php`,
+`ShimClassGeneratorTest.php`) to exercise the surviving declarative/
+PHP-only equivalents instead (`registerPageAssets()`/
+`AssetContribution::script()`/`inlineScript()`/`css()`,
+`registerHeadLink()`, `once()`); deleted 4 tests whose own behavior has
+no successor (`combineScript`'s invalid-`load` validation, its
+empty-`require`-string handling, and `footerScript()`/`htmlHead()`'s
+empty-content no-op guards — all genuinely retired, not relocated).
+Full `vendor/bin/phpstan analyse` (0 errors), `vendor/bin/ecs check` (0
+errors), full `composer test -- --testsuite=Unit,Arch` (5513 passed —
+net -4, matching the 4 deleted tests exactly), and full `composer
+test:integration` (2161 passed) all confirmed clean.
 
 **P43 — Typed contributions + plugin-owned routes.**
 

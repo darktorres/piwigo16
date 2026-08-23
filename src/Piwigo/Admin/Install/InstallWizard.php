@@ -54,7 +54,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\ConnectedWith;
 use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
@@ -187,7 +186,6 @@ final class InstallWizard
         private readonly InputValidator $inputValidator,
         private readonly EventDispatcher $eventDispatcher,
         private readonly PageState $pageState,
-        private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly DeploymentPolicy $deploymentPolicy,
         private readonly CurrentTemplate $currentTemplate,
@@ -392,7 +390,7 @@ final class InstallWizard
         // wanted this early. The theme-base "unconditional admin-layout
         // assets" piece (docs/PLAN.md's P42-A) would otherwise register
         // them regardless, a real regression caught via golden-html.
-        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
+        $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->processCache, $this->currentConfigService, $this->paths, new AccessLevelChecker($this->currentUser, $this->currentConfig), $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes/admin', ThemeId::from('clear'), applyThemeBase: false);
         $this->currentTemplate->set($template);
         $this->template = $template;
     }

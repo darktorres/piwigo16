@@ -10,8 +10,6 @@ use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
@@ -50,7 +48,6 @@ final class TemplateTestFactory
             $currentConfig,
             self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),
-            self::resolve(ErrorCollector::class) ?? new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
             self::resolve(ProcessCache::class) ?? new ProcessCache(),
             self::resolve(CurrentConfigService::class) ?? new CurrentConfigService(),
             self::resolve(Paths::class) ?? Paths::fromRoot(sys_get_temp_dir()),

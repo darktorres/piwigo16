@@ -10,7 +10,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiContext;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
@@ -60,7 +59,6 @@ final readonly class NoPhotoYetRenderer
         private readonly CurrentUser $currentUser,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentConfig $currentConfig,
-        private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
         private readonly Renderer $renderer,
@@ -96,7 +94,7 @@ final readonly class NoPhotoYetRenderer
                 // needed here either.
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', $user_theme);
+                $template = new Template($this->currentConfig, $this->lang, $this->eventDispatcher, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->urlService, $this->pageState, $this->htmlRenderer, $this->imageStdParams, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = NoPhotoYetRequest::fromGlobals()->action;

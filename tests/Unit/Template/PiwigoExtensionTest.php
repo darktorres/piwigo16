@@ -21,13 +21,12 @@ use Piwigo\Users\CurrentUser;
  * filter/function correctness"), which left every method here with zero
  * dedicated coverage -- this file closes that gap.
  *
- * `combineScript`/`combineCss`/`getCombinedScripts`/`getCombinedCss`/
- * `defineDerivative`/`htmlHead`/`footerScript`/
- * `localCssRules`/`once` are deliberately NOT retested here
- * -- they're thin `$this->template->x(...)` delegates with their own
- * real coverage in TemplateInstanceTest.php; duplicating it against a
- * second, PiwigoExtension-constructed Template would just be the same
- * assertions with extra indirection.
+ * `getCombinedScripts`/`getCombinedCss`/`getPageDataScript`/
+ * `defineDerivative`/`localCssRules`/`once` are deliberately NOT
+ * retested here -- they're thin `$this->template->x(...)` delegates
+ * with their own real coverage in TemplateInstanceTest.php; duplicating
+ * it against a second, PiwigoExtension-constructed Template would just
+ * be the same assertions with extra indirection.
  */
 function piwigo_extension_test_build(): PiwigoExtension
 {

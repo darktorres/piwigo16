@@ -17,9 +17,9 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * Smarty -> Latte engine adapter wiring proof -- a throwaway
  * fixture template exercising the direct-filename `parse()` dispatch,
  * `resolveLatteTemplatePath()`, the lazily-constructed `LatteEngine`,
- * `PiwigoExtension`'s filter/function registration, and the `{capture}`+
- * `{do}` composition a stateful function (`htmlHead()`) needs -- end to
- * end.
+ * `PiwigoExtension`'s filter/function registration, and a stateful
+ * function (`once()`) mutating instance state across two calls in the
+ * same render -- end to end.
  *
  * Not testing individual filter/function correctness (each is a thin,
  * separately-reviewable wrapper) -- testing that the wiring connecting
@@ -60,7 +60,7 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('parse() renders a real .latte file through Latte, exercising a filter, the translate filter, and {capture}+{do}', function (): void {
+test('parse() renders a real .latte file through Latte, exercising a filter and the translate filter', function (): void {
     $t = TemplateTestFactory::build();
     $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
     mkdir($tplDir, 0o777, true);
@@ -69,8 +69,6 @@ test('parse() renders a real .latte file through Latte, exercising a filter, the
         <<<'LATTE'
         <p>{$name|ucfirst}</p>
         <p>{='hello world'|l10n}</p>
-        {capture $headContent}<meta name="test" content="1">{/capture}
-        {do htmlHead($headContent)}
         LATTE
         ,
     );
@@ -83,9 +81,7 @@ test('parse() renders a real .latte file through Latte, exercising a filter, the
 
     expect($output)
         ->toContain('<p>World</p>')
-        ->toContain('<p>hello world</p>')
-        ->and($t->htmlHeadElements)
-        ->toBe(['<meta name="test" content="1">']);
+        ->toContain('<p>hello world</p>');
 
     latte_engine_wiring_test_rrmdir($tplDir);
 });
@@ -235,15 +231,13 @@ test('CurrentTemplate resolves independently of PiwigoExtension holding its owni
 
     $tplDir = sys_get_temp_dir() . '/piwigo-latte-wiring-test-' . bin2hex(random_bytes(8));
     mkdir($tplDir, 0o777, true);
-    file_put_contents($tplDir . '/throwaway.latte', '{do htmlHead("x")}rendered');
+    file_put_contents($tplDir . '/throwaway.latte', '{if once("x")}A{else}B{/if}{if once("x")}C{else}D{/if}');
     $t->setTemplateDir($tplDir);
 
     $output = $t->parse('throwaway.latte');
 
     expect($output)
-        ->toBe('rendered')
-        ->and($t->htmlHeadElements)
-        ->toBe(['x']);
+        ->toBe('AD');
 
     latte_engine_wiring_test_rrmdir($tplDir);
 });

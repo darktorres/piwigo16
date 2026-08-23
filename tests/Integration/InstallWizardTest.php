@@ -370,7 +370,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $dbCredentials = DbCredentialsTestFactory::get();
         $currentTemplate = new CurrentTemplate();
 
-        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), $currentTemplate, CurrentUserTestFactory::get(), new ConnectedWithSession(), new Renderer($currentTemplate), UrlServiceTestFactory::build(), HtmlServiceTestFactory::build(), ImageStdParamsTestFactory::get());
+        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new EventDispatcher(), new PageState(), new ProcessCache(), new DeploymentPolicy(), $currentTemplate, CurrentUserTestFactory::get(), new ConnectedWithSession(), new Renderer($currentTemplate), UrlServiceTestFactory::build(), HtmlServiceTestFactory::build(), ImageStdParamsTestFactory::get());
         $wizard->boot();
 
         return $wizard;

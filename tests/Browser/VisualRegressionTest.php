@@ -78,7 +78,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     docblock), so this page's row count depends on how many needsAuth
  *     routes happen to run before it in this file. H::truncateGuestActivity()
  *     wipes those accumulated rows right before this one screenshot,
- *     same freeze-a-narrow-DB-slice approach as H::truncateHistory().
+ *     same freeze-a-narrow-DB-slice approach as H::truncateHistory(). Also
+ *     races the same way admin-history's search panel does: its own
+ *     activity table populates via an async request behind a '.loading'
+ *     spinner, so this test waits for it the same way (found live -- the
+ *     previously-committed baseline had itself been captured mid-load).
  */
 // notification.php mints a new per-request feed subscription ID (see
 // NotificationController::findAvailableFeedId()) -- but the rendered
@@ -141,6 +145,20 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             }
 
             if ($name === 'admin-history') {
+                H::waitUntilHidden($page, '.loading');
+            }
+
+            if ($name === 'admin-user-activity') {
+                // Same real race as admin-history above: user_activity.latte's
+                // own activity table is populated via an async request, with
+                // a '.loading' spinner (icon-spin6, matching admin-history's
+                // own convention) shown until it resolves -- neither
+                // assertScreenshotMatches()'s own networkidle wait nor
+                // assertSee()/assertMissing() (both one-shot, no retry) catch
+                // it. Found live: the committed baseline itself was captured
+                // mid-load (empty table, spinner visible), confirmed by
+                // decoding it and comparing pixel-for-pixel against a fresh,
+                // fully-loaded capture.
                 H::waitUntilHidden($page, '.loading');
             }
 

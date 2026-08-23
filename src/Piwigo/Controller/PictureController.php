@@ -10,13 +10,11 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
-use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryIdNamePermalink;
-use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\CommentId;
@@ -153,6 +151,7 @@ final readonly class PictureController implements ControllerInterface
         private ImageService $imageService,
         private HtmlService $htmlService,
         private PictureRateRenderer $pictureRateRenderer,
+        private CommentService $commentService,
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
@@ -160,11 +159,6 @@ final readonly class PictureController implements ControllerInterface
         private Paths $paths,
         private Renderer $renderer,
     ) {}
-
-    private function commentService(UrlServiceInterface $urlService): CommentService
-    {
-        return new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
-    }
 
     /**
      * `U_ORIGINAL` -- the linked-original-file URL, shown only when a
@@ -481,7 +475,7 @@ final readonly class PictureController implements ControllerInterface
                     // no break
                 case 'edit_comment':
 
-                    $commentService = $this->commentService($this->urlService);
+                    $commentService = $this->commentService;
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
                     // 'edit_comment') -- it would have thrown otherwise.
@@ -551,7 +545,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->csrfService
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
-                    $commentService = $this->commentService($this->urlService);
+                    $commentService = $this->commentService;
 
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
@@ -575,7 +569,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->csrfService
                         ->checkOrFail($this->htmlService, $this->redirectService);
 
-                    $commentService = $this->commentService($this->urlService);
+                    $commentService = $this->commentService;
 
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===

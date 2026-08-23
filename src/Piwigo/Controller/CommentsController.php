@@ -13,7 +13,6 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Category\CategoryService;
-use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
@@ -28,8 +27,6 @@ use Piwigo\Core\Env;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
-use Piwigo\Core\MailerInterface;
-use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
@@ -83,7 +80,6 @@ final readonly class CommentsController implements ControllerInterface
         private EventDispatcher $eventDispatcher,
         private DeploymentPolicy $deploymentPolicy,
         private ImageStdParams $imageStdParams,
-        private PageState $pageState,
         private LayoutState $layoutState,
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
@@ -91,7 +87,7 @@ final readonly class CommentsController implements ControllerInterface
         private EntityManagerInterface $entityManager,
         private CategoryService $categoryService,
         private HtmlService $htmlService,
-        private MailerInterface $mailer,
+        private CommentService $commentService,
         private CurrentConfig $currentConfig,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
@@ -99,17 +95,6 @@ final readonly class CommentsController implements ControllerInterface
         private CurrentLogger $currentLogger,
         private Renderer $renderer,
     ) {}
-
-    /**
-     * Same recipe as Controller\PictureController's own commentService()
-     * resolver -- unlike that one, $urlService here is already a
-     * constructor property (this controller has no per-call-varying URL
-     * builder), so this needs no param.
-     */
-    private function commentService(): CommentService
-    {
-        return new CommentService($this->lang, $this->entityManager->getRepository(CommentEntity::class), new EphemeralKeyService($this->currentConfig), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, new AccessLevelChecker($this->currentUser, $this->currentConfig));
-    }
 
     #[Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -365,7 +350,7 @@ final readonly class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = $this->commentService();
+        $commentService = $this->commentService;
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);

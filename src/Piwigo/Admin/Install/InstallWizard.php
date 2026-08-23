@@ -477,41 +477,11 @@ final class InstallWizard
 
         $this->step = 2;
 
-        // Write .env (or .env.test in test mode) with DB credentials — atomic
-        // rename, preserving any line this block doesn't manage (e.g. a
-        // re-install's PIWIGO_TEST_NOW — see Piwigo\Core\Env::now()).
-        $env_file = $this->paths->root . Env::testModeEnvFile();
-        $env_values = [
-            'PIWIGO_DB_HOST' => $this->dbhost,
-            'PIWIGO_DB_USER' => $this->dbuser,
-            'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
-            'PIWIGO_DB_BASE' => $this->dbname,
-            'PIWIGO_DB_DRIVER' => $this->dblayer,
-        ];
-        // Only written when the operator actually chose a non-default port
-        // (the driver's own default applies otherwise, same as before this
-        // field existed) -- mergeIntoEnvFile()'s own $values shape is
-        // array<string, string>, so a null port is omitted rather than passed.
-        if ($this->dbport !== null) {
-            $env_values['PIWIGO_DB_PORT'] = (string) $this->dbport;
+        $envError = new InstallEnvWriter($this->paths, $this->dbCredentials)
+            ->write($this->dbhost, $this->dbuser, $this->dbpasswd, $this->dbname, $this->dblayer, $this->dbport);
+        if ($envError !== null) {
+            $this->errors[] = $envError;
         }
-        // In test mode, also record the base URL so e2e runners know where to connect.
-        if (Env::testModeIsActive()) {
-            $scheme = (! in_array($_SERVER['HTTPS'] ?? null, [null, false, 0, '0', ''], true) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $host = is_string($host) ? $host : 'localhost';
-            $script = $_SERVER['SCRIPT_NAME'] ?? '';
-            $script = is_string($script) ? $script : '';
-            $base_url = rtrim($scheme . '://' . $host . dirname($script), '/');
-            if ($base_url !== '') {
-                $env_values['PIWIGO_BASE_URL'] = $base_url;
-            }
-        }
-
-        if (! Env::mergeIntoEnvFile($env_file, $env_values)) {
-            $this->errors[] = 'Could not write ' . $env_file . ' — check filesystem permissions.';
-        }
-        $this->dbCredentials->reload();
 
         // tables creation, driven by the real Doctrine Migrations baseline
         // (src/Piwigo/Migrations/) instead of a static SQL file -- see

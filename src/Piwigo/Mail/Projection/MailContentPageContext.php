@@ -10,13 +10,13 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The `CONTENT` template variable `mail-wrapper.latte` prints between
- * its own `{include 'header.latte'}`/`{include 'footer.latte'}` --
- * assigned by {@see \Piwigo\Mail\MailService::mail()}, already
- * fully rendered/converted by that point (either a runtime `View`
- * render or the plain-text/HTML `$mailContent` conversion), so it's
- * carried as a trusted `Html` value here rather than a plain string,
- * matching `MailService::buildRuntimeTemplateView()`'s own
- * `new Html($mailContent)` convention.
+ * its own header and footer markup -- assigned by
+ * {@see \Piwigo\Mail\MailService::mail()}, already fully
+ * rendered/converted by that point (either a runtime `View` render or
+ * the plain-text/HTML `$mailContent` conversion), so it's carried as a
+ * trusted `Html` value here rather than a plain string, matching
+ * `MailService::buildRuntimeTemplateView()`'s own `new Html($mailContent)`
+ * convention.
  */
 final readonly class MailContentPageContext implements TemplatePageContext
 {

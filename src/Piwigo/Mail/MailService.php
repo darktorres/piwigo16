@@ -1008,12 +1008,12 @@ final class MailService implements MailerInterface
                     $renderedContent = $mailContent;
                 }
 
-                // Header + content + footer, composed as one real document by
-                // mail-wrapper.latte's own {include 'header.latte'}{$CONTENT}
-                // {include 'footer.latte'} -- Latte verifies the whole
-                // assembled document's HTML structure in one pass this way
-                // (header.latte's own deliberately-left-open tags, closed only
-                // in footer.latte, are genuinely checked, not just assumed).
+                // Header + content + footer, one physical mail-wrapper.latte
+                // document (header/footer used to be separate {include}'d
+                // files -- merged because {include} is a runtime call per
+                // file, not a compile-time merge, so it never actually gave
+                // Latte a single document to verify tag balance across;
+                // only one physical file does).
                 // $renderedContent is already fully rendered/converted by this
                 // point, so it's carried as a trusted Html value, not
                 // re-escaped -- see MailContentPageContext's own docblock.

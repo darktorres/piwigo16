@@ -26,19 +26,18 @@
   <p style="margin: .25em 0 .5em 0;">See you soon.</p>
 </div>
 
-</td></tr>
+              </td></tr>
 
-<tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
-    Sent by <a href="{{ABSOLUTE_ROOT_URL}}" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
-    - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
-    
+            <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">
+                Sent by <a href="{{ABSOLUTE_ROOT_URL}}" style="color: #f70; text-decoration: none;">Fixture Gallery</a>
+                - Powered by <a href="https://upstream.example.invalid" class="Piwigo" style="color: #f70; text-decoration: none;">Piwigo</a>
+                
 
-    - Contact
-    <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f70; text-decoration: none;">Webmaster</a>
-  </td></tr>
-</table>
-
-</td></tr>
-</table>
-</body>
+                - Contact
+                <a href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site" style="color: #f70; text-decoration: none;">Webmaster</a>
+              </td></tr>
+          </table>
+        </td></tr>
+    </table>
+  </body>
 </html>

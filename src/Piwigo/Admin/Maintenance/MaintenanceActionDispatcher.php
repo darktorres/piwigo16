@@ -143,7 +143,7 @@ final readonly class MaintenanceActionDispatcher
             case 'delete_orphan_tags':
 
                 $this->tagService
-                    ->deleteOrphanTags($this->entityManager, new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService));
+                    ->deleteOrphanTags($this->entityManager, new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService));
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Delete orphan tags'), $this->lang->t('action successfully performed.')));
                 break;
 
@@ -195,8 +195,8 @@ final readonly class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
-                    ->emptyLounge();
+                $rows = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
+                    ->emptyLounge($this->sessionService);
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
 

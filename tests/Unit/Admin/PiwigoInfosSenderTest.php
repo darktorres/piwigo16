@@ -184,7 +184,6 @@ test('send returns immediately without touching the DB or network when telemetry
     $imageService = new ImageService(
         EntityManagerFactory::build()->getRepository(ImageEntity::class),
         $activityService,
-        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         new CurrentConfig(),
         Paths::fromRoot(sys_get_temp_dir()),

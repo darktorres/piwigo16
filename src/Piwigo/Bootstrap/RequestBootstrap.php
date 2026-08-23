@@ -547,7 +547,6 @@ final class RequestBootstrap
         return new ImageService(
             EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
             self::activityService($conn),
-            self::sessionService(),
             self::eventDispatcher(),
             self::currentConfig(),
             self::paths(),

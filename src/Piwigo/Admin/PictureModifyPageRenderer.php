@@ -42,7 +42,6 @@ use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -68,7 +67,6 @@ final readonly class PictureModifyPageRenderer
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private ProcessCache $processCache,
-        private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private PageState $pageState,
         private CurrentUser $currentUser,
@@ -104,7 +102,7 @@ final readonly class PictureModifyPageRenderer
         $page = [];
         $template = $this->currentTemplate->get();
 
-        $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+        $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);

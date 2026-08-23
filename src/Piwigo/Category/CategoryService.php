@@ -170,7 +170,7 @@ final readonly class CategoryService
      */
     private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): ImageService
     {
-        return new ImageService($entityManager->getRepository(ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
+        return new ImageService($entityManager->getRepository(ImageEntity::class), $activityLogger, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
     }
 
     /**

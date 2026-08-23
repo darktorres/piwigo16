@@ -70,7 +70,6 @@ final readonly class ImageService
     public function __construct(
         private ImageRepository $repo,
         private ActivityLoggerInterface $activityLogger,
-        private SessionService $sessionService,
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
         private Paths $paths,
@@ -386,6 +385,11 @@ final readonly class ImageService
     /**
      * Move images from the lounge to the categories they were intended for.
      *
+     * $sessionService is an explicit parameter, not a constructor
+     * property -- same "many construction sites, mostly never needed"
+     * reasoning as self::logger()/self::currentConfigService() below;
+     * this is the only method of ~30 that touches it.
+     *
      * @param ?int $now the current Unix timestamp, used for both the
      *   staleness check below and the new lock's own timestamp -- defaults
      *   to a real `time()` read; the explicit parameter exists so a test
@@ -397,7 +401,7 @@ final readonly class ImageService
      *   image_id/category_id rows, or null if another call is already
      *   emptying the lounge concurrently
      */
-    public function emptyLounge(bool $invalidateUserCache = true, ?int $now = null): ?array
+    public function emptyLounge(SessionService $sessionService, bool $invalidateUserCache = true, ?int $now = null): ?array
     {
         $now ??= time();
         $logger = $this->logger();
@@ -413,7 +417,7 @@ final readonly class ImageService
             }
         }
 
-        $execId = $this->sessionService->generateKey(4);
+        $execId = $sessionService->generateKey(4);
         $requestMethod = EmptyLoungeRequest::fromGlobals()->requestMethod;
         $apiSuffix = $requestMethod !== null ? ' (API:' . $requestMethod . ')' : '';
         $logger->debug(__FUNCTION__ . $apiSuffix . ', exec=' . $execId . ', begins');

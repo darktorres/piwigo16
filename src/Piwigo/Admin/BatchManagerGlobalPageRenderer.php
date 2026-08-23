@@ -45,7 +45,6 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -72,7 +71,6 @@ final readonly class BatchManagerGlobalPageRenderer
         private Lang $lang,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
-        private SessionService $sessionService,
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
         private ImageStdParams $imageStdParams,
@@ -179,7 +177,7 @@ final readonly class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+            $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()

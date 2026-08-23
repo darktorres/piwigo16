@@ -6,6 +6,7 @@ namespace Piwigo\Command;
 
 use Override;
 use Piwigo\Image\ImageService;
+use Piwigo\Session\SessionService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -23,6 +24,7 @@ final class MaintenanceEmptyLoungeCommand extends Command
 {
     public function __construct(
         private readonly ImageService $imageService,
+        private readonly SessionService $sessionService,
     ) {
         parent::__construct();
     }
@@ -30,7 +32,7 @@ final class MaintenanceEmptyLoungeCommand extends Command
     #[Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $rows = $this->imageService->emptyLounge();
+        $rows = $this->imageService->emptyLounge($this->sessionService);
 
         $output->writeln(count($rows ?? []) . ' photo(s) were moved from the upload lounge to their album(s).');
 

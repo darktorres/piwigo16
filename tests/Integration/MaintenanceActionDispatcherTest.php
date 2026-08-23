@@ -110,7 +110,6 @@ namespace Piwigo\Tests\Integration {
             return new ImageService(
                 EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class),
                 $this->maintenanceActionDispatcherTestActivityService(),
-                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 new EventDispatcher(),
                 CurrentConfigTestFactory::get(),
                 CurrentPathsTestFactory::get(),

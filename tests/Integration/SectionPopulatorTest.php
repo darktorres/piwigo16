@@ -171,7 +171,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
             throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
         }
-        $imageService = new ImageService($em->getRepository(ImageEntity::class), new ActivityService($em->getRepository(ActivityEntity::class)), $this->sessionService, new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $this->categoryService);
+        $imageService = new ImageService($em->getRepository(ImageEntity::class), new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $this->categoryService);
         $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new SortRenderer($this->conn), $this->tagService, $imageService, $this->userService, new PreferencesService(new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()), $searchResultsCachePool);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();

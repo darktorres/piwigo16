@@ -108,7 +108,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
     private function imageService(): ImageService
     {
-        return new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+        return new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
     }
 
     #[Override]
@@ -179,7 +179,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->paths));
         }
 
         $save_error = null;

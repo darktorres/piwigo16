@@ -115,7 +115,6 @@ final class FilterResolverTest extends IntegrationTestCase
         $imageService = new ImageService(
             $em->getRepository(ImageEntity::class),
             new ActivityService($em->getRepository(ActivityEntity::class)),
-            $sessionService,
             new EventDispatcher(),
             CurrentConfigTestFactory::get(),
             $paths,

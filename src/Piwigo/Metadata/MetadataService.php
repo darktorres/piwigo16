@@ -28,7 +28,6 @@ use Piwigo\Metadata\Projection\MetadataImage;
 use Piwigo\Metadata\Projection\SvgDimensions;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -56,7 +55,6 @@ final readonly class MetadataService
         private EventDispatcher $eventDispatcher,
         private CurrentConfig $currentConfig,
         private CurrentUser $currentUser,
-        private SessionService $sessionService,
         private Paths $paths,
     ) {}
 
@@ -570,7 +568,7 @@ final readonly class MetadataService
         // (TagService::$imageService is itself an explicit per-method
         // parameter, not a constructor property, for the same reasoning).
         $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new AccessLevelChecker($this->currentUser, $this->currentConfig));
-        $tagServiceImageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
+        $tagServiceImageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
         $tagService = new TagService($this->lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {

@@ -13,6 +13,7 @@ use Piwigo\Http\CsrfGuard;
 use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageService;
+use Piwigo\Session\SessionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,6 +30,7 @@ final readonly class UploadCompleteBatchController implements ControllerInterfac
         private CsrfGuard $csrfGuard,
         private ImageService $imageService,
         private HtmlService $htmlService,
+        private SessionService $sessionService,
     ) {}
 
     #[Override]
@@ -46,7 +48,7 @@ final readonly class UploadCompleteBatchController implements ControllerInterfac
 
         $input = UploadCompleteBatchInput::fromArray(JsonBody::decode($request));
 
-        $movedFromLounge = $this->imageService->emptyLounge();
+        $movedFromLounge = $this->imageService->emptyLounge($this->sessionService);
 
         $nbPhotos = $this->imageService->countImagesInCategory(CategoryId::from($input->categoryId));
         $categoryName = $this->htmlService->getCatDisplayNameFromId($input->categoryId, null);

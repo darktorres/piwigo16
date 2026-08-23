@@ -124,7 +124,6 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
     $tagServiceImageService = new ImageService(
         EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
         EventDispatcherTestFactory::get(),
         $currentConfig,
         Paths::fromRoot(sys_get_temp_dir()),

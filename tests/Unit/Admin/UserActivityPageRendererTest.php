@@ -185,7 +185,6 @@ function userActivityTestImageService(): ImageService
     return new ImageService(
         EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
         userActivityTestActivityService(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         new CurrentConfig(),
         Paths::fromRoot(sys_get_temp_dir()),

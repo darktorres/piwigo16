@@ -1278,7 +1278,7 @@ final readonly class PictureController implements ControllerInterface
         $metadata = null;
         if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {
             $metadata = new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->paths, $this->entityManager);
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->paths, $this->entityManager);
         }
 
         // include menubar

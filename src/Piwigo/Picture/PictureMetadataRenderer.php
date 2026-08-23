@@ -14,7 +14,6 @@ use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Picture\Projection\MetadataPanel;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -30,9 +29,9 @@ final class PictureMetadataRenderer
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      * @return list<MetadataPanel>|null
      */
-    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, SessionService $sessionService, Paths $paths, EntityManagerInterface $entityManager): ?array
+    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, EntityManagerInterface $entityManager): ?array
     {
-        $metadataService = new MetadataService($lang, new MetadataRepository($entityManager), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $paths);
+        $metadataService = new MetadataService($lang, new MetadataRepository($entityManager), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $paths);
 
         $metadata = null;
 

@@ -15,8 +15,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Site\Projection\ElementUpdateAttributes;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -112,7 +110,6 @@ function lsrTestMetadataService(): MetadataService
         new EventDispatcher(),
         $currentConfig,
         new CurrentUser($currentConfig),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), $currentConfig),
         Paths::fromRoot(sys_get_temp_dir()),
     );
 }

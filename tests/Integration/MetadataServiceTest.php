@@ -35,7 +35,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Tests\Support\SessionServiceTestFactory;
     use ReflectionMethod;
     use RuntimeException;
 
@@ -74,7 +73,7 @@ namespace Piwigo\Tests\Integration {
             $currentLogger->set(new Logger([
                 'severity' => Logger::OFF,
             ]));
-            $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get());
+            $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
 
             CurrentConfigTestFactory::get()->useIptc = false;
             CurrentConfigTestFactory::get()->useExif = true;

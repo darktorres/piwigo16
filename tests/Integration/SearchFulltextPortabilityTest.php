@@ -132,7 +132,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             new SortRenderer($this->conn),
             new TagService(LangTestFactory::get(), $this->em->getRepository(TagEntity::class), $permissionService, new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger()),
-            new ImageService($this->em->getRepository(ImageEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $categoryService),
+            new ImageService($this->em->getRepository(ImageEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $categoryService),
             $userService,
             new PreferencesService(new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()),
             $searchResultsCachePool,

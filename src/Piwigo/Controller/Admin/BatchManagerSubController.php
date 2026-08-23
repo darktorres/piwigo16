@@ -50,7 +50,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -93,7 +92,6 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
         private CoreTabs $coreTabs,
-        private SessionService $sessionService,
         private Translator $translator,
         private EventDispatcher $eventDispatcher,
         private ImageStdParams $imageStdParams,
@@ -182,7 +180,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                 ->render($cat_elements_id, $start);
         }
 
-        return new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
+        return new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
             ->render($cat_elements_id, $start, $duplicates_on_fields);
     }
 

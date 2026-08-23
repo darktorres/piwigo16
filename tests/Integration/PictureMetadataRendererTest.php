@@ -23,7 +23,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -216,7 +215,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             ]))
         );
 
-        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
@@ -257,7 +256,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
@@ -279,7 +278,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             'Artist' => 'Jane',
         ])));
 
-        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
         self::assertNull($metadata);
     }
@@ -313,7 +312,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
         self::assertIsArray($metadata);
         self::assertCount(1, $metadata);
@@ -345,7 +344,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
+        $metadata = $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), Paths::fromRoot(dirname(__DIR__, 2)), $this->entityManager);
 
         self::assertIsArray($metadata);
         self::assertCount(2, $metadata);

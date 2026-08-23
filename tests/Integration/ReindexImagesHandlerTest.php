@@ -27,7 +27,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
 
 /**
  * Only exercises the empty-$imageIds path -- MetadataRepository::
@@ -82,7 +81,7 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
     {
         $currentConfig = new CurrentConfig();
         $handler = new ReindexImagesHandler(
-            new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), CurrentPathsTestFactory::get()),
+            new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get()),
             new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
                 EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),

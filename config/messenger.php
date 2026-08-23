@@ -75,7 +75,6 @@ return [
             RequestBootstrap::eventDispatcher(),
             RequestBootstrap::currentConfig(),
             RequestBootstrap::currentUser(),
-            RequestBootstrap::sessionService(),
             Paths::fromRoot(dirname(__DIR__))
         ), new PermissionService(
             new PermissionRepository(InfrastructureAccessor::entityManager()),

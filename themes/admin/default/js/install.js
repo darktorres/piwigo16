@@ -41,12 +41,37 @@ $(document).ready(function() {
     $("#db-check-status").text("");
   }
 
+  // Three explicit states, not a truthy/falsy shortcut over
+  // hasExistingInstall -- null and false are not the same thing, a loose
+  // check would silently give an operator no live warning about a
+  // privilege problem, the one case that most needs it. true shows the
+  // warning/checkbox and writes overwriteToken into the hidden field
+  // every time a response includes one (not just the first -- a later
+  // debounced re-check mints a fresh cookie+token pair, and the hidden
+  // field must track whichever is current or the eventual real submit
+  // fails the match); null/false hide the checkbox row (the null case's
+  // own distinct message is shown via db-check-status instead, see
+  // runDbCheck()'s success handler below).
+  function toggleOverwriteWarning(hasExistingInstall, overwriteToken) {
+    var row = $("#overwrite-confirm-row");
+    if (hasExistingInstall === true) {
+      row.removeClass("install-hidden-row");
+      if (overwriteToken) {
+        $("#overwrite_token").val(overwriteToken);
+      }
+    } else {
+      row.addClass("install-hidden-row");
+      $("#confirm_overwrite").prop("checked", false);
+    }
+  }
+
   function runDbCheck() {
     if (dbCheckXhr !== null) {
       dbCheckXhr.abort();
     }
     if (!dbCheckReady()) {
       hideDbCheckStatus();
+      toggleOverwriteWarning(false, null);
       return;
     }
 
@@ -66,9 +91,15 @@ $(document).ready(function() {
       },
       success: function(data) {
         if (data.ok) {
-          showDbCheckStatus("db-check-success", pwg_getPageString("Connection successful"));
+          if (data.hasExistingInstall === null) {
+            showDbCheckStatus("db-check-warning", pwg_getPageString("Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables"));
+          } else {
+            showDbCheckStatus("db-check-success", pwg_getPageString("Connection successful"));
+          }
+          toggleOverwriteWarning(data.hasExistingInstall, data.overwriteToken);
         } else {
           showDbCheckStatus("db-check-error", (data.errors || []).join(" "));
+          toggleOverwriteWarning(false, null);
         }
       },
       error: function(jqXHR, textStatus) {
@@ -76,6 +107,7 @@ $(document).ready(function() {
           return;
         }
         hideDbCheckStatus();
+        toggleOverwriteWarning(false, null);
       },
       complete: function() {
         dbCheckXhr = null;

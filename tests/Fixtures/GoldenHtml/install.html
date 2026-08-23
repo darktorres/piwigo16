@@ -361,6 +361,23 @@
                 <td></td>
                 <td colspan="2"><span id="db-check-status"></span></td>
               </tr>
+              <tr
+                  id="overwrite-confirm-row" class="install-hidden-row"
+                >
+                <td></td>
+                <td colspan="2" class="overwrite-warning">
+                  <p>This database already contains a Piwigo installation. This will permanently delete all existing data in this database.</p>
+                  <label>
+                    <input
+                        type="checkbox"
+                        name="confirm_overwrite"
+                        id="confirm_overwrite"
+                      >
+                    I understand, overwrite the existing installation
+                  </label>
+                  <input type="hidden" name="overwrite_token" id="overwrite_token">
+                </td>
+              </tr>
             </table>
           </fieldset>
           <fieldset>

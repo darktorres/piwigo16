@@ -61,6 +61,8 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         public ?array $infos,
         public array $themes,
         public array $dedupErrorStrings,
+        public ?bool $hasExistingInstall,
+        public ?string $overwriteToken,
     ) {}
 
     /**

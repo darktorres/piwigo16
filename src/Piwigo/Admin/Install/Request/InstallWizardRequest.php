@@ -40,6 +40,8 @@ final readonly class InstallWizardRequest
         public ?string $languageParam,
         public bool $isSendCredentialsByMail,
         public bool $isAjaxDbCheck,
+        public bool $confirmOverwrite,
+        public ?string $overwriteToken,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -88,6 +90,10 @@ final readonly class InstallWizardRequest
 
         $is_ajax_db_check = isset($get['ajax']) && $get['ajax'] === 'check-db';
 
+        $confirm_overwrite = isset($post['confirm_overwrite']);
+        $overwrite_token_raw = $post['overwrite_token'] ?? null;
+        $overwrite_token = (is_string($overwrite_token_raw) && $overwrite_token_raw !== '') ? $overwrite_token_raw : null;
+
         return new self(
             $dbhost,
             $dbuser,
@@ -104,6 +110,8 @@ final readonly class InstallWizardRequest
             $language_param,
             isset($post['send_credentials_by_mail']),
             $is_ajax_db_check,
+            $confirm_overwrite,
+            $overwrite_token,
         );
     }
 }

@@ -33,6 +33,8 @@ function makeInstallView(array $themes): InstallView
         infos: null,
         themes: $themes,
         dedupErrorStrings: [],
+        hasExistingInstall: null,
+        overwriteToken: null,
     );
 }
 

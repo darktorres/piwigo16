@@ -132,6 +132,18 @@ select:focus {
   color: #c0392b;
 }
 
+#db-check-status.db-check-warning {
+  color: #b36b00;
+}
+
+.overwrite-warning {
+  text-align: left;
+  color: #f22;
+  background-color: #ffd5dc;
+  border-left: 4px solid #f22;
+  padding: 5px 10px;
+}
+
 .field-error {
   display: block;
   color: #f22;

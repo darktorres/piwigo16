@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use LogicException;
 use mysqli_result;
 use Override;
+use Piwigo\Admin\Install\InstallSchemaMigrator;
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
@@ -181,6 +182,11 @@ final class InstallWizardTest extends IntegrationTestCase
      */
     private array $originalServer = [];
 
+    /**
+     * @var array<int|string, mixed>
+     */
+    private array $originalCookie = [];
+
     private bool $installBootstrapBooted = false;
 
     /**
@@ -224,6 +230,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->originalGet = $_GET;
         $this->originalPost = $_POST;
         $this->originalServer = $_SERVER;
+        $this->originalCookie = $_COOKIE;
 
         $this->tempRoot = sys_get_temp_dir() . '/piwigo-install-wizard-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->tempRoot, 0777, true);
@@ -250,6 +257,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $_GET = $this->originalGet;
         $_POST = $this->originalPost;
         $_SERVER = $this->originalServer;
+        $_COOKIE = $this->originalCookie;
         // render()'s own step-2 flow (InstallWizard.php ~line 701) calls
         // session_set_save_handler() directly against this test's
         // disposable $conn, then logs the new webmaster in -- a real PHP
@@ -340,6 +348,28 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->createdDatabases[] = $name;
 
         return $name;
+    }
+
+    /**
+     * Runs the real Doctrine Migrations baseline directly against $dbName
+     * -- a "pre-existing Piwigo install" fixture for Part 3's own
+     * overwrite-confirmation tests, built without ever calling
+     * performInstall() through a real wizard (which would touch this
+     * test's own throwaway install stamp file, tripping boot()'s "already
+     * installed" guard on the very next submit() in the same test).
+     */
+    private function migrateFreshDatabase(string $dbName): void
+    {
+        DbCredentialsTestFactory::get()
+            ->seed([
+                'PIWIGO_DB_HOST' => $this->dbHost,
+                'PIWIGO_DB_USER' => $this->dbUser,
+                'PIWIGO_DB_PASSWORD' => $this->dbPass,
+                'PIWIGO_DB_BASE' => $dbName,
+            ]);
+        $conn = DbConnection::build();
+        self::assertNull(new InstallSchemaMigrator()->migrate($conn));
+        $conn->close();
     }
 
     private function bootInstallBootstrap(): void
@@ -924,9 +954,36 @@ final class InstallWizardTest extends IntegrationTestCase
         $result = $wizard->checkDbConnection();
 
         self::assertSame([], $result['errors']);
+        // A genuinely fresh database (no migration_versions table yet) --
+        // hasExistingInstall is a definite false, not null, and no token
+        // is minted since there's nothing to confirm.
+        self::assertFalse($result['hasExistingInstall']);
+        self::assertNull($result['overwriteToken']);
         // checkDbConnection() must never hold the connection open past its
         // own request -- analyzeForm()'s own $this->conn stays untouched.
         self::assertNull($this->reflectPrivate($wizard, 'conn'));
+    }
+
+    public function testCheckDbConnectionReportsAnExistingInstallWithARealOverwriteToken(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+        $this->migrateFreshDatabase($freshDb);
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+        ]);
+
+        $result = $wizard->checkDbConnection();
+
+        self::assertSame([], $result['errors']);
+        self::assertTrue($result['hasExistingInstall']);
+        self::assertIsString($result['overwriteToken']);
+        self::assertNotSame('', $result['overwriteToken']);
     }
 
     public function testCheckDbConnectionReturnsAnErrorForABadConnection(): void
@@ -998,6 +1055,175 @@ final class InstallWizardTest extends IntegrationTestCase
             ['mail address must be like xxx@yyy.eee (example: jack@altern.org)'],
             $this->reflectPrivate($wizard, 'errors')
         );
+    }
+
+    // ------------------------------------------------- analyzeForm(), overwrite confirmation
+
+    public function testAnalyzeFormBlocksWithAConfirmationErrorWhenAnExistingInstallIsNotConfirmed(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+        $this->migrateFreshDatabase($freshDb);
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17blocked',
+            'admin_pass1' => 'Blocked-Secret-1!',
+            'admin_pass2' => 'Blocked-Secret-1!',
+            'admin_mail' => 'blocked@example.test',
+            'install' => '1',
+            // confirm_overwrite deliberately not submitted.
+        ]);
+
+        $wizard->analyzeForm();
+
+        self::assertTrue($wizard->hasErrors());
+        self::assertStringContainsString('already contains a Piwigo installation', $this->reflectErrorsJoined($wizard));
+        self::assertTrue($this->reflectPrivate($wizard, 'hasExistingInstall'));
+        // A fresh token is minted right here, ready for a real operator's
+        // resubmit -- not deferred to a first failed attempt.
+        $mintedToken = $this->reflectPrivate($wizard, 'overwriteToken');
+        self::assertIsString($mintedToken);
+        self::assertNotSame('', $mintedToken);
+    }
+
+    public function testAnalyzeFormBlocksWithAConfirmationErrorWhenTheOverwriteTokenDoesNotMatchTheCookie(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+        $this->migrateFreshDatabase($freshDb);
+
+        // confirm_overwrite is submitted, and a token, but the cookie the
+        // real double-submit check compares against was never set (or
+        // holds something else) -- confirmOverwrite alone must never be
+        // sufficient.
+        $_COOKIE['pwg_install_overwrite_token'] = 'a-completely-different-token';
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17mismatch',
+            'admin_pass1' => 'Mismatch-Secret-1!',
+            'admin_pass2' => 'Mismatch-Secret-1!',
+            'admin_mail' => 'mismatch@example.test',
+            'install' => '1',
+            'confirm_overwrite' => '1',
+            'overwrite_token' => 'whatever-the-operator-submitted',
+        ]);
+
+        $wizard->analyzeForm();
+
+        self::assertTrue($wizard->hasErrors());
+        self::assertStringContainsString('already contains a Piwigo installation', $this->reflectErrorsJoined($wizard));
+    }
+
+    public function testAnalyzeFormSucceedsWithAConfirmedMatchingOverwriteToken(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+        $this->migrateFreshDatabase($freshDb);
+
+        // The live AJAX check is what a real operator's browser fires
+        // first -- it discovers the prior install and mints the real
+        // cookie+token pair.
+        $checkWizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+        ]);
+        $checkResult = $checkWizard->checkDbConnection();
+        self::assertTrue($checkResult['hasExistingInstall']);
+        $token = $checkResult['overwriteToken'];
+        self::assertIsString($token);
+
+        // setcookie() itself has no observable effect on $_COOKIE in this
+        // same CLI process (see \Piwigo\Auth\CookieService's own
+        // docblock on this exact CLI-SAPI limitation) -- a real browser
+        // would store the Set-Cookie header from checkDbConnection()'s
+        // response and resend it on the real submit below, which this
+        // line simulates directly.
+        $_COOKIE['pwg_install_overwrite_token'] = $token;
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17overwrite',
+            'admin_pass1' => 'Overwrite-Secret-1!',
+            'admin_pass2' => 'Overwrite-Secret-1!',
+            'admin_mail' => 'overwrite@example.test',
+            'install' => '1',
+            'confirm_overwrite' => '1',
+            'overwrite_token' => $token,
+        ]);
+
+        $wizard->analyzeForm();
+
+        self::assertFalse($wizard->hasErrors(), 'unexpected errors: ' . $this->reflectErrorsJoined($wizard));
+    }
+
+    public function testPerformInstallOverwritesAConfirmedExistingInstallAndProducesAFreshInstall(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+        $this->migrateFreshDatabase($freshDb);
+
+        $checkWizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+        ]);
+        $checkResult = $checkWizard->checkDbConnection();
+        $token = $checkResult['overwriteToken'];
+        self::assertIsString($token);
+        $_COOKIE['pwg_install_overwrite_token'] = $token;
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17overwriteinstall',
+            'admin_pass1' => 'Overwrite-Install-1!',
+            'admin_pass2' => 'Overwrite-Install-1!',
+            'admin_mail' => 'overwriteinstall@example.test',
+            'install' => '1',
+            'confirm_overwrite' => '1',
+            'overwrite_token' => $token,
+        ]);
+        $wizard->analyzeForm();
+        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
+
+        // Without InstallSchemaDropper::drop() running first, this would
+        // fail exactly the way
+        // testPerformInstallRecordsAnErrorAndDoesNotProceedWhenTheSchemaMigrationFails
+        // above proves ("table already exists") -- this is the real
+        // regression test for the confirm-overwrite path actually
+        // clearing the prior schema before migrating again.
+        $wizard->performInstall();
+
+        self::assertFalse($wizard->hasErrors(), 'unexpected performInstall() errors: ' . $this->reflectErrorsJoined($wizard));
+
+        $webmaster = $this->queryOne($freshDb, 'SELECT username, mail_address FROM users WHERE id = 1');
+        self::assertIsArray($webmaster);
+        self::assertSame('p17overwriteinstall', $webmaster['username']);
+        self::assertSame('overwriteinstall@example.test', $webmaster['mail_address']);
+
+        self::assertFileExists($this->paths->siteLocal . Env::testModeInstalledStamp());
     }
 
     // ------------------------------------------------------------ render(), step 2

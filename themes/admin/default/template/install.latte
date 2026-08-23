@@ -179,6 +179,25 @@
                   <td></td>
                   <td colspan="2"><span id="db-check-status"></span></td>
                 </tr>
+                <tr
+                  id="overwrite-confirm-row"
+                  n:class="$hasExistingInstall === true ? null : 'install-hidden-row'"
+                >
+                  <td></td>
+                  <td colspan="2" class="overwrite-warning">
+                    <p>{='This database already contains a Piwigo installation. This will permanently delete all existing data in this database.'|translate}</p>
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="confirm_overwrite"
+                        id="confirm_overwrite"
+                        n:attr="checked: $hasExistingInstall === true ? 'checked' : null"
+                      >
+                      {='I understand, overwrite the existing installation'|translate}
+                    </label>
+                    <input type="hidden" name="overwrite_token" id="overwrite_token" value="{$overwriteToken}">
+                  </td>
+                </tr>
               </table>
             </fieldset>
             <fieldset>

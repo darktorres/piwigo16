@@ -69,6 +69,8 @@ use Piwigo\Validation\InputValidator;
  */
 final class InstallWizard
 {
+    private const OVERWRITE_TOKEN_COOKIE = 'pwg_install_overwrite_token';
+
     private string $dbhost = 'localhost';
 
     private string $dbuser = '';
@@ -110,6 +112,25 @@ final class InstallWizard
      * Built by analyzeForm() -> InstallService::installDbConnect(); non-null once hasErrors() is false.
      */
     private ?Connection $conn = null;
+
+    /**
+     * Set by checkDbConnection()/analyzeForm() once a real connection to
+     * an existing Piwigo install is confirmed (or ruled out) --
+     * {@see InstallSchemaDropper::hasExistingInstall()}'s own `?bool`
+     * shape, threaded through to render()'s InstallView so a real submit
+     * that hits the confirmation-required error still shows the warning
+     * block on redisplay, not just the live AJAX check.
+     */
+    private ?bool $hasExistingInstall = null;
+
+    /**
+     * The double-submit-cookie token minted by issueOverwriteToken() the
+     * moment $hasExistingInstall first becomes true -- threaded through to
+     * render() so a redisplayed form's hidden `overwrite_token` field
+     * carries whichever token is actually current (matching the cookie
+     * just (re)issued), not a stale one from an earlier request.
+     */
+    private ?string $overwriteToken = null;
 
     private string $language = 'en_UK';
 
@@ -410,27 +431,103 @@ final class InstallWizard
     }
 
     /**
+     * Mints a fresh double-submit-cookie token the moment
+     * $hasExistingInstall is first shown as `true`, from whichever path
+     * (live AJAX check or a real submit) gets there first -- both
+     * checkDbConnection() and analyzeForm() call this same helper, so an
+     * operator who trusts the live-check warning and submits with the box
+     * already checked doesn't hit a token-mismatch failure on their first
+     * real attempt. `bin2hex(random_bytes(32))` -- session-cookie
+     * lifetime (no explicit long-lived expiry needed), HttpOnly,
+     * SameSite=Strict: install.latte has no session/CSRF infrastructure
+     * this early (see this class's own docblock), so this is scoped to
+     * just this one destructive action rather than a general token.
+     */
+    private function issueOverwriteToken(): string
+    {
+        $token = bin2hex(random_bytes(32));
+
+        setcookie(self::OVERWRITE_TOKEN_COOKIE, $token, [
+            'expires' => 0,
+            'path' => '/',
+            'httponly' => true,
+            'samesite' => 'Strict',
+            'secure' => (bool) ini_get('session.cookie_secure'),
+        ]);
+
+        return $token;
+    }
+
+    /**
+     * The real gate everywhere this is checked: confirmOverwrite alone is
+     * never sufficient, only confirmOverwrite AND a matching
+     * overwriteToken/cookie pair.
+     */
+    private function overwriteConfirmed(): bool
+    {
+        if (! $this->request->confirmOverwrite || $this->request->overwriteToken === null) {
+            return false;
+        }
+
+        $cookieToken = $_COOKIE[self::OVERWRITE_TOKEN_COOKIE] ?? null;
+
+        return is_string($cookieToken) && hash_equals($cookieToken, $this->request->overwriteToken);
+    }
+
+    /**
      * install.php's own `?ajax=check-db` branch -- fires while the
      * operator is still typing DB credentials, before any real submit.
      * Deliberately never assigns $this->conn: this path has no business
      * holding a connection open past its own request, unlike
-     * analyzeForm() below.
+     * analyzeForm() below. The existence check runs before close() --
+     * querying a closed connection fails.
      *
      * @return array<string, mixed>
      */
     public function checkDbConnection(): array
     {
         $conn = $this->attemptDbConnection();
+
+        $hasExistingInstall = null;
+        $overwriteToken = null;
+        if ($conn instanceof Connection) {
+            $hasExistingInstall = new InstallSchemaDropper()
+                ->hasExistingInstall($conn);
+            if ($hasExistingInstall === true) {
+                $overwriteToken = $this->issueOverwriteToken();
+            }
+        }
+
         $conn?->close();
 
         return [
             'errors' => $this->errors,
+            'hasExistingInstall' => $hasExistingInstall,
+            'overwriteToken' => $overwriteToken,
         ];
     }
 
     public function analyzeForm(): void
     {
         $this->conn = $this->attemptDbConnection();
+
+        // Never trusts the client-reported live-check result for the
+        // gate itself -- re-checked here, defense in depth.
+        if ($this->conn instanceof Connection) {
+            $this->hasExistingInstall = new InstallSchemaDropper()
+                ->hasExistingInstall($this->conn);
+
+            if ($this->hasExistingInstall === null) {
+                $this->errors[] = $this->lang->t('Connected to the database, but couldn\'t verify whether it already contains a Piwigo installation — check the database user\'s privileges to list tables');
+            } elseif ($this->hasExistingInstall === true && ! $this->overwriteConfirmed()) {
+                // A fresh token for this response, invalidating any
+                // earlier one -- including one already displayed in
+                // another tab, an accepted tradeoff for a single-operator
+                // flow.
+                $this->overwriteToken = $this->issueOverwriteToken();
+                $this->errors[] = $this->lang->t('This database already contains a Piwigo installation. Check the box below to confirm you want to overwrite it, then submit again.');
+            }
+        }
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));
         if ($webmaster === '') {
@@ -506,6 +603,27 @@ final class InstallWizard
             ->write($this->dbhost, $this->dbuser, $this->dbpasswd, $this->dbname, $this->dblayer, $this->dbport);
         if ($envError !== null) {
             $this->errors[] = $envError;
+        }
+
+        // Re-checked once more here rather than trusting analyzeForm()'s
+        // own earlier result -- reaching this point already guarantees
+        // that gate passed with a definite true+confirmed or a definite
+        // false, so a fresh null here (a privilege change or connection
+        // hiccup between requests) aborts rather than assuming either
+        // answer, same "reset to step 1" shape as the migration-failure
+        // early return just below.
+        $hasExistingInstall = new InstallSchemaDropper()
+            ->hasExistingInstall($conn);
+        if ($hasExistingInstall === null) {
+            $this->errors[] = $this->lang->t('Connected to the database, but couldn\'t verify whether it already contains a Piwigo installation — check the database user\'s privileges to list tables');
+            $this->step = 1;
+
+            return;
+        }
+
+        if ($hasExistingInstall === true) {
+            new InstallSchemaDropper()
+                ->drop($conn);
         }
 
         // A schema left in an unknown/partial state past this point --
@@ -621,6 +739,8 @@ final class InstallWizard
             errors: count($this->errors) !== 0 ? $this->errors : null,
             infos: count($this->infos) !== 0 ? $this->infos : null,
             themes: $themes,
+            hasExistingInstall: $this->hasExistingInstall,
+            overwriteToken: $this->overwriteToken,
             // The 3 messages install.js already mirrors inline near their
             // own field -- deduped out of the top-of-page list so a
             // failed submit doesn't show each one twice. Same

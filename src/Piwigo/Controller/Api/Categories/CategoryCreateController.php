@@ -16,6 +16,7 @@ use Piwigo\Http\CsrfGuard;
 use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -34,6 +35,7 @@ final readonly class CategoryCreateController implements ControllerInterface
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private EntityManagerInterface $entityManager,
+        private UserRepository $userRepository,
     ) {}
 
     #[Override]
@@ -74,6 +76,7 @@ final readonly class CategoryCreateController implements ControllerInterface
             $this->activityService,
             $this->currentUser,
             $this->entityManager,
+            $this->userRepository,
             $input->parentId,
             $options
         );

@@ -181,9 +181,7 @@ final readonly class UrlService implements UrlServiceInterface
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator(),
-            $this->accessLevelChecker(),
-            new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
-        );
+            $this->accessLevelChecker());
     }
 
     /**

@@ -155,9 +155,7 @@ function searchServiceSqliteTestService(SearchRepository $repo): SearchService
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker,
-            new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), CurrentConfigTestFactory::get())
-        ),
+            $accessLevelChecker),
         HtmlServiceTestFactory::build(),
         new RedirectService(LangTestFactory::get(), searchServiceSqliteTestUserService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),

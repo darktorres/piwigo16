@@ -539,7 +539,7 @@ final class RequestBootstrap
 
     private static function categoryService(Connection $conn): CategoryService
     {
-        return new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::permissionService($conn), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()));
+        return new CategoryService(self::lang(), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::permissionService($conn), self::currentConfig(), self::eventDispatcher(), self::translator(), self::accessLevelChecker());
     }
 
     private static function buildImageService(Connection $conn): ImageService

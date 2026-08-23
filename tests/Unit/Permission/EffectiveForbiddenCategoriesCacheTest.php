@@ -71,7 +71,6 @@ function effectiveForbiddenCategoriesCacheTestSubject(CacheItemPoolInterface $po
         new EventDispatcher(),
         new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         $accessLevelChecker,
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
     );
 
     return new EffectiveForbiddenCategoriesCache($accessLevelChecker, $permissionService, $categoryService, $permissionRepository, $pool);

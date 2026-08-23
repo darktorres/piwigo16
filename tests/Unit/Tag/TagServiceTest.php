@@ -120,9 +120,7 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         $currentConfig,
         EventDispatcherTestFactory::get(),
         new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
-        $tagServiceAccessLevelChecker,
-        new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), $currentConfig)
-    );
+        $tagServiceAccessLevelChecker);
     $tagServiceImageService = new ImageService(
         EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),

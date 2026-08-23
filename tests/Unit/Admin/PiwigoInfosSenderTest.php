@@ -161,7 +161,7 @@ test('send returns immediately without touching the DB or network when telemetry
         Paths::fromRoot(sys_get_temp_dir()),
         EntityManagerFactory::build(),
         $userServicePermissionService,
-        new CategoryService(piwigoInfosSenderTestLang(), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServicePermissionService, $userServiceCurrentConfig, new EventDispatcher(), new Translator($userServiceCurrentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $userServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), $userServiceCurrentConfig)),
+        new CategoryService(piwigoInfosSenderTestLang(), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServicePermissionService, $userServiceCurrentConfig, new EventDispatcher(), new Translator($userServiceCurrentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $userServiceAccessLevelChecker),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build()), new DeploymentPolicy()),
     );
     $permissionService = new PermissionService(
@@ -180,7 +180,6 @@ test('send returns immediately without touching the DB or network when telemetry
         new EventDispatcher(),
         new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
-        new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), new CurrentConfig()),
     );
     $imageService = new ImageService(
         EntityManagerFactory::build()->getRepository(ImageEntity::class),

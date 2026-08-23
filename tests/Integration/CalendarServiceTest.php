@@ -77,9 +77,7 @@ namespace Piwigo\Tests\Integration {
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker,
-                    new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig)
-                )
+                    $accessLevelChecker)
             );
 
             // Matches getuserdata()'s own guaranteed shape -- an incomplete

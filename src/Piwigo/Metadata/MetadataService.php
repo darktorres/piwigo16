@@ -569,7 +569,7 @@ final readonly class MetadataService
         // below as an explicit argument, not to TagService's constructor
         // (TagService::$imageService is itself an explicit per-method
         // parameter, not a constructor property, for the same reasoning).
-        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new AccessLevelChecker($this->currentUser, $this->currentConfig), new UserRepository($entityManager, $this->eventDispatcher, $this->currentConfig));
+        $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new AccessLevelChecker($this->currentUser, $this->currentConfig));
         $tagServiceImageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
         $tagService = new TagService($this->lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger);
 

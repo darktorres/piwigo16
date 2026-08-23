@@ -252,9 +252,7 @@ namespace Piwigo\Tests\Integration {
                 CurrentConfigTestFactory::get(),
                 EventDispatcherTestFactory::get(),
                 TranslatorTestFactory::get(),
-                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
-                new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig)
-            );
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig));
 
             CurrentUserTestFactory::get()->set(User::fromUserArray([
                 'id' => 1,
@@ -802,7 +800,7 @@ namespace Piwigo\Tests\Integration {
             $activityLogger = new CategoryServiceFakeActivityLogger();
             $urlService = UrlServiceTestFactory::build();
 
-            $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
+            $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()));
             $tempIdRaw = $result->id;
             self::assertTrue(is_numeric($tempIdRaw));
             $tempId = (int) $tempIdRaw;
@@ -851,7 +849,7 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue(is_numeric($rawSiteId));
             $siteId = (int) $rawSiteId;
 
-            $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn))->id;
+            $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()))->id;
             self::assertTrue(is_numeric($categoryId));
             $this->conn->executeStatement('UPDATE categories SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
 
@@ -1181,7 +1179,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testCreateVirtualCategoryReturnsAnErrorWhenTheParentDoesNotExist(): void
         {
-            $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), 999999);
+            $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), 999999);
 
             self::assertSame('The parent album does not exist', $result->error);
         }
@@ -1196,7 +1194,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement("UPDATE categories SET visible = {$falseLiteral} WHERE id = 1");
 
             try {
-                $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), 1);
+                $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), 1);
                 $newIdRaw = $result->id;
                 self::assertTrue(is_numeric($newIdRaw));
                 $newId = (int) $newIdRaw;
@@ -1222,7 +1220,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (3, 1)');
 
             try {
-                $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), 1, [
+                $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), 1, [
                     'inherit' => true,
                 ]);
                 $newIdRaw = $result->id;
@@ -1447,6 +1445,7 @@ namespace Piwigo\Tests\Integration {
                 $activityLogger,
                 CurrentUserTestFactory::get(),
                 EntityManagerFactory::build($this->conn),
+                new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()),
                 null,
                 [
                     'status' => 'private',
@@ -1481,7 +1480,7 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->newcatDefaultPosition = 'last';
 
             try {
-                $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
+                $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()));
                 $newIdRaw = $result->id;
                 self::assertTrue(is_numeric($newIdRaw));
                 $newId = (int) $newIdRaw;

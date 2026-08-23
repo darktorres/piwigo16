@@ -185,7 +185,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $filterState,
             $accessLevelChecker
         );
-        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker, new UserRepository($em, new EventDispatcher(), $currentConfig));
+        $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
 
         $htmlService = HtmlServiceTestFactory::build();
         // mainpage_categories.latte's own {var $derivative =
@@ -306,7 +306,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function testRenderRecentCatsExcludesACategoryWithZeroImages(): void
     {
         $this->seedUser();
-        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
+        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()));
         $newIdRaw = $result->id;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
@@ -333,7 +333,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // count_images > 0 -- unlike createVirtualCategory()'s own
         // zero-image "Empty Recent Test" sibling above (which never gets
         // anywhere near findFullCategoriesByIds() at all).
-        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn));
+        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get(), EntityManagerFactory::build($this->conn), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()));
         $newIdRaw = $result->id;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;

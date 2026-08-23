@@ -360,9 +360,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator,
-            $this->accessLevelChecker(),
-            new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
-        )->getCategoryInfo($catId);
+            $this->accessLevelChecker())->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (a URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
         $upper_names = array_map(

@@ -702,7 +702,6 @@ function imageServiceTestCategoryService(Connection $conn): CategoryService
         EventDispatcherTestFactory::get(),
         TranslatorTestFactory::get(),
         $accessLevelChecker,
-        new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), $currentConfig),
     );
 }
 

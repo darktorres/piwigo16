@@ -17,6 +17,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 
 /**
  * Admin-side category WRITE operations, kept separate from
@@ -45,9 +46,9 @@ final readonly class CategoryAdminService
     /**
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
      */
-    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, ?int $parentId = null, array $options = []): CreateCategoryResult
+    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, UserRepository $userRepository, ?int $parentId = null, array $options = []): CreateCategoryResult
     {
-        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $this->entityManager, $parentId, $options);
+        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $this->entityManager, $userRepository, $parentId, $options);
 
         if ($result->error !== null) {
             return CreateCategoryResult::failure($result->error);

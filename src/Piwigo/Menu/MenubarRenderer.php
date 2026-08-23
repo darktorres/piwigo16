@@ -76,7 +76,7 @@ final class MenubarRenderer
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
 
-        $categoryService = new CategoryService($lang, new CategoryRepository($entityManager, $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker, new UserRepository($entityManager, $eventDispatcher, $currentConfig));
+        $categoryService = new CategoryService($lang, new CategoryRepository($entityManager, $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker);
 
         $tagService = new TagService($lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger);
 

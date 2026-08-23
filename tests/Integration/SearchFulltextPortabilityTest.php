@@ -115,7 +115,6 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             new EventDispatcher(),
             TranslatorTestFactory::get(),
             $accessLevelChecker,
-            new UserRepository($this->em, new EventDispatcher(), CurrentConfigTestFactory::get()),
         );
 
         $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), $this->em->getRepository(GroupEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get(), $this->em, $permissionService, $categoryService, new PasswordService(new PasswordRepository($this->em), new DeploymentPolicy()));

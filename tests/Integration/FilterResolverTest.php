@@ -111,7 +111,6 @@ final class FilterResolverTest extends IntegrationTestCase
             new EventDispatcher(),
             TranslatorTestFactory::get(),
             $accessLevelChecker,
-            new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()),
         );
         $imageService = new ImageService(
             $em->getRepository(ImageEntity::class),

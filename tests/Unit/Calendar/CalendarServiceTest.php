@@ -69,7 +69,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), CurrentConfigTestFactory::get())),
+        new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), $permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker),
     );
 }
 

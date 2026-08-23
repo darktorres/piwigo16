@@ -253,9 +253,7 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker,
-            new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), CurrentConfigTestFactory::get())
-        ),
+            $accessLevelChecker),
         $htmlRenderer,
         new RedirectService(LangTestFactory::get(), searchServiceTestUserService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),

@@ -92,7 +92,7 @@ final readonly class CalendarRenderer
         $accessLevelChecker = new AccessLevelChecker($this->currentUser, $this->currentConfig);
         $calendarService = new CalendarService(
             $this->permissionService,
-            new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), $this->permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker, new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig))
+            new CategoryService($this->lang, new CategoryRepository($this->entityManager, $this->currentConfig), $this->permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker)
         );
 
         if ($section === Section::Categories) { // we will regenerate the items by including subcats elements

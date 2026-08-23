@@ -89,7 +89,10 @@ use Piwigo\Users\UserRepository;
  * force all 33 real `new CategoryService(...)` call sites to supply one
  * -- the vast majority pure-read (menu rendering, gallery browsing) and
  * never touch activity logging. Instead, only those 4 write methods take
- * `ActivityLoggerInterface` as an explicit parameter.
+ * `ActivityLoggerInterface` as an explicit parameter. {@see
+ * createVirtualCategory()} takes `UserRepository` as an explicit
+ * parameter for the identical reason -- only its own private-category
+ * branch needs it.
  */
 final readonly class CategoryService
 {
@@ -101,7 +104,6 @@ final readonly class CategoryService
         private EventDispatcher $eventDispatcher,
         private Translator $translator,
         private AccessLevelChecker $accessLevelChecker,
-        private UserRepository $userRepository,
     ) {}
 
     /**
@@ -1944,7 +1946,7 @@ final readonly class CategoryService
      * row that exists but has no uppercats path, or a private album
      * created without the permissions it was supposed to inherit.
      */
-    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, EntityManagerInterface $entityManager, ?int $parentId = null, array $options = []): CategoryCreateOutcome
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, EntityManagerInterface $entityManager, UserRepository $userRepository, ?int $parentId = null, array $options = []): CategoryCreateOutcome
     {
 
         // is the given category name only containing blank spaces ?
@@ -2031,7 +2033,7 @@ final readonly class CategoryService
 
         // we have then to add the virtual category
         $insertedId = $entityManager->getConnection()
-            ->transactional(function () use ($insert, $uppercatsPrefix, $currentUser, $options): int|string {
+            ->transactional(function () use ($insert, $uppercatsPrefix, $currentUser, $options, $userRepository): int|string {
                 $insertedId = $this->repo->insertCategory($insert);
 
                 $this->repo->updateCategoryAfterInsert($insertedId, [
@@ -2068,7 +2070,7 @@ final readonly class CategoryService
                         ->id->value;
                     $adminIds = array_map(
                         static fn (UserId $id): int => $id->value,
-                        $this->userRepository
+                        $userRepository
                             ->findAdminIds()
                     );
                     $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));

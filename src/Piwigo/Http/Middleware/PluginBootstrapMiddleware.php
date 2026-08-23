@@ -186,7 +186,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
 
     private function categoryService(Connection $conn): CategoryService
     {
-        return new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->permissionService($conn), $this->currentConfig, $this->eventDispatcher, $this->translator, $this->accessLevelChecker(), new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig));
+        return new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->permissionService($conn), $this->currentConfig, $this->eventDispatcher, $this->translator, $this->accessLevelChecker());
     }
 
     private function accessLevelChecker(): AccessLevelChecker

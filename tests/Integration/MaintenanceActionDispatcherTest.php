@@ -208,7 +208,6 @@ namespace Piwigo\Tests\Integration {
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
                 new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
-                new UserRepository(EntityManagerFactory::build(DbConnection::build()), new EventDispatcher(), CurrentConfigTestFactory::get()),
             );
         }
 

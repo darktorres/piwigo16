@@ -154,7 +154,7 @@ function userActivitySubControllerTestUserService(ActivityService $activityServi
         Paths::fromRoot(sys_get_temp_dir()),
         EntityManagerFactory::build($conn),
         $permissionService,
-        new CategoryService(userActivitySubControllerTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig)),
+        new CategoryService(userActivitySubControllerTestLang(), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $permissionService, $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $accessLevelChecker),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
     );
 }
@@ -194,7 +194,6 @@ function userActivitySubControllerTestCategoryService(): CategoryService
         new EventDispatcher(),
         new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker($currentUser, new CurrentConfig()),
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
     );
 }
 

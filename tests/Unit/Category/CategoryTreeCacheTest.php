@@ -57,7 +57,6 @@ function categoryTreeCacheTestService(): CategoryService
         new EventDispatcher(),
         new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
         new AccessLevelChecker($currentUser, $currentConfig),
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
     );
 }
 

@@ -28,6 +28,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 
 /**
@@ -126,6 +127,7 @@ final readonly class CatListPageRenderer
                     $virtual_name,
                     $this->activityService,
                     $this->currentUser,
+                    new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig),
                     $parent_id
                 );
 

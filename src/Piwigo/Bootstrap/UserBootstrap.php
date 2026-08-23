@@ -142,7 +142,7 @@ final readonly class UserBootstrap
             $paths,
             EntityManagerFactory::build($conn),
             $permissionService,
-            new CategoryService(RequestBootstrap::lang(), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $permissionService, RequestBootstrap::currentConfig(), $eventDispatcher, $translator, $this->accessLevelChecker, new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig())),
+            new CategoryService(RequestBootstrap::lang(), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $permissionService, RequestBootstrap::currentConfig(), $eventDispatcher, $translator, $this->accessLevelChecker),
             $passwordService,
         );
 

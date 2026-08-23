@@ -168,9 +168,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker,
-            new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
-        );
+            $accessLevelChecker);
         $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build(), EntityManagerFactory::build($this->conn));
     }
 
@@ -395,7 +393,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function testCreateVirtualCategoryRejectsABlankName(): void
     {
-        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get());
+        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()));
 
         self::assertFalse($result->success);
         self::assertNotNull($result->message);
@@ -404,7 +402,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function testCreateVirtualCategoryCreatesARealRow(): void
     {
-        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get());
+        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()));
 
         self::assertTrue($result->success);
         self::assertNotNull($result->categoryId);

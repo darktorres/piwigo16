@@ -368,9 +368,7 @@ namespace Piwigo\Tests\Integration {
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker,
-                    new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
-                ),
+                    $accessLevelChecker),
                 HtmlServiceTestFactory::build(),
                 new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
@@ -470,9 +468,7 @@ namespace Piwigo\Tests\Integration {
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker,
-                    new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get())
-                ),
+                    $accessLevelChecker),
                 $htmlRenderer,
                 new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
                 new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),

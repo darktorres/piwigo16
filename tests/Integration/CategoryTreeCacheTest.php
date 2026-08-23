@@ -89,9 +89,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
                 CurrentConfigTestFactory::get(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
-                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
-                new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig)
-            ),
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
             new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
             $this->pool
         );

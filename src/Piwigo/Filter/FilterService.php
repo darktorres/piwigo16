@@ -188,9 +188,7 @@ final readonly class FilterService implements FilterUpdaterInterface
                     $this->currentConfig,
                     $this->eventDispatcher,
                     $this->translator,
-                    $accessLevelChecker,
-                    new UserRepository($this->entityManager, $this->eventDispatcher, $this->currentConfig)
-                )->getComputedCategories($user->id->value, $user->level, $user->forbiddenCategories, $filter_recent_period);
+                    $accessLevelChecker)->getComputedCategories($user->id->value, $user->level, $user->forbiddenCategories, $filter_recent_period);
                 // FilterState::$categories stays a plain array by design (it
                 // may also be restored from an untrusted session
                 // unserialize() result) -- toArray() once here, at the

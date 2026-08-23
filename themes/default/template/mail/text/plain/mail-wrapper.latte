@@ -1,0 +1,15 @@
+{varType \Latte\Runtime\Html $CONTENT}
+{contentType text}
+{*
+  Composes header.latte + the mail's own content + footer.latte into one
+  document via {include}, same reasoning as the text/html sibling
+  (mail/text/html/mail-wrapper.latte) -- this variant never actually had
+  a tag-balance problem (plain text, no real HTML tags), but shares the
+  same MailService.php rendering path (which always assigns CONTENT as
+  Html, regardless of content type -- see MailContentPageContext's own
+  docblock), so it gets the same wrapper for consistency: one parse()
+  call instead of three concatenated ones.
+*}
+{include 'header.latte'}
+{$CONTENT}
+{include 'footer.latte'}

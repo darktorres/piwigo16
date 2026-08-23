@@ -39,6 +39,7 @@ use Piwigo\Mail\Event\RenderLostPasswordMailContent;
 use Piwigo\Mail\Projection\CatGroupInfoView;
 use Piwigo\Mail\Projection\EmailRecipient;
 use Piwigo\Mail\Projection\MailContent;
+use Piwigo\Mail\Projection\MailContentPageContext;
 use Piwigo\Mail\Projection\MailHeaderPageContext;
 use Piwigo\Mail\Projection\MailRecipient;
 use Piwigo\Mail\Projection\MailTitlePageContext;
@@ -973,9 +974,6 @@ final class MailService implements MailerInterface
                     mailSubtitle: $args->mailSubtitle,
                 ));
 
-                // Header.
-                $contents[$contentType] = $template->parse('header.latte');
-
                 // Content -- stored in a temp variable; if a content template is
                 // used it's assigned to CONTENT, otherwise appended to the mail.
                 $contentInput = $args->content;
@@ -1003,15 +1001,24 @@ final class MailService implements MailerInterface
                 if ($tpl->filename !== null) {
                     $assign = self::emptyValue($tpl->assign) ? [] : $tpl->assign;
                     $runtimeView = self::buildRuntimeTemplateView($tpl->filename, $assign, $mailContent);
-                    $contents[$contentType] .= $runtimeView instanceof View
+                    $renderedContent = $runtimeView instanceof View
                         ? $template->renderView($tpl->filename . '.latte', $runtimeView)
                         : $mailContent;
                 } else {
-                    $contents[$contentType] .= $mailContent;
+                    $renderedContent = $mailContent;
                 }
 
-                // Footer.
-                $contents[$contentType] .= $template->parse('footer.latte');
+                // Header + content + footer, composed as one real document by
+                // mail-wrapper.latte's own {include 'header.latte'}{$CONTENT}
+                // {include 'footer.latte'} -- Latte verifies the whole
+                // assembled document's HTML structure in one pass this way
+                // (header.latte's own deliberately-left-open tags, closed only
+                // in footer.latte, are genuinely checked, not just assumed).
+                // $renderedContent is already fully rendered/converted by this
+                // point, so it's carried as a trusted Html value, not
+                // re-escaped -- see MailContentPageContext's own docblock.
+                $template->assignContext(new MailContentPageContext(new Html($renderedContent)));
+                $contents[$contentType] = $template->parse('mail-wrapper.latte');
             }
         } finally {
             // Undo compute-root_path -- always, even if an exception was

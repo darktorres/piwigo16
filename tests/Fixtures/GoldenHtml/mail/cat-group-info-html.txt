@@ -25,6 +25,7 @@
   <p style="margin: .25em 0 .5em 0;">A short note about this album.</p>
   <p style="margin: .25em 0 .5em 0;">See you soon.</p>
 </div>
+
 </td></tr>
 
 <tr><td id="footer" style="font-size: 10px; padding: 5px; background: #eee; border-bottom: 2px solid #f70;">

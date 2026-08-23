@@ -1,0 +1,22 @@
+{varType \Latte\Runtime\Html $CONTENT}
+{*
+  Composes header.latte + the mail's own content + footer.latte into one
+  real document -- {include} (Latte's own composition mechanism, already
+  used elsewhere in this codebase, e.g. password.latte's own
+  {include 'infos_errors.latte'}), not raw PHP string concatenation.
+  header.latte deliberately leaves several tags open (<html>/<body>/
+  <table>/<tr><td id="content">), closed only in footer.latte -- across
+  an {include} boundary, Latte compiles the whole thing as one real
+  document, so this nesting is genuinely verified, not just assumed.
+  $CONTENT is prepared by MailService.php (already rendered/escaped as
+  needed, wrapped in Latte\Runtime\Html so it prints here unescaped the
+  same way ADMIN_CONTENT/MENUBAR/etc. already do elsewhere) -- it is
+  NOT itself included as a template: sometimes it's a real rendered
+  View (cat_group_info.latte/notification_by_mail.latte/
+  notification_admin.latte), sometimes it's plain already-built text/
+  HTML with no backing template file at all (see MailService::mail()'s
+  own docblock on $tpl->filename's exactly-2-real-values scope).
+*}
+{include 'header.latte'}
+{$CONTENT}
+{include 'footer.latte'}

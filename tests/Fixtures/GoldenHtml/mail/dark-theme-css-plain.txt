@@ -1,6 +1,7 @@
 Fixture Gallery
  Dark theme CSS coverage
 ----
+
 ----
 Sent by "Fixture Gallery" {{ABSOLUTE_ROOT_URL}}
 Powered by "Piwigo" https://upstream.example.invalid

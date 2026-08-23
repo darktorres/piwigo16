@@ -26,11 +26,13 @@ function makeInstallView(array $themes): InstallView
         fAdminEmail: 'admin@example.com',
         email: 'admin@example.com',
         fNewsletterSubscribe: false,
+        fSendCredentialsByMail: false,
         lInstallHelp: '',
         install: null,
         errors: null,
         infos: null,
         themes: $themes,
+        dedupErrorStrings: [],
     );
 }
 
@@ -93,6 +95,9 @@ test('exposedStrings returns the install-check translated strings', function ():
             'Testing connection...',
             'Connection successful',
             'Connected to the database, but couldn\'t verify whether it already contains a Piwigo installation — check the database user\'s privileges to list tables',
+            'webmaster login can\'t contain characters \' or "',
+            'please enter your password again',
+            'mail address must be like xxx@yyy.eee (example : jack@altern.org)',
         ]);
 });
 

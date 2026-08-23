@@ -267,7 +267,7 @@
               <tr>
                 <td
                     class="table2-label-col fieldname"
-                  >Database type</td>
+                  ><label for="dbdriver">Database type</label></td>
                 <td>
                   <select
                       name="dbdriver"
@@ -293,7 +293,7 @@
               <tr>
                 <td
                     class="table2-label-col fieldname"
-                  >Host</td>
+                  ><label for="dbhost">Host</label></td>
                 <td><input
                       type="text"
                       name="dbhost"
@@ -306,7 +306,7 @@
                   >localhost or other, supplied by your host provider</td>
               </tr>
               <tr>
-                <td class="fieldname">Port</td>
+                <td class="fieldname"><label for="dbport">Port</label></td>
                 <td><input
                       type="number"
                       name="dbport"
@@ -320,7 +320,7 @@
                   >leave empty to use the default port for your chosen database type</td>
               </tr>
               <tr>
-                <td class="fieldname">User</td>
+                <td class="fieldname"><label for="dbuser">User</label></td>
                 <td><input
                       type="text"
                       name="dbuser"
@@ -333,7 +333,7 @@
                   >user login supplied by your host provider</td>
               </tr>
               <tr>
-                <td class="fieldname">Password</td>
+                <td class="fieldname"><label for="dbpasswd">Password</label></td>
                 <td><input
                       type="password"
                       name="dbpasswd"
@@ -345,7 +345,7 @@
                   >user password supplied by your host provider</td>
               </tr>
               <tr>
-                <td class="fieldname">Database name</td>
+                <td class="fieldname"><label for="dbname">Database name</label></td>
                 <td><input
                       type="text"
                       name="dbname"
@@ -370,22 +370,27 @@
               <tr>
                 <td
                     class="table2-label-col fieldname"
-                  >Username</td>
-                <td><input
+                  ><label for="admin_name">Username</label></td>
+                <td>
+                  <input
                       type="text"
                       name="admin_name"
+                      id="admin_name"
                       value=""
                       required
-                    ></td>
+                    >
+                  <span id="admin_name-error" class="field-error"></span>
+                </td>
                 <td
                     class="fielddesc"
                   >It will be shown to visitors. It is necessary for website administration</td>
               </tr>
               <tr>
-                <td class="fieldname">Password</td>
+                <td class="fieldname"><label for="admin_pass1">Password</label></td>
                 <td><input
                       type="password"
                       name="admin_pass1"
+                      id="admin_pass1"
                       value=""
                       required
                     ></td>
@@ -394,24 +399,31 @@
                   >Keep it confidential, it enables you to access the administration panel</td>
               </tr>
               <tr>
-                <td class="fieldname">Password [confirm]</td>
-                <td><input
+                <td class="fieldname"><label for="admin_pass2">Password [confirm]</label></td>
+                <td>
+                  <input
                       type="password"
                       name="admin_pass2"
+                      id="admin_pass2"
                       value=""
                       required
-                    ></td>
+                    >
+                  <span id="admin_pass2-error" class="field-error"></span>
+                </td>
                 <td class="fielddesc">verification</td>
               </tr>
               <tr>
-                <td class="fieldname">Email address</td>
-                <td><input
+                <td class="fieldname"><label for="admin_mail">Email address</label></td>
+                <td>
+                  <input
                       type="text"
                       name="admin_mail"
                       id="admin_mail"
                       value=""
                       required
-                    ></td>
+                    >
+                  <span id="admin_mail-error" class="field-error"></span>
+                </td>
                 <td
                     class="fielddesc"
                   >Visitors will be able to use this email to contact the site administrator</td>
@@ -424,8 +436,6 @@
                           type="checkbox"
                           name="newsletter_subscribe"
                           
-                          checked="checked"
-                          
                         >
                       <span
                           class="cluetip"
@@ -437,7 +447,6 @@
                       <input
                           type="checkbox"
                           name="send_credentials_by_mail"
-                          checked="checked"
                         >
                       Send my connection settings by email
                     </label>
@@ -459,7 +468,7 @@
       <div class="install-help-row">Need help? Ask your question on the <a href="https://upstream.example.invalid/forum">Piwigo message board</a>.</div>
     </div> 
 
-    <script type="application/json" id="page-data">{"data":[],"strings":{"Testing connection...":"Testing connection...","Connection successful":"Connection successful","Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables":"Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables"}}</script>
+    <script type="application/json" id="page-data">{"data":[],"strings":{"Testing connection...":"Testing connection...","Connection successful":"Connection successful","Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables":"Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables","webmaster login can't contain characters ' or \"":"the webmaster login may not contain the characters ' or \"","please enter your password again":"please enter your password again","mail address must be like xxx@yyy.eee (example : jack@altern.org)":"mail address must be like xxx@yyy.eee (example: jack@altern.org)"}}</script>
 
     <script type="text/javascript" src="themes/default/js/plugins/jquery.cluetip.js?v17.0.0"></script>
     <script type="text/javascript" src="themes/default/js/page-data.js?v17.0.0"></script>

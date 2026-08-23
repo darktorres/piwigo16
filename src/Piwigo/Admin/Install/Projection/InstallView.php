@@ -37,6 +37,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
      * @param array<int, string>|null $errors
      * @param array<int, string>|null $infos
      * @param list<mixed> $themes
+     * @param list<string> $dedupErrorStrings
      */
     public function __construct(
         public ?string $languageSelection,
@@ -53,11 +54,13 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         public string $fAdminEmail,
         public string $email,
         public bool $fNewsletterSubscribe,
+        public bool $fSendCredentialsByMail,
         public string $lInstallHelp,
         public ?bool $install,
         public ?array $errors,
         public ?array $infos,
         public array $themes,
+        public array $dedupErrorStrings,
     ) {}
 
     /**
@@ -120,6 +123,12 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
             'Testing connection...',
             'Connection successful',
             'Connected to the database, but couldn\'t verify whether it already contains a Piwigo installation — check the database user\'s privileges to list tables',
+            // Same 3 strings analyzeForm() validates server-side --
+            // install.js mirrors these checks inline near their own
+            // field, reusing the exact same translated text.
+            'webmaster login can\'t contain characters \' or "',
+            'please enter your password again',
+            'mail address must be like xxx@yyy.eee (example : jack@altern.org)',
         ];
     }
 }

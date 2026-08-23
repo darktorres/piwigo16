@@ -31,7 +31,7 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
         ->and($request->isInstallSubmitted)
         ->toBeFalse()
         ->and($request->isNewsletterSubscribe)
-        ->toBeTrue()
+        ->toBeFalse()
         ->and($request->languageParam)
         ->toBeNull()
         ->and($request->isSendCredentialsByMail)
@@ -152,11 +152,11 @@ test('fromArrays parses admin credentials from POST', function (): void {
         ->toBe('admin@example.test');
 });
 
-test('fromArrays keeps isNewsletterSubscribe true when install is not submitted, regardless of the checkbox', function (): void {
+test('fromArrays keeps isNewsletterSubscribe false when install is not submitted, regardless of the checkbox', function (): void {
     $request = InstallWizardRequest::fromArrays([], [], new InputValidator());
 
     expect($request->isNewsletterSubscribe)
-        ->toBeTrue();
+        ->toBeFalse();
 });
 
 test('fromArrays reflects the checkbox once install is submitted', function (): void {

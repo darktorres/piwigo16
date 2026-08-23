@@ -17,10 +17,10 @@ use Piwigo\Validation\InputValidator;
  * data this DTO has any business resolving; `boot()` keeps that
  * resolution itself.
  *
- * `isNewsletterSubscribe` defaults to `true` when `install` wasn't
- * submitted (matching the original's own property default, never
- * touched outside the `isset($_POST['install'])` branch), and only
- * reflects the checkbox's own presence once `install` was submitted.
+ * `isNewsletterSubscribe` defaults to `false` when `install` wasn't
+ * submitted -- true opt-in, not opt-out, for a marketing newsletter --
+ * and only reflects the checkbox's own presence once `install` was
+ * submitted.
  */
 final readonly class InstallWizardRequest
 {
@@ -79,7 +79,7 @@ final readonly class InstallWizardRequest
         $admin_mail = (is_string($admin_mail_raw) && $admin_mail_raw !== '') ? $admin_mail_raw : '';
 
         $is_install_submitted = isset($post['install']);
-        $is_newsletter_subscribe = $is_install_submitted ? isset($post['newsletter_subscribe']) : true;
+        $is_newsletter_subscribe = $is_install_submitted ? isset($post['newsletter_subscribe']) : false;
 
         $language_param = null;
         if (isset($get['language']) && is_string($get['language'])) {

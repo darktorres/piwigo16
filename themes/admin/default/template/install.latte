@@ -29,7 +29,17 @@
 
         <div n:if="isset($errors)" class="errors">
           <ul>
-            <li n:foreach="$errors as $error">{$error}</li>
+            {* The 3 checks Part 2's own JS mirrors inline near their
+               field -- shown there instead, so a failed submit doesn't
+               show the same message twice. $dedupErrorStrings holds the
+               already-translated form of each of those 3 messages
+               (computed server-side from the exact same $this->lang->t()
+               calls analyzeForm() itself uses), so this stays correct in
+               any locale without embedding raw string literals here. *}
+            <li
+              n:foreach="$errors as $error"
+              n:if="! in_array($error, $dedupErrorStrings, true)"
+            >{$error}</li>
           </ul>
         </div>
 
@@ -72,7 +82,7 @@
                 <tr>
                   <td
                     class="table2-label-col fieldname"
-                  >{='Database type'|translate}</td>
+                  ><label for="dbdriver">{='Database type'|translate}</label></td>
                   <td>
                     <select
                       name="dbdriver"
@@ -100,7 +110,7 @@
                 <tr>
                   <td
                     class="table2-label-col fieldname"
-                  >{='Host'|translate}</td>
+                  ><label for="dbhost">{='Host'|translate}</label></td>
                   <td><input
                       type="text"
                       name="dbhost"
@@ -113,7 +123,7 @@
                   >{='localhost or other, supplied by your host provider'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='Port'|translate}</td>
+                  <td class="fieldname"><label for="dbport">{='Port'|translate}</label></td>
                   <td><input
                       type="number"
                       name="dbport"
@@ -128,7 +138,7 @@
                   >{='leave empty to use the default port for your chosen database type'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='User'|translate}</td>
+                  <td class="fieldname"><label for="dbuser">{='User'|translate}</label></td>
                   <td><input
                       type="text"
                       name="dbuser"
@@ -141,7 +151,7 @@
                   >{='user login given by your host provider'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='Password'|translate}</td>
+                  <td class="fieldname"><label for="dbpasswd">{='Password'|translate}</label></td>
                   <td><input
                       type="password"
                       name="dbpasswd"
@@ -153,7 +163,7 @@
                   >{='user password given by your host provider'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='Database name'|translate}</td>
+                  <td class="fieldname"><label for="dbname">{='Database name'|translate}</label></td>
                   <td><input
                       type="text"
                       name="dbname"
@@ -178,22 +188,27 @@
                 <tr>
                   <td
                     class="table2-label-col fieldname"
-                  >{='Username'|translate}</td>
-                  <td><input
+                  ><label for="admin_name">{='Username'|translate}</label></td>
+                  <td>
+                    <input
                       type="text"
                       name="admin_name"
+                      id="admin_name"
                       value="{$fAdmin}"
                       required
-                    ></td>
+                    >
+                    <span id="admin_name-error" class="field-error"></span>
+                  </td>
                   <td
                     class="fielddesc"
                   >{='It will be shown to the visitors. It is necessary for website administration'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='Password'|translate}</td>
+                  <td class="fieldname"><label for="admin_pass1">{='Password'|translate}</label></td>
                   <td><input
                       type="password"
                       name="admin_pass1"
+                      id="admin_pass1"
                       value=""
                       required
                     ></td>
@@ -202,24 +217,31 @@
                   >{='Keep it confidential, it enables you to access administration panel'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='Password [confirm]'|translate}</td>
-                  <td><input
+                  <td class="fieldname"><label for="admin_pass2">{='Password [confirm]'|translate}</label></td>
+                  <td>
+                    <input
                       type="password"
                       name="admin_pass2"
+                      id="admin_pass2"
                       value=""
                       required
-                    ></td>
+                    >
+                    <span id="admin_pass2-error" class="field-error"></span>
+                  </td>
                   <td class="fielddesc">{='verification'|translate}</td>
                 </tr>
                 <tr>
-                  <td class="fieldname">{='Email address'|translate}</td>
-                  <td><input
+                  <td class="fieldname"><label for="admin_mail">{='Email address'|translate}</label></td>
+                  <td>
+                    <input
                       type="text"
                       name="admin_mail"
                       id="admin_mail"
                       value="{$fAdminEmail}"
                       required
-                    ></td>
+                    >
+                    <span id="admin_mail-error" class="field-error"></span>
+                  </td>
                   <td
                     class="fielddesc"
                   >{='Visitors will be able to contact site administrator with this mail'|translate}</td>
@@ -245,7 +267,7 @@
                         <input
                           type="checkbox"
                           name="send_credentials_by_mail"
-                          checked="checked"
+                          n:attr="checked: $fSendCredentialsByMail ? 'checked' : null"
                         >
                         {='Send my connection settings by email'|translate}
                       </label>

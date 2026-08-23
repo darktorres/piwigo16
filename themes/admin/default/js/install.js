@@ -92,6 +92,48 @@ $(document).ready(function() {
 
   $("#dbhost, #dbuser, #dbpasswd, #dbname").on("blur", scheduleDbCheck);
   $("#dbdriver, #dbport").on("change", scheduleDbCheck);
+
+  // Mirrors analyzeForm()'s own preg_match('/[\'"]/', $webmaster) --
+  // the "empty login" branch isn't mirrored, the field's own required
+  // attribute already blocks that natively.
+  function checkWebmasterLogin() {
+    var value = $.trim($("#admin_name").val()).replace(/\s{2,}/g, " ");
+    var error = $("#admin_name-error");
+    if (value !== "" && /['"]/.test(value)) {
+      error.text(pwg_getPageString("webmaster login can't contain characters ' or \""));
+    } else {
+      error.text("");
+    }
+  }
+
+  // Mirrors analyzeForm()'s own $this->adminPass1 !== $this->adminPass2.
+  function checkPasswordMatch() {
+    var pass1 = $("#admin_pass1").val();
+    var pass2 = $("#admin_pass2").val();
+    var error = $("#admin_pass2-error");
+    if (pass2 !== "" && pass1 !== pass2) {
+      error.text(pwg_getPageString("please enter your password again"));
+    } else {
+      error.text("");
+    }
+  }
+
+  // A deliberate approximation of PHP's FILTER_VALIDATE_EMAIL, not a
+  // byte-for-byte mirror (not practically replicable in JS) -- the
+  // server remains authoritative on submit.
+  function checkAdminEmailFormat() {
+    var value = $.trim($("#admin_mail").val());
+    var error = $("#admin_mail-error");
+    if (value !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      error.text(pwg_getPageString("mail address must be like xxx@yyy.eee (example : jack@altern.org)"));
+    } else {
+      error.text("");
+    }
+  }
+
+  $("#admin_name").on("blur", checkWebmasterLogin);
+  $("#admin_pass1, #admin_pass2").on("blur keyup", checkPasswordMatch);
+  $("#admin_mail").on("blur", checkAdminEmailFormat);
 });
 
 jQuery().ready(function(){

@@ -131,3 +131,13 @@ select:focus {
 #db-check-status.db-check-error {
   color: #c0392b;
 }
+
+.field-error {
+  display: block;
+  color: #f22;
+  font-style: italic;
+}
+
+.field-error:empty {
+  display: none;
+}

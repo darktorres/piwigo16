@@ -615,11 +615,23 @@ final class InstallWizard
             // fragment is wrapped Html/noescape'd downstream).
             email: '<span class="adminEmail">' . htmlspecialchars($this->adminMail) . '</span>',
             fNewsletterSubscribe: $this->isNewsletterSubscribe,
+            fSendCredentialsByMail: $this->request->isSendCredentialsByMail,
             lInstallHelp: $this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
             install: $install_value,
             errors: count($this->errors) !== 0 ? $this->errors : null,
             infos: count($this->infos) !== 0 ? $this->infos : null,
             themes: $themes,
+            // The 3 messages install.js already mirrors inline near their
+            // own field -- deduped out of the top-of-page list so a
+            // failed submit doesn't show each one twice. Same
+            // $this->lang->t() calls analyzeForm() itself uses, so this
+            // always matches whatever it actually produced, in any
+            // locale.
+            dedupErrorStrings: [
+                $this->lang->t('webmaster login can\'t contain characters \' or "'),
+                $this->lang->t('please enter your password again'),
+                $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)'),
+            ],
         );
 
         // ------------------------------------------------- html code display

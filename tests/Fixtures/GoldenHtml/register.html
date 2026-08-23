@@ -166,6 +166,7 @@
               >* Confirm Password</label>
           </span>
           <input type="password" name="password_conf" id="password_conf">
+          <span id="password_conf-error" class="field-error"></span>
         </li>
         <li>
           <span class="property">
@@ -179,6 +180,7 @@
               id="mail_address"
               value=""
             >
+          <span id="mail_address-error" class="field-error"></span>
           (useful in case password is forgotten)
         </li>
         <li>
@@ -192,7 +194,6 @@
               name="send_password_by_mail"
               id="send_password_by_mail"
               value="1"
-              checked="checked"
             >
         </li>
       </ul>
@@ -219,7 +220,7 @@
         Powered by <a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
         
 
-      </div>    </div>    <script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Quick search":"Quick search"}}</script>
+      </div>    </div>    <script type="application/json" id="page-data">{"data":[],"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Quick search":"Quick search","The passwords do not match":"The passwords do not match","mail address must be like xxx@yyy.eee (example : jack@altern.org)":"mail address must be like xxx@yyy.eee (example: jack@altern.org)"}}</script>
 
     <script type="text/javascript" src="themes/default/js/jquery.min.js?v17.0.0"></script>
     <script type="text/javascript" src="themes/default/js/scripts.js?v17.0.0"></script>

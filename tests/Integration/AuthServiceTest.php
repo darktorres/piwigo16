@@ -182,16 +182,16 @@ namespace Piwigo\Tests\Integration {
         {
             $result = $this->service->calculateAutoLoginKey(1, 1000);
 
-            self::assertIsString($result['key']);
-            self::assertSame('fixture_admin', $result['username']);
+            self::assertIsString($result->key);
+            self::assertSame('fixture_admin', $result->username);
         }
 
         public function testCalculateAutoLoginKeyReturnsFalseForAMissingUser(): void
         {
             $result = $this->service->calculateAutoLoginKey(999999, 1000);
 
-            self::assertFalse($result['key']);
-            self::assertSame('', $result['username']);
+            self::assertFalse($result->key);
+            self::assertSame('', $result->username);
         }
 
         public function testCalculateAutoLoginKeyIsStableForTheSameInputs(): void
@@ -199,7 +199,7 @@ namespace Piwigo\Tests\Integration {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
             $second = $this->service->calculateAutoLoginKey(1, 1000);
 
-            self::assertSame($first['key'], $second['key']);
+            self::assertSame($first->key, $second->key);
         }
 
         public function testCalculateAutoLoginKeyChangesWhenTheTimeChanges(): void
@@ -207,7 +207,7 @@ namespace Piwigo\Tests\Integration {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
             $second = $this->service->calculateAutoLoginKey(1, 2000);
 
-            self::assertNotSame($first['key'], $second['key']);
+            self::assertNotSame($first->key, $second->key);
         }
 
         public function testCalculateAutoLoginKeyChangesWhenTheSecretKeyChanges(): void
@@ -218,7 +218,7 @@ namespace Piwigo\Tests\Integration {
 
             $second = $this->service->calculateAutoLoginKey(1, 1000);
 
-            self::assertNotSame($first['key'], $second['key']);
+            self::assertNotSame($first->key, $second->key);
         }
 
         public function testTryLogUserFailsClosedWhenNoHandlerIsRegistered(): void
@@ -394,9 +394,9 @@ namespace Piwigo\Tests\Integration {
             $remember_me_name = CurrentConfigTestFactory::get()->rememberMeName;
             $time = time();
             $calculated = $this->service->calculateAutoLoginKey(1, $time);
-            self::assertIsString($calculated['key']);
+            self::assertIsString($calculated->key);
 
-            $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculated['key'];
+            $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculated->key;
 
             try {
                 // autoLogin()'s success path unconditionally reaches

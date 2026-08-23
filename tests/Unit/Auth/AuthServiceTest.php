@@ -180,16 +180,20 @@ test('calculateAutoLoginKey() returns a key and username for a real user', funct
     $result = authServiceTestService()
         ->calculateAutoLoginKey(1, 1000);
 
-    expect($result['key'])->toBeString()
-        ->and($result['username'])->toBe('fixture_admin');
+    expect($result->key)
+        ->toBeString()
+        ->and($result->username)
+        ->toBe('fixture_admin');
 });
 
 test('calculateAutoLoginKey() returns false for a missing user', function (): void {
     $result = authServiceTestService()
         ->calculateAutoLoginKey(999999, 1000);
 
-    expect($result['key'])->toBeFalse()
-        ->and($result['username'])->toBe('');
+    expect($result->key)
+        ->toBeFalse()
+        ->and($result->username)
+        ->toBe('');
 });
 
 test('calculateAutoLoginKey() is stable for the same inputs', function (): void {
@@ -198,7 +202,8 @@ test('calculateAutoLoginKey() is stable for the same inputs', function (): void 
     $first = $service->calculateAutoLoginKey(1, 1000);
     $second = $service->calculateAutoLoginKey(1, 1000);
 
-    expect($second['key'])->toBe($first['key']);
+    expect($second->key)
+        ->toBe($first->key);
 });
 
 test('calculateAutoLoginKey() changes when the time changes', function (): void {
@@ -207,7 +212,8 @@ test('calculateAutoLoginKey() changes when the time changes', function (): void 
     $first = $service->calculateAutoLoginKey(1, 1000);
     $second = $service->calculateAutoLoginKey(1, 2000);
 
-    expect($second['key'])->not->toBe($first['key']);
+    expect($second->key)
+        ->not->toBe($first->key);
 });
 
 test('calculateAutoLoginKey() changes when the secret key changes', function (): void {
@@ -218,7 +224,8 @@ test('calculateAutoLoginKey() changes when the secret key changes', function ():
 
     $second = $service->calculateAutoLoginKey(1, 1000);
 
-    expect($second['key'])->not->toBe($first['key']);
+    expect($second->key)
+        ->not->toBe($first->key);
 });
 
 test('tryLogUser() fails closed when no handler is registered', function (): void {
@@ -354,9 +361,10 @@ test('autoLogin() succeeds for a valid remember-me cookie and marks the session 
     $time = time();
     $service = authServiceTestService();
     $calculated = $service->calculateAutoLoginKey(1, $time);
-    expect($calculated['key'])->toBeString();
+    expect($calculated->key)
+        ->toBeString();
 
-    $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculated['key'];
+    $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculated->key;
 
     try {
         // Real bug, found live in the Integration original: autoLogin()

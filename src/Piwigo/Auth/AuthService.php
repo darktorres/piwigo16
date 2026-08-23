@@ -13,6 +13,7 @@ use Piwigo\Auth\Event\TryLogUser;
 use Piwigo\Auth\Event\UserLogout;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Auth\Projection\AutoLoginKey;
 use Piwigo\Auth\Projection\FinalizeLoginDecision;
 use Piwigo\Auth\Projection\UsernamePassword;
 use Piwigo\Common\ValueObject\IpAddress;
@@ -91,9 +92,8 @@ final readonly class AuthService
      * @param int|numeric-string $time ditto -- only ever used in string
      *   concatenation (the HMAC input) or SQL interpolation, never
      *   arithmetic
-     * @return array{key: string|false, username: string}
      */
-    public function calculateAutoLoginKey(int|string $userId, int|string $time): array
+    public function calculateAutoLoginKey(int|string $userId, int|string $time): AutoLoginKey
     {
         // $userId is untrusted (a raw remember-me cookie value) --
         // tryFrom() rather than from() so a tampered/malformed value
@@ -102,10 +102,7 @@ final readonly class AuthService
         $found = $userIdVo instanceof UserId ? $this->repo->findUsernameAndPassword($userIdVo) : null;
 
         if (! $found instanceof UsernamePassword) {
-            return [
-                'key' => false,
-                'username' => '',
-            ];
+            return new AutoLoginKey(key: false, username: '');
         }
 
         $username = $found->username;
@@ -115,10 +112,7 @@ final readonly class AuthService
         $secret_key = $this->currentConfig->secretKey;
         $key = base64_encode(hash_hmac('sha256', $data, $secret_key . $found->password, true));
 
-        return [
-            'key' => $key,
-            'username' => $username,
-        ];
+        return new AutoLoginKey(key: $key, username: $username);
     }
 
     /**
@@ -185,8 +179,8 @@ final readonly class AuthService
         if ($rememberMe && $this->currentConfig->authorizeRemembering) {
             $now = time();
             $calculated = $this->calculateAutoLoginKey($userId, $now);
-            if ($calculated['key'] !== false) {
-                $cookie = $userId . '-' . $now . '-' . $calculated['key'];
+            if ($calculated->key !== false) {
+                $cookie = $userId . '-' . $now . '-' . $calculated->key;
                 setcookie(
                     $remember_me_name,
                     $cookie,
@@ -246,13 +240,13 @@ final readonly class AuthService
                     && time() >= $cookie[1] /* cookie generated in the past */
                 ) {
                     $calculated = $this->calculateAutoLoginKey($cookie[0], $cookie[1]);
-                    if ($calculated['key'] !== false && hash_equals($calculated['key'], $cookie[2])) {
+                    if ($calculated->key !== false && hash_equals($calculated->key, $cookie[2])) {
                         // 'connected_with' in the session defines the
                         // authentication context (UI, API, etc). Auto-login
                         // via remember-me always means a UI login here.
                         $this->connectedWithSession->set(ConnectedWith::PwgUi);
                         $this->logUser($cookie[0], true);
-                        $this->eventDispatcher->dispatch(new LoginSuccess(Username::tryFrom($calculated['username'])));
+                        $this->eventDispatcher->dispatch(new LoginSuccess(Username::tryFrom($calculated->username)));
 
                         return true;
                     }

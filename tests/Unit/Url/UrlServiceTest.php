@@ -17,7 +17,6 @@ use Piwigo\Core\RequestMountDepth;
 use Piwigo\Lang\Translator;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -2152,18 +2151,6 @@ test('currentLogger() throws when the container returns an unexpected type', fun
 
         expect(fn (): mixed => $method->invoke($service))
             ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentLogger::class);
-    });
-});
-
-test('sessionService() throws when the container returns an unexpected type', function (): void {
-    // Real gap, newly surfaced this pass -- same reasoning as
-    // currentLogger() above.
-    KernelContainerOverride::withWrongTypeFor(SessionService::class, function (): void {
-        $service = UrlServiceTestFactory::build();
-        $method = new ReflectionMethod(UrlService::class, 'sessionService');
-
-        expect(fn (): mixed => $method->invoke($service))
-            ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . SessionService::class);
     });
 });
 

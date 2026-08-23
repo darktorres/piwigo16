@@ -5,17 +5,18 @@ declare(strict_types=1);
 use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Image\ImageService;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\UserService;
 
 /**
- * Piwigo\Bootstrap\CoreDomainAccessor -- userService() and imageService()
- * are its only accessors with real, remaining callers: userService()'s
- * only caller is Admin/Install/{InstallWizard,InstallService}.php's
- * genuinely-static-context install flow; imageService()'s only caller is
- * config/messenger.php (outside `src/Piwigo`, and deliberately outside the
- * `Kernel::container()` arch-test boundary too).
+ * Piwigo\Bootstrap\CoreDomainAccessor -- userService() and
+ * permissionService() are its only accessors with real, remaining
+ * callers: userService()'s only caller is Admin/Install/{InstallWizard,
+ * InstallService}.php's genuinely-static-context install flow;
+ * permissionService()'s only caller is config/messenger.php (outside
+ * `src/Piwigo`, and deliberately outside the `Kernel::container()`
+ * arch-test boundary too).
  *
  * The container always resolves the right type at every real call site, so
  * the "unexpected type" \LogicException guard on each accessor is only
@@ -43,18 +44,18 @@ test('userService throws when the container returns an unexpected type', functio
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . UserService::class);
 
-test('imageService resolves a real ImageService from the container', function (): void {
+test('permissionService resolves a real PermissionService from the container', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     // Same rationale as userService() above: the return type already
     // guarantees the class, so the real thing under test is that this
     // doesn't hit the internal "unexpected type" guard.
-    expect(static fn (): ImageService => CoreDomainAccessor::imageService())->not->toThrow(Throwable::class);
+    expect(static fn (): PermissionService => CoreDomainAccessor::permissionService())->not->toThrow(Throwable::class);
 });
 
-test('imageService throws when the container returns an unexpected type', function (): void {
+test('permissionService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
-        ImageService::class,
-        static fn (): ImageService => CoreDomainAccessor::imageService()
+        PermissionService::class,
+        static fn (): PermissionService => CoreDomainAccessor::permissionService()
     );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . ImageService::class);
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . PermissionService::class);

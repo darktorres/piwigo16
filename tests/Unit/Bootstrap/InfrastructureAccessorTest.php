@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Bootstrap\InfrastructureAccessor;
-use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
@@ -39,16 +38,3 @@ test('entityManager throws when the container returns an unexpected type', funct
         static fn (): EntityManagerInterface => InfrastructureAccessor::entityManager()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . EntityManagerInterface::class);
-
-test('translationsCachePool resolves the container\'s own single TranslationsCachePool instance', function (): void {
-    $pool = InfrastructureAccessor::translationsCachePool();
-
-    expect(InfrastructureAccessor::translationsCachePool())->toBe($pool);
-});
-
-test('translationsCachePool throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        TranslationsCachePool::class,
-        static fn (): TranslationsCachePool => InfrastructureAccessor::translationsCachePool()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . TranslationsCachePool::class);

@@ -6,7 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use LogicException;
 use Piwigo\Core\Kernel;
-use Piwigo\Image\ImageService;
+use Piwigo\Permission\PermissionService;
 use Piwigo\Users\UserService;
 
 /**
@@ -24,7 +24,7 @@ use Piwigo\Users\UserService;
  * `new()` instead.
  *
  * userService()'s only callers are Admin/Install/{InstallService,
- * InstallWizard}.php's own static-context install flow; imageService()'s
+ * InstallWizard}.php's own static-context install flow; permissionService()'s
  * only caller is config/messenger.php (outside `src/Piwigo`, and
  * deliberately outside the `Kernel::container()` arch-test boundary too,
  * per that file's own docblock).
@@ -40,11 +40,11 @@ final class CoreDomainAccessor
         return $service;
     }
 
-    public static function imageService(): ImageService
+    public static function permissionService(): PermissionService
     {
-        $service = Kernel::container()->get(ImageService::class);
-        if (! $service instanceof ImageService) {
-            throw new LogicException('Container returned an unexpected type for ' . ImageService::class);
+        $service = Kernel::container()->get(PermissionService::class);
+        if (! $service instanceof PermissionService) {
+            throw new LogicException('Container returned an unexpected type for ' . PermissionService::class);
         }
         return $service;
     }

@@ -9,7 +9,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\NotificationByMailSender;
-use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Url\UrlService;
@@ -64,15 +63,6 @@ final class PresentationAccessor
         $service = Kernel::container()->get(NotificationByMailSender::class);
         if (! $service instanceof NotificationByMailSender) {
             throw new LogicException('Container returned an unexpected type for ' . NotificationByMailSender::class);
-        }
-        return $service;
-    }
-
-    public static function pictureRateRenderer(): PictureRateRenderer
-    {
-        $service = Kernel::container()->get(PictureRateRenderer::class);
-        if (! $service instanceof PictureRateRenderer) {
-            throw new LogicException('Container returned an unexpected type for ' . PictureRateRenderer::class);
         }
         return $service;
     }

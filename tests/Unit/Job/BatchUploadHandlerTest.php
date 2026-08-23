@@ -77,10 +77,10 @@ afterEach(function (): void {
 });
 
 test('__invoke returns the existing image id and deletes the newly uploaded file when its md5sum already exists (duplicate detection)', function (): void {
-    // The duplicate-detection branch reads through Bootstrap\
-    // CoreDomainAccessor::imageService(), so it needs a booted container --
-    // same "boot right before, reset right after" convention as
-    // UploadServiceTest's own container-touching cases.
+    // __invoke() reads through Bootstrap\AdminAccessor::uploadService(),
+    // so it needs a booted container -- same "boot right before, reset
+    // right after" convention as UploadServiceTest's own
+    // container-touching cases.
     Kernel::reset();
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     batch_upload_handler_test_current_logger()

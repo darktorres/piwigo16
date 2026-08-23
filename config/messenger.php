@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Bootstrap\CoreDomainAccessor;
+use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -22,11 +19,6 @@ use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Job\SendNotificationEmailJob;
-use Piwigo\Lang\Translator;
-use Piwigo\Metadata\MetadataRepository;
-use Piwigo\Metadata\MetadataService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permission\PermissionService;
 
 /**
  * Transport + routing + handler-factory configuration for
@@ -63,27 +55,11 @@ return [
         ),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService(RequestBootstrap::currentConfig(), Paths::fromRoot(dirname(__DIR__)))),
-        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
-            new Lang(
-                new Translator(RequestBootstrap::currentConfig(), InfrastructureAccessor::translationsCachePool()),
-                PresentationAccessor::htmlService(),
-                Paths::fromRoot(dirname(__DIR__)),
-                new InstallationFlag(),
-            ),
-            new MetadataRepository(InfrastructureAccessor::entityManager()),
-            InfrastructureAccessor::currentLogger(),
-            RequestBootstrap::eventDispatcher(),
-            RequestBootstrap::currentConfig(),
-            RequestBootstrap::currentUser(),
-            Paths::fromRoot(dirname(__DIR__))
-        ), new PermissionService(
-            new PermissionRepository(InfrastructureAccessor::entityManager()),
-            InfrastructureAccessor::entityManager()->getRepository(GroupEntity::class),
-            new CategoryRepository(InfrastructureAccessor::entityManager(), RequestBootstrap::currentConfig()),
-            RequestBootstrap::currentUser(),
-            RequestBootstrap::filterState(),
-            new AccessLevelChecker(RequestBootstrap::currentUser(), RequestBootstrap::currentConfig()),
-        ), InfrastructureAccessor::entityManager()),
+        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(
+            ExtendedDomainAccessor::metadataService(),
+            CoreDomainAccessor::permissionService(),
+            InfrastructureAccessor::entityManager(),
+        ),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(PresentationAccessor::mailService()),
     ],
 ];

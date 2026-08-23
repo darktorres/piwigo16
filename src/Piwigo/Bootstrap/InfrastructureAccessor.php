@@ -6,8 +6,6 @@ namespace Piwigo\Bootstrap;
 
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
-use Piwigo\Cache\TranslationsCachePool;
-use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 
 /**
@@ -29,15 +27,17 @@ use Piwigo\Core\Kernel;
  *
  * `config/messenger.php` (outside `src/Piwigo`, and deliberately outside
  * the `Kernel::container()` arch-test boundary too, per its own
- * docblock) is the only caller, using entityManager()/currentLogger()/
- * translationsCachePool() to build its handler factories' object graphs.
- * `storageRegistry()`/`wsContext()`/`dbCredentials()` used to exist
- * alongside these for the same reason -- all 3 confirmed genuinely dead
- * (zero real callers anywhere) once `BatchUploadHandler`'s own
- * constructor collapsed to `UploadService` + `urlService()` (Finding 1's
- * container-sharing fix absorbed the `ApiContext`/`StorageRegistry`/
- * `DbCredentials` construction those 3 resolvers used to feed it) and
- * removed.
+ * docblock) is the only caller, using entityManager() to build its
+ * handler factories' object graphs. `currentLogger()`/
+ * `translationsCachePool()`/`storageRegistry()`/`wsContext()`/
+ * `dbCredentials()` used to exist alongside it for the same reason --
+ * all 5 confirmed genuinely dead (zero real callers anywhere) once
+ * `BatchUploadHandler`'s own constructor collapsed to `UploadService` +
+ * `urlService()` (Finding 1's container-sharing fix absorbed the
+ * `ApiContext`/`StorageRegistry`/`DbCredentials` construction those
+ * resolvers used to feed it) and `ReindexImagesJob`'s handler factory
+ * switched to `ExtendedDomainAccessor::metadataService()`/
+ * `CoreDomainAccessor::permissionService()`, and removed.
  */
 final class InfrastructureAccessor
 {
@@ -48,34 +48,5 @@ final class InfrastructureAccessor
             throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
         return $em;
-    }
-
-    /**
-     * Same rationale as entityManager() above -- gives still-static callers
-     * (e.g. config/messenger.php's handler factories) the real
-     * container-shared CurrentLogger instance, not just the Logger value
-     * its own get() unwraps to.
-     */
-    public static function currentLogger(): CurrentLogger
-    {
-        $currentLogger = Kernel::container()->get(CurrentLogger::class);
-        if (! $currentLogger instanceof CurrentLogger) {
-            throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
-        }
-        return $currentLogger;
-    }
-
-    /**
-     * Same rationale as currentLogger() above -- gives config/messenger.php's
-     * still-static handler factories the real, container-shared
-     * TranslationsCachePool instance instead of a throwaway one.
-     */
-    public static function translationsCachePool(): TranslationsCachePool
-    {
-        $translationsCachePool = Kernel::container()->get(TranslationsCachePool::class);
-        if (! $translationsCachePool instanceof TranslationsCachePool) {
-            throw new LogicException('Container returned an unexpected type for ' . TranslationsCachePool::class);
-        }
-        return $translationsCachePool;
     }
 }

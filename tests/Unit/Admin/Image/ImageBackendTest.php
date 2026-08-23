@@ -636,51 +636,61 @@ test('getGraphicsLibraryLabel formats the resolved library and version', functio
 
 test('constructor uses a caller-provided image instance and skips its own library resolution entirely', function (): void {
     $fake = new class() implements ImageInterface {
+        #[\Override]
         public function getWidth(): int
         {
             return 123;
         }
 
+        #[\Override]
         public function getHeight(): int
         {
             return 456;
         }
 
+        #[\Override]
         public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
 
+        #[\Override]
         public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
         {
             return true;
         }
 
+        #[\Override]
         public function strip(): bool
         {
             return true;
         }
 
+        #[\Override]
         public function rotate(int|float $rotation): bool
         {
             return true;
         }
 
+        #[\Override]
         public function resize(int|float $width, int|float $height): bool
         {
             return true;
         }
 
+        #[\Override]
         public function sharpen(int|float $amount): bool
         {
             return true;
         }
 
+        #[\Override]
         public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
 
+        #[\Override]
         public function write(string $destination_filepath): bool
         {
             return true;
@@ -1412,51 +1422,61 @@ test('getResizeResult reports a real, accurately-scaled elapsed-time measurement
             private int|float $height
         ) {}
 
+        #[\Override]
         public function getWidth(): int|float
         {
             return $this->width;
         }
 
+        #[\Override]
         public function getHeight(): int|float
         {
             return $this->height;
         }
 
+        #[\Override]
         public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
 
+        #[\Override]
         public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
         {
             return true;
         }
 
+        #[\Override]
         public function strip(): bool
         {
             return true;
         }
 
+        #[\Override]
         public function rotate(int|float $rotation): bool
         {
             return true;
         }
 
+        #[\Override]
         public function resize(int|float $width, int|float $height): bool
         {
             return true;
         }
 
+        #[\Override]
         public function sharpen(int|float $amount): bool
         {
             return true;
         }
 
+        #[\Override]
         public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
 
+        #[\Override]
         public function write(string $destination_filepath): bool
         {
             usleep(40000);
@@ -1623,51 +1643,61 @@ test('destroy falls back to true when the underlying image has no destroy method
     // an image without one (e.g. a plugin-provided backend, per this
     // method's own docblock).
     $fake = new class() implements ImageInterface {
+        #[\Override]
         public function getWidth(): int
         {
             return 1;
         }
 
+        #[\Override]
         public function getHeight(): int
         {
             return 1;
         }
 
+        #[\Override]
         public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
 
+        #[\Override]
         public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
         {
             return true;
         }
 
+        #[\Override]
         public function strip(): bool
         {
             return true;
         }
 
+        #[\Override]
         public function rotate(int|float $rotation): bool
         {
             return true;
         }
 
+        #[\Override]
         public function resize(int|float $width, int|float $height): bool
         {
             return true;
         }
 
+        #[\Override]
         public function sharpen(int|float $amount): bool
         {
             return true;
         }
 
+        #[\Override]
         public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
 
+        #[\Override]
         public function write(string $destination_filepath): bool
         {
             return true;
@@ -1693,51 +1723,61 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
     // method falls through to its own unconditional `return true;`
     // regardless of what the real destroy() returned.
     $fake = new class() implements ImageInterface {
+        #[\Override]
         public function getWidth(): int
         {
             return 1;
         }
 
+        #[\Override]
         public function getHeight(): int
         {
             return 1;
         }
 
+        #[\Override]
         public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
 
+        #[\Override]
         public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
         {
             return true;
         }
 
+        #[\Override]
         public function strip(): bool
         {
             return true;
         }
 
+        #[\Override]
         public function rotate(int|float $rotation): bool
         {
             return true;
         }
 
+        #[\Override]
         public function resize(int|float $width, int|float $height): bool
         {
             return true;
         }
 
+        #[\Override]
         public function sharpen(int|float $amount): bool
         {
             return true;
         }
 
+        #[\Override]
         public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
 
+        #[\Override]
         public function write(string $destination_filepath): bool
         {
             return true;

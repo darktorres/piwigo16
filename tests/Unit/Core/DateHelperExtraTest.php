@@ -383,11 +383,13 @@ test('formatDate uses the current user\'s own language as the ICU locale, not al
     // English month/day names even with a real, present current-user
     // language.
     LangTestFactory::get()->setDefaultLanguageProvider(new class() implements DefaultLanguageProviderInterface {
+        #[\Override]
         public function getDefaultLanguage(): string
         {
             return 'en_UK';
         }
 
+        #[\Override]
         public function getCurrentLanguage(): string
         {
             return 'fr_FR';

@@ -23,3 +23,22 @@ class Imagick
     {
     }
 }
+
+/**
+ * Overrides ImagickKernel::fromMatrix()'s bundled stub, whose $origin
+ * parameter is declared required. This environment's own installed
+ * extension's native reflection (ReflectionMethod::getParameters() reports
+ * `?array $origin = null`) confirms the real signature makes it optional,
+ * defaulting to null (the kernel's own center). Same PHPStan-bundled-stub
+ * limitation as Imagick::convolveImage() above.
+ */
+class ImagickKernel
+{
+    /**
+     * @param array<int, array<int, float>> $matrix
+     * @param array<int, int>|null $origin
+     */
+    public static function fromMatrix(array $matrix, ?array $origin = null): ImagickKernel
+    {
+    }
+}

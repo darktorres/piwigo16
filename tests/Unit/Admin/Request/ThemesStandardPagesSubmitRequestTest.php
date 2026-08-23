@@ -139,19 +139,25 @@ test('fromArrays requires a real array, not just an ArrayAccess-like value, for 
     // required. An ArrayAccess object can satisfy every other clause
     // while failing is_array(), which is the only way to prove the first
     // AND isn't accidentally an OR with the isset() check next to it.
-    $fakeUpload = new class() implements ArrayAccess {
+    $fakeUpload = new /**
+     * @implements ArrayAccess<string, string>
+     */ class() implements ArrayAccess {
+        #[\Override]
         public function offsetExists(mixed $offset): bool
         {
             return true;
         }
 
-        public function offsetGet(mixed $offset): mixed
+        #[\Override]
+        public function offsetGet(mixed $offset): string
         {
             return '/tmp/from-arrayaccess';
         }
 
+        #[\Override]
         public function offsetSet(mixed $offset, mixed $value): void {}
 
+        #[\Override]
         public function offsetUnset(mixed $offset): void {}
     };
 

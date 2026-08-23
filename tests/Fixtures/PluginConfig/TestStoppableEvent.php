@@ -28,6 +28,7 @@ final class TestStoppableEvent implements StoppableEventInterface
         $this->stopped = true;
     }
 
+    #[\Override]
     public function isPropagationStopped(): bool
     {
         return $this->stopped;

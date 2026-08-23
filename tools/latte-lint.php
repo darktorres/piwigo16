@@ -31,7 +31,6 @@ if (PHP_SAPI !== 'cli') {
  */
 
 /** @var list<string> $argv */
-global $argv;
 $paths = array_slice($argv, 1);
 
 $root = dirname(__DIR__);

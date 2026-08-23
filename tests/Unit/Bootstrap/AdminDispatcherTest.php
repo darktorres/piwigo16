@@ -107,6 +107,7 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
 
             public ?ServerRequestInterface $request = null;
 
+            #[\Override]
             public function handle(ServerRequestInterface $request): AdminPageResult
             {
                 $this->handled = true;

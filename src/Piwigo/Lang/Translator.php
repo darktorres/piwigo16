@@ -64,7 +64,7 @@ final class Translator
      * snapshot and restore a language's full translation state, not just
      * Piwigo\Core\Lang's own parallel $data/$langInfo bookkeeping.
      */
-    public function __clone(): void
+    public function __clone()
     {
         $this->inner = clone $this->inner;
     }

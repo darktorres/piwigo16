@@ -28,6 +28,7 @@ test('build honors extraDefinitions overrides', function (): void {
     // class, matching tests/Arch/StructuralTest.php's own convention.
     $container = Container::build([
         Countable::class => factory(static fn (): Countable => new class() implements Countable {
+            #[\Override]
             public function count(): int
             {
                 return 42;

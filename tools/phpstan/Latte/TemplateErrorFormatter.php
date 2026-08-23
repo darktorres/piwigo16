@@ -40,6 +40,7 @@ final readonly class TemplateErrorFormatter implements ErrorFormatter
         $this->mapper = new GeneratedFileErrorMapper($analysisDir);
     }
 
+    #[\Override]
     public function formatErrors(AnalysisResult $analysisResult, Output $output): int
     {
         $errors = [];

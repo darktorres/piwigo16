@@ -119,11 +119,13 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
             private stdClass $capture
         ) {}
 
+        #[\Override]
         public function getCatDisplayName(array $catInformations, ?string $url = ''): string
         {
             return '';
         }
 
+        #[\Override]
         public function getCatDisplayNameCache(
             string $uppercats,
             ?string $url = '',
@@ -134,31 +136,37 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
             return '';
         }
 
+        #[\Override]
         public function nameCompare(array $a, array $b): int
         {
             return 0;
         }
 
+        #[\Override]
         public function tagAlphaCompare(array $a, array $b): int
         {
             return 0;
         }
 
+        #[\Override]
         public function accessDenied(RedirectServiceInterface $redirectService): never
         {
             throw new RuntimeException('accessDenied');
         }
 
+        #[\Override]
         public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
         {
             throw new RuntimeException('badRequest');
         }
 
+        #[\Override]
         public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
         {
             throw new RuntimeException('pageNotFound');
         }
 
+        #[\Override]
         public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
         {
             $this->capture->lastMessage = $msg;
@@ -166,31 +174,37 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
             throw new RuntimeException('renderer-fatal:' . $msg);
         }
 
+        #[\Override]
         public function getTagsContentTitle(array $tags): string
         {
             return '';
         }
 
+        #[\Override]
         public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
         {
             return '';
         }
 
+        #[\Override]
         public function setStatusHeader(int $code, string $text = ''): HttpStatusLine
         {
             return new HttpStatusLine($code, $text);
         }
 
+        #[\Override]
         public function renderElementName(array $info): string
         {
             return '';
         }
 
+        #[\Override]
         public function renderElementDescription(array $info, string $param = ''): string
         {
             return '';
         }
 
+        #[\Override]
         public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
         {
             return '';
@@ -206,11 +220,13 @@ function langTestMakeProvider(?string $defaultLanguage = null, ?string $currentL
             private ?string $currentLanguage,
         ) {}
 
+        #[\Override]
         public function getDefaultLanguage(): string
         {
             return $this->defaultLanguage ?? AppInfo::DEFAULT_LANGUAGE;
         }
 
+        #[\Override]
         public function getCurrentLanguage(): ?string
         {
             return $this->currentLanguage;

@@ -76,6 +76,7 @@ test('render applies a HasPageAssets View\'s contributions before its own templa
     $t = rendererTestMakeTemplate();
     $renderer = new Renderer(CurrentTemplateTestFactory::get());
     $view = new #[TemplateAttr('renderer-test.latte')] class implements View, HasPageAssets {
+        #[\Override]
         public function pageAssets(): array
         {
             return [AssetContribution::css('view.css', version: false)];
@@ -93,6 +94,7 @@ test('render applies an ExposesPageData View\'s data/strings to PageState', func
     rendererTestMakeTemplate();
     $renderer = new Renderer(CurrentTemplateTestFactory::get());
     $view = new #[TemplateAttr('renderer-test.latte')] class implements View, ExposesPageData {
+        #[\Override]
         public function exposedPageData(): array
         {
             return [
@@ -100,6 +102,7 @@ test('render applies an ExposesPageData View\'s data/strings to PageState', func
             ];
         }
 
+        #[\Override]
         public function exposedStrings(): array
         {
             return ['Loading'];
@@ -128,6 +131,7 @@ test('render applies a HasHeadLinks View\'s links via registerHeadLink', functio
     $t = rendererTestMakeTemplate();
     $renderer = new Renderer(CurrentTemplateTestFactory::get());
     $view = new #[TemplateAttr('renderer-test.latte')] class implements View, HasHeadLinks {
+        #[\Override]
         public function headLinks(): array
         {
             return [new HeadLink(rel: 'canonical', href: '/canonical.php')];
@@ -175,6 +179,7 @@ test('render resolves the current Template fresh on every call, safe against a m
     rendererTestMakeTemplate();
     $renderer = new Renderer(CurrentTemplateTestFactory::get());
     $view = new #[TemplateAttr('renderer-test.latte')] class implements View, HasPageAssets {
+        #[\Override]
         public function pageAssets(): array
         {
             return [AssetContribution::css('first.css', version: false)];
@@ -184,6 +189,7 @@ test('render resolves the current Template fresh on every call, safe against a m
 
     $swapped = rendererTestMakeTemplate();
     $swappedView = new #[TemplateAttr('renderer-test.latte')] class implements View, HasPageAssets {
+        #[\Override]
         public function pageAssets(): array
         {
             return [AssetContribution::css('second.css', version: false)];

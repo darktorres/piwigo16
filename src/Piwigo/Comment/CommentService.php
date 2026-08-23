@@ -148,7 +148,12 @@ final readonly class CommentService
         }
 
         $myAction = $this->currentConfig->commentSpamReject ? 'reject' : 'moderate';
-        if ($action === $myAction) {
+        // $action can never be 'reject' here (the check above already
+        // returned for that case), so this only ever short-circuits the
+        // commentSpamReject=false/'moderate' config -- correctly, since
+        // 'moderate' is already this check's own escalation ceiling in
+        // that mode, making the link-count analysis below a no-op.
+        if (! $this->currentConfig->commentSpamReject && $action === 'moderate') {
             return $event;
         }
 

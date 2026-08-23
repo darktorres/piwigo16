@@ -39,6 +39,7 @@ final class TypedViewPropertyUsageProvider extends ReflectionBasedMemberUsagePro
         private readonly string $projectRoot,
     ) {}
 
+    #[\Override]
     protected function shouldMarkPropertyAsRead(ReflectionProperty $property): ?VirtualUsageData
     {
         $className = $property->getDeclaringClass()

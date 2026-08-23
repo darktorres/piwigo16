@@ -112,6 +112,7 @@ function template_test_themes(Template $t): array
 test('assignContext flattens a TemplatePageContext to individually-assigned template vars', function (): void {
     $template = TemplateTestFactory::build();
     $context = new class() implements TemplatePageContext {
+        #[\Override]
         public function toArray(): array
         {
             return [

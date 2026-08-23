@@ -24,21 +24,28 @@ use Piwigo\PluginConfig\ExtensionInterface;
  */
 final class Theme implements ExtensionInterface
 {
+    #[\Override]
     public function boot(ExtensionContext $context): void {}
 
+    #[\Override]
     public function install(): void {}
 
+    #[\Override]
     public function activate(): void {}
 
+    #[\Override]
     public function deactivate(): void {}
 
+    #[\Override]
     public function uninstall(): void {}
 
+    #[\Override]
     public function update(string $oldVersion, string $newVersion): void {}
 
     /**
      * @return array<class-string, Closure|list<Closure>>
      */
+    #[\Override]
     public function subscribedEvents(): array
     {
         return [];

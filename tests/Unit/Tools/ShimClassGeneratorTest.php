@@ -89,6 +89,7 @@ function shim_generator_test_edge_case_engine(): Engine
         /**
          * @return array<string, callable>
          */
+        #[\Override]
         public function getFilters(): array
         {
             return [
@@ -101,6 +102,7 @@ function shim_generator_test_edge_case_engine(): Engine
         /**
          * @return array<string, callable>
          */
+        #[\Override]
         public function getFunctions(): array
         {
             return [

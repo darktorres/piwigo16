@@ -617,51 +617,61 @@ test('compose throws a LogicException when the overlay uses a different image ba
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
     $overlay->image = new class() implements ImageInterface {
+        #[\Override]
         public function getWidth(): int
         {
             return 1;
         }
 
+        #[\Override]
         public function getHeight(): int
         {
             return 1;
         }
 
+        #[\Override]
         public function setCompressionQuality(int $quality): bool
         {
             return true;
         }
 
+        #[\Override]
         public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
         {
             return true;
         }
 
+        #[\Override]
         public function strip(): bool
         {
             return true;
         }
 
+        #[\Override]
         public function rotate(int|float $rotation): bool
         {
             return true;
         }
 
+        #[\Override]
         public function resize(int|float $width, int|float $height): bool
         {
             return true;
         }
 
+        #[\Override]
         public function sharpen(int|float $amount): bool
         {
             return true;
         }
 
+        #[\Override]
         public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
 
+        #[\Override]
         public function write(string $destination_filepath): bool
         {
             return true;

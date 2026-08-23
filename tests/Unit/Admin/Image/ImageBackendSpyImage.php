@@ -27,58 +27,68 @@ final class ImageBackendSpyImage implements ImageInterface
         private readonly int|float $height,
     ) {}
 
+    #[\Override]
     public function getWidth(): int|float
     {
         return $this->width;
     }
 
+    #[\Override]
     public function getHeight(): int|float
     {
         return $this->height;
     }
 
+    #[\Override]
     public function setCompressionQuality(int $quality): bool
     {
         $this->calls[] = "setCompressionQuality({$quality})";
         return true;
     }
 
+    #[\Override]
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         $this->calls[] = "crop({$width},{$height},{$x},{$y})";
         return true;
     }
 
+    #[\Override]
     public function strip(): bool
     {
         $this->calls[] = 'strip';
         return true;
     }
 
+    #[\Override]
     public function rotate(int|float $rotation): bool
     {
         $this->calls[] = "rotate({$rotation})";
         return true;
     }
 
+    #[\Override]
     public function resize(int|float $width, int|float $height): bool
     {
         $this->calls[] = "resize({$width},{$height})";
         return true;
     }
 
+    #[\Override]
     public function sharpen(int|float $amount): bool
     {
         $this->calls[] = "sharpen({$amount})";
         return true;
     }
 
+    #[\Override]
     public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         $this->calls[] = 'compose';
         return true;
     }
 
+    #[\Override]
     public function write(string $destination_filepath): bool
     {
         $this->calls[] = 'write';

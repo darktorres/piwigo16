@@ -194,6 +194,7 @@ it('is deterministic and write-only-if-changed for result-cache friendliness', f
 
 it('hard-fails on a filter/function calling convention the rewrite does not cover', function (): void {
     $engine = new class() extends Engine {
+        #[\Override]
         public function compile(string $name): string
         {
             return "<?php\necho (\$this->filters->somefilter)('x');\n\$ʟ_fi = new LR\\FilterInfo('html');\necho \$this->filters->filterContent('other', \$ʟ_fi, 'y');\n";

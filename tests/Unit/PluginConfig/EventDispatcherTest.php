@@ -311,6 +311,7 @@ test('registerSubscriber wires a single-event subscriber onto the dispatcher', f
          */
         public array $calls = [];
 
+        #[\Override]
         public function subscribedEvents(): array
         {
             return [
@@ -339,6 +340,7 @@ test('registerSubscriber wires every closure in a list<Closure> entry for the sa
          */
         public array $calls = [];
 
+        #[\Override]
         public function subscribedEvents(): array
         {
             return [
@@ -371,6 +373,7 @@ test('registerSubscriber wires every event class a subscriber declares, not just
 
         public ?string $changeValue = null;
 
+        #[\Override]
         public function subscribedEvents(): array
         {
             return [

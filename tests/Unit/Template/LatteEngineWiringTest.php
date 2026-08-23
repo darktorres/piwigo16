@@ -142,11 +142,13 @@ test('{$X|number} formats locale-aware once the current user language is known, 
     // thousands, round-half-up giving "1,235"), so this proves the locale
     // genuinely reached the engine, not just that rendering didn't crash.
     LangTestFactory::get()->setDefaultLanguageProvider(new class() implements DefaultLanguageProviderInterface {
+        #[\Override]
         public function getDefaultLanguage(): string
         {
             return 'fr_FR';
         }
 
+        #[\Override]
         public function getCurrentLanguage(): string
         {
             return 'fr_FR';

@@ -16,6 +16,7 @@ final class PageTailTestFakeTelemetrySender implements TelemetrySenderInterface
 {
     public bool $sendWasCalled = false;
 
+    #[\Override]
     public function send(): void
     {
         $this->sendWasCalled = true;

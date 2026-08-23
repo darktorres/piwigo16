@@ -114,6 +114,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         $this->renderer = new PageTailRenderer(
             new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
             new class() implements TelemetrySenderInterface {
+                #[\Override]
                 public function send(): void
                 {
                     // No-op: telemetry sending is out of scope for this

@@ -35,6 +35,7 @@ final class TemplateCallSiteVisitor extends NodeVisitorAbstract
      */
     private array $classStack = [];
 
+    #[\Override]
     public function enterNode(Node $node): ?Node
     {
         if ($node instanceof ClassLike) {
@@ -53,6 +54,7 @@ final class TemplateCallSiteVisitor extends NodeVisitorAbstract
         return null;
     }
 
+    #[\Override]
     public function leaveNode(Node $node): ?Node
     {
         if ($node instanceof ClassLike) {

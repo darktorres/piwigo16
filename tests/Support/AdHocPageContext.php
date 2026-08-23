@@ -26,6 +26,7 @@ final readonly class AdHocPageContext implements TemplatePageContext
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function toArray(): array
     {
         return $this->vars;

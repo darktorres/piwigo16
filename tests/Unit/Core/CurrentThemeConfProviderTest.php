@@ -53,6 +53,7 @@ test('set() then get() returns the same provider instance', function (): void {
     }
 
     $provider = new class() implements ThemeConfProviderInterface {
+        #[\Override]
         public function themeConf(string $key): string
         {
             return '';
@@ -74,6 +75,7 @@ test('reset() clears a previously set provider, so get() throws again afterward'
     }
 
     $instance->set(new class() implements ThemeConfProviderInterface {
+        #[\Override]
         public function themeConf(string $key): string
         {
             return '';

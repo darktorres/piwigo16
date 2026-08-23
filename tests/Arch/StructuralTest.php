@@ -80,6 +80,9 @@ test('findMissingOverrideAttributes() flags a missing #[\Override]', function ()
     // Reuses a built-in interface (rather than declaring a new named
     // fixture interface here) so this file has nothing for
     // `composer dump-autoload --strict-psr` to flag as PSR-4-noncompliant.
+    // Deliberately missing #[\Override] -- that absence is exactly what
+    // this test asserts findMissingOverrideAttributes() catches. See
+    // psalm.xml's own MissingOverrideAttribute suppression for this file.
     $withoutAttribute = new class() implements Countable {
         public function count(): int
         {

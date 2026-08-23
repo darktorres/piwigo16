@@ -40,6 +40,7 @@ final class GessoHookMethodUsageProvider extends ReflectionBasedMemberUsageProvi
         'openApiSpecFallback',
     ];
 
+    #[\Override]
     public function shouldMarkMethodAsUsed(ReflectionMethod $method): ?VirtualUsageData
     {
         if (! in_array($method->getName(), self::HOOK_METHOD_NAMES, true)) {

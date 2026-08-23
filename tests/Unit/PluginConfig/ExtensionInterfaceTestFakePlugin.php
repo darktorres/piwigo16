@@ -30,33 +30,40 @@ final class ExtensionInterfaceTestFakePlugin implements ExtensionInterface
      */
     public ?array $updatedFromTo = null;
 
+    #[\Override]
     public function boot(ExtensionContext $context): void {}
 
+    #[\Override]
     public function install(): void
     {
         $this->installed = true;
     }
 
+    #[\Override]
     public function activate(): void
     {
         $this->activated = true;
     }
 
+    #[\Override]
     public function deactivate(): void
     {
         $this->deactivated = true;
     }
 
+    #[\Override]
     public function uninstall(): void
     {
         $this->uninstalled = true;
     }
 
+    #[\Override]
     public function update(string $oldVersion, string $newVersion): void
     {
         $this->updatedFromTo = [$oldVersion, $newVersion];
     }
 
+    #[\Override]
     public function subscribedEvents(): array
     {
         return [

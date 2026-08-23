@@ -20,6 +20,7 @@ final class VitalsTestSpyLogger extends AbstractLogger
      */
     public array $records = [];
 
+    #[\Override]
     public function log($level, string|Stringable $message, array $context = []): void
     {
         $this->records[] = [

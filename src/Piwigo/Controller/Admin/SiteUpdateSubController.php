@@ -35,7 +35,6 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\ImageSyncInsertRow;
-use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -179,7 +178,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, new MetadataService($this->lang, new MetadataRepository($this->entityManager), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->paths));
+            $site_reader = new LocalSiteReader($site_url, $this->currentConfig, $this->metadataService);
         }
 
         $save_error = null;

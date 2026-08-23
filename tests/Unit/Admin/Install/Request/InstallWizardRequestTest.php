@@ -194,6 +194,24 @@ test('fromArrays reports isSendCredentialsByMail when present', function (): voi
         ->toBeTrue();
 });
 
+test('fromArrays reports isAjaxDbCheck when ajax=check-db is present', function (): void {
+    $request = InstallWizardRequest::fromArrays([
+        'ajax' => 'check-db',
+    ], [], new InputValidator());
+
+    expect($request->isAjaxDbCheck)
+        ->toBeTrue();
+});
+
+test('fromArrays leaves isAjaxDbCheck false when ajax is absent or a different value', function (): void {
+    expect(InstallWizardRequest::fromArrays([], [], new InputValidator())->isAjaxDbCheck)
+        ->toBeFalse()
+        ->and(InstallWizardRequest::fromArrays([
+            'ajax' => 'something-else',
+        ], [], new InputValidator())->isAjaxDbCheck)
+        ->toBeFalse();
+});
+
 /**
  * [Mutation] A scoped `pest --mutate` rerun leaves 9 mutations
  * "untested" -- zero real gaps, all individually hand-mutation-verified

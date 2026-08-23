@@ -388,24 +388,49 @@ final class InstallWizard
      * real driver choice was actually submitted, as a normal $this->errors[]
      * entry like every other check below.
      */
-    public function analyzeForm(): void
+    /**
+     * Extracted out of analyzeForm() so the live AJAX DB-check path
+     * (checkDbConnection()) can share the exact same extension guard --
+     * installDbConnect() calls straight into `new mysqli()`/`pg_connect()`
+     * with no extension guard of its own, and a genuinely missing
+     * extension throws \Error there (undefined class/function), not
+     * \Exception, which its own `catch (Exception $e)` doesn't catch.
+     * Skips the attempt entirely rather than crash the request.
+     */
+    private function attemptDbConnection(): ?Connection
     {
         $requiredExtension = $this->dblayer === 'pgsql' ? 'pgsql' : 'mysqli';
         if (! extension_loaded($requiredExtension)) {
-            // installDbConnect() below calls straight into `new mysqli()`/
-            // `pg_connect()` with no extension guard of its own -- a
-            // genuinely missing extension throws \Error there (undefined
-            // class/function), not \Exception, which its own
-            // `catch (Exception $e)` doesn't catch. Skip the attempt
-            // entirely rather than crash the request.
             $this->errors[] = $this->lang->t('PHP extension "%s" is not loaded', $requiredExtension);
-        } else {
-            $this->conn = InstallService::installDbConnect($this->infos, $this->errors, $this->lang);
 
-            if (count($this->errors) > 0) {
-                print_r($this->errors);
-            }
+            return null;
         }
+
+        return InstallService::installDbConnect($this->infos, $this->errors, $this->lang);
+    }
+
+    /**
+     * install.php's own `?ajax=check-db` branch -- fires while the
+     * operator is still typing DB credentials, before any real submit.
+     * Deliberately never assigns $this->conn: this path has no business
+     * holding a connection open past its own request, unlike
+     * analyzeForm() below.
+     *
+     * @return array<string, mixed>
+     */
+    public function checkDbConnection(): array
+    {
+        $conn = $this->attemptDbConnection();
+        $conn?->close();
+
+        return [
+            'errors' => $this->errors,
+        ];
+    }
+
+    public function analyzeForm(): void
+    {
+        $this->conn = $this->attemptDbConnection();
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));
         if ($webmaster === '') {
@@ -440,6 +465,16 @@ final class InstallWizard
     public function isInstallSubmitted(): bool
     {
         return $this->request->isInstallSubmitted;
+    }
+
+    /**
+     * Same reasoning as isInstallSubmitted() -- exposed for install.php's
+     * own `?ajax=check-db` gate, only valid to call after boot() has
+     * returned.
+     */
+    public function isAjaxDbCheck(): bool
+    {
+        return $this->request->isAjaxDbCheck;
     }
 
     /**

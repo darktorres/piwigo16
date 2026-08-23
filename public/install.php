@@ -20,6 +20,7 @@ use Piwigo\Core\ConnectedWithSession;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Http\SessionBootstrap;
 
@@ -71,6 +72,18 @@ try {
     // Template construction at the end needs it active before this call
     // returns, so it can't wait until here.
     $wizard->boot();
+
+    // Live DB-connection check the operator's own JS fires while still
+    // typing credentials -- checked before isInstallSubmitted() since it
+    // never sets $_POST['install'] and has nothing to do with a real
+    // submit.
+    if ($wizard->isAjaxDbCheck()) {
+        $checkResult = $wizard->checkDbConnection();
+        throw new ResponseReadyException(ResponseFactory::json([
+            'ok' => $checkResult['errors'] === [],
+            ...$checkResult,
+        ]));
+    }
 
     if ($wizard->isInstallSubmitted()) {
         $wizard->analyzeForm();

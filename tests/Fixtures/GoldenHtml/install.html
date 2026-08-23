@@ -297,6 +297,7 @@
                 <td><input
                       type="text"
                       name="dbhost"
+                      id="dbhost"
                       value="localhost"
                       required
                     ></td>
@@ -323,6 +324,7 @@
                 <td><input
                       type="text"
                       name="dbuser"
+                      id="dbuser"
                       value=""
                       required
                     ></td>
@@ -332,7 +334,12 @@
               </tr>
               <tr>
                 <td class="fieldname">Password</td>
-                <td><input type="password" name="dbpasswd" value=""></td>
+                <td><input
+                      type="password"
+                      name="dbpasswd"
+                      id="dbpasswd"
+                      value=""
+                    ></td>
                 <td
                     class="fielddesc"
                   >user password supplied by your host provider</td>
@@ -342,12 +349,17 @@
                 <td><input
                       type="text"
                       name="dbname"
+                      id="dbname"
                       value=""
                       required
                     ></td>
                 <td
                     class="fielddesc"
                   >also supplied by your hosting provider</td>
+              </tr>
+              <tr id="db-check-row" class="install-hidden-row">
+                <td></td>
+                <td colspan="2"><span id="db-check-status"></span></td>
               </tr>
             </table>
           </fieldset>
@@ -447,7 +459,10 @@
       <div class="install-help-row">Need help? Ask your question on the <a href="https://upstream.example.invalid/forum">Piwigo message board</a>.</div>
     </div> 
 
+    <script type="application/json" id="page-data">{"data":[],"strings":{"Testing connection...":"Testing connection...","Connection successful":"Connection successful","Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables":"Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables"}}</script>
+
     <script type="text/javascript" src="themes/default/js/plugins/jquery.cluetip.js?v17.0.0"></script>
+    <script type="text/javascript" src="themes/default/js/page-data.js?v17.0.0"></script>
     <script type="text/javascript" src="themes/admin/default/js/install.js?v17.0.0"></script>
   </body>
 </html>

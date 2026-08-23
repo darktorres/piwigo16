@@ -874,7 +874,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     // --------------------------------------------------------- analyzeForm(), more
 
-    public function testAnalyzeFormPrintsTheErrorsWhenTheDbConnectionItselfFails(): void
+    public function testAnalyzeFormRecordsAnErrorWhenTheDbConnectionItselfFails(): void
     {
         $this->bootInstallBootstrap();
 
@@ -900,17 +900,50 @@ final class InstallWizardTest extends IntegrationTestCase
             'install' => '1',
         ]);
 
-        ob_start();
         $wizard->analyzeForm();
-        $output = ob_get_clean();
 
-        self::assertIsString($output);
-        // analyzeForm()'s own print_r($this->errors) -- a real connection
-        // failure's Lang::t($e->getMessage()) text, not asserted verbatim
-        // (mysqli's own driver message text/wording isn't this class's
-        // contract), just that the debug dump actually ran.
-        self::assertStringContainsString('Array', $output);
         self::assertTrue($wizard->hasErrors());
+        self::assertNull($this->reflectPrivate($wizard, 'conn'));
+    }
+
+    // --------------------------------------------------------- checkDbConnection()
+
+    public function testCheckDbConnectionReturnsNoErrorsForARealWorkingConnection(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+        ]);
+
+        $result = $wizard->checkDbConnection();
+
+        self::assertSame([], $result['errors']);
+        // checkDbConnection() must never hold the connection open past its
+        // own request -- analyzeForm()'s own $this->conn stays untouched.
+        self::assertNull($this->reflectPrivate($wizard, 'conn'));
+    }
+
+    public function testCheckDbConnectionReturnsAnErrorForABadConnection(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => '127.0.0.1:1', // nothing listens here -- a real, immediate connection failure
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+        ]);
+
+        $result = $wizard->checkDbConnection();
+
+        self::assertNotSame([], $result['errors']);
         self::assertNull($this->reflectPrivate($wizard, 'conn'));
     }
 

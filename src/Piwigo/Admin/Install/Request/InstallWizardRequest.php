@@ -39,6 +39,7 @@ final readonly class InstallWizardRequest
         public bool $isNewsletterSubscribe,
         public ?string $languageParam,
         public bool $isSendCredentialsByMail,
+        public bool $isAjaxDbCheck,
     ) {}
 
     public static function fromGlobals(InputValidator $inputValidator): self
@@ -85,6 +86,8 @@ final readonly class InstallWizardRequest
             $language_param = strip_tags($get['language']);
         }
 
+        $is_ajax_db_check = isset($get['ajax']) && $get['ajax'] === 'check-db';
+
         return new self(
             $dbhost,
             $dbuser,
@@ -100,6 +103,7 @@ final readonly class InstallWizardRequest
             $is_newsletter_subscribe,
             $language_param,
             isset($post['send_credentials_by_mail']),
+            $is_ajax_db_check,
         );
     }
 }

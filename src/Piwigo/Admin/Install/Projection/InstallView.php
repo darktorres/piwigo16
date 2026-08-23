@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -29,7 +30,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * pattern every other P42-B ambient case uses.
  */
 #[Template('install.latte')]
-final readonly class InstallView implements View, HasPageAssets
+final readonly class InstallView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, string> $languageOptions
@@ -91,7 +92,34 @@ final readonly class InstallView implements View, HasPageAssets
         $assets[] = AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install');
         $assets[] = AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']);
         $assets[] = AssetContribution::script('install', 'themes/admin/default/js/install.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']);
+        // Normally auto-registered by theme-base wiring (Template::
+        // finalizeHtml(), gated on $themeBaseApplied) -- this page opts out
+        // of that (applyThemeBase: false), so install.js's own
+        // pwg_getPageString() calls need this registered explicitly.
+        $assets[] = AssetContribution::script('page-data', 'themes/default/js/page-data.js', loadMode: LoadMode::Footer);
 
         return $assets;
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'Testing connection...',
+            'Connection successful',
+            'Connected to the database, but couldn\'t verify whether it already contains a Piwigo installation — check the database user\'s privileges to list tables',
+        ];
     }
 }

@@ -72,7 +72,7 @@ test('pageAssets skips a theme whose load_css is false', function (): void {
         ->toBe([]);
 });
 
-test('pageAssets always registers the 4 static assets regardless of themes', function (): void {
+test('pageAssets always registers the 5 static assets regardless of themes', function (): void {
     $view = makeInstallView([]);
 
     expect($view->pageAssets())
@@ -81,5 +81,24 @@ test('pageAssets always registers the 4 static assets regardless of themes', fun
             AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install'),
             AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::script('install', 'themes/admin/default/js/install.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
+            AssetContribution::script('page-data', 'themes/default/js/page-data.js', loadMode: LoadMode::Footer),
         ]);
+});
+
+test('exposedStrings returns the install-check translated strings', function (): void {
+    $view = makeInstallView([]);
+
+    expect($view->exposedStrings())
+        ->toBe([
+            'Testing connection...',
+            'Connection successful',
+            'Connected to the database, but couldn\'t verify whether it already contains a Piwigo installation — check the database user\'s privileges to list tables',
+        ]);
+});
+
+test('exposedPageData returns no dynamic data', function (): void {
+    $view = makeInstallView([]);
+
+    expect($view->exposedPageData())
+        ->toBe([]);
 });

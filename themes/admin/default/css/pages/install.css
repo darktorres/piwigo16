@@ -111,3 +111,23 @@ select:focus {
 .install-help-row {
   text-align: center;
 }
+
+.install-hidden-row {
+  display: none;
+}
+
+#db-check-status {
+  font-style: italic;
+}
+
+#db-check-status.db-check-pending {
+  color: #666;
+}
+
+#db-check-status.db-check-success {
+  color: #2a7a2a;
+}
+
+#db-check-status.db-check-error {
+  color: #c0392b;
+}

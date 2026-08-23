@@ -104,6 +104,7 @@
                   <td><input
                       type="text"
                       name="dbhost"
+                      id="dbhost"
                       value="{$fDbHost}"
                       required
                     ></td>
@@ -131,6 +132,7 @@
                   <td><input
                       type="text"
                       name="dbuser"
+                      id="dbuser"
                       value="{$fDbUser}"
                       required
                     ></td>
@@ -140,7 +142,12 @@
                 </tr>
                 <tr>
                   <td class="fieldname">{='Password'|translate}</td>
-                  <td><input type="password" name="dbpasswd" value=""></td>
+                  <td><input
+                      type="password"
+                      name="dbpasswd"
+                      id="dbpasswd"
+                      value=""
+                    ></td>
                   <td
                     class="fielddesc"
                   >{='user password given by your host provider'|translate}</td>
@@ -150,12 +157,17 @@
                   <td><input
                       type="text"
                       name="dbname"
+                      id="dbname"
                       value="{$fDbName}"
                       required
                     ></td>
                   <td
                     class="fielddesc"
                   >{='also given by your host provider'|translate}</td>
+                </tr>
+                <tr id="db-check-row" class="install-hidden-row">
+                  <td></td>
+                  <td colspan="2"><span id="db-check-status"></span></td>
                 </tr>
               </table>
             </fieldset>
@@ -262,6 +274,8 @@
       </div> {* content *}
       <div class="install-help-row">{$lInstallHelp|noescape}</div>
     </div> {* the_page *}
+
+    {=getPageDataScript()}
 
     {=getCombinedScripts('footer')}
   </body>

@@ -59,11 +59,26 @@ final class InstallDataSeeder
 
     public function seed(Connection $conn, string $language, ?LanguageScanRow $languageScanRow, string $adminName, string $adminPass1, string $adminMail): void
     {
-        // We fill the tables with basic informations
-        InstallService::executeSqlfile(
-            $conn,
-            $this->paths->root . 'install/config.sql',
+        // We fill the tables with basic informations. `config.value` is a
+        // JSON column -- each row's native PHP value is json_encode()d
+        // here, mirroring ConfigService's own private encode() (null
+        // passthrough, json_encode() otherwise) so a row written here
+        // reads back identically to one written by a real
+        // confUpdateParam() call later. massInsert()'s own
+        // `$insert[$field] ?? null` already treats a row that omits
+        // 'comment' entirely as a real SQL NULL, not the JSON text
+        // "null" -- no special-casing needed for the rows below that
+        // never had a comment to begin with.
+        $configRows = array_map(
+            static function (array $row): array {
+                $row['value'] = $row['value'] === null ? null : json_encode($row['value']);
+
+                return $row;
+            },
+            InstallDefaultConfig::rows(),
         );
+        new BatchWriter($conn)
+            ->massInsert('config', ['param', 'value', 'comment'], $configRows);
 
         $configService = $this->currentConfigService->get();
         $configService->confUpdateParam('secret_key', sha1(random_bytes(1000)));

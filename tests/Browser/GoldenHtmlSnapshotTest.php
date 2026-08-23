@@ -635,7 +635,7 @@ it("captures install's golden HTML", function (): void {
     // install.php's real step-1 welcome/language form render instead of
     // its "Piwigo is already installed" fatalError() page. Safe for a
     // plain GET: $this->step only becomes 2 (the real schema-migration +
-    // config.sql seeding path) on an explicit step-2 POST this test never
+    // config-row seeding path) on an explicit step-2 POST this test never
     // sends, so the fixture DB itself is never touched -- confirmed by
     // reading InstallWizard.php directly, not assumed.
     $flagPath = dirname(__DIR__, 2) . '/local/.installed.test';

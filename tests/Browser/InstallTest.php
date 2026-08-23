@@ -103,7 +103,7 @@ it('completes a fresh install end-to-end', function (): void {
     } finally {
         // InstallWizard::performInstall() itself touch()es a fresh
         // local/.installed.test on success, at the very end of the method
-        // (after schema migration, config.sql seeding, extension
+        // (after schema migration, config-row seeding, extension
         // activation, the sites row, and webmaster/guest user creation all
         // succeeded) -- the real one, not our backup, so only fall back to
         // restoring the backup (or creating a fresh flag, if none existed

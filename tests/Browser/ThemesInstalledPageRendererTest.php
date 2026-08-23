@@ -25,7 +25,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * path -- ExtensionLifecycle::performThemeAction()'s 'activate' case
  * special-cases `$id === 'default'` into an unconditional no-op break
  * (faithful port of legacy admin/include/themes.class.php's identical
- * `'default' === $theme_id` guard; confirmed neither install/config.sql
+ * `'default' === $theme_id` guard; confirmed neither InstallDefaultConfig
  * nor any fixture ever INSERTs a 'default' row either). So `action=
  * deactivate&theme=default` always hits this class's own `$dbRow === null`
  * early break first and never reaches the "need at least one theme" guard

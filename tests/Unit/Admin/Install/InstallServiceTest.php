@@ -89,9 +89,8 @@ function installServiceTestLang(): Lang
 
 /**
  * This whole file is exempt from tests/Pest.php's own blanket per-test
- * transaction wrapper: executeSqlfile()'s own CREATE/DROP TABLE implicitly
- * commits in MySQL either way, and every installDbConnect() test below
- * specifically exercises DbConnection::build()'s own real credential-based
+ * transaction wrapper: every installDbConnect() test below specifically
+ * exercises DbConnection::build()'s own real credential-based
  * connection-establishment logic (via putenv()'d PIWIGO_DB_* vars) -- the
  * wrapper's own override would silently short-circuit build() to always
  * return the one already-open, already-good connection regardless of
@@ -114,62 +113,6 @@ test('PHP5_HOSTING_HTACCESS carries the expected hosting directives', function (
         ->and(InstallService::PHP5_HOSTING_HTACCESS['kundenserver.de'])->toBe('AddType x-mapp-php5 .php')
         ->and(InstallService::PHP5_HOSTING_HTACCESS['ovh.net'])->toBe('SetEnv PHP_VER 5')
         ->and(InstallService::PHP5_HOSTING_HTACCESS['free.fr'])->toBe('php 1');
-});
-
-test('executeSqlfile() creates tables and skips DROP TABLE', function (): void {
-    $conn = DbConnection::build();
-    // A unique table name baked directly into the SQL, not a shared
-    // literal like 'gizmo' -- this suite's DB is shared/persistent across
-    // composer test's own parallel runner, so a fixed name risks a real
-    // collision with a concurrently-running instance of this same test.
-    $table = 'itest_p17unit_' . bin2hex(random_bytes(6)) . '_gizmo';
-    $sqlFile = sys_get_temp_dir() . '/piwigo-install-service-' . bin2hex(random_bytes(6)) . '.sql';
-    file_put_contents(
-        $sqlFile,
-        "-- a comment line, must be ignored\n"
-        . "\n"
-        . "CREATE TABLE {$table} (\n"
-        . "  id INT NOT NULL,\n"
-        . "  label VARCHAR(64) NOT NULL\n"
-        . ");\n"
-        . "INSERT INTO {$table} (id, label) VALUES (42, 'widget-forty-two');\n"
-        . "DROP TABLE {$table};\n"
-    );
-
-    try {
-        InstallService::executeSqlfile($conn, $sqlFile);
-
-        // The DROP TABLE line was skipped -- the table (and its row) must
-        // still exist.
-        $row = $conn->fetchAssociative('SELECT id, label FROM ' . $table . ' WHERE id = 42');
-        if (! is_array($row)) {
-            throw new LogicException('expected an array row');
-        }
-        $id = $row['id'];
-        expect(is_numeric($id) ? (int) $id : null)
-            ->toBe(42)
-            ->and($row['label'])->toBe('widget-forty-two');
-    } finally {
-        $conn->executeStatement('DROP TABLE IF EXISTS ' . $table);
-        unlink($sqlFile);
-    }
-});
-
-test('executeSqlfile() throws a RuntimeException when the file does not exist', function (): void {
-    $conn = DbConnection::build();
-    $missing = sys_get_temp_dir() . '/piwigo-install-service-does-not-exist-' . bin2hex(random_bytes(6)) . '.sql';
-
-    // file()'s own real E_WARNING ("failed to open stream") is the exact
-    // branch being tested (the RuntimeException it triggers), matching
-    // the Integration original's own reasoning -- swallow it rather than
-    // let it fail the suite.
-    set_error_handler(static fn (): bool => true);
-    try {
-        expect(fn () => InstallService::executeSqlfile($conn, $missing))
-            ->toThrow(RuntimeException::class, 'Unable to read SQL file: ' . $missing);
-    } finally {
-        restore_error_handler();
-    }
 });
 
 $installServiceTestEnvVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'];

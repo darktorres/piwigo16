@@ -32,18 +32,24 @@ uses(OpenApiContractAssertions::class)
  * long stretch of this session's own work found and had to hand-fix
  * file-by-file (Category/Tag/Auth) before landing this instead.
  *
- * A DDL statement (CREATE/ALTER/DROP TABLE) implicitly commits in MySQL,
- * silently ending the transaction from that statement onward -- a test that
- * genuinely needs to run DDL (there is exactly one today,
- * InstallServiceTest.php's own `executeSqlfile() creates tables and skips
- * DROP TABLE`) calls DbTransactionTestOverride::rollback() itself as its own
- * first line, ending the enclosing transaction early and falling back to
- * DbConnection::build()'s normal fresh-connection-per-call behavior for the
- * rest of that one test; the global afterEach() below then finds nothing
- * left to roll back and is a safe no-op. Simpler than a Pest group-based
- * opt-out (Pest's own uses()->group() tags tests for --group/--exclude-group
- * CLI filtering, not conditional hook execution) and self-documenting at the
- * one call site that actually needs it.
+ * A test that genuinely needs DbConnection::build() to return a real,
+ * fresh-per-call connection rather than this wrapper's one shared,
+ * never-committed transaction -- either because it runs DDL (CREATE/ALTER/
+ * DROP TABLE implicitly commits in MySQL, silently ending the transaction
+ * from that statement onward) or because it specifically exercises
+ * DbConnection::build()'s own real credential-based connection-
+ * establishment logic (a `putenv()`'d PIWIGO_DB_* test, e.g.
+ * InstallServiceTest.php's own installDbConnect() tests, which the
+ * wrapper's override would otherwise short-circuit to always return the
+ * one already-open connection regardless of whatever credentials the test
+ * just set) -- calls DbTransactionTestOverride::rollback() itself as its
+ * own first line, ending the enclosing transaction early and falling back
+ * to DbConnection::build()'s normal behavior for the rest of that test;
+ * the global afterEach() below then finds nothing left to roll back and
+ * is a safe no-op. Simpler than a Pest group-based opt-out (Pest's own
+ * uses()->group() tags tests for --group/--exclude-group CLI filtering,
+ * not conditional hook execution) and self-documenting at the one call
+ * site that actually needs it.
  *
  * The rollback (and connection close) below runs before gc_collect_cycles()
  * -- both live in the same uses()->in('Unit') chain, not two separate ones,

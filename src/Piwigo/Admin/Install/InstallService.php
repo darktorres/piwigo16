@@ -35,7 +35,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
-use RuntimeException;
 
 /**
  * Installation helpers used on the pre-installation entry path
@@ -44,36 +43,6 @@ use RuntimeException;
  */
 final class InstallService
 {
-    /**
-     * Loads a SQL file and executes all queries. Drop table queries are
-     * not executed.
-     */
-    public static function executeSqlfile(Connection $conn, string $filepath): void
-    {
-        $sql_lines = file($filepath);
-        if ($sql_lines === false) {
-            throw new RuntimeException('Unable to read SQL file: ' . $filepath);
-        }
-        $query = '';
-        foreach ($sql_lines as $sql_line) {
-            $sql_line = trim($sql_line);
-            if ((bool) preg_match('/(^--|^$)/', $sql_line)) {
-                continue;
-            }
-            $query .= ' ' . $sql_line;
-            // if we reached the end of query, we execute it and reinitialize the
-            // variable "query"
-            if ((bool) preg_match('/;$/', $sql_line)) {
-                $query = trim($query);
-                // we don't execute "DROP TABLE" queries
-                if (! (bool) preg_match('/^DROP TABLE/i', $query)) {
-                    $conn->executeStatement($query);
-                }
-                $query = '';
-            }
-        }
-    }
-
     /**
      * Automatically activate all core themes in the "themes" directory.
      */

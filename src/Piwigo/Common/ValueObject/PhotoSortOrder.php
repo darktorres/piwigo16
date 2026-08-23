@@ -45,7 +45,7 @@ final readonly class PhotoSortOrder
 
     /**
      * The default applied when no `order_by` has been configured -- matches
-     * install/config.sql's own seed row.
+     * InstallDefaultConfig's own seed row.
      *
      * Parses the literal directly rather than through
      * {@see fromConfigFragment()}: that method falls back to this one, so

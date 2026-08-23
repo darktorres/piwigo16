@@ -21,16 +21,14 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
-use RuntimeException;
 
 /**
  * InstallService is a bag of static helpers pulled verbatim out of the
  * former admin/include/functions_install.inc.php (see its own docblock).
- * Every method here is plain SQL-file execution, a DB-credential probe, or
- * a real filesystem extension scan + DB write -- none of it needs a full
- * InstallWizard orchestration, so each is exercised directly against
- * either a disposable ad hoc table (executeSqlfile) or the shared
- * Integration test database (installDbConnect/activateCoreThemes/
+ * Every remaining method here is a DB-credential probe or a real
+ * filesystem extension scan + DB write -- none of it needs a full
+ * InstallWizard orchestration, so each is exercised directly against the
+ * shared Integration test database (installDbConnect/activateCoreThemes/
  * activateCorePlugins), the same real-DB pattern ExtensionLifecycleTest
  * already established.
  */
@@ -116,67 +114,6 @@ final class InstallServiceTest extends IntegrationTestCase
         /** @psalm-suppress RedundantCondition */
         // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('php 1', InstallService::PHP5_HOSTING_HTACCESS['free.fr']);
-    }
-
-    // --------------------------------------------------------- executeSqlfile
-
-    public function testExecuteSqlfileCreatesTablesAndSkipsDropTable(): void
-    {
-        $sqlFile = sys_get_temp_dir() . '/piwigo-install-service-' . bin2hex(random_bytes(6)) . '.sql';
-        file_put_contents(
-            $sqlFile,
-            "-- a comment line, must be ignored\n"
-            . "\n"
-            . "CREATE TABLE gizmo (\n"
-            . "  id INT NOT NULL,\n"
-            . "  label VARCHAR(64) NOT NULL\n"
-            . ");\n"
-            . "INSERT INTO gizmo (id, label) VALUES (42, 'widget-forty-two');\n"
-            . "DROP TABLE gizmo;\n"
-        );
-
-        try {
-            InstallService::executeSqlfile($this->conn, $sqlFile);
-
-            // The DROP TABLE line was skipped -- the table (and its row)
-            // must still exist.
-            // gizmo only exists via executeSqlfile() above, not in
-            // the live reflector's persistent schema.
-            // @phpstan-ignore dba.syntaxError
-            $row = $this->conn->fetchAssociative('SELECT id, label FROM gizmo WHERE id = 42');
-            self::assertIsArray($row);
-            $id = $row['id'];
-            self::assertSame(42, is_numeric($id) ? (int) $id : null);
-            self::assertSame('widget-forty-two', $row['label']);
-        } finally {
-            $this->conn->executeStatement('DROP TABLE IF EXISTS gizmo');
-            unlink($sqlFile);
-        }
-    }
-
-    public function testExecuteSqlfileThrowsARuntimeexceptionWhenTheFileDoesNotExist(): void
-    {
-        $missing = sys_get_temp_dir() . '/piwigo-install-service-does-not-exist-' . bin2hex(random_bytes(6)) . '.sql';
-
-        // executeSqlfile()'s own `file($filepath)` call unavoidably raises a
-        // real E_WARNING ("failed to open stream") before returning false --
-        // this is the exact real branch being tested (the RuntimeException
-        // it triggers), not a flaw in this test. This suite's own phpunit.xml
-        // has failOnWarning="true", and neither `@` nor a temporary
-        // error_reporting(0) actually hides it from PHPUnit's handler here
-        // (confirmed) -- installing a handler that swallows it outright is
-        // the same real-guard pattern already used elsewhere in this suite
-        // (see tests/Unit/Admin/Image/ImageGdTest.php,
-        // tests/Unit/Lang/TranslatorTest.php).
-        set_error_handler(static fn (): bool => true);
-        try {
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessageIsOrContains('Unable to read SQL file: ' . $missing);
-
-            InstallService::executeSqlfile($this->conn, $missing);
-        } finally {
-            restore_error_handler();
-        }
     }
 
     // ------------------------------------------------------- installDbConnect

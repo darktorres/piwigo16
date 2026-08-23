@@ -155,7 +155,6 @@ test('install/ contains only data files and the anti-listing stub', function ():
     // this codebase's own documented "no in-place upgrade" architecture.
     // Only schema/config data files may live here.
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/install'))->toBe([
-        'config.sql',
         'index.php',
         // One generated snapshot per provider. MariaDB has its own rather
         // than sharing MySQL's: the two differ at the engine level (no

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
@@ -64,7 +63,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -83,9 +81,6 @@ use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
-use Throwable;
 
 /**
  * install.php's orchestration. The install.php entry shell keeps only
@@ -483,59 +478,17 @@ final class InstallWizard
             $this->errors[] = $envError;
         }
 
-        // tables creation, driven by the real Doctrine Migrations baseline
-        // (src/Piwigo/Migrations/) instead of a static SQL file -- see
-        // this class's own constructor docblock for why the
-        // DependencyFactory below is built directly from this
-        // already-seeded $conn rather than resolved via the container
-        // (config/container.php's own DependencyFactory::class entry
-        // backs bin/piwigo migrations:migrate's CLI usage only). Runs the
-        // real MigrateCommand programmatically (ArrayInput/setInteractive
-        // (false) skips its confirmation prompt, matching --no-interaction)
-        // rather than calling AliasResolver::resolveVersionAlias()/
-        // Migrator::migrate()/MigratorConfiguration directly -- all 3 are
-        // internal Doctrine APIs (method.internalInterface/new.internalClass),
-        // off limits from outside the Doctrine root namespace; MigrateCommand itself is
-        // the sanctioned public entry point, and running it this way also
-        // means a future point release adding a new migration file here
-        // becomes the real upgrade path for an existing install (bin/
-        // piwigo migrations:migrate), not just a fresh-install mechanism.
-        $migrationsEm = EntityManagerFactory::build($conn);
-        $dependencyFactory = MigrationDependencyFactory::build($migrationsEm);
-        $migrateInput = new ArrayInput([
-            'version' => 'latest',
-            '--allow-no-migration' => true,
-        ]);
-        $migrateInput->setInteractive(false);
-        $migrateOutput = new BufferedOutput();
-        // MigrateCommand::run() is called directly (see this block's own
-        // docblock above for why), not through a full Symfony Application --
-        // unlike a real CLI invocation, that does NOT guarantee every
-        // failure is caught internally and converted to a plain exit code.
-        // A driver-level exception (mysqli's own exception-throwing mode,
-        // e.g. a genuine "table already exists") can still escape run()
-        // uncaught. public/install.php's own
-        // top-level catch only handles ResponseReadyException, so letting
-        // that propagate would reach the client as a raw fatal error/blank
-        // page instead of the installer's own error UI -- caught here and
-        // folded into the same "exit code" failure path below instead.
-        try {
-            $migrateExitCode = new MigrateCommand($dependencyFactory)
-                ->run($migrateInput, $migrateOutput);
-        } catch (Throwable $e) {
-            $migrateExitCode = 1;
-            $migrateOutput->writeln($e->getMessage());
-        }
-        if ($migrateExitCode !== 0) {
-            // A schema left in an unknown/partial state past this point --
-            // unlike the env-write failure above (which still lets the rest
-            // of the install proceed), continuing to seed config.sql/create
-            // the webmaster user against a migration that didn't finish
-            // would only cascade into more, harder-to-diagnose failures.
-            // Resets to step 1 so render() (called next by the entry shell)
-            // shows the initial form with this error, not a false "step 2
-            // succeeded" page.
-            $this->errors[] = 'Schema migration failed (migrations:migrate exit code ' . $migrateExitCode . '): ' . $migrateOutput->fetch();
+        // A schema left in an unknown/partial state past this point --
+        // unlike the env-write failure above (which still lets the rest of
+        // the install proceed), continuing to seed config.sql/create the
+        // webmaster user against a migration that didn't finish would only
+        // cascade into more, harder-to-diagnose failures. Resets to step 1
+        // so render() (called next by the entry shell) shows the initial
+        // form with this error, not a false "step 2 succeeded" page.
+        $migrationError = new InstallSchemaMigrator()
+            ->migrate($conn);
+        if ($migrationError !== null) {
+            $this->errors[] = $migrationError;
             $this->step = 1;
 
             return;

@@ -592,10 +592,6 @@
                 <file name="src/Piwigo/Admin/ThemesStandardPagesPageRenderer.php"/>
                 <file name="src/Piwigo/Auth/AuthService.php"/>
                 <file name="src/Piwigo/Html/HtmlService.php"/>
-                <!-- FileCombiner.php: HTTP_CACHE_CONTROL/HTTP_PRAGMA guards —
-                     genuinely not always sent by real clients, same
-                     "$_SERVER stub is more optimistic than reality" class. -->
-                <file name="src/Piwigo/Template/FileCombiner.php"/>
                 <file name="src/Piwigo/Audit/AuditService.php"/>
                 <file name="src/Piwigo/Auth/EphemeralKeyService.php"/>
                 <file name="src/Piwigo/Bootstrap/RequestBootstrap.php"/>
@@ -721,19 +717,6 @@
                 <file name="src/Piwigo/Users/UserService.php"/>
             </errorLevel>
         </PossiblyNullArgument>
-        <!-- FileCombiner.php: $file is only ever null-typed for Psalm's
-             benefit (see the method's own inline comment declaring it null
-             so PossiblyUndefinedVariable is resolvable); by the time
-             $combinable->path = $file runs, $return_content is
-             provably still false (unchanged since the earlier guard), so
-             $file is always the real string assigned inside that same `if`
-             block. composer analyse:phpstan is clean here with zero
-             changes. -->
-        <PossiblyNullPropertyAssignmentValue>
-            <errorLevel type="suppress">
-                <file name="src/Piwigo/Template/FileCombiner.php"/>
-            </errorLevel>
-        </PossiblyNullPropertyAssignmentValue>
         <!-- ProfileFormHandler.php: (string) $nb_image_page / (string)
              $recent_period casts inside preg_match() calls — already
              verified in the argument-safety batch that removing these
@@ -784,21 +767,8 @@
                 <file name="src/Piwigo/Controller/Admin/BatchManagerSubController.php"/>
             </errorLevel>
         </RedundantCastGivenDocblockType>
-        <!-- Combinable::$path is deliberately left unset by a null $path
-             constructor argument (see the class's own docblock:
-             "null leaves $path unset — callers ... rely on a well-known
-             path being filled in afterwards", e.g.
-             ScriptLoader::add()'s UI-core-dependency recursion). Real
-             two-phase construct-then-fill contract, not an oversight —
-             converting to ?string would ripple a null-guard into every
-             $this->path read site for a state that's guaranteed non-null
-             by contract before real use. Applies to Combinable and both
-             its subclasses (Css/Script share the same property). -->
         <PropertyNotSetInConstructor>
             <errorLevel type="suppress">
-                <file name="src/Piwigo/Template/Combinable.php"/>
-                <file name="src/Piwigo/Template/Css.php"/>
-                <file name="src/Piwigo/Template/Script.php"/>
                 <!-- DisplayBlock::$_position/$template/$raw_content: same
                      real, deliberate two-phase construct-then-fill contract
                      as Combinable::$path above — BlockManager constructs
@@ -822,18 +792,17 @@
                      other install/upgrade orchestration classes in this
                      codebase. -->
                 <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
-                <!-- tests/Integration/*Test.php, tests/Contract/*Test.php:
-                     every test class initializes its $conn/$repo/$service
-                     properties in setUp() (PHPUnit's own per-test lifecycle
-                     hook, run before each test method), not in the
-                     constructor — no psalm-plugin-phpunit is installed to
-                     teach Psalm this framework convention, so it flags
-                     every one. This is the standard PHPUnit test-fixture
-                     shape throughout this suite (see IntegrationTestCase's
-                     own setUp()/setUpConnectionFromEnv() pattern), not a
-                     real initialization gap. -->
+                <!-- tests/Integration/*Test.php: every test class
+                     initializes its $conn/$repo/$service properties in
+                     setUp() (PHPUnit's own per-test lifecycle hook, run
+                     before each test method), not in the constructor —
+                     no psalm-plugin-phpunit is installed to teach Psalm
+                     this framework convention, so it flags every one.
+                     This is the standard PHPUnit test-fixture shape
+                     throughout this suite (see IntegrationTestCase's own
+                     setUp()/setUpConnectionFromEnv() pattern), not a real
+                     initialization gap. -->
                 <directory name="tests/Integration"/>
-                <directory name="tests/Contract"/>
                 <!-- src/Piwigo/Db/DqlFunction/*.php: every custom DQL
                      function class extends Doctrine's own FunctionNode and
                      fills its $column/$pattern-style Node properties inside
@@ -1143,38 +1112,24 @@
                 <file name="tests/Integration/UploadServiceTest.php"/>
             </errorLevel>
         </InvalidArrayAccess>
-        <!-- phpstorm-stubs' own Imagick stub declares the class non-final;
-             PluginMaintain/ThemeMaintain are this app's own deliberately
-             extensible plugin/theme API base classes (rector.php's own
-             skip list documents the same reasoning: external plugin/theme
-             code outside this repo extends them, invisible to any
-             in-repo-only static analysis). -->
+        <!-- phpstorm-stubs' own Imagick stub declares the class non-final. -->
         <ClassMustBeFinal>
             <errorLevel type="suppress">
                 <file name="phpstan-stubs/Imagick.stub.php"/>
-                <file name="src/Piwigo/Admin/PluginMaintain.php"/>
-                <file name="src/Piwigo/Admin/ThemeMaintain.php"/>
             </errorLevel>
         </ClassMustBeFinal>
-        <!-- ExtendForTemplatesPageRenderer.php: CurrentConfig::
-             $extentsForTemplates is a PHP 8.4 property-hook property —
-             `set(array $value) { ... = self::sanitizeExtentsForTemplates
-             ($value); }` converts the raw [$handle, $url_keyword,
-             $bound_tpl] tuples this renderer assigns into real
-             TemplateExtension value objects (via TemplateExtension::
-             tryFromArray()) before they're ever stored. Psalm checks the
-             assignment against the property's plain @var array<string,
-             TemplateExtension> docblock directly rather than against the
-             hook's own `set(array $value)` parameter type — incomplete
-             property-hooks support for a still-young PHP 8.4 feature, not
-             a real type violation. Verified real: composer analyse:phpstan
-             is clean here with zero changes, and the hook's own sanitizer
-             is the actual, safe conversion path.
-             The tests/ entries are unrelated: same property-hooks-support
-             gap, different properties, same root cause. -->
+        <!-- CurrentConfig's own array-typed PHP 8.4 property-hook
+             properties (fileExtensions, formatExtensions, apiKeyDuration,
+             etc.) each have a `set(array $value) { ... }` hook doing real
+             sanitization/conversion before storage. Psalm checks an
+             assignment against the property's plain @var docblock
+             directly rather than against the hook's own `set(array
+             $value)` parameter type — incomplete property-hooks support
+             for a still-young PHP 8.4 feature, not a real type violation.
+             Verified real: composer analyse:phpstan is clean here with
+             zero changes. -->
         <InvalidPropertyAssignmentValue>
             <errorLevel type="suppress">
-                <file name="src/Piwigo/Admin/ExtendForTemplatesPageRenderer.php"/>
                 <directory name="tests"/>
             </errorLevel>
         </InvalidPropertyAssignmentValue>

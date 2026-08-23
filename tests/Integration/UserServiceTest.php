@@ -47,6 +47,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\Users\Projection\AccountFieldUpdates;
     use Piwigo\Users\Projection\DefaultUserInfo;
     use Piwigo\Users\User;
     use Piwigo\Users\UserInfoUpdateFailureReason;
@@ -479,7 +480,7 @@ namespace Piwigo\Tests\Integration {
                 );
 
                 self::assertFalse($result->isFailure);
-                self::assertArrayHasKey('password', $result->account);
+                self::assertNotNull($result->account->password);
             } finally {
                 CurrentUserTestFactory::get()->reset();
                 $this->conn->executeStatement('UPDATE users SET password = ? WHERE id = 4', [$originalHash]);
@@ -573,10 +574,13 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result->isFailure);
                 self::assertSame([4], $result->userIds);
                 self::assertSame([], $result->infos);
-                self::assertSame([
-                    'username' => $newLogin,
-                    'mail_address' => 'temp13@example.test',
-                ], $result->account);
+                self::assertEquals(new AccountFieldUpdates(
+                    username: $newLogin,
+                    mailAddress: 'temp13@example.test',
+                ), $result->account);
+                self::assertSame($newLogin, $result->account->username);
+                self::assertNull($result->account->password);
+                self::assertSame('temp13@example.test', $result->account->mailAddress);
                 $after = $this->conn->fetchAssociative('SELECT username, mail_address FROM users WHERE id = 4');
                 self::assertSame([
                     'username' => $newLogin,
@@ -628,7 +632,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result->isFailure);
                 self::assertSame([4], $result->userIds);
                 self::assertSame($expectedInfos, $result->infos);
-                self::assertSame([], $result->account);
+                self::assertEquals(new AccountFieldUpdates(), $result->account);
 
                 $after = $this->conn->fetchAssociative(
                     'SELECT level, language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits, enabled_high'
@@ -688,7 +692,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame([
                     'level' => 2,
                 ], $result->infos);
-                self::assertSame([], $result->account);
+                self::assertEquals(new AccountFieldUpdates(), $result->account);
 
                 $levels = $this->conn->fetchAllAssociative(
                     'SELECT user_id, level FROM user_infos WHERE user_id IN (3, 4) ORDER BY user_id'

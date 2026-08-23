@@ -61,6 +61,7 @@ use Piwigo\Sort\UserSortField;
 use Piwigo\Users\Event\DeleteUser;
 use Piwigo\Users\Event\RegisterUser;
 use Piwigo\Users\Event\RegisterUserCheck;
+use Piwigo\Users\Projection\AccountFieldUpdates;
 use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\Projection\NewUserSummary;
@@ -1466,11 +1467,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $this->activityLogger->record('user', $user_ids, 'edit');
 
-        $account_updates = array_filter([
-            'username' => $username_update?->value,
-            'password' => $password_update,
-            'mail_address' => $email_update?->value,
-        ], static fn (?string $v): bool => $v !== null);
+        $account_updates = new AccountFieldUpdates(
+            username: $username_update?->value,
+            password: $password_update,
+            mailAddress: $email_update?->value,
+        );
 
         return UserInfoUpdateResult::success($user_ids, $updates_infos, $account_updates);
     }

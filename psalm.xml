@@ -17,13 +17,22 @@
     <projectFiles>
         <directory name="."/>
         <ignoreFiles>
-            <directory name="vendor"/>
+            <!-- Generated Latte analysis files (_analysis/phpstan-latte/, written by
+                 `bin/piwigo phpstan-latte:compile`), analyzed only for PHPStan's own
+                 Latte-typing pipeline. phpstan.neon carries ~7500 lines of per-identifier
+                 ignores individually triaged for this directory (internal Latte-runtime
+                 API calls, compiler-generated methods with no Override attribute, etc.);
+                 Psalm has no equivalent triage, so it flags the same expected pattern as
+                 noise. Excluded wholesale rather than per-identifier since Psalm doesn't
+                 gate this codebase (PHPStan/ECS/deptrac/Pest are the real gates). -->
+            <directory name="_analysis"/>
+            <!-- Runtime-compiled Latte templates + combined JS/CSS cache, not source. -->
+            <directory name="_data"/>
+            <directory name="language"/>
             <!-- JS dependency tree — some npm packages ship stray .php files
                  (e.g. flatted's PHP port) that aren't part of this project. -->
             <directory name="node_modules"/>
-            <directory name="language"/>
-            <!-- Runtime-compiled Latte templates + combined JS/CSS cache, not source. -->
-            <directory name="_data"/>
+            <directory name="vendor"/>
             <!-- Standalone maintenance script; its own header comment
                  documents that knplabs/github-api must be `composer
                  require`d manually before running it — mirrors

@@ -100,6 +100,33 @@ test('exits with failure on a genuine Latte syntax error', function (): void {
         ->toBe(Command::FAILURE);
 });
 
+test('exits with failure on valid Latte syntax with mismatched HTML tags', function (): void {
+    // The motivating bug for this whole class's strict-parsing fix:
+    // `Latte\Tools\Linter`'s own `strict` constructor flag is a no-op
+    // whenever a custom `$engine` is supplied (see this command's own
+    // execute() docblock) -- a genuine mismatched-tag template like this
+    // one used to pass linting clean, silently, because
+    // Feature::StrictParsing was never actually turned on. This is valid
+    // Latte syntax throughout (no `{if}`/macro involved, unlike the test
+    // above -- plain literal HTML with no `n:` attribute, confirmed live
+    // that Latte tracks an `n:`-attributed tag's own open/close
+    // regardless of strict mode, since tag-macro scoping needs that
+    // either way); only the HTML tag balance is broken (`<div>` closed as
+    // `</p>`), which only strict HTML parsing catches.
+    $dir = $this->root . '/templates';
+    mkdir($dir);
+    file_put_contents($dir . '/mismatched-tags.latte', "<div>hello</p>\n");
+
+    $command = lint_latte_command_test_build();
+    $tester = new CommandTester($command);
+    $exitCode = $tester->execute([
+        'paths' => [$dir],
+    ]);
+
+    expect($exitCode)
+        ->toBe(Command::FAILURE);
+});
+
 test('an unknown filter does not flip this command\'s own exit code', function (): void {
     // Latte\Tools\Linter writes the real "[WARNING] ... Unknown filter"
     // marker straight to the raw STDERR stream constant (confirmed live),

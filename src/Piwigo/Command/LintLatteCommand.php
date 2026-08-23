@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Command;
 
 use Latte\Engine;
+use Latte\Feature;
 use Latte\Tools\Linter;
 use Latte\Tools\LinterExtension;
 use Override;
@@ -70,8 +71,17 @@ final class LintLatteCommand extends Command
         // LinterExtension by default) is bypassed when the constructor
         // receives one.
         $engine->addExtension(new LinterExtension());
+        // Linter's own `strict` constructor flag is a no-op whenever a
+        // custom `$engine` is supplied: `Linter::createEngine()` is the
+        // *only* place that flag is ever read (via
+        // `$engine->setFeature(Feature::StrictParsing, $this->strict)`),
+        // and `Linter::getEngine()` only calls `createEngine()` when no
+        // engine was passed to the constructor. Since this class always
+        // passes its own `$engine` (needed for the extensions above), the
+        // feature has to be set directly here instead.
+        $engine->setFeature(Feature::StrictParsing, true);
 
-        $linter = new Linter(engine: $engine, strict: true);
+        $linter = new Linter(engine: $engine);
 
         $ok = true;
         foreach ($paths as $path) {

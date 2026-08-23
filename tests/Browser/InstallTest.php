@@ -23,15 +23,17 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * bare install run left it in. See tests/Browser/RegenerateFixtureTest.php
  * for the same install-form flow used to build the committed fixture.
  *
- * install.latte's `send_credentials_by_mail` checkbox is `checked="checked"`
- * by default, so a real browser submits it. That field makes
- * `InstallWizard::boot()` call `MailService::mail()` -> Symfony
- * Mailer's native transport (no `smtp_host` configured on a fresh
- * install) -> PHP's `mail()` -> a real synchronous `/usr/sbin/sendmail`
- * invocation -- which blocks for 60-120+s in an environment with no
- * outbound SMTP egress. This test unchecks that box before submit, the
- * same way `newsletter_subscribe` already is -- it has no reason to
- * depend on real mail delivery succeeding or even being fast.
+ * A checked `send_credentials_by_mail` makes `InstallWizard::boot()`
+ * call `MailService::mail()` -> Symfony Mailer's native transport (no
+ * `smtp_host` configured on a fresh install) -> PHP's `mail()` -> a real
+ * synchronous `/usr/sbin/sendmail` invocation -- which blocks for
+ * 60-120+s in an environment with no outbound SMTP egress. This test
+ * explicitly leaves that box (and `newsletter_subscribe`) unchecked
+ * before submit -- both now default unchecked in install.latte itself,
+ * so this is redundant with the template's own default rather than
+ * overriding it, kept here so this test stays correct even if that
+ * default ever changes back. It has no reason to depend on real mail
+ * delivery succeeding or even being fast.
  * `tests/Browser/RegenerateFixtureTest.php` is unaffected: it POSTs an
  * explicit field array, not a real filled-in browser form, so it never
  * sends this field either.

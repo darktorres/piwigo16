@@ -166,6 +166,23 @@ $(document).ready(function() {
   $("#admin_name").on("blur", checkWebmasterLogin);
   $("#admin_pass1, #admin_pass2").on("blur keyup", checkPasswordMatch);
   $("#admin_mail").on("blur", checkAdminEmailFormat);
+
+  // Real POST resubmit of the whole form on language change, instead of
+  // the old plain document.location navigation that discarded every
+  // other field the operator had already typed -- boot() already reads
+  // every field from $_POST unconditionally (regardless of whether
+  // install was clicked), so the redisplayed form comes back sticky.
+  // .submit() (not .requestSubmit()) deliberately bypasses the
+  // Constraint Validation API -- several fields on this form are
+  // required, and this resubmit must never be blocked by them. That
+  // also means no "submit" event fires here at all, so this can't be
+  // implemented as a submit handler -- confirmed nothing else in this
+  // file needs one.
+  $("#language").on("change", function() {
+    var form = this.form;
+    form.action = "install.php?language=" + encodeURIComponent(this.value);
+    form.submit();
+  });
 });
 
 jQuery().ready(function(){

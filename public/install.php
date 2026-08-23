@@ -61,9 +61,8 @@ $wizard = new InstallWizard(
     RequestBootstrap::imageStdParams(),
 );
 
-// InstallWizard::boot()'s own "PHP extension mysqli is not loaded"/
-// "Piwigo is already installed" checks call HtmlService::fatalError(),
-// which throws ResponseReadyException -- this file has no
+// InstallWizard::boot()'s own "Piwigo is already installed" check throws
+// ResponseReadyException directly -- this file has no
 // RequestPipeline::handle() to catch it downstream, so it needs its own
 // catch point.
 try {
@@ -73,7 +72,7 @@ try {
     // returns, so it can't wait until here.
     $wizard->boot();
 
-    if (isset($_POST['install'])) {
+    if ($wizard->isInstallSubmitted()) {
         $wizard->analyzeForm();
 
         if (! $wizard->hasErrors()) {

@@ -433,6 +433,16 @@ final class InstallWizard
     }
 
     /**
+     * `$this->request` (private, set by boot()) exposed for the entry
+     * shell's own `if (...) { analyzeForm(); ... }` gate -- only valid
+     * to call after boot() has returned.
+     */
+    public function isInstallSubmitted(): bool
+    {
+        return $this->request->isInstallSubmitted;
+    }
+
+    /**
      * Former install.php step-2 block: .env writing, schema + base-data
      * creation, core theme/plugin activation, webmaster user creation and
      * upgrade-table pre-fill. The entry shell marks InstallationFlag active

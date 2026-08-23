@@ -1587,6 +1587,16 @@ final class ImageRepository extends EntityRepository
      * own caller which always supplies it. Bulk multi-row INSERT via
      * BatchWriter, not ORM persist()/flush().
      *
+     * ImageService::associateImagesToCategories() pre-filters this list against
+     * findExistingAssociations() before calling here, but that check-then-insert
+     * has a race window: two concurrent pwg.images.setCategory calls for the
+     * same image/category can both pass the check before either commits.
+     * image_category's PRIMARY KEY (image_id, category_id) would then reject
+     * the second INSERT and (since massInsert() runs the whole batch in one
+     * transaction) roll back every row in that call, not just the duplicate.
+     * ignore=true makes the redundant row a no-op instead, matching
+     * massInsertLounge()'s own ignore=true a few lines up for the same reason.
+     *
      * @param  list<ImageCategoryPair>  $inserts
      */
     public function massInsertImageCategory(array $inserts): void
@@ -1598,7 +1608,9 @@ final class ImageRepository extends EntityRepository
         $rows = array_map(static fn (ImageCategoryPair $pair): array => $pair->toArray(), $inserts);
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert('image_category', array_keys($rows[0]), $rows);
+            ->massInsert('image_category', array_keys($rows[0]), $rows, [
+                'ignore' => true,
+            ]);
         $this->getEntityManager()
             ->clear();
     }

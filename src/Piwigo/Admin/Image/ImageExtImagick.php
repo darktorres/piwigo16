@@ -72,8 +72,16 @@ final class ImageExtImagick implements ImageInterface
         // pest-plugin-mutate's worker harness, unlike a normal CLI run)
         // hangs here indefinitely instead of reaching the Corrupt-image
         // exception below.
+        //
+        // "2>/dev/null" (not write()'s own "2>&1" a few methods down) --
+        // non-fatal ImageMagick warnings (e.g. a PNG with a minor IDAT CRC
+        // mismatch) go to stderr; merging them into $returnarray the way
+        // write() does would risk pushing the "%wx%h" line below index 0,
+        // which the parse below reads positionally. Discarding stderr here
+        // keeps stdout clean and stops those warnings from otherwise
+        // inheriting this process's stderr into the web server's error log.
         $command = escapeshellarg($this->imagickdir) . 'identify -format "%wx%h" '
-            . escapeshellarg((string) realpath($this->source_filepath)) . ' < /dev/null';
+            . escapeshellarg((string) realpath($this->source_filepath)) . ' < /dev/null 2>/dev/null';
         $returnarray = [];
         @exec($command, $returnarray);
         if (! isset($returnarray[0]) || $returnarray[0] === '' || $returnarray[0] === '0' or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {

@@ -618,6 +618,49 @@ test('massInsertImageCategory persists every real row it is given', function ():
     }
 });
 
+test('massInsertImageCategory silently no-ops a row that already exists instead of throwing a duplicate-key violation', function (): void {
+    // Regression test for the concurrent pwg.images.setCategory race:
+    // ImageService::associateImagesToCategories()'s own findExistingAssociations()
+    // pre-check has a TOCTOU window, so massInsertImageCategory() must itself
+    // tolerate re-inserting an (image_id, category_id) pair that already exists
+    // (image_category's own PRIMARY KEY) rather than throwing and rolling back
+    // the whole batch.
+    DbTransactionTestOverride::rollback();
+    $repo = imageRepositoryTestRepo();
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/mass-insert-duplicate-test.jpg');
+
+    try {
+        $repo->massInsertImageCategory([
+            new ImageCategoryPair(
+                imageId: $imageId,
+                categoryId: 1,
+                rank: 4,
+            ),
+        ]);
+
+        // Same pair again, as a second concurrent caller's insert would look
+        // once it also passed the pre-existing-row check.
+        $repo->massInsertImageCategory([
+            new ImageCategoryPair(
+                imageId: $imageId,
+                categoryId: 1,
+                rank: 4,
+            ),
+        ]);
+
+        $conn = DbConnection::build();
+        $count = $conn->fetchOne("SELECT COUNT(*) FROM image_category WHERE image_id = {$imageId} AND category_id = 1");
+        expect($count)
+            ->toBe(1);
+    } finally {
+        DbConnection::build()->createQueryBuilder()->delete('image_category')
+            ->where('image_id = :i')
+            ->setParameter('i', $imageId)
+            ->executeStatement();
+        imageRepositoryTestDeleteImage($imageId);
+    }
+});
+
 test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clears the identity map', function (): void {
     // Kills line 731's RemoveMethodCall ($em->clear()) -- verified via
     // ImageEntity's own identity map: a prior find() on a real image

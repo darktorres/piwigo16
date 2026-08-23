@@ -9,6 +9,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -105,7 +106,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     {
         $derivative = $this->template->defineDerivative(width: 100, height: 80);
 
-        self::assertSame([100, 80], $derivative->sizing->ideal_size);
+        self::assertEquals(new Dimensions(100, 80), $derivative->sizing->ideal_size);
         // Omitted $crop defaults to int 0 (a non-bool), so defineDerivative()
         // takes its round()-based numeric branch, not the is_bool() one --
         // that always produces a float, unlike an explicit crop:false (see
@@ -120,7 +121,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         $derivative = $this->template->defineDerivative(width: 100, height: 80, crop: true);
 
         self::assertSame(1, $derivative->sizing->max_crop);
-        self::assertSame([100, 80], $derivative->sizing->min_size);
+        self::assertEquals(new Dimensions(100, 80), $derivative->sizing->min_size);
     }
 
     public function testCropAsAFalseBooleanLeavesCropDisabled(): void
@@ -142,7 +143,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     {
         $derivative = $this->template->defineDerivative(width: 100, height: 80, crop: 50, minWidth: 50);
 
-        self::assertSame([50, 80], $derivative->sizing->min_size);
+        self::assertEquals(new Dimensions(50, 80), $derivative->sizing->min_size);
     }
 
     public function testMinWidthGreaterThanWidthIsFatal(): void
@@ -157,7 +158,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     {
         $derivative = $this->template->defineDerivative(width: 100, height: 80, crop: 50, minHeight: 50);
 
-        self::assertSame([100, 50], $derivative->sizing->min_size);
+        self::assertEquals(new Dimensions(100, 50), $derivative->sizing->min_size);
     }
 
     public function testMinHeightGreaterThanHeightIsFatal(): void

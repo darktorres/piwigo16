@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
@@ -28,7 +29,7 @@ test('use_watermark/sharpen/last_mod_time/type default to their documented value
 });
 
 test('addUrlTokens delegates to the sizing object', function (): void {
-    $params = new DerivativeParams(new SizingParams([100, 200], 0.0, null));
+    $params = new DerivativeParams(new SizingParams(new Dimensions(100, 200), 0.0, null));
     $tokens = [];
     $params->addUrlTokens($tokens);
 

@@ -62,18 +62,18 @@ final class DerivativeParams
      */
     public function computeFinalSize(array $in_size): array
     {
-        $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
-        return $scale_size !== null ? array_map(intval(...), $scale_size) : $in_size;
+        $this->sizing->compute(new Dimensions($in_size[0], $in_size[1]), null, $crop_rect, $scale_size);
+        return $scale_size instanceof Dimensions ? [(int) $scale_size->width, (int) $scale_size->height] : $in_size;
     }
 
     public function maxWidth(): int
     {
-        return $this->sizing->ideal_size[0];
+        return (int) $this->sizing->ideal_size->width;
     }
 
     public function maxHeight(): int
     {
-        return $this->sizing->ideal_size[1];
+        return (int) $this->sizing->ideal_size->height;
     }
 
     /**
@@ -82,8 +82,8 @@ final class DerivativeParams
      */
     public function isIdentity(array $in_size): bool
     {
-        if ($in_size[0] > $this->sizing->ideal_size[0] or
-            $in_size[1] > $this->sizing->ideal_size[1]) {
+        if ($in_size[0] > $this->sizing->ideal_size->width or
+            $in_size[1] > $this->sizing->ideal_size->height) {
             return false;
         }
         return true;

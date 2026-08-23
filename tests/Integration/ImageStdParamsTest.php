@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\WatermarkParams;
@@ -298,7 +299,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
         $defined = $this->imageStdParams->getDefinedTypeMap();
         self::assertSame(['thumb'], array_keys($defined));
-        self::assertSame([100, 100], $defined['thumb']->sizing->ideal_size);
+        self::assertEquals(new Dimensions(100, 100), $defined['thumb']->sizing->ideal_size);
         self::assertSame('thumb', $defined['thumb']->type);
 
         $disabledTypeMap = $this->imageStdParams->getDisabledTypeMap();
@@ -324,9 +325,9 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
         $large = $this->imageStdParams->getCustom(600, 400, 0.3, 200, 150);
 
-        self::assertSame([600, 400], $large->sizing->ideal_size);
+        self::assertEquals(new Dimensions(600, 400), $large->sizing->ideal_size);
         self::assertSame(0.3, $large->sizing->max_crop);
-        self::assertSame([200, 150], $large->sizing->min_size);
+        self::assertEquals(new Dimensions(200, 150), $large->sizing->min_size);
         self::assertSame(ImageStdParams::CUSTOM, $large->type);
         // applyGlobal() compares the watermark's min_size against this
         // type's own ideal_size (600x400): 80<=600, so watermarking applies.
@@ -340,7 +341,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
         $small = $this->imageStdParams->getCustom(50, 40);
 
-        self::assertSame([50, 40], $small->sizing->ideal_size);
+        self::assertEquals(new Dimensions(50, 40), $small->sizing->ideal_size);
         self::assertSame(0, $small->sizing->max_crop);
         self::assertNull($small->sizing->min_size);
         // 80<=50 and 80<=40 are both false -- no watermarking for this
@@ -378,7 +379,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $this->imageStdParams->setWatermark($watermark);
         $this->imageStdParams->setQuality(82);
 
-        $params = new DerivativeParams(new SizingParams([500, 400], 0.5, [200, 150]));
+        $params = new DerivativeParams(new SizingParams(new Dimensions(500, 400), 0.5, new Dimensions(200, 150)));
         $params->sharpen = 0.25;
         $params->last_mod_time = 1_800_000_000;
 
@@ -412,9 +413,9 @@ final class ImageStdParamsTest extends IntegrationTestCase
         self::assertSame(82, $this->imageStdParams->getQuality());
 
         $reloaded = $this->imageStdParams->getDefinedTypeMap()['medium'];
-        self::assertSame([500, 400], $reloaded->sizing->ideal_size);
+        self::assertEquals(new Dimensions(500, 400), $reloaded->sizing->ideal_size);
         self::assertSame(0.5, $reloaded->sizing->max_crop);
-        self::assertSame([200, 150], $reloaded->sizing->min_size);
+        self::assertEquals(new Dimensions(200, 150), $reloaded->sizing->min_size);
         self::assertSame(0.25, $reloaded->sharpen);
         self::assertSame(1_800_000_000, $reloaded->last_mod_time);
 
@@ -647,43 +648,40 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $watermark = new WatermarkParams();
         $watermark->file = 'w.png';
 
-        // Isolates the width (index 0) comparison: min_size[0] equals
-        // ideal_size[0] exactly (80<=80 is true), while the height (index 1)
-        // pair is unambiguously false (9000<=1 isn't) -- so use_watermark
-        // can only end up true here via the width comparison. The extra
-        // -1/1 entries are deliberately chosen so that reading the wrong
-        // array index, using '<'/'>' instead of '<=', or turning the "or"
-        // into an "and" would each flip the result.
+        // Isolates the width comparison: min_size[0] equals ideal_size's
+        // own width exactly (80<=80 is true), while the height pair is
+        // unambiguously false (9000<=1 isn't) -- so use_watermark can only
+        // end up true here via the width comparison. The extra -1 entry on
+        // $watermark->min_size (still a plain array) is deliberately chosen
+        // so that reading the wrong array index there, using '<'/'>'
+        // instead of '<=', or turning the "or" into an "and" would each
+        // flip the result; ideal_size's own width/height are named
+        // Dimensions properties now, so no equivalent decoy-index trick
+        // applies to them -- a width<->height mix-up on that side is
+        // exercised structurally, by using deliberately different values
+        // for each axis instead.
         $watermark->min_size = [
             -1 => 9999,
             0 => 80,
             1 => 9000,
         ];
         $this->imageStdParams->setWatermark($watermark);
-        $params = new DerivativeParams(new SizingParams([
-            -1 => 1,
-            0 => 80,
-            1 => 1,
-        ]));
+        $params = new DerivativeParams(new SizingParams(new Dimensions(80, 1)));
 
         $this->imageStdParams->applyGlobal($params);
 
         self::assertTrue($params->use_watermark);
 
-        // Mirrors the above, isolating the height (index 1) comparison
-        // instead: 80<=80 is true there, while the width (index 0) pair is
-        // unambiguously false (9000<=1 isn't).
+        // Mirrors the above, isolating the height comparison instead:
+        // 80<=80 is true there, while the width pair is unambiguously
+        // false (9000<=1 isn't).
         $watermark->min_size = [
             0 => 9000,
             1 => 80,
             2 => 9999,
         ];
         $this->imageStdParams->setWatermark($watermark);
-        $params2 = new DerivativeParams(new SizingParams([
-            0 => 1,
-            1 => 80,
-            2 => 1,
-        ]));
+        $params2 = new DerivativeParams(new SizingParams(new Dimensions(1, 80)));
 
         $this->imageStdParams->applyGlobal($params2);
 

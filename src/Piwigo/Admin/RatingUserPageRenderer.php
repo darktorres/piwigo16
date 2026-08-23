@@ -213,7 +213,7 @@ final class RatingUserPageRenderer
             availableRates: $currentConfig->rateItems,
             ratings: $by_user_ratings,
             imageUrls: array_map(static fn (ImageThumbUrl $imageUrl): array => $imageUrl->toArray(), $image_urls),
-            tnWidth: $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size[0],
+            tnWidth: (int) $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->width,
             nbElements: $nb_elements,
             orderByOptions: $order_by_options,
             csrfToken: $csrfService

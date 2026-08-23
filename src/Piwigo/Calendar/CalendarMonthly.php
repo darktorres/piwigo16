@@ -448,7 +448,8 @@ final class CalendarMonthly extends CalendarBase
                 }
             }
 
-            [$cell_width, $cell_height] = $this->imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size;
+            $cell_width = (int) $this->imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->width;
+            $cell_height = (int) $this->imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->height;
 
             $tpl_weeks = [];
             $tpl_crt_week = [];

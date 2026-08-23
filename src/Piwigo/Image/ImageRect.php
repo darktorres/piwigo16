@@ -25,14 +25,14 @@ final class ImageRect
     public int|float $b;
 
     /**
-     * @param int[] $l width and height
+     * @param Dimensions $l width and height
      */
     public function __construct(
-        array $l
+        Dimensions $l
     ) {
         $this->l = $this->t = 0;
-        $this->r = $l[0];
-        $this->b = $l[1];
+        $this->r = $l->width;
+        $this->b = $l->height;
     }
 
     public function width(): float

@@ -35,7 +35,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageDuplicateField;
-use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\ImageTextField;
@@ -177,7 +176,7 @@ final readonly class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+            $imageService = $this->imageService;
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()

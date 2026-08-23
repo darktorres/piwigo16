@@ -767,7 +767,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $result = $this->service->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
 
-                self::assertStringContainsString('password.php?key=', $result['password_link']);
+                self::assertStringContainsString('password.php?key=', $result->passwordLink);
             } finally {
                 $this->conn->executeStatement(
                     'UPDATE user_infos SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
@@ -797,7 +797,7 @@ namespace Piwigo\Tests\Integration {
 
                 $result = $this->service->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
 
-                self::assertStringContainsString('password.php?key=', $result['password_link']);
+                self::assertStringContainsString('password.php?key=', $result->passwordLink);
             } finally {
                 $this->conn->executeStatement(
                     'UPDATE user_infos SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'

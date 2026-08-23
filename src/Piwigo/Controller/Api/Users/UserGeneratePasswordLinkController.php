@@ -93,8 +93,8 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
         if ($input->sendByMail && ! in_array($userLostEmail, [null, ''], true)) {
             $userLostUsername = is_string($userLost['username'] ?? null) ? $userLost['username'] : '';
             $emailParams = $firstLogin
-                ? $this->mailService->generateSetPasswordMail($userLostUsername, $generatedLink['password_link'], $galleryTitle, $generatedLink['time_validation'])
-                : $this->mailService->generateResetPasswordMail($userLostUsername, $generatedLink['password_link'], $galleryTitle, $generatedLink['time_validation']);
+                ? $this->mailService->generateSetPasswordMail($userLostUsername, $generatedLink->passwordLink, $galleryTitle, $generatedLink->timeValidation)
+                : $this->mailService->generateResetPasswordMail($userLostUsername, $generatedLink->passwordLink, $galleryTitle, $generatedLink->timeValidation);
 
             // Errors from mail() are suppressed deliberately -- a
             // failed send degrades to sendByMail: false, not a 5xx.
@@ -105,9 +105,9 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
         $this->mailService->switchLangBack();
 
         return ResponseFactory::json([
-            'generatedLink' => $generatedLink['password_link'],
+            'generatedLink' => $generatedLink->passwordLink,
             'sendByMail' => $sendByMailResponse,
-            'timeValidation' => $generatedLink['time_validation'],
+            'timeValidation' => $generatedLink->timeValidation,
         ]);
     }
 }

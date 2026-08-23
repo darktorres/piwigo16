@@ -661,7 +661,8 @@ test('generatePasswordLink() computes the reset link when not the first login', 
         $result = authServiceTestService()
             ->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
 
-        expect($result['password_link'])->toContain('password.php?key=');
+        expect($result->passwordLink)
+            ->toContain('password.php?key=');
     } finally {
         $conn->executeStatement('UPDATE user_infos SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4');
     }
@@ -690,7 +691,8 @@ test('generatePasswordLink() still works for a user locked out of pwgLogin()', f
         $result = authServiceTestService()
             ->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
 
-        expect($result['password_link'])->toContain('password.php?key=');
+        expect($result->passwordLink)
+            ->toContain('password.php?key=');
     } finally {
         $conn->executeStatement('UPDATE user_infos SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4');
         $conn->executeStatement("DELETE FROM user_failed_logins WHERE user_id = 4 AND ip = ''");

@@ -430,7 +430,7 @@ final class PasswordController implements ControllerInterface
             ->switchLangTo($language);
         $user_code = $this->authService->generateUserCode();
         $template_mail = $this->mailService
-            ->generateCodeVerificationMail($user_code['code']);
+            ->generateCodeVerificationMail($user_code->code);
         // $skip_mail already covers $email === null/''), so $email is
         // provably a non-empty string here.
         if (! $skip_mail) {
@@ -447,7 +447,7 @@ final class PasswordController implements ControllerInterface
         $this->passwordResetRequestRepo->recordRequest($is_user_found ? $user_id->value : null, $ip, $nowFormatted);
 
         $_SESSION['reset_password_code'] = [
-            'secret' => $user_code['secret'],
+            'secret' => $user_code->secret,
             'attempts' => 0,
             'user_id' => $is_user_found ? $user_id->value : null,
             'created_at' => time(),

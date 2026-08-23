@@ -18,7 +18,9 @@ use Piwigo\Auth\Projection\AutoLoginKey;
 use Piwigo\Auth\Projection\CreatedUserAuthKey;
 use Piwigo\Auth\Projection\FakeUser;
 use Piwigo\Auth\Projection\FinalizeLoginDecision;
+use Piwigo\Auth\Projection\PasswordResetLink;
 use Piwigo\Auth\Projection\UsernamePassword;
+use Piwigo\Auth\Projection\UserVerificationCode;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -678,10 +680,8 @@ final readonly class AuthService
 
     /**
      * Generate reset password link.
-     *
-     * @return array{time_validation: string, password_link: string}
      */
-    public function generatePasswordLink(int $userId, UrlServiceInterface $urlService, bool $firstLogin = false): array
+    public function generatePasswordLink(int $userId, UrlServiceInterface $urlService, bool $firstLogin = false): PasswordResetLink
     {
 
         $activation_key = $this->sessionService->generateKey(20);
@@ -705,10 +705,10 @@ final readonly class AuthService
         }
         $time_validation = DateHelper::timeSince($validation_timestamp, 'second', null, false);
 
-        return [
-            'time_validation' => $time_validation,
-            'password_link' => $password_link,
-        ];
+        return new PasswordResetLink(
+            timeValidation: $time_validation,
+            passwordLink: $password_link,
+        );
     }
 
     /**
@@ -738,10 +738,8 @@ final readonly class AuthService
 
     /**
      * Generate a user code for verification.
-     *
-     * @return array{secret: string, code: string}
      */
-    public function generateUserCode(): array
+    public function generateUserCode(): UserVerificationCode
     {
 
         $secret = Totp::generateSecret();
@@ -751,10 +749,7 @@ final readonly class AuthService
         $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration;
         $code = Totp::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
 
-        return [
-            'secret' => $secret,
-            'code' => $code,
-        ];
+        return new UserVerificationCode(secret: $secret, code: $code);
     }
 
     public function verifyUserCode(string $secret, string $code): bool

@@ -41,11 +41,18 @@ function makeProfileView(bool $isStandardPagesTheme): ProfileView
     );
 }
 
-test('pageAssets/exposedPageData/exposedStrings are all empty for the default theme', function (): void {
+test('pageAssets registers core.scripts for the default theme (profile_content.latte\'s own password-match check)', function (): void {
     $view = makeProfileView(false);
 
     expect($view->pageAssets())
-        ->toBe([]);
+        ->toEqual([
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+        ]);
+});
+
+test('exposedPageData/exposedStrings are both empty for the default theme', function (): void {
+    $view = makeProfileView(false);
+
     expect($view->exposedPageData())
         ->toBe([]);
     expect($view->exposedStrings())
@@ -66,9 +73,10 @@ test('exposedPageData exposes can_update_password as the inverse of specialUser 
     expect($view->exposedPageData()['can_update_password'])->toBeTrue();
 });
 
-test('exposedStrings returns all 12 strings for standard_pages', function (): void {
+test('exposedStrings returns all 13 strings for standard_pages, including the shared password-match string', function (): void {
     $view = makeProfileView(true);
 
     expect($view->exposedStrings())
-        ->toHaveCount(12);
+        ->toHaveCount(13)
+        ->toContain('The passwords do not match');
 });

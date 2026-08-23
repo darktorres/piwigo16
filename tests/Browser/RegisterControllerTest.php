@@ -23,10 +23,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * behavior.
  *
  * Regression coverage for a fixed bug: submitting
- * the register form with `send_password_by_mail` checked -- register.latte's
- * own checkbox is `checked="checked"` UNCONDITIONALLY, so this is what
- * every real browser submission sends by default, not an edge case -- used
- * to make the request hang for minutes instead of responding.
+ * the register form with `send_password_by_mail` checked -- used to make
+ * the request hang for minutes instead of responding.
  * UserService::registerUser()'s mail-sending path went through
  * MailService::mail()'s underlying transport with no timeout of its own in
  * this environment (no smtp_host configured -> Symfony Mailer's own
@@ -37,7 +35,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * fails) within a bounded ~10s regardless of transport health. Most POSTs
  * below still omit `send_password_by_mail` to stay fast when they're
  * testing something else entirely; the one dedicated test below exercises
- * the checked-by-default path itself.
+ * this explicitly-checked path directly.
+ *
+ * register.latte's own `send_password_by_mail` checkbox now defaults
+ * unchecked (a separate fix -- a fresh registration used to email the new
+ * user's own password by default, over a non-secure channel, regardless
+ * of whether this mail-hang bug had already struck) -- the dedicated test
+ * below submits `send_password_by_mail => 'on'` explicitly rather than
+ * relying on any template-rendered default, so it stays a real test of
+ * this transport-level fix either way.
  */
 
 /**
@@ -232,6 +238,27 @@ it('registers a brand-new user, auto-logs them in, and creates the real DB row',
     expect($result['body'])->toContain('act=logout');
     expect(registerUserExists($username))
         ->toBeTrue();
+
+    @unlink($jar);
+});
+
+it('renders send_password_by_mail unchecked by default on a fresh GET', function (): void {
+    $jar = registerFreshCookieJar();
+    $get = registerCurl($jar, '/register.php');
+
+    expect($get['status'])->toBe(200);
+    // A real DOM-agnostic string match, matching registerExtractKey()'s
+    // own approach in this same file -- the checkbox's own <input> tag
+    // must carry no checked attribute at all now that
+    // RegisterView::$formSendPasswordByMail defaults to false on a plain
+    // GET (RegisterSubmitRequest::$sendPasswordByMail reads
+    // isset($post['send_password_by_mail']), unconditionally false when
+    // $_POST is empty).
+    if (preg_match('/<input[^>]*name="send_password_by_mail"[^>]*>/', $get['body'], $matches) !== 1) {
+        throw new RuntimeException('Could not find the send_password_by_mail checkbox in: ' . $get['body']);
+    }
+    expect($matches[0])
+        ->not->toContain('checked');
 
     @unlink($jar);
 });

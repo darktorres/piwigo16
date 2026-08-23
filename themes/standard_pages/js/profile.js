@@ -145,6 +145,28 @@ $(function() {
       setInfos({ ...passwords });
       $('#password-section input').val('');
     });
+
+    // Live mirror of ProfileFormHandler's own server-side password-match
+    // check -- the AJAX save above remains authoritative either way.
+    // Reuses #password_conf's own existing sibling .error-message <p>,
+    // same element/convention the empty-field check above already
+    // shows/hides.
+    (function () {
+      const newPassword = $('#password_new');
+      const confirmPassword = $('#password_conf');
+      const errorMessage = confirmPassword.closest('.column-flex').find('.error-message');
+
+      function check() {
+        if (confirmPassword.val() !== '' && newPassword.val() !== confirmPassword.val()) {
+          errorMessage.html('<i class="gallery-icon-attention-circled"></i> ' + pwg_getPageString('The passwords do not match')).show();
+        } else {
+          errorMessage.hide();
+        }
+      }
+
+      newPassword.on('blur keyup', check);
+      confirmPassword.on('blur keyup', check);
+    })();
   }
   
 

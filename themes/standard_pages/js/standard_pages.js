@@ -142,3 +142,67 @@ jQuery("#toggle_mode_dark").click(function() {
 jQuery("#other-languages").on("click", "[data-lang-code]", function() {
   setCookie('lang', jQuery(this).data("langCode"), 30);
 });
+
+// Live mirrors of server-side checks already run on submit
+// (RegisterController's/PasswordController's own password-match check,
+// UserService::validateMailAddress()'s own format check) -- the server
+// remains authoritative either way. Reuses each field's own existing
+// sibling .error-message <p> (the same element the required-field check
+// above already shows/hides), rather than adding new markup. Scoped to
+// each page's own root section id (#register-form/#password-form) --
+// this file loads on profile.latte too (see ProfileView::pageAssets()),
+// which reuses the SAME #password/#password_conf ids for an unrelated
+// field pair (current-password re-entry + new-password confirmation,
+// paired with #password_new, not #password) -- an unscoped bind here
+// would silently misfire there.
+function pwg_checkPasswordMatchStdPages(rootId, pass1Id, pass2Id) {
+  var root = jQuery('#' + rootId);
+  if (root.length === 0) {
+    return;
+  }
+  var pass1 = root.find('#' + pass1Id);
+  var pass2 = root.find('#' + pass2Id);
+  if (pass1.length === 0 || pass2.length === 0) {
+    return;
+  }
+  var errorMessage = pass2.closest('.column-flex').find('.error-message');
+
+  function check() {
+    if (pass2.val() !== '' && pass1.val() !== pass2.val()) {
+      errorMessage.html('<i class="gallery-icon-attention-circled"></i> ' + pwg_getPageString('The passwords do not match')).show();
+    } else {
+      errorMessage.hide();
+    }
+  }
+
+  pass1.on('blur keyup', check);
+  pass2.on('blur keyup', check);
+}
+
+function pwg_checkEmailFormatStdPages(rootId, fieldId) {
+  var root = jQuery('#' + rootId);
+  if (root.length === 0) {
+    return;
+  }
+  var field = root.find('#' + fieldId);
+  if (field.length === 0) {
+    return;
+  }
+  var errorMessage = field.closest('.column-flex').find('.error-message');
+
+  function check() {
+    if (field.val() !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.val())) {
+      errorMessage.html('<i class="gallery-icon-attention-circled"></i> ' + pwg_getPageString('mail address must be like xxx@yyy.eee (example : jack@altern.org)')).show();
+    } else {
+      errorMessage.hide();
+    }
+  }
+
+  field.on('blur', check);
+}
+
+jQuery(document).ready(function() {
+  pwg_checkPasswordMatchStdPages('register-form', 'password', 'password_conf');
+  pwg_checkEmailFormatStdPages('register-form', 'mail_address');
+  pwg_checkPasswordMatchStdPages('password-form', 'use_new_pwd', 'passwordConf');
+});

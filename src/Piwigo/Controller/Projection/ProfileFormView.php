@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Override;
 use Piwigo\Contribution\FieldOverride;
 use Piwigo\Contribution\FormProvider;
 use Piwigo\Contribution\ProfileField;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -25,7 +27,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `$pluginFormProviders` is `$template->formProviders()`.
  */
 #[Template('profile_content.latte')]
-final readonly class ProfileFormView implements View
+final readonly class ProfileFormView implements View, ExposesPageData
 {
     /**
      * @param array<int|string, string> $templateOptions
@@ -58,4 +60,34 @@ final readonly class ProfileFormView implements View
         public array $pluginFieldOverrides,
         public array $pluginFormProviders,
     ) {}
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * The same translated string {@see \Piwigo\Controller\ProfileFormHandler}'s
+     * own server-side password-match check uses -- mirrored client-side
+     * by `themes/default/js/scripts.js`'s own check on `#use_new_pwd`/
+     * `#passwordConf` (the same field ids `password.latte` itself uses,
+     * see this class's own docblock). Rendered via `Renderer::render()`
+     * inside `ProfileController::__invoke()` before the outer
+     * `ProfileView` renders, so this lands in the same
+     * `<script id="page-data">` island that page's own `{=getPageDataScript()}`
+     * call prints.
+     *
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'The passwords do not match',
+        ];
+    }
 }

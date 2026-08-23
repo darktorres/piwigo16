@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -25,7 +26,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `IdentificationView`'s own do.
  */
 #[Template('password.latte')]
-final readonly class PasswordView implements View, HasPageAssets
+final readonly class PasswordView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, string> $languageOptions
@@ -83,5 +84,29 @@ final readonly class PasswordView implements View, HasPageAssets
         }
 
         return $assets;
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * The same translated string {@see \Piwigo\Controller\PasswordController}'s
+     * own server-side password-match check uses -- mirrored client-side
+     * in both themes' own JS.
+     *
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'The passwords do not match',
+        ];
     }
 }

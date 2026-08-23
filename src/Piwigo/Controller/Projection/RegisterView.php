@@ -10,6 +10,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Contribution\AuthButton;
 use Piwigo\Contribution\ProfileField;
+use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -32,7 +33,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `IdentificationView` itself makes.
  */
 #[Template('register.latte')]
-final readonly class RegisterView implements View, HasPageAssets
+final readonly class RegisterView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param array<string, string> $languageOptions
@@ -53,6 +54,7 @@ final readonly class RegisterView implements View, HasPageAssets
         public string $standardPagesSelectedSkin,
         public array $pluginRegisterFields,
         public array $pluginAuthButtons,
+        public bool $formSendPasswordByMail,
     ) {}
 
     /**
@@ -76,6 +78,32 @@ final readonly class RegisterView implements View, HasPageAssets
         return [
             AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('login');"),
+        ];
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null|array<mixed>>
+     */
+    #[Override]
+    public function exposedPageData(): array
+    {
+        return [];
+    }
+
+    /**
+     * The same 2 translated strings the server itself validates with
+     * (`RegisterController::__invoke()`'s own password-match check,
+     * `UserService::validateMailAddress()`'s own format check) --
+     * mirrored client-side in both themes' own JS.
+     *
+     * @return list<string>
+     */
+    #[Override]
+    public function exposedStrings(): array
+    {
+        return [
+            'The passwords do not match',
+            'mail address must be like xxx@yyy.eee (example : jack@altern.org)',
         ];
     }
 }

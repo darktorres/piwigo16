@@ -76,3 +76,17 @@ test('pageAssets registers the standard_pages theme\'s own asset list when stand
             AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
         ]);
 });
+
+test('exposedStrings returns the password-match translated string', function (): void {
+    $view = makePasswordView(false, 'reset');
+
+    expect($view->exposedStrings())
+        ->toBe(['The passwords do not match']);
+});
+
+test('exposedPageData returns no dynamic data', function (): void {
+    $view = makePasswordView(false, 'reset');
+
+    expect($view->exposedPageData())
+        ->toBe([]);
+});

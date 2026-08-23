@@ -304,6 +304,7 @@ final readonly class RegisterController implements ControllerInterface
             standardPagesSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
             pluginRegisterFields: $template->registerFields(),
             pluginAuthButtons: $template->authButtons(),
+            formSendPasswordByMail: $registerSubmit->sendPasswordByMail,
         );
 
         new PageHeaderRenderer()

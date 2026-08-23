@@ -22,6 +22,7 @@ function makeRegisterView(bool $isStandardPagesTheme): RegisterView
         standardPagesSelectedSkin: 'default',
         pluginRegisterFields: [],
         pluginAuthButtons: [],
+        formSendPasswordByMail: false,
     );
 }
 
@@ -44,4 +45,21 @@ test('pageAssets registers the standard_pages theme\'s own asset list when stand
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
             AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
         ]);
+});
+
+test('exposedStrings returns the password-match and mail-format translated strings', function (): void {
+    $view = makeRegisterView(false);
+
+    expect($view->exposedStrings())
+        ->toBe([
+            'The passwords do not match',
+            'mail address must be like xxx@yyy.eee (example : jack@altern.org)',
+        ]);
+});
+
+test('exposedPageData returns no dynamic data', function (): void {
+    $view = makeRegisterView(false);
+
+    expect($view->exposedPageData())
+        ->toBe([]);
 });

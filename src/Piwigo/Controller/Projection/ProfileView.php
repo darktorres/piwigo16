@@ -94,7 +94,15 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         if (! $this->isStandardPagesTheme) {
-            return [];
+            // The default theme's own profile_content.latte (embedded via
+            // $profileContent) needs this for its own password-match
+            // check -- normally auto-registered by RegisterView/
+            // PasswordView themselves, this page's own template has zero
+            // registration calls of its own (see this class's own
+            // docblock), so it's registered here instead.
+            return [
+                AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            ];
         }
 
         return [
@@ -153,6 +161,11 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
             'API Key has been successfully revoked.',
             'API Key has been successfully edited.',
             'right now',
+            // Same translated string ProfileFormHandler's own server-side
+            // password-match check uses -- mirrored client-side by
+            // profile.js's own check on this theme's #password_new/
+            // #password_conf fields.
+            'The passwords do not match',
         ];
     }
 }

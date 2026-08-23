@@ -42,6 +42,7 @@
               >* {='Confirm Password'|translate}</label>
             </span>
             <input type="password" name="password_conf" id="password_conf">
+            <span id="password_conf-error" class="field-error"></span>
           </li>
           <li>
             <span class="property">
@@ -55,6 +56,7 @@
               id="mail_address"
               value="{$formEmail}"
             >
+            <span id="mail_address-error" class="field-error"></span>
             {if !$obligatoryUserMailAddress}
               ({='useful when password forgotten'|translate})
             {/if}
@@ -70,7 +72,7 @@
               name="send_password_by_mail"
               id="send_password_by_mail"
               value="1"
-              checked="checked"
+              n:attr="checked: $formSendPasswordByMail ? 'checked' : null"
             >
           </li>
         </ul>

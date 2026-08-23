@@ -746,6 +746,16 @@ INPUT[type="radio"], INPUT[type="checkbox"] {
 	padding: 10px 50px 10px 10px;
 }
 
+.field-error {
+	display: block;
+	color: #f22;
+	font-style: italic;
+}
+
+.field-error:empty {
+	display: none;
+}
+
 /* Informations box */
 .infos {
 	color: #002000;

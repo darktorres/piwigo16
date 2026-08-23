@@ -47,8 +47,14 @@
   </p>
   <hr>
   {if !empty($recentPosts)}
-    </div>
-    <div id="nbm_recent_post">
+    {* Swaps into a new div mid-content: raw text, not a real tracked
+       HTML tag pair -- the closing </div> here belongs to the single,
+       lexically-real <div id="nbm_message"> opened at the top of this
+       file (which, when $recentPosts is empty, is instead closed by
+       the plain </div> at the very end of this file); Latte's
+       HTML-aware parser can't verify that conditional pairing
+       statically. *}
+    {="</div>\n    <div id=\"nbm_recent_post\">"|noescape}
       {foreach $recentPosts as $recent_post}
         <h2>{$recent_post['TITLE']}</h2>
         {$recent_post['HTML_DATA']|noescape}

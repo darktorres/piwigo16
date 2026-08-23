@@ -194,7 +194,7 @@
               class="icon-right goto-update-guide {if !empty($missing['plugins']) or !empty($missing['themes'])} goto-update-guide-disabled{/if}"
               href="{$dockerUpdateGuideUrl}"
               target="_blank"
-            > {='Follow the update guide'|translate}</a>
+            > {='Follow the update guide'|translate}</a></p>
           {else}
           <p><input
               type="submit"
@@ -203,7 +203,7 @@
               {if !empty($missing['plugins']) or !empty($missing['themes']) or isset($majorReleasePhpRequired)}
               disabled="disabled"
               {/if}
-            >
+            ></p>
           {/if}
         <span
           n:if="isset($majorReleasePhpRequired)"

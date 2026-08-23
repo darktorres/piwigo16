@@ -5,11 +5,24 @@
   {foreach $tplThemes as $theme}
     {if $field_name != $theme['STATE']}
       {if $field_name != 'null'}
-        </div>
-        </fieldset>
+        {* Closes the PREVIOUS group's <div class="themeBoxes">/<fieldset>
+           (opened further down, once per group, at the loop's real,
+           lexically-single opening point) -- printed as raw text, not
+           real tracked HTML tags, because Latte's HTML-aware parser
+           verifies element nesting statically against the source order,
+           and this closing pair appears here, textually before their
+           own (lexically single) opening tags later in this same file,
+           even though at runtime they always pair up correctly across
+           loop iterations. *}
+        {="</div>\n        </fieldset>"|noescape}
       {/if}
 
-      <fieldset>
+      {* <fieldset>/<div class="themeBoxes"> below, closing this same
+         way at the very end of the file (also raw text, same
+         reasoning) -- both stay conceptually open past this block's own
+         {/if}, spanning every remaining theme in this group, which
+         Latte's HTML-aware parser can't verify statically either. *}
+      {="<fieldset>"|noescape}
         <legend>
           {if $theme['STATE'] == 'active'}
             <span
@@ -21,7 +34,7 @@
             ></span>{='Inactive Themes'|translate}
           {/if}
         </legend>
-        <div class="themeBoxes">
+        {="<div class=\"themeBoxes\">"|noescape}
           {var $field_name = $theme['STATE']}
         {/if}
 
@@ -132,7 +145,6 @@
       {/if}
     </div>
   {/foreach}
-</div> <!-- themeBoxes -->
-</fieldset>
+{="</div> <!-- themeBoxes -->\n</fieldset>"|noescape}
 
 </div> <!-- themesContent -->

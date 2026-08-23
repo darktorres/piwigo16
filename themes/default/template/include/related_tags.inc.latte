@@ -137,9 +137,10 @@
 <h3 class="related-tags-title">{='Related tags'|translate}</h3>
 
 {foreach $COMBINABLE_TAGS as $tag}
+  {spaceless}
   <span
     class="related-tags {if isset($RELATED_TAGS_DISPLAY) and $RELATED_TAGS_DISPLAY == false} hide{/if}"
-  >{spaceless}
+  >
       {if isset($tag['U_ADD'])}
         <a
           class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"

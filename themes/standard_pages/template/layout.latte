@@ -149,9 +149,12 @@
 
   Unlike themes/default/template/layout.latte, this theme's own original
   header.latte never emitted a header_msgs/theHeader/header_notes chrome
-  block, and its own footer.latte never closed <div id="the_page"> (real
-  browsers handle that fine at end-of-document) -- both kept exactly as-is
-  here, not backfilled with the default theme's own shape.
+  block -- kept exactly as-is here, not backfilled with the default
+  theme's own shape. <div id="the_page"> below WAS left unclosed here
+  too for the same historical reason (real browsers handle that fine at
+  end-of-document) until Latte's own strict HTML parsing (enabled
+  repo-wide) started flagging it -- now closed for real, a harmless,
+  purely structural fix, not a behavior change.
 *}
 <!DOCTYPE html>
 <html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
@@ -189,8 +192,7 @@
   >
     <div id="the_page">
       {block content}{/block}
-    {* <div id="the_page"> above is deliberately never closed -- see this
-       file's own docblock. *}
+    </div>
 
     {=getPageDataScript()}
 

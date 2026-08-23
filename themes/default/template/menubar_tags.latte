@@ -3,7 +3,8 @@
 <dd>
   <div id="menuTagCloud">
     {foreach $block->data as $tag}
-      <span>{spaceless}
+      {spaceless}
+      <span>
           {if isset($tag['U_ADD'])}
             <a
               class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"

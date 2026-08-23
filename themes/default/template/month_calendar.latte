@@ -81,12 +81,12 @@
                 >
               </a>
             </div>
+          </td>
           {else}
-          <td class="calDayCellEmpty">{$day['DAY']}
+          <td class="calDayCellEmpty">{$day['DAY']}</td>
           {/if}
       {else}{*blank cell first or last row only*}
-        <td>{/if}
-      </td>
+        <td></td>{/if}
     {/foreach}{*day in week*}
   </tr>{*week in month*}
 </table>

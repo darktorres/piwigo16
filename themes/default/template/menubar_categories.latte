@@ -16,14 +16,26 @@
   <a href="{$block->data['U_CATEGORIES']|noescape}">{='Albums'|translate}</a>
 </dt>
 <dd>
+  {*
+    Builds a variable-depth <ul>/<li> tree across loop iterations --
+    every <ul>/<li> open and close below is printed as raw text, not a
+    real tracked HTML tag: the actual nesting depth (how many levels to
+    open or close) is only known at runtime (str_repeat'd by
+    $ref_level's own delta between iterations), which Latte's
+    HTML-aware parser -- built for a fixed, statically-analyzable tag
+    structure -- can't verify. Only the genuinely self-contained inner
+    content per item (the <a>/<span>/<img> below) stays as real tracked
+    HTML, since each of those opens and closes within one iteration.
+  *}
   {var $ref_level = 0}
   {foreach $block->data['MENU_CATEGORIES'] as $cat}
     {if $cat['LEVEL'] > $ref_level}
-      <ul>{else}
-      </li>
+      {="<ul>"|noescape}
+    {else}
+      {="</li>"|noescape}
       {='</ul></li>'|str_repeat:($ref_level - $cat['LEVEL'])|noescape}
     {/if}
-    <li {if $cat['SELECTED']} class="selected" {/if}>
+    {="<li" . ($cat['SELECTED'] ? ' class="selected"' : '') . ">"|noescape}
       <a
         href="{$cat['URL']|noescape}"
         {if $cat['IS_UPPERCAT']}

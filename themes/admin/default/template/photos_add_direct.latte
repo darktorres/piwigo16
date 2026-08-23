@@ -145,7 +145,7 @@
           title='{='Edit photo'|translate}'
         >
           <div class='info-framed-icon'>
-            <img src='{$formatsOriginalInfo['src']|noescape}'></i>
+            <img src='{$formatsOriginalInfo['src']|noescape}'>
           </div>
           <div class='info-framed-container'>
             <div
@@ -215,11 +215,9 @@
               >{='The original picture will be detected with the filename (without extension).'|translate}</p>
             {/if}
           </p>
-          </p>
           {if isset($maxUploadResolution)}
             {='Approximate maximum resolution: %dM pixels (that\'s %dx%d pixels).'|translate:$maxUploadResolution,$maxUploadWidth,$maxUploadHeight}
           {/if}
-          </p>
         </div>
       </div>
       <div

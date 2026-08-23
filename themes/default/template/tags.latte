@@ -59,8 +59,14 @@
             </table>
           </fieldset>
           {if isset($letter['CHANGE_COLUMN'])}
-            </td>
-            <td valign="top">{/if}
+            {* Starts a new column mid-loop: raw text, not a real tracked
+               HTML tag pair, because this </td><td> pairing spans across
+               loop iterations from the single, lexically-real <td
+               valign="top"> opened before this {foreach} (and closed
+               once, after it) -- Latte's HTML-aware parser can't verify
+               that cross-iteration pairing statically. *}
+            {="</td>\n            <td valign=\"top\">"|noescape}
+          {/if}
         {/foreach}
       </td>
     </tr>

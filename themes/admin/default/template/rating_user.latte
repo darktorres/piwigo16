@@ -61,8 +61,8 @@
     </tr>
   </thead>
   {foreach $ratings as $user => $rating}
-    <tr data-usr='{"uid":{$rating["uid"]},"aid":"{$rating["aid"]}"}'>
       {spaceless}
+        <tr data-usr='{"uid":{$rating["uid"]},"aid":"{$rating["aid"]}"}'>
         <td class="usr">{$user}</td><td
           title="First: {$rating['first_date']}"
         >{$rating['last_date']}</td>

@@ -147,6 +147,7 @@ Three structural changes produced that drift:
 | P54 | Dark mode (new feature) | Not started | 0 |
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
+| P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4299,7 +4300,101 @@ phase — no ordering constraint, land whenever convenient. Re-verify
 every call-site count above at execution time rather than trusting this
 snapshot to stay accurate.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P56 backbone)
+**P57 — `default`/`standard_pages` theme-duplication investigation.**
+Found while adding live client-side validation to
+`install`/`register`/`profile`/`password` (a duplicate `id="login"` on
+`standard_pages/register.latte`'s own email field, a bug this exact
+duplication let go unnoticed). Scope, investigate-not-prescribe: does the
+`default`/`standard_pages` split across these 4 page families still earn
+its keep, or is it worth merging away. A documentation-only phase — no
+code deleted or merged here.
+
+*Full candidate list.* 4 real per-theme splits confirmed:
+`identification.latte`, `register.latte`, `password.latte`,
+`profile.latte`/`profile_content.latte`. `toaster.latte` is NOT a 5th —
+`standard_pages`-exclusive, no `default`-theme counterpart at all
+(confirmed via `ProfileView`'s own `ToasterView` merge-in, gated
+entirely on `isStandardPagesTheme`). No other `themes/standard_pages/
+template/*.latte` file was checked against a `default`-theme counterpart
+beyond these 5 candidates — a future revisit of this phase should
+re-confirm the list is still exhaustive rather than trusting this one.
+
+*Real behavior diff, not just markup.* `standard_pages` is a genuine
+superset/modernization across all 4 pages, not a lateral reskin:
+light/dark mode toggle (`toggle_mode()`, a real per-page cookie-backed
+preference), a language switcher menu, a `helpLink`, icon-led inputs,
+and a real per-field `.error-message` UI convention (already wired to
+show/hide on blur/input by `standard_pages.js`'s own required-field
+check, which this session's own live-validation checks intentionally
+reused rather than duplicating). `default`'s own templates carry none of
+that — plain `<ul><li>` field lists, no live UI feedback beyond what
+this session just added. Field ids mostly line up 1:1 across the two
+implementations for the same semantic field (`username`/`password` on
+identification; `password`/`password_conf`/`mail_address` on register
+after this session's own id fix; `use_new_pwd`/`passwordConf` on
+password) — `profile` is the one real exception: the `default` theme
+embeds `profile_content.latte` (`password`/`use_new_pwd`/`passwordConf`)
+while `standard_pages/profile.latte` hand-writes its own inline form
+with different ids (`password`/`password_new`/`password_conf`) instead
+of embedding it — already flagged once before, in P43-A part 3
+(`ProfileView` "renders its own form inline rather than embedding
+`profile_content.latte`") and worked around there (two independent
+field-contribution collections) rather than resolved. JS-asset wiring is
+a real `if ($this->isStandardPagesTheme) { ... } return [...]` branch on
+every one of these 4 views' own `pageAssets()` — never a shared file —
+so the two implementations' client-side behavior can (and, per the
+`profile` case above, already does) drift independently of each other,
+not just their markup.
+
+*Usage signal: none exists.* `Piwigo\Telemetry\TelemetryPayload`
+(`EnvironmentInfo`/`DatabaseInfo`/`GalleryStats`/`ExtensionStats`) has no
+`use_standard_pages` field, and — more fundamentally — that whole module
+is still assembly-only; its own docblock says sending the payload
+anywhere "is out of scope here". There is no live signal, anonymous or
+otherwise, for how many real deployments actually run with
+`use_standard_pages` off. `InstallDefaultConfig::rows()` sets it `true`
+for every fresh install (Part 5, this session), so `default`'s own
+4 templates are being kept alive today purely for an unmeasured
+opt-out path, not a known-significant one.
+
+*Test coverage gap, partially closed since it was first documented.*
+`docs/PLAN.md`'s own P38-era note recorded that `test:golden-html`'s
+`golden_html_test` fixture theme never triggered the
+`use_standard_pages` swap at all. That's no longer fully true:
+`GoldenHtmlSnapshotTest.php`'s `goldenHtmlCapturesStandardPages()` now
+captures real `standard-pages-identification`/`-register`/`-password`
+output (confirmed live this session, reviewing the real diffs Part 6's
+own id fix produced against these 3 snapshots). `profile` is the one
+still-open exception: `Template::setTheme()`'s own `standard_pages`
+fallback only fires for `identification`/`register`/`password`, never
+`profile` — confirmed live this session (the "`standard-pages-profile`"
+snapshot's own diff, from this session's `ProfileView`/
+`profile_content.latte` changes, showed `default`-theme markers
+throughout — `<script src="themes/default/js/scripts.js">`, no
+`gallery-icon-*` classes — despite its name). `standard_pages/
+profile.latte`'s own real rendered output, including its own
+`password_new`/`password_conf` fields, has still never been captured by
+`test:golden-html` at all.
+
+*Conclusion.* Not a drive-by merge candidate — `profile`'s already-live
+field-shape divergence (`password_new` vs. `use_new_pwd`) means "delete
+`default`'s copies, keep `standard_pages`'s" isn't a no-op rename, and
+`standard_pages/profile.latte`'s own real output has zero golden-html
+coverage to catch a mistake made while doing it. Recommended direction,
+not decided here: `standard_pages` is the one worth keeping long-term
+(real UX superset, defaults on for every fresh install) — but a real
+merge should wait on two prerequisites this phase surfaced rather than
+resolved: (1) closing the `profile` golden-html gap above, so a removal
+step has real regression coverage; (2) some real signal on how many live
+deployments actually run `use_standard_pages` off, which today would
+mean building out `TelemetryService`'s own unimplemented transmission
+half first, not just adding one more field to the payload it already
+assembles. Until both land, keep both trees and keep them from drifting
+further apart (the `profile` id mismatch above is the cautionary
+example) rather than committing to either merge or permanent
+duplication.
+
+## Greenfield tracks (T3, cuttable — outside the P0–P57 backbone)
 
 All entirely cuttable, never gating a backbone commit, dropped first on
 overrun. None have started; each depends on backbone phases that have not

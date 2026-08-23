@@ -50,6 +50,16 @@
         </div>
 
         {if isset($install)}
+          <div class="writable-checklist">
+            <p>{='Filesystem permissions'|translate}</p>
+            <ul>
+              <li
+                n:foreach="$writableChecks as $check"
+                class="{$check['writable'] ? 'writable-ok' : 'writable-bad'}"
+              >{$check['writable'] ? '✓' : '✗'} {$check['label']|translate}: <code>{$check['path']}</code></li>
+            </ul>
+          </div>
+
           <form method="POST" action="{$fAction|noescape}" name="install_form">
             <fieldset>
               <legend>{='Basic configuration'|translate}</legend>

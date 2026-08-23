@@ -35,6 +35,7 @@ function makeInstallView(array $themes): InstallView
         dedupErrorStrings: [],
         hasExistingInstall: null,
         overwriteToken: null,
+        writableChecks: [],
     );
 }
 

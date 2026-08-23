@@ -530,6 +530,46 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertNotNull($this->reflectPrivate($wizard, 'conn'));
     }
 
+    /**
+     * Same read-only-root technique as
+     * testPerformInstallRecordsAnErrorWhenTheEnvFileCannotBeWritten below,
+     * moved a whole step earlier: this proves the error surfaces at
+     * analyzeForm() time, before any DB/schema work even starts, not just
+     * later when InstallEnvWriter::write() itself finally attempts the
+     * write inside performInstall().
+     */
+    public function testAnalyzeFormBlocksWithAnErrorWhenTheRootDirectoryIsNotWritable(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+            'admin_name' => 'p17readonly',
+            'admin_pass1' => 'Readonly-Secret-1!',
+            'admin_pass2' => 'Readonly-Secret-1!',
+            'admin_mail' => 'readonly@example.test',
+            'install' => '1',
+        ]);
+
+        chmod($this->tempRoot, 0o555);
+        try {
+            $wizard->analyzeForm();
+        } finally {
+            chmod($this->tempRoot, 0o777);
+        }
+
+        self::assertTrue($wizard->hasErrors());
+        self::assertStringContainsString('Could not write', $this->reflectErrorsJoined($wizard));
+        // The DB connection attempt still runs -- this check doesn't
+        // short-circuit the rest of analyzeForm(), it only adds its own
+        // blocking error alongside whatever else the real submit surfaces.
+        self::assertNotNull($this->reflectPrivate($wizard, 'conn'));
+    }
+
     // ------------------------------------------------------------- render() (step 1)
 
     public function testRenderOutputsTheInitialInstallFormWithTheSubmittedFieldValuesPrefilled(): void
@@ -554,6 +594,10 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertStringContainsString('value="submitted-db"', $output);
         // Step 1 never shows the post-install congratulations text.
         self::assertStringNotContainsString('Congratulations', $output);
+        // The writable-directory checklist (Part 4) is always visible on
+        // step 1, computed by boot() with zero operator input.
+        self::assertStringContainsString('writable-checklist', $output);
+        self::assertStringContainsString(htmlspecialchars($this->tempRoot), $output);
     }
 
     /**

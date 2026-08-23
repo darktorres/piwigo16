@@ -38,6 +38,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
      * @param array<int, string>|null $infos
      * @param list<mixed> $themes
      * @param list<string> $dedupErrorStrings
+     * @param list<array{path: string, label: string, writable: bool}> $writableChecks
      */
     public function __construct(
         public ?string $languageSelection,
@@ -63,6 +64,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         public array $dedupErrorStrings,
         public ?bool $hasExistingInstall,
         public ?string $overwriteToken,
+        public array $writableChecks,
     ) {}
 
     /**

@@ -132,6 +132,15 @@ final class InstallWizard
      */
     private ?string $overwriteToken = null;
 
+    /**
+     * Set by boot() -- {@see InstallEnvironmentChecker::checkWritableDirectories()}'s
+     * own return shape, threaded through to render()'s InstallView for the
+     * always-visible writable-directory checklist.
+     *
+     * @var list<array{path: string, label: string, writable: bool}>
+     */
+    private array $writableChecks = [];
+
     private string $language = 'en_UK';
 
     private Template $template;
@@ -308,6 +317,9 @@ final class InstallWizard
                 200,
             ));
         }
+
+        $this->writableChecks = new InstallEnvironmentChecker()
+            ->checkWritableDirectories($this->paths);
 
         $this->fsLanguages = new ExtensionScanner()
             ->scanLanguages($this->paths, $this->currentConfig, EntityManagerFactory::build(DbConnection::build()), 'utf-8');
@@ -509,6 +521,18 @@ final class InstallWizard
 
     public function analyzeForm(): void
     {
+        // Mirrors the exact failure InstallEnvWriter::write() would hit
+        // later in performInstall() (same message, that class's own
+        // untranslated convention for this one error) -- surfaced here
+        // instead, before any DB work even starts, where the operator can
+        // still act on it. $paths->root specifically: the one entry in
+        // $this->writableChecks InstallEnvWriter::write() actually writes
+        // into ({@see Env::testModeEnvFile()} resolves to a bare filename
+        // directly under root).
+        if (! is_writable($this->paths->root)) {
+            $this->errors[] = 'Could not write ' . $this->paths->root . Env::testModeEnvFile() . ' — check filesystem permissions.';
+        }
+
         $this->conn = $this->attemptDbConnection();
 
         // Never trusts the client-reported live-check result for the
@@ -741,6 +765,7 @@ final class InstallWizard
             themes: $themes,
             hasExistingInstall: $this->hasExistingInstall,
             overwriteToken: $this->overwriteToken,
+            writableChecks: $this->writableChecks,
             // The 3 messages install.js already mirrors inline near their
             // own field -- deduped out of the top-of-page list so a
             // failed submit doesn't show each one twice. Same

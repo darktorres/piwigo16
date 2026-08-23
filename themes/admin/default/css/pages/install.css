@@ -144,6 +144,29 @@ select:focus {
   padding: 5px 10px;
 }
 
+.writable-checklist {
+  text-align: left;
+  margin-top: 10px;
+}
+
+.writable-checklist ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.writable-checklist code {
+  font-size: 11px;
+}
+
+.writable-checklist .writable-ok {
+  color: #2a7a2a;
+}
+
+.writable-checklist .writable-bad {
+  color: #c0392b;
+  font-weight: bold;
+}
+
 .field-error {
   display: block;
   color: #f22;

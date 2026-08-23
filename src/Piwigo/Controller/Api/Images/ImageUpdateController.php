@@ -153,9 +153,9 @@ final readonly class ImageUpdateController implements ControllerInterface
             }
 
             if ($input->multipleValueMode === 'replace') {
-                $this->tagService->setTags($tagIds, $imageIdValue);
+                $this->tagService->setTags($tagIds, $imageIdValue, $this->imageService);
             } else {
-                $this->tagService->addTags($tagIds, [$imageIdValue]);
+                $this->tagService->addTags($tagIds, [$imageIdValue], $this->imageService);
             }
         }
 

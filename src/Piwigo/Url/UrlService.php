@@ -23,22 +23,18 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Image\ImageEntity;
-use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -113,21 +109,8 @@ final readonly class UrlService implements UrlServiceInterface
     }
 
     /**
-     * Same reasoning as currentLogger() above.
-     */
-    private function sessionService(): SessionService
-    {
-        $sessionService = Kernel::container()->get(SessionService::class);
-        if (! $sessionService instanceof SessionService) {
-            throw new LogicException('Container returned an unexpected type for ' . SessionService::class);
-        }
-
-        return $sessionService;
-    }
-
-    /**
-     * Same reasoning as currentLogger()/sessionService() above -- used only
-     * inside the one `new CategoryService(...)` construction below.
+     * Same reasoning as currentLogger() above -- used only inside the one
+     * `new CategoryService(...)` construction below.
      */
     private function translator(): Translator
     {
@@ -140,26 +123,10 @@ final readonly class UrlService implements UrlServiceInterface
     }
 
     /**
-     * Same reasoning as currentLogger()/sessionService()/translator()
-     * above -- used only to satisfy the throwaway `new ImageService(...)`
-     * construction below (TagService's own ImageService collaborator is
-     * never actually read on this findTags() call path).
-     */
-    private function paths(): Paths
-    {
-        $paths = Kernel::container()->get(Paths::class);
-        if (! $paths instanceof Paths) {
-            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
-        }
-
-        return $paths;
-    }
-
-    /**
-     * Same reasoning as currentLogger()/sessionService()/translator()
-     * above -- used only inside this class's own permissionService()
-     * resolver below. Falls back to a fresh, uninitialised instance when
-     * `Kernel::boot()` hasn't run.
+     * Same reasoning as currentLogger()/translator() above -- used only
+     * inside this class's own permissionService() resolver below. Falls
+     * back to a fresh, uninitialised instance when `Kernel::boot()` hasn't
+     * run.
      */
     private function filterState(): FilterState
     {
@@ -182,11 +149,10 @@ final readonly class UrlService implements UrlServiceInterface
      * $entityManager's own getRepository() call, CurrentUser is already a
      * constructor property, and FilterState/AccessLevelChecker come from
      * this class's own filterState()/accessLevelChecker() resolvers above
-     * -- no container resolve needed. Used at this class's own 3 `new
+     * -- no container resolve needed. Used at this class's own 2 `new
      * PermissionService(...)` construction sites this replaces
-     * (parseSectionUrl()'s categories branch, and twice more inside its
-     * tags branch's nested TagService/ImageService/CategoryService
-     * construction).
+     * (parseSectionUrl()'s categories branch, via categoryService() below,
+     * and once more directly for the tags branch's own TagService).
      */
     private function permissionService(): PermissionService
     {
@@ -202,10 +168,9 @@ final readonly class UrlService implements UrlServiceInterface
 
     /**
      * Same "built from this class's own already-resolvable properties"
-     * rationale as permissionService() above. Used at this class's own 2
-     * `new CategoryService(...)` construction sites this replaces
-     * (parseSectionUrl()'s categories branch, and once more inside its
-     * tags branch's nested TagService/ImageService construction).
+     * rationale as permissionService() above. Used at this class's own 1
+     * `new CategoryService(...)` construction site this replaces
+     * (parseSectionUrl()'s categories branch).
      */
     private function categoryService(): CategoryService
     {
@@ -878,7 +843,7 @@ final readonly class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
-            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), $this->permissionService(), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger(), new ImageService($this->entityManager->getRepository(ImageEntity::class), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->sessionService(), $this->eventDispatcher, $this->currentConfig, $this->paths(), $this->categoryService()))
+            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), $this->permissionService(), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

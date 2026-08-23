@@ -243,7 +243,6 @@ namespace Piwigo\Tests\Integration {
                 $currentUser,
                 CurrentConfigTestFactory::get(),
                 new CurrentLogger(),
-                $this->maintenanceActionDispatcherTestImageService(),
             );
         }
 

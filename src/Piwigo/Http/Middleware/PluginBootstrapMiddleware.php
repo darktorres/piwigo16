@@ -237,7 +237,6 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->currentUser,
             $this->currentConfig,
             $this->currentLogger,
-            $this->imageService($conn),
         );
     }
 

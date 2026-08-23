@@ -48,6 +48,16 @@ use Piwigo\Users\CurrentUser;
  * shape as ActivityLoggerInterface above -- their real callers already
  * construct an HtmlService for their own unrelated needs, or can trivially
  * do so (all L3/L4/L2b, HtmlService itself injects nothing).
+ *
+ * addTags()/deleteTags()/setTagsOf() each take ImageService as an explicit
+ * parameter rather than a constructor property, for the same "many
+ * construction sites, mostly pure-read" reasoning as
+ * ActivityLoggerInterface/HtmlRenderingInterface above -- most of this
+ * class's ~10 real construction sites (menu rendering, tag listings,
+ * search, metadata sync) never touch any of the 3 write methods, and
+ * ImageService is itself expensive to build (its own EntityManager repo,
+ * ActivityService, SessionService, EventDispatcher, CurrentConfig, Paths,
+ * and CategoryService).
  */
 final readonly class TagService
 {
@@ -67,7 +77,6 @@ final readonly class TagService
         private CurrentUser $currentUser,
         private CurrentConfig $currentConfig,
         private CurrentLogger $currentLogger,
-        private ImageService $imageService,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
     }
@@ -387,12 +396,12 @@ final readonly class TagService
     /**
      * Deletes all tags linked to no photo.
      */
-    public function deleteOrphanTags(EntityManagerInterface $entityManager): void
+    public function deleteOrphanTags(EntityManagerInterface $entityManager, ImageService $imageService): void
     {
         $orphanTags = $this->getOrphanTags();
 
         if ($orphanTags !== []) {
-            $this->deleteTags(array_map(static fn (TagBrief $tag): TagId => $tag->id, $orphanTags), $entityManager);
+            $this->deleteTags(array_map(static fn (TagBrief $tag): TagId => $tag->id, $orphanTags), $entityManager, $imageService);
         }
     }
 
@@ -412,11 +421,11 @@ final readonly class TagService
      *
      * @param list<TagId> $tags
      */
-    public function setTags(array $tags, int $imageId): void
+    public function setTags(array $tags, int $imageId, ImageService $imageService): void
     {
         $this->setTagsOf([
             $imageId => $tags,
-        ]);
+        ], $imageService);
     }
 
     /**
@@ -425,7 +434,7 @@ final readonly class TagService
      * @param list<TagId> $tags see setTags()'s $tags
      * @param int[] $images
      */
-    public function addTags(array $tags, array $images): void
+    public function addTags(array $tags, array $images, ImageService $imageService): void
     {
         if (count($tags) === 0 || count($images) === 0) {
             return;
@@ -455,7 +464,7 @@ final readonly class TagService
 
         $taglistAfter = $this->getImageTagIds($imageIds);
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
-        $this->imageService
+        $imageService
             ->updateImagesLastmodified($imagesToUpdate);
 
         $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
@@ -492,15 +501,15 @@ final readonly class TagService
      *
      * @param list<TagId> $tagIds
      */
-    public function deleteTags(array $tagIds, EntityManagerInterface $entityManager): void
+    public function deleteTags(array $tagIds, EntityManagerInterface $entityManager, ImageService $imageService): void
     {
         // we need the list of impacted images, to update their lastmodified
         $imageIds = $this->repo->findImageIdsForTagIds($tagIds);
 
         $entityManager->getConnection()
-            ->transactional(function () use ($tagIds, $imageIds): void {
+            ->transactional(function () use ($tagIds, $imageIds, $imageService): void {
                 $this->repo->deleteByIds($tagIds);
-                $this->imageService->updateImagesLastmodified($imageIds);
+                $imageService->updateImagesLastmodified($imageIds);
             });
 
         // EventDispatcher/ActivityLoggerInterface are cross-boundary sinks
@@ -593,7 +602,7 @@ final readonly class TagService
      *
      * @param array<int|string, list<TagId>> $tagsOf - keys are image ids, values are array of tag ids
      */
-    public function setTagsOf(array $tagsOf): void
+    public function setTagsOf(array $tagsOf, ImageService $imageService): void
     {
         if (count($tagsOf) === 0) {
             return;
@@ -627,7 +636,7 @@ final readonly class TagService
         $imagesToUpdate = $this->compareImageTagLists($taglistBefore, $taglistAfter);
         $logger->debug('$images_to_update', $imagesToUpdate);
 
-        $this->imageService
+        $imageService
             ->updateImagesLastmodified($imagesToUpdate);
         $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }

@@ -13,6 +13,7 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\CsrfGuard;
 use Piwigo\Http\JsonBody;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\Event\MergeTags;
 use Piwigo\Tag\Projection\ImageTagPair;
@@ -34,6 +35,7 @@ final readonly class TagMergeController implements ControllerInterface
         private ActivityService $activityService,
         private EventDispatcher $eventDispatcher,
         private EntityManagerInterface $entityManager,
+        private ImageService $imageService,
     ) {}
 
     #[Override]
@@ -87,7 +89,7 @@ final readonly class TagMergeController implements ControllerInterface
             array_values(array_map(TagId::from(...), $mergeTagIds))
         ));
 
-        $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $mergeTagIds)), $this->entityManager);
+        $this->tagService->deleteTags(array_values(array_map(TagId::from(...), $mergeTagIds)), $this->entityManager, $this->imageService);
 
         return ResponseFactory::json([
             'destinationTagId' => $input->destinationTagId,

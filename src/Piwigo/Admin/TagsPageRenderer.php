@@ -15,6 +15,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\Event\GetTagAltNames;
 use Piwigo\Tag\Event\RenderTagName;
@@ -40,6 +41,7 @@ final readonly class TagsPageRenderer
         private CsrfService $csrfService,
         private EntityManagerInterface $entityManager,
         private Renderer $renderer,
+        private ImageService $imageService,
     ) {}
 
     public function render(): AdminPageResult
@@ -58,7 +60,7 @@ final readonly class TagsPageRenderer
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $tagService->deleteOrphanTags($this->entityManager);
+            $tagService->deleteOrphanTags($this->entityManager, $this->imageService);
             $_SESSION['message_tags'] = $this->lang->t('Orphan tags deleted');
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }

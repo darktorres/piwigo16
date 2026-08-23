@@ -20,14 +20,10 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Image\ImageEntity;
-use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -88,41 +84,6 @@ function filterPanelTestActivityService(): ActivityService
     return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
 }
 
-function filterPanelTestImageService(): ImageService
-{
-    $conn = DbConnection::build();
-    $currentUser = CurrentUserTestFactory::get();
-    $accessLevelChecker = new AccessLevelChecker($currentUser, new CurrentConfig());
-    $permissionService = new PermissionService(
-        new PermissionRepository(EntityManagerFactory::build($conn)),
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        new CategoryRepository(EntityManagerFactory::build($conn), new CurrentConfig()),
-        $currentUser,
-        new FilterState(),
-        $accessLevelChecker,
-    );
-    $categoryService = new CategoryService(
-        LangTestFactory::get(),
-        new CategoryRepository(EntityManagerFactory::build($conn), new CurrentConfig()),
-        $permissionService,
-        new CurrentConfig(),
-        new EventDispatcher(),
-        new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
-        $accessLevelChecker,
-        new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), new CurrentConfig()),
-    );
-
-    return new ImageService(
-        EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
-        filterPanelTestActivityService(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
-        new EventDispatcher(),
-        new CurrentConfig(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        $categoryService,
-    );
-}
-
 function filterPanelTestTagService(): TagService
 {
     $conn = DbConnection::build();
@@ -144,7 +105,6 @@ function filterPanelTestTagService(): TagService
         $currentUser,
         new CurrentConfig(),
         new CurrentLogger(),
-        filterPanelTestImageService(),
     );
 }
 

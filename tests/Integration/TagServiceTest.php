@@ -58,6 +58,8 @@ namespace Piwigo\Tests\Integration {
 
         private TagService $service;
 
+        private ImageService $imageService;
+
         private Connection $conn;
 
         #[Override]
@@ -95,8 +97,8 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $tagServiceAccessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig);
             $tagServiceCategoryService = new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $tagServiceAccessLevelChecker), $currentConfig, new EventDispatcher(), new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), $tagServiceAccessLevelChecker, new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), $currentConfig));
-            $tagServiceImageService = new ImageService(EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), $currentConfig, CurrentPathsTestFactory::get(), $tagServiceCategoryService);
-            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $currentLogger, $tagServiceImageService);
+            $this->imageService = new ImageService(EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), $currentConfig, CurrentPathsTestFactory::get(), $tagServiceCategoryService);
+            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $currentLogger);
         }
 
         #[Override]
@@ -321,13 +323,13 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->setTagsOf([
                     4 => [TagId::from(1), TagId::from(2)],
-                ]);
+                ], $this->imageService);
                 self::assertEqualsCanonicalizing([TagId::from(1), TagId::from(2)], $this->service->getImageTagIds([4])[4]);
 
                 // Overwrites, not appends -- tag 3 replaces 1+2 entirely.
                 $this->service->setTagsOf([
                     4 => [TagId::from(3)],
-                ]);
+                ], $this->imageService);
                 self::assertEqualsCanonicalizing([TagId::from(3)], $this->service->getImageTagIds([4])[4]);
             } finally {
                 $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 4');
@@ -347,14 +349,14 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->setTagsOf([
                     4 => [TagId::from(1), TagId::from(2)],
-                ]);
+                ], $this->imageService);
                 $before = $this->service->getImageTagIds([4]);
 
                 // Re-set the exact same tags -- a genuine no-op from the
                 // caller's perspective.
                 $this->service->setTagsOf([
                     4 => [TagId::from(1), TagId::from(2)],
-                ]);
+                ], $this->imageService);
                 $after = $this->service->getImageTagIds([4]);
 
                 self::assertSame([], $this->service->compareImageTagLists($before, $after));
@@ -408,7 +410,7 @@ namespace Piwigo\Tests\Integration {
             ]);
             $id = (int) $this->conn->lastInsertId();
 
-            $this->service->deleteOrphanTags(EntityManagerFactory::build($this->conn));
+            $this->service->deleteOrphanTags(EntityManagerFactory::build($this->conn), $this->imageService);
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')
@@ -535,8 +537,8 @@ namespace Piwigo\Tests\Integration {
 
         public function testAddTagsIsANoOpForEmptyTagsOrImages(): void
         {
-            $this->service->addTags([], [5]);
-            $this->service->addTags([TagId::from(1)], []);
+            $this->service->addTags([], [5], $this->imageService);
+            $this->service->addTags([TagId::from(1)], [], $this->imageService);
 
             self::assertSame([], $this->service->getImageTagIds([5])[5]);
         }

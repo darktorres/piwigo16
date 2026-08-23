@@ -143,7 +143,7 @@ final readonly class MaintenanceActionDispatcher
             case 'delete_orphan_tags':
 
                 $this->tagService
-                    ->deleteOrphanTags($this->entityManager);
+                    ->deleteOrphanTags($this->entityManager, new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService));
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Delete orphan tags'), $this->lang->t('action successfully performed.')));
                 break;
 

@@ -207,7 +207,7 @@ final readonly class PictureModifyPageRenderer
                     $tag_ids = $tagService->getTagIds($raw_tags_post);
                 }
             }
-            $tagService->setTags($tag_ids, $image_id);
+            $tagService->setTags($tag_ids, $image_id, $imageService);
 
             // association to albums
             $associate_categories = $pictureModifyRequest->associate;

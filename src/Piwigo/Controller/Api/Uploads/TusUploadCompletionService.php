@@ -102,7 +102,8 @@ final readonly class TusUploadCompletionService
         if ($session->tagIds !== []) {
             $this->tagService->setTags(
                 array_values(array_filter(array_map(TagId::tryFrom(...), $session->tagIds))),
-                $imageId
+                $imageId,
+                $this->imageService,
             );
         }
 

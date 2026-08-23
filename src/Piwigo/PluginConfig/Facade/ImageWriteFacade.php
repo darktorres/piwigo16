@@ -48,7 +48,7 @@ final readonly class ImageWriteFacade
      */
     public function setTags(int $imageId, string|array $rawTags, bool $allowCreate = true): void
     {
-        $this->tagService->setTags($this->tagService->getTagIds($rawTags, $allowCreate), $imageId);
+        $this->tagService->setTags($this->tagService->getTagIds($rawTags, $allowCreate), $imageId, $this->imageService);
     }
 
     /**

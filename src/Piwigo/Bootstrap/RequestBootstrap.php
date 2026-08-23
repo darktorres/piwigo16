@@ -566,7 +566,6 @@ final class RequestBootstrap
             self::currentUser(),
             self::currentConfig(),
             self::currentLogger(),
-            self::buildImageService($conn),
         );
     }
 

@@ -202,7 +202,7 @@ final readonly class BatchManagerGlobalPageRenderer
                     }
 
                     $tag_ids = $tagService->getTagIds($add_tags);
-                    $tagService->addTags($tag_ids, $collection);
+                    $tagService->addTags($tag_ids, $collection, $imageService);
 
                     if ($prefilter_value === 'no_tag') {
                         $redirect = true;

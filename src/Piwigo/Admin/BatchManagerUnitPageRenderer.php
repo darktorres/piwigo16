@@ -151,7 +151,7 @@ final readonly class BatchManagerUnitPageRenderer
                         $tag_ids = $tagService->getTagIds($raw_tags_post);
                     }
                 }
-                $tagService->setTags($tag_ids, $image_id);
+                $tagService->setTags($tag_ids, $image_id, $this->imageService);
             }
 
             $this->imageService->massUpdateFields(

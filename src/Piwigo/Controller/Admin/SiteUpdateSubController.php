@@ -923,7 +923,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                         );
                     $this->entityManager->clear();
                 }
-                $tagService->setTagsOf($tags_of);
+                $tagService->setTagsOf($tags_of, $this->imageService());
             }
 
             $footer_elements[] = '<!-- metadata update : '

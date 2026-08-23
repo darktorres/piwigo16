@@ -200,7 +200,6 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),
         new CurrentLogger(),
-        $imageService,
     );
     $groupService = new GroupService(
         EntityManagerFactory::build()->getRepository(GroupEntity::class),

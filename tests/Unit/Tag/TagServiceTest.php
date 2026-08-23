@@ -88,7 +88,7 @@ function tagServiceTestRoot(): string
 }
 
 /**
- * @return array{0: TagService, 1: Connection}
+ * @return array{0: TagService, 1: Connection, 2: ImageService}
  */
 function tagServiceTestServiceConn(?Connection $conn = null): array
 {
@@ -148,16 +148,20 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         EventDispatcherTestFactory::get(),
         CurrentUserTestFactory::get(),
         $currentConfig,
-        $currentLogger,
-        $tagServiceImageService
+        $currentLogger
     );
 
-    return [$service, $conn];
+    return [$service, $conn, $tagServiceImageService];
 }
 
 function tagServiceTestService(): TagService
 {
     return tagServiceTestServiceConn()[0];
+}
+
+function tagServiceTestImageService(): ImageService
+{
+    return tagServiceTestServiceConn()[2];
 }
 
 beforeEach(function (): void {
@@ -491,13 +495,13 @@ test('setTagsOf() creates then overwrites image tag associations', function (): 
     try {
         $service->setTagsOf([
             $imageId => [$tagIdA, $tagIdB],
-        ]);
+        ], tagServiceTestImageService());
         expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([$tagIdA, $tagIdB]);
 
         // Overwrites, not appends -- tag C replaces A+B entirely.
         $service->setTagsOf([
             $imageId => [$tagIdC],
-        ]);
+        ], tagServiceTestImageService());
         expect($service->getImageTagIds([$imageId])[$imageId])->toEqualCanonicalizing([$tagIdC]);
     } finally {
         $conn->executeStatement('DELETE FROM image_tag WHERE image_id = ?', [$imageId]);
@@ -533,14 +537,14 @@ test('compareImageTagLists() reports no change when tags are set to the same val
     try {
         $service->setTagsOf([
             $imageId => [$tagIdA, $tagIdB],
-        ]);
+        ], tagServiceTestImageService());
         $before = $service->getImageTagIds([$imageId]);
 
         // Re-set the exact same tags -- a genuine no-op from the
         // caller's perspective.
         $service->setTagsOf([
             $imageId => [$tagIdA, $tagIdB],
-        ]);
+        ], tagServiceTestImageService());
         $after = $service->getImageTagIds([$imageId]);
 
         expect($service->compareImageTagLists($before, $after))
@@ -598,7 +602,7 @@ test('deleteOrphanTags() removes a genuinely orphaned tag', function (): void {
     // FULLTEXT-deadlock reason as the sibling getOrphanTags() test just
     // above.
     DbTransactionTestOverride::rollback();
-    [$service, $conn] = tagServiceTestServiceConn();
+    [$service, $conn, $imageService] = tagServiceTestServiceConn();
     $name = 'orphan-tag-' . uniqid();
     $conn->insert('tags', [
         'name' => $name,
@@ -607,7 +611,7 @@ test('deleteOrphanTags() removes a genuinely orphaned tag', function (): void {
     ]);
     $id = (int) $conn->lastInsertId();
 
-    $service->deleteOrphanTags(EntityManagerFactory::build($conn));
+    $service->deleteOrphanTags(EntityManagerFactory::build($conn), $imageService);
 
     $remaining = $conn->createQueryBuilder()
         ->select('id')
@@ -833,8 +837,8 @@ test('addTags() is a no-op for empty tags or images', function (): void {
     $service = tagServiceTestService();
 
     try {
-        $service->addTags([], [$imageId]);
-        $service->addTags([TagId::from(1)], []);
+        $service->addTags([], [$imageId], tagServiceTestImageService());
+        $service->addTags([TagId::from(1)], [], tagServiceTestImageService());
 
         expect($service->getImageTagIds([$imageId])[$imageId])->toBe([]);
     } finally {

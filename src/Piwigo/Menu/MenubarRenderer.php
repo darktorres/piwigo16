@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Doctrine\ORM\EntityManagerInterface;
-use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
@@ -19,14 +18,10 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
-use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Filter\FilterService;
-use Piwigo\Image\ImageEntity;
-use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
@@ -83,15 +78,7 @@ final class MenubarRenderer
 
         $categoryService = new CategoryService($lang, new CategoryRepository($entityManager, $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker, new UserRepository($entityManager, $eventDispatcher, $currentConfig));
 
-        // ImageService is a throwaway, never-actually-used collaborator
-        // here -- TagService only needs it for updateImagesLastmodified(),
-        // never called on this render() path.
-        $menubarPaths = Kernel::container()->get(Paths::class);
-        if (! $menubarPaths instanceof Paths) {
-            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
-        }
-        $imageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $sessionService, $eventDispatcher, $currentConfig, $menubarPaths, $categoryService);
-        $tagService = new TagService($lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger, $imageService);
+        $tagService = new TagService($lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig, $renderer);
 

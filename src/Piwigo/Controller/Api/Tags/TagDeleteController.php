@@ -11,6 +11,7 @@ use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\CsrfGuard;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageService;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -32,6 +33,7 @@ final readonly class TagDeleteController implements ControllerInterface
         private CsrfGuard $csrfGuard,
         private TagService $tagService,
         private EntityManagerInterface $entityManager,
+        private ImageService $imageService,
     ) {}
 
     #[Override]
@@ -55,7 +57,7 @@ final readonly class TagDeleteController implements ControllerInterface
             return ResponseFactory::problem('Not Found', 404, 'This tag does not exist.');
         }
 
-        $this->tagService->deleteTags([TagId::from($tagId)], $this->entityManager);
+        $this->tagService->deleteTags([TagId::from($tagId)], $this->entityManager, $this->imageService);
 
         return ResponseFactory::json([
             'id' => $tagId,

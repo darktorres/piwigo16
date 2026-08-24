@@ -38,19 +38,11 @@ final readonly class SectionInitializer
     {
         // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
         // default apache implementation it is not set
-        /**
-         * @psalm-suppress RedundantCondition Psalm's $_SERVER superglobal
-         *   stub is typed more optimistically than reality: PATH_INFO is
-         *   never guaranteed present or non-empty the way Psalm's stub
-         *   assumes, so both this and the is_string() guard further down
-         *   are genuinely needed.
-         */
         if ($this->currentConfig->questionMarkInUrls === false and
              isset($_SERVER['PATH_INFO']) and $_SERVER['PATH_INFO'] !== '') {
             $rewritten = $_SERVER['PATH_INFO'];
             // $_SERVER values are typed mixed by PHPStan (PATH_INFO is a string in
             // practice, but the superglobal's declared value type doesn't say so)
-            /** @psalm-suppress TypeDoesNotContainType */
             $rewritten = is_string($rewritten) ? $rewritten : '';
             $rewritten = str_replace('//', '/', $rewritten);
             $path_count = count(explode('/', $rewritten));

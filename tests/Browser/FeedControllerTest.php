@@ -146,7 +146,6 @@ function feedUserFeedRow(string $feedId): ?array
  * suppressions below. The non-empty-string declared here matches
  * feedRawGetWithCookies()'s own @param.
  * @return non-empty-string
- * @psalm-suppress MoreSpecificReturnType see comment above
  */
 function feedAdminCookieJar(): string
 {
@@ -160,7 +159,6 @@ function feedAdminCookieJar(): string
         'password' => H::ADMIN_PASS,
     ]);
 
-    /** @psalm-suppress LessSpecificReturnStatement see comment above */
     return $cookieJar;
 }
 
@@ -274,7 +272,6 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
         // Psalm's stub types it SimpleXMLElement|null generically, but the
         // string assertion just above already proves it's a real element
         // here (a real RSS <guid> the FeedController itself always emits).
-        /** @psalm-suppress PossiblyNullArrayAccess see comment above */
         expect((string) $item->guid['isPermaLink'])->toBe('false');
 
         // getTitleRecentPostDate(): "%d new photo(s) (<Month> <day>)" --
@@ -347,7 +344,6 @@ it('switches the current user to a personal feed\'s real owner when fetched anon
     // $xml->channel is a magic property fetch (SimpleXMLElement) -- Psalm's
     // stub types it SimpleXMLElement|null generically, but a well-formed
     // RSS2 feed (just confirmed above) always has a real <channel>.
-    /** @psalm-suppress PossiblyNullPropertyFetch see comment above */
     expect((string) $xml->channel->title)
         ->toContain(' (as ' . H::ADMIN_USER . ')');
 });
@@ -378,7 +374,6 @@ it('resets an authenticated session back to guest identity for the generic (toke
         // request, not just that an anonymous request happens to already
         // be guest. Same $xml->channel magic-property-nullability
         // suppression reasoning as the anonymous test above.
-        /** @psalm-suppress PossiblyNullPropertyFetch see comment above */
         expect((string) $xml->channel->title)
             ->toContain(' (as guest)');
     } finally {

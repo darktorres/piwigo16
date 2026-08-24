@@ -368,11 +368,6 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         }
 
         // newest first
-        /**
-         * @psalm-suppress InvalidArrayOffset count($rows) - 1 is only ever
-         *   -1 if $rows is empty, but the assertCount(4, $rows) above
-         *   already proves it has exactly 4 entries.
-         */
         self::assertGreaterThan($rows[count($rows) - 1]->activityId, $rows[0]->activityId);
 
         // activity_id 4's own fixture row has a real details JSON payload

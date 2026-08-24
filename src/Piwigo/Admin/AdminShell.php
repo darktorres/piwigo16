@@ -219,15 +219,6 @@ final readonly class AdminShell
 
         // sync_user() is only useful when external authentication is activated
         if ($this->deploymentPolicy->externalAuthentification) {
-            /**
-             * @psalm-suppress InvalidArgument getRepository() always really
-             *   returns each entity's own custom repositoryClass at
-             *   runtime (NotificationByMailRepository/FeedRepository),
-             *   both of which implement UserRelatedTableSyncInterface;
-             *   Psalm's Doctrine plugin doesn't narrow getRepository()'s
-             *   return type per-entity's own repositoryClass binding, only
-             *   the generic EntityRepository<T>.
-             */
             $this->userService->syncUsers(
                 TypedRepository::narrow($this->entityManager->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class),
                 TypedRepository::narrow($this->entityManager->getRepository(FeedEntity::class), FeedRepository::class),

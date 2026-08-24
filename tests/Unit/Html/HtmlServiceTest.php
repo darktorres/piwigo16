@@ -2264,13 +2264,6 @@ test('flushPageMessages merges in and clears the session flash channel', functio
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        /**
-         * @psalm-suppress InvalidScalarArgument Psalm tracks $_SESSION's
-         *   literal shape (from the assignment above) as possibly-
-         *   undefined for its own 'page_errors' key, which Pest's
-         *   ->and() signature (plain array<array-key, mixed>) doesn't
-         *   accept, even passing $_SESSION straight through unmodified.
-         */
         expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBe(['Live error', 'Flashed error'])
             ->and($_SESSION)
             ->not->toHaveKey('page_errors');
@@ -2314,13 +2307,6 @@ test('flushPageMessages leaves a non-array session flash value untouched, withou
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        /**
-         * @psalm-suppress InvalidScalarArgument Psalm tracks $_SESSION's
-         *   literal shape (from the assignment above) as possibly-
-         *   undefined for its own 'page_warnings' key, which Pest's
-         *   ->and() signature (plain array<array-key, mixed>) doesn't
-         *   accept, even passing $_SESSION straight through unmodified.
-         */
         expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('warnings'))->toBeNull()
             ->and($_SESSION)
             ->toHaveKey('page_warnings');

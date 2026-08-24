@@ -29,12 +29,6 @@ final class PageFilterHelper
                     continue;
                 }
                 $basename = basename($filename, '.php');
-                /**
-                 * @psalm-suppress RedundantCondition Psalm's basename()
-                 *   stub returns non-empty-string unconditionally, but
-                 *   basename('.php', '.php') genuinely returns '' at
-                 *   runtime -- this guard is needed.
-                 */
                 if ($basename !== '') {
                     return $basename;
                 }

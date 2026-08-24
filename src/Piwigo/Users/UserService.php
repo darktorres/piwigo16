@@ -997,11 +997,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * Tries to find the browser language among available languages.
-     *
-     * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER superglobal
-     *   stub is typed more optimistically than reality:
-     *   HTTP_ACCEPT_LANGUAGE is an optional request header, never
-     *   guaranteed present (or non-empty) the way Psalm's stub assumes.
      */
     public function getBrowserLanguage(): false|string
     {

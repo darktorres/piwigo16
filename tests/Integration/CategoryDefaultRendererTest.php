@@ -105,14 +105,6 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
         $imageRepo = TypedRepository::narrow($em->getRepository(ImageEntity::class), ImageRepository::class);
-        /**
-         * @psalm-suppress InvalidArgument getRepository() always really
-         *   returns CommentEntity's own custom repositoryClass at runtime
-         *   (CommentRepository), which implements CommentCounterInterface;
-         *   Psalm's Doctrine plugin doesn't narrow getRepository()'s
-         *   return type per-entity's own repositoryClass binding, only the
-         *   generic EntityRepository<T>.
-         */
         $commentRepo = TypedRepository::narrow($em->getRepository(CommentEntity::class), CommentRepository::class);
 
         $htmlService = HtmlServiceTestFactory::build();
@@ -134,11 +126,6 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         }
 
         $this->buildTemplate();
-        /**
-         * @psalm-suppress InvalidArgument $commentRepo is really a
-         *   CommentRepository at runtime (see its own assignment above),
-         *   which implements CommentCounterInterface.
-         */
         $this->renderer = new CategoryDefaultRenderer($htmlService, $imageRepo, $commentRepo, $urlService, new SessionService(TypedRepository::narrow($em->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, RequestMetricsTestFactory::get());
     }
 

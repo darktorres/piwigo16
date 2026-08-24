@@ -251,14 +251,6 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertInstanceOf(RatingScoreSummary::class, $result);
                 self::assertSame(['10.20.30'], $this->fetchAnonymousIdsForElement(4, 2));
-                /**
-                 * @psalm-suppress TypeDoesNotContainType Psalm still
-                 *   tracks $_COOKIE['pwg_anonymous_rater']'s pre-call
-                 *   literal value from this test's own fixture setup; it
-                 *   doesn't see RateService::rate() overwrite the cookie
-                 *   internally via setcookie(), which is exactly the
-                 *   real behavior under test.
-                 */
                 self::assertSame('10.20.30', $_COOKIE['pwg_anonymous_rater']);
             } finally {
                 $this->conn->createQueryBuilder()

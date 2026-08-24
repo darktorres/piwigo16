@@ -262,14 +262,6 @@ test('hasAlreadyLoggedIn() is true for a user with no login activity history', f
     // Fixture user 4 (power_user) -- no login-activity rows exist for
     // it in the fixture, so countLoginActivity() === 0.
     $conn = DbConnection::build();
-    /**
-     * @psalm-suppress InvalidArgument getRepository() always really
-     *   returns ActivityEntity's own custom repositoryClass at runtime
-     *   (ActivityRepository), which implements
-     *   LoginActivityLookupInterface; Psalm's Doctrine plugin doesn't
-     *   narrow getRepository()'s return type per-entity's own
-     *   repositoryClass binding, only the generic EntityRepository<T>.
-     */
     expect(
         authServiceTestService()
             ->hasAlreadyLoggedIn(4, TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class))

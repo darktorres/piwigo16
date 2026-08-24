@@ -240,7 +240,6 @@ test('restoreFrom() copies a snapshot instance\'s translation state onto this in
     // properties from their beforeEach() assignment, so PHPStan already
     // knows this; there is no Psalm equivalent of that plugin, so Psalm
     // only sees an untyped dynamic property (mixed).
-    /** @psalm-suppress MixedClone see comment above */
     $snapshot = clone $this->translator;
 
     // Mutate the live instance further after taking the snapshot -- proves

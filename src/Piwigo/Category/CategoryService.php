@@ -676,13 +676,6 @@ final readonly class CategoryService
             $countImages = $cat->countImages ?? 0;
             if ($hasIdUppercat && $countImages > 0) {
                 foreach (array_slice(explode(',', $cat->uppercats), 0, -1) as $uppercatId) {
-                    /**
-                     * @psalm-suppress InvalidArrayOffset $uppercatId is a
-                     *   numeric category id fragment from explode(), kept
-                     *   as a string; PHP canonicalises it back to an int
-                     *   array key at runtime regardless of Psalm's own
-                     *   static string typing here.
-                     */
                     $parentIdx = $indexOfCat[$uppercatId] ?? null;
                     if (! is_int($parentIdx)) {
                         continue;
@@ -1355,12 +1348,6 @@ final readonly class CategoryService
 
         $catMapCallback = function (array $m) use ($catMap): string {
             $matchedId = $m[1] ?? null;
-            /**
-             * @psalm-suppress InvalidArrayOffset $matchedId is always a
-             *   digits-only string, captured by the '/(\d+)/' regex below;
-             *   PHP canonicalises it back to an int array key at runtime
-             *   regardless of Psalm's own static string typing here.
-             */
             if (! is_string($matchedId) || ! isset($catMap[$matchedId])) {
                 return '';
             }
@@ -1564,13 +1551,6 @@ final readonly class CategoryService
 
                 if ($catHasParent) {
                     foreach (explode(',', $catUppercats) as $idUppercat) {
-                        /**
-                         * @psalm-suppress InvalidArrayOffset $idUppercat is
-                         *   a numeric category id fragment from explode(),
-                         *   kept as a string; PHP canonicalises it back to
-                         *   an int array key at runtime regardless of
-                         *   Psalm's own static string typing here.
-                         */
                         if (isset($topCategories[$idUppercat])) {
                             $isTop = false;
                             break;

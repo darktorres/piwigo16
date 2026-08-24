@@ -110,15 +110,6 @@ final readonly class UserRowFetcher
 
             $lastVisit = $listRow->lastVisit;
             if (! $listRow->lastVisitFromHistory && in_array($lastVisit, [null, ''], true)) {
-                /**
-                 * @psalm-suppress InvalidArgument getRepository() always
-                 *   really returns HistoryEntity's own custom
-                 *   repositoryClass at runtime (HistoryRepository), which
-                 *   implements LastVisitLookupInterface; Psalm's Doctrine
-                 *   plugin doesn't narrow getRepository()'s return type
-                 *   per-entity's own repositoryClass binding, only the
-                 *   generic EntityRepository<T>.
-                 */
                 $lastVisit = $this->authService->getUserLastVisitFromHistory(
                     $id,
                     TypedRepository::narrow($this->entityManager->getRepository(HistoryEntity::class), HistoryRepository::class),

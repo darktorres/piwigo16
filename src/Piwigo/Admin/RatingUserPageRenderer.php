@@ -152,7 +152,6 @@ final class RatingUserPageRenderer
                 // is genuinely always int at runtime despite Psalm's own
                 // generic array-key typing here. PHPStan already infers
                 // int on its own (hence the ignore below), Psalm doesn't.
-                /** @psalm-suppress RedundantCastGivenDocblockType same reasoning as above */
                 // @phpstan-ignore cast.useless
                 $rate = (int) $rate;
                 $ct = count($rates);
@@ -164,7 +163,6 @@ final class RatingUserPageRenderer
                     // below); Psalm's own strictBinaryOperands check needs
                     // the explicit cast to stop treating abs()'s result as
                     // a wider int|float union.
-                    /** @psalm-suppress RedundantCastGivenDocblockType same reasoning as above */
                     // @phpstan-ignore cast.useless
                     $dev = (float) abs((float) $rate - $all_img_sum[$id_date['id']]['avg']);
                     $consensus_dev += $dev;
@@ -194,13 +192,6 @@ final class RatingUserPageRenderer
 
         // filter
         foreach ($by_user_ratings as $id => $rating) {
-            /**
-             * @psalm-suppress InvalidArrayOffset Psalm loses the
-             *   'count'/'avg'/'cv'/'cd'/'cdtop' keys the by-ref foreach
-             *   above merged into every $by_user_ratings entry via
-             *   `$rating += [...]` -- a known by-ref-narrowing gap, not a
-             *   real missing key.
-             */
             if ($rating['count'] <= $filter_min_rates) {
                 unset($by_user_ratings[$id]);
             }
@@ -222,11 +213,6 @@ final class RatingUserPageRenderer
 
         $order_by_options = [];
         for ($i = 0; $i < count($available_order_by); $i++) {
-            /**
-             * @psalm-suppress InvalidArrayOffset Psalm can't prove $i stays
-             *   within $available_order_by's own literal 5-element bound
-             *   through a `count()`-based loop condition.
-             */
             $order_by_options[] = $available_order_by[$i][0];
         }
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);

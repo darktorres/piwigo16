@@ -1131,15 +1131,6 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
             try {
-                /**
-                 * @psalm-suppress InvalidArgument getRepository() always
-                 *   really returns SiteEntity's own custom repositoryClass
-                 *   at runtime (SiteRepository), which implements
-                 *   SiteGalleriesUrlLookupInterface; Psalm's Doctrine
-                 *   plugin doesn't narrow getRepository()'s return type
-                 *   per-entity's own repositoryClass binding, only the
-                 *   generic EntityRepository<T>.
-                 */
                 $this->service->updatePath(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class), SiteRepository::class));
 
                 $path = $this->conn->createQueryBuilder()

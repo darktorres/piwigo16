@@ -205,14 +205,6 @@ test('headerNotes getter returns the real stored value, not a hardcoded empty ar
 });
 
 test('links getter returns the real stored value, not a hardcoded empty array', function (): void {
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue CurrentConfig's own
-     *   PHP 8.4 property-hook properties each have a `set(...)` hook doing
-     *   real sanitization/conversion (here: raw string -> MenuLink::fromArray())
-     *   before storage; Psalm checks an assignment against the property's
-     *   own declared/hooked type, not the hook's own looser accepted input
-     *   shape.
-     */
     CurrentConfigTestFactory::get()->links = [
         'home' => 'https://example.test',
     ];
@@ -265,12 +257,6 @@ test('chmodValue returns the explicit override when set, regardless of the SAPI 
 });
 
 test('setDefaultFiltersViews keeps a well-shaped override entry and falls back per-key otherwise', function (): void {
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue same property-hook
-     *   sanitization reasoning as the links test above -- this test's own
-     *   whole point is feeding deliberately malformed shapes in to verify
-     *   the hook falls back per-key correctly.
-     */
     CurrentConfigTestFactory::get()->defaultFiltersViews = [
         // Well-shaped: both is_string(access) and is_bool(default) hold.
         'words' => [
@@ -299,10 +285,6 @@ test('setDefaultFiltersViews keeps a well-shaped override entry and falls back p
 });
 
 test('setDefaultFiltersViews resets to the full factory default when given null', function (): void {
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue same property-hook
-     *   sanitization reasoning as the links test above.
-     */
     CurrentConfigTestFactory::get()->defaultFiltersViews = [
         'words' => [
             'access' => 'admins',
@@ -334,12 +316,6 @@ test('setHistorySectionsCache accepts a literal null', function (): void {
 });
 
 test('setPictureInformations keeps only string-keyed bool entries', function (): void {
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue same property-hook
-     *   sanitization reasoning as the links test above -- this test's own
-     *   whole point is feeding deliberately malformed entries in to verify
-     *   the hook excludes them.
-     */
     CurrentConfigTestFactory::get()->pictureInformations = [
         'iso' => true,
         'aperture' => false,
@@ -354,12 +330,6 @@ test('setPictureInformations keeps only string-keyed bool entries', function ():
 });
 
 test('setRandomIndexRedirect casts both key and scalar value to string, excluding non-scalar values entirely', function (): void {
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue same property-hook
-     *   sanitization reasoning as the links test above -- this test's own
-     *   whole point is feeding a deliberately mixed-shape array in to
-     *   verify the hook casts/excludes per-entry.
-     */
     CurrentConfigTestFactory::get()->randomIndexRedirect = [
         5 => 'val1',
         'strkey' => 42,

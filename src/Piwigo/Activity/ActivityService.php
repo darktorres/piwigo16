@@ -87,12 +87,6 @@ final readonly class ActivityService implements ActivityLoggerInterface
     /**
      * @param int|string|array<int, int|string> $objectId
      * @param array<string, mixed> $details
-     *
-     * @psalm-suppress RedundantCondition
-     * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER superglobal
-     *   stub is typed more optimistically than reality: HTTP_USER_AGENT/
-     *   HTTP_REFERER are optional request headers, never guaranteed
-     *   present the way Psalm's stub assumes.
      */
     #[Override]
     public function record(string $object, int|string|array $objectId, string $action, array $details = []): void

@@ -389,14 +389,6 @@ final readonly class PictureController implements ControllerInterface
         if ($current_rank !== $last_rank) {
             // caching next & last item : readability purpose
             $next_item = $items[$current_rank + 1];
-            /**
-             * @psalm-suppress InvalidArrayOffset $last_rank = count($items) - 1
-             *   is only ever -1 if $items is empty, but $rank_of[$image_id]
-             *   being isset (see the comment above $current_rank) already
-             *   guarantees $items contains at least $image_id's own entry --
-             *   Psalm can't trace that guarantee from a check on a
-             *   different variable ($rank_of, not $items) through to here.
-             */
             $last_item = $items[$last_rank];
         }
 
@@ -1184,13 +1176,6 @@ final readonly class PictureController implements ControllerInterface
             foreach ($related_categories as $category) {
                 $cats = [];
                 foreach (explode(',', $category->uppercats) as $id) {
-                    /**
-                     * @psalm-suppress InvalidArrayOffset $id is a numeric
-                     *   category id fragment from explode(), kept as a
-                     *   string; PHP canonicalises it back to an int array
-                     *   key at runtime regardless of Psalm's own static
-                     *   string typing here.
-                     */
                     $cats[] = $cat_map[$id];
                 }
                 $related_categories_display[] = $this->htmlService->getCatDisplayName($cats);
@@ -1226,13 +1211,6 @@ final readonly class PictureController implements ControllerInterface
         $u_prefetch = null;
 
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        /**
-         * @psalm-suppress RedundantCondition
-         * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
-         *   superglobal stub is typed more optimistically than reality:
-         *   HTTP_USER_AGENT is never guaranteed present or string the
-         *   way Psalm's stub assumes.
-         */
         $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
         if (isset($picture['next'])
             and $picture['next']['src_image']->isOriginal()
@@ -1410,12 +1388,6 @@ final readonly class PictureController implements ControllerInterface
         $element_info = $event->currentPicture;
 
         if (isset($_COOKIE['picture_deriv'])) {
-            /**
-             * @psalm-suppress RedundantCondition Psalm's $_COOKIE
-             *   superglobal stub is typed more optimistically than
-             *   reality: cookie values can be arrays (e.g. `lang[x]=y`
-             *   syntax), so this is_string() guard is genuinely needed.
-             */
             if (is_string($_COOKIE['picture_deriv'])
                 and array_key_exists($_COOKIE['picture_deriv'], $this->imageStdParams->getDefinedTypeMap())) {
                 $this->sessionService->setSessionVar('picture_deriv', $_COOKIE['picture_deriv']);

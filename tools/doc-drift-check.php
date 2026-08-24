@@ -70,13 +70,6 @@ foreach ($markdownFiles as $file) {
         $cmd = $matches['cmd'];
         $expected = $matches['expect'];
 
-        /**
-         * @psalm-suppress ForbiddenCode This dev-only doc-drift checker
-         *   deliberately shells out to re-run the exact command each
-         *   doc comment claims produces its shown output, comparing the
-         *   real output against what the docs say -- never invoked with
-         *   user-controlled input.
-         */
         $rawActual = shell_exec('cd ' . escapeshellarg($root) . ' && ' . $cmd);
         $actual = is_string($rawActual) ? trim($rawActual) : '';
 

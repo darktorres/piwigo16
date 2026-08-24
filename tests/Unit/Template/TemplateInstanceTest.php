@@ -203,13 +203,6 @@ function template_instance_test_restore_server_keys(array $saved): void
 {
     foreach ($saved as $key => $value) {
         if ($value === null) {
-            /**
-             * @psalm-suppress InvalidArrayOffset Psalm's $_SERVER
-             *   superglobal stub is typed more pessimistically than
-             *   reality (non-empty-string keys only); $key always comes
-             *   from a real $_SERVER key captured elsewhere, never an
-             *   empty string.
-             */
             unset($_SERVER[$key]);
         } else {
             $_SERVER[$key] = $value;

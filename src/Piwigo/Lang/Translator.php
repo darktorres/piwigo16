@@ -171,7 +171,6 @@ final class Translator
             // CacheItemInterface here (just confirmed) is only possible
             // when $pool itself was non-null. PHPStan narrows $pool
             // backward through the nullsafe call; Psalm doesn't.
-            /** @psalm-suppress PossiblyNullReference */
             $pool->save($item);
         }
 

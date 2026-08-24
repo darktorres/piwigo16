@@ -270,15 +270,6 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             // get categort full directories in an array for comparison with file
             // system directory tree
             $siteGalleriesUrlLookup = TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class);
-            /**
-             * @psalm-suppress InvalidArgument getRepository() always really
-             *   returns SiteEntity's own custom repositoryClass at runtime
-             *   (SiteRepository), which implements
-             *   SiteGalleriesUrlLookupInterface; Psalm's Doctrine plugin
-             *   doesn't narrow getRepository()'s return type per-entity's
-             *   own repositoryClass binding, only the generic
-             *   EntityRepository<T>.
-             */
             $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)), $siteGalleriesUrlLookup);
 
             // what is the base directory to search file system sub-directories ?

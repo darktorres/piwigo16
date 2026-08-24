@@ -288,14 +288,6 @@ test('setSessionVar/unsetSessionVar round-trip through $_SESSION', function (): 
     $service = makeSessionService();
     $_SESSION = [];
 
-    /**
-     * @psalm-suppress EmptyArrayAccess $_SESSION superglobal narrowing
-     *   doesn't account for a called method mutating it (same family as
-     *   this project's own documented $_POST/$_SERVER stub-optimism
-     *   gaps): Psalm keeps treating $_SESSION as the literal array{}
-     *   assigned a few lines above even after setSessionVar() really does
-     *   write to the real superglobal at runtime.
-     */
     expect($service->setSessionVar('foo', 'bar'))
         ->toBeTrue()
         ->and($_SESSION['pwg_foo'] ?? null)->toBe('bar');

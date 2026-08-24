@@ -354,16 +354,6 @@ final class ThemeRegistryTest extends IntegrationTestCase
         self::assertSame('Child' . $suffix, $result->tag, 'the child theme must have the final word in the dispatch pipeline');
     }
 
-    /**
-     * @psalm-suppress InvalidPropertyFetch $parentClass/$childClass are
-     *   dynamically built (uniqid()-suffixed) FQCN strings for fixture
-     *   classes generated at runtime purely for this test's own isolation;
-     *   there's no shared interface/base class to type them against for
-     *   Psalm to resolve their $booted/$receivedContext static properties
-     *   through -- `class-string` alone (see the @var below) isn't enough,
-     *   Psalm needs a concrete class-string<T> referent it doesn't have
-     *   here.
-     */
     public function testBootCurrentBootsBothParentAndChildWithARealExtensionContext(): void
     {
         $dir = $this->makeTempDir();
@@ -387,14 +377,6 @@ final class ThemeRegistryTest extends IntegrationTestCase
         self::assertInstanceOf(ExtensionContext::class, $childClass::$receivedContext);
     }
 
-    /**
-     * @psalm-suppress InvalidPropertyFetch $className is a dynamically
-     *   built (uniqid()-suffixed) FQCN string for a fixture class
-     *   generated at runtime purely for this test's own isolation; no
-     *   shared interface/base class to type it against for Psalm to
-     *   resolve its $activated/$deactivated/$receivedContext static
-     *   properties through.
-     */
     public function testActivateDeactivateRoundTrip(): void
     {
         $dir = $this->makeTempDir();
@@ -475,14 +457,6 @@ final class ThemeRegistryTest extends IntegrationTestCase
         $registry->deactivate($depId);
     }
 
-    /**
-     * @psalm-suppress InvalidPropertyFetch $className is a dynamically
-     *   built (uniqid()-suffixed) FQCN string for a fixture class
-     *   generated at runtime purely for this test's own isolation; no
-     *   shared interface/base class to type it against for Psalm to
-     *   resolve its $installed/$uninstalled/$updatedFromTo/
-     *   $receivedContext static properties through.
-     */
     public function testInstallUninstallUpdateAndReloadAreCallableAndReflectARealScan(): void
     {
         $dir = $this->makeTempDir();
@@ -630,12 +604,6 @@ final class ThemeRegistryTest extends IntegrationTestCase
      * current request's own theme (never touched via bootCurrent() in
      * this test), proving the real reason this method exists separately:
      * an admin can open any installed theme's settings page.
-     *
-     * @psalm-suppress InvalidPropertyFetch $fqcn is a dynamically built
-     *   (uniqid()-suffixed) FQCN string for a fixture class generated at
-     *   runtime purely for this test's own isolation; no shared
-     *   interface/base class to type it against for Psalm to resolve its
-     *   $receivedContext/$receivedRequest static properties through.
      */
     public function testBootForSettingsPageBootsANonCurrentThemeAndReturnsARealSettingsPageInstance(): void
     {

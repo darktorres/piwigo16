@@ -56,19 +56,11 @@ function fail(string $message): never
 }
 
 $rawArgs = $_SERVER['argv'] ?? [];
-/**
- * @psalm-suppress RedundantCondition
- * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER superglobal
- *   stub types 'argv' as always a list<string>, but it's only actually
- *   populated when register_argc_argv is enabled -- this guard is
- *   genuinely needed.
- */
 if (! is_array($rawArgs)) {
     fail('$_SERVER[\'argv\'] is not an array -- register_argc_argv must be enabled for CLI SAPI.');
 }
 $args = [];
 foreach (array_slice($rawArgs, 1) as $rawArg) {
-    /** @psalm-suppress RedundantCondition same $_SERVER stub-optimism. */
     if (is_string($rawArg)) {
         $args[] = $rawArg;
     }
@@ -150,7 +142,6 @@ function describeField(Schema $fieldSchema): array
     // accounts for that) is the accurate "is a type declared here" check;
     // a direct `=== null` comparison is the shape PHPStan (correctly,
     // given the class's own inaccurate annotation) flags as unreachable.
-    /** @psalm-suppress DocblockTypeContradiction same __isset()/wrong-library-annotation reasoning as above */
     if (! isset($fieldSchema->type)) {
         $types = [];
     } else {

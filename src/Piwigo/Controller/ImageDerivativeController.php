@@ -520,14 +520,6 @@ final class ImageDerivativeController implements ControllerInterface
         // (no scheme), which resolves the app's real mount path from
         // cookiePath() (SCRIPT_NAME/REDIRECT_URL-based) -- no URL-depth
         // computation of any kind is needed, in either URL style below.
-        /**
-         * @psalm-suppress RedundantCondition Psalm's $_SERVER
-         *   superglobal stub is typed more optimistically than reality:
-         *   PATH_INFO is only conditionally set by the web server, so
-         *   both the strict in_array() falsy-value check below and the
-         *   is_string() narrowing further down genuinely guard against
-         *   values Psalm's stub assumes can never occur.
-         */
         if ($this->currentConfig->questionMarkInUrls === false and
              isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];
@@ -535,7 +527,6 @@ final class ImageDerivativeController implements ControllerInterface
             // populated by the web server as a string (verified via the isset()
             // + !empty() guard above), but we still narrow defensively rather
             // than cast.
-            /** @psalm-suppress TypeDoesNotContainType */
             $req = is_string($req) ? $req : '';
             $req = str_replace('//', '/', $req);
         } else {
@@ -607,7 +598,6 @@ final class ImageDerivativeController implements ControllerInterface
             // int|string> constraint on $key even after the call returns
             // and the reference is no longer live -- reassigning it to the
             // joined string here is genuinely safe.
-            /** @psalm-suppress ReferenceConstraintViolation */
             $key = implode('_', $key);
             if (! isset($this->imageStdParams->getCustomTimestamps()[$key])) {
                 $this->ierror('Size not allowed', 403);

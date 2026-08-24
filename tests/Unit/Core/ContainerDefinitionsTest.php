@@ -16,14 +16,6 @@ use DI\Definition\Helper\FactoryDefinitionHelper;
 function loadContainerDefinitions(): array
 {
     $loaded = require __DIR__ . '/../../../config/container.php';
-    /**
-     * @psalm-suppress TypeDoesNotContainType Psalm statically resolves
-     *   config/container.php's own current literal return shape through
-     *   this require, making this guard provably true today -- it
-     *   exists to catch a future edit that breaks the file's own
-     *   array-of-definitions contract, not to catch anything Psalm
-     *   itself would flag.
-     */
     if (! is_array($loaded)) {
         throw new RuntimeException('config/container.php must return an array of service definitions');
     }

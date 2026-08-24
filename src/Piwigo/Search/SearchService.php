@@ -554,13 +554,6 @@ final readonly class SearchService
             throw new RuntimeException('positionalCondition(): preg_replace_callback() failed');
         }
 
-        /**
-         * @psalm-suppress RedundantFunctionCall Psalm proves $values stays
-         *   a list through this closure's by-ref spread-append mutations;
-         *   PHPStan loses that narrowing through the by-ref closure
-         *   capture and needs array_values() to prove the same @return
-         *   list<mixed> contract.
-         */
         return [$sql, array_values($values)];
     }
 

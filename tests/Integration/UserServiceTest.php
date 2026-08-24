@@ -317,7 +317,6 @@ namespace Piwigo\Tests\Integration {
                 // assertNotNull() call throws (a failed assertion), in which
                 // case $result->userId is genuinely still null here. The
                 // null-check is the real cleanup guard, not dead code.
-                /** @psalm-suppress RedundantConditionGivenDocblockType see comment above */
                 if ($result->userId !== null) {
                     $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
@@ -1057,7 +1056,6 @@ namespace Piwigo\Tests\Integration {
                 // Same finally-runs-even-when-the-try's-own-assertNotNull()
                 // fails reasoning as testRegisterUserAddsTheNewUserToDefaultGroups()
                 // above -- the null-check is real cleanup, not dead code.
-                /** @psalm-suppress RedundantConditionGivenDocblockType see comment above */
                 if ($result->userId !== null) {
                     $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
@@ -1091,7 +1089,6 @@ namespace Piwigo\Tests\Integration {
                 // Same finally-runs-even-when-the-try's-own-assertNotNull()
                 // fails reasoning as testRegisterUserAddsTheNewUserToDefaultGroups()
                 // above -- the null-check is real cleanup, not dead code.
-                /** @psalm-suppress RedundantConditionGivenDocblockType see comment above */
                 if ($result->userId !== null) {
                     $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
@@ -1629,15 +1626,6 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->saveEditContext('/some/section', 'not-a-number');
 
-                /**
-                 * @psalm-suppress InvalidScalarArgument Psalm tracks
-                 *   $_SESSION's literal shape across this test's own
-                 *   prior assignments, marking 'edit_context' as a
-                 *   possibly-undefined key -- a shape PHPUnit's
-                 *   assertArrayNotHasKey() signature (plain
-                 *   array<array-key, mixed>) doesn't accept, even though
-                 *   the assertion itself is checking that exact absence.
-                 */
                 self::assertArrayNotHasKey('edit_context', $_SESSION);
             } finally {
                 CurrentUserTestFactory::get()->reset();

@@ -164,12 +164,6 @@ final readonly class AuthService
         // stored in a cookie
         if (isset($_COOKIE['lang']) && $this->currentUser->get()->language->value !== $_COOKIE['lang']) {
             $lang_cookie = $_COOKIE['lang'];
-            /**
-             * @psalm-suppress TypeDoesNotContainType Psalm's $_COOKIE
-             *   superglobal stub is typed more optimistically than
-             *   reality: cookie values can be arrays (e.g. `lang[x]=y`
-             *   syntax), so this is_string() guard is genuinely needed.
-             */
             if (! is_string($lang_cookie)) {
                 $this->htmlRenderer->fatalError('Invalid request parameter "lang"');
             }
@@ -241,12 +235,6 @@ final readonly class AuthService
 
         if (isset($_COOKIE[$remember_me_name])) {
             $remember_me_cookie = $_COOKIE[$remember_me_name];
-            /**
-             * @psalm-suppress RedundantCondition Psalm's $_COOKIE
-             *   superglobal stub is typed more optimistically than
-             *   reality: cookie values can be arrays (e.g. `lang[x]=y`
-             *   syntax), so this is_string() guard is genuinely needed.
-             */
             if (is_string($remember_me_cookie)) {
                 $cookie = explode('-', $remember_me_cookie);
                 if (

@@ -95,14 +95,6 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
     try {
         $conn = DbConnection::build();
 
-        /**
-         * @psalm-suppress InvalidArgument getRepository() always really
-         *   returns CommentEntity's own custom repositoryClass at runtime
-         *   (CommentRepository), which implements CommentCounterInterface;
-         *   Psalm's Doctrine plugin doesn't narrow getRepository()'s
-         *   return type per-entity's own repositoryClass binding, only the
-         *   generic EntityRepository<T>.
-         */
         $renderer = new CategoryDefaultRenderer(
             HtmlServiceTestFactory::build(),
             TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),

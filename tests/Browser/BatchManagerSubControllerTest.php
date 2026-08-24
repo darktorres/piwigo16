@@ -996,14 +996,6 @@ function bmSetImageDimensions(int $imageId, int $width, int $height): void
  * correlate a Playwright page with its own session row.
  *
  * @return array{curl: Closure(string, array<string, string>=): array{status: int, body: string}, cookieJar: non-empty-string, baseUrl: string}
- * @psalm-return array{curl: impure-Closure(string, array<string, string>=): array{status: int, body: string}, cookieJar: string, baseUrl: string}
- * @psalm-suppress InvalidReturnType Psalm reports "no return statements
- *   found" here despite the real `return [...]` a few lines down --
- *   likely confused by the inner impure closure's own return statement;
- *   the declared shape is otherwise correct and verified by this
- *   function's real callers. `impure-Closure` is Psalm-only syntax
- *   PHPStan can't parse (it treats the whole @return as unresolvable if
- *   used there instead), hence the separate @psalm-return.
  */
 function bmCurlLoginSession(string $username, string $password): array
 {

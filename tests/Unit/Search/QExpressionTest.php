@@ -47,13 +47,6 @@ function qexprScope(?QSearchScope $scope): QSearchScope
  * each test already knows it produced.
  *
  * @return array{range: array{0: int|float|string, 1: int|float|string}, strict: array{0: int, 1: int}}
- * @psalm-suppress InvalidReturnType, InvalidReturnStatement
- *   QSingleToken::$scope_data is declared as a union of two entirely
- *   different array shapes; array_key_exists('range', $data) below proves
- *   $data is the range-shaped member (not the date-shaped one), but Psalm
- *   merges a discriminated array-shape union into one shape with all keys
- *   from both members as optional, rather than narrowing to just the
- *   matching one.
  */
 function qexprRangeData(QSingleToken $token): array
 {
@@ -67,9 +60,6 @@ function qexprRangeData(QSingleToken $token): array
 
 /**
  * @return array{0: string, 1: string}
- * @psalm-suppress InvalidReturnType, InvalidReturnStatement same
- *   discriminated-array-shape-union narrowing gap as qexprRangeData()
- *   above, this time proven by array_key_exists(0, $data) instead.
  */
 function qexprDateData(QSingleToken $token): array
 {

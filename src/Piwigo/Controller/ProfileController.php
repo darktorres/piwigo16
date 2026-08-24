@@ -119,12 +119,6 @@ final readonly class ProfileController implements ControllerInterface
         // whole response (including $user's own language) consistently
         // reflects the just-switched language.
         $cookie_lang = $_COOKIE['lang'] ?? null;
-        /**
-         * @psalm-suppress TypeDoesNotContainType Psalm's $_COOKIE
-         *   superglobal stub is typed more optimistically than reality:
-         *   cookie values can be arrays (e.g. `lang[x]=y` syntax), so
-         *   this is_string() guard is genuinely needed.
-         */
         if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language->value !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
                 $this->htmlService

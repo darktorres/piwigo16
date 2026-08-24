@@ -71,10 +71,6 @@ final readonly class CacheSizeCalculator
             // resulting real undefined-key warning, and the is_int() guard
             // below is the actual runtime safety net, not dead code.
             $addedSize = @$msizesOnDisk[DerivativeUrlCodec::derivativeToUrl($sizeType)];
-            /**
-             * @psalm-suppress DocblockTypeContradiction same sparse-map reasoning as above
-             * @psalm-suppress RedundantConditionGivenDocblockType same sparse-map reasoning as above
-             */
             // @phpstan-ignore function.alreadyNarrowedType
             $addedSize = is_int($addedSize) ? $addedSize : 0;
 

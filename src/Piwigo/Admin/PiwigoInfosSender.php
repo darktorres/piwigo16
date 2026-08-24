@@ -474,10 +474,6 @@ final readonly class PiwigoInfosSender implements TelemetrySenderInterface
                      * already knows $currentCounter is int by this point;
                      * the is_numeric()/cast stays for PHPStan's own weaker
                      * inference here, which genuinely needs it.
-                     *
-                     * @psalm-suppress RedundantCondition
-                     * @psalm-suppress RedundantCast
-                     * @psalm-suppress TypeDoesNotContainType
                      */
                     $currentCounter = is_numeric($currentCounter) ? (int) $currentCounter : 0;
                     $apps[$appName]['counter'] = $currentCounter + $activity->counter;

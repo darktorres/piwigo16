@@ -176,29 +176,11 @@ final class AlbumsPageRenderer
             // array<string, string|null> would otherwise widen every other key's
             // inferred type to mixed for the rest of this iteration.
             $parents = explode(',', $album['uppercats']);
-            /**
-             * @psalm-suppress ReferenceReusedFromConfusingScope $the_place
-             *   is deliberately re-bound to a fresh reference at the top of
-             *   every outer foreach iteration (this line) and refined
-             *   deeper by the inner for loop below -- the tree-walking
-             *   algorithm this whole method implements; not a stale
-             *   reference leaking across iterations.
-             * @psalm-suppress UnsupportedReferenceUsage same deliberate
-             *   dynamic-depth reference-rebinding algorithm; Psalm's
-             *   reference analysis genuinely cannot follow it, but the
-             *   pattern itself is correct (mirrors PHP's own array
-             *   autovivification-by-reference).
-             */
             $the_place = &$associatedTree[strval($parents[0])];
             if (! is_array($the_place)) {
                 // Matches PHP's own null-to-array autovivification on the offset
                 // write below -- made explicit so PHPStan can prove $the_place is
                 // array-like at every depth of this dynamically built tree.
-                /**
-                 * @psalm-suppress ReferenceReusedFromConfusingScope same
-                 *   deliberate reference re-binding as above, not a stale
-                 *   reference leaking across iterations.
-                 */
                 $the_place = [];
             }
             /** @var array<string, mixed> $the_place */
@@ -370,13 +352,6 @@ final class AlbumsPageRenderer
             // column's own real int|bool runtime type.
             $orderedCat['visible'] = SqlDialect::booleanToString((bool) $cat_row['visible']);
             $orderedCat['uppercats'] = is_scalar($cat_row_uppercats) ? (string) $cat_row_uppercats : '';
-            /**
-             * @psalm-suppress InvalidArrayOffset $cat_id is a numeric
-             *   category id kept as a string (see the cast above, for the
-             *   int|numeric-string DBAL/mysqli parity reasoning); PHP
-             *   canonicalises it back to an int array key at runtime
-             *   regardless of Psalm's own static string typing here.
-             */
             $orderedCat['nb_images'] = $nb_photos_in[$cat_id] ?? 0;
             // Always a DateHelper::timeSince() string by the time it reaches
             // here (reassigned above, before $album was stored into the

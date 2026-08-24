@@ -57,13 +57,6 @@ final class SessionUserResolverTest extends IntegrationTestCase
 
         $this->repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class);
         $this->resolver = new SessionUserResolver($this->repo);
-        /**
-         * @psalm-suppress RedundantCondition
-         * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
-         *   superglobal stub is typed more optimistically than reality:
-         *   REMOTE_ADDR is never guaranteed present or string the way
-         *   Psalm's stub assumes.
-         */
         $this->originalRemoteAddr = isset($_SERVER['REMOTE_ADDR']) && is_string($_SERVER['REMOTE_ADDR'])
             ? $_SERVER['REMOTE_ADDR']
             : null;

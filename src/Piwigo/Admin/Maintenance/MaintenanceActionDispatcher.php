@@ -127,15 +127,6 @@ final readonly class MaintenanceActionDispatcher
             case 'images':
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
-                /**
-                 * @psalm-suppress InvalidArgument getRepository() always
-                 *   really returns SiteEntity's own custom repositoryClass
-                 *   at runtime (SiteRepository), which implements
-                 *   SiteGalleriesUrlLookupInterface; Psalm's Doctrine
-                 *   plugin doesn't narrow getRepository()'s return type
-                 *   per-entity's own repositoryClass binding, only the
-                 *   generic EntityRepository<T>.
-                 */
                 $this->categoryService
                     ->updatePath(TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class));
                 $this->rateService

@@ -452,25 +452,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
             $data_storage[$type]['total']['filesize'] = $current_filesize + $ext_filesize;
 
-            /**
-             * @psalm-suppress InvalidArrayOffset $data_storage is declared
-             *   array<string, array<string, array<string, mixed>>> above;
-             *   Psalm still narrows $data_storage[$type]['total']'s shape
-             *   to just the 'filesize' key it saw read/written a few lines
-             *   above, not yet accounting for 'nb_files' being read/written
-             *   right here in the very next pair of statements.
-             */
             $current_nb_files = $data_storage[$type]['total']['nb_files'] ?? 0;
-            /**
-             * @psalm-suppress RedundantCondition
-             * @psalm-suppress RedundantCast
-             * @psalm-suppress TypeDoesNotContainType Same array-shape
-             *   narrowing gap as the InvalidArrayOffset suppression above:
-             *   Psalm infers $current_nb_files as literally 0 here (since
-             *   it thinks 'nb_files' is never a real key), not the real
-             *   possibly-numeric value the ?? read above can actually
-             *   produce.
-             */
             $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
             $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
 
@@ -492,25 +474,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
             $data_storage[$type]['total']['filesize'] = $current_filesize + $ext_filesize;
 
-            /**
-             * @psalm-suppress InvalidArrayOffset $data_storage is declared
-             *   array<string, array<string, array<string, mixed>>> above;
-             *   Psalm still narrows $data_storage[$type]['total']'s shape
-             *   to just the 'filesize' key it saw read/written a few lines
-             *   above, not yet accounting for 'nb_files' being read/written
-             *   right here in the very next pair of statements.
-             */
             $current_nb_files = $data_storage[$type]['total']['nb_files'] ?? 0;
-            /**
-             * @psalm-suppress RedundantCondition
-             * @psalm-suppress RedundantCast
-             * @psalm-suppress TypeDoesNotContainType Same array-shape
-             *   narrowing gap as the InvalidArrayOffset suppression above:
-             *   Psalm infers $current_nb_files as literally 0 here (since
-             *   it thinks 'nb_files' is never a real key), not the real
-             *   possibly-numeric value the ?? read above can actually
-             *   produce.
-             */
             $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
             $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
 

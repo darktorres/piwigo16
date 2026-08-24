@@ -75,7 +75,6 @@ if ($driver === 'pgsql') {
     // false -- PHPStan's stub reflects that (proves an instanceof guard
     // here dead code, instanceof.alwaysTrue); Psalm's own mysqli stub
     // still types the return as mysqli_result|bool.
-    /** @psalm-suppress PossiblyInvalidMethodCall see comment above */
     while (($row = $result->fetch_assoc()) !== null) {
         $rows[] = $row;
     }

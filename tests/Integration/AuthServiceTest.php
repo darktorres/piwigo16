@@ -251,15 +251,6 @@ namespace Piwigo\Tests\Integration {
             // Fixture user 4 (power_user) -- see this suite's own
             // fixture-shape memory notes; no login-activity rows exist for
             // it in the fixture, so countLoginActivity() === 0.
-            /**
-             * @psalm-suppress InvalidArgument getRepository() always really
-             *   returns ActivityEntity's own custom repositoryClass at
-             *   runtime (ActivityRepository), which implements
-             *   LoginActivityLookupInterface; Psalm's Doctrine plugin
-             *   doesn't narrow getRepository()'s return type per-entity's
-             *   own repositoryClass binding, only the generic
-             *   EntityRepository<T>.
-             */
             self::assertTrue($this->service->hasAlreadyLoggedIn(4, TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class)));
         }
 

@@ -105,13 +105,10 @@ final class InstallServiceTest extends IntegrationTestCase
         // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertCount(11, InstallService::PHP5_HOSTING_HTACCESS);
         // Same "redundant, but that's the point" reasoning as above for Psalm.
-        /** @psalm-suppress RedundantCondition */
         // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('AddType x-mapp-php5 .php', InstallService::PHP5_HOSTING_HTACCESS['kundenserver.de']);
-        /** @psalm-suppress RedundantCondition */
         // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('SetEnv PHP_VER 5', InstallService::PHP5_HOSTING_HTACCESS['ovh.net']);
-        /** @psalm-suppress RedundantCondition */
         // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('php 1', InstallService::PHP5_HOSTING_HTACCESS['free.fr']);
     }

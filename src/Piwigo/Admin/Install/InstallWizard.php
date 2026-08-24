@@ -607,12 +607,6 @@ final class InstallWizard
      * upgrade-table pre-fill. The entry shell marks InstallationFlag active
      * immediately before calling this, exactly where the former top-level
      * code's raw `define('PHPWG_INSTALLED', true)` sat.
-     *
-     * @psalm-suppress RedundantCondition
-     * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER superglobal
-     *   stub is typed more optimistically than reality: HTTP_HOST/
-     *   SCRIPT_NAME are never guaranteed present or string the way Psalm's
-     *   stub assumes.
      */
     public function performInstall(): void
     {

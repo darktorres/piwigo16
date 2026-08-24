@@ -795,15 +795,6 @@ final readonly class UploadService
             // the unprefixed name, so this matches both the plain SVG2
             // `href` and the legacy `xlink:href` form regardless of
             // namespace prefix.
-            /**
-             * @psalm-suppress RedundantCondition
-             * @psalm-suppress TypeDoesNotContainType Psalm's DOM stub
-             *   types DOMAttr::$localName as always non-null, but the
-             *   real DOM API returns null when the attribute was created
-             *   without a namespace (plain createAttribute() rather than
-             *   createAttributeNS()); this `?? ''` guard is genuinely
-             *   needed.
-             */
             if (strtolower($attrNode->localName ?? '') === 'href'
                 and (bool) preg_match('/^\s*(javascript|data)\s*:/i', $attrNode->value)) {
                 $attrNode->ownerElement?->removeAttributeNode($attrNode);

@@ -810,13 +810,6 @@ test('extract sets each extracted file\'s mtime to the archive entry\'s stored m
     $zip->open($archive, ZipArchive::CREATE);
     $zip->addFromString('plugin_id/main.inc.php', '<?php // main');
     $fixedMtime = mktime(12, 0, 0, 6, 15, 2001);
-    /**
-     * @psalm-suppress RedundantCondition mktime() no longer returns
-     *   false for out-of-range values since PHP 5.1 (it normalizes
-     *   instead), so this is provably int today; kept as a real guard
-     *   against a hypothetical future stdlib behavior change, not
-     *   anything Psalm itself would otherwise flag.
-     */
     Assert::assertIsInt($fixedMtime);
     $zip->setMtimeName('plugin_id/main.inc.php', $fixedMtime);
     $zip->close();

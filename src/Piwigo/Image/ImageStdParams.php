@@ -214,7 +214,6 @@ final class ImageStdParams
         // int|string> constraint on $key even after the call returns and
         // the reference is no longer live -- reassigning it to the joined
         // string here is genuinely safe.
-        /** @psalm-suppress ReferenceConstraintViolation */
         $key = implode('_', $key);
         if (($this->custom[$key] ?? 0) < time() - 24 * 3600) {
             $this->custom[$key] = time();
@@ -652,11 +651,6 @@ final class ImageStdParams
 
     /**
      * Build 'type_map', 'all_type_map' and 'undefined_type_map'.
-     */
-    /**
-     * @psalm-suppress InvalidArrayOffset Psalm can't prove $i/$j stay
-     *   within ALL_TYPES' own literal 11-element bound through a
-     *   `count()`-based loop condition.
      */
     private function buildMaps(): void
     {

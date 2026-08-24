@@ -269,13 +269,6 @@ final readonly class CommentsController implements ControllerInterface
             // from email for management purpose (validate/delete)
             if (! $this->accessControl->isAdmin()) {
                 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-                /**
-                 * @psalm-suppress RedundantCondition
-                 * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
-                 *   superglobal stub is typed more optimistically than
-                 *   reality: REQUEST_URI is never guaranteed present or
-                 *   string the way Psalm's stub assumes.
-                 */
                 $request_uri = is_string($request_uri) ? $request_uri : '';
                 $login_url =
                   $this->urlService->getRootUrl() . 'identification.php?redirect='
@@ -525,13 +518,6 @@ final readonly class CommentsController implements ControllerInterface
                 $src_image = new SrcImage(SrcImageInfo::fromRow($elements[$image_id_int]));
 
                 // link to the full size picture
-                /**
-                 * @psalm-suppress InvalidArrayOffset $category_id is a
-                 *   numeric category id kept as a string (see the cast
-                 *   above); PHP canonicalises it back to an int array key
-                 *   at runtime regardless of Psalm's own static string
-                 *   typing here.
-                 */
                 $url = $urlService->makePictureUrl(
                     [
                         'category' => $categories[$category_id],

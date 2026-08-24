@@ -89,18 +89,6 @@ final class CheckIntegrity
 
         // Information
         if (count($this->retrieve_list) > 0) {
-            /**
-             * @psalm-suppress NoValue dispatchListCheckIntegrity()'s own
-             *   docblock already documents the root cause for PHPStan: a
-             *   registered event handler may call back into this same
-             *   instance and mutate $retrieve_list via addAnomaly(),
-             *   invisible to static analysis through the dispatch() call.
-             *   Psalm's flow analysis is stricter here than PHPStan's and
-             *   still collapses this count() (already inside the
-             *   `if (count(...) > 0)` body above) to an impossible/never
-             *   type -- not dead code, this line executes on every real
-             *   anomaly-detected request.
-             */
             $this->layoutState->addHeaderNote($this->translator->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',

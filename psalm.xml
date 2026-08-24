@@ -466,7 +466,36 @@
                      `nullCoalesce.property`/`nullCoalesce.variable` from
                      PHPStan. -->
                 <file name="src/Piwigo/Auth/AuthService.php"/>
+                <!-- ContextVariableExtractor: 3 sites iterate a
+                     nikic/php-parser Array_::$items list, whose element
+                     type is `array<ArrayItem|null>` (null only for a
+                     list-unpack skip like `[, $x]`, never a real literal
+                     array in this tool's own toArray()/assign() input
+                     shapes). PHPStan's own php-parser stub/scope proves
+                     $item is never null in these 3 loops (confirmed:
+                     adding an `if ($item === null) continue;` guard gets
+                     `identical.alwaysFalse` from PHPStan, dead code);
+                     Psalm's stub doesn't narrow this. -->
+                <file name="tools/phpstan/Latte/ContextVariableExtractor.php"/>
             </errorLevel>
         </PossiblyNullArgument>
+        <PossiblyNullPropertyFetch>
+            <errorLevel type="suppress">
+                <!-- Same nikic/php-parser Array_::$items nullable-element
+                     gap as this file's own PossiblyNullArgument entry
+                     above: $item->key/$item->value property reads hit
+                     this before the argument-passing point does. -->
+                <file name="tools/phpstan/Latte/ContextVariableExtractor.php"/>
+            </errorLevel>
+        </PossiblyNullPropertyFetch>
+        <PossiblyNullReference>
+            <errorLevel type="suppress">
+                <!-- Same nikic/php-parser Array_::$items nullable-element
+                     gap as this file's own PossiblyNullArgument entry
+                     above: $item->getStartLine() method calls hit this
+                     before the argument-passing point does. -->
+                <file name="tools/phpstan/Latte/ContextVariableExtractor.php"/>
+            </errorLevel>
+        </PossiblyNullReference>
     </issueHandlers>
 </psalm>

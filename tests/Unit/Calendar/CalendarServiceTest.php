@@ -293,7 +293,9 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
 
     expect($scope->rawSqlWhere->parameters)
         ->toHaveCount(4);
-    [$forbidKey, $visCatKey, $visImgKey, $levelKey] = array_keys($scope->rawSqlWhere->parameters);
+    $rawSqlWhereKeys = array_keys($scope->rawSqlWhere->parameters);
+    assert(count($rawSqlWhereKeys) === 4);
+    [$forbidKey, $visCatKey, $visImgKey, $levelKey] = $rawSqlWhereKeys;
 
     expect($scope->rawSqlFrom)
         ->toBe(" FROM images\nINNER JOIN " . 'image_category ON id = image_id')
@@ -309,7 +311,9 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
 
     expect($scope->dqlWhere->parameters)
         ->toHaveCount(4);
-    [$dqlForbidKey, $dqlVisCatKey, $dqlVisImgKey, $dqlLevelKey] = array_keys($scope->dqlWhere->parameters);
+    $dqlWhereKeys = array_keys($scope->dqlWhere->parameters);
+    assert(count($dqlWhereKeys) === 4);
+    [$dqlForbidKey, $dqlVisCatKey, $dqlVisImgKey, $dqlLevelKey] = $dqlWhereKeys;
 
     expect((string) $scope->dqlWhere->expr)
         ->toBe(

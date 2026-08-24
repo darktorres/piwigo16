@@ -294,7 +294,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $cat = $cat_names[$category_id] ?? null;
             $cat = $cat instanceof CategoryIdNamePermalink ? $cat->toArray() : [];
 
-            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
+            $cat_name = $cat['name'] ?? null;
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat_name) ? $cat_name : '', 'get_cat_display_name_cache'));
             $cat['name'] = $nameEvent->categoryName;
             // Escaped only for the HTML text this method builds below --
             // $cat['name'] itself stays raw for makeIndexUrl()'s own

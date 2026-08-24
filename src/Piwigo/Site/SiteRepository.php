@@ -116,8 +116,9 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
 
         $byId = [];
         foreach ($rows as $row) {
-            if (is_array($row) && (is_int($row['id']) || is_string($row['id'])) && is_string($row['galleriesUrl'] ?? null)) {
-                $byId[$row['id']] = $row['galleriesUrl'];
+            $galleriesUrl = is_array($row) ? ($row['galleriesUrl'] ?? null) : null;
+            if (is_array($row) && (is_int($row['id']) || is_string($row['id'])) && is_string($galleriesUrl)) {
+                $byId[$row['id']] = $galleriesUrl;
             }
         }
 

@@ -77,6 +77,7 @@ final readonly class CategoryListController implements ControllerInterface
                 ? $row['image_order']
                 : $this->currentConfig->orderBy->toStoredBody();
 
+            $row_global_rank = $row['global_rank'] ?? null;
             $categories[] = [
                 'id' => is_string($id) ? (int) $id : $id,
                 'name' => strip_tags($nameEvent->categoryName),
@@ -85,7 +86,7 @@ final readonly class CategoryListController implements ControllerInterface
                 'commentRaw' => is_string($row['comment']) ? $row['comment'] : null,
                 'fullname' => strip_tags($this->htmlRenderer->getCatDisplayNameCache($row['uppercats'], 'admin.php?page=album-')),
                 'uppercats' => $row['uppercats'],
-                'globalRank' => is_scalar($row['global_rank'] ?? null) ? (string) $row['global_rank'] : null,
+                'globalRank' => is_scalar($row_global_rank) ? (string) $row_global_rank : null,
                 'status' => $row['status'],
                 'imageOrder' => $imageOrder,
                 'nbImages' => $nbImages,

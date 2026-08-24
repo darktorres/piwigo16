@@ -227,7 +227,9 @@ final class MailService implements MailerInterface
     private static function resolveMailTheme(MailArgs $args, array $confMail): string
     {
         if ($args->theme === null || self::emptyValue($args->theme) || ! in_array($args->theme, ['clear', 'dark'], true)) {
-            return is_string($confMail['mail_theme'] ?? null) ? $confMail['mail_theme'] : 'clear';
+            $mail_theme = $confMail['mail_theme'] ?? null;
+
+            return is_string($mail_theme) ? $mail_theme : 'clear';
         }
 
         return $args->theme;

@@ -1022,12 +1022,14 @@ final readonly class SearchFilterRenderer
 
                 [$dateWithoutTime] = explode(' ', $date);
                 [$y, $m] = explode('-', $dateWithoutTime);
+                $ym = $y . '-' . $m;
 
-                $listOfDates[$y]['months'][$y . '-' . $m]['days'][$dateWithoutTime]['count'] =
-                    ($listOfDates[$y]['months'][$y . '-' . $m]['days'][$dateWithoutTime]['count'] ?? 0) + 1;
-                $listOfDates[$y]['months'][$y . '-' . $m]['count'] =
-                    ($listOfDates[$y]['months'][$y . '-' . $m]['count'] ?? 0) + 1;
-                $listOfDates[$y]['count'] = ($listOfDates[$y]['count'] ?? 0) + 1;
+                $day_count = $listOfDates[$y]['months'][$ym]['days'][$dateWithoutTime]['count'] ?? 0;
+                $listOfDates[$y]['months'][$ym]['days'][$dateWithoutTime]['count'] = $day_count + 1;
+                $month_count = $listOfDates[$y]['months'][$ym]['count'] ?? 0;
+                $listOfDates[$y]['months'][$ym]['count'] = $month_count + 1;
+                $year_count = $listOfDates[$y]['count'] ?? 0;
+                $listOfDates[$y]['count'] = $year_count + 1;
             }
 
             if ($cacheApplicable) {

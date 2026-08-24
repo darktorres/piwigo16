@@ -523,6 +523,7 @@ final class RateRepository extends EntityRepository
             }
 
             $name = $row['name'] ?? null;
+            $status = $row['status'] ?? null;
 
             $result[] = new RaterInfo(
                 id: $row['id']->value,
@@ -530,7 +531,7 @@ final class RateRepository extends EntityRepository
                 // `ui.status` (UserInfoEntity::$status) is enumType-mapped
                 // -- array hydration returns a real UserStatus instance for
                 // it, not a raw string.
-                status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
+                status: $status instanceof UserStatus ? $status->value : '',
             );
         }
 

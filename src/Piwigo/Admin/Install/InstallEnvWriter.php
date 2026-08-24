@@ -52,7 +52,8 @@ final class InstallEnvWriter
         }
         // In test mode, also record the base URL so e2e runners know where to connect.
         if (Env::testModeIsActive()) {
-            $scheme = (! in_array($_SERVER['HTTPS'] ?? null, [null, false, 0, '0', ''], true) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $https = $_SERVER['HTTPS'] ?? null;
+            $scheme = (! in_array($https, [null, '0', ''], true) && $https !== 'off') ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
             $host = is_string($host) ? $host : 'localhost';
             $script = $_SERVER['SCRIPT_NAME'] ?? '';

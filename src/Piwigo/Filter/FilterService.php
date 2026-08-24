@@ -138,7 +138,8 @@ final readonly class FilterService implements FilterUpdaterInterface
             // $filter['matches'] was populated by preg_match()'s by-reference
             // $matches parameter above -- that call re-widens PHPStan's prior
             // narrowing of the array's value type, so re-narrow here.
-            $filter_matches = is_array($filter['matches'] ?? null) ? $filter['matches'] : null;
+            $filter_matches_raw = $filter['matches'] ?? null;
+            $filter_matches = is_array($filter_matches_raw) ? $filter_matches_raw : null;
             if ($filter_matches !== null) {
                 // matches[1] always exists here: this branch is only reached when
                 // $filter['enabled'] was set true via a successful preg_match()

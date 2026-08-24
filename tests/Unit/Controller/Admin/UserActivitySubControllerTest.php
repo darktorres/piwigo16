@@ -291,7 +291,9 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
         expect($result->pageTitle)
             ->toBe('Users');
 
-        [$usersPart, $ulistPart] = explode('|', (string) $adminContent, 2);
+        $adminContentParts = explode('|', (string) $adminContent, 2);
+        assert(count($adminContentParts) === 2);
+        [$usersPart, $ulistPart] = $adminContentParts;
         expect($usersPart)
             ->toBe('users=4')
             ->and(json_decode(substr($ulistPart, strlen('ulist=')), true, flags: JSON_THROW_ON_ERROR))

@@ -353,6 +353,20 @@
                      condition either. Confirmed: adding a `?? ''` guard
                      gets `nullCoalesce.offset` from PHPStan. -->
                 <file name="src/Piwigo/Db/AdvisorySessionLock.php"/>
+                <!-- actionCurlGet()'s header-parsing loop: `explode(':',
+                     $line, 2)` is only reached inside `if
+                     (str_contains($line, ':'))`, so it always yields
+                     exactly 2 parts. PHPStan's flow analysis proves this
+                     (confirmed: adding an `assert(count(...) === 2)` guard
+                     gets `function.alreadyNarrowedType`/
+                     `identical.alwaysTrue`, dead code); Psalm can't
+                     correlate str_contains()'s boolean result with
+                     explode()'s own part count. -->
+                <file name="tests/Browser/ActionControllerTest.php"/>
+                <!-- Same str_contains()-then-explode() gap as
+                     ActionControllerTest.php above, in idcGet()'s own
+                     identical header-parsing loop. -->
+                <file name="tests/Browser/ImageDerivativeControllerTest.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

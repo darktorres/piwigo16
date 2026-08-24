@@ -329,7 +329,9 @@ test('render() lists real activity aggregated by user and skips the additional-f
 
         $parts = [];
         foreach (explode('|', (string) $adminContent) as $field) {
-            [$key, $value] = explode('=', $field, 2);
+            $fieldParts = explode('=', $field, 2);
+            assert(count($fieldParts) === 2);
+            [$key, $value] = $fieldParts;
             $parts[$key] = $value;
         }
 

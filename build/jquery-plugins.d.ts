@@ -82,6 +82,78 @@ interface Window {
 	prefix_icon: any;
 	sliders: any;
 	show_filter_ratings: any;
+
+	// common.ts's own established shared-global set (P46-A/eslint.config.ts's
+	// pre-existing globals block for this exact file, now enforced by real
+	// exposure instead of just an ESLint no-undef exemption).
+	array_delete: (arr: any[], item: any) => void;
+	str_repeat: (i: string, m: number) => string;
+	getRandomInt: (min: number, max: number) => number;
+	sprintf: (...args: any[]) => string;
+	jConfirm_alert_options: Record<string, unknown>;
+	jConfirm_confirm_options: Record<string, unknown>;
+	jConfirm_warning_options: Record<string, unknown>;
+	jConfirm_confirm_with_content_options: Record<string, unknown>;
+	// A real ES6 `class`, not a plain function/object like the rest of this
+	// interface -- `typeof TemporaryStateCtor` (a constructor type) is what
+	// lets a consumer file write `new TemporaryState()` against the bare
+	// global the same way it already could pre-P46.
+	TemporaryState: TemporaryStateCtor;
+
+	// LocalStorageCache.ts's own established shared-global set (same
+	// eslint.config.ts pre-existing globals block, same "now enforced by
+	// real exposure" note as common.ts's own copy of this comment).
+	// Loosely typed on purpose: these 4 are old-style prototype-chain
+	// "classes" (`Foo.prototype = new Bar()`), not real ES6 classes --
+	// modeling the actual inheritance chain precisely isn't this phase's
+	// job (P46 stays "same code, same behavior," not a real typing
+	// refactor); `any` options in, an object with a real `selectize()`
+	// method out is all a consumer ever needs from the ambient type.
+	CategoriesCache: new (options: any) => { selectize($target: JQuery, options?: any): void };
+	TagsCache: new (options: any) => { selectize($target: JQuery, options?: any): void };
+	GroupsCache: new (options: any) => { selectize($target: JQuery, options?: any): void };
+	UsersCache: new (options: any) => { selectize($target: JQuery, options?: any): void };
+	// The base class the 4 above inherit from -- exported (`exports.
+	// LocalStorageCache = ...`) same as the others in the real pre-P46
+	// .js, even though no other real file reads it bare today; typed for
+	// the same "same code" completeness reason, not because it's used.
+	LocalStorageCache: any;
+
+	// album_selector.ts's own established shared-global set (confirmed via
+	// the P46-C full 61-file sweep, not this plan's earlier 5-minute
+	// spot-check -- see docs/PLAN.md's own sweep writeup for the full
+	// per-name evidence).
+	str_albums_found: string;
+	str_result_limit: string;
+	AlbumSelector: new (options: Record<string, any>) => any;
+
+	// intro.ts's own established shared-global set (matches this plan's
+	// own earlier 5-minute spot-check finding, confirmed by full reading
+	// during the P46-C sweep).
+	str_gb: string;
+	str_mb: string;
+	storage_details: Record<string, any>;
+	translate_files: string;
+	translate_type: Record<string, string>;
+}
+
+// Declared outside `Window` (TS doesn't allow forward-referencing a
+// same-file class-as-type from inside an interface merge) -- mirrors
+// common.ts's own `TemporaryState` class shape exactly. Kept minimal
+// (method signatures only) since the real implementation lives in
+// common.ts; this is purely the ambient type consumer files need.
+interface TemporaryStateCtor {
+	new (): {
+		attrChanges: { object: JQuery; attribute: string; value: string | undefined }[];
+		classChanges: { object: JQuery; state: boolean; class: string }[];
+		htmlChanges: { object: JQuery; html: string }[];
+		changeAttribute(obj: JQuery, attr: string, tempVal: string): void;
+		changeClass(obj: JQuery, st: boolean, tempclass: string): void;
+		addClass(obj: JQuery, tempclass: string): void;
+		removeClass(obj: JQuery, tempclass: string): void;
+		changeHTML(obj: JQuery, temphtml: string): void;
+		reverse(): void;
+	};
 }
 
 // These 4 (declared as real functions in page-data.ts/scripts.ts,
@@ -100,6 +172,17 @@ declare function pwg_getPageData(key: string): any;
 declare function pwg_getPageString(key: string): string;
 declare function phpWGOpenWindow(theURL: string, winName: string, features: string): void;
 declare function pwgAddEventListener(elem: EventTarget, evt: string, fn: EventListenerOrEventListenerObject): void;
+declare function sprintf(...args: any[]): string;
+
+// `pwg_token` (the CSRF token) is independently declared per-page by
+// whichever file happens to be that page's own top-level script
+// (`albums.js`'s own `var pwg_token = pwg_getPageData('csrf_token');`
+// is one of several -- same "declared per-page, safe because never
+// co-loaded with a conflicting value" pattern as P46-0's own
+// `add_related_category` finding). `album_selector.ts` is the first
+// *consumer*-only file converted so far that reads it bare without
+// declaring it itself.
+declare const pwg_token: any;
 
 interface JQueryStatic {
 	// jquery.ajaxmanager (vendored, never published to npm -- P46-0's own
@@ -110,4 +193,46 @@ interface JQueryStatic {
 			add(options: Record<string, unknown>): void;
 		};
 	};
+
+	// jquery-confirm (vendored -- P46-0's own CDN table). `common.ts`'s own
+	// `pwg_jconfirm_follow_href` is the one real first-party call site so
+	// far; every admin page that pops a confirm/alert dialog calls this
+	// same `$.confirm(...)` API directly too, so this grows as those
+	// convert.
+	confirm(options: Record<string, unknown>): void;
+	alert(options: Record<string, unknown>): void;
+
+	// Real jQuery-core static helper, just missing from @types/jquery's
+	// own typings for this jQuery version. `LocalStorageCache.ts`'s own
+	// `AbstractSelectizer._selectize` is the one real first-party call
+	// site.
+	isNumeric(value: any): boolean;
+}
+
+interface JQuery {
+	// selectize.js (vendored, github-sourced -- P46-0's own CDN table).
+	// `LocalStorageCache.ts`'s own `CategoriesCache`/`TagsCache`/
+	// `GroupsCache`/`UsersCache.selectize()` methods are the one real
+	// first-party call site so far.
+	selectize(options?: Record<string, unknown>): JQuery;
+
+	// jquery.cluetip (vendored, github-sourced -- P46-0's own CDN table).
+	// `intro.ts`'s own tooltip setup is the one real first-party call
+	// site so far.
+	cluetip(options?: Record<string, unknown>): JQuery;
+
+	// common.ts's own 2 first-party `jQuery.fn` extensions (not vendored
+	// plugins) -- `datepicker.ts`'s own `pwgDatepicker` and 4 others
+	// (`addAlbum.ts`'s `pwgAddAlbum`, `admin.ts`'s `lightAccordion`,
+	// `batchManagerGlobal.ts`'s `enableShiftClick`) get the same
+	// treatment here once their own conversion adds a real cross-file
+	// call site -- none has one yet, so no ambient declaration needed
+	// for those 4 until one does.
+	fontCheckbox(): JQuery;
+	pwg_jconfirm_follow_href(options?: {
+		alert_title?: string;
+		alert_confirm?: string;
+		alert_cancel?: string;
+		alert_content?: string;
+	}): void;
 }

@@ -1,4 +1,4 @@
-jQuery.fn.fontCheckbox = function() {
+jQuery.fn.fontCheckbox = function(this: JQuery): JQuery {
   /* checkbox */
   this.find('input[type=checkbox]').each(function() {
     if (!jQuery(this).is(':checked')) {
@@ -37,28 +37,30 @@ jQuery.fn.fontCheckbox = function() {
       }
     })
   });
+  return this;
 };
 
 // init fontChecbox everywhere
 jQuery('.font-checkbox').fontCheckbox();
 
-function array_delete(arr, item) {
-  var i = arr.indexOf(item);
+function array_delete(arr: any[], item: any): void {
+  const i = arr.indexOf(item);
   if (i != -1) arr.splice(i, 1);
 }
 
-function str_repeat(i, m) {
-  for (var o = []; m > 0; o[--m] = i);
+function str_repeat(i: string, m: number): string {
+  const o: string[] = [];
+  for (; m > 0; o[--m] = i);
   return o.join('');
 }
 
 if (!Array.prototype.indexOf)
 {
-  Array.prototype.indexOf = function(elt /*, from*/)
+  Array.prototype.indexOf = function(elt: any, fromArg?: number): number
   {
-    var len = this.length;
+    const len = this.length;
 
-    var from = Number(arguments[1]) || 0;
+    let from = Number(fromArg) || 0;
     from = (from < 0)
          ? Math.ceil(from)
          : Math.floor(from);
@@ -75,50 +77,51 @@ if (!Array.prototype.indexOf)
   };
 }
 
-function getRandomInt(min, max) {
+function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function sprintf() {
-  var i = 0, a, f = arguments[i++], o = [], m, p, c, x, s = '';
+function sprintf(...args: any[]): string {
+  let i = 0, a: any, f = args[i++], m: RegExpExecArray | null, p: string, c: string, x: number;
+  const o: string[] = [], s = '';
   while (f) {
-    if (m = /^[^\x25]+/.exec(f)) {
+    if ((m = /^[^\x25]+/.exec(f))) {
       o.push(m[0]);
     }
-    else if (m = /^\x25{2}/.exec(f)) {
+    else if ((m = /^\x25{2}/.exec(f))) {
       o.push('%');
     }
-    else if (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f)) {
-      if (((a = arguments[m[1] || i++]) == null) || (a == undefined)) {
-        throw('Too few arguments.');
+    else if ((m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))) {
+      if (((a = args[m[1] ? Number(m[1]) : i++]) == null) || (a == undefined)) {
+        throw new Error('Too few arguments.');
       }
-      if (/[^s]/.test(m[7]) && (typeof(a) != 'number')) {
-        throw('Expecting number but found ' + typeof(a));
+      if (/[^s]/.test(m[7]!) && (typeof(a) != 'number')) {
+        throw new Error('Expecting number but found ' + typeof(a));
       }
 
       switch (m[7]) {
         case 'b': a = a.toString(2); break;
         case 'c': a = String.fromCharCode(a); break;
         case 'd': a = parseInt(a); break;
-        case 'e': a = m[6] ? a.toExponential(m[6]) : a.toExponential(); break;
-        case 'f': a = m[6] ? parseFloat(a).toFixed(m[6]) : parseFloat(a); break;
+        case 'e': a = m[6] ? a.toExponential(Number(m[6])) : a.toExponential(); break;
+        case 'f': a = m[6] ? parseFloat(a).toFixed(Number(m[6])) : parseFloat(a); break;
         case 'o': a = a.toString(8); break;
-        case 's': a = ((a = String(a)) && m[6] ? a.substring(0, m[6]) : a); break;
+        case 's': a = ((a = String(a)) && m[6] ? a.substring(0, Number(m[6])) : a); break;
         case 'u': a = Math.abs(a); break;
         case 'x': a = a.toString(16); break;
         case 'X': a = a.toString(16).toUpperCase(); break;
       }
 
-      a = (/[def]/.test(m[7]) && m[2] && a >= 0 ? '+'+ a : a);
+      a = (/[def]/.test(m[7]!) && m[2] && a >= 0 ? '+'+ a : a);
       c = m[3] ? m[3] == '0' ? '0' : m[3].charAt(1) : ' ';
-      x = m[5] - String(a).length - s.length;
+      x = Number(m[5]) - String(a).length - s.length;
       p = m[5] ? str_repeat(c, x) : '';
       o.push(s + (m[4] ? a + p : p + a));
     }
     else {
-      throw('Huh ?!');
+      throw new Error('Huh ?!');
     }
 
     f = f.substring(m[0].length);
@@ -140,8 +143,29 @@ $('.search-input').on('input', function() {
   }
 })
 
+interface TemporaryStateAttrChange {
+  object: JQuery;
+  attribute: string;
+  value: string | undefined;
+}
+
+interface TemporaryStateClassChange {
+  object: JQuery;
+  state: boolean;
+  class: string;
+}
+
+interface TemporaryStateHtmlChange {
+  object: JQuery;
+  html: string;
+}
+
 // Class to implement a temporary state and reverse it
 class TemporaryState {
+  attrChanges: TemporaryStateAttrChange[];
+  classChanges: TemporaryStateClassChange[];
+  htmlChanges: TemporaryStateHtmlChange[];
+
   constructor() {
     //Arrays to reverse changes
     this.attrChanges = []; //Attribute changes : {object(s), attribute, value}
@@ -153,14 +177,14 @@ class TemporaryState {
    * Change temporaly an attribute of an object
    * @param {Jquery Object(s)} obj HTML Object(s)
    * @param {String} attr Attribute
-   * @param {String} tempVal Temporary value of the attribute 
+   * @param {String} tempVal Temporary value of the attribute
    */
-  changeAttribute(obj, attr, tempVal) {
+  changeAttribute(obj: JQuery, attr: string, tempVal: string): void {
     for (let i = 0; i < obj.length; i++) {
       this.attrChanges.push({
-        object: $(obj[i]),
+        object: $(obj[i]!),
         attribute: attr,
-        value: $(obj[i]).attr(attr)
+        value: $(obj[i]!).attr(attr)
       })
     }
     obj.attr(attr, tempVal)
@@ -172,50 +196,50 @@ class TemporaryState {
    * @param {Boolean} st Add (true) or Remove (false) the class
    * @param {String} loadclass Class Name
    */
-  changeClass(obj, st, tempclass) {
+  changeClass(obj: JQuery, st: boolean, tempclass: string): void {
     for (let i = 0; i < obj.length; i++) {
-      if (!($(obj[i]).hasClass(tempclass) && st)) {
+      if (!($(obj[i]!).hasClass(tempclass) && st)) {
         this.classChanges.push({
-          object: $(obj[i]),
+          object: $(obj[i]!),
           state: !st,
           class: tempclass
         })
-        if (st) 
-          $(obj[i]).addClass(tempclass)
+        if (st)
+          $(obj[i]!).addClass(tempclass)
         else
-          $(obj[i]).removeClass(tempclass)
+          $(obj[i]!).removeClass(tempclass)
       }
     }
   }
 
   /**
    * Add temporarily a class to the object
-   * @param {Jquery Object(s)} obj 
-   * @param {string} tempclass 
+   * @param {Jquery Object(s)} obj
+   * @param {string} tempclass
    */
-  addClass(obj, tempclass) {
+  addClass(obj: JQuery, tempclass: string): void {
     this.changeClass(obj, true, tempclass);
   }
 
   /**
    * Remove temporarily a class to the object
-   * @param {Jquery Object(s)} obj 
-   * @param {string} tempclass 
+   * @param {Jquery Object(s)} obj
+   * @param {string} tempclass
    */
-  removeClass(obj, tempclass) {
+  removeClass(obj: JQuery, tempclass: string): void {
     this.changeClass(obj, false, tempclass);
   }
 
   /**
    * Change temporaly the html of objects (remove event handlers on the actual content)
-   * @param {Jquery Object(s)} obj 
-   * @param {string} temphtml 
+   * @param {Jquery Object(s)} obj
+   * @param {string} temphtml
    */
-  changeHTML(obj, temphtml) {
+  changeHTML(obj: JQuery, temphtml: string): void {
     for (let i = 0; i < obj.length; i++) {
       this.htmlChanges.push({
-        object:$(obj[i]),
-        html:$(obj[i]).html()
+        object:$(obj[i]!),
+        html:$(obj[i]!).html()
       })
     }
     obj.html(temphtml);
@@ -224,7 +248,7 @@ class TemporaryState {
   /**
    * Reverse all the changes and clear the history
    */
-  reverse() {
+  reverse(): void {
     this.attrChanges.forEach(function(change) {
       if (change.value == undefined) {
         change.object.removeAttr(change.attribute);
@@ -281,7 +305,6 @@ const jConfirm_warning_options = {
   theme:"modern",
   type: 'orange',
   closeIcon: true,
-  draggable: false,
   animation: "zoom",
   boxWidth: '20%',
   useBootstrap: false,
@@ -304,13 +327,13 @@ const jConfirm_confirm_with_content_options = {
 
 
 
-jQuery.fn.pwg_jconfirm_follow_href = function({
-  alert_title = "TITLE", 
+jQuery.fn.pwg_jconfirm_follow_href = function(this: JQuery, {
+  alert_title = "TITLE",
   alert_confirm = "CONFIRM",
   alert_cancel = "CANCEL",
   alert_content = ""
-} = {}) {
-  let button_href = $(this).attr('href');
+}: { alert_title?: string; alert_confirm?: string; alert_cancel?: string; alert_content?: string } = {}): void {
+  const button_href = $(this).attr('href');
   const options = alert_content === "" ? jConfirm_confirm_options : jConfirm_confirm_with_content_options
   $(this).click(function() {
     $.confirm({
@@ -321,7 +344,7 @@ jQuery.fn.pwg_jconfirm_follow_href = function({
           text: alert_confirm,
           btnClass: 'btn-red',
           action: function () {
-            window.location.href = button_href;
+            window.location.href = button_href!;
           }
         },
         cancel: {
@@ -333,3 +356,17 @@ jQuery.fn.pwg_jconfirm_follow_href = function({
     return (false);
   });
 }
+
+// Explicit `window.` exposure -- required, not decorative (see
+// page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
+// full explanation of why every P46 entry needs this for any name read
+// bare by another file).
+window.array_delete = array_delete;
+window.str_repeat = str_repeat;
+window.getRandomInt = getRandomInt;
+window.sprintf = sprintf;
+window.jConfirm_alert_options = jConfirm_alert_options;
+window.jConfirm_confirm_options = jConfirm_confirm_options;
+window.jConfirm_warning_options = jConfirm_warning_options;
+window.jConfirm_confirm_with_content_options = jConfirm_confirm_with_content_options;
+window.TemporaryState = TemporaryState;

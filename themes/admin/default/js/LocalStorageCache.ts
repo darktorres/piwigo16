@@ -1,6 +1,6 @@
-(function($, exports) {
+(function($: JQueryStatic, exports: Window) {
   "use strict";
-  
+
   /**
    * Base LocalStorage cache
    *
@@ -12,19 +12,19 @@
    *    - loader (required) function called to fetch data, takes a callback as first argument
    *        which must be called with the loaded date
    */
-  var LocalStorageCache = function(options) {
+  const LocalStorageCache: any = function(this: any, options: any) {
     this._init(options);
   };
 
   /*
    * Constructor (deported for easy inheritance)
    */
-  LocalStorageCache.prototype._init = function(options) {
+  LocalStorageCache.prototype._init = function(this: any, options: any) {
     this.key = options.key + '_' + options.serverId;
     this.serverKey = options.serverKey;
     this.lifetime = options.lifetime ? options.lifetime*1000 : 3600*1000;
     this.loader = options.loader;
-    
+
     this.storage = window.localStorage;
     this.ready = !!this.storage;
   };
@@ -33,20 +33,21 @@
    * Get the cache content
    * @param callback {function} called with the data as first parameter
    */
-  LocalStorageCache.prototype.get = function(callback) {
-    var now = new Date().getTime(),
+  LocalStorageCache.prototype.get = function(this: any, callback: (data: any) => void) {
+    const now = new Date().getTime(),
+        // eslint-disable-next-line @typescript-eslint/no-this-alias -- pre-arrow-function idiom, needed so `this` survives into the loader's own callback below; a real behavior change (converting to a real arrow function here) is out of scope for a mechanical conversion.
         that = this;
-    
+
     if (this.ready && this.storage[this.key] != undefined) {
-      var cache = JSON.parse(this.storage[this.key]);
-      
+      const cache = JSON.parse(this.storage[this.key]);
+
       if (now - cache.timestamp <= this.lifetime && cache.key == this.serverKey) {
         callback(cache.data);
         return;
       }
     }
-    
-    this.loader(function(data) {
+
+    this.loader(function(data: any) {
       that.set.call(that, data);
       callback(data);
     });
@@ -56,7 +57,7 @@
    * Manually set the cache content
    * @param data {mixed}
    */
-  LocalStorageCache.prototype.set = function(data) {
+  LocalStorageCache.prototype.set = function(this: any, data: any) {
     try {
       if (this.ready) {
         this.storage[this.key] = JSON.stringify({
@@ -75,18 +76,18 @@
   /*
    * Manually clear the cache
    */
-  LocalStorageCache.prototype.clear = function() {
+  LocalStorageCache.prototype.clear = function(this: any) {
     if (this.ready) {
       this.storage.removeItem(this.key);
     }
   };
 
-  
+
   /**
    * Abstract class containing common initialization code for selectize
    */
-  var AbstractSelectizer = function(){};
-  AbstractSelectizer.prototype = new LocalStorageCache({});
+  const AbstractSelectizer: any = function(this: any){};
+  AbstractSelectizer.prototype = new (LocalStorageCache)({});
 
   /*
    * Load Selectize with cache content
@@ -99,14 +100,14 @@
    *      takes two parameters: cache data, options
    *      must return new data
    */
-  AbstractSelectizer.prototype._selectize = function($target, globalOptions) {
+  AbstractSelectizer.prototype._selectize = function(this: any, $target: JQuery, globalOptions: any) {
     $target.data('cache', this);
 
-    this.get(function(data) {
-      $target.each(function() {
-        var filtered, value, defaultValue,
-            options = $.extend({}, globalOptions);
-        
+    this.get(function(data: any) {
+      $target.each(function(this: any) {
+        let filtered: any, value, defaultValue;
+        const options = $.extend({}, globalOptions);
+
         // apply filter function
         if (options.filter != undefined) {
           filtered = options.filter.call(this, data, options);
@@ -114,7 +115,7 @@
         else {
           filtered = data;
         }
-        
+
         this.selectize.settings.maxOptions = filtered.length + 100;
 
         // active creation mode
@@ -124,7 +125,7 @@
         this.selectize.settings.create = !!options.create;
 
         // load options
-        this.selectize.load(function(callback) {
+        this.selectize.load(function(this: any, callback: (data: any) => void) {
           if ($.isEmptyObject(this.options)) {
             callback(filtered);
           }
@@ -135,14 +136,14 @@
           options.value = value;
         }
         if (options.value != undefined) {
-          $.each(value, $.proxy(function(i, cat) {
+          $.each(value, $.proxy(function(this: any, i: number, cat: any) {
             if ($.isNumeric(cat))
               this.selectize.addItem(cat);
             else
               this.selectize.addItem(cat.id);
           }, this));
         }
-        
+
         // set default
         if ((defaultValue = $(this).data('default'))) {
           options.default = defaultValue;
@@ -150,7 +151,7 @@
         if (options.default == 'first') {
           options.default = filtered[0] ? filtered[0].id : undefined;
         }
-        
+
         if (options.default != undefined) {
           // add default item
           if (this.selectize.getValue() == '') {
@@ -160,8 +161,8 @@
           // if multiple: prevent item deletion
           if (this.multiple) {
             this.selectize.getItem(options.default).find('.remove').hide();
-            
-            this.selectize.on('item_remove', function(id) {
+
+            this.selectize.on('item_remove', function(this: any, id: any) {
               if (id == options.default) {
                 this.addItem(id);
                 this.getItem(id).find('.remove').hide();
@@ -170,7 +171,7 @@
           }
           // if single: restore default on blur
           else {
-            this.selectize.on('dropdown_close', function() {
+            this.selectize.on('dropdown_close', function(this: any) {
               if (this.getValue() == '') {
                 this.addItem(options.default);
               }
@@ -180,19 +181,19 @@
       });
     });
   };
-  
+
   // redefine Selectize templates without escape
-  AbstractSelectizer.getRender = function(field_label, lang) {
+  AbstractSelectizer.getRender = function(field_label: string, lang: any) {
     lang = lang || { 'Add': 'Add' };
 
   	return {
-      'option': function(data, escape) {
+      'option': function(data: any, _escape: any) {
         return '<div class="option">' + data[field_label] + '</div>';
       },
-      'item': function(data, escape) {
+      'item': function(data: any, _escape: any) {
         return '<div class="item">' + data[field_label] + '</div>';
       },
-      'option_create': function(data, escape) {
+      'option_create': function(data: any, _escape: any) {
         return '<div class="create">' + lang['Add'] + ' <strong>' + data.input + '</strong>&hellip;</div>';
       }
     };
@@ -207,12 +208,12 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  var CategoriesCache = function(options) {
+  const CategoriesCache: any = function(this: any, options: any) {
     options.key = 'categoriesAdminList';
-    
-    options.loader = function(callback) {
-      $.getJSON(options.rootUrl + 'api/v1/categories', function(data) {
-        var cats = data.categories.map(function(c, i) {
+
+    options.loader = function(callback: (data: any) => void) {
+      $.getJSON(options.rootUrl + 'api/v1/categories', function(data: any) {
+        const cats = data.categories.map(function(c: any, i: number) {
           c.pos = i;
           delete c['comment'];
           delete c['uppercats'];
@@ -222,17 +223,17 @@
         callback(cats);
       });
     };
-    
+
     this._init(options);
   };
 
-  CategoriesCache.prototype = new AbstractSelectizer();
+  CategoriesCache.prototype = new (AbstractSelectizer)();
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
-  CategoriesCache.prototype.selectize = function($target, options) {
+  CategoriesCache.prototype.selectize = function(this: any, $target: JQuery, options: any) {
     options = options || {};
 
     $target.selectize({
@@ -243,7 +244,7 @@
       plugins: ['remove_button'],
       render: AbstractSelectizer.getRender('fullname', options.lang)
     });
-    
+
     this._selectize($target, options);
   };
 
@@ -256,12 +257,12 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  var TagsCache = function(options) {
+  const TagsCache: any = function(this: any, options: any) {
     options.key = 'tagsAdminList';
-    
-    options.loader = function(callback) {
-      $.getJSON(options.rootUrl + 'api/v1/tags', function(data) {
-        var tags = data.tags.map(function(t) {
+
+    options.loader = function(callback: (data: any) => void) {
+      $.getJSON(options.rootUrl + 'api/v1/tags', function(data: any) {
+        const tags = data.tags.map(function(t: any) {
           t.id = '~~' + t.id + '~~';
           delete t['urlName'];
           delete t['lastmodified'];
@@ -271,17 +272,17 @@
         callback(tags);
       });
     };
-    
+
     this._init(options);
   };
 
-  TagsCache.prototype = new AbstractSelectizer();
+  TagsCache.prototype = new (AbstractSelectizer)();
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
-  TagsCache.prototype.selectize = function($target, options) {
+  TagsCache.prototype.selectize = function(this: any, $target: JQuery, options: any) {
     options = options || {};
 
     $target.selectize({
@@ -292,11 +293,11 @@
       plugins: ['remove_button'],
       render: AbstractSelectizer.getRender('name', options.lang)
     });
-    
+
     this._selectize($target, options);
   };
-  
-  
+
+
   /**
    * Special LocalStorage for admin groups list
    *
@@ -305,12 +306,12 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  var GroupsCache = function(options) {
+  const GroupsCache: any = function(this: any, options: any) {
     options.key = 'groupsAdminList';
-    
-    options.loader = function(callback) {
-      $.getJSON(options.rootUrl + 'api/v1/groups', function(data) {
-        var groups = data.groups.map(function(g) {
+
+    options.loader = function(callback: (data: any) => void) {
+      $.getJSON(options.rootUrl + 'api/v1/groups', function(data: any) {
+        const groups = data.groups.map(function(g: any) {
           delete g['lastmodified'];
           return g;
         });
@@ -318,17 +319,17 @@
         callback(groups);
       });
     };
-    
+
     this._init(options);
   };
 
-  GroupsCache.prototype = new AbstractSelectizer();
+  GroupsCache.prototype = new (AbstractSelectizer)();
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
-  GroupsCache.prototype.selectize = function($target, options) {
+  GroupsCache.prototype.selectize = function(this: any, $target: JQuery, options: any) {
     options = options || {};
 
     $target.selectize({
@@ -339,11 +340,11 @@
       plugins: ['remove_button'],
       render: AbstractSelectizer.getRender('name', options.lang)
     });
-    
+
     this._selectize($target, options);
   };
-  
-  
+
+
   /**
    * Special LocalStorage for admin users list
    *
@@ -352,15 +353,15 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  var UsersCache = function(options) {
+  const UsersCache: any = function(this: any, options: any) {
     options.key = 'usersAdminList';
-    
-    options.loader = function(callback) {
-      var users = [];
-      
+
+    options.loader = function(callback: (data: any) => void) {
+      let users: any[] = [];
+
       // recursive loader
-      (function load(page){
-        jQuery.getJSON(options.rootUrl + 'api/v1/users?perPage=9999&page='+ page, function(data) {
+      (function load(page: number){
+        jQuery.getJSON(options.rootUrl + 'api/v1/users?perPage=9999&page='+ page, function(data: any) {
           users = users.concat(data.users);
 
           if (data.users.length == data.perPage) {
@@ -372,17 +373,17 @@
         });
       }(0));
     };
-    
+
     this._init(options);
   };
 
-  UsersCache.prototype = new AbstractSelectizer();
+  UsersCache.prototype = new (AbstractSelectizer)();
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
-  UsersCache.prototype.selectize = function($target, options) {
+  UsersCache.prototype.selectize = function(this: any, $target: JQuery, options: any) {
     options = options || {};
 
     $target.selectize({
@@ -393,11 +394,11 @@
       plugins: ['remove_button'],
       render: AbstractSelectizer.getRender('username', options.lang)
     });
-    
+
     this._selectize($target, options);
   };
-  
-  
+
+
   /**
    * Expose classes in global scope
    */
@@ -406,5 +407,5 @@
   exports.TagsCache = TagsCache;
   exports.GroupsCache = GroupsCache;
   exports.UsersCache = UsersCache;
-  
+
 }(jQuery, window));

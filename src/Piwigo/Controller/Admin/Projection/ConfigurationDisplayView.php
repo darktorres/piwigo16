@@ -40,7 +40,7 @@ final readonly class ConfigurationDisplayView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/configuration_display.css', id: 'configuration_display'),
         ];
     }

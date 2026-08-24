@@ -66,8 +66,8 @@ final readonly class AlbumSelectorView implements View, HasPageAssets, ExposesPa
         return [
             AssetContribution::css('themes/admin/default/css/components/album_selector.css'),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            AssetContribution::script('albumSelector', 'themes/admin/default/js/album_selector.js', loadMode: $loadMode, dependsOn: ['page-data']),
-            AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('albumSelector', 'themes/admin/default/js/album_selector.ts', loadMode: $loadMode, dependsOn: ['page-data']),
+            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
         ];
     }
 

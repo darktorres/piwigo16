@@ -13,7 +13,7 @@ const str_album_modal_title = pwg_getPageString('Select an album');
 const str_album_modal_placeholder = pwg_getPageString('Search');
 const str_root = pwg_getPageString('Root');
 
-let activeAlbumSelector = null;
+let activeAlbumSelector: AlbumSelector | null = null;
 
 $(window).on('keypress', function(e) {
   const haveAlbumSelector = $('#addLinkedAlbum').is(':visible');
@@ -35,22 +35,23 @@ $(window).on('keypress', function(e) {
  * @param {String} modalSearchPlaceholder - Custom placeholder text for the search input in the modal.
  */
 class AlbumSelector {
-  #in_admin_mode;
-  #methodPwg;
-  #limitParam;
-  #isAlbumCreationChecked;
-  #selectAlbum;
-  #removeSelectedAlbum;
-  #currentSelectedId;
-  #searchCat;
-  #cats;
-  #selected_categories;
-  #show_root_btn;
-  #put_to_root;
-  #current_cat;
-  #title;
-  #searchPlaceholder;
-  #loading_add;
+  instanceId: string;
+  #in_admin_mode: boolean;
+  #methodPwg: string;
+  #limitParam: number;
+  #isAlbumCreationChecked: boolean;
+  #selectAlbum: (args: any) => void;
+  #removeSelectedAlbum: (args: any) => void;
+  #currentSelectedId: any;
+  #searchCat: Record<string, any>;
+  #cats: Record<string, any>;
+  #selected_categories: any[];
+  #show_root_btn: boolean;
+  #put_to_root: boolean;
+  #current_cat: any;
+  #title: string;
+  #searchPlaceholder: string;
+  #loading_add: boolean;
 
   /**
    * Selector for AlbumSelector
@@ -81,16 +82,26 @@ class AlbumSelector {
     linkedAlbumPopInContainer: $('.linkedAlbumPopInContainer'),
   };
 
-  constructor({ 
+  constructor({
     selectedCategoriesIds=[],
-    selectAlbum=() => {},
-    removeSelectedAlbum=() => {},
+    selectAlbum=(_args: any) => {},
+    removeSelectedAlbum=(_args: any) => {},
     showRootButton=false,
     adminMode=false,
     limitParam=50,
     currentAlbumId=0,
     modalTitle='',
     modalSearchPlaceholder='',
+  }: {
+    selectedCategoriesIds?: any[];
+    selectAlbum?: (args: any) => void;
+    removeSelectedAlbum?: (args: any) => void;
+    showRootButton?: boolean;
+    adminMode?: boolean;
+    limitParam?: number;
+    currentAlbumId?: any;
+    modalTitle?: string;
+    modalSearchPlaceholder?: string;
   }) {
     this.instanceId = `AlbumSelector-${Math.random().toString(36).substring(2, 9)}`;
     this.#in_admin_mode = adminMode;
@@ -151,6 +162,7 @@ class AlbumSelector {
     if (activeAlbumSelector && activeAlbumSelector !== this) {
         activeAlbumSelector.close();
     }
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- not the classic callback-closure idiom: tracks which AlbumSelector *instance* is currently active module-wide, real state (not just a scoping workaround).
     activeAlbumSelector = this;
     this.#open_album_selector();
   }
@@ -162,7 +174,7 @@ class AlbumSelector {
     this.#close_album_selector();
   }
 
-  remove_selected_album(id) {
+  remove_selected_album(id: any) {
     if (this.#selected_categories.includes(id)) {
       const cat_to_remove_index = this.#selected_categories.indexOf(id);
       if (cat_to_remove_index > -1) {
@@ -177,7 +189,7 @@ class AlbumSelector {
     return [...this.#selected_categories];
   }
 
-  select_album(id) {
+  select_album(id: any) {
     this.#selected_categories.push(id.toString());
   }
 
@@ -190,7 +202,7 @@ class AlbumSelector {
     }
   }
 
-  hardUpdate(cats) {
+  hardUpdate(cats: any) {
     this.#selected_categories = cats;
   }
 
@@ -238,8 +250,8 @@ class AlbumSelector {
     }
 
     // event perform search
-    AlbumSelector.selectors.searchInput.off(`keyup${instanceAb}`).on(`keyup${instanceAb}`, (e) => {
-      const searchValue = AlbumSelector.selectors.searchInput.val();
+    AlbumSelector.selectors.searchInput.off(`keyup${instanceAb}`).on(`keyup${instanceAb}`, (_e) => {
+      const searchValue = String(AlbumSelector.selectors.searchInput.val() ?? '');
       if (searchValue.length > 0) {
         AlbumSelector.selectors.iconCancelInput.show();
       } else {
@@ -275,14 +287,14 @@ class AlbumSelector {
     if (this.#isAlbumCreationChecked) {
       $('.prefill-results-item').off(`click${instanceAb}`).on(`click${instanceAb}`, (e) => {
         const curr = $(e.currentTarget);
-        const cat_id = curr.attr('id');
+        const cat_id = curr.attr('id')!;
         const cat = this.#cats[cat_id];
         this.#switch_album_view(cat);
       });
     } else {
       $('.prefill-results-item.available').off(`click${instanceAb}`).on(`click${instanceAb}`, (e) => {
         const curr = $(e.currentTarget);
-        const cat_id = curr.attr('id');
+        const cat_id = curr.attr('id')!;
         const cat = this.#cats[cat_id];
 
         this.#currentSelectedId = cat.id;
@@ -308,7 +320,7 @@ class AlbumSelector {
       } else {
         $("#" + cat_id + ".display-subcat").removeClass('gallery-icon-up-open').addClass('gallery-icon-spin6 animate-spin');
         $("#" + cat_id + ".search-result-item").after(`<div id="subcat-${cat_id}" class="search-result-subcat-item"></div>`);
-        this.#prefill_search_subcats(cat_id).then(() => {
+        void this.#prefill_search_subcats(cat_id).then(() => {
           $("#" + cat_id + ".display-subcat").removeClass('gallery-icon-spin6 animate-spin').addClass('gallery-icon-up-open');
           $(curr).addClass('open');
           $("#subcat-" + cat.id).fadeIn();
@@ -317,12 +329,12 @@ class AlbumSelector {
     });
   }
 
-  #loadFillResultEvent(tempSelect) {
+  #loadFillResultEvent(tempSelect: any) {
     const instanceAb = `.${this.instanceId}`;
 
     AlbumSelector.selectors.searchResult.find('.search-result-item').off(`click${instanceAb}`).on(`click${instanceAb}`, (e) => {
       const curr = $(e.currentTarget);
-      const cat_id = curr.attr('id');
+      const cat_id = curr.attr('id')!;
       const cat = this.#searchCat[cat_id];
 
       const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);
@@ -341,6 +353,7 @@ class AlbumSelector {
     if (activeAlbumSelector && activeAlbumSelector !== this) {
       activeAlbumSelector.close();
     }
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- see open()'s own copy of this comment.
     activeAlbumSelector = this;
   }
 
@@ -400,7 +413,7 @@ class AlbumSelector {
 
   }
 
-  #reset_search_input(prefill) {
+  #reset_search_input(prefill: boolean) {
     AlbumSelector.selectors.searchInput.val('');
     AlbumSelector.selectors.limitReached.show().html(str_no_search_in_progress);
     AlbumSelector.selectors.searchResult.empty();
@@ -437,7 +450,7 @@ class AlbumSelector {
     }
   }
 
-  #switch_album_view(cat) {
+  #switch_album_view(cat: any) {
     const instanceAb = `.${this.instanceId}`;
 
     AlbumSelector.selectors.albumSelector.hide();
@@ -463,13 +476,12 @@ class AlbumSelector {
     AlbumSelector.selectors.addAlbumErrors.css('visibility', 'hidden');
   }
 
-  #show_new_album_error(text) {
+  #show_new_album_error(text: string) {
     AlbumSelector.selectors.linkedAddAlbumErrors.html(text);
     AlbumSelector.selectors.addAlbumErrors.css('visibility', 'visible');
   }
 
-  #select_new_album_and_close(cat) {
-    const tempThis = this;
+  #select_new_album_and_close(cat: any) {
     this.#currentSelectedId = cat.id;
     this.#selectAlbum({ album: cat });
     this.#close_album_selector();
@@ -491,12 +503,12 @@ class AlbumSelector {
   /*--------------
   Dom modification
   --------------*/
-  #prefill_results(rank, cats, limit) {
+  #prefill_results(rank: any, cats: any[], limit: any) {
     const isCreationMode = this.#isAlbumCreationChecked;
     const iconAlbum = this.#isAlbumCreationChecked ? 'icon-add-album' : 'gallery-icon-plus-circled';
     const tempSelectedCat = this.#current_cat ? [...this.#selected_categories, this.#current_cat.toString()] : [...this.#selected_categories];
 
-    this.#cats = { ...this.#cats, ...Object.fromEntries(cats.map(c => [c.id, c])) };
+    this.#cats = { ...this.#cats, ...Object.fromEntries(cats.map((c: any) => [c.id, c])) };
     let display_div = $('#subcat-' + rank);
     if ('root' == rank) {
       AlbumSelector.selectors.searchResult.empty();
@@ -554,11 +566,11 @@ class AlbumSelector {
     }
   }
 
-  #fill_results(cats) {
+  #fill_results(cats: any[]) {
     const iconAlbum = this.#isAlbumCreationChecked ? 'icon-add-album' : 'gallery-icon-plus-circled';
     const tempSelectedCat = this.#current_cat ? [...this.#selected_categories, this.#current_cat.toString()] : [...this.#selected_categories];
 
-    this.#searchCat = Object.fromEntries(cats.map(c => [c.id, c]));
+    this.#searchCat = Object.fromEntries(cats.map((c: any) => [c.id, c]));
     AlbumSelector.selectors.searchResult.empty();
 
     cats.forEach(cat => {
@@ -584,10 +596,10 @@ class AlbumSelector {
       } 
     });
 
-    !this.#isAlbumCreationChecked && this.#loadFillResultEvent(tempSelectedCat);
+    if (!this.#isAlbumCreationChecked) this.#loadFillResultEvent(tempSelectedCat);
   }
 
-  #getEllipsisName(str, lenght = 50) {
+  #getEllipsisName(str: string, lenght = 50) {
     if (str.length <= lenght) return str;
     return '...' + str.slice(-lenght).trim();
   } 
@@ -598,13 +610,13 @@ class AlbumSelector {
   // /api/v1/categories/available (non-admin mode) filters by catId --
   // the two endpoints were built at different times with different
   // query param names for the same "look at this category" concept.
-  #catIdParam(cat_id) {
+  #catIdParam(cat_id: any) {
     return this.#in_admin_mode ? { parentId: cat_id } : { catId: cat_id };
   }
 
   #prefill_search() {
     $(".linkedAlbumPopInContainer .searching").show();
-    let api_params = {
+    const api_params = {
       ...this.#catIdParam(0),
       recursive: false,
       fullname: true,
@@ -624,15 +636,16 @@ class AlbumSelector {
         const limit = data.limit;
         this.#prefill_results("root", cats, limit);
       },
-      error: function (e) {
+      error: function (e: any) {
         $(".linkedAlbumPopInContainer .searching").hide();
         console.log("error : ", e.message);
       },
     });
   }
 
-  async #prefill_search_subcats(cat_id) {
-    let api_params = {
+  // eslint-disable-next-line @typescript-eslint/require-await -- the call site (`#loadSubCatEvent`) relies on this always returning a real Promise (`.then(...)`), even though the body never needs to `await` anything itself: `$.ajax`'s own `error` callback already handles failures internally, nothing here re-throws.
+  async #prefill_search_subcats(cat_id: any) {
+    const api_params = {
       ...this.#catIdParam(cat_id),
       recursive: false,
       limit: this.#limitParam,
@@ -644,7 +657,7 @@ class AlbumSelector {
       dataType: "json",
       data: api_params,
       success: (data) => {
-        const cats = data.categories.filter((c) => c.id != cat_id);
+        const cats = data.categories.filter((c: any) => c.id != cat_id);
         const limit = data.limit;
         this.#prefill_results(cat_id, cats, limit);
       },
@@ -654,12 +667,12 @@ class AlbumSelector {
     });
   }
 
-  #perform_albums_search(searchText) {
+  #perform_albums_search(searchText: string) {
     if (searchText == '') {
       this.#reset_search_input(true);
       return;
     }
-    let api_params = {
+    const api_params = {
       ...this.#catIdParam(0),
       recursive: true,
       fullname: true,
@@ -674,7 +687,7 @@ class AlbumSelector {
       data: api_params,
       success: (data) => {
         AlbumSelector.selectors.iconSearchingSpin.hide();
-        let categories = data.categories;
+        const categories = data.categories;
         this.#fill_results(categories);
 
         if (data.limit && data.limit.remainingCats > 0) {
@@ -687,14 +700,14 @@ class AlbumSelector {
           }
         }
       },
-      error: (e) => {
+      error: (e: any) => {
         AlbumSelector.selectors.iconSearchingSpin.hide();
         console.log(e.message);
       }
     });
   }
 
-  #add_new_album(cat_id) {
+  #add_new_album(cat_id: any) {
     if (this.#loading_add) return;
     this.#loading_add = true;
     const cat_name = AlbumSelector.selectors.linkedAlbumInput.val();
@@ -728,7 +741,7 @@ class AlbumSelector {
     });
   }
 
-  #get_album_by_id(cat_id) {
+  #get_album_by_id(cat_id: any) {
     $.ajax({
       url: 'api/v1/categories',
       type: 'GET',
@@ -746,3 +759,13 @@ class AlbumSelector {
   }
 
 }
+
+// Explicit `window.` exposure -- required, not decorative (see
+// page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
+// full explanation). `cat_search.ts` reads the 2 strings bare;
+// batchManagerFilter.ts/batchManagerGlobal.ts/batchManagerUnit.ts/
+// cat_modify.ts/photos_add_direct.ts/picture_modify.ts all instantiate
+// `new AlbumSelector(...)` bare, confirmed via the P46-C full sweep.
+window.str_albums_found = str_albums_found;
+window.str_result_limit = str_result_limit;
+window.AlbumSelector = AlbumSelector;

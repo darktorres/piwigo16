@@ -1,15 +1,15 @@
-var piwigo_need_update_msg = '<a href="admin.php?page=updates">' + pwg_getPageString('A new version of Piwigo is available.') + ' <i class="icon-right"></i></a>';
-var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">' + pwg_getPageString('Some upgrades are available for extensions.') + ' <i class="icon-right"></i></a>';
-var str_gb_used = pwg_getPageString('%s GB used');
-var str_mb_used = pwg_getPageString('%s MB used');
-var str_gb = pwg_getPageString('%sGB').replace(' ', '&nbsp;');
-var str_mb = pwg_getPageString('%sMB').replace(' ', '&nbsp;');
-var storage_total = pwg_getPageData('storage_total');
-var storage_details = pwg_getPageData('storage_chart_data');
-var translate_files = pwg_getPageString('%d files');
-var newsletter_base_url = pwg_getPageData('subscribe_base_url');
+const piwigo_need_update_msg = '<a href="admin.php?page=updates">' + pwg_getPageString('A new version of Piwigo is available.') + ' <i class="icon-right"></i></a>';
+const ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">' + pwg_getPageString('Some upgrades are available for extensions.') + ' <i class="icon-right"></i></a>';
+const str_gb_used = pwg_getPageString('%s GB used');
+const str_mb_used = pwg_getPageString('%s MB used');
+const str_gb = pwg_getPageString('%sGB').replace(' ', '&nbsp;');
+const str_mb = pwg_getPageString('%sMB').replace(' ', '&nbsp;');
+const storage_total = pwg_getPageData('storage_total');
+const storage_details: Record<string, any> = pwg_getPageData('storage_chart_data');
+const translate_files = pwg_getPageString('%d files');
+const newsletter_base_url = pwg_getPageData('subscribe_base_url');
 
-var translate_type = {};
+const translate_type: Record<string, string> = {};
 Object.keys(storage_details).forEach(function(type) {
   translate_type[type] = pwg_getPageString(type);
 });
@@ -27,9 +27,9 @@ jQuery().ready(function(){
       url: 'api/v1/extensions/updates',
       dataType: 'json',
       timeout: 5000,
-      success: function (data) {
-        var piwigo_update = data['piwigoNeedUpdate'];
-        var ext_update = data['extNeedUpdate']
+      success: function (data: any) {
+        const piwigo_update = data['piwigoNeedUpdate'];
+        const ext_update = data['extNeedUpdate']
         if ((piwigo_update || ext_update) && !jQuery(".warnings").is('div'))
           jQuery(".eiw").prepend('<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
         if (piwigo_update)
@@ -63,7 +63,7 @@ jQuery().ready(function(){
   }
 
   jQuery("#newsletterSubscribeInput").change(function(){
-    jQuery("#newsletterSubscribeLink").attr("href", newsletter_base_url + jQuery("#newsletterSubscribeInput").val())
+    jQuery("#newsletterSubscribeLink").attr("href", newsletter_base_url + String(jQuery("#newsletterSubscribeInput").val()))
   })
 
   jQuery('.newsletter-hide').click(function() {
@@ -78,7 +78,16 @@ jQuery().ready(function(){
       return false;
     }
   });
-  let size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
-  let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
+  const size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
+  const size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
   $(".chart-title-infos").html(size_info.replace("%s", size_nb));
 });
+
+// Explicit `window.` exposure -- required, not decorative (see
+// page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
+// full explanation). `intro_tooltips.ts` reads all 5 bare.
+window.str_gb = str_gb;
+window.str_mb = str_mb;
+window.storage_details = storage_details;
+window.translate_files = translate_files;
+window.translate_type = translate_type;

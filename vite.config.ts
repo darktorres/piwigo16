@@ -27,13 +27,37 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     manifest: true,
-    // Matches .browserslistrc's floor (docs/PLAN.md P35) -- esbuild target
-    // strings, not browserslist queries, so this can't just read the
-    // .browserslistrc file directly.
-    target: ["chrome94", "edge94", "firefox93", "safari15"],
+    // docs/PLAN.md P35's own stated intent for .browserslistrc's floor
+    // (Chrome/Edge ≥94, Firefox ≥93, Safari ≥15): "the evergreen floor
+    // that actually supports tsconfig.json's existing ES2022
+    // target/lib" -- originally mirrored here as those same specific
+    // browser-version strings (esbuild targets and browserslist queries
+    // aren't interchangeable), on the assumption the two framings were
+    // equivalent. They aren't, for at least one real feature: esbuild's
+    // own per-browser-version compat table treats real ES2022 private
+    // class fields (`#foo`) as unsupported by every one of those 4
+    // specific version strings, and downlevels them into a
+    // `Object.defineProperty`-based helper -- extracted by Rollup into
+    // its own chunk, imported via a real ES `import` statement no
+    // `<script>` tag in this codebase ever loads (P46-B's own "every
+    // entry loads as a separate non-module script tag" design), a real
+    // dead-on-arrival ReferenceError. Found via `album_selector.ts`
+    // (P46-C), the first converted entry to use `#foo` syntax --
+    // confirmed the exact same syntax was already being served raw,
+    // untranspiled, straight to the browser pre-conversion (this file
+    // was never bundled before), so requiring genuine ES2022 support
+    // isn't a new compatibility requirement, just P35's own original
+    // intent enforced accurately. `target: "es2022"` (the bare language
+    // target, not per-browser version strings) is what actually
+    // delivers that intent -- confirmed to produce byte-identical
+    // output for every other already-converted entry (none use
+    // private fields), so this isn't a broader compatibility change,
+    // just a correction of a gap in esbuild's own compat table.
+    target: "es2022",
     rollupOptions: {
       input: {
-        // Placeholder only — 65 more real entries land in P46-C onward.
+        // Placeholder only — 61 more real entries land across P46-C
+        // onward.
         noop: r("build/noop.ts"),
         // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.
@@ -53,6 +77,14 @@ export default defineConfig({
         popuphelp: r("themes/default/js/popuphelp.ts"),
         switchbox: r("themes/default/js/switchbox.ts"),
         thumbnailsLoader: r("themes/default/js/thumbnails.loader.ts"),
+        // P46-C — themes/admin/default/js/*.js's first 4 real entries
+        // (the shared-global foundation files the P46-C full sweep
+        // found: common.ts/LocalStorageCache.ts were already known;
+        // album_selector.ts/intro.ts are new findings).
+        adminCommon: r("themes/admin/default/js/common.ts"),
+        localStorageCache: r("themes/admin/default/js/LocalStorageCache.ts"),
+        albumSelector: r("themes/admin/default/js/album_selector.ts"),
+        intro: r("themes/admin/default/js/intro.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

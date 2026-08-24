@@ -68,7 +68,7 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
-            AssetContribution::script('intro', 'themes/admin/default/js/intro.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip', 'page-data']),
+            AssetContribution::script('intro', 'themes/admin/default/js/intro.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip', 'page-data']),
             AssetContribution::script('intro_tooltips', 'themes/admin/default/js/intro_tooltips.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/intro.css', id: 'intro'),
         ];

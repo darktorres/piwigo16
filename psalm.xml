@@ -411,6 +411,17 @@
                      `notIdentical.alwaysTrue`); Psalm can't do this
                      cross-variable correlation. -->
                 <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+                <!-- strtotime() with a literal, always-parseable relative
+                     date string ('-1 hour'): PHPStan's own strtotime()
+                     stub special-cases literal-string arguments and proves
+                     the result is never false (confirmed: adding an
+                     `assert($x !== false)` guard gets
+                     `notIdentical.alwaysTrue`); Psalm's stub doesn't do
+                     this literal-string narrowing. -->
+                <file name="tests/Browser/AdminShellTest.php"/>
+                <!-- Same literal-relative-date strtotime() gap as
+                     AdminShellTest.php above ('-30 days'/'-90 days'). -->
+                <file name="tests/Browser/PictureControllerTest.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
     </issueHandlers>

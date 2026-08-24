@@ -1,29 +1,42 @@
-var album_id = pwg_getPageData('cat_id');
-var parent_album = pwg_getPageData('parent_cat_id');
-var default_parent_album = pwg_getPageData('parent_cat_id');
-var album_name = pwg_getPageData('cat_name');
-var nb_sub_albums = pwg_getPageData('nb_subcats');
-var pwg_token = pwg_getPageData('csrf_token');
-var u_delete = pwg_getPageData('u_delete');
-var is_visible = pwg_getPageData('is_visible') ? 'true' : 'false';
-var related_categories_ids = [String(pwg_getPageData('cat_id')), String(pwg_getPageData('parent_cat_id'))];
+export {};
 
-var str_cancel = pwg_getPageString('No, I have changed my mind');
-var str_delete_album = pwg_getPageString('Delete album');
-var str_delete_album_and_his_x_subalbums = pwg_getPageString('Delete album "%s" and its %d sub-albums.');
-var str_just_now = pwg_getPageString('Just now');
-var str_dont_delete_photos = pwg_getPageString('delete only album, not photos');
-var str_delete_orphans = pwg_getPageString('delete album and the %d orphan photos');
-var str_delete_all_photos = pwg_getPageString('delete album and all %d photos, even the %d associated to other albums');
-var str_album_comment_allow = pwg_getPageString('Comments allowed for sub-albums');
-var str_album_comment_disallow = pwg_getPageString('Comments disallowed for sub-albums');
-var str_modal_ab = pwg_getPageString('New parent album');
+// Consumer of album_selector.ts's own real, top-level `class
+// AlbumSelector` -- resolves directly via that file's own real
+// declaration, same reasoning as picture_modify.ts/
+// batchManagerFilter.ts's own copy of this comment.
+//
+// `add_related_category` is declared here too, independently of the
+// same-named functions in mcs.js/batchManagerUnit.js/
+// batchManagerFilter.ts(no)/photos_add_direct.js/picture_modify.ts
+// (docs/PLAN.md P46-B's own finding) -- safe since these pages never
+// co-load, and this file's own `export {}` module isolation makes the
+// safety even more robust than before.
+const album_id = pwg_getPageData('cat_id');
+let parent_album = pwg_getPageData('parent_cat_id');
+let default_parent_album = pwg_getPageData('parent_cat_id');
+const album_name = pwg_getPageData('cat_name');
+const nb_sub_albums = pwg_getPageData('nb_subcats');
+const pwg_token = pwg_getPageData('csrf_token');
+const u_delete = pwg_getPageData('u_delete');
+let is_visible: string = pwg_getPageData('is_visible') ? 'true' : 'false';
+const related_categories_ids = [String(pwg_getPageData('cat_id')), String(pwg_getPageData('parent_cat_id'))];
+
+const str_cancel = pwg_getPageString('No, I have changed my mind');
+const str_delete_album = pwg_getPageString('Delete album');
+const str_delete_album_and_his_x_subalbums = pwg_getPageString('Delete album "%s" and its %d sub-albums.');
+const str_just_now = pwg_getPageString('Just now');
+const str_dont_delete_photos = pwg_getPageString('delete only album, not photos');
+const str_delete_orphans = pwg_getPageString('delete album and the %d orphan photos');
+const str_delete_all_photos = pwg_getPageString('delete album and all %d photos, even the %d associated to other albums');
+const str_album_comment_allow = pwg_getPageString('Comments allowed for sub-albums');
+const str_album_comment_disallow = pwg_getPageString('Comments disallowed for sub-albums');
+const str_modal_ab = pwg_getPageString('New parent album');
 
 jQuery(document).ready(function() {
 
   activateCommentDropdown();
   checkAlbumLock();
-  const ab = new AlbumSelector({ 
+  const ab = new AlbumSelector({
     selectedCategoriesIds: related_categories_ids,
     selectAlbum: add_related_category,
     showRootButton: true,
@@ -42,7 +55,7 @@ jQuery(document).ready(function() {
       data: JSON.stringify({
         visible: true,
       }),
-      success:function(data) {
+      success:function(_data: any) {
         is_visible = 'true';
         if ($("#cat-locked").is(":checked")) {
           $("input[id='cat-locked']").trigger('click');
@@ -56,14 +69,14 @@ jQuery(document).ready(function() {
           5000
         )
       },
-      error:function(XMLHttpRequest, textStatus, errorThrows) {
+      error:function(XMLHttpRequest: any, textStatus: any, errorThrows: any) {
         save_button_set_loading(false)
 
         $('.info-error').show()
         setTimeout(
           function() {
             $('.info-error').hide()
-          }, 
+          },
           5000
         )
         console.log(errorThrows);
@@ -77,7 +90,7 @@ jQuery(document).ready(function() {
     'fadeOut' : 200
   });
 
-  
+
   $('#cat-properties-save').click(() => {
     save_button_set_loading(true)
     $('.info-error,.info-message').hide()
@@ -94,7 +107,7 @@ jQuery(document).ready(function() {
         visible: !$("#cat-locked").is(":checked"),
         commentable: $("#cat-commentable").is(":checked"),
       }),
-      success:function(data) {
+      success:function(_data: any) {
         save_button_set_loading(false)
 
         $('.info-message').show()
@@ -111,7 +124,7 @@ jQuery(document).ready(function() {
           5000
         )
       },
-      error:function(XMLHttpRequest, textStatus, errorThrows) {
+      error:function(XMLHttpRequest: any, textStatus: any, errorThrows: any) {
         save_button_set_loading(false)
 
         $('.info-error').show()
@@ -136,13 +149,13 @@ jQuery(document).ready(function() {
           categoryIds: [album_id],
           parentId: parent_album,
         }),
-        success: function (data) {
+        success: function (data: any) {
           $(".cat-modify-ariane").html(
             data.newArianeString
           )
           default_parent_album = parent_album;
         },
-        error: function(e) {
+        error: function(e: any) {
           $('.info-error').show()
           setTimeout(
             function() {
@@ -156,7 +169,7 @@ jQuery(document).ready(function() {
     }
   })
 
-  function save_button_set_loading(state = true) {
+  function save_button_set_loading(state: boolean = true) {
     if (state) {
       $('#cat-properties-save i').removeClass("icon-floppy")
       $('#cat-properties-save i').addClass("icon-spin6")
@@ -167,20 +180,21 @@ jQuery(document).ready(function() {
       $('#cat-properties-save i').removeClass("animate-spin")
     }
 
-    $('#cat-properties-save').attr("disabled", state)
+    $('#cat-properties-save').prop("disabled", state)
   }
 
   $(".deleteAlbum").on("click", function() {
-    
+
     $.confirm({
       title: str_delete_album,
-      content : function () {
+      content : function (this: any) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this
         return $.ajax({
           url: "api/v1/categories/" + album_id + "/orphan-impact",
           type: "GET",
           dataType: "json",
-          success: function (data) {
+          success: function (data: any) {
             let message = "<p>" + str_delete_album_and_his_x_subalbums
               .replace("%s", "<strong>"+album_name+"</strong>")
               .replace("%d", "<strong>"+nb_sub_albums+"</strong>") + "</p>"
@@ -196,7 +210,7 @@ jQuery(document).ready(function() {
               let t = 0
               message += `<div>
                 <input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", _ => [data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++])}</label>
+                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", _ => String([data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++]))}</label>
               </div>`;
             }
 
@@ -210,7 +224,7 @@ jQuery(document).ready(function() {
 
             self.setContent(message)
           },
-          error: function(message) {
+          error: function(message: any) {
             console.log(message);
             self.setContent("An error has occured while calculating orphans")
           }
@@ -220,12 +234,12 @@ jQuery(document).ready(function() {
         deleteAlbum: {
           text: str_delete_album,
           btnClass: 'btn-red',
-          action: function () {
+          action: function (this: any) {
             this.showLoading()
-            let deletionMode = $('input[name="deletion-mode"]:checked').val();
+            const deletionMode = $('input[name="deletion-mode"]:checked').val();
             delete_album(deletionMode)
             .then(()=>window.location.href = u_delete)
-            .catch((err)=> {
+            .catch((err: any)=> {
               this.close()
               console.log(err)
             })
@@ -240,8 +254,8 @@ jQuery(document).ready(function() {
     })
   });
 
-  function delete_album(photo_deletion_mode) {
-    return new Promise((res, rej) => {
+  function delete_album(photo_deletion_mode: any) {
+    return new Promise<void>((res, rej) => {
       $.ajax({
         url: "api/v1/categories/" + album_id,
         type: "DELETE",
@@ -250,10 +264,11 @@ jQuery(document).ready(function() {
         data: JSON.stringify({
           photoDeletionMode: photo_deletion_mode,
         }),
-        success: function (raw_data) {
+        success: function (_raw_data: any) {
           res()
         },
-        error: function(message) {
+        error: function(message: any) {
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- rejects with the real jqXHR error object, matching the original .catch()'s own console.log(err) usage; not a new Error, same as pre-P46.
           rej(message)
         }
       });
@@ -269,7 +284,7 @@ jQuery(document).ready(function() {
       contentType: "application/json",
       headers: {'X-CSRF-Token': pwg_token},
       dataType: "json",
-      success:function(data) {
+      success:function(data: any) {
         jQuery("#deleteRepresentative").show();
 
         jQuery(".cat-modify-representative")
@@ -278,7 +293,7 @@ jQuery(document).ready(function() {
 
         $('#refreshRepresentative i').addClass("icon-ccw").removeClass("icon-spin6").removeClass("animate-spin")
       },
-      error:function(XMLHttpRequest, textStatus, errorThrows) {
+      error:function(XMLHttpRequest: any, textStatus: any, errorThrows: any) {
         console.error(errorThrows);
         $('#refreshRepresentative i').addClass("icon-ccw").removeClass("icon-spin6").removeClass("animate-spin")
       }
@@ -296,7 +311,7 @@ jQuery(document).ready(function() {
       contentType: "application/json",
       headers: {'X-CSRF-Token': pwg_token},
       dataType: "json",
-      success:function(data) {
+      success:function(_data: any) {
         jQuery("#deleteRepresentative").hide();
         jQuery(".cat-modify-representative")
           .attr('style', ``)
@@ -304,7 +319,7 @@ jQuery(document).ready(function() {
 
         $('#deleteRepresentative i').addClass("icon-cancel").removeClass("icon-spin6").removeClass("animate-spin")
       },
-      error:function(XMLHttpRequest, textStatus, errorThrows) {
+      error:function(XMLHttpRequest: any, textStatus: any, errorThrows: any) {
         console.error(errorThrows);
         $('#deleteRepresentative i').addClass("icon-cancel").removeClass("icon-spin6").removeClass("animate-spin")
       }
@@ -335,7 +350,7 @@ jQuery(document).ready(function() {
       beforeSend: function () {
         save_button_set_loading(true);
       },
-      success:function(data) {
+      success:function(_data: any) {
         save_button_set_loading(false);
         if (!$("#cat-commentable").is(":checked")) {
           $("#cat-commentable").trigger("click");
@@ -353,7 +368,7 @@ jQuery(document).ready(function() {
           5000
         )
       },
-      error:function(e) {
+      error:function(e: any) {
         console.log(e);
         save_button_set_loading(false);
         $('.info-error').show()
@@ -380,7 +395,7 @@ jQuery(document).ready(function() {
       beforeSend: function () {
         save_button_set_loading(true);
       },
-      success:function(data) {
+      success:function(_data: any) {
         save_button_set_loading(false);
         if ($("#cat-commentable").is(":checked")) {
           $("#cat-commentable").trigger("click");
@@ -398,7 +413,7 @@ jQuery(document).ready(function() {
           5000
         )
       },
-      error:function(e) {
+      error:function(e: any) {
         console.log(e);
         save_button_set_loading(false);
         $('.info-error').show()
@@ -413,7 +428,14 @@ jQuery(document).ready(function() {
   });
 
   // Modal description
-  let form_unsaved = false;
+  const form_unsaved = false;
+  // Genuine pre-existing implicit-global bug (no `var`/`let`/`const`
+  // anywhere) -- shared, harmlessly, between the allow-comments/
+  // disallow-comments handlers above (each assigns before reading, so
+  // sharing this declaration is behaviorally identical to the original
+  // accidental `window.temp_txt`). Declared here, scoped to this ready
+  // callback, since strict TS refuses a bare undeclared assignment.
+  let temp_txt: string;
   const cat_modify = $('#cat-modify');
   const desc_modal = $('#desc-modal');
   const textareas = $('.sync-textarea');
@@ -421,10 +443,10 @@ jQuery(document).ready(function() {
     desc_modal.fadeToggle();
   });
   textareas.keyup(function() {
-    textareas.val($(this).val());
+    textareas.val($(this).val() as any);
   });
   $(window).on('click', function(e) {
-    if(e.target == desc_modal[0]){
+    if((e.target as unknown as Element) == desc_modal[0]){
       desc_modal.fadeToggle();
     }
   });
@@ -446,7 +468,7 @@ function checkAlbumLock() {
 
 // Parent album popin functions
 
-function add_related_category({ album, newSelectedAlbum, getSelectedAlbum }) {
+function add_related_category({ album, newSelectedAlbum, getSelectedAlbum }: any) {
   if (parent_album != album.id) {
     $("#cat-parent").html(
       album.full_name_with_admin_links ?? album.root
@@ -474,7 +496,7 @@ function activateCommentDropdown() {
     e.stopPropagation();
     let option_is_clicked = false
     $(".comment-option span").each(function () {
-      if (!($(this).has(e.target).length === 0)) {
+      if (!($(this).has(e.target as unknown as Element).length === 0)) {
         option_is_clicked = true;
       }
     })

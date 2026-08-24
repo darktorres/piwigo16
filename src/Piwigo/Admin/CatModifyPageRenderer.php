@@ -110,7 +110,7 @@ final class CatModifyPageRenderer
         // parent category id -- see its own computation above) and
         // PARENT_CAT_ID (below) feed cat_modify.latte's own `var
         // parent_album`/`related_categories_ids` JS globals, which the
-        // move-album jstree widget (themes/admin/default/js/cat_modify.js)
+        // move-album jstree widget (themes/admin/default/js/cat_modify.ts)
         // uses to preselect the album's current parent.
 
         // We show or hide this warning in JS

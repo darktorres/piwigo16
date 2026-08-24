@@ -23,7 +23,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * against both the template's own body (and its included
  * `album_selector.inc.latte`, which is entirely self-contained and
  * reads no external context beyond a local `{var $load_mode}`) and
- * `cat_modify.js`'s `pwg_getPageData()` reads.
+ * `cat_modify.ts`'s `pwg_getPageData()` reads.
  */
 #[Template('cat_modify.latte')]
 final readonly class CatModifyView implements View, HasPageAssets, ExposesPageData
@@ -73,7 +73,7 @@ final readonly class CatModifyView implements View, HasPageAssets, ExposesPageDa
     {
         return [
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('cat_modify', 'themes/admin/default/js/cat_modify.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('cat_modify', 'themes/admin/default/js/cat_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080

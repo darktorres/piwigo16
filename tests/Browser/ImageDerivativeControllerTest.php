@@ -317,6 +317,9 @@ it("sends 304 Not Modified when If-Modified-Since matches the cached derivative'
     $lastModified = $first['headers']['last-modified'] ?? null;
     expect($lastModified)
         ->not->toBeNull();
+    if (! is_string($lastModified)) {
+        throw new RuntimeException('expected a string Last-Modified header');
+    }
 
     $second = idcGet($path, ['If-Modified-Since: ' . $lastModified]);
     expect($second['status'])->toBe(304);

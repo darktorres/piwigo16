@@ -495,6 +495,9 @@ it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s
         $lastModified = $first['headers']['last-modified'] ?? null;
         expect($lastModified)
             ->not->toBeNull();
+        if (! is_string($lastModified)) {
+            throw new RuntimeException('expected a string Last-Modified header');
+        }
 
         $second = actionCurlGet('/action.php?id=' . $imageId . '&part=e', ['If-Modified-Since: ' . $lastModified]);
         expect($second['status'])->toBe(304);

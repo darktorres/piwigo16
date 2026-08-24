@@ -51,7 +51,7 @@ final class UrlServiceTestHtmlRenderer implements HtmlRenderingInterface
     #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
-        throw new RuntimeException('pageNotFound: ' . $msg);
+        throw new RuntimeException('pageNotFound: ' . ($msg ?? ''));
     }
 
     #[Override]

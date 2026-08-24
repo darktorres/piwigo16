@@ -1075,7 +1075,7 @@ foreach ($core as $trigger) {
          *   within $trigger['vars']'s own literal 8-element bound through a
          *   `count()`-based loop condition.
          */
-        $vars_html .= $trigger['vars'][$i] . ' ' . (! in_array($trigger['vars'][$i + 1] ?? null, [null, '0'], true) ? '<i>$' . $trigger['vars'][$i + 1] . '</i>' : null);
+        $vars_html .= $trigger['vars'][$i] . ' ' . (! in_array($trigger['vars'][$i + 1] ?? null, [null, '0'], true) ? '<i>$' . $trigger['vars'][$i + 1] . '</i>' : '');
     }
 
     $files_html = '';
@@ -1091,7 +1091,7 @@ foreach ($core as $trigger) {
          *   $trigger['files'] iteration and requires this cast for
          *   preg_replace()'s $subject param.
          */
-        $files_html .= preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file);
+        $files_html .= preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file) ?? '';
     }
 
     $rows .= <<<HTML

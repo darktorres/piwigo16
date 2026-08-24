@@ -625,7 +625,7 @@ function findCallSitesOutsideComments(string $dir, string $needle): array
             }
             [$id, $text] = $token;
             if (in_array($id, [T_COMMENT, T_DOC_COMMENT, T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE, T_INLINE_HTML], true)) {
-                $blanked .= preg_replace('/[^\n]/', ' ', $text);
+                $blanked .= preg_replace('/[^\n]/', ' ', $text) ?? '';
                 continue;
             }
             $blanked .= $text;

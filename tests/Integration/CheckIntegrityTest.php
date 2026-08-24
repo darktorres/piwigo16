@@ -136,7 +136,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
      */
     private function anomalyId(string $anomaly, ?string $correctionFct = null, ?array $correctionFctArgs = null, ?string $correctionMsg = null): string
     {
-        return md5($anomaly . $correctionFct . serialize($correctionFctArgs) . $correctionMsg);
+        return md5($anomaly . ($correctionFct ?? '') . serialize($correctionFctArgs) . ($correctionMsg ?? ''));
     }
 
     private function buildIntegrityRepo(): IntegrityIgnoredAnomalyRepository

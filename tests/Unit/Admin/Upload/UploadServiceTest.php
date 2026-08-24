@@ -1653,6 +1653,9 @@ test('uploadFileTiff converts a real TIFF into a representative image via the ex
 
     expect($result)
         ->not->toBeNull();
+    if (! is_string($result)) {
+        throw new RuntimeException('expected uploadFileTiff() to return a string extension');
+    }
     $representativePath = $dir . '/pwg_representative/photo.' . $result;
     expect(file_exists($representativePath))
         ->toBeTrue();

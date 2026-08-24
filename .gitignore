@@ -28,6 +28,10 @@
 # pest-plugin-browser auto-captures a screenshot here on assertion failure
 /tests/Browser/Screenshots
 
+# Playwright MCP's own scratch output (console logs, page snapshots) from
+# live-browser verification sessions -- not a committed artifact.
+/.playwright-mcp
+
 # GoldenHtmlSnapshotTest.php/MailGoldenHtmlSnapshotTest.php write a real
 # `diff -u` here on a mismatch, for review without re-running the suite --
 # generated on failure, not committed state.

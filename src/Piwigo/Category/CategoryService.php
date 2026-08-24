@@ -812,7 +812,7 @@ final readonly class CategoryService
             $rowGlobalRank = $computedRow->globalRank;
             $childDateLast = @$computedRow->maxDateLast > @$computedRow->dateLast;
             $selectedIdStr = $selectedCategory !== null ? (string) $selectedCategory->id : null;
-            $selectedIdUppercatStr = $selectedCategory?->idUppercat !== null ? (string) $selectedCategory->idUppercat : null;
+            $selectedIdUppercatStr = $selectedCategory !== null && $selectedCategory->idUppercat !== null ? (string) $selectedCategory->idUppercat : null;
             $menuNameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName($computedRow->name ?? '', 'get_categories_menu'));
             $row = [
                 ...$computedRow->toArray(),

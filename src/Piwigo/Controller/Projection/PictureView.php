@@ -148,10 +148,13 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
     #[Override]
     public function exposedPageData(): array
     {
+        $navCurrentIdRaw = $this->navCurrent['id'] ?? null;
+        $navCurrentId = is_string($navCurrentIdRaw) || is_int($navCurrentIdRaw) ? $navCurrentIdRaw : '';
+
         return [
             'cookie_path' => $this->cookiePath,
             'root_url' => $this->rootUrl,
-            'image_id' => is_string($this->navCurrent['id'] ?? null) || is_int($this->navCurrent['id'] ?? null) ? $this->navCurrent['id'] : '',
+            'image_id' => $navCurrentId,
             'csrf_token' => $this->csrfToken,
             ...$this->pictureNavButtonsView()
                 ->exposedPageData(),

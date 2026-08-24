@@ -152,6 +152,7 @@ final class RatingUserPageRenderer
                 // is genuinely always int at runtime despite Psalm's own
                 // generic array-key typing here. PHPStan already infers
                 // int on its own (hence the ignore below), Psalm doesn't.
+                /** @psalm-suppress RedundantCastGivenDocblockType same reasoning as above */
                 // @phpstan-ignore cast.useless
                 $rate = (int) $rate;
                 $ct = count($rates);
@@ -163,6 +164,7 @@ final class RatingUserPageRenderer
                     // below); Psalm's own strictBinaryOperands check needs
                     // the explicit cast to stop treating abs()'s result as
                     // a wider int|float union.
+                    /** @psalm-suppress RedundantCastGivenDocblockType same reasoning as above */
                     // @phpstan-ignore cast.useless
                     $dev = (float) abs((float) $rate - $all_img_sum[$id_date['id']]['avg']);
                     $consensus_dev += $dev;

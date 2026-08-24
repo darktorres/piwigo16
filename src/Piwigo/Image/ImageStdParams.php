@@ -210,6 +210,11 @@ final class ImageStdParams
 
         $key = [];
         $params->addUrlTokens($key);
+        // Psalm keeps enforcing addUrlTokens()'s by-ref array<int,
+        // int|string> constraint on $key even after the call returns and
+        // the reference is no longer live -- reassigning it to the joined
+        // string here is genuinely safe.
+        /** @psalm-suppress ReferenceConstraintViolation */
         $key = implode('_', $key);
         if (($this->custom[$key] ?? 0) < time() - 24 * 3600) {
             $this->custom[$key] = time();

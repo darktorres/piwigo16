@@ -55,8 +55,21 @@ final class InstallEnvWriter
             $https = $_SERVER['HTTPS'] ?? null;
             $scheme = (! in_array($https, [null, '0', ''], true) && $https !== 'off') ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            /**
+             * @psalm-suppress RedundantCondition
+             * @psalm-suppress TypeDoesNotContainType Psalm's $_SERVER
+             *   superglobal stub types every key as always string, but
+             *   HTTP_HOST/SCRIPT_NAME are only actually populated for a
+             *   real HTTP request -- this runs in install/CLI contexts too,
+             *   where the guard is genuinely needed.
+             */
             $host = is_string($host) ? $host : 'localhost';
             $script = $_SERVER['SCRIPT_NAME'] ?? '';
+            /**
+             * @psalm-suppress RedundantCondition
+             * @psalm-suppress TypeDoesNotContainType same $_SERVER
+             *   stub-optimism as $host above.
+             */
             $script = is_string($script) ? $script : '';
             $base_url = rtrim($scheme . '://' . $host . dirname($script), '/');
             if ($base_url !== '') {

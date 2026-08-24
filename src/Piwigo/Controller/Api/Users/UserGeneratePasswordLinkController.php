@@ -98,7 +98,8 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
         $this->mailService->switchLangTo($langToUse);
         $generatedLink = $this->authService->generatePasswordLink($lostUserId, $this->urlService, $firstLogin);
 
-        $userLostEmail = is_string($userLost['email'] ?? null) ? $userLost['email'] : null;
+        $userLostEmailRaw = $userLost['email'] ?? null;
+        $userLostEmail = is_string($userLostEmailRaw) ? $userLostEmailRaw : null;
         $galleryTitle = $this->currentConfig->galleryTitle;
 
         if ($input->sendByMail && ! in_array($userLostEmail, [null, ''], true)) {

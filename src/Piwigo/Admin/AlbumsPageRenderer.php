@@ -183,6 +183,11 @@ final class AlbumsPageRenderer
              *   deeper by the inner for loop below -- the tree-walking
              *   algorithm this whole method implements; not a stale
              *   reference leaking across iterations.
+             * @psalm-suppress UnsupportedReferenceUsage same deliberate
+             *   dynamic-depth reference-rebinding algorithm; Psalm's
+             *   reference analysis genuinely cannot follow it, but the
+             *   pattern itself is correct (mirrors PHP's own array
+             *   autovivification-by-reference).
              */
             $the_place = &$associatedTree[strval($parents[0])];
             if (! is_array($the_place)) {

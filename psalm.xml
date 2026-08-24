@@ -595,5 +595,48 @@
                 <file name="tests/Integration/GroupServiceTest.php"/>
             </errorLevel>
         </ArgumentTypeCoercion>
+        <PropertyTypeCoercion>
+            <errorLevel type="suppress">
+                <!-- CurrentConfigTest.php deliberately assigns raw,
+                     non-sequential-keyed/mixed-value arrays to
+                     CurrentConfig's own PHP 8.4 hooked properties (e.g.
+                     `public array $apiKeyDuration = [...] { set(array
+                     $value) { $this->apiKeyDuration =
+                     self::sanitizeApiKeyDuration($value); } }`) to prove
+                     the `set` hook's own sanitization actually reindexes/
+                     coerces/rejects bad input: that's the whole point of
+                     this test file (see its own docblock: "Custom-shaped
+                     properties (non-trivial coercion)"). PHPStan correctly
+                     validates external assignment against the hook's own
+                     `set(array $value)` parameter type and is clean on
+                     this file; Psalm instead applies the property's
+                     internal storage type (`@var list<string>` etc.) to
+                     the external assignment, which is a mismatch for PHP
+                     8.4 native property hooks generally, not a real bug
+                     in this test. -->
+                <file name="tests/Unit/Config/CurrentConfigTest.php"/>
+            </errorLevel>
+        </PropertyTypeCoercion>
+        <PossiblyNullPropertyAssignmentValue>
+            <errorLevel type="suppress">
+                <!-- Same PHP 8.4 property-hooks gap as this file's own
+                     PropertyTypeCoercion entry above, the other direction:
+                     CurrentConfig::$chmodValue/$defaultFiltersViews are
+                     declared non-nullable (`int`/`array<...>`) since their
+                     own `get` hook always resolves a real default via `??`
+                     against a private nullable backing field, but each
+                     property's own `set` hook explicitly takes a nullable
+                     param (`set(?int $value)` / `set(?array $value)`) so
+                     tests can reset back to that default. PHPStan
+                     validates external assignment against the `set`
+                     hook's own param type and is clean on all 4 files;
+                     Psalm applies the (non-nullable) `get` type to the
+                     assignment instead. -->
+                <file name="tests/Integration/SearchServiceTest.php"/>
+                <file name="tests/Unit/Config/ConfigTest.php"/>
+                <file name="tests/Unit/Config/CurrentConfigTest.php"/>
+                <file name="tests/Unit/Search/SearchServiceTest.php"/>
+            </errorLevel>
+        </PossiblyNullPropertyAssignmentValue>
     </issueHandlers>
 </psalm>

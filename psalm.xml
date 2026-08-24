@@ -567,6 +567,32 @@
                      non-empty-string` docblocks. -->
                 <file name="tests/Browser/ImageDerivativeControllerTest.php"/>
                 <file name="tests/Browser/PictureControllerTest.php"/>
+                <!-- RequestPipeline::handle()'s array_map() over the
+                     literal `const array DEFAULT_MIDDLEWARE` list: PHPStan
+                     proves the result is already `list<MiddlewareInterface>`
+                     (confirmed: wrapping in array_values() gets
+                     `arrayValues.list`, "already a list, call has no
+                     effect"); Psalm's array_map()-over-a-const-array
+                     inference doesn't carry the same list tag through to
+                     MiddlewarePipeline::__construct()'s own `list<...>`
+                     param. -->
+                <file name="src/Piwigo/Bootstrap/RequestPipeline.php"/>
+                <!-- SearchFilterRenderer's $addedBy: built via a plain
+                     sequential `$addedBy[] = ...` push in a loop, but
+                     merged across multiple assignment sites (starts null,
+                     conditionally becomes `[]`). PHPStan still proves it's
+                     `list<array<mixed>>` by the read site (confirmed:
+                     wrapping in array_values() gets `arrayValues.list`);
+                     Psalm's cross-branch merge loses the list tag. -->
+                <file name="src/Piwigo/Search/SearchFilterRenderer.php"/>
+                <!-- GroupServiceTest's array_filter([$sourceId, $copyId]):
+                     PHPStan proves filtering this literal
+                     `array{0: GroupId, 1?: GroupId}` shape still satisfies
+                     `list<GroupId>` (confirmed: wrapping in array_values()
+                     gets `arrayValues.list`); Psalm doesn't carry the list
+                     tag through array_filter() on a literal array with an
+                     optional trailing key. -->
+                <file name="tests/Integration/GroupServiceTest.php"/>
             </errorLevel>
         </ArgumentTypeCoercion>
     </issueHandlers>

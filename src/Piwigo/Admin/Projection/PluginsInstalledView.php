@@ -56,7 +56,7 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('tiptip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
-            AssetContribution::script('pluginInstallated', 'themes/admin/default/js/plugins_installated.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
+            AssetContribution::script('pluginInstallated', 'themes/admin/default/js/plugins_installated.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
             AssetContribution::script('plugins_installed_config', 'themes/admin/default/js/plugins_installed_config.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];
     }

@@ -229,6 +229,39 @@ declare function sprintf(...args: any[]): string;
 // declaring it itself.
 declare const pwg_token: any;
 
+// themes/admin/default/js/plugins_installed_config.js's own shared-global
+// set (docs/PLAN.md P46-C's full sweep) -- `plugins_installated.ts` is
+// the first *consumer*-only file converted, reading every one of these
+// bare without declaring any itself, same "consumer converts before its
+// declarer" technique as `pwg_token` above. Remove these once
+// plugins_installed_config.js itself converts and supplies its own real
+// `var`/`const` declarations for the same names (matches the
+// `derivatives` precedent -- a real declaration in the shared
+// type-checking program makes an ambient one redundant, and `let`/
+// `const` there would conflict with it outright).
+declare const activate_msg: string;
+declare const cancel_msg: string;
+declare const confirm_msg: string;
+declare const deactivate_all_msg: string;
+declare const delete_plugin_msg: string;
+declare const deleted_plugin_msg: string;
+declare const incompatible_msg: string;
+declare const isWebmaster: any;
+declare const nb_plugin: { all: number; active: number; inactive: number; other: number };
+declare const not_webmaster: string;
+declare const nothing_found: string;
+declare const plugin_action_error: string;
+declare const plugin_added_str: string;
+declare const plugin_deactivated_str: string;
+declare const plugin_filter: any;
+declare const plugin_found: string;
+declare const plugin_restored_str: string;
+declare const restore_plugin_msg: string;
+declare const show_details: any;
+declare const str_restore_def: string;
+declare const uninstall_plugin_msg: string;
+declare const x_plugins_found: string;
+
 interface JQueryStatic {
 	// jquery.ajaxmanager (vendored, never published to npm -- P46-0's own
 	// CDN table) -- `thumbnails.loader.ts`'s own queued-thumbnail loader is
@@ -260,6 +293,12 @@ interface JQueryStatic {
 }
 
 interface JQuery {
+	// Real jQuery-core instance method (deprecated since 1.8, but still
+	// present in the vendored 1.11.3 runtime -- @types/jquery never typed
+	// it even in legacy.d.ts). `plugins_installated.ts`'s own
+	// `jQuery("div.active").size()` is the one real first-party call site.
+	size(): number;
+
 	// selectize.js (vendored, github-sourced -- P46-0's own CDN table).
 	// `LocalStorageCache.ts`'s own `CategoriesCache`/`TagsCache`/
 	// `GroupsCache`/`UsersCache.selectize()` methods are the one real

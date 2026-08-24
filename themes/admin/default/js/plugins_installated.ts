@@ -1,3 +1,19 @@
+// Consumer of themes/admin/default/js/plugins_installed_config.js's own
+// shared globals (docs/PLAN.md P46-C's full sweep): activate_msg/
+// cancel_msg/confirm_msg/deactivate_all_msg/delete_plugin_msg/
+// deleted_plugin_msg/incompatible_msg/isWebmaster/nb_plugin/
+// not_webmaster/nothing_found/plugin_action_error/plugin_added_str/
+// plugin_deactivated_str/plugin_filter/plugin_found/plugin_restored_str/
+// pwg_token/restore_plugin_msg/show_details/str_restore_def/
+// uninstall_plugin_msg/x_plugins_found -- all read bare, declared with
+// ambient `declare const` bindings in build/jquery-plugins.d.ts (same
+// "consumer converts before its declarer" technique already used for
+// pwg_token in album_selector.ts). jConfirm_alert_options/
+// jConfirm_confirm_options need no such binding: common.ts's own real
+// `const` declarations of those names already resolve this file's bare
+// reads, since every themes/**/*.ts file shares one global
+// type-checking program (same reasoning as batchManagerGlobal.ts's own
+// `derivatives` case).
 function setDisplayClassic() {
     $(".pluginContainer").removeClass("line-form").removeClass("compact-form").addClass("classic-form");
 
@@ -32,32 +48,32 @@ function setDisplayLine() {
 }
 
 function reduceTitle() {
-    var x = document.getElementsByClassName("pluginName");
-    var length = 22;
+    const x = document.getElementsByClassName("pluginName") as HTMLCollectionOf<HTMLElement>;
+    const length = 22;
 
     for (const div of x) {
-        var text = div.innerHTML.trim()
+        const text = div.innerHTML.trim()
         if (text.length > length) {
-            var newText = text.substring(0, length);
+            let newText = text.substring(0, length);
             newText = newText + "...";
 
             div.innerHTML = newText;
-            div.title =  text   
+            div.title =  text
         }
     }
 }
 
 function normalTitle() {
-    var x = document.getElementsByClassName("pluginName");
+    const x = document.getElementsByClassName("pluginName") as HTMLCollectionOf<HTMLElement>;
 
     for (const div of x) {
-        div.innerHTML = div.dataset.title
+        div.innerHTML = div.dataset.title || "";
     }
 }
 
-function activatePlugin(id) {
+function activatePlugin(id: string) {
 
-    $("#"+id+" .switch").attr("disabled", true);
+    $("#"+id+" .switch").prop("disabled", true);
 
     $.ajax({
         type: 'POST',
@@ -66,8 +82,7 @@ function activatePlugin(id) {
         headers: {'X-CSRF-Token': pwg_token},
         url: 'api/v1/plugins/' + id + '/actions/perform',
         data: JSON.stringify({ action: 'activate' }),
-        success: function (data) {
-            let pluginName = id;
+        success: function (_data: any) {
             $("#" + id + " .pluginNotif").stop(false, true);
             $("#" + id + " .AddPluginSuccess label span:first").html(plugin_added_str);
             $("#" + id + " .AddPluginSuccess").css("display", "flex");
@@ -76,21 +91,21 @@ function activatePlugin(id) {
             nb_plugin.inactive -= 1;
             actualizeFilter();
         },
-        error: function (e) {
+        error: function (e: any) {
             console.log(e.responseText);
             $("#" + id + " .pluginNotif").stop(false, true);
             $("#" + id + " .PluginActionError label span:first").html(plugin_action_error);
             $("#" + id + " .PluginActionError").css("display", "flex");
             $("#" + id + " .PluginActionError").delay(1500).fadeOut(2500);
         }
-    }).done(function (data) {
-        $("#"+id+" .switch").attr("disabled", false);
+    }).done(function (_data: any) {
+        $("#"+id+" .switch").prop("disabled", false);
         $("#" + id + " .AddPluginSuccess").fadeOut(3000);
     })
 }
 
-function disactivatePlugin(id) {
-    $("#"+id+" .switch").attr("disabled", true);
+function disactivatePlugin(id: string) {
+    $("#"+id+" .switch").prop("disabled", true);
 
     $.ajax({
         type: 'POST',
@@ -99,8 +114,7 @@ function disactivatePlugin(id) {
         headers: {'X-CSRF-Token': pwg_token},
         url: 'api/v1/plugins/' + id + '/actions/perform',
         data: JSON.stringify({ action: 'deactivate' }),
-        success: function (data) {
-            let pluginName = id;
+        success: function (_data: any) {
             $("#" + id + " .pluginNotif").stop(false, true);
             $("#" + id + " .DeactivatePluginSuccess label span:first").html(plugin_deactivated_str);
             $("#" + id + " .DeactivatePluginSuccess").css("display", "flex");
@@ -109,20 +123,20 @@ function disactivatePlugin(id) {
             nb_plugin.active -= 1;
             actualizeFilter();
         },
-        error: function (e) {
+        error: function (e: any) {
             console.log(e);
             $("#" + id + " .pluginNotif").stop(false, true);
             $("#" + id + " .PluginActionError label span:first").html(plugin_action_error);
             $("#" + id + " .PluginActionError").css("display", "flex");
             $("#" + id + " .PluginActionError").delay(1500).fadeOut(2500);
         }
-    }).done(function (data) {
-        $("#"+id+" .switch").attr("disabled", false);
+    }).done(function (_data: any) {
+        $("#"+id+" .switch").prop("disabled", false);
         $("#" + id + " .DeactivatePluginSuccess").fadeOut(3000);
     })
 }
 
-function deletePlugin(id, name) {
+function deletePlugin(id: string, name: string) {
     $.alert({
         title : deleted_plugin_msg.replace("%s",name),
         content: function() {
@@ -133,13 +147,13 @@ function deletePlugin(id, name) {
                     headers: {'X-CSRF-Token': pwg_token},
                     url: 'api/v1/plugins/' + id + '/actions/perform',
                     data: JSON.stringify({ action: 'delete' }),
-                    success: function (data) {
+                    success: function (_data: any) {
                         $("#"+id).remove();
                         nb_plugin.inactive -=1;
                         nb_plugin.all -=1;
                         actualizeFilter();
                     },
-                    error: function (e) {
+                    error: function (e: any) {
                         console.log(e);
                         $("#" + id + " .pluginNotif").stop(false, true);
                         $("#" + id + " .PluginActionError label span:first").html(plugin_action_error);
@@ -152,7 +166,7 @@ function deletePlugin(id, name) {
     });
 }
 
-function restorePlugin(id) {
+function restorePlugin(id: string) {
     $.ajax({
         type: 'POST',
         dataType: 'json',
@@ -160,25 +174,24 @@ function restorePlugin(id) {
         headers: {'X-CSRF-Token': pwg_token},
         url: 'api/v1/plugins/' + id + '/actions/perform',
         data: JSON.stringify({ action: 'restore' }),
-        success: function (data) {
-            let pluginName = id;
+        success: function (_data: any) {
             $("#" + id + " .pluginNotif").stop(false, true);
             $("#" + id + " .RestorePluginSuccess label span:first").html(plugin_restored_str);
             $("#" + id + " .RestorePluginSuccess").css("display", "flex");
         },
-        error: function (e) {
+        error: function (e: any) {
             console.log(e);
             $("#" + id + " .pluginNotif").stop(false, true);
             $("#" + id + " .PluginActionError label span:first").html(plugin_action_error);
             $("#" + id + " .PluginActionError").css("display", "flex");
             $("#" + id + " .PluginActionError").delay(1500).fadeOut(2500);
         }
-    }).done(function (data) {
+    }).done(function (_data: any) {
         $("#" + id + " .RestorePluginSuccess").fadeOut(3000);
     })
 }
 
-function uninstallPlugin(id) {
+function uninstallPlugin(id: string) {
     $.ajax({
         type: 'POST',
         dataType: 'json',
@@ -186,13 +199,13 @@ function uninstallPlugin(id) {
         headers: {'X-CSRF-Token': pwg_token},
         url: 'api/v1/plugins/' + id + '/actions/perform',
         data: JSON.stringify({ action: 'uninstall' }),
-        success: function (data) {
+        success: function (_data: any) {
             $("#"+id).remove();
             nb_plugin.other -=1;
             nb_plugin.all -=1;
             actualizeFilter();
-        }, 
-        error: function (e) {
+        },
+        error: function (e: any) {
           $("#" + id + " .pluginNotif").stop(false, true);
           $("#" + id + " .PluginActionError label span:first").html(plugin_action_error);
           $("#" + id + " .PluginActionError").css("display", "flex");
@@ -282,7 +295,7 @@ $(document).ready(function () {
         $('.search-input').trigger("input");
     })
 
-    /* Plugin Actions */ 
+    /* Plugin Actions */
     /**
      * Activate / Deactivate
      */
@@ -291,19 +304,19 @@ $(document).ready(function () {
       $(".pluginMiniBox").addClass("usable");
 
         if ($(this).find("#toggleSelectionMode").is(':checked')) {
-            activatePlugin($(this).parent().parent().attr("id"));
+            activatePlugin($(this).parent().parent().attr("id")!);
 
             $(this).parent().parent().addClass("plugin-active").removeClass("plugin-inactive");
             if ($(this).parent().parent().find(".pluginUnavailableAction").attr("href")) {
                 $(this).parent().parent().find(".pluginUnavailableAction").removeClass("pluginUnavailableAction").addClass("pluginActionLevel1");
             }
         } else {
-            disactivatePlugin($(this).parent().parent().attr("id"))
+            disactivatePlugin($(this).parent().parent().attr("id")!)
 
             $(this).parent().parent().removeClass("plugin-active").addClass("plugin-inactive");
             $(this).parent().parent().find(".pluginActionLevel1").removeClass("pluginActionLevel1").addClass("pluginUnavailableAction");
         }
-        
+
         actualizeFilter();
       })
     } else {
@@ -315,7 +328,7 @@ $(document).ready(function () {
         event.preventDefault();
         event.stopPropagation();
 
-        var id = $(this).parent().parent().parent().attr("id");
+        const id = $(this).parent().parent().parent().attr("id")!;
         $("#" + id + " .pluginNotif").stop(false, true);
         $("#" + id + " .PluginActionError label span:first").html(not_webmaster);
         $("#" + id + " .PluginActionError").css("display", "flex");
@@ -331,8 +344,8 @@ $(document).ready(function () {
      * Delete
      */
     $(".pluginContent").find('.dropdown-option.delete-plugin-button').on('click', function () {
-        let plugin_name = $(this).closest(".pluginContent").find(".pluginName").html().trim();
-        let plugin_id = $(this).closest(".pluginContent").parent().attr("id");
+        const plugin_name = $(this).closest(".pluginContent").find(".pluginName").html().trim();
+        const plugin_id = $(this).closest(".pluginContent").parent().attr("id")!;
         $.confirm({
           title: delete_plugin_msg.replace("%s",plugin_name),
           buttons: {
@@ -355,8 +368,8 @@ $(document).ready(function () {
        * Restore
        */
       $(".pluginContent").find('.dropdown-option.plugin-restore').on('click', function () {
-        let plugin_name = $(this).closest(".pluginContent").find(".pluginName").html().trim();
-        let plugin_id = $(this).closest(".pluginContent").parent().attr("id");
+        const plugin_name = $(this).closest(".pluginContent").find(".pluginName").html().trim();
+        const plugin_id = $(this).closest(".pluginContent").parent().attr("id")!;
         $.confirm({
           title: restore_plugin_msg.replace('%s', plugin_name),
           content: str_restore_def,
@@ -380,8 +393,8 @@ $(document).ready(function () {
        * Uninstall
        */
       $(".pluginContent").find('.uninstall-plugin-button').on('click', function () {
-        let plugin_name = $(this).closest(".pluginContent").find(".pluginName").html().trim();
-        let plugin_id = $(this).closest(".pluginContent").parent().attr("id");
+        const plugin_name = $(this).closest(".pluginContent").find(".pluginName").html().trim();
+        const plugin_id = $(this).closest(".pluginContent").parent().attr("id")!;
         $.confirm({
           title: uninstall_plugin_msg.replace('%s', plugin_name),
           buttons: {
@@ -401,7 +414,7 @@ $(document).ready(function () {
       })
 })
 
-function set_view_selector(view_type) {
+function set_view_selector(view_type: string) {
   $.ajax({
     url: "api/v1/session/preferences/plugin-manager-view",
     type: "PUT",
@@ -419,25 +432,33 @@ const queuedManager = jQuery.manageAjax.create("queued", {
     queue: true,
     maxRequests: 1,
   });
-  
+
 const nb_plugins = jQuery("div.active").size();
-const done = 0;
+// Was `const done = 0;` with `done++;` below -- a genuine pre-existing
+// bug (reassigning a `const`), invisible at runtime only because nothing
+// ever exercised this exact code path in a way that surfaced the
+// TypeError, and undetectable by `eqeqeq`/`no-undef` (P45's own
+// not-yet-CI-gated lint rules) the way this plan's other real bug finds
+// were. `strict: true` refuses to compile a `const` reassignment
+// outright (TS2588), so this genuinely can't be preserved byte-for-byte
+// the way an ordering race condition can -- `let` is the fix, restoring
+// the "reload after every active plugin is deactivated" feature this
+// bug silently broke.
+let done = 0;
 
 function showInactivePlugins () {
-  jQuery(".showInactivePlugins").fadeOut(
-    (complete = function () {
-      jQuery(".plugin-inactive").fadeIn();
-    })
-  );
+  jQuery(".showInactivePlugins").fadeOut(function () {
+    jQuery(".plugin-inactive").fadeIn();
+  });
 };
 
 function actualizeFilter() {
-  $("label[for='seeAll'] .filter-badge").html(nb_plugin.all);
-  $("label[for='seeActive'] .filter-badge").html(nb_plugin.active);
-  $("label[for='seeInactive'] .filter-badge").html(nb_plugin.inactive);
-  $("label[for='seeOther'] .filter-badge").html(nb_plugin.other);
+  $("label[for='seeAll'] .filter-badge").html(String(nb_plugin.all));
+  $("label[for='seeActive'] .filter-badge").html(String(nb_plugin.active));
+  $("label[for='seeInactive'] .filter-badge").html(String(nb_plugin.inactive));
+  $("label[for='seeOther'] .filter-badge").html(String(nb_plugin.other));
   $(".filterLabel").show();
-  
+
   $(".pluginMiniBox").each(function () {
     if (nb_plugin.active == 0) {
       $("label[for='seeActive']").hide();
@@ -460,7 +481,7 @@ function actualizeFilter() {
   });
 }
 
-function performPluginDeactivate(id) {
+function performPluginDeactivate(id: string) {
   queuedManager.add({
     type: "POST",
     dataType: "json",
@@ -470,7 +491,7 @@ function performPluginDeactivate(id) {
     data: JSON.stringify({
       action: "deactivate",
     }),
-    success: function (data) {
+    success: function (_data: any) {
       jQuery("#" + id)
         .removeClass("active")
         .addClass("inactive");
@@ -483,10 +504,10 @@ function performPluginDeactivate(id) {
 /* group action */
 
 jQuery(document).ready(function () {
-    $("label[for='seeActive'] .filter-badge").html(nb_plugin.active);
-    $("label[for='seeInactive'] .filter-badge").html(nb_plugin.inactive);
-    $("label[for='seeOther'] .filter-badge").html(nb_plugin.other);
-    $(".filterLabel").show(); 
+    $("label[for='seeActive'] .filter-badge").html(String(nb_plugin.active));
+    $("label[for='seeInactive'] .filter-badge").html(String(nb_plugin.inactive));
+    $("label[for='seeOther'] .filter-badge").html(String(nb_plugin.other));
+    $(".filterLabel").show();
 
     $(".pluginBox").each(function () {
         if (nb_plugin.active == 0) {
@@ -508,7 +529,7 @@ jQuery(document).ready(function () {
             }
         }
 
-        let myplugin = jQuery(this);
+        const myplugin = jQuery(this);
         myplugin.find(".showOptions").click(function () {
             myplugin.find(".PluginOptionsBlock").toggle();
         });
@@ -523,7 +544,7 @@ jQuery(document).ready(function () {
             btnClass: "btn-red",
             action: function () {
                 jQuery("div.active").each(function () {
-                performPluginDeactivate(jQuery(this).attr("id"));
+                performPluginDeactivate(jQuery(this).attr("id")!);
                 });
             },
             },
@@ -541,8 +562,8 @@ jQuery(document).ready(function () {
         url: "admin.php",
         data: { page: "plugins_installed", incompatible_plugins: true },
         dataType: "json",
-        success: function (data) {
-        for (i = 0; i < data.length; i++) {
+        success: function (data: any) {
+        for (let i = 0; i < data.length; i++) {
             if (show_details)
             jQuery("#" + data[i] + " .pluginName").prepend(
                 '<a class="warning" title="' + incompatible_msg + '"></a>'
@@ -586,12 +607,12 @@ jQuery(document).ready(function () {
     };
 
     jQuery(".pluginFilter input").on("input", function () {
-        let text = jQuery(this).val().toLowerCase();
-        var searchNumber = 0;
+        const text = String(jQuery(this).val()).toLowerCase();
+        let searchNumber = 0;
 
-        var searchActive = 0;
-        var searchInactive = 0;
-        var searchOther = 0;
+        let searchActive = 0;
+        let searchInactive = 0;
+        let searchOther = 0;
 
         $(".pluginBox").each(function () {
         if (text == "") {
@@ -638,9 +659,9 @@ jQuery(document).ready(function () {
             nb_plugin.inactive = searchInactive;
             nb_plugin.other = searchOther;
         } else {
-            let name = jQuery(this).find(".pluginName").text().toLowerCase();
+            const name = jQuery(this).find(".pluginName").text().toLowerCase();
             jQuery(".nbPluginsSearch").show();
-            let description = jQuery(this).find(".pluginDesc").text().toLowerCase();
+            const description = jQuery(this).find(".pluginDesc").text().toLowerCase();
             if (name.search(text) != -1 || description.search(text) != -1) {
             searchNumber++;
 
@@ -700,10 +721,10 @@ jQuery(document).ready(function () {
         if (searchNumber == 0) {
         jQuery(".nbPluginsSearch").html(nothing_found);
         } else if (searchNumber == 1) {
-        jQuery(".nbPluginsSearch").html(plugin_found.replace("%s", searchNumber));
+        jQuery(".nbPluginsSearch").html(plugin_found.replace("%s", String(searchNumber)));
         } else {
         jQuery(".nbPluginsSearch").html(
-            x_plugins_found.replace("%s", searchNumber)
+            x_plugins_found.replace("%s", String(searchNumber))
         );
         }
     });
@@ -719,7 +740,7 @@ jQuery(document).ready(function () {
 $(document).mouseup(function (e) {
   e.stopPropagation();
   $(".pluginBox").each(function () {
-    if ($(this).find(".showOptions").has(e.target).length === 0) {
+    if ($(this).find(".showOptions").has(e.target as unknown as Element).length === 0) {
       $(this).find(".PluginOptionsBlock").hide();
     }
   });

@@ -90,6 +90,9 @@ export default defineConfig({
         // analysis).
         batchManagerGlobalUnderscore: r("themes/admin/default/js/batch_manager_global.ts"),
         batchManagerGlobal: r("themes/admin/default/js/batchManagerGlobal.ts"),
+        // P46-C part 3 -- the first consumer-only file (its declarer,
+        // plugins_installed_config.js, hasn't converted yet).
+        pluginsInstallated: r("themes/admin/default/js/plugins_installated.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

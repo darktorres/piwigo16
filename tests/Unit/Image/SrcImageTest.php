@@ -83,6 +83,9 @@ function srcImageTestMakePng(string $path, int $width, int $height): void
         mkdir($dir, 0o777, true);
     }
     $image = imagecreatetruecolor($width, $height);
+    if ($image === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
     imagepng($image, $path);
 }
 

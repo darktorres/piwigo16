@@ -117,6 +117,9 @@ it('silently drops a malformed (non-JSON) body -- still 204, nothing logged', fu
     $ch = curl_init(H::baseUrl() . '/analytics/vitals');
     expect($ch)
         ->not->toBeFalse();
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, 'this is not json{{{');
@@ -151,6 +154,9 @@ it('silently drops a completely empty request body -- still 204, nothing logged'
     $ch = curl_init(H::baseUrl() . '/analytics/vitals');
     expect($ch)
         ->not->toBeFalse();
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     // Deliberately no CURLOPT_POSTFIELDS at all -- parseMetric()'s own
@@ -170,6 +176,9 @@ it('silently drops a well-formed JSON body that decodes to a non-array -- still 
     $ch = curl_init(H::baseUrl() . '/analytics/vitals');
     expect($ch)
         ->not->toBeFalse();
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     // A bare JSON string is valid JSON (json_decode() succeeds, no

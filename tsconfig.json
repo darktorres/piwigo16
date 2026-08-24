@@ -15,7 +15,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node", "jquery"]
   },
   "include": [
     "build/**/*.ts",
@@ -24,7 +24,8 @@
     "eslint.config.ts",
     "commitlint.config.ts",
     "tests/Unit/**/*.ts",
-    "openapi/client/**/*.ts"
+    "openapi/client/**/*.ts",
+    "themes/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

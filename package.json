@@ -31,6 +31,7 @@
     "@redocly/cli": "2.46.1",
     "@size-limit/file": "13.0.3",
     "@size-limit/preset-app": "13.0.3",
+    "@types/jquery": "4.0.1",
     "@types/node": "26.2.0",
     "@vitest/coverage-v8": "4.1.11",
     "eslint": "10.8.1",

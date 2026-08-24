@@ -33,7 +33,7 @@ export default defineConfig({
     target: ["chrome94", "edge94", "firefox93", "safari15"],
     rollupOptions: {
       input: {
-        // Placeholder only — 68 real entries land in P45.
+        // Placeholder only — 78 real entries land in P46.
         noop: r("build/noop.ts"),
         // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.

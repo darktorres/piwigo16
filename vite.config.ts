@@ -95,6 +95,10 @@ export default defineConfig({
         pluginsInstallated: r("themes/admin/default/js/plugins_installated.ts"),
         // P46-C part 4 -- consumer of the already-converted intro.ts.
         introTooltips: r("themes/admin/default/js/intro_tooltips.ts"),
+        // P46-C part 5 -- consumer of album_selector.ts, and (a new
+        // finding beyond the plan's own sweep) of not-yet-converted
+        // albums.js's own `data`/`str_album_found` globals.
+        catSearch: r("themes/admin/default/js/cat_search.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

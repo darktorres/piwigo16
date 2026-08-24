@@ -20,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * declares one), not a fixed structural shape worth minting its own DTO
  * for here. No `$baseUrl`/`$maxInactiveBeforeHide`/`$pluginStates`
  * field -- confirmed dead against both the template's own body and
- * `plugins_installed_config.js`'s `pwg_getPageData()` reads.
+ * `plugins_installed_config.ts`'s `pwg_getPageData()` reads.
  */
 #[Template('plugins_installed.latte')]
 final readonly class PluginsInstalledView implements View, HasPageAssets, ExposesPageData
@@ -57,7 +57,7 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('tiptip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
             AssetContribution::script('pluginInstallated', 'themes/admin/default/js/plugins_installated.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
-            AssetContribution::script('plugins_installed_config', 'themes/admin/default/js/plugins_installed_config.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('plugins_installed_config', 'themes/admin/default/js/plugins_installed_config.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];
     }
 

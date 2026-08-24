@@ -159,6 +159,35 @@ interface Window {
 	progress_start: () => void;
 	progress: (success?: boolean) => void;
 	getDerivativeUrls: () => void;
+
+	// plugins_installed_config.ts's own shared-global set
+	// (docs/PLAN.md P46-C's full sweep) -- plugins_installated.ts reads
+	// every one of these bare. `window.` exposure here is required at
+	// runtime (not just documentation): see plugins_installed_config.ts's
+	// own leading comment for the real IIFE-wrapping bug this caught.
+	incompatible_msg: string;
+	activate_msg: string;
+	deactivate_all_msg: string;
+	pwg_token: any;
+	nb_plugin: { all: number; active: number; inactive: number; other: number };
+	confirm_msg: string;
+	cancel_msg: string;
+	delete_plugin_msg: string;
+	deleted_plugin_msg: string;
+	restore_plugin_msg: string;
+	uninstall_plugin_msg: string;
+	plugin_added_str: string;
+	plugin_deactivated_str: string;
+	plugin_restored_str: string;
+	plugin_action_error: string;
+	not_webmaster: string;
+	nothing_found: string;
+	x_plugins_found: string;
+	plugin_found: string;
+	isWebmaster: any;
+	str_restore_def: string;
+	show_details: any;
+	plugin_filter: string | null;
 }
 
 // batch_manager_global.ts reads these 4 as *bare* identifiers (deferred,
@@ -224,43 +253,16 @@ declare function sprintf(...args: any[]): string;
 // (`albums.js`'s own `var pwg_token = pwg_getPageData('csrf_token');`
 // is one of several -- same "declared per-page, safe because never
 // co-loaded with a conflicting value" pattern as P46-0's own
-// `add_related_category` finding). `album_selector.ts` is the first
-// *consumer*-only file converted so far that reads it bare without
-// declaring it itself.
-declare const pwg_token: any;
-
-// themes/admin/default/js/plugins_installed_config.js's own shared-global
-// set (docs/PLAN.md P46-C's full sweep) -- `plugins_installated.ts` is
-// the first *consumer*-only file converted, reading every one of these
-// bare without declaring any itself, same "consumer converts before its
-// declarer" technique as `pwg_token` above. Remove these once
-// plugins_installed_config.js itself converts and supplies its own real
-// `var`/`const` declarations for the same names (matches the
-// `derivatives` precedent -- a real declaration in the shared
-// type-checking program makes an ambient one redundant, and `let`/
-// `const` there would conflict with it outright).
-declare const activate_msg: string;
-declare const cancel_msg: string;
-declare const confirm_msg: string;
-declare const deactivate_all_msg: string;
-declare const delete_plugin_msg: string;
-declare const deleted_plugin_msg: string;
-declare const incompatible_msg: string;
-declare const isWebmaster: any;
-declare const nb_plugin: { all: number; active: number; inactive: number; other: number };
-declare const not_webmaster: string;
-declare const nothing_found: string;
-declare const plugin_action_error: string;
-declare const plugin_added_str: string;
-declare const plugin_deactivated_str: string;
-declare const plugin_filter: any;
-declare const plugin_found: string;
-declare const plugin_restored_str: string;
-declare const restore_plugin_msg: string;
-declare const show_details: any;
-declare const str_restore_def: string;
-declare const uninstall_plugin_msg: string;
-declare const x_plugins_found: string;
+// `add_related_category` finding). No ambient `declare const` needed
+// here at all, unlike every other "consumer converts before its
+// declarer" case in this file: `var` (unlike `let`/`const`) allows
+// unlimited redeclaration in the same scope, so once ANY one real
+// `var pwg_token = ...` exists anywhere in the shared type-checking
+// program (`plugins_installed_config.ts` supplied the first, followed
+// by every other per-page declarer as it converts), every consumer's
+// bare read resolves through it -- confirmed via a real TS2451 error
+// the one time an ambient `declare const pwg_token` briefly coexisted
+// with `plugins_installed_config.ts`'s own real `var` declaration.
 
 // Vendored standalone-library globals (not jQuery plugins) --
 // `photos_add_direct.ts` is the first real converted call site for all

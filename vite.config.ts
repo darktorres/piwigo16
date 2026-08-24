@@ -127,6 +127,10 @@ export default defineConfig({
         siteManager: r("themes/admin/default/js/site_manager.ts"),
         themesNew: r("themes/admin/default/js/themes_new.ts"),
         menubarAdmin: r("themes/admin/default/js/menubar.ts"),
+        // P46-C part 12 -- plugins_installated.ts's own declarer, now
+        // real (retires that file's earlier ambient declare-const
+        // bindings).
+        pluginsInstalledConfig: r("themes/admin/default/js/plugins_installed_config.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

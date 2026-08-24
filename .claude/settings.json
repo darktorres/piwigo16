@@ -8,6 +8,16 @@
             "type": "command",
             "command": ".claude/hooks/check-ecs-fix-position.sh",
             "statusMessage": "Checking ECS --fix argument position..."
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-tool-invocation-guardrails.sh",
+            "statusMessage": "Checking tool-invocation guardrails..."
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-git-safety.sh",
+            "statusMessage": "Checking git safety guardrails..."
           }
         ]
       }

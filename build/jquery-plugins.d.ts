@@ -339,4 +339,11 @@ interface JQuery {
 	// declared and consumed within the same file, no other real call
 	// site found.
 	enableShiftClick(): JQuery;
+
+	// `doubleSlider.ts`'s own first-party `jQuery.fn.pwgDoubleSlider`
+	// extension -- not converted yet, but `batchManagerFilter.ts` is the
+	// first *consumer*-only file that needs the ambient type without
+	// declaring it itself (same reasoning as `pwgDatepicker`/
+	// `pwgAddAlbum` above).
+	pwgDoubleSlider(options?: Record<string, unknown>): JQuery;
 }

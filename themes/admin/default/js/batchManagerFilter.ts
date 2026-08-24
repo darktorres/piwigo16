@@ -1,7 +1,17 @@
-var dimensions = pwg_getPageData('dimensions');
-var filesizeData = pwg_getPageData('filesize');
+export {};
 
-var sliders = {
+// Consumer of album_selector.ts's own real, top-level `class
+// AlbumSelector` -- resolves directly via that file's own real
+// declaration, same reasoning as picture_modify.ts's own copy of this
+// comment. `sliders` here is a genuinely independent, unrelated
+// top-level `var` from search_filters.ts's own `window.sliders` (a
+// different theme, a different page, never co-loaded) -- this file's
+// own `export {}` module isolation keeps the two from ever colliding
+// regardless.
+const dimensions = pwg_getPageData('dimensions');
+const filesizeData = pwg_getPageData('filesize');
+
+const sliders = {
   widths: {
     values: dimensions.widths.split(',').map(Number),
     selected: {
@@ -39,15 +49,15 @@ var sliders = {
   }
 };
 
-var filterCategorySelected = pwg_getPageData('filter_category_selected');
-var selected_filter_cat_ids = filterCategorySelected ? [String(filterCategorySelected)] : [];
+const filterCategorySelected = pwg_getPageData('filter_category_selected');
+const selected_filter_cat_ids = filterCategorySelected ? [String(filterCategorySelected)] : [];
 
-var str_select_album = pwg_getPageString('Select at least one album');
-var str_select_tag = pwg_getPageString('Select at least one tag');
-var errorFilters = '';
+const str_select_album = pwg_getPageString('Select at least one album');
+const str_select_tag = pwg_getPageString('Select at least one tag');
+let errorFilters = '';
 
 /* ********** Filters*/
-function filter_enable(filter) {
+function filter_enable(filter: string) {
 	/* show the filter*/
 	$("#"+filter).show();
 
@@ -55,14 +65,14 @@ function filter_enable(filter) {
 	$("input[type=checkbox][name="+filter+"_use]").prop("checked", true);
 
 	/* forbid to select this filter in the addFilter list */
-  $("#addFilter").find("a[data-value="+filter+"]").addClass("disabled", "disabled");
-  
+  $("#addFilter").find("a[data-value="+filter+"]").addClass("disabled");
+
   /* hide the no filter message */
   $('.noFilter').hide();
   $('.addFilter-button').removeClass('highlight');
 }
 
-function filter_disable(filter) {
+function filter_disable(filter: string) {
 	/* hide the filter line */
 	$("#"+filter).hide();
 
@@ -71,16 +81,16 @@ function filter_disable(filter) {
 
 	/* give the possibility to show it again */
   $("#addFilter").find("a[data-value="+filter+"]").removeClass("disabled");
-  
+
   /* show the no filter message if no filter selected */
   if ($('#filterList li:visible').length == 0) {
     $('.noFilter').show();
     $('.addFilter-button').addClass('highlight');
   }
-  
+
 }
 // Album Selector
-function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }) {
+function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }: any) {
   $('#selectedAlbumNameFilter').html(album.name);
   newSelectedAlbum();
   hide_filters_error(str_select_album);
@@ -90,12 +100,12 @@ function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }) {
 }
 
 // Tags and Albums validation
-function show_filters_error(message) {
+function show_filters_error(message: string) {
   errorFilters = message;
   $('#errorFilter').html(`<p>${message}</p>`).fadeIn();
 }
 
-function hide_filters_error(message) {
+function hide_filters_error(message: string) {
   if (message === errorFilters) {
     $('#errorFilter').hide();
   }
@@ -113,35 +123,35 @@ $(document).ready(function () {
   });
 
   $(".removeFilter").addClass("icon-cancel-circled");
-  
+
   $(".removeFilter").click(function () {
-    const filter = $(this).parent('li').attr("id");
+    const filter = $(this).parent('li').attr("id")!;
     filter_disable(filter);
-  
+
     return false;
   });
-  
+
   $("#addFilter a").on('click', function () {
-    const filter = $(this).attr("data-value");
+    const filter = $(this).attr("data-value")!;
     filter_enable(filter);
   });
-  
+
   $("#removeFilters").click(function() {
     $("#filterList li").each(function() {
-      const filter = $(this).attr("id");
+      const filter = $(this).attr("id")!;
       filter_disable(filter);
     });
     return false;
   });
-  
+
   $('[data-slider=widths]').pwgDoubleSlider(sliders.widths);
   $('[data-slider=heights]').pwgDoubleSlider(sliders.heights);
   $('[data-slider=ratios]').pwgDoubleSlider(sliders.ratios);
   $('[data-slider=filesizes]').pwgDoubleSlider(sliders.filesizes);
-  
+
   $(document).mouseup(function (e) {
     e.stopPropagation();
-    if (!$(event.target).hasClass('addFilter-button')) {
+    if (!$(event!.target as unknown as Element).hasClass('addFilter-button')) {
       $('.addFilter-dropdown').slideUp();
     }
   });
@@ -186,4 +196,3 @@ $(document).ready(function () {
     $('#modalQuickSearch').fadeOut();
   });
 })
-

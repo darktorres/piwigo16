@@ -63,6 +63,9 @@ it('returns the real app version as JSON, no envelope, no auth required', functi
 
 it('returns an RFC 9457 problem+json 404 for an unmatched /api/v1 path', function (): void {
     $ch = curl_init(H::baseUrl() . '/api/v1/this-resource-does-not-exist');
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
     $body = curl_exec($ch);
@@ -81,6 +84,9 @@ it('returns an RFC 9457 problem+json 404 for an unmatched /api/v1 path', functio
 
 it('returns an RFC 9457 problem+json 405 for a POST to the GET-only version endpoint', function (): void {
     $ch = curl_init(H::baseUrl() . '/api/v1/version');
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());

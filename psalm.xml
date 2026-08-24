@@ -257,5 +257,25 @@
                 <file name="src/Piwigo/Users/UserRepository.php"/>
             </errorLevel>
         </LessSpecificReturnStatement>
+        <!-- SectionPopulator.php's $page local starts as `array<string, mixed>`
+             and is repeatedly array_merge()'d with several call sites'
+             return values, including UrlService::parseWellKnownParamsUrl()'s
+             own precisely-typed `array{..., chronology_style?: string,
+             chronology_view?: string, chronology_date?: list<string>, ...}`.
+             PHPStan tracks that merge with full confidence: it knows these
+             3 keys are always string/list<string> whenever present, so any
+             is_string()/is_array()/array_key_exists() guard added to satisfy
+             Psalm here is flagged by PHPStan itself as dead code
+             (`function.alreadyNarrowedType`/`function.impossibleType`, since
+             treatPhpDocTypesAsCertain trusts the return docblock). Psalm's
+             own array_merge shape-inference is looser and still shows these
+             keys unioned with `mixed`, so it can't see what PHPStan already
+             proves. Confirmed by trying the guard and having PHPStan reject
+             it; reverted rather than adding checks the real gate calls dead. -->
+        <PossiblyUndefinedArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/Piwigo/Section/SectionPopulator.php"/>
+            </errorLevel>
+        </PossiblyUndefinedArrayOffset>
     </issueHandlers>
 </psalm>

@@ -709,7 +709,7 @@ final readonly class SectionPopulator
 
         // see if we need a redirect because of a permalink
         if ($section === Section::Categories and $page_category !== null and ! isset($page['combined_categories'])) {
-            $hit_by = is_array($page['hit_by'] ?? null) ? $page['hit_by'] : [];
+            $hit_by = array_key_exists('hit_by', $page) && is_array($page['hit_by']) ? $page['hit_by'] : [];
             $hit_by_cat_url_name = $hit_by['cat_url_name'] ?? null;
             $hit_by_cat_url_name = is_string($hit_by_cat_url_name) ? $hit_by_cat_url_name : null;
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;

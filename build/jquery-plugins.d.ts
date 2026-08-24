@@ -135,7 +135,52 @@ interface Window {
 	storage_details: Record<string, any>;
 	translate_files: string;
 	translate_type: Record<string, string>;
+
+	// batch_manager_global.ts / batchManagerGlobal.ts's own genuinely
+	// bidirectional shared-global set (docs/PLAN.md P46-C's own full
+	// sweep -- see both files' own leading comments for the real
+	// ordering-safety analysis, not just this ambient typing).
+	lang: {
+		Cancel: string;
+		deleteProgressMessage: string;
+		syncProgressMessage: string;
+		AreYouSure: string;
+		generateMsg: string;
+	};
+	all_elements: any[];
+	str_add_alb_associate: string;
+	str_select_alb_associate: string;
+	derivatives: {
+		elements: any[] | null;
+		done: number;
+		total: number;
+		finished(): boolean;
+	};
+	progress_start: () => void;
+	progress: (success?: boolean) => void;
+	getDerivativeUrls: () => void;
 }
+
+// batch_manager_global.ts reads these 4 as *bare* identifiers (deferred,
+// inside its own `#applyAction` click handler only -- confirmed safe
+// regardless of load order). Only the 3 functions need a `declare
+// function` binding here, same reasoning as page-data.ts's own copy of
+// this comment: TS allows a `declare function` to coexist with a real
+// `function` declaration of the same name elsewhere (function
+// declaration merging), so both this ambient signature and
+// batchManagerGlobal.ts's own real one are valid together. `derivatives`
+// itself does NOT get one: it's declared with `const` there, and `let`/
+// `const` (unlike `function`) flatly disallow being redeclared by
+// anything, ambient or not, in the same global scope -- confirmed via a
+// real TS2451 "Cannot redeclare block-scoped variable" error. No
+// ambient binding is needed for it anyway: every `themes/**/*.ts` file
+// is one shared global type-checking scope regardless of module
+// bundling, so batchManagerGlobal.ts's own real `const derivatives`
+// declaration already makes the bare name resolve correctly for
+// batch_manager_global.ts's own type-checking, with zero ambient help.
+declare function progress_start(): void;
+declare function progress(success?: boolean): void;
+declare function getDerivativeUrls(): void;
 
 // Declared outside `Window` (TS doesn't allow forward-referencing a
 // same-file class-as-type from inside an interface merge) -- mirrors
@@ -192,6 +237,11 @@ interface JQueryStatic {
 		create(name: string, options: Record<string, unknown>): {
 			add(options: Record<string, unknown>): void;
 		};
+		// The other real half of this plugin's API: adds a request to an
+		// *already-created*, named queue (by the queue name string, not
+		// the object `.create()` returns) -- `batchManagerGlobal.ts`'s own
+		// `getDerivativeUrls()` is the one real first-party call site.
+		add(queueName: string, options: Record<string, unknown>): void;
 	};
 
 	// jquery-confirm (vendored -- P46-0's own CDN table). `common.ts`'s own
@@ -222,12 +272,7 @@ interface JQuery {
 	cluetip(options?: Record<string, unknown>): JQuery;
 
 	// common.ts's own 2 first-party `jQuery.fn` extensions (not vendored
-	// plugins) -- `datepicker.ts`'s own `pwgDatepicker` and 4 others
-	// (`addAlbum.ts`'s `pwgAddAlbum`, `admin.ts`'s `lightAccordion`,
-	// `batchManagerGlobal.ts`'s `enableShiftClick`) get the same
-	// treatment here once their own conversion adds a real cross-file
-	// call site -- none has one yet, so no ambient declaration needed
-	// for those 4 until one does.
+	// plugins).
 	fontCheckbox(): JQuery;
 	pwg_jconfirm_follow_href(options?: {
 		alert_title?: string;
@@ -235,4 +280,24 @@ interface JQuery {
 		alert_cancel?: string;
 		alert_content?: string;
 	}): void;
+
+	// jquery.colorbox / jquery.tipTip (both vendored -- P46-0's own CDN
+	// table). `batchManagerGlobal.ts`'s own thumbnail preview/tooltip
+	// setup is the one real first-party call site so far for each.
+	colorbox(options?: Record<string, unknown>): JQuery;
+	tipTip(options?: Record<string, unknown>): JQuery;
+
+	// `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
+	// extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` --
+	// neither file is converted yet, but `batchManagerGlobal.ts` is the
+	// first *consumer*-only file that needs the ambient type without
+	// declaring it itself (same reasoning as `pwg_token`, P46-C's own
+	// `album_selector.ts`).
+	pwgDatepicker(options?: Record<string, unknown>): JQuery;
+	pwgAddAlbum(options?: Record<string, unknown>): JQuery;
+
+	// `batchManagerGlobal.ts`'s own first-party `jQuery.fn` extension --
+	// declared and consumed within the same file, no other real call
+	// site found.
+	enableShiftClick(): JQuery;
 }

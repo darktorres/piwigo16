@@ -85,6 +85,11 @@ export default defineConfig({
         localStorageCache: r("themes/admin/default/js/LocalStorageCache.ts"),
         albumSelector: r("themes/admin/default/js/album_selector.ts"),
         intro: r("themes/admin/default/js/intro.ts"),
+        // P46-C part 2 — the genuinely bidirectional pair (see both
+        // files' own leading comments for the real ordering-safety
+        // analysis).
+        batchManagerGlobalUnderscore: r("themes/admin/default/js/batch_manager_global.ts"),
+        batchManagerGlobal: r("themes/admin/default/js/batchManagerGlobal.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

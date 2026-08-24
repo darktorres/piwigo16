@@ -1,6 +1,19 @@
-/* global derivatives, progress_start, progress, getDerivativeUrls -- themes/admin/default/js/batchManagerGlobal.js, loaded via the same page's own combineScript() call */
-
-var lang = {
+// Genuinely bidirectional with batchManagerGlobal.ts (docs/PLAN.md P46-C's
+// own full-sweep finding): this file declares `lang`/`all_elements`/
+// `str_add_alb_associate`/`str_select_alb_associate`, read bare by
+// batchManagerGlobal.ts; that file declares `derivatives`/`progress_start`/
+// `progress`/`getDerivativeUrls`, read bare here (only inside the deferred
+// `#applyAction` click handler below -- safe regardless of load order).
+// batchManagerGlobal.ts's own `lang.Cancel` reference is NOT deferred
+// (a real top-level, synchronous read) -- a genuine pre-existing race
+// condition this conversion preserves exactly, not fixes: both scripts
+// are real `AssetContribution` registrations on the same page
+// (`BatchManagerGlobalView.php`), `batchManagerGlobal` `Async` and
+// `batch_manager_global` `Footer`, with no `dependsOn` between them
+// today, so `window.lang` may or may not be set yet by the time
+// batchManagerGlobal.ts's own top-level code runs -- exactly as risky
+// pre-P46 as it is now.
+window.lang = {
 	Cancel: pwg_getPageString('Cancel'),
 	deleteProgressMessage: pwg_getPageString('Deletion in progress'),
 	syncProgressMessage: pwg_getPageString('Synchronization in progress'),
@@ -11,7 +24,7 @@ var lang = {
 jQuery(document).ready(function() {
 
 	// <!-- TAGS -->
-	var tagsCache = new TagsCache({
+	const tagsCache = new window.TagsCache({
 		serverKey: pwg_getPageData('cache_key_tags'),
 		serverId: pwg_getPageData('cache_key_hash'),
 		rootUrl: pwg_getPageData('root_url')
@@ -22,18 +35,18 @@ jQuery(document).ready(function() {
 	}});
 
 	// <!-- CATEGORIES -->
-	var categoriesCache = new CategoriesCache({
+	const categoriesCache = new window.CategoriesCache({
 		serverKey: pwg_getPageData('cache_key_categories'),
 		serverId: pwg_getPageData('cache_key_hash'),
 		rootUrl: pwg_getPageData('root_url')
 	});
 
-	var associated_categories = pwg_getPageData('associated_categories');
+	const associated_categories = pwg_getPageData('associated_categories');
 
 	categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
-		filter: function(categories, options) {
+		filter: function(this: any, categories: any[], options: any) {
 			if (this.name === 'dissociate') {
-				var filtered = jQuery.grep(categories, function(cat) {
+				const filtered = jQuery.grep(categories, function(cat: any) {
 					return Boolean(associated_categories[cat.id]);
 				});
 
@@ -51,20 +64,20 @@ jQuery(document).ready(function() {
 
 });
 
-var nb_thumbs_page = pwg_getPageData('nb_thumbs_page');
-var nb_thumbs_set = pwg_getPageData('nb_thumbs_set');
-var applyOnDetails_pattern = pwg_getPageString('on the %d selected photos');
-var all_elements = pwg_getPageData('all_elements') || [];
+const _nb_thumbs_page = pwg_getPageData('nb_thumbs_page');
+const nb_thumbs_set = pwg_getPageData('nb_thumbs_set');
+const applyOnDetails_pattern = pwg_getPageString('on the %d selected photos');
+window.all_elements = pwg_getPageData('all_elements') || [];
 
-var selectedMessage_pattern = pwg_getPageString('%d of %d photos selected');
-var selectedMessage_none = pwg_getPageString('No photo selected, %d photos in current set');
-var selectedMessage_all = pwg_getPageString('All %d photos are selected');
-const str_add_alb_associate = pwg_getPageString('Add Album');
-const str_select_alb_associate = pwg_getPageString('Select an album');
+const selectedMessage_pattern = pwg_getPageString('%d of %d photos selected');
+const selectedMessage_none = pwg_getPageString('No photo selected, %d photos in current set');
+const selectedMessage_all = pwg_getPageString('All %d photos are selected');
+window.str_add_alb_associate = pwg_getPageString('Add Album');
+window.str_select_alb_associate = pwg_getPageString('Select an album');
 
 $(document).ready(function() {
 	function checkPermitAction() {
-		var nbSelected;
+		let nbSelected;
 		if ($("input[name=setSelected]").is(':checked')) {
 			nbSelected = nb_thumbs_set;
 		}
@@ -123,14 +136,14 @@ $(document).ready(function() {
 	$("select[name=selectAction]").change(function () {
 		$("[id^=action_]").hide();
 
-		var action = $(this).prop("value");
+		const action = $(this).prop("value");
 		// if (action == 'move') {
 		//   action = 'associate';
 		// }
 
 		$("#action_"+action).show();
 
-		// eslint-disable-next-line eqeqeq -- .val() returns a string; -1 is the real sentinel, loose equality intentional
+		 
 		if ($(this).val() != -1) {
 			$("#applyActionBlock").show();
 		}
@@ -147,10 +160,10 @@ $(document).ready(function() {
 	$(".wrap1 label").click(function (event) {
 		$("input[name=setSelected]").prop('checked', false).trigger('change');
 
-		var li = $(this).closest("li");
-		var checkbox = $(this).children("input[type=checkbox]");
+		const li = $(this).closest("li");
+		const checkbox = $(this).children("input[type=checkbox]");
 
-		checkbox.triggerHandler("shclick",event);
+		checkbox.triggerHandler("shclick",event as any);
 
 		if ($(checkbox).is(':checked')) {
 			$(li).addClass("thumbSelected");
@@ -171,7 +184,7 @@ $(document).ready(function() {
 
 	function selectPageThumbnails() {
 		$(".thumbnails label").each(function() {
-			var checkbox = $(this).children("input[type=checkbox]");
+			const checkbox = $(this).children("input[type=checkbox]");
 
 			$(checkbox).prop('checked', true).trigger("change");
 			$(this).closest("li").addClass("thumbSelected");
@@ -182,7 +195,7 @@ $(document).ready(function() {
 		$("input[name=setSelected]").prop('checked', false).trigger('change');
 
 		$(".thumbnails label").each(function() {
-			var checkbox = $(this).children("input[type=checkbox]");
+			const checkbox = $(this).children("input[type=checkbox]");
 
 			if (jQuery(checkbox).is(':checked')) {
 				$(checkbox).prop('checked', false).trigger("change");
@@ -198,7 +211,7 @@ $(document).ready(function() {
 		$("input[name=setSelected]").prop('checked', false).trigger('change');
 
 		$(".thumbnails label").each(function() {
-			var checkbox = $(this).children("input[type=checkbox]");
+			const checkbox = $(this).children("input[type=checkbox]");
 
 			$(checkbox).prop('checked', !$(checkbox).is(':checked')).trigger("change");
 
@@ -221,7 +234,7 @@ $(document).ready(function() {
 	});
 
 	$("input[name=setSelected]").change(function() {
-		$('input[name=whole_set]').val(this.checked ? all_elements.join(',') : '');
+		$('input[name=whole_set]').val((this as HTMLInputElement).checked ? window.all_elements.join(',') : '');
 	});
 
 	// if the whole set is selected on page load (after a first action has been applied),
@@ -235,10 +248,10 @@ $(document).ready(function() {
 	});
 
 	jQuery('#applyAction').click(function() {
-		var action = jQuery('[name="selectAction"]').val();
+		const action = jQuery('[name="selectAction"]').val();
 		if (action === 'delete_derivatives') {
-			let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
-			let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
+			const _d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
+			const _e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
 			if (!jQuery("#confirmDel input[name=confirm_deletion]").is(':checked')) {
 				jQuery("#confirmDel span.errors").css("visibility", "visible");
 				return false;
@@ -255,7 +268,7 @@ $(document).ready(function() {
 
 		jQuery('.bulkAction').hide();
 
-		var queuedManager = jQuery.manageAjax.create('queued', {
+		const _queuedManager = jQuery.manageAjax.create('queued', {
 			queue: true,
 			cacheResponse: false,
 			maxRequests: 1
@@ -263,11 +276,11 @@ $(document).ready(function() {
 
 		derivatives.elements = [];
 		if (jQuery('input[name="setSelected"]').is(':checked'))
-			derivatives.elements = all_elements;
+			derivatives.elements = window.all_elements;
 		else
 			jQuery('.thumbnails input[type=checkbox]').each(function() {
 				if (jQuery(this).is(':checked')) {
-					derivatives.elements.push(jQuery(this).val());
+					derivatives.elements!.push(jQuery(this).val());
 				}
 			});
 

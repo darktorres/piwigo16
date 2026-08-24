@@ -2,25 +2,25 @@
 
 /* Shift-click: select all photos between the click and the shift+click */
 jQuery(document).ready(function() {
-	var last_clicked=0,
+	let last_clicked=0,
 		last_clickedstatus=true;
-	jQuery.fn.enableShiftClick = function() {
-		var inputs = [],
-			count=0;
+	jQuery.fn.enableShiftClick = function(this: JQuery) {
+		const inputs: HTMLElement[] = [];
+		let count=0;
 		this.find('input[type=checkbox]').each(function() {
-			var pos=count;
+			const pos=count;
 			inputs[count++]=this;
-			$(this).bind("shclick", function (dummy,event) {
+			$(this).bind("shclick", function (dummy: unknown, event: JQuery.TriggeredEvent) {
 				if (event.shiftKey) {
-					var first = last_clicked;
-					var last = pos;
+					let first = last_clicked;
+					let last = pos;
 					if (first > last) {
 						first=pos;
 						last=last_clicked;
 					}
 
-					for (var i=first; i<=last;i++) {
-						input = $(inputs[i]);
+					for (let i=first; i<=last;i++) {
+						const input = $(inputs[i]!);
 						$(input).prop('checked', last_clickedstatus).trigger("change");
 						if (last_clickedstatus)
 						{
@@ -34,16 +34,17 @@ jQuery(document).ready(function() {
 				}
 				else {
 					last_clicked = pos;
-					last_clickedstatus = this.checked;
+					last_clickedstatus = (this as HTMLInputElement).checked;
 				}
 				return true;
 			});
-			$(this).click(function(event) { $(this).triggerHandler("shclick",event)});
+			$(this).click(function(event) { $(this).triggerHandler("shclick",event as any)});
 		});
+		return this;
 	}
-	$('ul.thumbnails').enableShiftClick();
+	jQuery('ul.thumbnails').enableShiftClick();
 
-  const ab_action = new AlbumSelector({
+  const ab_action = new window.AlbumSelector({
     adminMode: true,
     selectAlbum: select_album_action,
     removeSelectedAlbum: remove_album_action,
@@ -54,7 +55,7 @@ jQuery(document).ready(function() {
   });
 
   $('.selected-associate-action').on('click', (e) => {
-    if (e.target.classList.contains("remove-associate")) {
+    if ((e.target).classList.contains("remove-associate")) {
       ab_action.remove_selected_album($(e.target).attr('id'));
     }
   });
@@ -62,8 +63,8 @@ jQuery(document).ready(function() {
 });
 
 /* ********** Album Selector */
-function select_album_action({ album, addSelectedAlbum, getSelectedAlbum }) {
-  $('#associate_as p').html(str_add_alb_associate);
+function select_album_action({ album, addSelectedAlbum }: { album: any; addSelectedAlbum: () => void; getSelectedAlbum?: () => any[] }) {
+  $('#associate_as p').html(window.str_add_alb_associate);
   $(".selected-associate-action").append(
     `<div class="selected-associate-item">
       <span>${album.name}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
@@ -73,11 +74,11 @@ function select_album_action({ album, addSelectedAlbum, getSelectedAlbum }) {
   addSelectedAlbum();
 }
 
-function remove_album_action({ id_album, getSelectedAlbum }) {
+function remove_album_action({ id_album, getSelectedAlbum }: { id_album: any; getSelectedAlbum: () => any[] }) {
   $('.selected-associate-item').find(`#${id_album}`).parent().remove();
   const selected = getSelectedAlbum();
   if (!selected.length) {
-    $('#associate_as p').html(str_select_alb_associate);
+    $('#associate_as p').html(window.str_select_alb_associate);
   }
 }
 
@@ -93,9 +94,12 @@ jQuery('.thumbnails img').tipTip({
 
 /* ********** Actions*/
 
+// Real, pre-existing top-level synchronous read of `window.lang` -- see
+// batch_manager_global.ts's own leading comment for the full race-
+// condition analysis this conversion preserves rather than fixes.
 jQuery('[data-datepicker]').pwgDatepicker({
 	showTimepicker: true,
-	cancelButton: lang.Cancel
+	cancelButton: window.lang.Cancel
 });
 
 jQuery('[data-add-album]').pwgAddAlbum();
@@ -127,13 +131,20 @@ $("input[name=remove_date_creation]").click(function () {
 	}
 });
 
-var derivatives = {
+interface Derivatives {
+	elements: any[] | null;
+	done: number;
+	total: number;
+	finished(): boolean;
+}
+
+const derivatives: Derivatives = {
 	elements: null,
 	done: 0,
 	total: 0,
 
 	finished: function() {
-		return derivatives.done == derivatives.total && derivatives.elements && derivatives.elements.length==0;
+		return derivatives.done == derivatives.total && !!derivatives.elements && derivatives.elements.length==0;
 	}
 };
 
@@ -146,13 +157,14 @@ function progress_end() {
   jQuery('#uploadingActions').hide();
 }
 
-function progress(success) {
+function progress(success?: boolean) {
 
-  percent = parseInt(derivatives.done / derivatives.total * 100);
+  const percent = parseInt(String(derivatives.done / derivatives.total * 100));
   jQuery('#uploadingActions .progressbar').width(percent.toString()+'%');
 	if (success !== undefined) {
-		var type = success ? 'regenerateSuccess': 'regenerateError',
-			s = jQuery('[name="'+type+'"]').val();
+		const type = success ? 'regenerateSuccess': 'regenerateError';
+		let s = Number(jQuery('[name="'+type+'"]').val());
+		// eslint-disable-next-line no-useless-assignment -- `s` genuinely exists only to be pre-incremented once here; inlining it would just make this harder to read for no behavior change.
 		jQuery('[name="'+type+'"]').val(++s);
 	}
 
@@ -163,47 +175,47 @@ function progress(success) {
 }
 
 function getDerivativeUrls() {
-	var ids = derivatives.elements.splice(0, 500).map(Number);
-	var params = {maxUrls: 100000, ids: ids, types: []};
+	const ids = derivatives.elements!.splice(0, 500).map(Number);
+	const params: { maxUrls: number; ids: number[]; types: string[] } = {maxUrls: 100000, ids: ids, types: []};
 	jQuery("#action_generate_derivatives input").each( function(i, t) {
 		if ($(t).is(":checked"))
-			params.types.push( t.value );
+			params.types.push( (t as HTMLInputElement).value );
   } );
   jQuery('#applyActionBlock').hide();
   jQuery('.permitActionListButton').hide();
   jQuery('#confirmDel').hide();
   jQuery('#regenerationMsg').show();
-  jQuery('#regenerationText').html(lang.generateMsg);
+  jQuery('#regenerationText').html(window.lang.generateMsg);
   progress_start();
 	jQuery.ajax( {
 		type: "POST",
 		url: 'api/v1/images/actions/missing-derivatives',
 		contentType: "application/json",
-		headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
+		headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val() as string},
 		data: JSON.stringify(params),
 		dataType: "json",
-		success: function(data) {
+		success: function(data: any) {
       derivatives.total += data.urls.length;
       jQuery('#regenerationStatus .badge-number').html(derivatives.done.toString() + "/" + derivatives.total.toString());
 			progress();
-			for (var i=0; i < data.urls.length; i++) {
+			for (let i=0; i < data.urls.length; i++) {
 				jQuery.manageAjax.add("queued", {
 					type: 'GET',
 					url: data.urls[i] + "&ajaxload=true",
 					dataType: 'json',
-					success: ( function(data) {
+					success: ( function(_data: any) {
             derivatives.done++;
             jQuery('#regenerationStatus .badge-number').html(derivatives.done.toString() + "/" + derivatives.total.toString());
             progress(true)
           }),
-					error: ( function(data) {
+					error: ( function(_data: any) {
             derivatives.done++;
             jQuery('#regenerationStatus .badge-number').html(derivatives.done.toString() + "/" + derivatives.total.toString());
             progress(false)
           })
 				});
 			}
-			if (derivatives.elements.length)
+			if (derivatives.elements!.length)
 				setTimeout( getDerivativeUrls, 25 * (derivatives.total-derivatives.done));
 		}
 	} );
@@ -223,17 +235,42 @@ function selectDelDerivNone() {
 	$('#action_delete_derivatives input[name="del_derivatives_type[]"]').prop("checked", false).trigger("change");
 }
 
+// Explicit `window.` exposure -- required for a different reason than
+// this file's other `window.X = X` lines: not read by another *script*
+// at all, but called from `batch_manager_global.latte`'s own
+// `href="javascript:selectGenerateDerivAll()"`-style pseudo-protocol
+// links, which look these up as real `window` properties when clicked
+// -- wrapping this whole file in its own IIFE (vite.config.ts's
+// banner/footer) would otherwise make them invisible to that lookup.
+window.selectGenerateDerivAll = selectGenerateDerivAll;
+window.selectGenerateDerivNone = selectGenerateDerivNone;
+window.selectDelDerivAll = selectDelDerivAll;
+window.selectDelDerivNone = selectDelDerivNone;
+
 // Trigger action click on pressing enter and if the value of applyAction is not equal to -1
 $(window).on('keypress', function(e) {
   const selected = $("select[name='selectAction']").val();
-  const haveTextarea = $(`#action_${selected} textarea`).length;
+  const haveTextarea = $(`#action_${String(selected)} textarea`).length;
   const haveAlbumSelector = $('#addLinkedAlbum').is(':visible');
-  
+
   if (e.key === "Enter" && selected != -1 && !haveTextarea && !haveAlbumSelector) {
     e.preventDefault();
     $('#applyAction').trigger('click');
   }
 });
+
+// Real pre-existing behavior, not a bug to fix: the original .js never
+// declares `elements` with `var` anywhere (confirmed), making it an
+// accidental *implicit global* -- which, unlike a normal function-local
+// var, PERSISTS across repeated clicks. The handler below's own
+// `typeof(elements) != "undefined"` guard relies on exactly that
+// persistence as a real (if accidental) "only run once" check: once
+// the first click sets `elements`, every later click short-circuits.
+// Declaring it here (file-top-level, inside this file's own IIFE
+// wrapper) reproduces that same cross-click persistence via closure,
+// without actually leaking it onto `window` -- nothing else in the
+// codebase relies on a shared global named `elements` (confirmed).
+let elements: any[] | undefined;
 
 /* sync metadatas or delete photos by blocks, with progress bar */
 jQuery('#applyAction').click(function(e) {
@@ -241,49 +278,51 @@ jQuery('#applyAction').click(function(e) {
     return true;
   }
 
+  let progressBar_max: number;
+
   if (jQuery('[name="selectAction"]').val() == 'metadata') {
     e.preventDefault();
     e.stopPropagation();
     jQuery('.bulkAction').hide();
-    jQuery('#regenerationText').html(lang.syncProgressMessage);
-    elements = Array();
+    jQuery('#regenerationText').html(window.lang.syncProgressMessage);
+    elements = [];
 
     if (jQuery('input[name=setSelected]').is(':checked')) {
-      elements = all_elements;
+      elements = window.all_elements;
     }
     else {
       jQuery('input[name="selection[]"]').filter(':checked').each(function() {
-        elements.push(jQuery(this).val());
+        elements!.push(jQuery(this).val());
       });
     }
 
-    var queuedManager = jQuery.manageAjax.create('queued', {
+    const queuedManager = jQuery.manageAjax.create('queued', {
       queue: true,
       cacheResponse: false,
       maxRequests: 1
     });
 
     progressBar_max = elements.length;
-    var todo = 0;
-    var syncBlockSize = Math.min(
+    let todo = 0;
+    const syncBlockSize = Math.min(
       Number((elements.length/2).toFixed()),
       1000
     );
-    var image_ids = Array();
+    let image_ids = [];
 
     jQuery('#applyActionBlock').hide();
     jQuery('.permitActionListButton').hide();
     jQuery('#confirmDel').hide();
     jQuery('#regenerationMsg').show();
     progress_bar_start();
-    for (i=0;i<elements.length;i++) {
+    for (let i=0;i<elements.length;i++) {
       image_ids.push(elements[i]);
       if (i % syncBlockSize != syncBlockSize - 1 && i != elements.length - 1) {
         continue;
       }
 
       (function(ids) {
-        var thisBatchSize = ids.length;
+        const thisBatchSize = ids.length;
         queuedManager.add({
           url: "api/v1/images/actions/sync-metadata",
           type:"POST",
@@ -295,14 +334,15 @@ jQuery('#applyAction').click(function(e) {
             imageIds: ids
           }),
           dataType: "json",
-          success: function(data) {
+          success: function(data: any) {
             todo += thisBatchSize;
-            if (data.nbSynchronized != thisBatchSize)
-            /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/;
+            if (data.nbSynchronized != thisBatchSize) {
+              /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/
+            }
             jQuery('#regenerationStatus .badge-number').html(todo.toString() + "/" + progressBar_max.toString());
             progress_bar(todo, progressBar_max, false);
           },
-          error: function(data) {
+          error: function(_data: any) {
             todo += thisBatchSize;
             /*TODO: user feedback*/
             jQuery('#regenerationStatus .badge-number').html(todo.toString() + "/" + progressBar_max.toString());
@@ -310,7 +350,7 @@ jQuery('#applyAction').click(function(e) {
           }
         });
       } )(image_ids);
-      image_ids = Array();
+      image_ids = [];
     }
   }
 
@@ -326,47 +366,47 @@ jQuery('#applyAction').click(function(e) {
   }
 
   jQuery('.bulkAction').hide();
-  var maxRequests=1;
+  const maxRequests=1;
 
-  var queuedManager = jQuery.manageAjax.create('queued', {
+  const queuedManager = jQuery.manageAjax.create('queued', {
     queue: true,
     cacheResponse: false,
     maxRequests: maxRequests
   });
 
-  elements = Array();
+  elements = [];
 
   if (jQuery('input[name=setSelected]').is(':checked')) {
-    elements = all_elements;
+    elements = window.all_elements;
   }
   else {
     jQuery('input[name="selection[]"]').filter(':checked').each(function() {
-      elements.push(jQuery(this).val());
+      elements!.push(jQuery(this).val());
     });
   }
 
   progressBar_max = elements.length;
-  var todo = 0;
-  var deleteBlockSize = Math.min(
+  let todo = 0;
+  const deleteBlockSize = Math.min(
     Number((elements.length/2).toFixed()),
     1000
   );
-  var image_ids = Array();
+  let image_ids = [];
 
   jQuery('#applyActionBlock').hide();
   jQuery('.permitActionListButton').hide();
   jQuery('#confirmDel').hide();
-  jQuery('#regenerationText').html(lang.deleteProgressMessage);
+  jQuery('#regenerationText').html(window.lang.deleteProgressMessage);
   jQuery('#regenerationMsg').show();
   progress_bar_start();
-  for (i=0;i<elements.length;i++) {
+  for (let i=0;i<elements.length;i++) {
     image_ids.push(elements[i]);
     if (i % deleteBlockSize != deleteBlockSize - 1 && i != elements.length - 1) {
       continue;
     }
 
     (function(ids) {
-      var thisBatchSize = ids.length;
+      const thisBatchSize = ids.length;
       queuedManager.add({
         type: 'POST',
         url: 'api/v1/images/actions/delete',
@@ -376,15 +416,16 @@ jQuery('#applyAction').click(function(e) {
           imageIds: ids.map(Number)
         }),
         dataType: 'json',
-        success: function(data) {
+        success: function(data: any) {
           todo += thisBatchSize;
-          if (data.deletedCount != thisBatchSize);
-            /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/;
+          if (data.deletedCount != thisBatchSize) {
+            /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/
+          }
           /*TODO: user feedback if isError*/
           jQuery('#regenerationStatus .badge-number').html(todo.toString() + "/" + progressBar_max.toString());
           progress_bar(todo, progressBar_max, false);
         },
-        error: function(data) {
+        error: function(_data: any) {
           todo += thisBatchSize;
           /*TODO: user feedback*/
           jQuery('#regenerationStatus .badge-number').html(todo.toString() + "/" + progressBar_max.toString());
@@ -393,7 +434,7 @@ jQuery('#applyAction').click(function(e) {
       });
     } )(image_ids);
 
-    image_ids = Array();
+    image_ids = [];
   }
 
   /* tell PHP how many photos were deleted */
@@ -407,12 +448,17 @@ function progress_bar_start() {
   jQuery('#uploadingActions .progress-bar').width("0%");
 }
 
-function progress_bar_end() {
+// Genuinely dead code, confirmed via a repo-wide grep (zero references
+// anywhere, not even from a template) -- kept, not deleted, prefixed
+// per this codebase's own `^_`-means-intentionally-unused convention:
+// `progress_end()` (a few lines up) does the exact same thing and is
+// the one actually called.
+function _progress_bar_end() {
   jQuery('#uploadingActions').hide();
 }
 
-function progress_bar(val, max, success) {
-  percent = parseInt(val / max * 100);
+function progress_bar(val: number, max: number, _success: boolean) {
+  const percent = parseInt(String(val / max * 100));
   jQuery('#uploadingActions .progressbar').width(percent.toString()+'%');
   if (val == max)
     jQuery('#applyAction').click();
@@ -422,11 +468,11 @@ jQuery("#confirmDel input[name=confirm_deletion]").change(function() {
   jQuery("#confirmDel span.errors").css("visibility", "hidden");
 });
 
-jQuery('#sync_md5sum').click(function(e) {
+jQuery('#sync_md5sum').click(function(_e) {
   jQuery(this).hide();
   jQuery('#add_md5sum').show();
 
-  var addBlockSize = Math.min(
+  const addBlockSize = Math.min(
     Number((jQuery('#md5sum_to_add').data('origin') / 2).toFixed()),
     1000
   );
@@ -435,48 +481,48 @@ jQuery('#sync_md5sum').click(function(e) {
   return false;
 });
 
-function add_md5sum_block(blockSize){
+function add_md5sum_block(blockSize?: number){
   jQuery.ajax({
     url: "api/v1/images/actions/set-md5sum",
     type:"POST",
     contentType: "application/json",
-    headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
+    headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val() as string},
     dataType: "json",
     data: JSON.stringify({
       blockSize: blockSize
     }),
-    success:function(data) {
+    success:function(data: any) {
       jQuery('#md5sum_to_add').html(data.remainingCount);
 
-      var percent_remaining = Number(
+      const percent_remaining = Number(
         (data.remainingCount * 100 / jQuery('#md5sum_to_add').data('origin')).toFixed()
       );
-      var percent_done = 100 - percent_remaining;
-      jQuery('#md5sum_added').html(percent_done);
+      const percent_done = 100 - percent_remaining;
+      jQuery('#md5sum_added').html(String(percent_done));
       if (data.remainingCount > 0) {
         add_md5sum_block();
       }
       else {
         // time to refresh the whole page
-        var redirect_to = 'admin.php?page=batch_manager';
+        let redirect_to = 'admin.php?page=batch_manager';
         redirect_to += '&action=sync_md5sum';
         redirect_to += '&nb_md5sum_added='+jQuery('#md5sum_to_add').data('origin');
 
-        document.location = redirect_to;
+        window.location.href = redirect_to;
       }
     },
-    error:function(XMLHttpRequest) {
+    error:function(XMLHttpRequest: any) {
       jQuery('#add_md5sum').hide();
       jQuery('#add_md5sum_error').show().html('error '+XMLHttpRequest.status+' : '+XMLHttpRequest.statusText);
     }
   });
 }
 
-jQuery('#delete_orphans').click(function(e) {
+jQuery('#delete_orphans').click(function(_e) {
   jQuery(this).hide();
   jQuery('#orphans_deletion').show();
 
-  var deleteBlockSize = Math.min(
+  const deleteBlockSize = Math.min(
     Number((jQuery('#orphans_to_delete').data('origin') / 2).toFixed()),
     1000
   );
@@ -486,43 +532,55 @@ jQuery('#delete_orphans').click(function(e) {
   return false;
 });
 
-function delete_orphans_block(blockSize) {
+function delete_orphans_block(blockSize?: number) {
   jQuery.ajax({
     url: "api/v1/images/actions/delete-orphans",
     type:"POST",
     contentType: "application/json",
     headers: {
-      "X-CSRF-Token": jQuery("input[name=pwg_token]").val()
+      "X-CSRF-Token": jQuery("input[name=pwg_token]").val() as string
     },
     data: JSON.stringify({
       blockSize: blockSize
     }),
     dataType: "json",
-    success:function(data) {
+    success:function(data: any) {
       jQuery('#orphans_to_delete').html(data.nbOrphans);
 
-      var percent_remaining = Number(
+      const percent_remaining = Number(
         (data.nbOrphans * 100 / jQuery('#orphans_to_delete').data('origin')).toFixed()
       );
-      var percent_done = 100 - percent_remaining;
-      jQuery('#orphans_deleted').html(percent_done);
+      const percent_done = 100 - percent_remaining;
+      jQuery('#orphans_deleted').html(String(percent_done));
 
       if (data.nbOrphans > 0) {
         delete_orphans_block();
       }
       else {
         // time to refresh the whole page
-        var redirect_to = 'admin.php?page=batch_manager';
+        let redirect_to = 'admin.php?page=batch_manager';
         redirect_to += '&action=delete_orphans';
         redirect_to += '&nb_orphans_deleted='+jQuery('#orphans_to_delete').data('origin');
 
-        document.location = redirect_to;
+        window.location.href = redirect_to;
       }
     },
-    error:function(XMLHttpRequest) {
+    error:function(XMLHttpRequest: any) {
       jQuery('#orphans_deletion').hide();
       jQuery('#orphans_deletion_error').show().html('error '+XMLHttpRequest.status+' : '+XMLHttpRequest.statusText);
     }
   });
 }
 
+// Explicit `window.` exposure -- required, not decorative (see
+// page-data.ts's own copy of this comment, docs/PLAN.md P46-B). Unlike
+// `_pwgRatingAutoQueue` (P46-B), none of these 4 are ever *read* before
+// being unconditionally set here, so a bare bidirectional reference
+// (like `pwg_getPageData`) is safe -- batch_manager_global.ts's own
+// bare reads (deferred, inside its own `#applyAction` click handler,
+// confirmed safe regardless of load order -- see its own leading
+// comment) resolve through the scope chain to these `window.` properties.
+window.derivatives = derivatives;
+window.progress_start = progress_start;
+window.progress = progress;
+window.getDerivativeUrls = getDerivativeUrls;

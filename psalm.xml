@@ -308,6 +308,17 @@
                      (`nullCoalesce.offset`, "always exists ... on left side
                      of ??"). -->
                 <file name="tests/Unit/Auth/SensitiveParameterTest.php"/>
+                <!-- CalendarMonthly::buildMonthCalendar()'s $items array is
+                     built by one foreach loop (setting 'nb_images' for
+                     every key, then 'derivative'/'file'/'dow' for that same
+                     key later in the same iteration) and read back by a
+                     completely separate later loop. PHPStan's flow analysis
+                     proves 'derivative'/'file' always exist on every entry
+                     by that second loop (confirmed: adding a `?? null`
+                     guard there gets `nullCoalesce.offset`, "always exists
+                     ... on left side of ??"); Psalm can't do this
+                     across-loop, self-mutating-array narrowing. -->
+                <file name="src/Piwigo/Calendar/CalendarMonthly.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

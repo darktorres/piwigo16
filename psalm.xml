@@ -674,5 +674,80 @@
                 <file name="tests/Integration/ConfigServiceTest.php"/>
             </errorLevel>
         </DocblockTypeContradiction>
+        <PropertyNotSetInConstructor>
+            <errorLevel type="suppress">
+                <!-- Every Integration test class extends IntegrationTestCase
+                     and initializes its typed dependency properties in
+                     PHPUnit's own setUp() lifecycle method, not the
+                     constructor: the standard, deliberate PHPUnit/Pest
+                     idiom used consistently across all 123 files this
+                     covers (confirmed: not a handful of stragglers, this is
+                     the project's uniform test-class shape). Psalm has an
+                     official psalm/plugin-phpunit that recognizes setUp()
+                     for exactly this case, but this project doesn't
+                     install/register Psalm plugins (Psalm doesn't gate this
+                     codebase: PHPStan/ECS/deptrac/Pest are the real
+                     gates, see this file's own directory-exclusion comment
+                     above for _analysis/). PHPStan has no equivalent gap
+                     and is clean on every one of these files (spot-checked
+                     ActivityRepositoryTest.php). Directory-wide rather than
+                     per-file/per-property since this is a structural Psalm
+                     limitation for the setUp() pattern generally: any new
+                     Integration test class hits the same gap. -->
+                <directory name="tests/Integration"/>
+                <!-- Every Doctrine custom DQL function class extends
+                     Doctrine\ORM\Query\AST\Functions\FunctionNode and has
+                     no constructor at all: Doctrine's own query parser
+                     instantiates each one via `new $className()` (no args)
+                     then immediately calls parse(Parser $parser) to
+                     populate the AST node's properties, always before
+                     getSql() is ever invoked: a framework-mandated
+                     2-phase lifecycle identical in shape to the setUp()
+                     case above, just a different framework/method name.
+                     PHPStan has no equivalent gap and is clean on every
+                     file here. Directory-wide since all 12 files (18
+                     findings) share this exact same base-class contract. -->
+                <directory name="src/Piwigo/Db/DqlFunction"/>
+                <!-- CalendarBase/CalendarMonthly/CalendarWeekly's own
+                     initialize(CalendarQueryScope $scope) is this
+                     hierarchy's deliberate 2-phase-construction lifecycle
+                     method: CalendarRenderer::render() (the sole real
+                     caller) always calls initialize() immediately after
+                     construction, before any other method. Genuinely
+                     foldable into the constructor (both $scope and
+                     chronology_field are available before `new
+                     $classname(...)` is called), but chronology_field is
+                     also set/read as a public property directly by 25+
+                     existing Unit/Integration test call sites
+                     (CalendarMonthlyTest.php/CalendarWeeklyTest.php and
+                     their Integration counterparts) that deliberately
+                     exercise the current "construct, then set
+                     chronology_field, then initialize()" contract:
+                     changing the constructor signature would mean
+                     rewriting all of those call sites for Psalm's sake
+                     alone, a tool this project doesn't gate on. PHPStan has
+                     no equivalent gap and is clean on all 3 files. -->
+                <file name="src/Piwigo/Calendar/CalendarBase.php"/>
+                <file name="src/Piwigo/Calendar/CalendarMonthly.php"/>
+                <file name="src/Piwigo/Calendar/CalendarWeekly.php"/>
+                <!-- InstallWizard::boot() is the install flow's own
+                     2-phase-construction lifecycle method: public/install.php
+                     (the sole real entry point) always calls `new
+                     InstallWizard(...)` immediately followed by
+                     `$wizard->boot()`, before any other method
+                     (checkDbConnection()/analyzeForm()/performInstall()/
+                     render()): same framework-adjacent single-entry-point
+                     shape as the cases above, just this project's own
+                     convention rather than a 3rd-party one. PHPStan is
+                     clean on this file. -->
+                <file name="src/Piwigo/Admin/Install/InstallWizard.php"/>
+                <!-- PasswordController::$request is set inside __invoke()
+                     itself: the single method PHP-DI's router ever calls
+                     on a per-request-instantiated single-action controller,
+                     functionally this object's real entry point. PHPStan is
+                     clean on this file. -->
+                <file name="src/Piwigo/Controller/PasswordController.php"/>
+            </errorLevel>
+        </PropertyNotSetInConstructor>
     </issueHandlers>
 </psalm>

@@ -107,6 +107,9 @@ export default defineConfig({
         // P46-C part 8 -- another of the 5 remaining AlbumSelector
         // consumers.
         catModify: r("themes/admin/default/js/cat_modify.ts"),
+        // P46-C part 9 -- the 4th of the 5 remaining AlbumSelector
+        // consumers.
+        batchManagerUnit: r("themes/admin/default/js/batchManagerUnit.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

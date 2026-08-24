@@ -97,7 +97,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'LocalStorageCache', 'jquery.colorbox', 'page-data']),
+            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'LocalStorageCache', 'jquery.colorbox', 'page-data']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
                 ->pageAssets(),

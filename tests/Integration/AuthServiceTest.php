@@ -598,7 +598,8 @@ namespace Piwigo\Tests\Integration {
             // like a missing key, so this reaches the exact same $ip = ''
             // outcome pwgLogin() needs without an unset() PHPStan can't
             // reason about the shape of $_SERVER through.
-            $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+            $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? null;
+            $originalRemoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
             $_SERVER['REMOTE_ADDR'] = '';
             $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 1;

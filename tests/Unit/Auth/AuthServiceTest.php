@@ -501,7 +501,8 @@ test('pwgLogin() fast-rejects a locked-out username via the user-scoped lockout 
     // resolved, and only when $_SERVER['REMOTE_ADDR'] is non-empty.
     // Force REMOTE_ADDR to the same guaranteed-empty state every
     // sibling test here relies on implicitly.
-    $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+    $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? null;
+    $originalRemoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
     $_SERVER['REMOTE_ADDR'] = '';
     $conn = DbConnection::build();
     CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 1;

@@ -542,7 +542,7 @@ test('getAbsoluteRootUrl treats X-Forwarded-Proto=https as HTTPS', function (): 
     expect($service->getAbsoluteRootUrl())
         ->toBe('https://gallery.example.test/piwigo/');
     // The real side effect the guard itself performs, not just its result.
-    expect($_SERVER['HTTPS'])->toBe('on');
+    expect($_SERVER['HTTPS'] ?? null)->toBe('on');
 });
 
 test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=on', function (): void {

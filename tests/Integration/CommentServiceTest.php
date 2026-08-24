@@ -1451,7 +1451,8 @@ namespace Piwigo\Tests\Integration {
         private function validKey(int $imageId = 1): string
         {
             $issuedAt = round(microtime(true), 1) - 1.0;
-            $remoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+            $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? null;
+            $remoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
             $secretKey = CurrentConfigTestFactory::get()->secretKey;
             $signature = hash_hmac('sha256', (string) $issuedAt . substr($remoteAddr, 0, 5) . '0' . $imageId, $secretKey);
 

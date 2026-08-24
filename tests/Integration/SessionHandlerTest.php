@@ -57,7 +57,8 @@ final class SessionHandlerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        $this->originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : null;
+        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? null;
+        $this->originalRemoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : null;
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
         $conn = DbConnection::build();

@@ -100,9 +100,7 @@ final readonly class TusUploadPatchController implements ControllerInterface
         }
 
         $newOffset = $this->tusUploadStore->appendChunk($session->id, $expectedOffset, $stream, $session->uploadLength);
-        if (is_resource($stream)) {
-            fclose($stream);
-        }
+        fclose($stream);
 
         if ($newOffset === null) {
             return $this->problem('Conflict', 409, "Upload-Offset does not match the upload's real current offset.");

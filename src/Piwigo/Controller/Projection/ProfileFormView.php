@@ -73,7 +73,7 @@ final readonly class ProfileFormView implements View, ExposesPageData
     /**
      * The same translated string {@see \Piwigo\Controller\ProfileFormHandler}'s
      * own server-side password-match check uses -- mirrored client-side
-     * by `themes/default/js/scripts.js`'s own check on `#use_new_pwd`/
+     * by `themes/default/js/scripts.ts`'s own check on `#use_new_pwd`/
      * `#passwordConf` (the same field ids `password.latte` itself uses,
      * see this class's own docblock). Rendered via `Renderer::render()`
      * inside `ProfileController::__invoke()` before the outer

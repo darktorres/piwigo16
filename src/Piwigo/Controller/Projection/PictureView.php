@@ -128,18 +128,18 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
-            AssetContribution::script('picture', 'themes/default/js/picture.js', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
+            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
         ];
 
         if ($this->uOriginal !== null) {
-            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async);
+            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async);
         }
 
         if ($this->rating !== null) {
-            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async);
-            $assets[] = AssetContribution::script('rating', 'themes/default/js/rating.js', loadMode: LoadMode::Async, dependsOn: ['core.scripts']);
+            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async);
+            $assets[] = AssetContribution::script('rating', 'themes/default/js/rating.ts', loadMode: LoadMode::Async, dependsOn: ['core.scripts']);
         }
 
         return [...$assets, ...$this->pictureNavButtonsView()->pageAssets()];

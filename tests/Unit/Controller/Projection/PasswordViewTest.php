@@ -31,7 +31,7 @@ test('pageAssets registers no focus script when action is none of the 3 known va
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
         ]);
 });
 
@@ -40,7 +40,7 @@ test('pageAssets focuses username_or_email when action is lost', function (): vo
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('username_or_email');"),
         ]);
 });
@@ -50,7 +50,7 @@ test('pageAssets focuses use_new_pwd when action is reset', function (): void {
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('use_new_pwd');"),
         ]);
 });
@@ -60,7 +60,7 @@ test('pageAssets focuses user_code when action is lost_code', function (): void 
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('user_code');"),
         ]);
 });

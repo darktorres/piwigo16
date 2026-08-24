@@ -46,7 +46,7 @@ test('pageAssets registers core.scripts for the default theme (profile_content.l
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
         ]);
 });
 

@@ -218,15 +218,15 @@ test('resolvePath() uses the real ViteManifest entry when one exists, falls back
 
     $assets = new PageAssets(new ViteManifest(Paths::fromRoot($root)));
     $assets->add(AssetContribution::script('vitals', 'build/vitals.ts', loadMode: LoadMode::Async));
-    $assets->add(AssetContribution::script('legacy', 'themes/default/js/scripts.js'));
+    $assets->add(AssetContribution::script('legacy', 'themes/default/js/scripts.ts'));
 
     $scriptPaths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
     $cssPaths = array_map(fn ($r) => $r->path, $assets->resolveCss());
 
     expect($scriptPaths)
-        ->toContain('vitals.js')
+        ->toContain('dist/vitals.js')
         ->and($scriptPaths)
-        ->toContain('themes/default/js/scripts.js')
+        ->toContain('themes/default/js/scripts.ts')
         ->and($cssPaths)
-        ->toBe(['assets/vitals-abc123.css']);
+        ->toBe(['dist/assets/vitals-abc123.css']);
 });

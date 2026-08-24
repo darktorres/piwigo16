@@ -128,4 +128,42 @@ export default tseslint.config(
       },
     },
   },
+  {
+    // docs/PLAN.md P46's own stated scope for themes/**/*.ts is "same
+    // code, same behavior... minimal types to satisfy strict tsconfig,"
+    // explicitly NOT full plugin-author/business-logic typings -- these
+    // are mechanically-converted legacy global scripts trading in
+    // page-data-JSON-derived values and jQuery-plugin returns that
+    // genuinely don't have a narrower real type yet. recommendedTypeChecked's
+    // blanket `any` ban (and the no-unsafe-* family it implies) fights
+    // that goal directly rather than serving it -- found only once real
+    // .ts files existed under themes/ to lint (P46-B, the first themed
+    // batch). `build/jquery-plugins.d.ts` is the shared ambient-types
+    // file this same escape hatch lives in, so it needs the identical
+    // relaxation. A future typing-improvement phase narrowing these
+    // `any`s away (not this one) is the right place to remove this block.
+    files: ["themes/**/*.ts", "build/jquery-plugins.d.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+    },
+  },
+  {
+    // Match the plain-JS block's own `^_`-prefixed-means-intentionally-
+    // unused convention (see the `no-unused-vars` rule above) --
+    // `recommendedTypeChecked` enables `@typescript-eslint/no-unused-vars`
+    // with no ignore pattern of its own, which is a real inconsistency
+    // with the rest of this config once .ts files exist to lint (P46-B).
+    files: ["**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
 );

@@ -75,7 +75,7 @@ final readonly class IdentificationView implements View, HasPageAssets
         }
 
         return [
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('username');"),
         ];
     }

@@ -13,7 +13,8 @@ use LogicException;
  * `Event\GetPageAssets`), then runs one final ordering pass and
  * resolves each surviving entry through `ViteManifest` -- falling back
  * to the raw, un-bundled path for anything that isn't a real Vite entry
- * yet (everything except `vitals` today).
+ * yet (66 of the real 78 theme JS files as of docs/PLAN.md's P46-B;
+ * `vitals` plus P46-B's own 12 entries already resolve here).
  *
  * No real caller wires all three sources together yet -- see
  * `docs/PLAN.md`'s P36 section on why real template migration is
@@ -83,7 +84,7 @@ final class PageAssets
      * @var array<string, string>
      */
     private static array $knownPaths = [
-        'core.scripts' => 'themes/default/js/scripts.js',
+        'core.scripts' => 'themes/default/js/scripts.ts',
         'jquery' => 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
         // One full bundle, not the old per-widget minified files
         // (docs/PLAN.md P46's vendor-CDN migration). cdnjs specifically,
@@ -337,9 +338,13 @@ final class PageAssets
                 continue;
             }
             foreach ($entry->css as $cssPath) {
-                if (! isset($seenCssPaths[$cssPath])) {
-                    $resolved[] = ResolvedAsset::file($cssPath, null, false);
-                    $seenCssPaths[$cssPath] = true;
+                // Same `dist/`-relative-not-root-relative fix as
+                // `resolvePath()` above -- these paths come from the same
+                // manifest entry.
+                $rootRelativeCssPath = 'dist/' . $cssPath;
+                if (! isset($seenCssPaths[$rootRelativeCssPath])) {
+                    $resolved[] = ResolvedAsset::file($rootRelativeCssPath, null, false);
+                    $seenCssPaths[$rootRelativeCssPath] = true;
                 }
             }
         }
@@ -351,7 +356,16 @@ final class PageAssets
     {
         $entry = $this->viteManifest->resolve($sourcePath);
 
-        return $entry !== null ? $entry->file : $sourcePath;
+        // `ViteManifestEntry::$file` is relative to Vite's own `outDir`
+        // ("dist"), not the site root every other resolved path (the raw
+        // fallback below, every un-bundled `themes/...` path) is relative
+        // to -- confirmed missing here only once real themes/**/*.ts
+        // entries existed to expose it (P46-B): every request 404'd,
+        // since nothing had ever exercised this branch with a populated
+        // manifest before. `PageTailRenderer::render()`'s own hand-rolled
+        // `vitals` resolution already prepends `'dist/'` for exactly this
+        // reason -- this is that same fix, generalized to every entry.
+        return $entry !== null ? 'dist/' . $entry->file : $sourcePath;
     }
 
     private static function modeKey(LoadMode $mode): string

@@ -96,7 +96,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/default/css/search.css', order: -100),
             AssetContribution::css('themes/default/css/' . $this->colorscheme . '-search.css', order: -100),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            AssetContribution::script('search_filters', 'themes/default/js/search_filters.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('search_filters', 'themes/default/js/search_filters.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('mcs', 'themes/default/js/mcs.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             ...new AlbumSelectorView()
                 ->pageAssets(),

@@ -76,7 +76,7 @@ final readonly class RegisterView implements View, HasPageAssets, ExposesPageDat
         }
 
         return [
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('login');"),
         ];
     }

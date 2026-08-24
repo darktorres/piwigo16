@@ -69,7 +69,7 @@ final readonly class PasswordView implements View, HasPageAssets, ExposesPageDat
         }
 
         $assets = [
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
         ];
 
         $focusScript = match ($this->action) {

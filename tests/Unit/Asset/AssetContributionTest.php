@@ -7,14 +7,14 @@ use Piwigo\Asset\AssetKind;
 use Piwigo\Asset\LoadMode;
 
 test('script() defaults load mode to Header, no deps, version 0', function (): void {
-    $contribution = AssetContribution::script('core.scripts', 'themes/default/js/scripts.js');
+    $contribution = AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts');
 
     expect($contribution->id)
         ->toBe('core.scripts')
         ->and($contribution->kind)
         ->toBe(AssetKind::Script)
         ->and($contribution->path)
-        ->toBe('themes/default/js/scripts.js')
+        ->toBe('themes/default/js/scripts.ts')
         ->and($contribution->loadMode)
         ->toBe(LoadMode::Header)
         ->and($contribution->dependsOn)
@@ -28,7 +28,7 @@ test('script() defaults load mode to Header, no deps, version 0', function (): v
 test('script() carries explicit load mode and dependencies', function (): void {
     $contribution = AssetContribution::script(
         'rating',
-        'themes/default/js/rating.js',
+        'themes/default/js/rating.ts',
         loadMode: LoadMode::Async,
         dependsOn: ['core.scripts'],
     );

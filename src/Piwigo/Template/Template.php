@@ -848,7 +848,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                         $this->pageAssets->add($lateAsset);
                     }
                 }
-                $this->pageAssets->add(AssetContribution::script('page-data', 'themes/default/js/page-data.js', loadMode: LoadMode::Footer));
+                $this->pageAssets->add(AssetContribution::script('page-data', 'themes/default/js/page-data.ts', loadMode: LoadMode::Footer));
             }
 
             $scripts = $this->pageAssets->resolveScripts();
@@ -1432,7 +1432,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Every real `switchBox` pair in this codebase (`themes/default/js/
      * index.js`'s own `#derivativeSwitchLink`/`#derivativeSwitchBox` etc.)
      * is wired via a `window.SwitchBox.push(link, box)` call --
-     * `themes/default/js/switchbox.js`'s own generic toggle/hide
+     * `themes/default/js/switchbox.ts`'s own generic toggle/hide
      * behavior, already an unconditional page asset on both
      * `IndexView`/`PictureView` (`core.switchbox`). Registered here, once
      * per action, rather than requiring `index.latte`/`picture.latte` to

@@ -13,7 +13,7 @@ namespace Piwigo\Contribution;
  * sizes" index-page buttons already use, and the real
  * `language_switch_17.0.0` plugin's own flag-picker (both: a
  * `pwg-button`-styled toggle with no `href`, wired to a `switchBox`
- * panel via `themes/default/js/switchbox.js`'s `window.SwitchBox.push()`
+ * panel via `themes/default/js/switchbox.ts`'s `window.SwitchBox.push()`
  * -- the consuming template emits that wiring itself, from `$id`, so a
  * plugin author never writes JS for this).
  *

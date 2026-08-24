@@ -55,7 +55,7 @@ final readonly class PictureNavButtonsView implements HasPageAssets, ExposesPage
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];
     }
 

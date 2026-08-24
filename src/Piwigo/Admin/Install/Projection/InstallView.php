@@ -103,7 +103,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         // finalizeHtml(), gated on $themeBaseApplied) -- this page opts out
         // of that (applyThemeBase: false), so install.js's own
         // pwg_getPageString() calls need this registered explicitly.
-        $assets[] = AssetContribution::script('page-data', 'themes/default/js/page-data.js', loadMode: LoadMode::Footer);
+        $assets[] = AssetContribution::script('page-data', 'themes/default/js/page-data.ts', loadMode: LoadMode::Footer);
 
         return $assets;
     }

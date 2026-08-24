@@ -33,11 +33,26 @@ export default defineConfig({
     target: ["chrome94", "edge94", "firefox93", "safari15"],
     rollupOptions: {
       input: {
-        // Placeholder only — 78 real entries land in P46.
+        // Placeholder only — 65 more real entries land in P46-C onward.
         noop: r("build/noop.ts"),
         // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.
         vitals: r("build/vitals.ts"),
+        // P46-B — themes/default/js/*.js's first 12 real entries (2 more,
+        // autosize.js/search.js, turned out to be dead code and were
+        // deleted rather than converted).
+        pageData: r("themes/default/js/page-data.ts"),
+        scripts: r("themes/default/js/scripts.ts"),
+        picture: r("themes/default/js/picture.ts"),
+        searchFilters: r("themes/default/js/search_filters.ts"),
+        rating: r("themes/default/js/rating.ts"),
+        index: r("themes/default/js/index.ts"),
+        menubarLinks: r("themes/default/js/menubar-links.ts"),
+        menubarQuicksearch: r("themes/default/js/menubar-quicksearch.ts"),
+        pictureNavButtons: r("themes/default/js/picture_nav_buttons.ts"),
+        popuphelp: r("themes/default/js/popuphelp.ts"),
+        switchbox: r("themes/default/js/switchbox.ts"),
+        thumbnailsLoader: r("themes/default/js/thumbnails.loader.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for
@@ -49,6 +64,36 @@ export default defineConfig({
         // every other entry keeps the default.
         entryFileNames: (chunk) =>
           chunk.name === "vitals" ? "vitals.js" : "assets/[name]-[hash].js",
+        // Real bug found only via an actual `vite build` + real browser
+        // run (P46-B): every themes/**/*.ts entry compiles as a flat,
+        // unwrapped top-level script (Rollup's default 'es' output has
+        // no reason to add a wrapper when a chunk has no real import/
+        // export of its own -- confirmed against several real entries'
+        // output). Since every one of these entries is loaded as a
+        // separate, non-module `<script>` tag sharing ONE browser global
+        // scope (docs/PLAN.md's own "not real ES modules, no import/
+        // export between first-party files" P46 scope), each entry's own
+        // MINIFIED-INTERNAL (not `window.`-exposed) top-level names can
+        // silently collide with another entry's own same-named internal
+        // binding -- confirmed concretely: page-data.ts's cache variable
+        // and menubar-quicksearch.ts's own top-level function both
+        // minified down to the identical single-letter name `e`, and
+        // menubar-quicksearch's later-loaded declaration overwrote
+        // page-data's cache variable, silently corrupting
+        // `pwg_getPageString()` on every page that loads both. `format:
+        // 'iife'` (Rollup's normal fix for this) can't be used
+        // build-wide: `vitals` genuinely needs real ES-module semantics
+        // (`import.meta.url`, confirmed in its own source) that `iife`
+        // doesn't support. Wrapping only the *other* entries' own raw
+        // output text in a self-invoking function -- via `banner`/
+        // `footer`, not the `format` option -- gets the same private-
+        // scope isolation for exactly the entries that need it, without
+        // touching `vitals`'s own compiled format at all. Safe precisely
+        // because these entries already compile with zero import/export
+        // statements (confirmed) -- wrapping code that already assumes
+        // "plain script, own scope" changes nothing else observable.
+        banner: (chunk) => (chunk.name === "vitals" ? "" : "(function(){"),
+        footer: (chunk) => (chunk.name === "vitals" ? "" : "})();"),
       },
     },
   },

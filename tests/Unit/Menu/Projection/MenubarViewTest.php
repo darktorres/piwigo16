@@ -38,7 +38,7 @@ test('pageAssets registers menubar_links.latte\'s own script when that block is 
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
         ]);
 });
 
@@ -51,7 +51,7 @@ test('pageAssets registers menubar_menu.latte\'s quicksearch assets when qsearch
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
         ]);
 
@@ -91,7 +91,7 @@ test('pageAssets preserves block iteration order across multiple recognized bloc
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/css/components/menubar_identification.css', id: 'menubar_identification'),
         ]);
 });

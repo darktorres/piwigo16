@@ -94,8 +94,8 @@ final readonly class IndexView implements View, HasPageAssets
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
-            AssetContribution::script('index', 'themes/default/js/index.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('index', 'themes/default/js/index.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
         ];
 

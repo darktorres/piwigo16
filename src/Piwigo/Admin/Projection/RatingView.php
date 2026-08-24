@@ -67,7 +67,7 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('themes/admin/default/css/pages/rating.css', id: 'rating'),
             AssetContribution::script('rating', 'themes/admin/default/js/rating.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.selectize', 'page-data', 'LocalStorageCache']),
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async),
         ];
     }
 

@@ -18,7 +18,9 @@ use Piwigo\Core\Paths;
  * that case rather than throwing, matching this codebase's established
  * "degrade gracefully when unpopulated" pattern (e.g.
  * `Template::concat()`) -- a caller falls back to the raw, un-bundled
- * file path, which is every asset except `vitals` today.
+ * file path, which is every asset not yet converted by docs/PLAN.md's
+ * P46 (66 of the real 78 theme JS files remain, as of P46-B; `vitals`
+ * plus P46-B's own 12 entries already resolve through here).
  */
 final class ViteManifest
 {

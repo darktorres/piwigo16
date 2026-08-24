@@ -29,7 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Piwigo\Controller\PopuphelpController. Not a `?page=` slug -- reached
  * as its own file path (`/admin/popuphelp.php`), invoked from the admin
  * UI's `popuphelp(url)` JS popup-window helper
- * (themes/default/js/scripts.js), so it has its own RouteDefinitions
+ * (themes/default/js/scripts.ts), so it has its own RouteDefinitions
  * entry rather than a config/admin_pages.php one.
  *
  * `IN_ADMIN` is read elsewhere (Piwigo\Page\PageHeaderRenderer), set by

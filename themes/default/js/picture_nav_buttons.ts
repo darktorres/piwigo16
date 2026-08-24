@@ -1,9 +1,13 @@
-document.onkeydown = function(e){
-	e = e || window.event;
+export {};
+
+document.onkeydown = function(e: KeyboardEvent){
+	e = e || (window.event as KeyboardEvent);
 	if (e.altKey) return true;
-	var target = e.target || e.srcElement;
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- tsc genuinely needs this: plain EventTarget has no `.type` member, and removing the cast is a real TS2339 (confirmed directly against tsc). The lint rule appears to treat `T & {optional?: U}` as assignability-equivalent to bare `T` and false-positives here.
+	const target = (e.target || e.srcElement) as (EventTarget & { type?: string }) | null;
 	if (target && target.type) return true; // an input editable element
-	var keyCode = e.keyCode || e.which, docElem = document.documentElement, url;
+	const keyCode = e.keyCode || e.which, docElem = document.documentElement;
+	let url: string | undefined;
 	switch (keyCode) {
 		case 63235: case 39:
 			if (e.ctrlKey || docElem.scrollLeft === docElem.scrollWidth - docElem.clientWidth) url = pwg_getPageData('nav_next_url');
@@ -28,6 +32,6 @@ document.onkeydown = function(e){
 			url = pwg_getPageData('nav_slideshow_start_url') || pwg_getPageData('nav_slideshow_stop_url');
 			break;
 	}
-	if (url) { window.location = url.replace("&amp;", "&"); return false; }
+	if (url) { window.location.href = url.replace("&amp;", "&"); return false; }
 	return true;
 };

@@ -1,13 +1,15 @@
+export {};
+
 function pwg_initQuickSearch()
 {
-	var input = document.getElementById('qsearchInput');
-	var form = document.getElementById('quicksearch');
+	const input = document.getElementById('qsearchInput') as HTMLInputElement | null;
+	const form = document.getElementById('quicksearch') as HTMLFormElement | null;
 	if (!input || !form)
 	{
 		return;
 	}
 
-	var prompt = pwg_getPageString('Quick search');
+	const prompt = pwg_getPageString('Quick search');
 
 	if (input.value === '')
 	{

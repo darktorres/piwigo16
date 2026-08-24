@@ -101,7 +101,7 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
             // registration calls of its own (see this class's own
             // docblock), so it's registered here instead.
             return [
-                AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Footer),
+                AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
             ];
         }
 

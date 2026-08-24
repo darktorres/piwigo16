@@ -130,7 +130,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // above, matching the accepted golden-html baseline.
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')
                 ->pageAssets(),
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async),
+            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async),
         ];
     }
 

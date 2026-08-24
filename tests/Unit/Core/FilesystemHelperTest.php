@@ -184,7 +184,8 @@ test('mkgetdir applies the requested mode exactly, via a real umask(0) during cr
 
     FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get());
 
-    expect(fileperms($dir) & 0o777)
+    $perms = fileperms($dir);
+    expect($perms !== false ? $perms & 0o777 : false)
         ->toBe(0o777);
 });
 
@@ -464,8 +465,10 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
     }
 
     $stdout = stream_get_contents($pipes[1]);
+    $stdout = $stdout !== false ? $stdout : '';
     fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]);
+    $stderr = $stderr !== false ? $stderr : '';
     fclose($pipes[2]);
     $exit = proc_close($proc);
 

@@ -183,8 +183,10 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
     $sent = $ready && posix_kill($pid, SIGTERM);
 
     $stdout = stream_get_contents($pipes[1]);
+    $stdout = $stdout !== false ? $stdout : '';
     fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]);
+    $stderr = $stderr !== false ? $stderr : '';
     fclose($pipes[2]);
     $exit = proc_close($proc);
 

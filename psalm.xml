@@ -437,5 +437,36 @@
                 <file name="src/Piwigo/Mail/MailService.php"/>
             </errorLevel>
         </PossiblyNullOperand>
+        <PossiblyNullArgument>
+            <errorLevel type="suppress">
+                <!-- UploadService::addUploadedFile()'s $dbnow: only ever
+                     assigned inside the "new photo" else-branch, and only
+                     ever read inside that same branch (own comment: "Only
+                     ever read in the 'new photo' branch below (where it's
+                     also assigned)"). $dup_detect_lock_name is the same
+                     shape as $dup_detect_lock_conn, checked together (own
+                     comment: "PHPStan proves this itself, flagging a
+                     separate null-check on the name as redundant").
+                     PHPStan's flow analysis proves both correlations;
+                     Psalm can't do this cross-branch/cross-variable
+                     correlation. Confirmed: adding a `?? ''` guard on
+                     $dbnow gets `nullCoalesce.variable` from PHPStan. -->
+                <file name="src/Piwigo/Admin/Upload/UploadService.php"/>
+                <!-- AuthService: (1) pwgLogin()'s $user_found->id (property
+                     type `string`, non-nullable) reads at lines 416/438 are
+                     both reached only after $user_found instanceof AuthUser
+                     narrowing via a negated multi-clause OR condition
+                     PHPStan's flow analysis follows but Psalm doesn't; (2)
+                     authKeyLogin()'s $secret_key: only ever non-null
+                     alongside $valid_key === ConnectedWith::ApiKey, which
+                     is exactly the condition gating its one read site.
+                     PHPStan proves both; Psalm can't do this
+                     cross-branch/cross-variable correlation. Confirmed:
+                     adding `?? ''` guards to all 3 sites gets
+                     `nullCoalesce.property`/`nullCoalesce.variable` from
+                     PHPStan. -->
+                <file name="src/Piwigo/Auth/AuthService.php"/>
+            </errorLevel>
+        </PossiblyNullArgument>
     </issueHandlers>
 </psalm>

@@ -10,6 +10,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\ImageTagEntity;
@@ -123,7 +124,7 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
  */
 function tagTestRepo(): TagRepository
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class), TagRepository::class);
 
     return $repo;
 }
@@ -137,7 +138,7 @@ function tagTestRepo(): TagRepository
  */
 function tagTestRepoFor(Connection $conn): TagRepository
 {
-    $repo = EntityManagerFactory::build($conn)->getRepository(TagEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(TagEntity::class), TagRepository::class);
 
     return $repo;
 }
@@ -153,7 +154,7 @@ function tagTestRepoFor(Connection $conn): TagRepository
 function tagTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
-    $repo = $em->getRepository(TagEntity::class);
+    $repo = TypedRepository::narrow($em->getRepository(TagEntity::class), TagRepository::class);
 
     return [$repo, $em];
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
@@ -17,6 +18,7 @@ use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Auth\Projection\CreatedUserAuthKey;
 use Piwigo\Auth\Projection\FinalizeLoginDecision;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
@@ -28,9 +30,11 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -93,12 +97,12 @@ function authServiceTestService(?Connection $conn = null, ?FinalizeLoginDecision
 
     return new AuthService(
         new AuthRepository(EntityManagerFactory::build($conn)),
-        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
         HtmlServiceTestFactory::build(),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
         new CookieService(),
-        EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig),
         EventDispatcherTestFactory::get(),
         PageStateTestFactory::get(),
         CurrentUserTestFactory::get(),
@@ -124,7 +128,7 @@ function authServiceTestApiKeyService(): ApiKeyService
         new ApiKeyRepository(EntityManagerFactory::build($conn)),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
         UrlServiceTestFactory::build(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
         CurrentConfigTestFactory::get(),
     );
 }
@@ -268,7 +272,7 @@ test('hasAlreadyLoggedIn() is true for a user with no login activity history', f
      */
     expect(
         authServiceTestService()
-            ->hasAlreadyLoggedIn(4, EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class))
+            ->hasAlreadyLoggedIn(4, TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class))
     )->toBeTrue();
 });
 

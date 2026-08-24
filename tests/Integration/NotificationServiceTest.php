@@ -22,7 +22,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Group\GroupRepository;
     use Piwigo\Lang\Translator;
     use Piwigo\Notification\NotificationRepository;
     use Piwigo\Notification\NotificationService;
@@ -107,7 +109,7 @@ namespace Piwigo\Tests\Integration {
                 LangTestFactory::get(),
                 new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
                 new NotificationRepository(EntityManagerFactory::build($this->conn)),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
                 HtmlServiceTestFactory::build(),
                 UrlServiceTestFactory::build(),
                 new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),

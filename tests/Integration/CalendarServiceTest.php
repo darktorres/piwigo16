@@ -17,7 +17,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Group\GroupRepository;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
@@ -26,7 +28,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Users\User;
-    use Piwigo\Users\UserRepository;
 
     /**
      * Same fixture shape as CategoryRepositoryTest: category 1 "Sample Album"
@@ -69,15 +70,16 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig);
             $this->service = new CalendarService(
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
                 new CategoryService(
                     LangTestFactory::get(),
                     new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
-                    new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
+                    new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
                     CurrentConfigTestFactory::get(),
                     new EventDispatcher(),
                     TranslatorTestFactory::get(),
-                    $accessLevelChecker)
+                    $accessLevelChecker
+                )
             );
 
             // Matches getuserdata()'s own guaranteed shape -- an incomplete

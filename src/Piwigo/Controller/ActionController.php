@@ -15,12 +15,14 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImagePathHelper;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -87,7 +89,7 @@ final readonly class ActionController implements ControllerInterface
                 return $this->doError(400, 'Invalid request - format');
             }
 
-            $format = $this->entityManager->getRepository(ImageEntity::class)
+            $format = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                 ->findFormatById($actionRequest->formatId);
 
             if ($format === null) {
@@ -105,7 +107,7 @@ final readonly class ActionController implements ControllerInterface
             $get_part = $actionRequest->part;
         }
 
-        $elementImage = $this->entityManager->getRepository(ImageEntity::class)
+        $elementImage = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
             ->findById($image_id);
         if ($elementImage === null) {
             return $this->doError(404, 'Requested id not found');

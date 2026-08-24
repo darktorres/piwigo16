@@ -20,7 +20,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -155,7 +157,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $permissionService = new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
-            EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
             CurrentUserTestFactory::get(),
             $filterState,
@@ -168,7 +170,8 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker);
+            $accessLevelChecker
+        );
         $this->service = new CategoryAdminService($categoryService, $permissionService, HtmlServiceTestFactory::build(), EntityManagerFactory::build($this->conn));
     }
 

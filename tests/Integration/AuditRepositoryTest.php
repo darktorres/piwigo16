@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * The fixture actually seeds 3 real audit_log rows (group-creation events
@@ -54,7 +55,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class), AuditRepository::class);
         $this->conn->executeStatement('DELETE FROM audit_log');
     }
 

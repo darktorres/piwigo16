@@ -11,6 +11,7 @@ use Piwigo\Admin\Projection\PhotosAddDirectView;
 use Piwigo\Admin\Request\PhotosAddDirectRequest;
 use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
@@ -24,8 +25,10 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -96,7 +99,7 @@ final readonly class PhotosAddDirectPageRenderer
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $this->entityManager->getRepository(CaddieEntity::class)
+            TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)
                 ->replaceForUser(
                     $user_id,
                     array_values(array_map(intval(...), array_unique(explode(',', $photosAddDirectRequest->batch))))
@@ -110,7 +113,7 @@ final readonly class PhotosAddDirectPageRenderer
                 ->findEarliestRegistrationDate();
             $nb_cats = new CategoryRepository($this->entityManager, $this->currentConfig)
                 ->countAllCategories();
-            $nb_images = $this->entityManager->getRepository(ImageEntity::class)
+            $nb_images = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                 ->countAllImages();
 
             // To see the mobile app promote, the account must have 2 weeks
@@ -144,7 +147,7 @@ final readonly class PhotosAddDirectPageRenderer
 
                 $formats_image_id = $formats_original_info['id'];
 
-                $formats = $this->entityManager->getRepository(ImageEntity::class)
+                $formats = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                     ->findFormatsForImage(ImageId::from($formats_image_id));
 
                 if ($formats !== []) {
@@ -289,7 +292,7 @@ final readonly class PhotosAddDirectPageRenderer
             }
         } else {
             // we need to know the category in which the last photo was added
-            $mostRecentCategoryInfo = $this->entityManager->getRepository(ImageEntity::class)
+            $mostRecentCategoryInfo = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                 ->findMostRecentImageCategoryInfo();
             if ($mostRecentCategoryInfo !== null) {
                 $selected_category = [$mostRecentCategoryInfo->categoryId];

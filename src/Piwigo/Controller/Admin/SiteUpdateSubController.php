@@ -30,8 +30,10 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\ImageSyncInsertRow;
@@ -42,6 +44,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -107,7 +110,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
     private function imageService(): ImageService
     {
-        return new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+        return new ImageService(TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
     }
 
     #[Override]
@@ -129,7 +132,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         }
         $site_id = (int) $siteUpdateRequest->siteRaw;
 
-        $site_url = $this->entityManager->getRepository(SiteEntity::class)
+        $site_url = TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class)
             ->findGalleriesUrlById($site_id);
         if (! is_string($site_url)) {
             $this->htmlRenderer
@@ -266,7 +269,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $siteGalleriesUrlLookup = $this->entityManager->getRepository(SiteEntity::class);
+            $siteGalleriesUrlLookup = TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class);
             /**
              * @psalm-suppress InvalidArgument getRepository() always really
              *   returns SiteEntity's own custom repositoryClass at runtime
@@ -639,7 +642,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                     // find formats for existing photos (already in database)
                     $existing_ids_int = array_values(array_map(intval(...), array_filter($existing_ids, is_numeric(...))));
-                    foreach ($this->entityManager->getRepository(ImageEntity::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
+                    foreach (TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)->findFullFormatsByImageIds($existing_ids_int) as $formatRow) {
                         $format_image_id = $formatRow->imageId->value;
                         if (! isset($db_formats[$format_image_id])) {
                             $db_formats[$format_image_id] = [];

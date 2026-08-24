@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\Projection\UserMailNotification;
@@ -29,7 +30,7 @@ use Piwigo\Notification\UserMailNotificationEntity;
 function nbmTestRepo(): NotificationByMailRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(UserMailNotificationEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class);
 
     return $repo;
 }

@@ -8,6 +8,7 @@ use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository -- has a
@@ -22,7 +23,7 @@ use Piwigo\Db\EntityManagerFactory;
 function extensionIgnoredTestRepo(): ExtensionIgnoredUpdateRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(ExtensionIgnoredUpdateEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ExtensionIgnoredUpdateEntity::class), ExtensionIgnoredUpdateRepository::class);
 
     return $repo;
 }
@@ -114,7 +115,7 @@ test('unignore() removes an existing ignored row', function (): void {
 test('unignore() is a no-op when the row was never ignored', function (): void {
     // Not extensionIgnoredTestRepo() -- its own toBeInstanceOf() assertion
     // would make this "risky" (throwsNoExceptions() expects exactly 0).
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class), ExtensionIgnoredUpdateRepository::class);
 
     $repo->unignore(ExtensionType::Plugin, extensionIgnoredTestId());
 })->throwsNoExceptions();

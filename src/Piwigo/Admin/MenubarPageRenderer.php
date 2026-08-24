@@ -11,11 +11,13 @@ use Piwigo\Admin\Request\MenubarSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\ConfigCachePool;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Menu\BlockManager;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -88,7 +90,7 @@ final class MenubarPageRenderer
             $mb_conf_db = $mb_conf;
             $encodedPositions = json_encode($mb_conf_db);
             assert($encodedPositions !== false);
-            $entityManager->getRepository(ConfigEntry::class)
+            TypedRepository::narrow($entityManager->getRepository(ConfigEntry::class), ConfigRepository::class)
                 ->upsert('blk_' . $menu->getId(), $encodedPositions);
 
             // The upsert() above bypasses ConfigService::confUpdateParam()

@@ -12,6 +12,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\EphemeralKeyService;
     use Piwigo\Comment\AvailableCommentsCounter;
     use Piwigo\Comment\CommentEntity;
+    use Piwigo\Comment\CommentRepository;
     use Piwigo\Comment\CommentService;
     use Piwigo\Comment\Event\UserCommentCheck;
     use Piwigo\Comment\Projection\CommentInsertData;
@@ -27,6 +28,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
@@ -235,7 +237,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new CommentService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), new EphemeralKeyService(CurrentConfigTestFactory::get()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->accessLevelChecker());
+            $this->service = new CommentService(LangTestFactory::get(), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class), new EphemeralKeyService(CurrentConfigTestFactory::get()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->accessLevelChecker());
         }
 
         private function accessControl(): AccessControl
@@ -1277,7 +1279,7 @@ namespace Piwigo\Tests\Integration {
             // CommentService itself) -- CommentRepositoryTest's own
             // countAvailableWithConditions() tests exercise the same
             // repository mechanism, but never through this exact caller.
-            $repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
+            $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class);
             $counter = new AvailableCommentsCounter(CurrentUserTestFactory::get(), $this->accessLevelChecker());
             $baseline = $counter->count($this->permissionService(), EntityManagerFactory::build($this->conn));
 
@@ -1352,7 +1354,7 @@ namespace Piwigo\Tests\Integration {
         {
             return new CommentService(
                 LangTestFactory::get(),
-                EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class),
                 new EphemeralKeyService(CurrentConfigTestFactory::get()),
                 $mailer,
                 HtmlServiceTestFactory::build(),
@@ -1378,7 +1380,7 @@ namespace Piwigo\Tests\Integration {
 
             return new CommentService(
                 LangTestFactory::get(),
-                EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class),
                 new EphemeralKeyService(CurrentConfigTestFactory::get()),
                 $mailer,
                 $htmlRenderer,

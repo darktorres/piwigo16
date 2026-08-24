@@ -18,9 +18,12 @@ use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Filter\Request\RecentFilterRequest;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -28,7 +31,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\Projection\FilterCheckKey;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 
 /**
  * Applies the current request's recent-content filter ($filter['enabled']/
@@ -63,7 +65,7 @@ final readonly class FilterService implements FilterUpdaterInterface
     {
         return new PermissionService(
             new PermissionRepository($this->entityManager),
-            $this->entityManager->getRepository(GroupEntity::class),
+            TypedRepository::narrow($this->entityManager->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository($this->entityManager, $this->currentConfig),
             $currentUser,
             $this->filterState,
@@ -188,7 +190,8 @@ final readonly class FilterService implements FilterUpdaterInterface
                     $this->currentConfig,
                     $this->eventDispatcher,
                     $this->translator,
-                    $accessLevelChecker)->getComputedCategories($user->id->value, $user->level, $user->forbiddenCategories, $filter_recent_period);
+                    $accessLevelChecker
+                )->getComputedCategories($user->id->value, $user->level, $user->forbiddenCategories, $filter_recent_period);
                 // FilterState::$categories stays a plain array by design (it
                 // may also be restored from an untrusted session
                 // unserialize() result) -- toArray() once here, at the
@@ -213,7 +216,7 @@ final readonly class FilterService implements FilterUpdaterInterface
 
                 $visible_image_ids = array_map(
                     strval(...),
-                    $this->entityManager->getRepository(ImageEntity::class)
+                    TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                         ->findIdsVisibleInCategoriesRecentlyAvailable($visibleCategoriesCsv, $recentPeriodExpr)
                 );
                 $filter['visible_images'] = implode(',', $visible_image_ids);

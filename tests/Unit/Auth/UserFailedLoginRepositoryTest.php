@@ -7,6 +7,7 @@ use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Piwigo\Auth\UserFailedLoginRepository -- has no dedicated Integration
@@ -22,14 +23,14 @@ use Piwigo\Db\EntityManagerFactory;
 function userFailedLoginTestRepo(): UserFailedLoginRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class);
 
     return $repo;
 }
 
 function userFailedLoginTestRepoForConn(Connection $conn): UserFailedLoginRepository
 {
-    return EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class);
+    return TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class);
 }
 
 function userFailedLoginTestPurgeIp(Connection $conn, string $ip): void

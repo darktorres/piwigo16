@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -19,9 +20,11 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\Event\Init;
 use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentEntity;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigLoader;
@@ -52,17 +55,21 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\ThemeEntity;
+use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
@@ -84,7 +91,9 @@ use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -390,7 +399,7 @@ final class RequestBootstrap
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
-            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()), self::pageState(), self::htmlRenderer(), self::imageStdParams())
+            new NoPhotoYetRenderer(self::lang(), self::accessLevelChecker(), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService(), self::eventDispatcher(), self::layoutState(), new Renderer(self::currentTemplate())), self::urlService(), self::paths(), self::adminContext(), self::apiContext(), self::eventDispatcher(), self::currentUser(), self::currentTemplate(), self::currentConfig(), self::processCache(), self::currentConfigService(), new Renderer(self::currentTemplate()), self::pageState(), self::htmlRenderer(), self::imageStdParams())
                 ->render();
         }
 
@@ -444,8 +453,8 @@ final class RequestBootstrap
         // instances rather than static calls) -- CommentService is built
         // here, reusing the request's own shared Connection, and handed
         // to the listener rather than autowired fresh.
-        self::eventDispatcher()->registerSubscriber(new CommentSpamListener(new CommentService(self::lang(), EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())));
-        self::eventDispatcher()->registerSubscriber(new SiteCleanupListener(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)));
+        self::eventDispatcher()->registerSubscriber(new CommentSpamListener(new CommentService(self::lang(), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), CommentRepository::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), self::htmlService(), self::urlService(), self::eventDispatcher(), self::pageState(), self::currentUser(), self::currentConfig(), self::accessLevelChecker())));
+        self::eventDispatcher()->registerSubscriber(new SiteCleanupListener(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class), SiteRepository::class)));
         // self::uploadService() resolves the container-shared instance --
         // see that method's own docblock for why every real UploadService
         // consumer (this listener included) now resolves the same object
@@ -496,8 +505,8 @@ final class RequestBootstrap
     private static function imageReadFacade(Connection $conn): ImageReadFacade
     {
         return new ImageReadFacade(
-            EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class),
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class), CaddieRepository::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()),
         );
     }
@@ -509,7 +518,7 @@ final class RequestBootstrap
 
     private static function themeReadFacade(Connection $conn): ThemeReadFacade
     {
-        return new ThemeReadFacade(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class));
+        return new ThemeReadFacade(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class), ThemeRepository::class));
     }
 
     /**
@@ -529,12 +538,12 @@ final class RequestBootstrap
      */
     private static function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+        return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class));
     }
 
     public static function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker());
+        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), self::currentConfig()), self::currentUser(), self::filterState(), self::accessLevelChecker());
     }
 
     private static function categoryService(Connection $conn): CategoryService
@@ -545,7 +554,7 @@ final class RequestBootstrap
     private static function buildImageService(Connection $conn): ImageService
     {
         return new ImageService(
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
             self::activityService($conn),
             self::eventDispatcher(),
             self::currentConfig(),
@@ -558,7 +567,7 @@ final class RequestBootstrap
     {
         return new TagService(
             self::lang(),
-            EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(TagEntity::class), TagRepository::class),
             self::permissionService($conn),
             self::activityService($conn),
             self::eventDispatcher(),
@@ -640,7 +649,7 @@ final class RequestBootstrap
     private static function themeRegistry(Connection $conn): ThemeRegistry
     {
         return new ThemeRegistry(
-            EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class), ThemeRepository::class),
             self::eventDispatcher(),
             self::extensionContextFactory($conn),
             self::currentConfig(),

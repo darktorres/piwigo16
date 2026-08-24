@@ -21,9 +21,11 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
@@ -344,7 +346,7 @@ final class CatModifyPageRenderer
      */
     private function getSiteUrl(int $category_id, CategoryService $categoryService, EntityManagerInterface $entityManager): string
     {
-        $siteGalleriesUrlLookup = $entityManager->getRepository(SiteEntity::class);
+        $siteGalleriesUrlLookup = TypedRepository::narrow($entityManager->getRepository(SiteEntity::class), SiteRepository::class);
         /**
          * @psalm-suppress InvalidArgument getRepository() always really
          *   returns SiteEntity's own custom repositoryClass at runtime

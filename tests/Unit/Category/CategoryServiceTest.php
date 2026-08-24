@@ -21,13 +21,17 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
@@ -86,7 +90,7 @@ function categoryServiceTestServiceRepoConn(): array
         $repo,
         new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($conn)),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
             CurrentUserTestFactory::get(),
             $filterState,
@@ -95,7 +99,8 @@ function categoryServiceTestServiceRepoConn(): array
         CurrentConfigTestFactory::get(),
         EventDispatcherTestFactory::get(),
         TranslatorTestFactory::get(),
-        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig));
+        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+    );
 
     return [$service, $repo, $conn];
 }
@@ -128,7 +133,7 @@ function categoryServiceTestServiceRepoForConn(Connection $conn): array
         $repo,
         new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($conn)),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
             CurrentUserTestFactory::get(),
             $filterState,
@@ -137,7 +142,8 @@ function categoryServiceTestServiceRepoForConn(Connection $conn): array
         CurrentConfigTestFactory::get(),
         EventDispatcherTestFactory::get(),
         TranslatorTestFactory::get(),
-        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig));
+        new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+    );
 
     return [$service, $repo];
 }
@@ -792,7 +798,7 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
         // category must NOT delete it, unlike a genuinely orphaned image.
         $conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (2, {$tempId})");
 
-        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn), 'delete_orphans');
+        $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn), 'delete_orphans');
 
         expect($repo->findById($tempId))
             ->toBeNull();
@@ -837,7 +843,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
 
     try {
         [$service, $repo] = categoryServiceTestServiceRepoForConn($conn);
-        $siteRepo = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class);
+        $siteRepo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class), SiteRepository::class);
         $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
         $siteRepo->insert($siteUrl);
         // lastInsertId() isn't reliable straight after an ORM persist()+
@@ -867,7 +873,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
         EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
         try {
-            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn));
+            $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn));
 
             expect($repo->findById((int) $categoryId))
                 ->toBeNull();
@@ -1163,7 +1169,7 @@ test('updatePath() rewrites image paths for storage-linked categories', function
          *   repositoryClass binding, only the generic EntityRepository<T>.
          */
         categoryServiceTestService()
-            ->updatePath(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class));
+            ->updatePath(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SiteEntity::class), SiteRepository::class));
 
         $path = $conn->createQueryBuilder()
             ->select('path')

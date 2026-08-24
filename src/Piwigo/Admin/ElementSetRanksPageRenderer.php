@@ -21,8 +21,10 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -150,7 +152,7 @@ final readonly class ElementSetRanksPageRenderer
 
         $thumbnails = [];
 
-        $thumbnail_rows = $this->entityManager->getRepository(ImageEntity::class)
+        $thumbnail_rows = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
             ->findThumbnailRowsForCategoryOrderedByRank(CategoryId::from($category_id));
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization

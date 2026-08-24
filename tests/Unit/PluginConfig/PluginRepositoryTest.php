@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\PluginConfig\Projection\Plugin;
@@ -19,7 +20,7 @@ use Piwigo\PluginConfig\Projection\Plugin;
 function pluginRepositoryTestRepo(): PluginRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(PluginEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(PluginEntity::class), PluginRepository::class);
 
     return $repo;
 }
@@ -146,13 +147,13 @@ test('updateVersion() updates only the given plugin\'s version', function (): vo
 test('updateVersion() is a no-op for a malformed id, instead of throwing', function (): void {
     // Not pluginRepositoryTestRepo() -- its own toBeInstanceOf() assertion
     // would make this "risky" (throwsNoExceptions() expects exactly 0).
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(PluginEntity::class), PluginRepository::class);
 
     $repo->updateVersion('not a valid plugin id!!', '2.0.0');
 })->throwsNoExceptions();
 
 test('updateVersion() is a no-op for an id with no matching row', function (): void {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(PluginEntity::class), PluginRepository::class);
 
     $repo->updateVersion('ut_plugin_does_not_exist', '2.0.0');
 })->throwsNoExceptions();

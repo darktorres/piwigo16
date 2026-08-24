@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CacheFactory;
@@ -24,18 +25,20 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\Event\GetTagAltNames;
 use Piwigo\Tag\Event\GetTagNameLikeWhere;
 use Piwigo\Tag\Projection\TagBrief;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -44,7 +47,6 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\User;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserStatus;
 
 /**
@@ -111,7 +113,7 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
         new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($conn)),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
             CurrentUserTestFactory::get(),
             $filterState,
@@ -120,10 +122,11 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
         $currentConfig,
         EventDispatcherTestFactory::get(),
         new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
-        $tagServiceAccessLevelChecker);
+        $tagServiceAccessLevelChecker
+    );
     $tagServiceImageService = new ImageService(
-        EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
-        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
+        new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
         EventDispatcherTestFactory::get(),
         $currentConfig,
         Paths::fromRoot(sys_get_temp_dir()),
@@ -132,16 +135,16 @@ function tagServiceTestServiceConn(?Connection $conn = null): array
 
     $service = new TagService(
         LangTestFactory::get(),
-        EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(TagEntity::class), TagRepository::class),
         new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($conn)),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
             CurrentUserTestFactory::get(),
             $filterState,
             new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
         ),
-        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
         EventDispatcherTestFactory::get(),
         CurrentUserTestFactory::get(),
         $currentConfig,

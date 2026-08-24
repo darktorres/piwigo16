@@ -6,8 +6,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
 /**
@@ -23,7 +25,7 @@ use Piwigo\Session\SessionService;
  * thin-delegate role.
  */
 test('open/write/read/close/destroy/gc all delegate to a real SessionService round trip', function (): void {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class);
     $service = new SessionService($repo, new CurrentConfig());
     $pwgSession = new SessionHandler($service, new CurrentLogger());
     $sessionId = str_replace('.', '-', uniqid('pwg-session-test-', true));

@@ -13,8 +13,10 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
@@ -171,7 +173,7 @@ final class FilterPanelRenderer
             $cat_elements_id_for_sql = array_filter($catElementsId, is_scalar(...));
 
             $associated_categories = array_column(
-                $entityManager->getRepository(ImageEntity::class)
+                TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                     ->findVirtuallyAssociatedCategoryRows($cat_elements_id_for_sql),
                 'id',
                 'id'

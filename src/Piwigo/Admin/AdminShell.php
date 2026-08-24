@@ -25,6 +25,7 @@ use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -37,12 +38,15 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Feed\FeedEntity;
+use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageService;
+use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -225,8 +229,8 @@ final readonly class AdminShell
              *   the generic EntityRepository<T>.
              */
             $this->userService->syncUsers(
-                $this->entityManager->getRepository(UserMailNotificationEntity::class),
-                $this->entityManager->getRepository(FeedEntity::class),
+                TypedRepository::narrow($this->entityManager->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class),
+                TypedRepository::narrow($this->entityManager->getRepository(FeedEntity::class), FeedRepository::class),
             );
         }
 
@@ -321,7 +325,7 @@ final readonly class AdminShell
         // any photo in the caddie?
         $user_id = $this->currentUser->get()
             ->id->value;
-        $nb_photos_in_caddie = count($this->entityManager->getRepository(CaddieEntity::class)->findElementIdsForUser($user_id));
+        $nb_photos_in_caddie = count(TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
             $u_caddie = $link_start . 'batch_manager&amp;filter=prefilter-caddie';

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
@@ -19,6 +20,7 @@ use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -32,7 +34,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -40,6 +44,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\ThemeRegistry;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -290,14 +295,14 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 {
     $conn = DbConnection::build();
     $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
-    $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
+    $configRepo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
 
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger([
         'severity' => Logger::OFF,
     ]));
 
-    $activityRepo = EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class);
+    $activityRepo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class);
 
     $pluginRegistry = Kernel::container()->get(PluginRegistry::class);
     $themeRegistry = Kernel::container()->get(ThemeRegistry::class);
@@ -319,15 +324,15 @@ function themesInstalledLifecycleUserService(): UserService
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
     $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
-    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         LangTestFactory::get(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
+        new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
         HtmlServiceTestFactory::build(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
         $currentUser,

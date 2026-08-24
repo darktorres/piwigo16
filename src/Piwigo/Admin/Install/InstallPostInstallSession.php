@@ -13,12 +13,14 @@ namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Common\ValueObject\UserId;
@@ -32,11 +34,13 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\SessionBootstrap;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -69,7 +73,7 @@ final class InstallPostInstallSession
         // of the install InstallationFlag was only just marked active and
         // this block ran unconditionally in the original, without
         // SessionBootstrap::register()'s session_save_handler === 'db' guard)
-        session_set_save_handler(new SessionHandler(new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), InstallBootstrap::currentLogger()));
+        session_set_save_handler(new SessionHandler(new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $this->currentConfig), InstallBootstrap::currentLogger()));
         if (function_exists('ini_set')) {
             ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies);
             ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies);
@@ -113,7 +117,7 @@ final class InstallPostInstallSession
         // method's own two calls verbatim.
         $this->currentUser->set(User::fromUserArray($user));
         $this->currentUser->markRealUserResolved();
-        new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)), PresentationAccessor::htmlService(), $this->installServiceFactory->passwordService($conn), new CookieService(), EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths, EntityManagerFactory::build($conn), $this->connectedWithSession)
+        new AuthService(new AuthRepository(EntityManagerFactory::build($conn)), new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)), PresentationAccessor::htmlService(), $this->installServiceFactory->passwordService($conn), new CookieService(), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $this->currentConfig), $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentConfig, $this->paths, EntityManagerFactory::build($conn), $this->connectedWithSession)
             ->logUser($login_user_id, false);
         $this->connectedWithSession->set(ConnectedWith::PwgUi);
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
@@ -22,13 +23,16 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -72,15 +76,15 @@ function redirect_service_test_user_service(): UserService
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
     $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
-    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         redirect_service_test_lang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
+        new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
         HtmlServiceTestFactory::build(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
         $currentUser,

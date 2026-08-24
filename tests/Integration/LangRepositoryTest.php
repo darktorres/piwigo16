@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Lang\Projection\LanguageListing;
@@ -37,7 +38,7 @@ final class LangRepositoryTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(LanguageEntity::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(LanguageEntity::class), LangRepository::class);
         $this->repo = $repo;
     }
 

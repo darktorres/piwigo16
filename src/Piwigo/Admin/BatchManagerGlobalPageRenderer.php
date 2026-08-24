@@ -15,6 +15,7 @@ use Piwigo\Admin\Projection\BatchManagerGlobalView;
 use Piwigo\Admin\Request\BatchManagerGlobalRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryInfo;
@@ -31,6 +32,7 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SortRenderer;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
@@ -181,7 +183,7 @@ final readonly class BatchManagerGlobalPageRenderer
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
                     ->id->value;
-                $this->entityManager->getRepository(CaddieEntity::class)
+                TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)
                     ->removeElementsForUser($current_user_id, $collection);
 
                 // remove from caddie action available only in caddie so reload content

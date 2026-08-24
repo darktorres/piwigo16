@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 
@@ -17,7 +18,7 @@ use Piwigo\Session\SessionRepository;
 function sessionTestRepo(): SessionRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(SessionEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class);
 
     return $repo;
 }

@@ -8,10 +8,12 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
@@ -27,13 +29,17 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\ThemeEntity;
+use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\LoungeMaintenance;
 use Piwigo\Lang\Translator;
@@ -50,9 +56,12 @@ use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginMigrationEntity;
+use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -176,12 +185,12 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
 
     private function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+        return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class));
     }
 
     private function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $this->accessLevelChecker());
+        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $this->accessLevelChecker());
     }
 
     private function categoryService(Connection $conn): CategoryService
@@ -197,8 +206,8 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
     private function imageReadFacade(Connection $conn): ImageReadFacade
     {
         return new ImageReadFacade(
-            EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class),
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class), CaddieRepository::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig),
         );
     }
@@ -210,13 +219,13 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
 
     private function themeReadFacade(Connection $conn): ThemeReadFacade
     {
-        return new ThemeReadFacade(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class));
+        return new ThemeReadFacade(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class), ThemeRepository::class));
     }
 
     private function imageService(Connection $conn): ImageService
     {
         return new ImageService(
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
             $this->activityService($conn),
             $this->eventDispatcher,
             $this->currentConfig,
@@ -229,7 +238,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
     {
         return new TagService(
             $this->lang,
-            EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(TagEntity::class), TagRepository::class),
             $this->permissionService($conn),
             $this->activityService($conn),
             $this->eventDispatcher,
@@ -282,8 +291,8 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
     private function pluginRegistry(Connection $conn): PluginRegistry
     {
         return new PluginRegistry(
-            EntityManagerFactory::build($conn)->getRepository(PluginEntity::class),
-            EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(PluginEntity::class), PluginRepository::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class), PluginMigrationRepository::class),
             $this->eventDispatcher,
             $this->extensionContextFactory($conn),
             $this->currentConfig,

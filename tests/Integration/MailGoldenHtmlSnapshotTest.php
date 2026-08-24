@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Projection\MailArgs;
@@ -15,6 +16,7 @@ use Piwigo\Core\Projection\MailOptions;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\NotificationByMailView;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -119,7 +121,7 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
         Kernel::boot();
 
         $this->conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
         $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();

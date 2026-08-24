@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Admin\Projection\MaintenanceSysView;
 use Piwigo\Auth\AccessControl;
@@ -13,6 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 
@@ -36,7 +38,7 @@ final class MaintenanceSysPageRenderer
     {
         $activity_log_entries = [];
         if ($accessControl->isWebmaster()) {
-            $activity_log = $entityManager->getRepository(ActivityEntity::class)
+            $activity_log = TypedRepository::narrow($entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)
                 ->findSystemObjectLogWithUsernames();
 
             $formatter = new ActivityLogEntryFormatter();

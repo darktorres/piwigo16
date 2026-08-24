@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 // Guards the property contract on Piwigo\Config\CurrentConfig: every
 // config-value property is publicly readable, write access matches an
@@ -214,7 +216,7 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
     // $this->currentConfig (see this test's own docblock above).
     $currentConfig = new CurrentConfig();
     $configService = new ConfigService(
-        EntityManagerFactory::build()->getRepository(ConfigEntry::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(ConfigEntry::class), ConfigRepository::class),
         $currentConfig,
     );
 

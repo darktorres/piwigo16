@@ -19,7 +19,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMetrics;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
@@ -112,7 +114,7 @@ test('render() returns a no-op result for a non-categories section with no items
             new RequestMetrics(),
             new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($conn)),
-                EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
                 new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
                 CurrentUserTestFactory::get(),
                 new FilterState(),

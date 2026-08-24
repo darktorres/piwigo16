@@ -18,6 +18,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
@@ -70,7 +71,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $currentConfig->rateEnabled = true;
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), RateRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
         CurrentTemplateTestFactory::get()->set(TemplateTestFactory::build());
 

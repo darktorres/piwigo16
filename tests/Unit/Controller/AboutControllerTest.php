@@ -7,6 +7,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Controller\AboutController;
 use Piwigo\Core\CurrentLogger;
@@ -15,6 +16,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
@@ -75,7 +77,7 @@ test('invoke renders the real about page for a guest visitor, with menubar/updat
 
         $conn = DbConnection::build();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(
-            EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class),
             CurrentConfigTestFactory::get(),
         ));
 

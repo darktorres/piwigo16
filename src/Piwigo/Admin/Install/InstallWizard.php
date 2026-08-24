@@ -14,6 +14,7 @@ namespace Piwigo\Admin\Install;
 use Doctrine\DBAL\Connection;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\Projection\LanguageScanRow;
@@ -24,6 +25,7 @@ use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -42,6 +44,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageStdParams;
@@ -248,7 +251,7 @@ final class InstallWizard
         // staleness the same way every other throwaway service in this
         // method already is.
         $configService = new ConfigService(
-            EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class),
+            TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), ConfigRepository::class),
             $this->currentConfig,
         );
         $this->currentConfigService->set($configService);
@@ -719,7 +722,7 @@ final class InstallWizard
                 throw new LogicException('render() reached step 2 before a successful analyzeForm() connection.');
             }
 
-            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class))
+            new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class))
                 ->record('system', ActivitySystem::Core, 'install', [
                     'version' => AppInfo::VERSION,
                 ]);

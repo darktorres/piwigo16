@@ -6,6 +6,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Site\Projection\SiteCategoryImageCounts;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
@@ -57,7 +58,7 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
  */
 function siteTestRepo(): SiteRepository
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class), SiteRepository::class);
 
     return $repo;
 }
@@ -130,7 +131,7 @@ test('delete() removes the row', function (): void {
 });
 
 test('delete() on an unknown id is a silent no-op', function (): void {
-    EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class)->delete(254);
+    TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class), SiteRepository::class)->delete(254);
 })->throwsNoExceptions();
 
 test('findAllGalleriesUrls() returns the id-to-url map', function (): void {

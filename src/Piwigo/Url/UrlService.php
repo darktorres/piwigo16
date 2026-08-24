@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
@@ -28,7 +29,9 @@ use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\NoMatchSentinel;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -36,6 +39,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -158,7 +162,7 @@ final readonly class UrlService implements UrlServiceInterface
     {
         return new PermissionService(
             new PermissionRepository($this->entityManager),
-            $this->entityManager->getRepository(GroupEntity::class),
+            TypedRepository::narrow($this->entityManager->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository($this->entityManager, $this->currentConfig),
             $this->currentUser,
             $this->filterState(),
@@ -181,7 +185,8 @@ final readonly class UrlService implements UrlServiceInterface
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator(),
-            $this->accessLevelChecker());
+            $this->accessLevelChecker()
+        );
     }
 
     /**
@@ -841,7 +846,7 @@ final readonly class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->badRequest($redirectService, 'at least one tag required');
             }
 
-            $page['tags'] = new TagService($this->lang, $this->entityManager->getRepository(TagEntity::class), $this->permissionService(), new ActivityService($this->entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger())
+            $page['tags'] = new TagService($this->lang, TypedRepository::narrow($this->entityManager->getRepository(TagEntity::class), TagRepository::class), $this->permissionService(), new ActivityService(TypedRepository::narrow($this->entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');

@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Cache\CacheFactory;
-use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -19,12 +17,14 @@ use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Lang\Translator;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -32,7 +32,6 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Users\UserRepository;
 
 /**
  * Piwigo\Admin\BatchManager\FilterPanelRenderer -- has no constructor
@@ -81,7 +80,7 @@ function filterPanelTestRrmdir(string $dir): void
 
 function filterPanelTestActivityService(): ActivityService
 {
-    return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
+    return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class), ActivityRepository::class));
 }
 
 function filterPanelTestTagService(): TagService
@@ -91,10 +90,10 @@ function filterPanelTestTagService(): TagService
 
     return new TagService(
         LangTestFactory::get(),
-        EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(TagEntity::class), TagRepository::class),
         new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($conn)),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), new CurrentConfig()),
             $currentUser,
             new FilterState(),

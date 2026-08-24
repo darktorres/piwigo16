@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Lang\Projection\LanguageListing;
@@ -18,7 +19,7 @@ use Piwigo\Lang\Projection\LanguageListing;
 function langRepositoryTestRepo(): LangRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(LanguageEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(LanguageEntity::class), LangRepository::class);
 
     return $repo;
 }

@@ -11,6 +11,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -79,7 +80,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
         $this->categoryRepo = new CategoryRepository($em, CurrentConfigTestFactory::get());
-        $this->tagRepo = $em->getRepository(TagEntity::class);
+        $this->tagRepo = TypedRepository::narrow($em->getRepository(TagEntity::class), TagRepository::class);
     }
 
     public function testNgramParserFindsCjkSubstringsTheDefaultParserCannot(): void

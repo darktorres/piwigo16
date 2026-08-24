@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Feed\Projection\FeedInfo;
@@ -21,7 +22,7 @@ use Piwigo\Feed\Projection\FeedInfo;
 function feedTestRepo(): FeedRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(FeedEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(FeedEntity::class), FeedRepository::class);
 
     return $repo;
 }
@@ -179,7 +180,7 @@ test('deleteForUserIds() is a no-op for an empty list', function (): void {
 test('updateLastCheck() is a no-op for an id that doesn\'t exist, instead of throwing', function (): void {
     // Not feedTestRepo() -- its own toBeInstanceOf() assertion would make
     // this "risky" (throwsNoExceptions() expects exactly 0).
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(FeedEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(FeedEntity::class), FeedRepository::class);
 
     $repo->updateLastCheck(feedTestId(), new DateTimeImmutable('2026-08-01 12:00:00'));
 })->throwsNoExceptions();

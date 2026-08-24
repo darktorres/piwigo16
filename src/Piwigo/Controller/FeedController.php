@@ -20,8 +20,10 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedHelper;
+use Piwigo\Feed\FeedRepository;
 use Piwigo\Feed\Projection\FeedChannel;
 use Piwigo\Feed\Projection\FeedItem;
 use Piwigo\Http\ControllerInterface;
@@ -69,7 +71,7 @@ final readonly class FeedController implements ControllerInterface
         $htmlRenderer = $this->htmlRenderer;
 
         $feed_helper = new FeedHelper();
-        $feed_repo = $this->entityManager->getRepository(FeedEntity::class);
+        $feed_repo = TypedRepository::narrow($this->entityManager->getRepository(FeedEntity::class), FeedRepository::class);
         $notificationService = $this->notificationService;
 
         $feedRequest = FeedRequest::fromGlobals($this->inputValidator);

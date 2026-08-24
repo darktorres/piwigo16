@@ -10,6 +10,7 @@ use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\Projection\Image;
@@ -32,7 +33,7 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
 function imageRepositoryTestRepo(): ImageRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class);
 
     return $repo;
 }

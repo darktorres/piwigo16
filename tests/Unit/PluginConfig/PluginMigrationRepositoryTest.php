@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginMigrationRepository;
 
@@ -20,7 +21,7 @@ use Piwigo\PluginConfig\PluginMigrationRepository;
 function pluginMigrationTestRepo(): PluginMigrationRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class), PluginMigrationRepository::class);
 
     return $repo;
 }

@@ -12,6 +12,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\PluginConfig\Projection\Plugin;
@@ -45,7 +46,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(PluginEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(PluginEntity::class), PluginRepository::class);
 
         // the fixture ships an empty plugins table -- seed it directly so
         // getDbPlugins()'s filters have something real to select against.

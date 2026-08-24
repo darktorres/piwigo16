@@ -8,6 +8,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Override;
     use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
     use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
@@ -38,19 +39,25 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Group\GroupRepository;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Image\ImageEntity;
+    use Piwigo\Image\ImageRepository;
     use Piwigo\Image\ImageService;
     use Piwigo\Lang\Translator;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Rate\RateEntity;
+    use Piwigo\Rate\RateRepository;
     use Piwigo\Rate\RateService;
     use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionRepository;
     use Piwigo\Session\SessionService;
     use Piwigo\Tag\TagEntity;
+    use Piwigo\Tag\TagRepository;
     use Piwigo\Tag\TagService;
     use Piwigo\Template\Renderer;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -108,7 +115,7 @@ namespace Piwigo\Tests\Integration {
         private function maintenanceActionDispatcherTestImageService(): ImageService
         {
             return new ImageService(
-                EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), ImageRepository::class),
                 $this->maintenanceActionDispatcherTestActivityService(),
                 new EventDispatcher(),
                 CurrentConfigTestFactory::get(),
@@ -125,7 +132,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function maintenanceActionDispatcherTestActivityService(): ActivityService
         {
-            return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
+            return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class), ActivityRepository::class));
         }
 
         /**
@@ -141,7 +148,7 @@ namespace Piwigo\Tests\Integration {
                     new AccessControlTestFakeRedirectServiceNeverCalled(),
                     new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
                 ),
-                EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), RateRepository::class),
                 new CookieService(),
                 new CurrentUser(new CurrentConfig()),
                 new CurrentConfig(),
@@ -160,10 +167,10 @@ namespace Piwigo\Tests\Integration {
             return new UserService(
                 LangTestFactory::get(),
                 new UserRepository(EntityManagerFactory::build($conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()),
-                EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
                 $this->maintenanceActionDispatcherTestActivityService(),
                 HtmlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+                new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
                 new EventDispatcher(),
                 new DeploymentPolicy(),
                 new CurrentUser(new CurrentConfig()),
@@ -184,7 +191,7 @@ namespace Piwigo\Tests\Integration {
 
             return new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($conn)),
-                EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
                 new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
                 CurrentUserTestFactory::get(),
                 new FilterState(),
@@ -234,7 +241,7 @@ namespace Piwigo\Tests\Integration {
 
             return new TagService(
                 LangTestFactory::get(),
-                EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class), TagRepository::class),
                 $this->maintenanceActionDispatcherTestPermissionService(),
                 $this->maintenanceActionDispatcherTestActivityService(),
                 new EventDispatcher(),
@@ -282,7 +289,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
             $configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
-            $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new EventDispatcher(), PageStateTestFactory::get(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn));
+            $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(LangTestFactory::get(), $this->maintenanceActionDispatcherTestUserService(), new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), $configService, new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()), new SessionService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new EventDispatcher(), PageStateTestFactory::get(), LayoutStateTestFactory::get(), CurrentTemplateTestFactory::get(), new DbMaintenanceRepository(EntityManagerFactory::build($this->conn)), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), HtmlServiceTestFactory::build(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn));
         }
 
         #[Override]
@@ -675,7 +682,7 @@ namespace Piwigo\Tests\Integration {
                 UrlServiceTestFactory::build(),
                 $configService,
                 new FilesystemIntegrityChecker(LangTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigServiceTestFactory::get(), $this->maintenanceActionDispatcherTestImageService(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get()),
-                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+                new SessionService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
                 new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))),
                 new EventDispatcher(),
                 PageStateTestFactory::get(),

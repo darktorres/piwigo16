@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\UserActivityPageRenderer;
 use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -21,6 +23,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -32,15 +35,19 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -133,7 +140,7 @@ function userActivityTestAccessControl(): AccessControl
 
 function userActivityTestActivityService(): ActivityService
 {
-    return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
+    return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class), ActivityRepository::class));
 }
 
 // $lang/$userService below never observably affect render()'s own
@@ -151,15 +158,15 @@ function userActivityTestUserService(ActivityService $activityService): UserServ
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
     $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
-    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         userActivityTestLang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
         $activityService,
         HtmlServiceTestFactory::build(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
         $currentUser,
@@ -183,7 +190,7 @@ function userActivityTestImageService(): ImageService
     $conn = DbConnection::build();
 
     return new ImageService(
-        EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
         userActivityTestActivityService(),
         new EventDispatcher(),
         new CurrentConfig(),
@@ -202,7 +209,7 @@ function userActivityTestCategoryService(): CategoryService
         new CategoryRepository(EntityManagerFactory::build($conn), new CurrentConfig()),
         new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($conn)),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($conn), new CurrentConfig()),
             $currentUser,
             new FilterState(),
@@ -221,10 +228,10 @@ function userActivityTestGroupService(ActivityService $activityService): GroupSe
     $currentConfig = new CurrentConfig();
 
     return new GroupService(
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
         $activityService,
-        new AuditService(EntityManagerFactory::build($conn)->getRepository(AuditLogEntity::class)),
-        new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), $currentConfig),
+        new AuditService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(AuditLogEntity::class), AuditRepository::class)),
+        new ConfigService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class), $currentConfig),
         new CurrentUser($currentConfig),
         $currentConfig,
     );

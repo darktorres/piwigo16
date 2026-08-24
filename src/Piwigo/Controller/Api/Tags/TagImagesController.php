@@ -12,12 +12,14 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Controller\Api\ImageFilterQueryInput;
 use Piwigo\Core\OperationError;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteriaBuilder;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageUrlBuilder;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagService;
@@ -90,7 +92,7 @@ final readonly class TagImagesController implements ControllerInterface
             $rankOf = array_flip($imageIds);
             $favoriteIds = $this->urlService->getUserFavorites();
 
-            foreach ($this->entityManager->getRepository(ImageEntity::class)->findByIds($imageIds) as $rowId => $imageEntity) {
+            foreach (TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)->findByIds($imageIds) as $rowId => $imageEntity) {
                 $row = $imageEntity->toArray();
 
                 $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($row['name']) ? $row['name'] : '', 'tagImages'));

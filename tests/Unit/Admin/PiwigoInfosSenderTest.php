@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -18,6 +20,7 @@ use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -30,11 +33,15 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
@@ -42,10 +49,13 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -106,7 +116,7 @@ test('send returns immediately without touching the DB or network when telemetry
     // Kernel::boot() needed; EntityManagerFactory::build() only
     // constructs objects, it never opens a real connection) is enough.
     $configService = new ConfigService(
-        EntityManagerFactory::build()->getRepository(ConfigEntry::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(ConfigEntry::class), ConfigRepository::class),
         new CurrentConfig(),
     );
     // Never actually read either -- same "send() returns before touching
@@ -117,7 +127,7 @@ test('send returns immediately without touching the DB or network when telemetry
             new AccessControlTestFakeRedirectServiceNeverCalled(),
             new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
         ),
-        EntityManagerFactory::build()->getRepository(RateEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(RateEntity::class), RateRepository::class),
         new CookieService(),
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),
@@ -128,7 +138,7 @@ test('send returns immediately without touching the DB or network when telemetry
             new AccessControlTestFakeRedirectServiceNeverCalled(),
             new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
         ),
-        EntityManagerFactory::build()->getRepository(HistoryEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(HistoryEntity::class), HistoryRepository::class),
         $configService,
         $currentLogger,
         new EventDispatcher(),
@@ -137,21 +147,21 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentConfig(),
     );
     $activityService = new ActivityService(
-        EntityManagerFactory::build()->getRepository(ActivityEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(ActivityEntity::class), ActivityRepository::class),
     );
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $userServiceCurrentConfig = new CurrentConfig();
     $userServiceCurrentUser = new CurrentUser($userServiceCurrentConfig);
     $userServiceAccessLevelChecker = new AccessLevelChecker($userServiceCurrentUser, $userServiceCurrentConfig);
-    $userServicePermissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build()), EntityManagerFactory::build()->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServiceCurrentUser, new FilterState(), $userServiceAccessLevelChecker);
+    $userServicePermissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build()), TypedRepository::narrow(EntityManagerFactory::build()->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build(), $userServiceCurrentConfig), $userServiceCurrentUser, new FilterState(), $userServiceAccessLevelChecker);
     $userService = new UserService(
         piwigoInfosSenderTestLang(),
         new UserRepository(EntityManagerFactory::build(), new EventDispatcher(), $userServiceCurrentConfig),
-        EntityManagerFactory::build()->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(GroupEntity::class), GroupRepository::class),
         $activityService,
         HtmlServiceTestFactory::build(),
-        new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), $userServiceCurrentConfig),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build()->getRepository(SessionEntity::class), SessionRepository::class), $userServiceCurrentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
         $userServiceCurrentUser,
@@ -166,7 +176,7 @@ test('send returns immediately without touching the DB or network when telemetry
     );
     $permissionService = new PermissionService(
         new PermissionRepository(EntityManagerFactory::build()),
-        EntityManagerFactory::build()->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(GroupEntity::class), GroupRepository::class),
         new CategoryRepository(EntityManagerFactory::build(), new CurrentConfig()),
         new CurrentUser(new CurrentConfig()),
         new FilterState(),
@@ -182,7 +192,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new AccessLevelChecker(new CurrentUser(new CurrentConfig()), new CurrentConfig()),
     );
     $imageService = new ImageService(
-        EntityManagerFactory::build()->getRepository(ImageEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(ImageEntity::class), ImageRepository::class),
         $activityService,
         new EventDispatcher(),
         new CurrentConfig(),
@@ -191,7 +201,7 @@ test('send returns immediately without touching the DB or network when telemetry
     );
     $tagService = new TagService(
         piwigoInfosSenderTestLang(),
-        EntityManagerFactory::build()->getRepository(TagEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(TagEntity::class), TagRepository::class),
         $permissionService,
         $activityService,
         new EventDispatcher(),
@@ -200,9 +210,9 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentLogger(),
     );
     $groupService = new GroupService(
-        EntityManagerFactory::build()->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build()->getRepository(GroupEntity::class), GroupRepository::class),
         $activityService,
-        new AuditService(EntityManagerFactory::build()->getRepository(AuditLogEntity::class)),
+        new AuditService(TypedRepository::narrow(EntityManagerFactory::build()->getRepository(AuditLogEntity::class), AuditRepository::class)),
         $configService,
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),

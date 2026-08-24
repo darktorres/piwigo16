@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Admin\Maintenance\Request\DerivativesTypeRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Cache\PersistentCache;
@@ -23,9 +24,11 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permalink\PermalinkRepository;
@@ -33,6 +36,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
@@ -133,7 +137,7 @@ final readonly class MaintenanceActionDispatcher
                  *   generic EntityRepository<T>.
                  */
                 $this->categoryService
-                    ->updatePath($this->entityManager->getRepository(SiteEntity::class));
+                    ->updatePath(TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class));
                 $this->rateService
                     ->updateRatingScore($this->entityManager);
                 PermissionCacheInvalidator::invalidate();
@@ -143,7 +147,7 @@ final readonly class MaintenanceActionDispatcher
             case 'delete_orphan_tags':
 
                 $this->tagService
-                    ->deleteOrphanTags($this->entityManager, new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService));
+                    ->deleteOrphanTags($this->entityManager, new ImageService(TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService));
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Delete orphan tags'), $this->lang->t('action successfully performed.')));
                 break;
 
@@ -187,7 +191,7 @@ final readonly class MaintenanceActionDispatcher
 
             case 'c13y':
 
-                $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
+                $integrityRepo = TypedRepository::narrow($this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class);
                 $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState);
                 $c13y->maintenance();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Reinitialize check integrity'), $this->lang->t('action successfully performed.')));
@@ -195,7 +199,7 @@ final readonly class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
+                $rows = new ImageService(TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService)
                     ->emptyLounge($this->sessionService);
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;

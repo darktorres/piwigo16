@@ -21,6 +21,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Sort\CommentSortField;
 
@@ -53,7 +54,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class);
     }
 
     public function testInsertCreatesANewCommentAndReturnsItsId(): void

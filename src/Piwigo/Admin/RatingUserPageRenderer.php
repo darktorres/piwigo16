@@ -14,12 +14,14 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\Projection\ImageThumbUrl;
 use Piwigo\Rate\RateEntity;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 
@@ -48,7 +50,7 @@ final class RatingUserPageRenderer
         $consensus_top_number = $ratingFilter->consensusTopNumber;
 
         // build users
-        $rate_repository = $entityManager->getRepository(RateEntity::class);
+        $rate_repository = TypedRepository::narrow($entityManager->getRepository(RateEntity::class), RateRepository::class);
 
         $users_by_id = [];
         foreach ($rate_repository->findUsersWithStatusByIdUsername() as $u) {

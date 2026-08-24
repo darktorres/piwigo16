@@ -16,6 +16,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\PluginSubController;
@@ -31,6 +32,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
@@ -113,7 +115,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
         // does (see that file for the fuller explanation).
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        $configRepo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
+        $configRepo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
         $configService = new ConfigService($configRepo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();

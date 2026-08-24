@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Caddie;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -24,7 +25,7 @@ final class CaddieService
         $userId = $currentUser->get()
             ->id->value;
 
-        $entityManager->getRepository(CaddieEntity::class)
+        TypedRepository::narrow($entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)
             ->addElements($userId, $elementsId);
     }
 }

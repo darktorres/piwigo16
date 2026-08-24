@@ -18,6 +18,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
@@ -71,7 +72,7 @@ final readonly class NotificationController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $feedRepo = $this->entityManager->getRepository(FeedEntity::class);
+        $feedRepo = TypedRepository::narrow($this->entityManager->getRepository(FeedEntity::class), FeedRepository::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
         $urlService = $this->urlService;
 

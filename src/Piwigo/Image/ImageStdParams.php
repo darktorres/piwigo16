@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Container for standard derivatives parameters.
@@ -337,7 +339,7 @@ final class ImageStdParams
 
     /**
      * Fresh, throwaway EntityManager per call (like Piwigo\Caddie\CaddieService's
-     * own `EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)`)
+     * own `TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class), CaddieRepository::class)`)
      * rather than
      * Bootstrap\InfrastructureAccessor's container-shared one -- unlike a
      * raw bulk-write onto a table other repositories concurrently read in
@@ -356,12 +358,12 @@ final class ImageStdParams
         // DerivativeSettingsEntity's own #[ORM\Entity(repositoryClass:...)]
         // attribute -- PHPStan already proves this exact, no runtime guard
         // needed.
-        return EntityManagerFactory::build(DbConnection::build())->getRepository(DerivativeSettingsEntity::class);
+        return TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(DerivativeSettingsEntity::class), DerivativeSettingsRepository::class);
     }
 
     private static function sizeRepository(): DerivativeSizeRepository
     {
-        return EntityManagerFactory::build(DbConnection::build())->getRepository(DerivativeSizeEntity::class);
+        return TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(DerivativeSizeEntity::class), DerivativeSizeRepository::class);
     }
 
     /**

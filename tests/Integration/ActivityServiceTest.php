@@ -8,6 +8,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Override;
     use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Activity\Projection\CoreUpdateHistoryRow;
     use Piwigo\Activity\Projection\SystemActionCount;
@@ -19,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 
@@ -59,7 +61,7 @@ namespace Piwigo\Tests\Integration {
             $_SERVER['SCRIPT_NAME'] = '/some/script.php';
 
             $this->conn = DbConnection::build();
-            $this->service = new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class));
+            $this->service = new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class));
         }
 
         #[Override]
@@ -591,7 +593,7 @@ namespace Piwigo\Tests\Integration {
             // action filter), so this inserts its own disposable row directly
             // via the repository, same technique/shape as
             // ActivityRepositoryTest::test_find_core_update_history_filters_by_object_and_actions().
-            $repo = EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class);
+            $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class);
             $repo->insertMany([
                 [
                     'object' => 'system',

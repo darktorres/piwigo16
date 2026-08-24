@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Site\Projection\SiteCategoryImageCounts;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
@@ -42,7 +43,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class), SiteRepository::class);
     }
 
     #[Override]

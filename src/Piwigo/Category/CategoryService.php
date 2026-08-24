@@ -66,8 +66,10 @@ use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\NoMatchSentinel;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Lang\Translator;
@@ -170,7 +172,7 @@ final readonly class CategoryService
      */
     private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager): ImageService
     {
-        return new ImageService($entityManager->getRepository(ImageEntity::class), $activityLogger, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
+        return new ImageService(TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class), $activityLogger, $eventDispatcher, $this->currentConfig, $this->paths(), $this);
     }
 
     /**
@@ -1713,7 +1715,7 @@ final readonly class CategoryService
     public function getCategoryRepresentantProperties(int $imageId, UrlServiceInterface $urlService, EntityManagerInterface $entityManager, ?string $size = null): CategoryRepresentantProperties
     {
         $imageIdVo = ImageId::tryFrom($imageId);
-        $row = $imageIdVo instanceof ImageId ? $entityManager->getRepository(ImageEntity::class)->findById($imageIdVo) : null;
+        $row = $imageIdVo instanceof ImageId ? TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class)->findById($imageIdVo) : null;
         if ($row === null) {
             throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }

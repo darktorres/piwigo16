@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
@@ -14,6 +15,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\Event\UserInit;
 use Piwigo\Bootstrap\Request\UserBootstrapRequest;
 use Piwigo\Category\CategoryRepository;
@@ -33,7 +35,9 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -106,11 +110,11 @@ final readonly class UserBootstrap
         $passwordService = new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), $this->deploymentPolicy);
         $authService = new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
-            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+            new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
             RequestBootstrap::htmlService(),
             $passwordService,
             new CookieService(),
-            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class),
             $sessionService,
             $eventDispatcher,
             $pageState,
@@ -125,12 +129,12 @@ final readonly class UserBootstrap
         if (! $translator instanceof Translator) {
             throw new LogicException('Container returned an unexpected type for ' . Translator::class);
         }
-        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker);
+        $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), RequestBootstrap::currentConfig()), $currentUser, $filterState, $this->accessLevelChecker);
         $userService = new UserService(
             RequestBootstrap::lang(),
             new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, RequestBootstrap::currentConfig()),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
-            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
+            new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
             RequestBootstrap::htmlService(),
             $sessionService,
             $eventDispatcher,

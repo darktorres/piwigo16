@@ -7,7 +7,9 @@ namespace Piwigo\Controller\Api\History;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\JsonBody;
@@ -36,7 +38,7 @@ final readonly class HistoryLogController implements ControllerInterface
 
         $section = null;
         if ($input->section !== null) {
-            $historyRepository = $this->entityManager->getRepository(HistoryEntity::class);
+            $historyRepository = TypedRepository::narrow($this->entityManager->getRepository(HistoryEntity::class), HistoryRepository::class);
             if (in_array($input->section, $historyRepository->getSectionEnumOptions(), true)) {
                 $section = $input->section;
             }

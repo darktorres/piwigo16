@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
+use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
@@ -17,6 +18,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -217,7 +219,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // throws once scan() actually reaches a real theme with no
     // screenshot.png.
     $entityManager = EntityManagerFactory::build(DbConnection::build());
-    $repo = $entityManager->getRepository(ExtensionIgnoredUpdateEntity::class);
+    $repo = TypedRepository::narrow($entityManager->getRepository(ExtensionIgnoredUpdateEntity::class), ExtensionIgnoredUpdateRepository::class);
 
     return new ExtensionUpdateChecker(
         LangTestFactory::get(),

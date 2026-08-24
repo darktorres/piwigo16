@@ -7,6 +7,7 @@ use Piwigo\Auth\PasswordResetRequestEntity;
 use Piwigo\Auth\PasswordResetRequestRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * [P44-L] Piwigo\Auth\PasswordResetRequestRepository -- same shape as
@@ -18,14 +19,14 @@ use Piwigo\Db\EntityManagerFactory;
 function passwordResetRequestTestRepo(): PasswordResetRequestRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(PasswordResetRequestEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(PasswordResetRequestEntity::class), PasswordResetRequestRepository::class);
 
     return $repo;
 }
 
 function passwordResetRequestTestRepoForConn(Connection $conn): PasswordResetRequestRepository
 {
-    return EntityManagerFactory::build($conn)->getRepository(PasswordResetRequestEntity::class);
+    return TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(PasswordResetRequestEntity::class), PasswordResetRequestRepository::class);
 }
 
 function passwordResetRequestTestPurgeIp(Connection $conn, string $ip): void

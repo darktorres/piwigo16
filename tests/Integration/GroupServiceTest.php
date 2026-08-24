@@ -9,19 +9,23 @@ use InvalidArgumentException;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
@@ -82,17 +86,17 @@ final class GroupServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class);
-        $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class);
+        $auditRepo = TypedRepository::narrow(EntityManagerFactory::build()->getRepository(AuditLogEntity::class), AuditRepository::class);
         $this->configService = new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get());
-        $this->service = new GroupService($this->repo, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new AuditService($auditRepo), $this->configService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+        $this->service = new GroupService($this->repo, new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class)), new AuditService($auditRepo), $this->configService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
         // -- PermissionCacheInvalidator::invalidate() -> its own private
         // currentConfigService()->get()
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
-        CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), CurrentConfigTestFactory::get()));
+        CurrentConfigServiceTestFactory::get()->set(new ConfigService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class), CurrentConfigTestFactory::get()));
     }
 
     public function testCreateRejectsAnAlreadyUsedName(): void

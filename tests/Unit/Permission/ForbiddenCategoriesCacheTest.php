@@ -9,7 +9,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -37,7 +39,7 @@ function forbiddenCategoriesCacheTestService(): PermissionService
 
     return new PermissionService(
         new PermissionRepository(EntityManagerFactory::build($conn)),
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
         new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig),
         $currentUser,
         new FilterState(),

@@ -7,6 +7,7 @@ namespace Piwigo\Core;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Projection\ThemeListing;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Lives in `Piwigo\Core` (L1Infrastructure) rather than `Piwigo\Admin`
@@ -30,7 +31,7 @@ final class ThemeCatalog
 
         $themes = [];
 
-        $rows = $entityManager->getRepository(ThemeEntity::class)->findAllIdsAndNames();
+        $rows = TypedRepository::narrow($entityManager->getRepository(ThemeEntity::class), ThemeRepository::class)->findAllIdsAndNames();
 
         // AppInfo::DEFAULT_TEMPLATE is a base layer other themes load on
         // top of, never something a real install activates (see

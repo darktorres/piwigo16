@@ -19,7 +19,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Group\GroupRepository;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -60,7 +62,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $this->service = new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
-                EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 CurrentUserTestFactory::get(),
                 $filterState,

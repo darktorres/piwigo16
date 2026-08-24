@@ -26,7 +26,9 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\Event\RenderCommentContent;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\Event\RenderElementName;
@@ -44,7 +46,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
@@ -351,7 +352,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $this->categoryRepo,
             new PermissionService(
                 new PermissionRepository($this->entityManager),
-                $this->entityManager->getRepository(GroupEntity::class),
+                TypedRepository::narrow($this->entityManager->getRepository(GroupEntity::class), GroupRepository::class),
                 new CategoryRepository($this->entityManager, $this->currentConfig),
                 $this->currentUser,
                 $this->filterState(),
@@ -360,7 +361,8 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $this->currentConfig,
             $this->eventDispatcher,
             $this->translator,
-            $this->accessLevelChecker())->getCategoryInfo($catId);
+            $this->accessLevelChecker()
+        )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (a URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
         $upper_names = array_map(

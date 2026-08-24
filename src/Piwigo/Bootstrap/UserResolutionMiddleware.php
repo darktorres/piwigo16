@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
@@ -15,6 +16,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ConnectedWithSession;
@@ -25,6 +27,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Listener\AuthListener;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -88,7 +91,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
             $this->htmlService,
             $this->passwordService($conn),
             new CookieService(),
-            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class),
             $this->sessionService,
             $this->eventDispatcher,
             $this->pageState,
@@ -112,7 +115,7 @@ final readonly class UserResolutionMiddleware implements MiddlewareInterface
 
     private function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+        return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class));
     }
 
     private function passwordService(Connection $conn): PasswordService

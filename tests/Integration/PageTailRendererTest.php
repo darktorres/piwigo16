@@ -16,9 +16,11 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -127,7 +129,7 @@ final class PageTailRendererTest extends IntegrationTestCase
             RequestMetricsTestFactory::get(),
             CurrentTemplateTestFactory::get(),
             CurrentConfigTestFactory::get(),
-            new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+            new SessionService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
             EntityManagerFactory::build(DbConnection::build()),
             new ViteManifest(CurrentPathsTestFactory::get()),
         );

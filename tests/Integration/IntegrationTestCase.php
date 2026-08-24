@@ -27,6 +27,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\FixtureNormalizer;
@@ -260,7 +261,7 @@ abstract class IntegrationTestCase extends TestCase
         $em = new EntityManager($conn, $ormConfig);
         $this->configEntityManager = $em;
 
-        $repo = $em->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow($em->getRepository(ConfigEntry::class), ConfigRepository::class);
 
         return $repo;
     }

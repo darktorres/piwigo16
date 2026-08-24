@@ -7,6 +7,8 @@ namespace Piwigo\Controller\Api\Session;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\CsrfGuard;
@@ -47,7 +49,7 @@ final readonly class CaddieAddController implements ControllerInterface
         $userId = $this->currentUser->get()
             ->id->value;
 
-        $added = $this->entityManager->getRepository(CaddieEntity::class)->addElements($userId, $input->imageIds);
+        $added = TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)->addElements($userId, $input->imageIds);
 
         return ResponseFactory::json([
             'addedCount' => $added,

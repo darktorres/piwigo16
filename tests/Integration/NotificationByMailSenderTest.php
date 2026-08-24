@@ -10,11 +10,13 @@ use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -112,7 +114,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         LangTestFactory::get()->load('admin.lang');
 
         $conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
         $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real

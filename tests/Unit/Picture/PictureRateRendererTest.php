@@ -7,8 +7,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateEntity;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -68,7 +70,7 @@ test('render does nothing when rating is disabled', function (): void {
     if (! $accessControl instanceof AccessControl) {
         throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
     }
-    $renderer = new PictureRateRenderer($accessControl, EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+    $renderer = new PictureRateRenderer($accessControl, TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), RateRepository::class), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
     $result = $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
 

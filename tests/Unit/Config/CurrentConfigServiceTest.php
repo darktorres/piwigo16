@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 
 /**
@@ -24,7 +26,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
  */
 function current_config_service_test_config_service(): ConfigService
 {
-    return new ConfigService(EntityManagerFactory::build()->getRepository(ConfigEntry::class), new CurrentConfig());
+    return new ConfigService(TypedRepository::narrow(EntityManagerFactory::build()->getRepository(ConfigEntry::class), ConfigRepository::class), new CurrentConfig());
 }
 
 afterEach(function (): void {

@@ -16,8 +16,10 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Template\CurrentTemplate;
@@ -39,7 +41,7 @@ final class PictureFormatsPageRenderer
                 ->fatalError('image_id does not exist');
         }
 
-        $imageRow = $entityManager->getRepository(ImageEntity::class)
+        $imageRow = TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class)
             ->findById($image_id);
         if ($imageRow === null) {
             $htmlRenderer
@@ -48,7 +50,7 @@ final class PictureFormatsPageRenderer
         $image = SrcImageInfo::fromRow($imageRow->toArray());
 
         $formats = [];
-        foreach ($entityManager->getRepository(ImageEntity::class)->findFormatsForImage($image_id) as $formatRow) {
+        foreach (TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class)->findFormatsForImage($image_id) as $formatRow) {
             $label = strtoupper($formatRow->ext);
             $lang_key = 'format ' . strtoupper($formatRow->ext);
             $lang_label = $lang->has($lang_key) ? $lang->t($lang_key) : null;

@@ -6,6 +6,7 @@ namespace Piwigo\Menu;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
@@ -21,6 +22,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
@@ -31,11 +33,11 @@ use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 
 /**
  * Builds the main menubar's blocks. Injects nothing on its own
@@ -78,7 +80,7 @@ final class MenubarRenderer
 
         $categoryService = new CategoryService($lang, new CategoryRepository($entityManager, $currentConfig), $permissionService, $currentConfig, $eventDispatcher, $translator, $accessLevelChecker);
 
-        $tagService = new TagService($lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger);
+        $tagService = new TagService($lang, TypedRepository::narrow($entityManager->getRepository(TagEntity::class), TagRepository::class), $permissionService, new ActivityService(TypedRepository::narrow($entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)), $eventDispatcher, $currentUser, $currentConfig, $currentLogger);
 
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig, $renderer);
 

@@ -24,9 +24,11 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Psr\Http\Message\ServerRequestInterface;
@@ -121,7 +123,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             }
 
             // site must not exists
-            $site_repo = $this->entityManager->getRepository(SiteEntity::class);
+            $site_repo = TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class);
             if ($site_repo->countByUrl($url) > 0) {
                 $this->pageState->addError($this->lang->t('This site already exists') . ' [' . $url . ']');
             }
@@ -139,7 +141,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
 
         if ($siteManagerRequest->action !== null and $siteManagerRequest->siteId !== null) {
             $site_id = $siteManagerRequest->siteId;
-            $galleries_url = $this->entityManager->getRepository(SiteEntity::class)
+            $galleries_url = TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class)
                 ->findGalleriesUrlById($site_id);
             switch ($siteManagerRequest->action) {
                 case 'delete':
@@ -151,11 +153,11 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             }
         }
 
-        $sites_detail = $this->entityManager->getRepository(SiteEntity::class)
+        $sites_detail = TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class)
             ->findCategoryAndImageCountsBySite();
 
         $tpl_sites = [];
-        foreach ($this->entityManager->getRepository(SiteEntity::class)->findAllSites() as $row) {
+        foreach (TypedRepository::narrow($this->entityManager->getRepository(SiteEntity::class), SiteRepository::class)->findAllSites() as $row) {
             $id = (string) $row->id;
             $id_int = $row->id;
             $galleries_url = $row->galleriesUrl;

@@ -7,6 +7,7 @@ namespace Piwigo\Http\Middleware;
 use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\ApiKeyRepository;
@@ -32,7 +33,9 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\VersionHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Lang\Translator;
@@ -98,7 +101,7 @@ final readonly class LanguageMiddleware implements MiddlewareInterface
         $this->lang->setDefaultLanguageProvider(new UserService(
             $this->lang,
             new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig),
-            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
             $this->activityService($conn),
             $this->htmlService,
             $this->sessionService,
@@ -180,7 +183,7 @@ final readonly class LanguageMiddleware implements MiddlewareInterface
 
     private function activityService(Connection $conn): ActivityService
     {
-        return new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
+        return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class));
     }
 
     private function passwordService(Connection $conn): PasswordService
@@ -190,7 +193,7 @@ final readonly class LanguageMiddleware implements MiddlewareInterface
 
     private function permissionService(Connection $conn): PermissionService
     {
-        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $this->accessLevelChecker);
+        return new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $this->currentUser, $this->filterState, $this->accessLevelChecker);
     }
 
     private function categoryService(Connection $conn): CategoryService

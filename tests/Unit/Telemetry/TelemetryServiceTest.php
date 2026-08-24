@@ -7,8 +7,10 @@ use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Telemetry\TelemetryService;
 use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
 
@@ -38,7 +40,7 @@ function telemetryTestService(): TelemetryService
 {
     $conn = DbConnection::build();
     $em = EntityManagerFactory::build($conn);
-    $configRepo = $em->getRepository(ConfigEntry::class);
+    $configRepo = TypedRepository::narrow($em->getRepository(ConfigEntry::class), ConfigRepository::class);
 
     return new TelemetryService($em, $configRepo);
 }
@@ -132,22 +134,22 @@ test('detectDriverLabel() distinguishes MariaDB from plain MySQL/MariaDB\'s own 
     $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
     $mariaDbEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new MariaDBPlatform());
-    $mariaDbService = new TelemetryService($mariaDbEm, $mariaDbEm->getRepository(ConfigEntry::class));
+    $mariaDbService = new TelemetryService($mariaDbEm, TypedRepository::narrow($mariaDbEm->getRepository(ConfigEntry::class), ConfigRepository::class));
     expect($method->invoke($mariaDbService))
         ->toBe('mariadb');
 
     $mysqlEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new MySQLPlatform());
-    $mysqlService = new TelemetryService($mysqlEm, $mysqlEm->getRepository(ConfigEntry::class));
+    $mysqlService = new TelemetryService($mysqlEm, TypedRepository::narrow($mysqlEm->getRepository(ConfigEntry::class), ConfigRepository::class));
     expect($method->invoke($mysqlService))
         ->toBe('mysql');
 
     $pgsqlEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new PostgreSQLPlatform());
-    $pgsqlService = new TelemetryService($pgsqlEm, $pgsqlEm->getRepository(ConfigEntry::class));
+    $pgsqlService = new TelemetryService($pgsqlEm, TypedRepository::narrow($pgsqlEm->getRepository(ConfigEntry::class), ConfigRepository::class));
     expect($method->invoke($pgsqlService))
         ->toBe('pgsql');
 
     $oracleEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new OraclePlatform());
-    $oracleService = new TelemetryService($oracleEm, $oracleEm->getRepository(ConfigEntry::class));
+    $oracleService = new TelemetryService($oracleEm, TypedRepository::narrow($oracleEm->getRepository(ConfigEntry::class), ConfigRepository::class));
     expect($method->invoke($oracleService))
         ->toBe('unknown');
 });

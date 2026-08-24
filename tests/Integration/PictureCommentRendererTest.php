@@ -29,6 +29,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Picture\Event\UserCommentInsertion;
@@ -38,6 +39,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -221,7 +223,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         LangTestFactory::get()->load('common.lang');
 
         $this->conn = DbConnection::build();
-        $this->commentRepo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
+        $this->commentRepo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class);
 
         // dataDirChecked() defaults to null after applyDefaults(), which
         // would make Template's constructor reach for CurrentConfigService
@@ -1036,7 +1038,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     private function sessionService(): SessionService
     {
-        return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
+        return new SessionService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get());
     }
 
     private function mailService(): MailService

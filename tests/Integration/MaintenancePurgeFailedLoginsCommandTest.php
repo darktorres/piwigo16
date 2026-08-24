@@ -7,14 +7,18 @@ namespace Piwigo\Tests\Integration;
 use LogicException;
 use Override;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Auth\PasswordResetRequestEntity;
+use Piwigo\Auth\PasswordResetRequestRepository;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -47,9 +51,9 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
         $em = EntityManagerFactory::build($conn);
-        $failedLoginRepo = $em->getRepository(UserFailedLoginEntity::class);
-        $passwordResetRequestRepo = $em->getRepository(PasswordResetRequestEntity::class);
-        $ignoredAnomalyRepo = $em->getRepository(IntegrityIgnoredAnomalyEntity::class);
+        $failedLoginRepo = TypedRepository::narrow($em->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class);
+        $passwordResetRequestRepo = TypedRepository::narrow($em->getRepository(PasswordResetRequestEntity::class), PasswordResetRequestRepository::class);
+        $ignoredAnomalyRepo = TypedRepository::narrow($em->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class);
 
         $failedLoginRepo->recordFailure(1, '203.0.113.10', '2000-01-01 00:00:00');
         $failedLoginRepo->recordFailure(1, '203.0.113.10', date('Y-m-d H:i:s'));

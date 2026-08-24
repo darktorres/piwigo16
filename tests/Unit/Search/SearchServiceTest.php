@@ -22,7 +22,9 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SortRenderer;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -39,6 +41,7 @@ use Piwigo\Search\QSingleToken;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Renderer;
@@ -56,7 +59,6 @@ use Piwigo\Tests\Unit\Search\SearchServiceTestFatalSignalHtmlRenderer;
 use Piwigo\Tests\Unit\Search\SearchServiceTestNotAnInflector;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
-use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -245,18 +247,19 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
     return new SearchService(
         $accessLevelChecker,
         new SearchRepository(EntityManagerFactory::build($conn)),
-        new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), searchServiceTestFilterState(), $accessLevelChecker),
+        new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), searchServiceTestFilterState(), $accessLevelChecker),
         new CategoryService(
             LangTestFactory::get(),
             new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), searchServiceTestFilterState(), $accessLevelChecker),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), searchServiceTestFilterState(), $accessLevelChecker),
             CurrentConfigTestFactory::get(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            $accessLevelChecker),
+            $accessLevelChecker
+        ),
         $htmlRenderer,
         new RedirectService(LangTestFactory::get(), searchServiceTestUserService(), EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
         EventDispatcherTestFactory::get(),
         CurrentUserTestFactory::get(),
         CurrentConfigTestFactory::get(),

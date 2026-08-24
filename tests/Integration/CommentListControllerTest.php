@@ -25,6 +25,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\AdminGuard;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -68,7 +69,7 @@ final class CommentListControllerTest extends IntegrationTestCase
         Kernel::boot();
 
         $conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($conn)->getRepository(CommentEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), CommentRepository::class);
     }
 
     #[Override]

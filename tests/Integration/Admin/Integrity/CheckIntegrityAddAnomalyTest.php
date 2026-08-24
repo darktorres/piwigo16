@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
@@ -13,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -37,7 +39,7 @@ function checkIntegrityAddAnomalyTestLang(): Lang
 
 function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class);
 
     return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), LayoutStateTestFactory::get());
 }

@@ -7,8 +7,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Session\Projection\FilterCheckKey;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -34,7 +36,7 @@ function makeSessionService(?CurrentConfig $currentConfig = null): SessionServic
     ConfigLoader::applyDefaults();
     putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
 
-    return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class), $currentConfig ?? new CurrentConfig());
+    return new SessionService(TypedRepository::narrow(EntityManagerFactory::build()->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig ?? new CurrentConfig());
 }
 
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest

@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
 use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Audit\AuditRepository;
 use Piwigo\Audit\AuditService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigLoader;
@@ -15,6 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 final class AuditServiceTest extends IntegrationTestCase
 {
@@ -47,7 +49,7 @@ final class AuditServiceTest extends IntegrationTestCase
         $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
 
         $this->conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class), AuditRepository::class);
         $this->service = new AuditService($repo);
         // The fixture seeds 3 real audit_log rows (group-creation events) --
         // cleared so every test starts from a genuinely empty table, same

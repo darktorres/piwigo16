@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -38,6 +39,7 @@ use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -190,7 +192,7 @@ final class PasswordController implements ControllerInterface
                  *   return type per-entity's own repositoryClass binding,
                  *   only the generic EntityRepository<T>.
                  */
-                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, $this->entityManager->getRepository(ActivityEntity::class));
+                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, TypedRepository::narrow($this->entityManager->getRepository(ActivityEntity::class), ActivityRepository::class));
 
                 if ($this->action === null) {
                     $this->action = 'reset';

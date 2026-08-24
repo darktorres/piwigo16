@@ -16,6 +16,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\Projection\ConfigValueUpdate;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\TypedRepository;
 
 /**
  * ConfigRepository has no Unit-level test file at all -- every public
@@ -61,7 +62,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $ormConfig->enableNativeLazyObjects(true);
         $this->em = new EntityManager($conn, $ormConfig);
 
-        $repo = $this->em->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow($this->em->getRepository(ConfigEntry::class), ConfigRepository::class);
         $this->repo = $repo;
     }
 
@@ -284,7 +285,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
 
-        $repo = $em->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow($em->getRepository(ConfigEntry::class), ConfigRepository::class);
 
         return $repo;
     }

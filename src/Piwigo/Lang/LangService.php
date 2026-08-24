@@ -7,6 +7,7 @@ namespace Piwigo\Lang;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Thin object-oriented facade over Lang/Translator for constructor
@@ -68,7 +69,7 @@ final readonly class LangService
      */
     public static function getLanguages(Paths $paths, EntityManagerInterface $entityManager): array
     {
-        $repo = $entityManager->getRepository(LanguageEntity::class);
+        $repo = TypedRepository::narrow($entityManager->getRepository(LanguageEntity::class), LangRepository::class);
 
         $languages = [];
         foreach ($repo->findAllRows() as $row) {

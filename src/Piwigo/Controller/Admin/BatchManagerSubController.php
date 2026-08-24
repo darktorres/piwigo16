@@ -22,6 +22,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\TagId;
@@ -43,6 +44,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SortRenderer;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
@@ -195,7 +197,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $this->csrfService
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $this->entityManager->getRepository(CaddieEntity::class)
+            TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)
                 ->replaceForUser($userId->value, []);
 
             $_SESSION['page_infos'] = [

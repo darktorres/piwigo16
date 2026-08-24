@@ -7,6 +7,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiContext;
@@ -15,7 +16,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Renderer;
@@ -80,8 +83,8 @@ function noPhotoYetTestRenderer(AdminContext $adminContext, ApiContext $apiConte
     return new NoPhotoYetRenderer(
         LangTestFactory::get(),
         new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
-        EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
-        new ConfigService(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), CurrentConfigTestFactory::get()),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
+        new ConfigService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class), CurrentConfigTestFactory::get()),
         new AccessControlTestFakeRedirectServiceNeverCalled(),
         UrlServiceTestFactory::build(),
         Paths::fromRoot(sys_get_temp_dir()),

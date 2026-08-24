@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Comment\CommentEntity;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
@@ -15,10 +16,13 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RequestMetrics;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -101,10 +105,10 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
          */
         $renderer = new CategoryDefaultRenderer(
             HtmlServiceTestFactory::build(),
-            EntityManagerFactory::build($conn)->getRepository(ImageEntity::class),
-            EntityManagerFactory::build($conn)->getRepository(CommentEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(CommentEntity::class), CommentRepository::class),
             UrlServiceTestFactory::build(),
-            new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+            new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), new CurrentConfig()),
             new EventDispatcher(),
             categoryDefaultTestImageStdParams(),
             CurrentUserTestFactory::get(),

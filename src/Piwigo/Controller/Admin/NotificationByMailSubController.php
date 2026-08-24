@@ -26,9 +26,11 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Event\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\UserMailNotificationEntity;
@@ -395,7 +397,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
         // base_url from.
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
-        $notificationByMailService = new NotificationByMailService($this->entityManager->getRepository(UserMailNotificationEntity::class), $sessionService);
+        $notificationByMailService = new NotificationByMailService(TypedRepository::narrow($this->entityManager->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class), $sessionService);
 
         // Set null mail_address empty
         $notificationByMailService->nullifyBlankEmails();

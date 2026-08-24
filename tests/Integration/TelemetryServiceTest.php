@@ -20,6 +20,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Telemetry\TelemetryService;
 use ReflectionMethod;
 
@@ -219,7 +220,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
 
-        $repo = $em->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow($em->getRepository(ConfigEntry::class), ConfigRepository::class);
 
         return $repo;
     }

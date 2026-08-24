@@ -15,8 +15,10 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -73,7 +75,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+            new SessionService(TypedRepository::narrow($this->em->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
             CurrentConfigTestFactory::get(),
         );
 

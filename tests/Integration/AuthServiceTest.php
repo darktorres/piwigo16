@@ -12,6 +12,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Override;
     use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Auth\ApiKeyRepository;
     use Piwigo\Auth\ApiKeyService;
@@ -37,9 +38,11 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Mail\MailService;
     use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionRepository;
     use Piwigo\Session\SessionService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -135,7 +138,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
 
-            $this->failedLoginRepo = EntityManagerFactory::build(DbConnection::build())->getRepository(UserFailedLoginEntity::class);
+            $this->failedLoginRepo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class);
 
             $this->service = $this->buildAuthService();
         }
@@ -150,12 +153,12 @@ namespace Piwigo\Tests\Integration {
         {
             return new AuthService(
                 new AuthRepository(EntityManagerFactory::build(DbConnection::build())),
-                new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)),
+                new ActivityService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class), ActivityRepository::class)),
                 HtmlServiceTestFactory::build(),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), new DeploymentPolicy()),
                 new CookieService(),
                 $this->failedLoginRepo,
-                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+                new SessionService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 PageStateTestFactory::get(),
                 CurrentUserTestFactory::get(),
@@ -257,7 +260,7 @@ namespace Piwigo\Tests\Integration {
              *   own repositoryClass binding, only the generic
              *   EntityRepository<T>.
              */
-            self::assertTrue($this->service->hasAlreadyLoggedIn(4, EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)));
+            self::assertTrue($this->service->hasAlreadyLoggedIn(4, TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class)));
         }
 
         public function testLogUserTreatsANonStringLangCookieAsAnInvalidRequestParameter(): void
@@ -731,7 +734,7 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
                 UrlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+                new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
                 CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Wrong Secret Test Key');
@@ -758,7 +761,7 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
                 UrlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+                new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
                 CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Revoked Test Key');

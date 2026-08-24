@@ -9,6 +9,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Override;
     use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Activity\ActivityRepository;
     use Piwigo\Activity\ActivityService;
     use Piwigo\Auth\PasswordService;
     use Piwigo\Category\CategoryService;
@@ -19,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Common\ValueObject\Username;
     use Piwigo\Config\ConfigEntry;
     use Piwigo\Config\ConfigLoader;
+    use Piwigo\Config\ConfigRepository;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\DeploymentPolicy;
@@ -27,9 +29,11 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Feed\FeedEntity;
     use Piwigo\Feed\FeedRepository;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Group\GroupRepository;
     use Piwigo\Image\ImageEntity;
     use Piwigo\Mail\MailService;
     use Piwigo\Notification\NotificationByMailRepository;
@@ -38,6 +42,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\SqlCondition;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionRepository;
     use Piwigo\Session\SessionService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -139,7 +144,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(CategoryService::class, $categoryService);
             $passwordService = Kernel::container()->get(PasswordService::class);
             self::assertInstanceOf(PasswordService::class, $passwordService);
-            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn), $permissionService, $categoryService, $passwordService);
+            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class)), HtmlServiceTestFactory::build(), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn), $permissionService, $categoryService, $passwordService);
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -147,7 +152,7 @@ namespace Piwigo\Tests\Integration {
             // CurrentConfigServiceTestFactory::get()->get() -- without this,
             // that throws a bare "CurrentConfigService not initialised"
             // LogicException.
-            CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), $currentConfig));
+            CurrentConfigServiceTestFactory::get()->set(new ConfigService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class), $currentConfig));
         }
 
         /**
@@ -281,7 +286,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function testRegisterUserAddsTheNewUserToDefaultGroups(): void
         {
-            $groupRepo = EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class);
+            $groupRepo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class);
             $defaultGroupId = $groupRepo->insert('p18-regression-' . bin2hex(random_bytes(4)), true);
 
             $login = 'p18-regression-' . bin2hex(random_bytes(4));
@@ -955,12 +960,12 @@ namespace Piwigo\Tests\Integration {
 
         private function mailNotificationRepo(): NotificationByMailRepository
         {
-            return EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class);
+            return TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class);
         }
 
         private function feedRepo(): FeedRepository
         {
-            return EntityManagerFactory::build($this->conn)->getRepository(FeedEntity::class);
+            return TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(FeedEntity::class), FeedRepository::class);
         }
 
         public function testSyncUsersDeletesOrphanedChildRowsNotPresentInTheBaseTable(): void
@@ -1351,7 +1356,7 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(CategoryService::class, $categoryService);
             $passwordService = Kernel::container()->get(PasswordService::class);
             self::assertInstanceOf(PasswordService::class, $passwordService);
-            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn), $permissionService, $categoryService, $passwordService);
+            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class)), HtmlServiceTestFactory::build(), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get(), EntityManagerFactory::build($this->conn), $permissionService, $categoryService, $passwordService);
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

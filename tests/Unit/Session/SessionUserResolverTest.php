@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionUserResolver;
@@ -23,7 +24,7 @@ use Piwigo\Session\SessionUserResolver;
  */
 function sessionUserResolverTestRepo(): SessionRepository
 {
-    return EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class);
+    return TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class);
 }
 
 test('resolveLoggedUserId returns null for a cookie value with no matching session row', function (): void {

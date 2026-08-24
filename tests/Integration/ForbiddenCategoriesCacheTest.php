@@ -15,7 +15,9 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -67,7 +69,7 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
         $this->cache = new ForbiddenCategoriesCache(
             new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
-                EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 CurrentUserTestFactory::get(),
                 $filterState,

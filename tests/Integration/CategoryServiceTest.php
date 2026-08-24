@@ -30,13 +30,17 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Group\GroupEntity;
+    use Piwigo\Group\GroupRepository;
     use Piwigo\Permalink\PermalinkRepository;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionRepository;
     use Piwigo\Session\SessionService;
     use Piwigo\Site\SiteEntity;
+    use Piwigo\Site\SiteRepository;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -248,11 +252,12 @@ namespace Piwigo\Tests\Integration {
             $this->service = new CategoryService(
                 LangTestFactory::get(),
                 $this->repo,
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
                 CurrentConfigTestFactory::get(),
                 EventDispatcherTestFactory::get(),
                 TranslatorTestFactory::get(),
-                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig));
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
+            );
 
             CurrentUserTestFactory::get()->set(User::fromUserArray([
                 'id' => 1,
@@ -811,7 +816,7 @@ namespace Piwigo\Tests\Integration {
             // image.
             $this->conn->executeStatement("INSERT INTO image_category (image_id, category_id) VALUES (1, {$tempId})");
 
-            $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn), 'delete_orphans');
+            $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn), 'delete_orphans');
 
             self::assertNull($this->repo->findById($tempId));
             $stillLinked = $this->conn->createQueryBuilder()
@@ -832,7 +837,7 @@ namespace Piwigo\Tests\Integration {
             // RequestBootstrap.php itself registers in production, to prove
             // the wiring (not just the individual pieces) actually works end
             // to end.
-            $siteRepo = EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class);
+            $siteRepo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class), SiteRepository::class);
             $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
             $siteRepo->insert($siteUrl);
             // lastInsertId() isn't reliable straight after an ORM persist()+
@@ -859,7 +864,7 @@ namespace Piwigo\Tests\Integration {
             EventDispatcherTestFactory::get()->addTypedHandler(DeleteSite::class, $handler);
 
             try {
-                $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn));
+                $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn));
 
                 self::assertNull($this->repo->findById((int) $categoryId));
                 self::assertNull($siteRepo->findGalleriesUrlById($siteId));
@@ -1135,7 +1140,7 @@ namespace Piwigo\Tests\Integration {
                  *   per-entity's own repositoryClass binding, only the
                  *   generic EntityRepository<T>.
                  */
-                $this->service->updatePath(EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class));
+                $this->service->updatePath(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class), SiteRepository::class));
 
                 $path = $this->conn->createQueryBuilder()
                     ->select('path')

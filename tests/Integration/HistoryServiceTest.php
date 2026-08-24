@@ -16,7 +16,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\History\Projection\HistorySearchCriteria;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -98,7 +100,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->service = new HistoryService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), $currentConfig), $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), $currentConfig);
+        $this->service = new HistoryService($accessControl, TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), HistoryRepository::class), new ConfigService($this->buildConfigRepository(), $currentConfig), $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), $currentConfig);
     }
 
     #[Override]
@@ -398,7 +400,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      */
     public function testLogVisitStoresABrandNewSectionWithoutAlteringTheSchema(): void
     {
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), HistoryRepository::class);
         self::assertNotContains('my_custom_section', $repo->getSectionEnumOptions());
 
         $definitionBefore = $this->fetchSectionColumnDefinition();

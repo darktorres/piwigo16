@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
@@ -18,6 +19,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -34,7 +36,9 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Lang\Translator;
@@ -45,6 +49,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -140,7 +145,7 @@ final class MailServiceTest extends IntegrationTestCase
         Kernel::boot();
 
         $this->conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
         $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();
@@ -182,10 +187,10 @@ final class MailServiceTest extends IntegrationTestCase
         return new UserService(
             LangTestFactory::get(),
             new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()),
-            EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
-            new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
+            TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class),
+            new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
             HtmlServiceTestFactory::build(),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+            new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
             new EventDispatcher(),
             new DeploymentPolicy(),
             CurrentUserTestFactory::get(),

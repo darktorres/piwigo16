@@ -8,6 +8,7 @@ use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Piwigo\Core\ThemeRepository -- has no dedicated Integration test file
@@ -29,7 +30,7 @@ use Piwigo\Db\EntityManagerFactory;
 function themeRepositoryTestRepo(): ThemeRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class), ThemeRepository::class);
 
     return $repo;
 }

@@ -16,7 +16,9 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -25,7 +27,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Users\UserRepository;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
@@ -93,7 +94,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
         $permissionService = new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
-            EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+            TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()),
             CurrentUserTestFactory::get(),
             $filterState,
@@ -166,8 +167,8 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             }
             $afterCache = new EffectiveForbiddenCategoriesCache(
                 new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $afterCacheFilterState, new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())),
-                new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $afterCacheFilterState, new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())), CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $afterCacheFilterState, new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())),
+                new CategoryService(LangTestFactory::get(), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $afterCacheFilterState, new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())), CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())),
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
                 new ArrayAdapter(),
             );

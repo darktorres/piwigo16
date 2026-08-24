@@ -22,6 +22,7 @@ use Piwigo\Admin\Upload\Projection\ImageDimensionsInfo;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\Projection\ConfigValueUpdate;
@@ -35,6 +36,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImagePathHelper;
@@ -240,7 +242,7 @@ final readonly class UploadService
         }
 
         if (count($errors) === 0) {
-            $this->entityManager->getRepository(ConfigEntry::class)
+            TypedRepository::narrow($this->entityManager->getRepository(ConfigEntry::class), ConfigRepository::class)
                 ->massUpdateValues($updates);
             $this->entityManager->clear();
             return true;

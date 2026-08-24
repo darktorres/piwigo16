@@ -25,8 +25,10 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Image\ImageEntity;
+    use Piwigo\Image\ImageRepository;
     use Piwigo\Page\NoPhotoYetRenderer;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Template\Renderer;
@@ -136,7 +138,7 @@ namespace Piwigo\Tests\Integration {
             if (! $userService instanceof UserService) {
                 throw new LogicException('Container returned an unexpected type for ' . UserService::class);
             }
-            $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new LayoutState(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new ApiContext(), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new ProcessCache(), CurrentConfigServiceTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()), PageStateTestFactory::get(), HtmlServiceTestFactory::build(), ImageStdParamsTestFactory::get());
+            $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), ImageRepository::class), new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new LayoutState(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new ApiContext(), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), new ProcessCache(), CurrentConfigServiceTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()), PageStateTestFactory::get(), HtmlServiceTestFactory::build(), ImageStdParamsTestFactory::get());
 
             // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
             // isAdmin() directly (real class methods), which read

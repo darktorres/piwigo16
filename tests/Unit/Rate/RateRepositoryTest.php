@@ -8,6 +8,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\RaterInfo;
 use Piwigo\Rate\Projection\RateSummary;
@@ -64,7 +65,7 @@ use Piwigo\Tests\Support\DbTransactionTestOverride;
  */
 function rateTestRepo(): RateRepository
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), RateRepository::class);
 
     return $repo;
 }
@@ -80,7 +81,7 @@ function rateTestRepo(): RateRepository
 function rateTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
-    $repo = $em->getRepository(RateEntity::class);
+    $repo = TypedRepository::narrow($em->getRepository(RateEntity::class), RateRepository::class);
 
     return [$repo, $em];
 }

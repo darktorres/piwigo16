@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
@@ -13,6 +14,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\ExtensionUpdateCachePool;
@@ -20,6 +22,7 @@ use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -32,7 +35,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailRecipientRepository;
@@ -41,6 +46,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -66,7 +72,7 @@ use Piwigo\Users\UserService;
 // is safe without a reachable test DB.
 function core_update_service_test_activity_service(): ActivityService
 {
-    return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
+    return new ActivityService(TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class), ActivityRepository::class));
 }
 
 // Never actually queried either -- same "type-satisfying instance is
@@ -78,15 +84,15 @@ function core_update_service_test_user_service(): UserService
     $currentConfig = new CurrentConfig();
     $currentUser = new CurrentUser($currentConfig);
     $accessLevelChecker = new AccessLevelChecker($currentUser, $currentConfig);
-    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
+    $permissionService = new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository(EntityManagerFactory::build($conn), $currentConfig), $currentUser, new FilterState(), $accessLevelChecker);
 
     return new UserService(
         core_update_service_test_lang(),
         new UserRepository(EntityManagerFactory::build($conn), new EventDispatcher(), $currentConfig),
-        EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), GroupRepository::class),
         core_update_service_test_activity_service(),
         HtmlServiceTestFactory::build(),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig),
         new EventDispatcher(),
         new DeploymentPolicy(),
         $currentUser,
@@ -132,12 +138,12 @@ function core_update_service_test_mail_service(): MailService
         new MailRecipientRepository(EntityManagerFactory::build($conn)),
         new AuthService(
             new AuthRepository(EntityManagerFactory::build($conn)),
-            new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+            new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
             HtmlServiceTestFactory::build(),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
             new CookieService(),
-            EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
-            new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+            TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class),
+            new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), new CurrentConfig()),
             new EventDispatcher(),
             new PageState(),
             new CurrentUser(new CurrentConfig()),
@@ -155,7 +161,7 @@ function core_update_service_test_mail_service(): MailService
 
 function core_update_service(): CoreUpdateService
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), ConfigRepository::class);
 
     return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), new ConfigService($repo, CurrentConfigTestFactory::get()), Paths::fromRoot(dirname(__DIR__, 4)), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
 }
@@ -210,7 +216,7 @@ afterEach(function (): void {
 
 function core_update_service_at(string $root): CoreUpdateService
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class), ConfigRepository::class);
 
     return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service(), new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), UrlServiceTestFactory::build(), new ConfigService($repo, CurrentConfigTestFactory::get()), Paths::fromRoot($root), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), core_update_service_test_activity_service(), core_update_service_test_user_service(), core_update_service_test_mail_service(), CurrentConfigTestFactory::get(), new ExtensionUpdateCachePool(CacheFactory::create(namespace: 'piwigo.extension_update', defaultLifetime: 86400)));
 }

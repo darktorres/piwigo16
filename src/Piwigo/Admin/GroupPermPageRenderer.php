@@ -20,7 +20,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Template\Renderer;
@@ -132,7 +134,7 @@ final readonly class GroupPermPageRenderer
         $adminContent = $this->renderer->render(new GroupPermView(
             title: $this->lang->t(
                 'Manage permissions for group "%s"',
-                $this->entityManager->getRepository(GroupEntity::class)
+                TypedRepository::narrow($this->entityManager->getRepository(GroupEntity::class), GroupRepository::class)
                     ->findName($groupId) ?? false
             ),
             formAction: $this->urlService->getRootUrl() .

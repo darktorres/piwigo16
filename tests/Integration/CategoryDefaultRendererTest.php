@@ -10,6 +10,7 @@ use Override;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\Projection\CategoryDefaultResult;
 use Piwigo\Comment\CommentEntity;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -19,8 +20,11 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
@@ -100,7 +104,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
-        $imageRepo = $em->getRepository(ImageEntity::class);
+        $imageRepo = TypedRepository::narrow($em->getRepository(ImageEntity::class), ImageRepository::class);
         /**
          * @psalm-suppress InvalidArgument getRepository() always really
          *   returns CommentEntity's own custom repositoryClass at runtime
@@ -109,7 +113,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
          *   return type per-entity's own repositoryClass binding, only the
          *   generic EntityRepository<T>.
          */
-        $commentRepo = $em->getRepository(CommentEntity::class);
+        $commentRepo = TypedRepository::narrow($em->getRepository(CommentEntity::class), CommentRepository::class);
 
         $htmlService = HtmlServiceTestFactory::build();
         // thumbnails.latte's own {var $derivative =
@@ -135,7 +139,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
          *   CommentRepository at runtime (see its own assignment above),
          *   which implements CommentCounterInterface.
          */
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, RequestMetricsTestFactory::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $imageRepo, $commentRepo, $urlService, new SessionService(TypedRepository::narrow($em->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), $processCache, RequestMetricsTestFactory::get());
     }
 
     #[Override]

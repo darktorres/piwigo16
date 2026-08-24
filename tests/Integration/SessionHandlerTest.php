@@ -11,8 +11,10 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
 /**
@@ -59,7 +61,7 @@ final class SessionHandlerTest extends IntegrationTestCase
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
         $conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($conn)->getRepository(SessionEntity::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class);
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {

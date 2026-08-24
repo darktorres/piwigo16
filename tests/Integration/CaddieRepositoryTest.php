@@ -14,6 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * caddie is empty in the fixture and only 4 real (FK-valid) user ids exist,
@@ -51,7 +52,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(CaddieEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CaddieEntity::class), CaddieRepository::class);
     }
 
     public function testAddElementsInsertsNewRowsAndReturnsTheCount(): void

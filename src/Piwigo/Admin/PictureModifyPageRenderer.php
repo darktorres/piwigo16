@@ -31,8 +31,10 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -102,7 +104,7 @@ final readonly class PictureModifyPageRenderer
         $page = [];
         $template = $this->currentTemplate->get();
 
-        $imageService = new ImageService($this->entityManager->getRepository(ImageEntity::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
+        $imageService = new ImageService(TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class), $this->activityService, $this->eventDispatcher, $this->currentConfig, $this->paths, $this->categoryService);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);
@@ -316,7 +318,7 @@ final readonly class PictureModifyPageRenderer
             $intro_stats .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = $this->entityManager->getRepository(ImageEntity::class)
+        $formats = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
             ->findFormatsForImage(ImageId::from($image_id));
 
         $intro_formats = null;

@@ -7,10 +7,12 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -48,7 +50,7 @@ final class TemplateAdapterTest extends IntegrationTestCase
         Kernel::boot();
 
         $conn = DbConnection::build();
-        $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
         $configService = new ConfigService($repo, CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();

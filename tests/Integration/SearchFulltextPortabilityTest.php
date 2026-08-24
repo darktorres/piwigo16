@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
@@ -30,8 +31,11 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SortRenderer;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -40,8 +44,10 @@ use Piwigo\Search\QSingleToken;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -106,7 +112,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         if (! $searchResultsCachePool instanceof SearchResultsCachePool) {
             throw new LogicException('Container returned an unexpected type for ' . SearchResultsCachePool::class);
         }
-        $permissionService = new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker);
+        $permissionService = new PermissionService(new PermissionRepository($this->em), TypedRepository::narrow($this->em->getRepository(GroupEntity::class), GroupRepository::class), new CategoryRepository($this->em, CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker);
         $categoryService = new CategoryService(
             LangTestFactory::get(),
             new CategoryRepository($this->em, CurrentConfigTestFactory::get()),
@@ -117,7 +123,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             $accessLevelChecker,
         );
 
-        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), $this->em->getRepository(GroupEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get(), $this->em, $permissionService, $categoryService, new PasswordService(new PasswordRepository($this->em), new DeploymentPolicy()));
+        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), TypedRepository::narrow($this->em->getRepository(GroupEntity::class), GroupRepository::class), new ActivityService(TypedRepository::narrow($this->em->getRepository(ActivityEntity::class), ActivityRepository::class)), HtmlServiceTestFactory::build(), new SessionService(TypedRepository::narrow($this->em->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get(), $this->em, $permissionService, $categoryService, new PasswordService(new PasswordRepository($this->em), new DeploymentPolicy()));
 
         $this->service = new SearchService(
             $accessLevelChecker,
@@ -126,13 +132,13 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             $categoryService,
             HtmlServiceTestFactory::build(),
             new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())),
-            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
+            new SessionService(TypedRepository::narrow($this->em->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             CurrentUserTestFactory::get(),
             CurrentConfigTestFactory::get(),
             new SortRenderer($this->conn),
-            new TagService(LangTestFactory::get(), $this->em->getRepository(TagEntity::class), $permissionService, new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger()),
-            new ImageService($this->em->getRepository(ImageEntity::class), new ActivityService($this->em->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $categoryService),
+            new TagService(LangTestFactory::get(), TypedRepository::narrow($this->em->getRepository(TagEntity::class), TagRepository::class), $permissionService, new ActivityService(TypedRepository::narrow($this->em->getRepository(ActivityEntity::class), ActivityRepository::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger()),
+            new ImageService(TypedRepository::narrow($this->em->getRepository(ImageEntity::class), ImageRepository::class), new ActivityService(TypedRepository::narrow($this->em->getRepository(ActivityEntity::class), ActivityRepository::class)), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), $categoryService),
             $userService,
             new PreferencesService(new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get()),
             $searchResultsCachePool,

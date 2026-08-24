@@ -21,6 +21,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -140,7 +141,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function buildIntegrityRepo(): IntegrityIgnoredAnomalyRepository
     {
-        $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class);
 
         return $repo;
     }

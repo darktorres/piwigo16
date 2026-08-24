@@ -48,6 +48,7 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\NoMatchSentinel;
+use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Html\Event\RenderElementDescription;
 use Piwigo\Html\HtmlService;
@@ -56,6 +57,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImagePathHelper;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\ImageFormat;
@@ -618,7 +620,7 @@ final readonly class PictureController implements ControllerInterface
 
         // don't increment if adding a comment
         if ($this->eventDispatcher->dispatch(new AllowIncrementElementHitCount($inc_hit_count, ImageId::from($image_id)))->incHitCount) {
-            $this->entityManager->getRepository(ImageEntity::class)
+            TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                 ->incrementVisitCounter(ImageId::from($image_id));
         }
 
@@ -640,7 +642,7 @@ final readonly class PictureController implements ControllerInterface
             $ids[] = (string) $last_item;
         }
 
-        foreach ($this->entityManager->getRepository(ImageEntity::class)->findByIds($ids) as $imageRow) {
+        foreach (TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)->findByIds($ids) as $imageRow) {
             $row = $imageRow->toArray();
             if ($previous_item !== null and $imageRow->id->value === (int) $previous_item) {
                 $i = 'previous';
@@ -844,7 +846,7 @@ final readonly class PictureController implements ControllerInterface
                 $picture_id = $picture['current']['id'];
                 $formats = array_map(
                     static fn (ImageFormat $format): array => $format->toArray(),
-                    $this->entityManager->getRepository(ImageEntity::class)
+                    TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                         ->findFormatsForImage(ImageId::from($picture_id))
                 );
 

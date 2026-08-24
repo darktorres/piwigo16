@@ -12,9 +12,12 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
+    use Piwigo\Notification\NotificationByMailRepository;
     use Piwigo\Notification\NotificationByMailService;
     use Piwigo\Notification\UserMailNotificationEntity;
     use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionRepository;
     use Piwigo\Session\SessionService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
@@ -50,7 +53,7 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyEnvOverrides();
 
             $this->conn = DbConnection::build();
-            $this->service = new NotificationByMailService(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()));
+            $this->service = new NotificationByMailService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()));
         }
 
         public function testFindAvailableCheckKeyMatchesTheExpectedShape(): void
@@ -64,7 +67,7 @@ namespace Piwigo\Tests\Integration {
         {
             $key = $this->service->findAvailableCheckKey();
 
-            self::assertSame(0, EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class)->countByCheckKey($key));
+            self::assertSame(0, TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class)->countByCheckKey($key));
         }
 
         public function testGetUserNotificationsReturnsEmptyForAnUnknownAction(): void

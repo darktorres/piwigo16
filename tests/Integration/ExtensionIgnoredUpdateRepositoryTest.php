@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Direct coverage of ExtensionIgnoredUpdateRepository's own query/mutation
@@ -59,7 +60,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(ExtensionIgnoredUpdateEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ExtensionIgnoredUpdateEntity::class), ExtensionIgnoredUpdateRepository::class);
     }
 
     public function testFindIgnoredIdsByTypeReturnsOnlyRowsForTheRequestedType(): void

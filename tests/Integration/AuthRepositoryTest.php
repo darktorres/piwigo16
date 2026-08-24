@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 
@@ -176,7 +177,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     private function historyLookup(): HistoryRepository
     {
-        return EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
+        return TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), HistoryRepository::class);
     }
 
     public function testSaveLastVisitFromHistoryPersistsANonNullValue(): void

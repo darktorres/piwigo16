@@ -16,7 +16,9 @@ use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Job\Handler\ReindexImagesHandler;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Metadata\MetadataRepository;
@@ -84,7 +86,7 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
             new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), $currentConfig, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get()),
             new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
-                EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
+                TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
                 CurrentUserTestFactory::get(),
                 new FilterState(),

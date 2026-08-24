@@ -7,6 +7,7 @@ use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository -- has no
@@ -21,7 +22,7 @@ use Piwigo\Db\EntityManagerFactory;
 function integrityIgnoredAnomalyTestRepo(): IntegrityIgnoredAnomalyRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class);
 
     return $repo;
 }

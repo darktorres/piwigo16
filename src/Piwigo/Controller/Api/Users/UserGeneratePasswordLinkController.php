@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Api\Users;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\UserId;
@@ -14,6 +15,7 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Projection\MailArgs;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\CsrfGuard;
@@ -88,7 +90,7 @@ final readonly class UserGeneratePasswordLinkController implements ControllerInt
          *   narrow getRepository()'s return type per-entity's own
          *   repositoryClass binding, only the generic EntityRepository<T>.
          */
-        $firstLogin = $this->authService->hasAlreadyLoggedIn($lostUserId, $this->entityManager->getRepository(ActivityEntity::class));
+        $firstLogin = $this->authService->hasAlreadyLoggedIn($lostUserId, TypedRepository::narrow($this->entityManager->getRepository(ActivityEntity::class), ActivityRepository::class));
         $sendByMailResponse = null;
         $userLostLanguage = is_string($userLost['language'] ?? null) ? $userLost['language'] : $this->userService->getDefaultLanguage();
         $langToUse = $firstLogin ? $this->userService->getDefaultLanguage() : $userLostLanguage;

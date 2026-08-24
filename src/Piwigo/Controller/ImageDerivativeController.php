@@ -16,6 +16,7 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -23,6 +24,7 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Permission\ImageVisibilityChecker;
@@ -120,7 +122,7 @@ final class ImageDerivativeController implements ControllerInterface
             $timing[$k] = '';
         }
 
-        $imageRepo = $this->entityManager->getRepository(ImageEntity::class);
+        $imageRepo = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class);
 
         // parseRequest() fills these by mutating $this's own properties;
         // returning its result directly (rather than re-reading

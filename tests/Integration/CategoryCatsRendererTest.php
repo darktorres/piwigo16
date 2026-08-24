@@ -28,8 +28,11 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -169,7 +172,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             ->clear();
         $em = EntityManagerFactory::build($this->conn);
         $categoryRepo = new CategoryRepository($em, $currentConfig);
-        $imageRepo = $em->getRepository(ImageEntity::class);
+        $imageRepo = TypedRepository::narrow($em->getRepository(ImageEntity::class), ImageRepository::class);
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
@@ -179,7 +182,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $permissionService = new PermissionService(
             new PermissionRepository($em),
-            $em->getRepository(GroupEntity::class),
+            TypedRepository::narrow($em->getRepository(GroupEntity::class), GroupRepository::class),
             $categoryRepo,
             CurrentUserTestFactory::get(),
             $filterState,

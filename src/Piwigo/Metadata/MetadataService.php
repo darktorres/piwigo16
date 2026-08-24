@@ -6,6 +6,7 @@ namespace Piwigo\Metadata;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CacheFactory;
@@ -18,8 +19,10 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringHelper;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImagePathHelper;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Metadata\Event\CleanIptcValue;
@@ -29,9 +32,9 @@ use Piwigo\Metadata\Projection\SvgDimensions;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 use RuntimeException;
 use SimpleXMLElement;
 
@@ -568,8 +571,8 @@ final readonly class MetadataService
         // (TagService::$imageService is itself an explicit per-method
         // parameter, not a constructor property, for the same reasoning).
         $tagServiceCategoryService = new CategoryService($this->lang, new CategoryRepository($entityManager, $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, new Translator($this->currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), new AccessLevelChecker($this->currentUser, $this->currentConfig));
-        $tagServiceImageService = new ImageService($entityManager->getRepository(ImageEntity::class), new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
-        $tagService = new TagService($this->lang, $entityManager->getRepository(TagEntity::class), $permissionService, new ActivityService($entityManager->getRepository(ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger);
+        $tagServiceImageService = new ImageService(TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class), new ActivityService(TypedRepository::narrow($entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)), $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
+        $tagService = new TagService($this->lang, TypedRepository::narrow($entityManager->getRepository(TagEntity::class), TagRepository::class), $permissionService, new ActivityService(TypedRepository::narrow($entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());

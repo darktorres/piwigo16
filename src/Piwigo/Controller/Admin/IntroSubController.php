@@ -15,6 +15,7 @@ use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Admin\Integrity\Projection\CheckIntegrityView;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
@@ -39,6 +40,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
@@ -563,7 +565,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         ));
 
         // Check integrity
-        $integrityRepo = $this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class);
+        $integrityRepo = TypedRepository::narrow($this->entityManager->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class);
         $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState);
         // add internal checks
         new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService, $this->currentConfig)

@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\Projection\GroupedCountSince;
@@ -85,7 +86,7 @@ use Piwigo\Users\UserInfoEntity;
  */
 function historyTestRepo(): HistoryRepository
 {
-    return EntityManagerFactory::build(DbConnection::build())->getRepository(HistoryEntity::class);
+    return TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(HistoryEntity::class), HistoryRepository::class);
 }
 
 /**
@@ -100,7 +101,7 @@ function historyTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
 
-    return [$em->getRepository(HistoryEntity::class), $em];
+    return [TypedRepository::narrow($em->getRepository(HistoryEntity::class), HistoryRepository::class), $em];
 }
 
 function historyTestInsertLine(int $userId, string $date, string $time): int

@@ -9,8 +9,10 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\DateHelper;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryRepository;
 use Piwigo\Sort\UserSortField;
 use Piwigo\Users\Projection\UserListRow;
 use Piwigo\Users\UserListCriteria;
@@ -119,7 +121,7 @@ final readonly class UserRowFetcher
                  */
                 $lastVisit = $this->authService->getUserLastVisitFromHistory(
                     $id,
-                    $this->entityManager->getRepository(HistoryEntity::class),
+                    TypedRepository::narrow($this->entityManager->getRepository(HistoryEntity::class), HistoryRepository::class),
                     true
                 );
             }

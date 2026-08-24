@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\Request\EmptyLoungeRequest;
 
 /**
@@ -43,7 +44,7 @@ final class LoungeMaintenance
         }
 
         // is the oldest photo in the lounge older than lounge maximum waiting time?
-        $dateAvailable = $entityManager->getRepository(ImageEntity::class)
+        $dateAvailable = TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class)
             ->findOldestLoungeAgeInfo();
         if ($dateAvailable === null) {
             return false;

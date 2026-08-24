@@ -8,6 +8,7 @@ use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
@@ -65,7 +66,7 @@ use Piwigo\Group\UserGroupEntity;
  */
 function groupTestRepo(): GroupRepository
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), GroupRepository::class);
 
     return $repo;
 }
@@ -81,7 +82,7 @@ function groupTestRepo(): GroupRepository
 function groupTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
-    $repo = $em->getRepository(GroupEntity::class);
+    $repo = TypedRepository::narrow($em->getRepository(GroupEntity::class), GroupRepository::class);
 
     return [$repo, $em];
 }

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\DriverManager;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 // confGetParam() for a property-backed key reads via reflection on
@@ -48,7 +50,7 @@ function unconnectedConfigService(): ConfigService
         'dbname' => '',
         'host' => 'localhost',
     ]);
-    $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class), ConfigRepository::class);
 
     return new ConfigService($repo, CurrentConfigTestFactory::get());
 }

@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
@@ -17,6 +18,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -31,14 +33,18 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -89,7 +95,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $paths = Kernel::container()->get(Paths::class);
         self::assertInstanceOf(Paths::class, $paths);
-        $sessionService = new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
+        $sessionService = new SessionService(TypedRepository::narrow($em->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get());
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
@@ -97,7 +103,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $permissionService = new PermissionService(
             new PermissionRepository($em),
-            $em->getRepository(GroupEntity::class),
+            TypedRepository::narrow($em->getRepository(GroupEntity::class), GroupRepository::class),
             new CategoryRepository($em, CurrentConfigTestFactory::get()),
             CurrentUserTestFactory::get(),
             $filterState,
@@ -113,19 +119,19 @@ final class FilterResolverTest extends IntegrationTestCase
             $accessLevelChecker,
         );
         $imageService = new ImageService(
-            $em->getRepository(ImageEntity::class),
-            new ActivityService($em->getRepository(ActivityEntity::class)),
+            TypedRepository::narrow($em->getRepository(ImageEntity::class), ImageRepository::class),
+            new ActivityService(TypedRepository::narrow($em->getRepository(ActivityEntity::class), ActivityRepository::class)),
             new EventDispatcher(),
             CurrentConfigTestFactory::get(),
             $paths,
             $categoryService,
         );
-        $caddieRepo = $em->getRepository(CaddieEntity::class);
+        $caddieRepo = TypedRepository::narrow($em->getRepository(CaddieEntity::class), CaddieRepository::class);
         $userService = new UserService(
             LangTestFactory::get(),
             new UserRepository($em, new EventDispatcher(), CurrentConfigTestFactory::get()),
-            $em->getRepository(GroupEntity::class),
-            new ActivityService($em->getRepository(ActivityEntity::class)),
+            TypedRepository::narrow($em->getRepository(GroupEntity::class), GroupRepository::class),
+            new ActivityService(TypedRepository::narrow($em->getRepository(ActivityEntity::class), ActivityRepository::class)),
             HtmlServiceTestFactory::build(),
             $sessionService,
             new EventDispatcher(),

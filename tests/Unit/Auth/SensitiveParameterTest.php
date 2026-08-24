@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
@@ -11,6 +12,7 @@ use Piwigo\Auth\Event\TryLogUser;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
 use Piwigo\Core\ConnectedWithSession;
@@ -19,7 +21,9 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -73,12 +77,12 @@ function sensitiveParameterTestAuthService(): AuthService
 
     return new AuthService(
         new AuthRepository(EntityManagerFactory::build($conn)),
-        new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
+        new ActivityService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class), ActivityRepository::class)),
         HtmlServiceTestFactory::build(),
         new PasswordService(new PasswordRepository(EntityManagerFactory::build($conn)), new DeploymentPolicy()),
         new CookieService(),
-        EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class),
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $currentConfig),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class),
+        new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), $currentConfig),
         EventDispatcherTestFactory::get(),
         PageStateTestFactory::get(),
         CurrentUserTestFactory::get(),

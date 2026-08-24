@@ -16,11 +16,13 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\DerivativeUrlStyleOverride;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\CenterOfInterest;
 use Piwigo\Image\Projection\DerivativePathInfo;
@@ -59,11 +61,11 @@ final readonly class PictureCoiPageRenderer
         }
 
         if ($pictureCoiRequest->isSubmitted) {
-            $this->entityManager->getRepository(ImageEntity::class)
+            TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                 ->updateCoi($image_id, $pictureCoiRequest->coi);
         }
 
-        $image = $this->entityManager->getRepository(ImageEntity::class)
+        $image = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
             ->findById($image_id);
         if ($image === null) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');

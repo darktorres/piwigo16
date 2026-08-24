@@ -15,7 +15,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Group\Projection\GroupListRow;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -59,7 +61,7 @@ final readonly class GroupListPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
-        $group_repo = $this->entityManager->getRepository(GroupEntity::class);
+        $group_repo = TypedRepository::narrow($this->entityManager->getRepository(GroupEntity::class), GroupRepository::class);
         $groups = $group_repo->findAllBasic();
 
         $group_counter = 0;

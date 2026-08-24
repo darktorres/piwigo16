@@ -15,6 +15,7 @@ use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -633,7 +634,7 @@ test('getSize() persists the real, correctly-ordered width/height back onto the 
     // name when allowed' (reproduced live there: DeadlockException).
     DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), ImageRepository::class);
 
     $conn->createQueryBuilder()
         ->insert('images')

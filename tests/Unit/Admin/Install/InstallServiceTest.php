@@ -7,6 +7,7 @@ use Piwigo\Admin\Install\InstallService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -17,6 +18,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -54,7 +56,7 @@ function installServiceTestConfigService(): ConfigService
     $conn = DbConnection::build();
 
     return new ConfigService(
-        EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class),
+        TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class), ConfigRepository::class),
         CurrentConfigTestFactory::get(),
     );
 }

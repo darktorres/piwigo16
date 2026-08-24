@@ -20,8 +20,10 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Db\TypedRepository;
     use Piwigo\Rate\Projection\RatingScoreSummary;
     use Piwigo\Rate\RateEntity;
+    use Piwigo\Rate\RateRepository;
     use Piwigo\Rate\RateService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -71,7 +73,7 @@ namespace Piwigo\Tests\Integration {
             if (! $accessControl instanceof AccessControl) {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
-            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+            $this->service = new RateService($accessControl, TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), RateRepository::class), new CookieService(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         }
 
         public function testRateReturnsFalseForANullRate(): void

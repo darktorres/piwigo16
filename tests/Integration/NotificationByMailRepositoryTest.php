@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\Projection\NotificationInsertRow;
 use Piwigo\Notification\UserMailNotificationEntity;
@@ -52,7 +53,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class);
     }
 
     public function testCountByCheckKeyFindsAnExistingKey(): void

@@ -20,10 +20,12 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Validation\InputValidator;
@@ -75,7 +77,7 @@ final class RatingPageRenderer
             $exclude_filter_user = false;
         }
 
-        $rate_repository = $entityManager->getRepository(RateEntity::class);
+        $rate_repository = TypedRepository::narrow($entityManager->getRepository(RateEntity::class), RateRepository::class);
 
         $usernames_by_id = $rate_repository->findUsernamesById();
         $users = [];

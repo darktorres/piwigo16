@@ -16,6 +16,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageDuplicateField;
@@ -63,7 +64,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class);
+        $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), ImageRepository::class);
     }
 
     #[Override]

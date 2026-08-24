@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentEntity;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentInsertData;
 use Piwigo\Common\Enum\SortOrder;
@@ -23,6 +24,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\PaginationService;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Html\Event\RenderCommentContent;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -72,7 +74,7 @@ final class PictureCommentRenderer
      */
     public function render(Lang $lang, AccessLevelChecker $accessLevelChecker, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, EventDispatcher $eventDispatcher, PageState $pageState, CurrentUser $currentUser, CurrentConfig $currentConfig, CsrfService $csrfService, MailerInterface $mailer, HtmlRenderingInterface $htmlRenderer, EntityManagerInterface $entityManager, Renderer $renderer): PictureCommentsResult
     {
-        $commentRepository = $entityManager->getRepository(CommentEntity::class);
+        $commentRepository = TypedRepository::narrow($entityManager->getRepository(CommentEntity::class), CommentRepository::class);
         $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService($currentConfig), $mailer, $htmlRenderer, $urlService, $eventDispatcher, $pageState, $currentUser, $currentConfig, $accessLevelChecker);
 
         $commentAction = null;

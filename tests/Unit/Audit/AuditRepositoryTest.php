@@ -11,6 +11,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 
 /**
  * Piwigo\Audit\AuditRepository -- has its own dedicated
@@ -31,7 +32,7 @@ use Piwigo\Db\EntityManagerFactory;
 function auditTestRepo(): AuditRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(AuditLogEntity::class);
+    $repo = TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(AuditLogEntity::class), AuditRepository::class);
 
     return $repo;
 }

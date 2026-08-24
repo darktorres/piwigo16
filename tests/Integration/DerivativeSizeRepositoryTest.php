@@ -9,6 +9,7 @@ use LogicException;
 use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\DerivativeSizeEntity;
 use Piwigo\Image\DerivativeSizeRepository;
 
@@ -57,7 +58,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->originalRows = $this->conn->fetchAllAssociative('SELECT * FROM derivative_size');
 
-        $repo = EntityManagerFactory::build($this->conn)->getRepository(DerivativeSizeEntity::class);
+        $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(DerivativeSizeEntity::class), DerivativeSizeRepository::class);
         $this->repo = $repo;
     }
 

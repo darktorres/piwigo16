@@ -15,6 +15,7 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Cache\EffectivePermissionsCachePool;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -48,6 +49,7 @@ use Piwigo\Core\ThemeCatalog;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SortRenderer;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Lang\LangService;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
@@ -1400,7 +1402,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->htmlRenderer,
             $this->passwordService,
             new CookieService(),
-            $this->entityManager->getRepository(UserFailedLoginEntity::class),
+            TypedRepository::narrow($this->entityManager->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class),
             $this->sessionService,
             $this->eventDispatcher,
             $pageState,

@@ -196,6 +196,9 @@ function mail_service_start_fake_smtp(string $mode): array
         $port = random_int(20_000, 60_000);
         $markerFile = tempnam(sys_get_temp_dir(), 'pwg_smtp_marker_');
         $readyFile = tempnam(sys_get_temp_dir(), 'pwg_smtp_ready_');
+        if ($markerFile === false || $readyFile === false) {
+            throw new RuntimeException('tempnam() failed');
+        }
         @unlink($markerFile);
         @unlink($readyFile);
 

@@ -424,5 +424,18 @@
                 <file name="tests/Browser/PictureControllerTest.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
+        <PossiblyNullOperand>
+            <errorLevel type="suppress">
+                <!-- MailService::mail()'s $errorMessage: starts null, only
+                     ever set alongside $ret=false in the same catch block.
+                     The trigger_error() call is itself gated behind `!
+                     $ret`, so $errorMessage is never null there. PHPStan's
+                     flow analysis proves this correlation (confirmed:
+                     adding a `?? ''` guard gets `nullCoalesce.variable`,
+                     "always exists and is not nullable"); Psalm can't do
+                     this cross-variable correlation. -->
+                <file name="src/Piwigo/Mail/MailService.php"/>
+            </errorLevel>
+        </PossiblyNullOperand>
     </issueHandlers>
 </psalm>

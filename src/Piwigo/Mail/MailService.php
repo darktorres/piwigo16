@@ -928,7 +928,7 @@ final class MailService implements MailerInterface
                 // MailService -- a genuine, long-standing bug carried forward
                 // across all 3 codebases, not a regression introduced here.
                 $cacheKey = $contentType . '-' . $langCode . '-' . $args->theme;
-                if (! self::emptyValue($args->authKey)) {
+                if (! self::emptyValue($args->authKey) && $args->authKey !== null) {
                     $cacheKey .= '-' . $args->authKey;
                 }
 
@@ -1171,7 +1171,7 @@ final class MailService implements MailerInterface
                 return;
             }
             if (! $success) {
-                fwrite($file, 'ERROR: ' . $errorMessage . "\n\n");
+                fwrite($file, 'ERROR: ' . ($errorMessage ?? '') . "\n\n");
             }
             fwrite($file, $mail->toString());
             fclose($file);

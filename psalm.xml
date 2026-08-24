@@ -300,6 +300,14 @@
                      the array shape off that assert(), so it still sees
                      these keys as possibly-undefined/possibly-null. -->
                 <file name="tests/Unit/Db/DbConnectionTest.php"/>
+                <!-- debug_backtrace()/Exception::getTrace() frame shape:
+                     PHPStan's own stub declares 'function' as always-present
+                     (`array{function: string, line?: int, ...}`); Psalm's
+                     stub treats it as optional. Confirmed by adding a `??
+                     null` guard and having PHPStan reject it
+                     (`nullCoalesce.offset`, "always exists ... on left side
+                     of ??"). -->
+                <file name="tests/Unit/Auth/SensitiveParameterTest.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

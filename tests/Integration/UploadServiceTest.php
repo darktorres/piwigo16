@@ -1871,7 +1871,8 @@ final class UploadServiceTest extends IntegrationTestCase
             $message = $service->readyForUploadMessage();
 
             self::assertNull($message);
-            self::assertSame(0o777, fileperms($root . 'upload') & 0o777, 'the recovery chmod() must set exactly 0777, not a narrower mode that happens to still satisfy is_writable() from the owning user\'s own perspective');
+            $uploadPerms = fileperms($root . 'upload');
+            self::assertSame(0o777, $uploadPerms !== false ? $uploadPerms & 0o777 : false, 'the recovery chmod() must set exactly 0777, not a narrower mode that happens to still satisfy is_writable() from the owning user\'s own perspective');
         } finally {
             chmod($root . 'upload', 0o777);
         }
@@ -1891,7 +1892,8 @@ final class UploadServiceTest extends IntegrationTestCase
         $method = new ReflectionMethod(UploadService::class, 'prepareDirectoryStatic');
         $method->invoke(null, $dir);
 
-        self::assertSame(0o777, fileperms($dir) & 0o777);
+        $dirPerms = fileperms($dir);
+        self::assertSame(0o777, $dirPerms !== false ? $dirPerms & 0o777 : false);
     }
 
     /**
@@ -1909,7 +1911,8 @@ final class UploadServiceTest extends IntegrationTestCase
         $method->invoke(null, $dir);
 
         self::assertDirectoryExists($dir);
-        self::assertSame(0o777, fileperms($dir) & 0o777, 'mkdir() must genuinely produce mode 0777 -- the umask(0)/restore pair around it exists precisely to prevent the process umask from narrowing this');
+        $dirPerms = fileperms($dir);
+        self::assertSame(0o777, $dirPerms !== false ? $dirPerms & 0o777 : false, 'mkdir() must genuinely produce mode 0777 -- the umask(0)/restore pair around it exists precisely to prevent the process umask from narrowing this');
     }
 
     /**

@@ -470,8 +470,10 @@ test('fileUploadErrorMessage maps every UPLOAD_ERR_* constant to a non-empty mes
 test('fileUploadErrorMessage embeds the real upload_max_filesize value for UPLOAD_ERR_INI_SIZE', function (): void {
     $service = upload_service_test_make();
 
+    $uploadMaxFilesize = ini_get('upload_max_filesize');
+    $uploadMaxFilesize = $uploadMaxFilesize !== false ? $uploadMaxFilesize : '';
     expect($service->fileUploadErrorMessage(UPLOAD_ERR_INI_SIZE))
-        ->toBe('The uploaded file exceeds the upload_max_filesize directive in php.ini: ' . ini_get('upload_max_filesize') . 'B');
+        ->toBe('The uploaded file exceeds the upload_max_filesize directive in php.ini: ' . $uploadMaxFilesize . 'B');
 });
 
 test('getIniSize converts a shorthand ini value to bytes', function (): void {

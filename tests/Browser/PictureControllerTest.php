@@ -1272,8 +1272,10 @@ it('remembers a picture_deriv cookie choice in the session across a follow-up re
         throw new RuntimeException('failed to read cookie jar: ' . $session['cookieJar']);
     }
     $baseUrlParts = parse_url($baseUrl);
-    $cookieHost = is_string($baseUrlParts['host'] ?? null) ? $baseUrlParts['host'] : '127.0.0.1';
-    $cookiePath = is_string($baseUrlParts['path'] ?? null) && $baseUrlParts['path'] !== '' ? $baseUrlParts['path'] : '/';
+    $baseUrlParts_host = is_array($baseUrlParts) ? ($baseUrlParts['host'] ?? null) : null;
+    $cookieHost = is_string($baseUrlParts_host) ? $baseUrlParts_host : '127.0.0.1';
+    $baseUrlParts_path = is_array($baseUrlParts) ? ($baseUrlParts['path'] ?? null) : null;
+    $cookiePath = is_string($baseUrlParts_path) && $baseUrlParts_path !== '' ? $baseUrlParts_path : '/';
     file_put_contents(
         $session['cookieJar'],
         $jarContents . "{$cookieHost}\tFALSE\t{$cookiePath}\tFALSE\t0\tpicture_deriv\tlarge\n"

@@ -68,6 +68,7 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Db\SortRenderer;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
@@ -438,53 +439,55 @@ return [
     // takes ClassMetadata, which PHP-DI can't autowire. Resolved the
     // standard Doctrine way: EntityManager::getRepository() reads the
     // #[ORM\Entity(repositoryClass: ...)] attribute and instantiates the
-    // custom repository class correctly -- guaranteed by that same
-    // attribute, so the declared return type is enough (PHP itself throws
-    // a TypeError if it's ever wrong; phpstan-doctrine's own generic
-    // tracking confirms it statically too, once installed).
-    ConfigRepository::class => factory(static fn (EntityManagerInterface $em): ConfigRepository => $em->getRepository(ConfigEntry::class)),
+    // custom repository class correctly, guaranteed by that same
+    // attribute -- phpstan-doctrine's own generic tracking confirms it
+    // statically. TypedRepository::narrow() exists for Psalm, which has
+    // no equivalent repositoryClass-aware return-type resolution and
+    // would otherwise only ever see the generic EntityRepository<T>;
+    // its assert() is a real runtime check on top, not just a cast.
+    ConfigRepository::class => factory(static fn (EntityManagerInterface $em): ConfigRepository => TypedRepository::narrow($em->getRepository(ConfigEntry::class), ConfigRepository::class)),
 
-    LangRepository::class => factory(static fn (EntityManagerInterface $em): LangRepository => $em->getRepository(LanguageEntity::class)),
+    LangRepository::class => factory(static fn (EntityManagerInterface $em): LangRepository => TypedRepository::narrow($em->getRepository(LanguageEntity::class), LangRepository::class)),
 
-    AuditRepository::class => factory(static fn (EntityManagerInterface $em): AuditRepository => $em->getRepository(AuditLogEntity::class)),
+    AuditRepository::class => factory(static fn (EntityManagerInterface $em): AuditRepository => TypedRepository::narrow($em->getRepository(AuditLogEntity::class), AuditRepository::class)),
 
-    SessionRepository::class => factory(static fn (EntityManagerInterface $em): SessionRepository => $em->getRepository(SessionEntity::class)),
+    SessionRepository::class => factory(static fn (EntityManagerInterface $em): SessionRepository => TypedRepository::narrow($em->getRepository(SessionEntity::class), SessionRepository::class)),
 
-    GroupRepository::class => factory(static fn (EntityManagerInterface $em): GroupRepository => $em->getRepository(GroupEntity::class)),
+    GroupRepository::class => factory(static fn (EntityManagerInterface $em): GroupRepository => TypedRepository::narrow($em->getRepository(GroupEntity::class), GroupRepository::class)),
 
-    TagRepository::class => factory(static fn (EntityManagerInterface $em): TagRepository => $em->getRepository(TagEntity::class)),
+    TagRepository::class => factory(static fn (EntityManagerInterface $em): TagRepository => TypedRepository::narrow($em->getRepository(TagEntity::class), TagRepository::class)),
 
-    ImageRepository::class => factory(static fn (EntityManagerInterface $em): ImageRepository => $em->getRepository(ImageEntity::class)),
+    ImageRepository::class => factory(static fn (EntityManagerInterface $em): ImageRepository => TypedRepository::narrow($em->getRepository(ImageEntity::class), ImageRepository::class)),
 
-    CaddieRepository::class => factory(static fn (EntityManagerInterface $em): CaddieRepository => $em->getRepository(CaddieEntity::class)),
+    CaddieRepository::class => factory(static fn (EntityManagerInterface $em): CaddieRepository => TypedRepository::narrow($em->getRepository(CaddieEntity::class), CaddieRepository::class)),
 
-    NotificationByMailRepository::class => factory(static fn (EntityManagerInterface $em): NotificationByMailRepository => $em->getRepository(UserMailNotificationEntity::class)),
+    NotificationByMailRepository::class => factory(static fn (EntityManagerInterface $em): NotificationByMailRepository => TypedRepository::narrow($em->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class)),
 
-    SiteRepository::class => factory(static fn (EntityManagerInterface $em): SiteRepository => $em->getRepository(SiteEntity::class)),
+    SiteRepository::class => factory(static fn (EntityManagerInterface $em): SiteRepository => TypedRepository::narrow($em->getRepository(SiteEntity::class), SiteRepository::class)),
 
-    FeedRepository::class => factory(static fn (EntityManagerInterface $em): FeedRepository => $em->getRepository(FeedEntity::class)),
+    FeedRepository::class => factory(static fn (EntityManagerInterface $em): FeedRepository => TypedRepository::narrow($em->getRepository(FeedEntity::class), FeedRepository::class)),
 
-    ActivityRepository::class => factory(static fn (EntityManagerInterface $em): ActivityRepository => $em->getRepository(ActivityEntity::class)),
+    ActivityRepository::class => factory(static fn (EntityManagerInterface $em): ActivityRepository => TypedRepository::narrow($em->getRepository(ActivityEntity::class), ActivityRepository::class)),
 
-    CommentRepository::class => factory(static fn (EntityManagerInterface $em): CommentRepository => $em->getRepository(CommentEntity::class)),
+    CommentRepository::class => factory(static fn (EntityManagerInterface $em): CommentRepository => TypedRepository::narrow($em->getRepository(CommentEntity::class), CommentRepository::class)),
 
-    PluginRepository::class => factory(static fn (EntityManagerInterface $em): PluginRepository => $em->getRepository(PluginEntity::class)),
+    PluginRepository::class => factory(static fn (EntityManagerInterface $em): PluginRepository => TypedRepository::narrow($em->getRepository(PluginEntity::class), PluginRepository::class)),
 
-    PluginMigrationRepository::class => factory(static fn (EntityManagerInterface $em): PluginMigrationRepository => $em->getRepository(PluginMigrationEntity::class)),
+    PluginMigrationRepository::class => factory(static fn (EntityManagerInterface $em): PluginMigrationRepository => TypedRepository::narrow($em->getRepository(PluginMigrationEntity::class), PluginMigrationRepository::class)),
 
-    ThemeRepository::class => factory(static fn (EntityManagerInterface $em): ThemeRepository => $em->getRepository(ThemeEntity::class)),
+    ThemeRepository::class => factory(static fn (EntityManagerInterface $em): ThemeRepository => TypedRepository::narrow($em->getRepository(ThemeEntity::class), ThemeRepository::class)),
 
-    RateRepository::class => factory(static fn (EntityManagerInterface $em): RateRepository => $em->getRepository(RateEntity::class)),
+    RateRepository::class => factory(static fn (EntityManagerInterface $em): RateRepository => TypedRepository::narrow($em->getRepository(RateEntity::class), RateRepository::class)),
 
-    HistoryRepository::class => factory(static fn (EntityManagerInterface $em): HistoryRepository => $em->getRepository(HistoryEntity::class)),
+    HistoryRepository::class => factory(static fn (EntityManagerInterface $em): HistoryRepository => TypedRepository::narrow($em->getRepository(HistoryEntity::class), HistoryRepository::class)),
 
-    ExtensionIgnoredUpdateRepository::class => factory(static fn (EntityManagerInterface $em): ExtensionIgnoredUpdateRepository => $em->getRepository(ExtensionIgnoredUpdateEntity::class)),
+    ExtensionIgnoredUpdateRepository::class => factory(static fn (EntityManagerInterface $em): ExtensionIgnoredUpdateRepository => TypedRepository::narrow($em->getRepository(ExtensionIgnoredUpdateEntity::class), ExtensionIgnoredUpdateRepository::class)),
 
-    UserFailedLoginRepository::class => factory(static fn (EntityManagerInterface $em): UserFailedLoginRepository => $em->getRepository(UserFailedLoginEntity::class)),
+    UserFailedLoginRepository::class => factory(static fn (EntityManagerInterface $em): UserFailedLoginRepository => TypedRepository::narrow($em->getRepository(UserFailedLoginEntity::class), UserFailedLoginRepository::class)),
 
-    PasswordResetRequestRepository::class => factory(static fn (EntityManagerInterface $em): PasswordResetRequestRepository => $em->getRepository(PasswordResetRequestEntity::class)),
+    PasswordResetRequestRepository::class => factory(static fn (EntityManagerInterface $em): PasswordResetRequestRepository => TypedRepository::narrow($em->getRepository(PasswordResetRequestEntity::class), PasswordResetRequestRepository::class)),
 
-    IntegrityIgnoredAnomalyRepository::class => factory(static fn (EntityManagerInterface $em): IntegrityIgnoredAnomalyRepository => $em->getRepository(IntegrityIgnoredAnomalyEntity::class)),
+    IntegrityIgnoredAnomalyRepository::class => factory(static fn (EntityManagerInterface $em): IntegrityIgnoredAnomalyRepository => TypedRepository::narrow($em->getRepository(IntegrityIgnoredAnomalyEntity::class), IntegrityIgnoredAnomalyRepository::class)),
 
     // Backs bin/piwigo's registered `migrations:migrate` command --
     // CLI usage only. Piwigo\Admin\Install\InstallWizard deliberately does

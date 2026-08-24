@@ -1032,7 +1032,8 @@ function pictureSessionDerivType(string $pwgIdCookieValue): ?string
     $row = H::dbFetchAssoc($db, sprintf("SELECT data FROM sessions WHERE id LIKE '%%%s'", H::dbEscape($db, $pwgIdCookieValue)));
     H::dbClose($db);
 
-    $data = is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
+    $dataRaw = is_array($row) ? ($row['data'] ?? null) : null;
+    $data = is_string($dataRaw) ? $dataRaw : '';
     if (preg_match('/pwg_picture_deriv\|s:\d+:"([^"]*)";/', $data, $matches) === 1) {
         return $matches[1];
     }

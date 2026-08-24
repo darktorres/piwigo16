@@ -358,7 +358,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(
                 '/fake-index?' . json_encode([
                     'chronology_date' => ['2024', '7'],
-                ]) . '|removed=' . json_encode(['start']),
+                ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR),
                 $this->dig($nav, ['next', 'URL'])
             );
         }
@@ -638,13 +638,13 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         public function makeIndexUrl(array $params = []): string
         {
-            return '/fake-index?' . json_encode($params);
+            return '/fake-index?' . json_encode($params, JSON_THROW_ON_ERROR);
         }
 
         #[Override]
         public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
         {
-            return '/fake-index?' . json_encode($redefined) . '|removed=' . json_encode($removed);
+            return '/fake-index?' . json_encode($redefined, JSON_THROW_ON_ERROR) . '|removed=' . json_encode($removed, JSON_THROW_ON_ERROR);
         }
 
         #[Override]

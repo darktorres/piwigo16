@@ -110,8 +110,10 @@ final class QNumericRangeScope extends QSearchScope
         // shape; still discriminated at runtime since the property is a
         // union across both real writers.
         $scope_data = $token->scope_data;
-        $range = is_array($scope_data) && is_array($scope_data['range'] ?? null) ? $scope_data['range'] : ['', ''];
-        $strict = is_array($scope_data) && is_array($scope_data['strict'] ?? null) ? $scope_data['strict'] : [0, 0];
+        $scope_data_range = is_array($scope_data) ? ($scope_data['range'] ?? null) : null;
+        $range = is_array($scope_data_range) ? $scope_data_range : ['', ''];
+        $scope_data_strict = is_array($scope_data) ? ($scope_data['strict'] ?? null) : null;
+        $strict = is_array($scope_data_strict) ? $scope_data_strict : [0, 0];
         $range_0 = $range[0];
         $range_1 = $range[1];
 

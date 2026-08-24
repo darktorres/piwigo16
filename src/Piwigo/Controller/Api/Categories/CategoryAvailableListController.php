@@ -268,7 +268,7 @@ final readonly class CategoryAvailableListController implements ControllerInterf
                         continue;
                     }
 
-                    $categoryIdVoForRandom = is_int($category['id']) ? CategoryId::tryFrom($category['id']) : null;
+                    $categoryIdVoForRandom = CategoryId::tryFrom($category['id']);
                     $substituteImageId = $categoryIdVoForRandom instanceof CategoryId
                         ? $this->categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
                             id: $categoryIdVoForRandom,

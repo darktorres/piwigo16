@@ -36,7 +36,7 @@ final readonly class LanguagesNewView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.cluetip', 'themes/default/js/plugins/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::script('languages_new', 'themes/admin/default/js/languages_new.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
             AssetContribution::css('themes/admin/default/css/pages/languages_new.css', id: 'languages_new'),
         ];

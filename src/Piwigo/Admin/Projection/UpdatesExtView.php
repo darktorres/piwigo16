@@ -43,14 +43,14 @@ final readonly class UpdatesExtView implements View, HasPageAssets, ExposesPageD
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.ajaxmanager', 'themes/default/js/plugins/jquery.ajaxmanager.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('jquery.jgrowl', 'themes/default/js/plugins/jquery.jgrowl_minimized.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery.jgrowl.css'),
+            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('jquery.jgrowl', 'https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css'),
             AssetContribution::css('themes/admin/default/css/pages/updates_ext.css', id: 'updates_ext'),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
-            AssetContribution::script('updates_ext', 'themes/admin/default/js/updates_ext.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.effect-blind', 'jquery.ajaxmanager', 'jquery.jgrowl', 'common', 'jquery.confirm', 'page-data']),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::script('updates_ext', 'themes/admin/default/js/updates_ext.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.ajaxmanager', 'jquery.jgrowl', 'common', 'jquery.confirm', 'page-data']),
         ];
     }
 

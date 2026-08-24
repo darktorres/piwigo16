@@ -21,7 +21,7 @@ test('pageAssets registers only the 3 unconditional entries when no comment has 
     expect($view->pageAssets())
         ->toEqual([
             AssetContribution::css('themes/default/css/pages/comment_list.css', id: 'comment_list'),
-            AssetContribution::script('jquery.ajaxmanager', 'themes/default/js/plugins/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
             AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager', 'page-data']),
         ]);
 });

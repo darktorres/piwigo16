@@ -39,8 +39,8 @@ final readonly class SiteManagerView implements View, HasPageAssets, ExposesPage
     {
         return [
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::css('themes/admin/default/css/pages/site_manager.css', id: 'site_manager'),
             AssetContribution::script('site_manager', 'themes/admin/default/js/site_manager.js', loadMode: LoadMode::Footer, dependsOn: ['common', 'jquery.confirm', 'page-data']),
         ];

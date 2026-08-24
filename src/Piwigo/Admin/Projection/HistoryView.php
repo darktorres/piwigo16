@@ -30,7 +30,6 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
         public string $start,
         public string $end,
         public int $guestId,
-        public string $rootPath,
         public string $jqueryCode,
     ) {}
 
@@ -41,11 +40,11 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            ...new DatepickerView(rootPath: $this->rootPath, jqueryCode: $this->jqueryCode)
+            ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
             AssetContribution::script('history', 'themes/admin/default/js/history.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),

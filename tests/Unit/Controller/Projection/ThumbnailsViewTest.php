@@ -43,7 +43,7 @@ test('pageAssets registers the 3 entries and exposedPageData includes error_icon
     expect($view->pageAssets())
         ->toEqual([
             AssetContribution::css('themes/default/css/pages/thumbnails.css', id: 'thumbnails'),
-            AssetContribution::script('jquery.ajaxmanager', 'themes/default/js/plugins/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
             AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager', 'page-data']),
         ]);
     expect($view->exposedPageData())

@@ -85,7 +85,7 @@ final readonly class ThemeBaseAssets
             $assets[] = AssetContribution::css('themes/admin/' . $id . '/css/components/general.css', order: -9);
         }
 
-        $assets[] = AssetContribution::script('jquery', 'themes/default/js/jquery.min.js');
+        $assets[] = AssetContribution::script('jquery', 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js');
 
         return $assets;
     }
@@ -104,7 +104,7 @@ final readonly class ThemeBaseAssets
     public static function lateAdminScripts(): array
     {
         return [
-            AssetContribution::script('jquery.tipTip', 'themes/default/js/plugins/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
             AssetContribution::script('footer', 'themes/admin/default/js/footer.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.tipTip', 'page-data']),
         ];
     }

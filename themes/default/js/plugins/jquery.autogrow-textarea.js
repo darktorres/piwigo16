@@ -1,6 +1,14 @@
 (function($) {
 
     /*
+     * docs/PLAN.md P46's vendor-CDN migration: kept vendored, not
+     * retargeted -- the one same-named real package found
+     * (rotundasoftware/jquery.autogrow-textarea) is a different,
+     * unrelated implementation (confirmed via a real content diff:
+     * different UMD wrapper, different attribution comment), and no
+     * other real source for this exact "ripped from Facebook" snippet
+     * could be found anywhere.
+     *
      * Auto-growing textareas; technique ripped from Facebook
      */
     $.fn.autogrow = function(options) {

@@ -459,7 +459,6 @@ final readonly class PictureModifyPageRenderer
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             csrfToken: $this->csrfService
                 ->getToken(),
-            rootPath: $this->paths->root,
             jqueryCode: $jquery_code,
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $this->urlService->getRootUrl(),

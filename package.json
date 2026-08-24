@@ -51,7 +51,27 @@
     "vitest": "4.1.11"
   },
   "dependencies": {
+    "chart.js": "2.9.3",
+    "datatables.net": "1.10.11",
+    "jgrowl": "1.3.0",
+    "jquery": "1.11.3",
+    "jquery-cluetip": "github:kswedberg/jquery-cluetip#1.2.6",
+    "jquery-confirm": "3.3.4",
+    "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
+    "jquery-ui": "1.10.4",
+    "jquery.ajaxmanager": "github:aFarkas/Ajaxmanager#3.12",
+    "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",
+    "jquery.cookie": "1.4.1",
+    "jquery.jcrop": "github:tapmodo/Jcrop#v0.9.12",
+    "jqtree": "1.4.12",
+    "moment": "2.26.0",
     "openapi-fetch": "0.17.0",
+    "piecon": "github:lipka/piecon#0.5.0",
+    "plupload": "github:moxiecode/plupload#v2.1.2",
+    "selectize": "github:selectize/selectize.js#v0.11.2",
+    "tipTip": "github:drewwilson/TipTip#277e33629e",
+    "tus-js-client": "4.3.0",
+    "underscore": "1.5.2",
     "web-vitals": "6.1.1"
   },
   "overrides": {

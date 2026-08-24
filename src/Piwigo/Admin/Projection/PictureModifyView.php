@@ -63,7 +63,6 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         public array $representedAlbums,
         public array $cacheKeys,
         public string $csrfToken,
-        public string $rootPath,
         public string $jqueryCode,
         public string $colorscheme,
         public string $rootUrl,
@@ -78,16 +77,16 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         return [
             ...new AutosizeView()
                 ->pageAssets(),
-            ...new DatepickerView(rootPath: $this->rootPath, jqueryCode: $this->jqueryCode)
+            ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('themes/admin/default/css/pages/picture_modify.css', id: 'picture_modify'),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('picture_modify', 'themes/admin/default/js/picture_modify.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox', 'page-data']),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

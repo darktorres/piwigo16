@@ -50,12 +50,12 @@ final readonly class GroupListView implements View, HasPageAssets, ExposesPageDa
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css'),
             AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.js', loadMode: LoadMode::Footer),
             AssetContribution::script('group_list', 'themes/admin/default/js/group_list.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.selectize', 'page-data', 'LocalStorageCache']),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
         ];

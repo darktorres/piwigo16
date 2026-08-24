@@ -32,19 +32,20 @@ use LogicException;
  *   dependency-respecting topologically sorted
  *   (`ScriptLoader::computeScriptTopologicalOrder()`'s real logic --
  *   confirmed real multi-level chains exist, e.g.
- *   `jquery.ui.timepicker-addon` -> `jquery.ui.datepicker` -> its own
- *   transitive deps). A dependency can't load more loosely than its
- *   dependent (`ScriptLoader::checkLoadDep()`'s real "if B requires A,
- *   A->loadMode <= B->loadMode" promotion).
- * - The jQuery-UI known-script resolver
- *   (`ScriptLoader::fillWellKnown()`/`loadKnownRequiredScript()`) is
- *   preserved, not dropped: confirmed live that `rating_user.latte`
- *   registers `jquery.ui.tooltip` with zero explicit path/require,
- *   `jquery.ui.datepicker` is never explicitly registered anywhere, and
- *   `jquery.ui.effect-blind` (required by 3 real call sites, e.g.
- *   `updates_ext.latte`'s `footerScript($tmp, 'jquery.ui.effect-blind,
- *   ...')`) is also never explicitly registered -- all three resolve
- *   purely by naming convention today.
+ *   `jquery.ui.timepicker-addon` -> `jquery.ui` -> `jquery`). A
+ *   dependency can't load more loosely than its dependent
+ *   (`ScriptLoader::checkLoadDep()`'s real "if B requires A, A->loadMode
+ *   <= B->loadMode" promotion).
+ * - The jQuery-UI known-script resolver (`ScriptLoader::fillWellKnown()`/
+ *   `loadKnownRequiredScript()`) used to also resolve individual
+ *   `jquery.ui.{widget}`/`jquery.ui.effect-*` ids purely by naming
+ *   convention -- deleted along with the whole per-widget lazy-loading
+ *   system it supported (docs/PLAN.md P46's vendor-CDN migration: one
+ *   full `jquery.ui` bundle replaces every individual widget file, so
+ *   every former per-widget id just depends on `'jquery.ui'` directly
+ *   now). `'jquery'`/`'jquery.ui'` themselves still resolve purely by
+ *   naming convention, with zero explicit path/require needed at the
+ *   real call site.
  * - Both kinds dedupe by id: a later `add()` with an id already
  *   present merges into the existing contribution rather than
  *   replacing or duplicating it (`ScriptLoader::add()`'s real merge --
@@ -75,32 +76,29 @@ final class PageAssets
     private array $inlineScripts = [];
 
     /**
-     * Path resolved by id (once), matching
-     * `ScriptLoader::$known_paths` -- both sides of a dependency chain
-     * (`jquery.ui.slider` requiring `jquery.ui`, `jquery.ui.datepicker`
-     * required by `jquery.ui.timepicker-addon`) can be registered
-     * without ever passing an explicit `path:`.
+     * Path resolved by id (once), matching `ScriptLoader::$known_paths`
+     * -- `jquery`/`jquery.ui` can each be registered as someone else's
+     * `dependsOn` without ever passing an explicit `path:`.
      *
      * @var array<string, string>
      */
     private static array $knownPaths = [
         'core.scripts' => 'themes/default/js/scripts.js',
-        'jquery' => 'themes/default/js/jquery.min.js',
-        'jquery.ui' => 'themes/default/js/ui/minified/jquery.ui.core.min.js',
-        'jquery.ui.effect' => 'themes/default/js/ui/minified/jquery.ui.effect.min.js',
-    ];
-
-    /**
-     * Matches `ScriptLoader::$ui_core_dependencies` -- the 3 jQuery-UI
-     * "core" scripts every other `jquery.ui.*` script transitively
-     * needs.
-     *
-     * @var array<string, list<string>>
-     */
-    private static array $uiCoreDependencies = [
-        'jquery.ui.widget' => ['jquery'],
-        'jquery.ui.position' => ['jquery'],
-        'jquery.ui.mouse' => ['jquery', 'jquery.ui', 'jquery.ui.widget'],
+        'jquery' => 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
+        // One full bundle, not the old per-widget minified files
+        // (docs/PLAN.md P46's vendor-CDN migration). cdnjs specifically,
+        // not jsDelivr's npm mirror like every other pin here -- a real
+        // VR run caught that npm's own published `jquery-ui` tarball
+        // (individual widget files AND its own "main" full-bundle file
+        // alike) starts with an unconditional `require('jquery')`,
+        // which throws in a plain `<script>` tag and silently no-ops
+        // the whole file (confirmed live: `.datepicker`/`.slider`
+        // simply didn't exist on real pages). cdnjs serves the
+        // project's own official, genuinely browser-ready distributable
+        // instead (confirmed zero `require(` calls anywhere in it) --
+        // the same file 14.x's own real migration used for this exact
+        // reason.
+        'jquery.ui' => 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js',
     ];
 
     public function __construct(
@@ -155,10 +153,10 @@ final class PageAssets
      * resolver (`knownPath()`/`knownRequires()` below) the first time
      * it's registered -- `ScriptLoader::add()`'s real behavior: every
      * newly-added script goes through `fillWellKnown()` regardless of
-     * whether it was registered directly (e.g. `rating_user.latte`'s
-     * bare `combineScript(id: 'jquery.ui.tooltip', load: 'footer')`,
-     * with no `path:`/`require:` at all) or reached only as someone
-     * else's dependency.
+     * whether it was registered directly or reached only as someone
+     * else's `dependsOn` (e.g. `'jquery.ui'` itself, auto-registered
+     * with zero explicit path/require the moment any real page depends
+     * on it).
      */
     private static function fillKnownScript(AssetContribution $contribution): AssetContribution
     {
@@ -230,10 +228,13 @@ final class PageAssets
     /**
      * Auto-registers an undeclared known-by-naming-convention dependency
      * -- `ScriptLoader::loadKnownRequiredScript()`'s real, live
-     * behavior. Recurses through `$uiCoreDependencies` (via
-     * `addScript()` -> `fillKnownScript()` -> back here) so a chain like
-     * `jquery.ui.datepicker` -> `jquery.ui.widget` -> `jquery` resolves
-     * fully without any of them ever being explicitly registered.
+     * behavior. Only 2 real ids left since the jQuery-UI per-widget
+     * resolver's own deletion (docs/PLAN.md P46's vendor-CDN migration
+     * -- one full `jquery.ui` bundle replaces the whole per-widget
+     * `$uiCoreDependencies`/`jquery.ui.effect-*` naming-convention
+     * machinery that used to live here): `jquery`/`jquery.ui` can each
+     * still be reached purely as someone else's dependency, with no
+     * explicit path of their own.
      */
     private function resolveMissingDependencies(AssetContribution $contribution): void
     {
@@ -248,44 +249,25 @@ final class PageAssets
 
     private static function isKnownId(string $id): bool
     {
-        return isset(self::$knownPaths[$id]) || str_starts_with($id, 'jquery.ui.');
+        return isset(self::$knownPaths[$id]);
     }
 
     private static function knownPath(string $id): string
     {
-        if (isset(self::$knownPaths[$id])) {
-            return self::$knownPaths[$id];
-        }
-
-        if (str_starts_with($id, 'jquery.ui.effect-')) {
-            return dirname(self::$knownPaths['jquery.ui.effect']) . "/{$id}.min.js";
-        }
-
-        return dirname(self::$knownPaths['jquery.ui']) . "/{$id}.min.js";
+        return self::$knownPaths[$id];
     }
 
     /**
+     * `jquery.ui`'s own real, remaining implicit dependency -- every
+     * other naming-convention case this used to resolve
+     * (`jquery.ui.{widget}`, `jquery.ui.effect-*`) was the per-widget
+     * lazy-loading system this phase's vendor-CDN migration deleted.
+     *
      * @return list<string>
      */
     private static function knownRequires(string $id): array
     {
-        if (! str_starts_with($id, 'jquery.')) {
-            return [];
-        }
-
-        if (isset(self::$uiCoreDependencies[$id])) {
-            return self::$uiCoreDependencies[$id];
-        }
-
-        if (str_starts_with($id, 'jquery.ui.effect-')) {
-            return ['jquery', 'jquery.ui.effect'];
-        }
-
-        if (str_starts_with($id, 'jquery.ui.')) {
-            return ['jquery', 'jquery.ui', ...array_keys(self::$uiCoreDependencies)];
-        }
-
-        return ['jquery'];
+        return $id === 'jquery.ui' ? ['jquery'] : [];
     }
 
     /**

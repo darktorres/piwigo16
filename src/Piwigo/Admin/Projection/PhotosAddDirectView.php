@@ -63,17 +63,34 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
         public array $setupWarnings,
         public ?string $hideWarningsLink,
         public string $colorscheme,
-        public string $rootPath,
         public string $pluploadCode,
     ) {}
 
     /**
-     * `plupload_i18n-{code}`'s own `file_exists()` gate is a real
-     * derived value, not a fixed literal -- covered by its own unit
-     * test, same shape `DatepickerView`'s own `file_exists()` gate
-     * already established. `include/add_album.inc.latte`'s own
-     * contribution stays conditional on `!$displayFormats`, matching
-     * the template's own original `{if}` guard exactly.
+     * The real, upstream `moxiecode/plupload` v2.1.2 tag's own
+     * `js/i18n/` directory listing (confirmed identical between the
+     * vendored copy and the real npm-published package before the CDN
+     * migration deleted the vendored copy) -- `plupload_i18n-{code}`'s
+     * own membership check below replaces a real `file_exists()` gate
+     * that can no longer work once the locale file is served from a
+     * CDN, not a local path (docs/PLAN.md P46's vendor-CDN migration).
+     * Covered by its own unit test, same shape `DatepickerView`'s own
+     * gate already established.
+     *
+     * @var list<string>
+     */
+    private const array PLUPLOAD_LOCALES = [
+        'ar', 'az', 'bs', 'cs', 'cy', 'da', 'de', 'el', 'en', 'es', 'et',
+        'fa', 'fi', 'fr', 'he', 'hr', 'hu', 'hy', 'id', 'it', 'ja', 'ka',
+        'kk', 'km', 'ko', 'lt', 'lv', 'mn', 'ms', 'nl', 'pl', 'pt_BR',
+        'ro', 'ru', 'sk', 'sq', 'sr', 'sr_RS', 'sv', 'th_TH', 'tr',
+        'uk_UA', 'zh_CN', 'zh_TW',
+    ];
+
+    /**
+     * `include/add_album.inc.latte`'s own contribution stays
+     * conditional on `!$displayFormats`, matching the template's own
+     * original `{if}` guard exactly.
      *
      * @return list<AssetContribution>
      */
@@ -82,17 +99,16 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
     {
         $assets = [
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.plupload', 'themes/default/js/plugins/plupload/plupload.full.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('jquery.plupload.queue', 'themes/default/js/plugins/plupload/jquery.plupload.queue/jquery.plupload.queue.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('tus-js-client', 'themes/default/js/plugins/tus-js-client/tus.min.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
-            AssetContribution::css('themes/default/js/plugins/plupload/jquery.plupload.queue/css/jquery.plupload.queue.css'),
+            AssetContribution::script('jquery.plupload', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/plupload.full.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('jquery.plupload.queue', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/jquery.plupload.queue.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('tus-js-client', 'https://cdn.jsdelivr.net/npm/tus-js-client@4.3.0/dist/tus.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/css/jquery.plupload.queue.css'),
         ];
 
-        $pluploadI18n = 'themes/default/js/plugins/plupload/i18n/' . $this->pluploadCode . '.js';
-        if (file_exists($this->rootPath . $pluploadI18n)) {
-            $assets[] = AssetContribution::script('plupload_i18n-' . $this->pluploadCode, $pluploadI18n, loadMode: LoadMode::Footer, dependsOn: ['jquery.plupload.queue']);
+        if (in_array($this->pluploadCode, self::PLUPLOAD_LOCALES, true)) {
+            $assets[] = AssetContribution::script('plupload_i18n-' . $this->pluploadCode, 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/i18n/' . $this->pluploadCode . '.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.plupload.queue']);
         }
 
         $assets = [
@@ -112,9 +128,9 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
         return [
             ...$assets,
             AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('piecon', 'themes/default/js/plugins/piecon.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('piecon', 'https://cdn.jsdelivr.net/gh/lipka/piecon@0.5.0/piecon.js', loadMode: LoadMode::Footer),
             AssetContribution::script('add_photo', 'themes/admin/default/js/photos_add_direct.js', loadMode: LoadMode::Footer, dependsOn: ['tus-js-client', 'page-data']),
             AssetContribution::css('themes/admin/default/css/pages/photos_add_direct.css', id: 'photos_add_direct'),
             ...new AlbumSelectorView()

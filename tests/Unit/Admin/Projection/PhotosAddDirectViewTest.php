@@ -10,7 +10,6 @@ use Piwigo\Admin\Projection\PhotosAddDirectView;
 function makePhotosAddDirectView(
     ?array $formatsOriginalInfo = null,
     string $pluploadCode = 'xx',
-    string $rootPath = '',
 ): PhotosAddDirectView {
     return new PhotosAddDirectView(
         promoteMobileApps: false,
@@ -42,15 +41,12 @@ function makePhotosAddDirectView(
         setupWarnings: [],
         hideWarningsLink: null,
         colorscheme: 'light',
-        rootPath: $rootPath,
         pluploadCode: $pluploadCode,
     );
 }
 
-$root = dirname(__DIR__, 4) . '/';
-
-test('pageAssets skips the plupload i18n script when the locale file does not exist', function () use ($root): void {
-    $view = makePhotosAddDirectView(pluploadCode: 'xx', rootPath: $root);
+test('pageAssets skips the plupload i18n script for a locale plupload does not ship', function (): void {
+    $view = makePhotosAddDirectView(pluploadCode: 'xx');
 
     $ids = array_map(static fn ($asset) => $asset->id, $view->pageAssets());
 
@@ -58,8 +54,8 @@ test('pageAssets skips the plupload i18n script when the locale file does not ex
         ->not->toContain('plupload_i18n-xx');
 });
 
-test('pageAssets registers the plupload i18n script when the locale file exists', function () use ($root): void {
-    $view = makePhotosAddDirectView(pluploadCode: 'fr', rootPath: $root);
+test('pageAssets registers the plupload i18n script for a locale plupload ships', function (): void {
+    $view = makePhotosAddDirectView(pluploadCode: 'fr');
 
     $ids = array_map(static fn ($asset) => $asset->id, $view->pageAssets());
 

@@ -31,9 +31,46 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
 #[TemplateAttr('include/datepicker.inc.latte')]
 final readonly class DatepickerView implements View, HasPageAssets
 {
+    /**
+     * The real, upstream `jquery/jquery-ui` v1.10.4 tag's own
+     * `ui/i18n/` directory listing (confirmed identical to the vendored
+     * copy before the CDN migration deleted it -- npm's own published
+     * `jquery-ui` package drops these files entirely, so this list
+     * comes from the real GitHub repo, not npm). Replaces a real
+     * `file_exists()` gate that can no longer work once the locale
+     * file is served from a CDN, not a local path (docs/PLAN.md P46's
+     * vendor-CDN migration).
+     *
+     * @var list<string>
+     */
+    private const array DATEPICKER_LOCALES = [
+        'af', 'ar', 'ar-DZ', 'az', 'bg', 'bs', 'ca', 'cs', 'cy-GB', 'da',
+        'de', 'el', 'en-AU', 'en-GB', 'en-NZ', 'eo', 'es', 'et', 'eu',
+        'fa', 'fi', 'fo', 'fr', 'fr-CH', 'gl', 'he', 'hi', 'hr', 'hu',
+        'hy', 'id', 'is', 'it', 'ja', 'ka', 'kk', 'km', 'ko', 'lb', 'lt',
+        'lv', 'mk', 'ml', 'ms', 'nl', 'no', 'pl', 'pt', 'pt-BR', 'rm',
+        'ro', 'ru', 'sk', 'sl', 'sq', 'sr', 'sr-SR', 'sv', 'ta', 'th',
+        'tj', 'tr', 'uk', 'vi', 'zh-CN', 'zh-HK', 'zh-TW',
+    ];
+
+    /**
+     * Same shape as `DATEPICKER_LOCALES` above, but the real, upstream
+     * `trentrichardson/jQuery-Timepicker-Addon` v1.4.4 tag's own
+     * `dist/i18n/` directory listing instead (a distinct package from
+     * jQuery UI core itself, confirmed via byte-identical content
+     * before this migration).
+     *
+     * @var list<string>
+     */
+    private const array TIMEPICKER_LOCALES = [
+        'af', 'am', 'bg', 'ca', 'cs', 'da', 'de', 'el', 'es', 'et', 'eu',
+        'fi', 'fr', 'gl', 'he', 'hr', 'hu', 'id', 'it', 'ja', 'ko', 'lt',
+        'nl', 'no', 'pl', 'pt', 'pt-BR', 'ro', 'ru', 'sk', 'sr-RS',
+        'sr-YU', 'sv', 'th', 'tr', 'uk', 'vi', 'zh-CN', 'zh-TW',
+    ];
+
     public function __construct(
         public ?string $load_mode = null,
-        public string $rootPath = '',
         public string $jqueryCode = '',
     ) {}
 
@@ -56,27 +93,23 @@ final readonly class DatepickerView implements View, HasPageAssets
 
         $require = ['jquery.ui.timepicker-addon'];
         $assets = [
-            AssetContribution::script('jquery.ui.timepicker-addon', 'themes/default/js/ui/jquery.ui.timepicker-addon.js', loadMode: $loadMode, dependsOn: ['jquery.ui.datepicker', 'jquery.ui.slider']),
+            AssetContribution::script('jquery.ui.timepicker-addon', 'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js', loadMode: $loadMode, dependsOn: ['jquery.ui']),
         ];
 
-        $datepickerLanguagePath = 'themes/default/js/ui/i18n/jquery.ui.datepicker-' . $this->jqueryCode . '.js';
-        if (file_exists($this->rootPath . $datepickerLanguagePath)) {
-            $assets[] = AssetContribution::script('jquery.ui.datepicker-' . $this->jqueryCode, $datepickerLanguagePath, loadMode: $loadMode, dependsOn: ['jquery.ui.datepicker']);
+        if (in_array($this->jqueryCode, self::DATEPICKER_LOCALES, true)) {
+            $assets[] = AssetContribution::script('jquery.ui.datepicker-' . $this->jqueryCode, 'https://cdn.jsdelivr.net/gh/jquery/jquery-ui@1.10.4/ui/i18n/jquery.ui.datepicker-' . $this->jqueryCode . '.js', loadMode: $loadMode, dependsOn: ['jquery.ui']);
             $require[] = 'jquery.ui.datepicker-' . $this->jqueryCode;
         }
 
-        $timepickerLanguagePath = 'themes/default/js/ui/i18n/jquery.ui.timepicker-' . $this->jqueryCode . '.js';
-        if (file_exists($this->rootPath . $timepickerLanguagePath)) {
-            $assets[] = AssetContribution::script('jquery.ui.timepicker-' . $this->jqueryCode, $timepickerLanguagePath, loadMode: $loadMode, dependsOn: ['jquery.ui.timepicker-addon']);
+        if (in_array($this->jqueryCode, self::TIMEPICKER_LOCALES, true)) {
+            $assets[] = AssetContribution::script('jquery.ui.timepicker-' . $this->jqueryCode, 'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/i18n/jquery-ui-timepicker-' . $this->jqueryCode . '.js', loadMode: $loadMode, dependsOn: ['jquery.ui.timepicker-addon']);
             $require[] = 'jquery.ui.timepicker-' . $this->jqueryCode;
         }
 
         $assets[] = AssetContribution::script('datepicker', 'themes/admin/default/js/datepicker.js', loadMode: $loadMode, dependsOn: $require);
 
-        $assets[] = AssetContribution::css('themes/default/js/ui/theme/jquery.ui.theme.css');
-        $assets[] = AssetContribution::css('themes/default/js/ui/theme/jquery.ui.slider.css');
-        $assets[] = AssetContribution::css('themes/default/js/ui/theme/jquery.ui.datepicker.css');
-        $assets[] = AssetContribution::css('themes/default/js/ui/theme/jquery.ui.timepicker-addon.css');
+        $assets[] = AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui');
+        $assets[] = AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css');
 
         return $assets;
     }

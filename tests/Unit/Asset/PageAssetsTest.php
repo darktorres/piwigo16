@@ -37,14 +37,14 @@ test('resolveCss() sorts by order, real range found in templates (-999 to 100)',
     $assets = new PageAssets(pageAssetsTestManifest());
     $assets->add(AssetContribution::css('themes/default/css/search.css', order: -100));
     $assets->add(AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10));
-    $assets->add(AssetContribution::css('themes/default/js/ui/theme/jquery.ui.slider.css', order: -999));
+    $assets->add(AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', order: -999));
     $assets->add(AssetContribution::css('themes/default/theme.css', order: 0));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveCss());
 
     expect($paths)
         ->toBe([
-            'themes/default/js/ui/theme/jquery.ui.slider.css',
+            'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css',
             'themes/default/css/search.css',
             'themes/default/theme.css',
             'themes/admin/default/fontello/css/animation.css',
@@ -97,65 +97,52 @@ test('resolveScripts() partitions header before footer before async', function (
         ->toBe(['header.js', 'footer.js', 'async.js']);
 });
 
-test('resolveScripts() orders a dependency before its dependent, real multi-level chain', function (): void {
+test('resolveScripts() orders a dependency before its dependent, real chain', function (): void {
     // Real chain found live in datepicker.inc.latte: timepicker-addon
-    // requires datepicker and slider; datepicker is never registered
-    // explicitly anywhere -- only ever reached via this require: chain.
+    // depends on jquery.ui, which itself depends on jquery -- both
+    // resolved purely by naming convention, neither ever registered
+    // explicitly. docs/PLAN.md P46's vendor-CDN migration collapsed
+    // the old per-widget jquery.ui.datepicker/jquery.ui.slider chain
+    // into this single shared jquery.ui id (one full CDN bundle now
+    // covers every widget).
     $assets = new PageAssets(pageAssetsTestManifest());
     $assets->add(AssetContribution::script(
         'jquery.ui.timepicker-addon',
-        'themes/default/js/ui/jquery.ui.timepicker-addon.js',
-        dependsOn: ['jquery.ui.datepicker', 'jquery.ui.slider'],
+        'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js',
+        dependsOn: ['jquery.ui'],
     ));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
 
-    // jquery + jquery.ui load once (shared by both branches), followed by
-    // jquery.ui.widget/position/mouse (jquery.ui.mouse's own real deps),
-    // then datepicker and slider (siblings, either order), then the
-    // dependent addon last -- 8 total: the 5 shared jQuery-UI core deps
-    // + datepicker + slider + the addon itself.
-    $addonIndex = pageAssetsTestIndexOf($paths, 'themes/default/js/ui/jquery.ui.timepicker-addon.js');
-
     expect($paths)
-        ->toHaveCount(8)
-        ->and(pageAssetsTestIndexOf($paths, 'themes/default/js/jquery.min.js'))
-        ->toBe(0)
-        ->and(pageAssetsTestIndexOf($paths, 'themes/default/js/ui/minified/jquery.ui.core.min.js'))
-        ->toBeGreaterThan(0)
-        ->and(pageAssetsTestIndexOf($paths, 'themes/default/js/ui/minified/jquery.ui.datepicker.min.js'))
-        ->toBeLessThan($addonIndex)
-        ->and(pageAssetsTestIndexOf($paths, 'themes/default/js/ui/minified/jquery.ui.slider.min.js'))
-        ->toBeLessThan($addonIndex)
-        ->and(end($paths))
-        ->toBe('themes/default/js/ui/jquery.ui.timepicker-addon.js');
+        ->toBe([
+            'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js',
+            'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js',
+        ]);
 });
 
-test('resolveScripts() resolves jquery.ui.tooltip from a zero-param registration, real rating_user.latte case', function (): void {
+test('resolveScripts() resolves jquery.ui from a zero-param registration, real rating_user.latte case', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('jquery.ui.tooltip', ''));
+    $assets->add(AssetContribution::script('jquery.ui', ''));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
 
     expect($paths)
-        ->toContain('themes/default/js/ui/minified/jquery.ui.tooltip.min.js')
+        ->toContain('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js')
         ->and($paths)
-        ->toContain('themes/default/js/jquery.min.js')
-        ->and($paths)
-        ->toContain('themes/default/js/ui/minified/jquery.ui.core.min.js');
+        ->toContain('https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js');
 });
 
-test('resolveScripts() resolves jquery.ui.effect-blind, real updates_ext.latte/plugins_new.latte case', function (): void {
+test('resolveScripts() resolves jquery.ui as an undeclared dependency, real updates_ext.latte/plugins_new.latte case', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.js', dependsOn: ['jquery.ui.effect-blind', 'jquery.sort']));
+    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.js', dependsOn: ['jquery.ui', 'jquery.sort']));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
 
     expect($paths)
-        ->toContain('themes/default/js/ui/minified/jquery.ui.effect-blind.min.js')
-        ->and($paths)
-        ->toContain('themes/default/js/ui/minified/jquery.ui.effect.min.js')
-        ->and(pageAssetsTestIndexOf($paths, 'themes/default/js/ui/minified/jquery.ui.effect-blind.min.js'))
+        ->toContain('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js')
+        ->and(pageAssetsTestIndexOf($paths, 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js'))
         ->toBeLessThan(pageAssetsTestIndexOf($paths, 'themes/admin/default/js/plugins_new.js'));
 });
 

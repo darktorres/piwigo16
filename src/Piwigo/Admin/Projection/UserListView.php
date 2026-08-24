@@ -84,17 +84,17 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
     {
         return [
             AssetContribution::script('common', 'themes/admin/default/js/common.js', dependsOn: ['jquery']),
-            AssetContribution::script('jquery.selectize', 'themes/default/js/plugins/selectize.min.js'),
+            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js'),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('jquery.ui.slider', 'themes/default/js/ui/minified/jquery.ui.slider.min.js', dependsOn: ['jquery.ui']),
-            AssetContribution::css('themes/default/js/ui/theme/jquery.ui.slider.css'),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
-            AssetContribution::script('jquery.tipTip', 'themes/default/js/plugins/jquery.tipTip.minified.js'),
+            AssetContribution::script('jquery.ui', ''),
+            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('user_list', 'themes/admin/default/js/user_list.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
-            AssetContribution::script('jquery.cookie', 'themes/default/js/jquery.cookie.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/user_list.css', id: 'user_list'),
         ];
     }

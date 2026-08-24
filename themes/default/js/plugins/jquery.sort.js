@@ -1,4 +1,9 @@
 /**
+ * docs/PLAN.md P46's vendor-CDN migration: kept vendored, not retargeted
+ * -- this is the well-known, widely copy-pasted jQuery.fn.sortElements
+ * snippet, confirmed (via a GitHub code search on its own distinctive
+ * content) to have no single canonical source repo or package anywhere.
+ *
  * jQuery.fn.sortElements
  * --------------
  * @param Function comparator:

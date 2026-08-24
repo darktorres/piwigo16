@@ -53,26 +53,27 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
 
     /**
      * `rating_user.latte`'s own unconditional `{do combineScript(...)}`x7/
-     * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B). `jquery.ui.tooltip`
-     * carries no `path:` in the original call either -- it's one of
-     * `PageAssets`'s own well-known ids, resolved by naming convention
-     * (`PageAssets::fillKnownScript()`'s own docblock cites this exact
-     * call as its precedent), so an empty path here matches the
-     * original behavior exactly.
+     * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B). `jquery.ui` carries
+     * no `path:` in the original call either -- it's one of `PageAssets`'s
+     * own well-known ids, resolved by naming convention, so an empty path
+     * here matches the original behavior exactly. No jQuery-UI theme CSS
+     * was ever registered on this page (tooltip styling didn't need it),
+     * so the CDN vendor-migration retarget doesn't add one here either
+     * (docs/PLAN.md P46).
      */
     #[Override]
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.dataTables', 'themes/default/js/plugins/jquery.dataTables.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.dataTables', 'https://cdn.jsdelivr.net/npm/datatables.net@1.10.11/js/jquery.dataTables.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/rating_user.css', id: 'rating_user'),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('core.scripts', 'themes/default/js/scripts.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.geoip', 'themes/admin/default/js/jquery.geoip.js', loadMode: LoadMode::Async),
-            AssetContribution::script('jquery.ui.tooltip', '', loadMode: LoadMode::Footer),
-            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui.tooltip', 'page-data']),
+            AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Footer),
+            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui', 'page-data']),
         ];
     }
 

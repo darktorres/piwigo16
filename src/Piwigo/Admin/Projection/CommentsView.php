@@ -37,8 +37,8 @@ final readonly class CommentsView implements View, HasPageAssets, ExposesPageDat
             AssetContribution::script('comments', 'themes/admin/default/js/comments.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/admin/default/css/pages/comments.css', id: 'comments'),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
         ];
     }
 

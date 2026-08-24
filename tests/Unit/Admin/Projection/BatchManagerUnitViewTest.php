@@ -23,7 +23,6 @@ function makeBatchManagerUnitView(array $elements): BatchManagerUnitView
             '_hash' => 'hash-key',
         ],
         elements: $elements,
-        rootPath: '',
         jqueryCode: '',
         colorscheme: 'light',
         rootUrl: '',

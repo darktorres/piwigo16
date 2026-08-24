@@ -42,14 +42,14 @@ final readonly class AlbumsView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::css('themes/default/js/plugins/jqtree.css'),
-            AssetContribution::script('jtree', 'themes/default/js/plugins/tree.jquery.js', loadMode: LoadMode::Footer),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jqtree@1.4.12/jqtree.css'),
+            AssetContribution::script('jtree', 'https://cdn.jsdelivr.net/npm/jqtree@1.4.12/tree.jquery.js', loadMode: LoadMode::Footer),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
-            AssetContribution::script('jquery.tipTip', 'themes/default/js/plugins/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
             AssetContribution::script('albums', 'themes/admin/default/js/albums.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('cat_search', 'themes/admin/default/js/cat_search.js', loadMode: LoadMode::Footer, dependsOn: ['albums']),
             AssetContribution::css('themes/admin/default/css/pages/albums.css', id: 'albums'),

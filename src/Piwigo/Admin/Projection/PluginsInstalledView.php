@@ -50,12 +50,12 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.ajaxmanager', 'themes/default/js/plugins/jquery.ajaxmanager.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.cookie', 'themes/default/js/jquery.cookie.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.confirm', 'themes/default/js/plugins/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/jquery-confirm.min.css'),
-            AssetContribution::script('tiptip', 'themes/default/js/plugins/jquery.tipTip.minified.js'),
+            AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::script('tiptip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
             AssetContribution::script('pluginInstallated', 'themes/admin/default/js/plugins_installated.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
             AssetContribution::script('plugins_installed_config', 'themes/admin/default/js/plugins_installed_config.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];

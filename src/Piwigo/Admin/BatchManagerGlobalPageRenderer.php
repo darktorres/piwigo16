@@ -590,7 +590,6 @@ final readonly class BatchManagerGlobalPageRenderer
             nbThumbsSet: count($cat_elements_id),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             thumbnails: $thumbnails,
-            rootPath: $this->paths->root,
             jqueryCode: $jquery_code,
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $this->urlService->getRootUrl(),

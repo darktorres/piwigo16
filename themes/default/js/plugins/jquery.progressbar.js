@@ -1,4 +1,9 @@
 /*
+ * docs/PLAN.md P46's vendor-CDN migration: kept vendored, not retargeted
+ * -- no npm package, GitHub repo, or personal site for Gary Teo/
+ * t.wits.sg (the author/site this file's own header below cites) could
+ * be found anywhere.
+ *
  * jQuery Progress Bar plugin
  * Version 2.0 (06/22/2009)
  * @requires jQuery v1.2.1 or later

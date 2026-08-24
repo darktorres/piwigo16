@@ -21,7 +21,6 @@ use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
@@ -69,7 +68,6 @@ final readonly class PhotosAddDirectPageRenderer
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
         private Renderer $renderer,
-        private Paths $paths,
     ) {}
 
     /**
@@ -199,7 +197,6 @@ final readonly class PhotosAddDirectPageRenderer
             formatExt: implode(',', array_filter($conf_format_ext, is_string(...))),
             strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
             colorscheme: $template->themeConf('colorscheme'),
-            rootPath: $this->paths->root,
             pluploadCode: $plupload_code,
         ));
 

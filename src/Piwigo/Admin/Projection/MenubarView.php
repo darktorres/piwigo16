@@ -41,7 +41,7 @@ final readonly class MenubarView implements View, HasPageAssets
     {
         return [
             AssetContribution::script('common', 'themes/admin/default/js/common.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('menubar', 'themes/admin/default/js/menubar.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.sortable']),
+            AssetContribution::script('menubar', 'themes/admin/default/js/menubar.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
             AssetContribution::css('themes/admin/default/css/pages/menubar.css', id: 'menubar'),
         ];
     }

@@ -50,8 +50,8 @@ final readonly class ColorboxView implements View, HasPageAssets
         };
 
         return [
-            AssetContribution::script('jquery.colorbox', 'themes/default/js/plugins/jquery.colorbox.min.js', loadMode: $loadMode, dependsOn: ['jquery']),
-            AssetContribution::css('themes/default/js/plugins/colorbox/style2/colorbox.css', id: 'jquery.colorbox'),
+            AssetContribution::script('jquery.colorbox', 'https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/jquery.colorbox-min.js', loadMode: $loadMode, dependsOn: ['jquery']),
+            AssetContribution::css('https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css', id: 'jquery.colorbox'),
         ];
     }
 }

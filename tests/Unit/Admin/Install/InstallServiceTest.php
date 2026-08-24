@@ -129,7 +129,7 @@ beforeEach(function () use ($installServiceTestEnvVars, &$installServiceTestOrig
 
 afterEach(function () use ($installServiceTestEnvVars, &$installServiceTestOriginalEnv): void {
     foreach ($installServiceTestEnvVars as $var) {
-        $value = $installServiceTestOriginalEnv[$var];
+        $value = $installServiceTestOriginalEnv[$var] ?? null;
         putenv($value === null ? $var : $var . '=' . $value);
     }
 });

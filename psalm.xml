@@ -385,6 +385,17 @@
                      array_key_exists('IS_CHILD_DATE', ...) guard gets
                      `function.alreadyNarrowedType` from PHPStan. -->
                 <file name="tests/Integration/RecentIconResolverTest.php"/>
+                <!-- triggers_list.php's `@$trigger['infos']`: the `@`
+                     error-suppression operator is a deliberate existing
+                     idiom here, not an oversight: confirmed replacing it
+                     with a `?? ''` guard actively BREAKS PHPStan
+                     (`binaryOp.invalid`, a huge pre-existing literal-string
+                     union for $trigger['infos']'s value type becomes
+                     concatenation-incompatible once the `@` no longer
+                     masks it from PHPStan's own binary-op check). Reverted
+                     rather than trading a Psalm pass for a PHPStan
+                     failure. -->
+                <file name="tools/triggers_list.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

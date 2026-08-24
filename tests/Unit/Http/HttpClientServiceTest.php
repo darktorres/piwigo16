@@ -383,6 +383,7 @@ test('sendRequest downgrades POST to GET on a 302 redirect and drops the body, h
 
     expect($seen)
         ->toHaveCount(2);
+    assert(count($seen) === 2);
     [$firstMethod, , $firstOptions] = $seen[0];
     [$secondMethod, , $secondOptions] = $seen[1];
 

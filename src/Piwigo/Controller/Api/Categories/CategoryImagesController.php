@@ -122,8 +122,10 @@ final readonly class CategoryImagesController implements ControllerInterface
                 $imageRowId = (int) $imageRow['id'];
                 $imageIds[] = $imageRowId;
 
-                $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($imageRow['name'] ?? null) ? $imageRow['name'] : '', 'categoryImages'));
-                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($imageRow['comment'] ?? null) ? $imageRow['comment'] : '', 'categoryImages'));
+                $imageRow_name = $imageRow['name'] ?? null;
+                $nameEvent = $this->eventDispatcher->dispatch(new RenderElementName(is_string($imageRow_name) ? $imageRow_name : '', 'categoryImages'));
+                $imageRow_comment = $imageRow['comment'] ?? null;
+                $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription(is_string($imageRow_comment) ? $imageRow_comment : '', 'categoryImages'));
 
                 $images[$imageRowId] = array_merge(
                     [

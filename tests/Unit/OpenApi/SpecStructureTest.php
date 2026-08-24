@@ -121,6 +121,7 @@ test('every operation\'s security override is either absent (inherits global) or
         // all" check; a direct `=== null` comparison is the one PHPStan
         // (correctly, given the class's own wrong annotation) flags as
         // unreachable.
+        /** @psalm-suppress DocblockTypeContradiction same __isset()/wrong-library-annotation reasoning as above */
         if (! isset($operation->security)) {
             continue;
         }

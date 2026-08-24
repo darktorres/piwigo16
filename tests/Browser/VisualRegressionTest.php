@@ -111,6 +111,32 @@ foreach ($routes as $name => [$path, $needsAuth]) {
         // the frozen placeholder leak into its own baseline.
         $originalGalleriesUrl = $name === 'admin-site-manager' ? H::galleriesUrl() : null;
 
+        if ($name === 'admin-site-manager') {
+            // See H::freezeGalleriesUrl()'s own docblock: the fixture's
+            // real, checkout-specific galleries_url would otherwise make
+            // this baseline fail on any checkout but the one it was
+            // captured under. A synthetic, obviously-fake path -- not
+            // tied to any real user/worktree -- so the baseline is
+            // portable everywhere, not just wherever it happened to be
+            // (re)captured; the listing view this route renders never
+            // touches the filesystem for this value (no is_dir()/
+            // file_exists() call on this code path), so it doesn't need
+            // to resolve to a real directory.
+            //
+            // Must run BEFORE H::navigateOk()/H::loginAsAdmin() below,
+            // not right before the screenshot -- SiteManagerSubController
+            // renders the sites list synchronously, server-side, from a
+            // real DB query at request time (no later client-side
+            // AJAX re-fetch), so a freeze applied only after the page
+            // already rendered has zero effect on what's on screen. This
+            // exact bug is why the previously-checked-in baseline itself
+            // still had a real, worktree-specific path baked in (a
+            // *different* worktree's own path, confirmed by decoding it)
+            // instead of this placeholder -- the original freeze call
+            // was already too late to matter, for every prior capture.
+            H::freezeGalleriesUrl('/srv/piwigo-vr-baseline/galleries/');
+        }
+
         try {
             if ($needsAuth) {
                 if ($name === 'admin-user-activity') {
@@ -169,20 +195,6 @@ foreach ($routes as $name => [$path, $needsAuth]) {
                 // fade-out + tag-box fade sequence — no network call involved,
                 // but still a genuine race against assertScreenshotMatches().
                 H::waitUntilHidden($page, '.pageLoad');
-            }
-
-            if ($name === 'admin-site-manager') {
-                // See H::freezeGalleriesUrl()'s own docblock: the fixture's
-                // real, checkout-specific galleries_url would otherwise make
-                // this baseline fail on any checkout but the one it was
-                // captured under. A synthetic, obviously-fake path -- not
-                // tied to any real user/worktree -- so the baseline is
-                // portable everywhere, not just wherever it happened to be
-                // (re)captured; the listing view this route renders never
-                // touches the filesystem for this value (no is_dir()/
-                // file_exists() call on this code path), so it doesn't need
-                // to resolve to a real directory.
-                H::freezeGalleriesUrl('/srv/piwigo-vr-baseline/galleries/');
             }
 
             if ($name === 'admin-comments') {

@@ -74,6 +74,9 @@ final class HistoryPageRenderer
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }
 
+        $jquery_code_raw = $lang->langInfo()['jquery_code'] ?? null;
+        $jquery_code = is_string($jquery_code_raw) ? $jquery_code_raw : '';
+
         $adminContent = $renderer->render(new HistoryView(
             userId: $form_param['user_id'],
             userName: $form_param['user_name'] ?? null,
@@ -83,7 +86,7 @@ final class HistoryPageRenderer
             end: $form['end'],
             guestId: $currentConfig->guestId,
             rootPath: $paths->root,
-            jqueryCode: is_string($lang->langInfo()['jquery_code'] ?? null) ? $lang->langInfo()['jquery_code'] : '',
+            jqueryCode: $jquery_code,
         ));
 
         return new AdminPageResult(

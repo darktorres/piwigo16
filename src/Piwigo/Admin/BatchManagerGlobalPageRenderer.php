@@ -573,6 +573,9 @@ final readonly class BatchManagerGlobalPageRenderer
             }
         }
 
+        $jquery_code_raw = $this->lang->langInfo()['jquery_code'] ?? null;
+        $jquery_code = is_string($jquery_code_raw) ? $jquery_code_raw : '';
+
         $adminContent = $this->renderer->render(new BatchManagerGlobalView(
             inCaddie: $in_caddie,
             associatedTags: $associated_tags,
@@ -588,7 +591,7 @@ final readonly class BatchManagerGlobalPageRenderer
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             thumbnails: $thumbnails,
             rootPath: $this->paths->root,
-            jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
+            jqueryCode: $jquery_code,
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $this->urlService->getRootUrl(),
             associatedCategories: is_array($associated_categories_raw) ? $associated_categories_raw : [],

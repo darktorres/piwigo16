@@ -429,6 +429,9 @@ final readonly class PictureModifyPageRenderer
             }
         }
 
+        $jquery_code_raw = $this->lang->langInfo()['jquery_code'] ?? null;
+        $jquery_code = is_string($jquery_code_raw) ? $jquery_code_raw : '';
+
         $adminContent = $this->renderer->render(new PictureModifyView(
             saveSuccess: $save_success,
             tagSelection: $tag_selection,
@@ -457,7 +460,7 @@ final readonly class PictureModifyPageRenderer
             csrfToken: $this->csrfService
                 ->getToken(),
             rootPath: $this->paths->root,
-            jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
+            jqueryCode: $jquery_code,
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $this->urlService->getRootUrl(),
         ));

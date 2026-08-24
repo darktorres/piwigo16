@@ -11,22 +11,6 @@ use PhpCsFixer\Fixer\Whitespace\LineEndingFixer;
 use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Option;
 
-/**
- * @psalm-suppress UndefinedClass CamelCapsMethodNameSniff resolves fine at
- *   ECS's own runtime (verified: `vendor/bin/ecs check` runs clean with
- *   this exact config) via ECS's internal PHP-Scoper class-alias/scoping
- *   machinery, but the real, unprefixed class only lives under ECS's own
- *   nested vendor/ path (vendor/symplify/easy-coding-standard/vendor/
- *   squizlabs/php_codesniffer/...), which Psalm's own <ignoreFiles> vendor
- *   exclusion can't see into, and Composer's autoloader doesn't expose it
- *   either (confirmed: class_exists() is false even with the project's
- *   real autoloader loaded) -- a Psalm/Composer visibility gap in ECS's
- *   own boxing, not a broken config reference.
- * @psalm-suppress InvalidArgument Same root cause cascading into
- *   withRules()'s own array-shape check: it can't verify
- *   CamelCapsMethodNameSniff::class satisfies class-string<Sniff> without
- *   first resolving the class.
- */
 return ECSConfig::configure()
     ->withPaths([
         __DIR__,

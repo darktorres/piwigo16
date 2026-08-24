@@ -105,7 +105,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
                 $this->htmlRenderer
                     ->fatalError('remote sites not supported');
             }
-            $url = preg_replace('/[\/]*$/', '', $galleries_url_input);
+            $url = preg_replace('/[\/]*$/', '', $galleries_url_input) ?? '';
             $url .= '/';
             // Anchored to the real install root, not a `./`-relative path
             // -- every real HTTP entry point's cwd is wherever Apache/
@@ -147,7 +147,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
                 case 'delete':
 
                     $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher, $this->entityManager);
-                    $this->pageState->addInfo($galleries_url . ' ' . $this->lang->t('deleted'));
+                    $this->pageState->addInfo(($galleries_url ?? '') . ' ' . $this->lang->t('deleted'));
                     break;
 
             }

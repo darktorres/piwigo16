@@ -308,7 +308,7 @@ final class CheckIntegrity
             default => new ReflectionFunction($correction_fct)
                 ->getName(),
         };
-        $id = md5($anomaly . $correctionFctLabel . serialize($correction_fct_args) . $correction_msg);
+        $id = md5($anomaly . ($correctionFctLabel ?? '') . serialize($correction_fct_args) . ($correction_msg ?? ''));
 
         if (in_array($id, array_map(strval(...), array_filter($this->ignore_list, is_scalar(...))), true)) {
             $this->build_ignore_list[] = $id;

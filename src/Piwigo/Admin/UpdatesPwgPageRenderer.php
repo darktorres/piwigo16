@@ -162,7 +162,7 @@ final readonly class UpdatesPwgPageRenderer
         if ($new_versions->minor !== null) {
             $minor_version = $new_versions->minor;
             $minor_release_url = ($ct_env === 'Official')
-                ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->minor)
+                ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . (preg_replace('/\./', '', $new_versions->minor) ?? '')
                 : AppInfo::URL . '/releases/' . $new_versions->minor;
         }
 
@@ -174,7 +174,7 @@ final readonly class UpdatesPwgPageRenderer
             $major_version = $new_versions->major;
             $major_release_url = AppInfo::URL . '/releases/' .
               (($ct_env === 'Official') ? substr($new_versions->major, 0, -1) : $new_versions->major);
-            $major_docker_release_url = 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->major);
+            $major_docker_release_url = 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . (preg_replace('/\./', '', $new_versions->major) ?? '');
         }
 
         $adminContent = $this->renderer->render(new UpdatesPwgView(

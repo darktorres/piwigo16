@@ -281,8 +281,9 @@ final readonly class HtmlService implements HtmlRenderingInterface
         $output = '';
         if ($singleLink) {
             $uppercats_array = explode(',', $uppercats);
+            $last_uppercat = array_pop($uppercats_array);
             $single_url = $this->urlService()
-                ->addUrlParams($this->urlService()->getRootUrl() . $url . array_pop($uppercats_array), $add_url_params);
+                ->addUrlParams($this->urlService()->getRootUrl() . ($url ?? '') . $last_uppercat, $add_url_params);
             $output .= '<a href="' . $single_url . '"';
             if (isset($linkClass)) {
                 $output .= ' class="' . $linkClass . '"';
@@ -567,7 +568,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $alternateUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . $this->lang()->t('Page not found') . '</h1><br>'
-. $msg . '</div>',
+. ($msg ?? '') . '</div>',
             5,
             404,
         );

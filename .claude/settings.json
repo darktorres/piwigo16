@@ -18,6 +18,23 @@
             "type": "command",
             "command": ".claude/hooks/check-git-safety.sh",
             "statusMessage": "Checking git safety guardrails..."
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-composer-normalize-reminder.sh",
+            "statusMessage": "Checking composer normalize follow-up..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-content-hygiene.sh",
+            "statusMessage": "Checking content hygiene..."
           }
         ]
       }

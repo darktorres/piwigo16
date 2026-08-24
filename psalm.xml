@@ -398,13 +398,5 @@
                 <file name="tools/triggers_list.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
-        <PossiblyNullArrayAccess>
-            <errorLevel type="suppress">
-                <!-- Same assert()-narrowing gap as this file's own
-                     PossiblyUndefinedArrayOffset entry above, applied to
-                     $params['driverOptions']'s own value type once read. -->
-                <file name="tests/Unit/Db/DbConnectionTest.php"/>
-            </errorLevel>
-        </PossiblyNullArrayAccess>
     </issueHandlers>
 </psalm>

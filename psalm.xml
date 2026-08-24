@@ -275,6 +275,18 @@
         <PossiblyUndefinedArrayOffset>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Section/SectionPopulator.php"/>
+                <!-- DateHelper::asDateTime()'s $ymdhms is built by an
+                     strtok() loop, then guarded by `count($ymdhms) < 3`
+                     before indices 0-2 are read. PHPStan's flow analysis
+                     narrows the array to `non-empty-list<...>` off that
+                     count() check and proves offsets 0-2 always exist
+                     (`nullCoalesce.offset` when a `?? 0` fallback is added:
+                     "always exists ... on left side of ??"); Psalm has
+                     no equivalent count()-length narrowing for a
+                     dynamically-built list, so it still sees them as
+                     possibly-undefined. Confirmed by trying the `?? 0`
+                     guard and having PHPStan reject it as dead code. -->
+                <file name="src/Piwigo/Core/DateHelper.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
     </issueHandlers>

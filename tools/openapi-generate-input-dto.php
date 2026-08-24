@@ -150,6 +150,7 @@ function describeField(Schema $fieldSchema): array
     // accounts for that) is the accurate "is a type declared here" check;
     // a direct `=== null` comparison is the shape PHPStan (correctly,
     // given the class's own inaccurate annotation) flags as unreachable.
+    /** @psalm-suppress DocblockTypeContradiction same __isset()/wrong-library-annotation reasoning as above */
     if (! isset($fieldSchema->type)) {
         $types = [];
     } else {

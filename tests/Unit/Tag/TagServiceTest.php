@@ -489,7 +489,9 @@ test('setTagsOf() creates then overwrites image tag associations', function (): 
     DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
-    [$tagIdA, $tagIdB, $tagIdC] = tagServiceTestDisposableTagIds($conn, 3);
+    $disposableTagIds = tagServiceTestDisposableTagIds($conn, 3);
+    assert(count($disposableTagIds) === 3);
+    [$tagIdA, $tagIdB, $tagIdC] = $disposableTagIds;
     $service = tagServiceTestService();
 
     try {
@@ -531,7 +533,9 @@ test('compareImageTagLists() reports no change when tags are set to the same val
     DbTransactionTestOverride::rollback();
     $conn = DbConnection::build();
     $imageId = tagServiceTestDisposableImageId($conn);
-    [$tagIdA, $tagIdB] = tagServiceTestDisposableTagIds($conn, 2);
+    $disposableTagIds = tagServiceTestDisposableTagIds($conn, 2);
+    assert(count($disposableTagIds) === 2);
+    [$tagIdA, $tagIdB] = $disposableTagIds;
     $service = tagServiceTestService();
 
     try {

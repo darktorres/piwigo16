@@ -92,12 +92,19 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
-            AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js', loadMode: LoadMode::Header),
+            // Genuine pre-existing bug, unrelated to any P46 JS->TS
+            // conversion work (confirmed via git blame -- this line
+            // predates it): missing `dependsOn: ['jquery']` meant this
+            // Header-loaded CDN script could run before jQuery itself
+            // had loaded, throwing `ReferenceError: jQuery is not
+            // defined` on every real page load. Found via a real
+            // browser console error, not a type/lint tool.
+            AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js', loadMode: LoadMode::Header, dependsOn: ['jquery']),
             AssetContribution::css('themes/default/css/search.css', order: -100),
             AssetContribution::css('themes/default/css/' . $this->colorscheme . '-search.css', order: -100),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
             AssetContribution::script('search_filters', 'themes/default/js/search_filters.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
-            AssetContribution::script('mcs', 'themes/default/js/mcs.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')

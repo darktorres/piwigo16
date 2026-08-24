@@ -157,7 +157,19 @@ final readonly class ImageFilteredSearchCreateController implements ControllerIn
                 }
             }
 
-            if ($custom !== null) {
+            // Genuine pre-existing bug, unrelated to any P46 JS->TS
+            // conversion work: mcs.ts's own performSearch() always sends
+            // dateCreatedCustom/datePostedCustom as '' (its own real
+            // "not set yet" default -- date_created_custom/
+            // date_posted_custom only ever become a real array once the
+            // user actually picks a custom date), never omits the key.
+            // '' !== null, so this treated every plain search as if a
+            // custom date range had been "provided" without the matching
+            // preset, a real 422 on production. '' and [] are both real,
+            // pre-existing "not provided" sentinels elsewhere in this
+            // same loop (see the preset==='custom' check above) -- this
+            // check now agrees with that.
+            if ($custom !== null && $custom !== '' && $custom !== []) {
                 if ($dateRule->preset !== 'custom') {
                     return ResponseFactory::problem('Unprocessable Entity', 422, $customKey . ' provided but ' . $presetKey . ' is not custom.');
                 }

@@ -426,7 +426,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                     $category_up = [];
                     foreach ($inserts as $category) {
                         $category_ids[] = $category['id'];
-                        if (! in_array($category['id_uppercat'] ?? null, [null, 0, '0', ''], true)) {
+                        if (array_key_exists('id_uppercat', $category) && ! in_array($category['id_uppercat'], [0, '0', ''], true)) {
                             $category_up[] = $category['id_uppercat'];
                         }
                     }
@@ -447,10 +447,12 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                             // 'parent' only exists on the freshly-inserted-category
                             // shape of $db_categories entries (see above); narrow to
                             // int so it's safe to use as an array key below.
-                            $parent_id = $db_categories[$ids]['parent'] ?? null;
+                            $db_category_row = $db_categories[$ids];
+                            $parent_id = $db_category_row['parent'] ?? null;
                             $parent_id = is_int($parent_id) ? $parent_id : null;
                             while ($parent_id !== null && in_array($parent_id, $category_ids, true)) {
-                                $parent_id = $db_categories[$parent_id]['parent'] ?? null;
+                                $db_category_row = $db_categories[$parent_id];
+                                $parent_id = $db_category_row['parent'] ?? null;
                                 $parent_id = is_int($parent_id) ? $parent_id : null;
                             }
                             if ($db_categories[$ids]['status'] === 'private' and $parent_id !== null) {
@@ -575,8 +577,9 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                 }
 
                 $insertLevel = null;
-                if ($post['privacy_level'] !== '0' && is_numeric($post['privacy_level'])) {
-                    $insertLevel = (int) $post['privacy_level'];
+                $post_privacy_level = $post['privacy_level'] ?? null;
+                if ($post_privacy_level !== '0' && is_numeric($post_privacy_level)) {
+                    $insertLevel = (int) $post_privacy_level;
                 }
 
                 $insert = new ImageSyncInsertRow(
@@ -653,7 +656,8 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
                     // first we search the formats that were removed
                     foreach ($db_formats as $image_id => $formats) {
-                        $element_formats = $fs[$db_elements[$image_id]]['formats'] ?? [];
+                        $fs_row = $fs[$db_elements[$image_id]];
+                        $element_formats = $fs_row['formats'] ?? [];
                         $image_formats_to_delete = array_diff_key($formats, $element_formats);
                         $logger->debug('image_formats_to_delete', 'sync', $image_formats_to_delete);
                         foreach ($image_formats_to_delete as $ext => $format_id) {
@@ -675,7 +679,8 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                             $formats = $db_formats[$image_id];
                         }
 
-                        $element_formats = $fs[$path]['formats'] ?? [];
+                        $fs_row = $fs[$path];
+                        $element_formats = $fs_row['formats'] ?? [];
                         $image_formats_to_insert = array_diff_key($element_formats, $formats);
                         $logger->debug('image_formats_to_insert', 'sync', $image_formats_to_insert);
                         foreach ($image_formats_to_insert as $ext => $filesize) {
@@ -956,7 +961,8 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                 $privacy_level_selected = (int) $post['privacy_level'];
             }
 
-            $sync_value = is_string($post['sync'] ?? null) ? $post['sync'] : 'dirs';
+            $post_sync = $post['sync'] ?? null;
+            $sync_value = is_string($post_sync) ? $post_sync : 'dirs';
             $sync_meta_value = isset($post['sync_meta']);
             $display_info_value = isset($post['display_info']) && $post['display_info'] === '1';
             $add_to_caddie_value = isset($post['add_to_caddie']) && $post['add_to_caddie'] === '1';

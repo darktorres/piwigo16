@@ -408,7 +408,7 @@ final readonly class UploadService
                 // compute file path
                 $date_string = preg_replace('/[^\d]/', '', $dbnow);
                 $random_string = substr($md5sum, 0, 4) . '%s';
-                $filename_wo_ext = $date_string . '-' . $random_string;
+                $filename_wo_ext = ($date_string ?? '') . '-' . $random_string;
                 $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
 
                 $image_size = getimagesize($source_filepath);
@@ -446,12 +446,12 @@ final readonly class UploadService
                     // this whole branch that got any cross-check at all).
                     if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                         unlink($source_filepath);
-                        $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
+                        $error_msg = 'File extension "' . $original_extension . '" for file "' . ($original_filename ?? '') . '" does not match file MIME type "' . $finfo_type . '"';
                         throw new UnsupportedMediaTypeException($error_msg);
                     }
                     if (in_array($finfo_type, ['text/html', 'text/plain'], true) and ! in_array($original_extension, ['html', 'htm', 'txt'], true)) {
                         unlink($source_filepath);
-                        $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
+                        $error_msg = 'File extension "' . $original_extension . '" for file "' . ($original_filename ?? '') . '" does not match file MIME type "' . $finfo_type . '"';
                         throw new UnsupportedMediaTypeException($error_msg);
                     }
 
@@ -902,7 +902,7 @@ final readonly class UploadService
         $file_path = $event->filePath;
         $logger = $this->currentLogger->get();
 
-        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . ($representative_ext ?? ''));
 
         if (isset($representative_ext)) {
             $event->representativeExt = $representative_ext;
@@ -967,7 +967,7 @@ final readonly class UploadService
         $file_path = $event->filePath;
         $logger = $this->currentLogger->get();
 
-        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . ($representative_ext ?? ''));
 
         if (isset($representative_ext)) {
             $event->representativeExt = $representative_ext;
@@ -1027,7 +1027,7 @@ final readonly class UploadService
         $file_path = $event->filePath;
         $logger = $this->currentLogger->get();
 
-        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . ($representative_ext ?? ''));
 
         if (isset($representative_ext)) {
             $event->representativeExt = $representative_ext;
@@ -1115,7 +1115,7 @@ final readonly class UploadService
         $file_path = $event->filePath;
         $logger = $this->currentLogger->get();
 
-        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . ($representative_ext ?? ''));
 
         if (isset($representative_ext)) {
             $event->representativeExt = $representative_ext;
@@ -1204,7 +1204,7 @@ final readonly class UploadService
         $file_path = $event->filePath;
         $logger = $this->currentLogger->get();
 
-        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . ($representative_ext ?? ''));
 
         if (isset($representative_ext)) {
             $event->representativeExt = $representative_ext;
@@ -1286,7 +1286,7 @@ final readonly class UploadService
         $file_path = $event->filePath;
         $logger = $this->currentLogger->get();
 
-        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
+        $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . ($representative_ext ?? ''));
 
         if (isset($representative_ext)) {
             $event->representativeExt = $representative_ext;

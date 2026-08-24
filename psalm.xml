@@ -367,6 +367,24 @@
                      ActionControllerTest.php above, in idcGet()'s own
                      identical header-parsing loop. -->
                 <file name="tests/Browser/ImageDerivativeControllerTest.php"/>
+                <!-- self::assertArrayHasKey('URL_NEXT', $navbar) right
+                     before the flagged read: PHPStan's PHPUnit extension
+                     narrows the array shape off assertArrayHasKey() (proves
+                     'URL_NEXT' always exists afterwards); Psalm doesn't.
+                     Confirmed: adding a `?? null` guard + assertIsString()
+                     gets `nullCoalesce.offset`/`staticMethod.alreadyNarrowedType`
+                     from PHPStan. -->
+                <file name="tests/Integration/PictureCommentRendererTest.php"/>
+                <!-- RecentIconResolver::getIcon()'s own return type is
+                     `false|array{}|array{TITLE: string, IS_CHILD_DATE:
+                     bool}`: TITLE and IS_CHILD_DATE always co-occur.
+                     PHPStan narrows the whole union off the
+                     array_key_exists('TITLE', ...) + fail() guard already
+                     present, proving IS_CHILD_DATE also always exists once
+                     TITLE is confirmed. Confirmed: adding the equivalent
+                     array_key_exists('IS_CHILD_DATE', ...) guard gets
+                     `function.alreadyNarrowedType` from PHPStan. -->
+                <file name="tests/Integration/RecentIconResolverTest.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

@@ -398,5 +398,20 @@
                 <file name="tools/triggers_list.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
+        <PossiblyFalseArgument>
+            <errorLevel type="suppress">
+                <!-- ImageDerivativeController::handle()'s $derivative_mtime
+                     (@filemtime(), int|false) sets $need_generate=true
+                     whenever it's false; the later `if (! $need_generate)`
+                     branch uses $derivative_mtime as an int. PHPStan's flow
+                     analysis correlates the boolean flag with the other
+                     variable's type and proves $derivative_mtime is never
+                     false inside that branch (confirmed: adding an
+                     `assert($derivative_mtime !== false)` guard there gets
+                     `notIdentical.alwaysTrue`); Psalm can't do this
+                     cross-variable correlation. -->
+                <file name="src/Piwigo/Controller/ImageDerivativeController.php"/>
+            </errorLevel>
+        </PossiblyFalseArgument>
     </issueHandlers>
 </psalm>

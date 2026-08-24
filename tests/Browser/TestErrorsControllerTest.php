@@ -57,6 +57,9 @@ it('returns a real JSON content-type header', function (): void {
     $ch = curl_init(H::baseUrl() . '/__test/errors');
     expect($ch)
         ->not->toBeFalse();
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());

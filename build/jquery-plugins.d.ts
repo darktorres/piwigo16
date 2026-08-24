@@ -361,6 +361,12 @@ interface JQuery {
 	colorbox(options?: Record<string, unknown>): JQuery;
 	tipTip(options?: Record<string, unknown>): JQuery;
 
+	// jquery.Jcrop (vendored -- P46-0's own CDN table). `picture_coi.ts`'s
+	// own crop-of-interest setup is the one real first-party call site.
+	// The optional callback runs with `this` bound to the real Jcrop API
+	// object (`.animateTo(...)` etc.), not the jQuery collection.
+	Jcrop(options: Record<string, any>, callback?: (this: any) => void): JQuery;
+
 	// `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
 	// extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` --
 	// neither file is converted yet, but `batchManagerGlobal.ts` is the

@@ -147,6 +147,12 @@ export default defineConfig({
         catPerm: r("themes/admin/default/js/cat_perm.ts"),
         ratingAdmin: r("themes/admin/default/js/rating.ts"),
         doubleSlider: r("themes/admin/default/js/doubleSlider.ts"),
+        // P46-C part 14 -- 5 more small, self-contained admin files.
+        configurationComments: r("themes/admin/default/js/configuration_comments.ts"),
+        pictureCoi: r("themes/admin/default/js/picture_coi.ts"),
+        configurationSizes: r("themes/admin/default/js/configuration_sizes.ts"),
+        configurationMain: r("themes/admin/default/js/configuration_main.ts"),
+        maintenanceActions: r("themes/admin/default/js/maintenance_actions.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

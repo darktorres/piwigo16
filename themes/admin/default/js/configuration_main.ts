@@ -1,15 +1,21 @@
+export {};
+
 (function(){
-  var targets = {
+  const targets: Record<string, string> = {
     'input[name="rate"]' : '#rate_anonymous',
     'input[name="allow_user_registration"]' : '#email_admin_on_new_user',
     'input[name="email_admin_on_new_user"]' : '#email_admin_on_new_user_filter'
   };
 
-  for (var selector in targets) {
-    var target = targets[selector];
+  for (const selector in targets) {
+    const target = targets[selector]!;
 
     jQuery(target).toggle(jQuery(selector).is(':checked'));
 
+    // Same pre-existing closure bug as configuration_comments.ts's own
+    // copy of this pattern -- `selector` read from the outer loop's
+    // `var`, not passed into the IIFE the way `target` is. Preserved
+    // exactly.
     (function(target){
       jQuery(selector).on('change', function() {
         jQuery(target).toggle($(this).is(':checked'));
@@ -26,17 +32,17 @@
 }());
 
 (function(){
-  var max_fields = Math.ceil(pwg_getPageData('order_by_options_count')/2);
+  const max_fields = Math.ceil(pwg_getPageData('order_by_options_count')/2);
 
   function updateFilters() {
-    var $selects = jQuery('#order_filters select');
+    const $selects = jQuery('#order_filters select');
 
     jQuery('#order_filters .addFilter').toggle($selects.length <= max_fields);
     jQuery('#order_filters .removeFilter').css('display', '').filter(':first').css('display', 'none');
 
     $selects.find('option').removeAttr('disabled');
     $selects.each(function() {
-      $selects.not(this).find('option[value="'+ jQuery(this).val() +'"]').attr('disabled', 'disabled');
+      $selects.not(this).find('option[value="'+ String(jQuery(this).val()) +'"]').attr('disabled', 'disabled');
     });
   }
 
@@ -64,7 +70,7 @@ jQuery("input[name='mail_theme']").change(function() {
 });
 
 jQuery("input[name='email_admin_on_new_user_filter']").change(function() {
-  var val = jQuery("input[name='email_admin_on_new_user_filter']:checked").val();
+  const val = jQuery("input[name='email_admin_on_new_user_filter']:checked").val();
 
   jQuery('#email_admin_on_new_user_filter_group_options').toggle(val === 'group');
 });

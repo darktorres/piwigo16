@@ -346,7 +346,8 @@ test('open() uses the container-shared CurrentConfig, not a disconnected fresh o
         ]);
         $logger->write('anything');
 
-        expect(fileperms($dir) & 0o777)
+        $dirPerms = fileperms($dir);
+        expect($dirPerms !== false ? $dirPerms & 0o777 : false)
             ->toBe(0o700);
     } finally {
         CurrentConfigTestFactory::get()->reset();

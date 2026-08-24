@@ -532,7 +532,11 @@ it('denies HD download of an oversized original to a guest with no HD access', f
     if ($img === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
     }
-    $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_action_oversized_') . '.jpg';
+    $tmp = tempnam(sys_get_temp_dir(), 'pwg_action_oversized_');
+    if ($tmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $tmpPath = $tmp . '.jpg';
     imagejpeg($img, $tmpPath, 80);
     $imageId = H::uploadPhotoViaApi($tmpPath, $albumId, 'Action Controller Oversized Photo');
     @unlink($tmpPath);
@@ -704,7 +708,11 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
     if ($img === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
     }
-    $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_action_admin_dl_') . '.jpg';
+    $tmp = tempnam(sys_get_temp_dir(), 'pwg_action_admin_dl_');
+    if ($tmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $tmpPath = $tmp . '.jpg';
     imagejpeg($img, $tmpPath, 80);
     $imageId = H::uploadPhotoViaApi($tmpPath, $albumId, 'Action Controller Admin Download Photo');
     @unlink($tmpPath);

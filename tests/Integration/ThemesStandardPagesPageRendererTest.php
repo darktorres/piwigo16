@@ -310,7 +310,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // reached (mkgetdir()'s own is_writable() short-circuit).
         chmod($fixtureRoot, 0o555);
 
-        $realPng = tempnam(sys_get_temp_dir(), 'pwg_std_pages_mkgetdir_') . '.png';
+        $realPngTmp = tempnam(sys_get_temp_dir(), 'pwg_std_pages_mkgetdir_');
+        if ($realPngTmp === false) {
+            throw new RuntimeException('tempnam() failed');
+        }
+        $realPng = $realPngTmp . '.png';
         file_put_contents($realPng, $this->realPngBytes());
 
         try {

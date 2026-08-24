@@ -741,7 +741,8 @@ final class BackupServiceTest extends IntegrationTestCase
 
         try {
             self::assertDirectoryExists($dir, 'makeTempDir() should have created a real directory');
-            self::assertSame(0775, fileperms($dir) & 0777);
+            $dirPerms = fileperms($dir);
+            self::assertSame(0775, $dirPerms !== false ? $dirPerms & 0777 : false);
         } finally {
             rmdir($dir);
         }

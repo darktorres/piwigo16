@@ -18,7 +18,11 @@ use Symfony\Component\Process\Exception\ProcessTimedOutException;
  */
 function fakeSendmailScript(string $body): string
 {
-    $path = tempnam(sys_get_temp_dir(), 'pwg_fake_sendmail_') . '.sh';
+    $tmp = tempnam(sys_get_temp_dir(), 'pwg_fake_sendmail_');
+    if ($tmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $path = $tmp . '.sh';
     file_put_contents($path, "#!/usr/bin/env bash\n" . $body);
     chmod($path, 0755);
 

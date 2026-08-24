@@ -149,7 +149,7 @@ function callIerrorFor400(ImageDerivativeController $controller, array $tokens):
     } catch (ResponseReadyException $e) {
         return $e;
     }
-    throw new RuntimeException('parseCustomParams() did not throw for: ' . json_encode($tokens));
+    throw new RuntimeException('parseCustomParams() did not throw for: ' . json_encode($tokens, JSON_THROW_ON_ERROR));
 }
 
 test('parseCustomParams() rejects a genuinely empty token array', function (): void {

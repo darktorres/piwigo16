@@ -376,8 +376,12 @@ test('autoLogin() succeeds for a valid remember-me cookie and marks the session 
     $calculated = $service->calculateAutoLoginKey(1, $time);
     expect($calculated->key)
         ->toBeString();
+    $calculatedKey = $calculated->key;
+    if (! is_string($calculatedKey)) {
+        throw new RuntimeException('calculateAutoLoginKey() unexpectedly returned false for a known user');
+    }
 
-    $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculated->key;
+    $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculatedKey;
 
     try {
         // Real bug, found live in the Integration original: autoLogin()

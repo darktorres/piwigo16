@@ -180,10 +180,18 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
         'std_pgs_selected_skin' => 'fuchsia',
     ];
 
-    $txtPath = tempnam(sys_get_temp_dir(), 'pwg_std_pages_logo_') . '.txt';
+    $txtTmp = tempnam(sys_get_temp_dir(), 'pwg_std_pages_logo_');
+    if ($txtTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $txtPath = $txtTmp . '.txt';
     file_put_contents($txtPath, 'not an image');
 
-    $pngPath = tempnam(sys_get_temp_dir(), 'pwg_std_pages_logo_') . '.png';
+    $pngTmp = tempnam(sys_get_temp_dir(), 'pwg_std_pages_logo_');
+    if ($pngTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $pngPath = $pngTmp . '.png';
     $img = imagecreatetruecolor(16, 16);
     if ($img === false) {
         throw new RuntimeException('imagecreatetruecolor failed');

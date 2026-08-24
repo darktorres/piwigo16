@@ -379,7 +379,9 @@ test('extract applies the given chmod mode to each extracted file', function ():
 
     expect($result)
         ->not->toBeNull();
-    expect(fileperms($dest . '/main.inc.php') & 0o777)->toBe(0o640);
+    $mainIncPerms = fileperms($dest . '/main.inc.php');
+    expect($mainIncPerms !== false ? $mainIncPerms & 0o777 : false)
+        ->toBe(0o640);
 });
 
 test('extract returns null for a corrupt (non-zip) archive file', function (): void {

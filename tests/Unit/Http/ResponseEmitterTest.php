@@ -109,7 +109,8 @@ function responseEmitterTestRawResponse(int $port, string $query): string
     fwrite($sock, "GET /?{$query} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
     $raw = '';
     while (! feof($sock)) {
-        $raw .= fread($sock, 8192);
+        $chunk = fread($sock, 8192);
+        $raw .= $chunk !== false ? $chunk : '';
     }
     fclose($sock);
 

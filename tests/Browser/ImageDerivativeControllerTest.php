@@ -548,7 +548,11 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
     // applies to virtually any derivative type, making a corner pixel of
     // the *generated* derivative unambiguously distinguishable from
     // H::makeTestImage()'s own solid blue-ish (90, 130, 200) fill.
-    $watermarkPath = tempnam(sys_get_temp_dir(), 'pwg_idc_wm_') . '.png';
+    $watermarkTmp = tempnam(sys_get_temp_dir(), 'pwg_idc_wm_');
+    if ($watermarkTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $watermarkPath = $watermarkTmp . '.png';
     $wmImg = imagecreatetruecolor(10, 10);
     if ($wmImg === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
@@ -1481,7 +1485,11 @@ it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, w
         // 'thumb' as the only surviving, structurally-matching candidate
         // (verified directly against applyGlobal()/trySwitchSource(),
         // not hand-derived).
-        $watermarkPngPath = tempnam(sys_get_temp_dir(), 'pwg_idc_cropreuse_img_') . '.png';
+        $watermarkPngTmp = tempnam(sys_get_temp_dir(), 'pwg_idc_cropreuse_img_');
+        if ($watermarkPngTmp === false) {
+            throw new RuntimeException('tempnam() failed');
+        }
+        $watermarkPngPath = $watermarkPngTmp . '.png';
         $wmImg = imagecreatetruecolor(10, 10);
         if ($wmImg === false) {
             throw new RuntimeException('imagecreatetruecolor failed');

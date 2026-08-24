@@ -1,3 +1,5 @@
+export {};
+
 jQuery(document).ready(function() {
 
 	jQuery("input[name=who]").change(function () {
@@ -7,7 +9,7 @@ jQuery(document).ready(function() {
 	checkWhoOptions();
 
 	function checkWhoOptions() {
-		var option = jQuery("input[name=who]:checked").val();
+		const option = String(jQuery("input[name=who]:checked").val());
 		jQuery(".who_option").hide();
 		jQuery(".who_" + option).show();
 	}
@@ -17,8 +19,8 @@ jQuery(document).ready(function() {
 	});
 
 	jQuery("form#categoryNotify").submit(function(e) {
-		var who_selected = false;
-		var who_option = jQuery("input[name=who]:checked").val();
+		let who_selected = false;
+		const who_option = String(jQuery("input[name=who]:checked").val());
 
 		if (jQuery(".who_" + who_option + " select").length > 0) {
 			if (jQuery(".who_" + who_option + " select option:selected").length > 0) {

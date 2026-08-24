@@ -188,6 +188,14 @@ interface Window {
 	str_restore_def: string;
 	show_details: any;
 	plugin_filter: string | null;
+
+	// footer.ts's own 2 functions, called from layout.latte's own
+	// `onclick="show_user_whats_new()"` / `onClick=
+	// "hide_user_whats_new()"` attributes -- the `javascript:`/`onclick=`
+	// exposure pattern (docs/PLAN.md P46-C's own finding, first surfaced
+	// by batchManagerGlobal.ts's own selectGenerateDerivAll/etc.).
+	hide_user_whats_new: () => void;
+	show_user_whats_new: () => void;
 }
 
 // batch_manager_global.ts reads these 4 as *bare* identifiers (deferred,
@@ -331,6 +339,21 @@ interface JQuery {
 		alert_cancel?: string;
 		alert_content?: string;
 	}): void;
+
+	// admin.ts's own first-party `jQuery.fn.lightAccordion` extension --
+	// declared and consumed within the same file, no other real call
+	// site found.
+	lightAccordion(options?: Record<string, any>): JQuery;
+
+	// jQuery UI's own `slider` widget (vendored -- P46-0's own CDN
+	// table, the one full-bundle `jquery.ui` id) --
+	// `doubleSlider.ts`'s own `pwgDoubleSlider` extension (declared
+	// separately below, alongside every other vendored-plugin entry)
+	// is built on it. Both its options-object and multi-arg "command"
+	// forms (`.slider('values', 0, ...)`) are real, distinct call
+	// shapes.
+	slider(options?: Record<string, unknown>): JQuery;
+	slider(command: string, ...args: any[]): any;
 
 	// jquery.colorbox / jquery.tipTip (both vendored -- P46-0's own CDN
 	// table). `batchManagerGlobal.ts`'s own thumbnail preview/tooltip

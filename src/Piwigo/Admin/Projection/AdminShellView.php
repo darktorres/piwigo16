@@ -87,7 +87,7 @@ final readonly class AdminShellView implements View, HasPageAssets, ExposesPageD
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('admin', 'themes/admin/default/js/admin.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('admin', 'themes/admin/default/js/admin.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];
 
         if ($this->hasHelp) {

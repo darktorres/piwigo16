@@ -1,3 +1,5 @@
+export {};
+
 jQuery(document).ready(function() {
 	function checkOrderOptions() {
 		jQuery("#image_order_user_define_options").hide();

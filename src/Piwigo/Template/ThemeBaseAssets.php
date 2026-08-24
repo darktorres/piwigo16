@@ -105,7 +105,7 @@ final readonly class ThemeBaseAssets
     {
         return [
             AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('footer', 'themes/admin/default/js/footer.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.tipTip', 'page-data']),
+            AssetContribution::script('footer', 'themes/admin/default/js/footer.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.tipTip', 'page-data']),
         ];
     }
 

@@ -48,7 +48,7 @@ final readonly class ThemesStandardPagesView implements View, HasPageAssets
     {
         return [
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('themes_standard_pages', 'themes/admin/default/js/themes_standard_pages.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('themes_standard_pages', 'themes/admin/default/js/themes_standard_pages.ts', loadMode: LoadMode::Footer),
         ];
     }
 }

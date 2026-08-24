@@ -1,6 +1,12 @@
+export {};
+
+// `GroupsCache`/`UsersCache` are only reachable via `window.` --
+// LocalStorageCache.ts wraps them in its own real, pre-existing IIFE
+// (same reasoning as every other GroupsCache/UsersCache/
+// CategoriesCache/TagsCache consumer this session).
 (function() {
 	// <!-- GROUPS -->
-	var groupsCache = new GroupsCache({
+	const groupsCache = new window.GroupsCache({
 		serverKey: pwg_getPageData('cache_key_groups'),
 		serverId: pwg_getPageData('cache_key_hash'),
 		rootUrl: pwg_getPageData('root_url')
@@ -9,7 +15,7 @@
 	groupsCache.selectize(jQuery('[data-selectize=groups]'));
 
 	// <!-- USERS -->
-	var usersCache = new UsersCache({
+	const usersCache = new window.UsersCache({
 		serverKey: pwg_getPageData('cache_key_users'),
 		serverId: pwg_getPageData('cache_key_hash'),
 		rootUrl: pwg_getPageData('root_url')

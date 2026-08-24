@@ -1,20 +1,22 @@
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
+export {};
+
+jQuery.fn.lightAccordion = function(this: JQuery, options: any) {
+  const settings = $.extend({
     header: 'dt',
     content: 'dd',
     active: 0
   }, options);
 
   return this.each(function() {
-    var self = jQuery(this);
+    const self = jQuery(this);
 
-    var contents = self.find(settings.content),
+    const contents = self.find(settings.content),
         headers = self.find(settings.header);
 
     contents.not(contents[settings.active]).hide();
 
     self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
+        const content = jQuery(this).next(settings.content);
         content.slideDown();
         contents.not(content).slideUp();
     });
@@ -27,10 +29,10 @@ $('#menubar').lightAccordion({
 
 /* in case we have several infos/errors/warnings display bullets */
 jQuery(document).ready(function() {
-  var eiw = ["infos","erros","warnings", "messages"];
+  const eiw = ["infos","erros","warnings", "messages"];
 
-  for (var i = 0; i < eiw.length; i++) {
-    var boxType = eiw[i];
+  for (let i = 0; i < eiw.length; i++) {
+    const boxType = eiw[i];
 
     if (jQuery("."+boxType+" ul li").length > 1) {
       jQuery("."+boxType+" ul li").css("list-style-type", "square");

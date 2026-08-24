@@ -1,4 +1,6 @@
-var filters_names = pwg_getPageData('filters_names');
+export {};
+
+const filters_names = pwg_getPageData('filters_names');
 
 for (const filter_name of filters_names) {
   if (!$("input#"+filter_name+"Filters").is(':checked')) {

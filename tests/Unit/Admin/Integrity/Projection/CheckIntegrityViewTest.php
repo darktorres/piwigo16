@@ -42,6 +42,6 @@ test('pageAssets registers check_integrity.js unconditionally', function (): voi
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('check_integrity', 'themes/admin/default/js/check_integrity.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('check_integrity', 'themes/admin/default/js/check_integrity.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ]);
 });

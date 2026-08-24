@@ -131,6 +131,22 @@ export default defineConfig({
         // real (retires that file's earlier ambient declare-const
         // bindings).
         pluginsInstalledConfig: r("themes/admin/default/js/plugins_installed_config.ts"),
+        // P46-C part 13 -- second batch of small, self-contained admin
+        // files (14 files).
+        footerAdmin: r("themes/admin/default/js/footer.ts"),
+        checkIntegrity: r("themes/admin/default/js/check_integrity.ts"),
+        configurationWatermark: r("themes/admin/default/js/configuration_watermark.ts"),
+        elementSetRanks: r("themes/admin/default/js/element_set_ranks.ts"),
+        albumNotification: r("themes/admin/default/js/album_notification.ts"),
+        adminShell: r("themes/admin/default/js/admin.ts"),
+        configurationSearch: r("themes/admin/default/js/configuration_search.ts"),
+        themesInstalled: r("themes/admin/default/js/themes_installed.ts"),
+        themesStandardPages: r("themes/admin/default/js/themes_standard_pages.ts"),
+        maintenance: r("themes/admin/default/js/maintenance.ts"),
+        pictureFormats: r("themes/admin/default/js/picture_formats.ts"),
+        catPerm: r("themes/admin/default/js/cat_perm.ts"),
+        ratingAdmin: r("themes/admin/default/js/rating.ts"),
+        doubleSlider: r("themes/admin/default/js/doubleSlider.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

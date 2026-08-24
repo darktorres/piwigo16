@@ -1,6 +1,8 @@
+export {};
+
 (function(){
   function onWatermarkChange() {
-    var val = jQuery("#wSelect").val();
+    const val = String(jQuery("#wSelect").val());
     if (val.length) {
       jQuery("#wImg").attr('src', pwg_getPageData('root_url')+val).show();
     }

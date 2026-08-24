@@ -43,7 +43,7 @@ final readonly class ConfigurationSearchView implements View, HasPageAssets, Exp
     {
         return [
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('configuration_search', 'themes/admin/default/js/configuration_search.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('configuration_search', 'themes/admin/default/js/configuration_search.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
         ];
     }

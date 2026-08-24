@@ -1,11 +1,13 @@
-var pwg_token = pwg_getPageData('csrf_token');
-var str_confirm_delete_format = pwg_getPageString('Delete %s format ?');
-var str_confirm_msg = pwg_getPageString('Yes, I am sure');
-var str_cancel_msg = pwg_getPageString('No, I have changed my mind');
+export {};
+
+const pwg_token = pwg_getPageData('csrf_token');
+const str_confirm_delete_format = pwg_getPageString('Delete %s format ?');
+const str_confirm_msg = pwg_getPageString('Yes, I am sure');
+const str_cancel_msg = pwg_getPageString('No, I have changed my mind');
 
 function fitExtensions() {
     $(".format-card-ext span").each((i, node) => {
-        let size = Math.min(180 * 1/node.innerHTML.length, 45) 
+        const size = Math.min(180 * 1/node.innerHTML.length, 45)
         node.setAttribute('style', `font-size:${size}px`)
     })
 }
@@ -13,8 +15,8 @@ function fitExtensions() {
 fitExtensions()
 
 $('.format-card').each((i, node) => {
-    let card = $(node)
-    let button = card.find(".format-delete")
+    const card = $(node)
+    const button = card.find(".format-delete")
     button.click(() => {
         $.confirm({
             title: str_confirm_delete_format.replace("%s",card.find('.format-card-ext span').html()),
@@ -33,11 +35,11 @@ $('.format-card').each((i, node) => {
             },
             ...jConfirm_confirm_options
           })
-        
+
     })
 })
 
-function deleteFormat(card) {
+function deleteFormat(card: JQuery) {
     card.find('.format-delete i').attr("class", "icon-spin6 animate-spin")
     $.ajax({
         url: "api/v1/images/formats/actions/delete",
@@ -47,14 +49,14 @@ function deleteFormat(card) {
         data: JSON.stringify({
             formatIds: [Number(card.data("id"))],
         }),
-        success: function (raw_data) {
+        success: function (_raw_data: any) {
             card.fadeOut("slow", () => {
                 card.remove();
                 if ($('.format-card').length == 0)
                     $('.no-formats').show()
             })
         },
-        error: function(message) {
+        error: function(message: any) {
             console.log(message);
         }
     })

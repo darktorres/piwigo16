@@ -45,7 +45,7 @@ final readonly class PictureFormatsView implements View, HasPageAssets, ExposesP
         return [
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/picture_formats.css', id: 'picture_formats'),
-            AssetContribution::script('picture_formats', 'themes/admin/default/js/picture_formats.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('picture_formats', 'themes/admin/default/js/picture_formats.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),

@@ -656,5 +656,23 @@
                 <directory name="."/>
             </errorLevel>
         </UnresolvableInclude>
+        <DocblockTypeContradiction>
+            <errorLevel type="suppress">
+                <!-- testResetToDefaultValueWhenParamIsDeleted() sets
+                     CurrentConfig::$sessionLength (a PHP 8.4 hooked
+                     property) to 9999 via ConfigService::confUpdateParam()
+                     + loadConfFromDb(), asserts it, then calls
+                     confDeleteParam() (a completely separate mutation
+                     path) and asserts the property reset to its real
+                     default (3600). Psalm's flow analysis pins the
+                     property's type to the literal 9999 it just observed
+                     via assertSame() and carries that across the
+                     intervening confDeleteParam() call, then flags the
+                     3600 assertion as provably-false against that stale
+                     literal; PHPStan doesn't have this hooked-property
+                     mutation-tracking gap and is clean on this file. -->
+                <file name="tests/Integration/ConfigServiceTest.php"/>
+            </errorLevel>
+        </DocblockTypeContradiction>
     </issueHandlers>
 </psalm>

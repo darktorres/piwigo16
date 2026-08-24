@@ -311,6 +311,13 @@ namespace Piwigo\Tests\Integration {
                     ->fetchOne();
                 self::assertSame(0, is_numeric($swappedRowCount) ? (int) $swappedRowCount : -1);
             } finally {
+                // Psalm narrows $result->userId to non-null from the
+                // assertNotNull() above and carries that narrowing into this
+                // finally block -- but finally also runs when that very
+                // assertNotNull() call throws (a failed assertion), in which
+                // case $result->userId is genuinely still null here. The
+                // null-check is the real cleanup guard, not dead code.
+                /** @psalm-suppress RedundantConditionGivenDocblockType see comment above */
                 if ($result->userId !== null) {
                     $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
@@ -1047,6 +1054,10 @@ namespace Piwigo\Tests\Integration {
                 self::assertNotNull($result->userId);
                 self::assertSame([], $result->errors);
             } finally {
+                // Same finally-runs-even-when-the-try's-own-assertNotNull()
+                // fails reasoning as testRegisterUserAddsTheNewUserToDefaultGroups()
+                // above -- the null-check is real cleanup, not dead code.
+                /** @psalm-suppress RedundantConditionGivenDocblockType see comment above */
                 if ($result->userId !== null) {
                     $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
@@ -1077,6 +1088,10 @@ namespace Piwigo\Tests\Integration {
                 self::assertNotNull($result->userId);
                 self::assertSame([], $result->errors);
             } finally {
+                // Same finally-runs-even-when-the-try's-own-assertNotNull()
+                // fails reasoning as testRegisterUserAddsTheNewUserToDefaultGroups()
+                // above -- the null-check is real cleanup, not dead code.
+                /** @psalm-suppress RedundantConditionGivenDocblockType see comment above */
                 if ($result->userId !== null) {
                     $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }

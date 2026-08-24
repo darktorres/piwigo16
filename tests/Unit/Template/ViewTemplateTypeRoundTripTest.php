@@ -25,6 +25,7 @@ test('every View implementation round-trips with its #[Template] file\'s own {te
         if (! str_starts_with($class, 'Piwigo\\') || ! class_exists($class)) {
             continue;
         }
+        assert(class_exists($class));
 
         $reflection = new ReflectionClass($class);
         if (! $reflection->implementsInterface(View::class)) {

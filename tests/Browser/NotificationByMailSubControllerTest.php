@@ -22,17 +22,24 @@ function nbmUserMailNotificationRow(int $userId): ?array
     $row = H::dbFetchAssoc($db, sprintf('SELECT check_key, enabled, last_send FROM user_mail_notification WHERE user_id = %d', $userId));
     H::dbClose($db);
 
-    if (! is_array($row) || ! is_string($row['check_key'] ?? null)) {
+    if (! is_array($row)) {
         return null;
     }
+
+    $checkKey = $row['check_key'] ?? null;
+    if (! is_string($checkKey)) {
+        return null;
+    }
+
+    $lastSendRaw = $row['last_send'] ?? null;
 
     // user_mail_notification.enabled is a genuine boolean column on
     // Postgres -- pg_fetch_assoc() represents it as 't'/'f', which a
     // naive (int) cast silently mishandles.
     return [
-        'check_key' => $row['check_key'],
+        'check_key' => $checkKey,
         'enabled' => H::dbToBool($row['enabled']) ? 1 : 0,
-        'last_send' => is_string($row['last_send'] ?? null) ? $row['last_send'] : null,
+        'last_send' => is_string($lastSendRaw) ? $lastSendRaw : null,
     ];
 }
 

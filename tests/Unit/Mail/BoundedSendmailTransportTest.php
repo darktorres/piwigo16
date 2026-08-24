@@ -35,7 +35,13 @@ function fakeSendmailScript(string $body): string
 function fakeSendmailCapturing(int $exitCode = 0): array
 {
     $argvFile = tempnam(sys_get_temp_dir(), 'pwg_argv_');
+    if ($argvFile === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
     $stdinFile = tempnam(sys_get_temp_dir(), 'pwg_stdin_');
+    if ($stdinFile === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
     $script = fakeSendmailScript(<<<BASH
         printf '%s\\n' "\$@" > '{$argvFile}'
         cat > '{$stdinFile}'

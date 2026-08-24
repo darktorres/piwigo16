@@ -140,7 +140,13 @@ function feedUserFeedRow(string $feedId): ?array
  * from a guest) hitting feed.php directly, outside of pest-plugin-
  * browser's own Playwright context (which has no cookie-jar access for
  * reuse against a raw curl request).
+ * tempnam() always returns a genuinely non-empty path string on success
+ * (only the false-on-failure case, handled below, is real) -- PHPStan's
+ * stub encodes that; Psalm's only proves plain string, hence the
+ * suppressions below. The non-empty-string declared here matches
+ * feedRawGetWithCookies()'s own @param.
  * @return non-empty-string
+ * @psalm-suppress MoreSpecificReturnType see comment above
  */
 function feedAdminCookieJar(): string
 {
@@ -154,6 +160,7 @@ function feedAdminCookieJar(): string
         'password' => H::ADMIN_PASS,
     ]);
 
+    /** @psalm-suppress LessSpecificReturnStatement see comment above */
     return $cookieJar;
 }
 
@@ -263,6 +270,11 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
         // -- a space/colon aren't special chars, so this is an exact match.
         expect((string) $item->guid)
             ->toBe('pics-' . FEED_FIXED_DATE);
+        // $item->guid is a magic property fetch (SimpleXMLElement) --
+        // Psalm's stub types it SimpleXMLElement|null generically, but the
+        // string assertion just above already proves it's a real element
+        // here (a real RSS <guid> the FeedController itself always emits).
+        /** @psalm-suppress PossiblyNullArrayAccess see comment above */
         expect((string) $item->guid['isPermaLink'])->toBe('false');
 
         // getTitleRecentPostDate(): "%d new photo(s) (<Month> <day>)" --
@@ -332,6 +344,10 @@ it('switches the current user to a personal feed\'s real owner when fetched anon
     }
     // rss_title's " (as <username>)" suffix reflects the feed OWNER
     // (fixture_admin), not the anonymous requester's own guest identity.
+    // $xml->channel is a magic property fetch (SimpleXMLElement) -- Psalm's
+    // stub types it SimpleXMLElement|null generically, but a well-formed
+    // RSS2 feed (just confirmed above) always has a real <channel>.
+    /** @psalm-suppress PossiblyNullPropertyFetch see comment above */
     expect((string) $xml->channel->title)
         ->toContain(' (as ' . H::ADMIN_USER . ')');
 });
@@ -360,7 +376,9 @@ it('resets an authenticated session back to guest identity for the generic (toke
         // Same guest-identity title suffix the anonymous test above
         // asserts -- proving the admin session got reset for this
         // request, not just that an anonymous request happens to already
-        // be guest.
+        // be guest. Same $xml->channel magic-property-nullability
+        // suppression reasoning as the anonymous test above.
+        /** @psalm-suppress PossiblyNullPropertyFetch see comment above */
         expect((string) $xml->channel->title)
             ->toContain(' (as guest)');
     } finally {

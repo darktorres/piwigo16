@@ -53,7 +53,7 @@ test('build without a $paths argument does not register a Paths definition at al
     // via a sed-applied mutation rerun.
     $container = Container::build();
 
-    expect(fn () => $container->get(Paths::class))->toThrow(InvalidDefinition::class);
+    expect(fn (): mixed => $container->get(Paths::class))->toThrow(InvalidDefinition::class);
 });
 
 test('build with a $paths argument registers it so Paths::class resolves to that same instance', function (): void {

@@ -152,6 +152,7 @@ namespace Piwigo\Tests\Integration {
             // ob_get_clean() can only return false when there's no active output
             // buffer -- ob_start() immediately above guarantees one here.
             $base = ob_get_clean();
+            assert(is_string($base));
 
             return substr($base, 0, 2) . $app13 . substr($base, 2);
         }
@@ -273,6 +274,7 @@ namespace Piwigo\Tests\Integration {
             ob_start();
             imagejpeg($image);
             $jpegBytes = ob_get_clean();
+            assert(is_string($jpegBytes));
             $relativePath = '_data/metadata-service-test-scratch/sample.jpg';
             file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, str_pad($jpegBytes, 2048, "\0"));
 

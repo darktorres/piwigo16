@@ -790,6 +790,7 @@ function upload_service_make_jpeg_with_orientation(int $orientation, int $width,
     // ob_get_clean() can only return false when there's no active output
     // buffer -- ob_start() immediately above guarantees one here.
     $base = ob_get_clean();
+    assert(is_string($base));
 
     return substr($base, 0, 2) . $app1 . substr($base, 2);
 }

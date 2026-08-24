@@ -268,6 +268,9 @@ function suMakeJpegWithIptcKeywords(array $keywords): string
     ob_start();
     imagejpeg($img, null, 80);
     $base = ob_get_clean();
+    // ob_get_clean() can only return false when there's no active output
+    // buffer -- ob_start() immediately above guarantees one here.
+    assert(is_string($base));
 
     $bytes = substr($base, 0, 2) . $app13 . substr($base, 2);
 

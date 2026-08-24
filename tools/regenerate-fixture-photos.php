@@ -69,7 +69,13 @@ if ($driver === 'pgsql') {
     }
 
     $result = $db->query('SELECT id, path FROM images WHERE id BETWEEN 1 AND 5 ORDER BY id');
-
+    // mysqli's default report mode (MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT,
+    // the default since PHP 8.1, never changed in this script) makes
+    // query() throw mysqli_sql_exception on failure instead of returning
+    // false -- PHPStan's stub reflects that (proves an instanceof guard
+    // here dead code, instanceof.alwaysTrue); Psalm's own mysqli stub
+    // still types the return as mysqli_result|bool.
+    /** @psalm-suppress PossiblyInvalidMethodCall see comment above */
     while (($row = $result->fetch_assoc()) !== null) {
         $rows[] = $row;
     }

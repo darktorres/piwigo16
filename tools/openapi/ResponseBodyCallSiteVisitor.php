@@ -118,6 +118,11 @@ final class ResponseBodyCallSiteVisitor extends NodeVisitorAbstract
 
         $keys = [];
         foreach ($arrayNode->items as $item) {
+            // Array_::$items' own docblock types every element ArrayItem
+            // (never null) -- PHPStan trusts that (proves an explicit null
+            // guard here dead code, notIdentical.alwaysTrue); Psalm's own
+            // array-shape inference doesn't pick up that certainty.
+            /** @psalm-suppress PossiblyNullPropertyFetch see comment above */
             if ($item->key instanceof String_) {
                 $keys[] = $item->key->value;
             }

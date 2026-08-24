@@ -54,8 +54,11 @@ final class DisplayBlock
     public mixed $id = null;
 
     public function __construct(
-        private readonly RegisteredBlock $registeredBlock
-    ) {}
+        private readonly RegisteredBlock $registeredBlock,
+        int $position = 0,
+    ) {
+        $this->position = $position;
+    }
 
     public function getBlock(): RegisteredBlock
     {

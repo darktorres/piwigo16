@@ -98,8 +98,7 @@ final class BlockManager
             // here either.
             $pos = $mb_conf[$id] ?? $idx * 50;
             if ($pos > 0) {
-                $this->display_blocks[$id] = new DisplayBlock($block);
-                $this->display_blocks[$id]->setPosition($pos);
+                $this->display_blocks[$id] = new DisplayBlock($block, $pos);
             }
             $idx++;
         }

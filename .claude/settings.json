@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-ecs-fix-position.sh",
+            "statusMessage": "Checking ECS --fix argument position..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -427,7 +427,7 @@ final readonly class HttpClientService implements ClientInterface
         }
 
         $currentPath = $parts['path'] ?? '/';
-        $basePath = preg_replace('#/[^/]*$#', '/', $currentPath);
+        $basePath = preg_replace('#/[^/]*$#', '/', $currentPath) ?? '/';
 
         return $origin . $basePath . $location;
     }

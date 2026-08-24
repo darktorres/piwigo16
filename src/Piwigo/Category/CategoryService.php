@@ -1791,7 +1791,7 @@ final readonly class CategoryService
                 '/(\d+)/',
                 $catDirsCallback,
                 $uppercats
-            );
+            ) ?? '';
         }
 
         return $catFulldirs;

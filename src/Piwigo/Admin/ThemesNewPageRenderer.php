@@ -98,7 +98,7 @@ final readonly class ThemesNewPageRenderer
                 $install_status = $extraction->status;
                 $theme_id = $extraction->id;
 
-                $this->redirectService->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
+                $this->redirectService->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . ($theme_id ?? ''));
             }
         }
 

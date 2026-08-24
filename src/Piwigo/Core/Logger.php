@@ -114,8 +114,9 @@ final class Logger
     {
         $this->options = array_merge($this->options, $options);
 
-        if (is_string($this->options['severity'] ?? null)) {
-            $this->options['severity'] = self::codeToLevel($this->options['severity']);
+        $severity = $this->options['severity'] ?? null;
+        if (is_string($severity)) {
+            $this->options['severity'] = self::codeToLevel($severity);
         }
 
         if (($this->options['severity'] ?? null) === self::OFF) {
@@ -483,7 +484,7 @@ final class Logger
                     '  ',
                 ],
                 str_replace('array (', 'array(', var_export($value, true))
-            );
+            ) ?? '';
             $export .= PHP_EOL;
         }
         return str_replace(['\\\\', '\\\''], ['\\', '\''], rtrim($export));

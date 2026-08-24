@@ -52,7 +52,7 @@ final readonly class SessionLoginController implements ControllerInterface
             // The combined "username:password" string must match
             // authKeyLogin()'s own strict [a-z0-9]-only regex to be
             // considered valid at all, so it never needs escaping.
-            $authenticated = $this->authService->authKeyLogin($input->username . ':' . $input->password);
+            $authenticated = $this->authService->authKeyLogin($input->username . ':' . ($input->password ?? ''));
             if ($authenticated) {
                 $this->connectedWithSession->set(ConnectedWith::ApiSessionLoginApiKey);
                 $this->refreshCurrentUser();

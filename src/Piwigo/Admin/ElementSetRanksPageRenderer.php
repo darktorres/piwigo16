@@ -123,7 +123,7 @@ final readonly class ElementSetRanksPageRenderer
                         if ($image_order !== null) {
                             $image_order .= ',';
                         }
-                        $image_order .= $order_value;
+                        $image_order = ($image_order ?? '') . $order_value;
                     }
                 }
             } elseif ($image_order_choice === 'rank') {

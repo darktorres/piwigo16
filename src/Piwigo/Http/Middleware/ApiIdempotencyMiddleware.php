@@ -80,7 +80,7 @@ final readonly class ApiIdempotencyMiddleware implements MiddlewareInterface
             || $result->handler === null
             || ! in_array($request->getMethod(), self::GUARDED_METHODS, true)
             || ! str_starts_with($path, self::API_PREFIX)
-            || $result->bypassIdempotency
+            || $result->bypassIdempotency === true
         ) {
             return $handler->handle($request);
         }

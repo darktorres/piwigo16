@@ -538,5 +538,21 @@
                 <file name="tools/phpstan/Latte/ContextVariableExtractor.php"/>
             </errorLevel>
         </PossiblyNullReference>
+        <RiskyTruthyFalsyComparison>
+            <errorLevel type="suppress">
+                <!-- ConfigurationSubController's $pderivative['enabled']:
+                     declared `string|int|bool|null` per this method's own
+                     `@var array<string, array<string, string|int|bool|null>>
+                     $pderivatives` docblock (a genuinely broad per-key
+                     union across the whole array), but PHPStan tracks the
+                     'enabled' sub-key specifically and proves it's always
+                     a real bool by the time these 2 sites read it (it's
+                     unconditionally reassigned to `true`/`false` earlier
+                     in the same request). Confirmed: adding a `(bool)`
+                     cast at either site gets `cast.useless` from PHPStan.
+                     Psalm trusts the broader docblock union instead. -->
+                <file name="src/Piwigo/Controller/Admin/ConfigurationSubController.php"/>
+            </errorLevel>
+        </RiskyTruthyFalsyComparison>
     </issueHandlers>
 </psalm>

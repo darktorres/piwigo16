@@ -364,8 +364,10 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
     }
 
     $stdout = stream_get_contents($pipes[1]);
+    $stdout = $stdout !== false ? $stdout : '';
     fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]);
+    $stderr = $stderr !== false ? $stderr : '';
     fclose($pipes[2]);
     $exit = proc_close($proc);
     @unlink($scriptFile);
@@ -435,8 +437,10 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
     }
 
     $stdout = stream_get_contents($pipes[1]);
+    $stdout = $stdout !== false ? $stdout : '';
     fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]);
+    $stderr = $stderr !== false ? $stderr : '';
     fclose($pipes[2]);
     $exit = proc_close($proc);
     @unlink($scriptFile);
@@ -516,8 +520,10 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
     }
 
     $stdout = stream_get_contents($pipes[1]);
+    $stdout = $stdout !== false ? $stdout : '';
     fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]);
+    $stderr = $stderr !== false ? $stderr : '';
     fclose($pipes[2]);
     $exit = proc_close($proc);
     @unlink($scriptFile);
@@ -696,8 +702,10 @@ test('flush never calls header() when headers are already sent, even with a non-
     }
 
     $stdout = stream_get_contents($pipes[1]);
+    $stdout = $stdout !== false ? $stdout : '';
     fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]);
+    $stderr = $stderr !== false ? $stderr : '';
     fclose($pipes[2]);
     $exit = proc_close($proc);
     @unlink($scriptFile);
@@ -799,7 +807,8 @@ function errorCollectorTestResponseHeaders(int $port): array
     fwrite($sock, "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
     $raw = '';
     while (! feof($sock)) {
-        $raw .= fread($sock, 8192);
+        $chunk = fread($sock, 8192);
+        $raw .= $chunk !== false ? $chunk : '';
     }
     fclose($sock);
 

@@ -40,8 +40,10 @@ beforeEach(function () use (&$originalDbDriver, &$originalDbBase): void {
 
 afterEach(function () use (&$originalDbDriver, &$originalDbBase): void {
     UniqueExecLock::reset();
-    putenv($originalDbDriver === false ? 'PIWIGO_DB_DRIVER' : 'PIWIGO_DB_DRIVER=' . $originalDbDriver);
-    putenv($originalDbBase === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $originalDbBase);
+    $dbDriver = $originalDbDriver;
+    $dbBase = $originalDbBase;
+    putenv($dbDriver === false || $dbDriver === null ? 'PIWIGO_DB_DRIVER' : 'PIWIGO_DB_DRIVER=' . $dbDriver);
+    putenv($dbBase === false || $dbBase === null ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $dbBase);
 });
 
 function uniqueExecLockSqliteTestLogger(): Logger

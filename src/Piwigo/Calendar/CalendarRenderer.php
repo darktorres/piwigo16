@@ -34,7 +34,6 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 use Psr\Cache\CacheItemInterface;
 
 /**

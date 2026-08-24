@@ -310,6 +310,21 @@ interface JQueryStatic {
 	// `AbstractSelectizer._selectize` is the one real first-party call
 	// site.
 	isNumeric(value: any): boolean;
+
+	// jQuery UI's core datepicker widget + jquery-ui-timepicker-addon
+	// (both vendored -- P46-0's own CDN table). `datepicker.ts`'s own
+	// `pwgDatepicker` plugin definition (patching `_generateMonthYearHeader`/
+	// `_selectMonthYear`) is the one real first-party call site for all
+	// of these -- loosely typed throughout, matching this whole file's
+	// own "minimal types" convention for vendored internals P46 doesn't
+	// re-derive real types for.
+	timepicker: { log: any };
+	datepicker: {
+		_generateMonthYearHeader: (...args: any[]) => any;
+		_selectMonthYear: (...args: any[]) => any;
+		parseDateTime(dateFormat: string, timeFormat: string, value: string, ...args: any[]): any;
+		parseDate(format: string, value: string, ...args: any[]): any;
+	};
 }
 
 interface JQuery {
@@ -368,13 +383,23 @@ interface JQuery {
 	Jcrop(options: Record<string, any>, callback?: (this: any) => void): JQuery;
 
 	// `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
-	// extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` --
-	// neither file is converted yet, but `batchManagerGlobal.ts` is the
-	// first *consumer*-only file that needs the ambient type without
-	// declaring it itself (same reasoning as `pwg_token`, P46-C's own
-	// `album_selector.ts`).
+	// extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` -- both
+	// files converted (docs/PLAN.md P46-C), `batchManagerGlobal.ts` was
+	// the first *consumer*-only file that needed the ambient type
+	// without declaring it itself (same reasoning as `pwg_token`, P46-C's
+	// own `album_selector.ts`).
 	pwgDatepicker(options?: Record<string, unknown>): JQuery;
 	pwgAddAlbum(options?: Record<string, unknown>): JQuery;
+
+	// jQuery UI core datepicker + jquery-ui-timepicker-addon's own
+	// combined `.fn` widget method (vendored -- same pair as
+	// `JQueryStatic.datepicker`/`.timepicker` above). `datepicker.ts`'s
+	// own `pwgDatepicker` plugin is the one real first-party call site;
+	// every one of its many distinct command-string overloads collapses
+	// to one loose signature, matching `.sortable()`/`.slider()`'s own
+	// treatment above.
+	datetimepicker(...args: any[]): any;
+	datepicker(...args: any[]): any;
 
 	// `batchManagerGlobal.ts`'s own first-party `jQuery.fn` extension --
 	// declared and consumed within the same file, no other real call
@@ -382,10 +407,9 @@ interface JQuery {
 	enableShiftClick(): JQuery;
 
 	// `doubleSlider.ts`'s own first-party `jQuery.fn.pwgDoubleSlider`
-	// extension -- not converted yet, but `batchManagerFilter.ts` is the
-	// first *consumer*-only file that needs the ambient type without
-	// declaring it itself (same reasoning as `pwgDatepicker`/
-	// `pwgAddAlbum` above).
+	// extension -- `batchManagerFilter.ts` was the first *consumer*-only
+	// file that needed the ambient type without declaring it itself
+	// (same reasoning as `pwgDatepicker`/`pwgAddAlbum` above).
 	pwgDoubleSlider(options?: Record<string, unknown>): JQuery;
 
 	// plupload's own jQuery-UI queue widget (vendored -- P46-0's own CDN

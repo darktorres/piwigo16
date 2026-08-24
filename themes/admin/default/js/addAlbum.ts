@@ -1,15 +1,26 @@
-jQuery.fn.pwgAddAlbum = function(options) {
+export {};
+
+jQuery.fn.pwgAddAlbum = function(this: JQuery, options: any) {
   options = options || {};
 
-  var $popup = jQuery('#addAlbumForm'),
-      $albumParent = $popup.find('[name="category_parent"]')
+  // Genuine pre-existing bug, TS-forced fix (not just a type gap): a
+  // missing comma here made TS's parser (matching how a real JS parser
+  // treats this too, confirmed by the actual compile errors before
+  // this fix) end the `var` statement after `$albumParent`, leaving
+  // `$button`/`$target`/`cache` as bare, undeclared assignments --
+  // sloppy-mode implicit globals at runtime (never intentional, and
+  // confirmed via grep that nothing anywhere reads
+  // `window.$button`/`window.$target`/`window.cache`). Restored the
+  // clearly-intended single continuous `var` list.
+  const $popup = jQuery('#addAlbumForm'),
+      $albumParent = $popup.find('[name="category_parent"]'),
       $button = jQuery(this),
       $target = jQuery('[name="'+ $button.data('addAlbum') +'"]'),
       cache = $target.data('cache');
 
       console.log(cache);
 
-  if ($target[0] && !$target[0].selectize) {
+  if ($target[0] && !($target[0] as any).selectize) {
     jQuery.error('pwgAddAlbum: target must use selectize');
   }
   if (!cache) {
@@ -21,7 +32,7 @@ jQuery.fn.pwgAddAlbum = function(options) {
 
     cache.selectize($albumParent, {
       'default': 0,
-      'filter': function(categories) {
+      'filter': function(this: any, categories: any[]) {
         categories.push({
           id: 0,
           fullname: '------------',
@@ -39,7 +50,7 @@ jQuery.fn.pwgAddAlbum = function(options) {
     $popup.find('form').on('submit', function(e) {
       e.preventDefault();
 
-      var parent_id = $albumParent.val(),
+      const parent_id = $albumParent.val(),
       name = $popup.find('[name=category_name]').val();
 
       if (!name) {
@@ -52,7 +63,7 @@ jQuery.fn.pwgAddAlbum = function(options) {
         url: 'api/v1/categories',
         type: 'POST',
         contentType: 'application/json',
-        headers: {'X-CSRF-Token': jQuery("input[name=pwg_token]").val()},
+        headers: {'X-CSRF-Token': String(jQuery("input[name=pwg_token]").val())},
         dataType: 'json',
         data: JSON.stringify({
           parentId: Number(parent_id),
@@ -62,12 +73,12 @@ jQuery.fn.pwgAddAlbum = function(options) {
           jQuery('#albumCreationLoading').css('display', 'inline-block');
           jQuery('.albumCreationButton').hide();
         },
-        success: function(data) {
+        success: function(data: any) {
           jQuery('#albumCreationLoading').hide();
           jQuery('.albumCreationButton').show();
-          $button.colorbox.close();
+          ($button as any).colorbox.close();
 
-          var newAlbum = {
+          const newAlbum: Record<string, any> = {
             id: data.id,
             name: name,
             fullname: name,
@@ -77,16 +88,16 @@ jQuery.fn.pwgAddAlbum = function(options) {
             pos: 0
           };
 
-          var parentSelectize = $albumParent[0].selectize;
+          const parentSelectize = ($albumParent[0] as any).selectize;
 
           if (parent_id != 0) {
-            var parent = parentSelectize.options[parent_id];
+            const parent = parentSelectize.options[parent_id as any];
             newAlbum.fullname = parent.fullname + ' / ' + newAlbum.fullname;
             newAlbum.global_rank = parent.global_rank + '.1';
             newAlbum.pos = parent.pos + 1;
           }
 
-          var targetSelectize = $target[0].selectize;
+          const targetSelectize = ($target[0] as any).selectize;
           targetSelectize.addOption(newAlbum);
           targetSelectize.setValue(newAlbum.id);
 
@@ -96,7 +107,7 @@ jQuery.fn.pwgAddAlbum = function(options) {
             options.afterSelect();
           }
         },
-        error: function(XMLHttpRequest, textStatus, errorThrows) {
+        error: function(XMLHttpRequest: any, textStatus: any, errorThrows: any) {
             jQuery('#albumCreationLoading').hide();
             alert(errorThrows);
         }
@@ -115,7 +126,7 @@ jQuery.fn.pwgAddAlbum = function(options) {
 
       jQuery('#categoryNameError').css('visibility','hidden');
       $popup.find('[name=category_name]').val('').focus();
-      $albumParent[0].selectize.setValue($target.val() || 0);
+      ($albumParent[0] as any).selectize.setValue($target.val() || 0);
     }
   });
 

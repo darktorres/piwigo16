@@ -62,7 +62,7 @@ final readonly class AddAlbumView implements View, HasPageAssets
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
-            AssetContribution::script('addAlbum', 'themes/admin/default/js/addAlbum.js', loadMode: $loadMode),
+            AssetContribution::script('addAlbum', 'themes/admin/default/js/addAlbum.ts', loadMode: $loadMode),
             AssetContribution::css('themes/admin/default/css/components/add_album.css', id: 'add_album'),
         ];
     }

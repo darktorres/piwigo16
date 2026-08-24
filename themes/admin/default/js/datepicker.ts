@@ -1,28 +1,31 @@
-(function($) {
+export {};
+
+(function($: JQueryStatic) {
+// eslint-disable-next-line @typescript-eslint/unbound-method -- jQuery.noop is a real no-op, never reads `this`; safe to assign bare.
 jQuery.timepicker.log = jQuery.noop; // that's ugly, but the timepicker is acting weird and throws parsing errors
 
 
 // modify DatePicker internal methods to replace year select by a numeric input
-var origGenerateMonthYearHeader = $.datepicker._generateMonthYearHeader,
+const origGenerateMonthYearHeader = $.datepicker._generateMonthYearHeader,
     origSelectMonthYear = $.datepicker._selectMonthYear;
 
-$.datepicker._generateMonthYearHeader = function(inst, drawMonth, drawYear, minDate, maxDate,
-      secondary, monthNames, monthNamesShort) {
+$.datepicker._generateMonthYearHeader = function(inst: any, drawMonth: any, drawYear: any, minDate: any, maxDate: any,
+      secondary: any, monthNames: any, monthNamesShort: any) {
 
-  var html = origGenerateMonthYearHeader.call(this, inst, drawMonth, drawYear, minDate, maxDate,
+  const html = origGenerateMonthYearHeader.call(this, inst, drawMonth, drawYear, minDate, maxDate,
       secondary, monthNames, monthNamesShort);
 
-  var yearshtml = "<input type='number' class='ui-datepicker-year' data-handler='selectYear' data-event='change keyup' value='"+drawYear+"' style='width:4em;margin-left:2px;'>";
+  const yearshtml = "<input type='number' class='ui-datepicker-year' data-handler='selectYear' data-event='change keyup' value='"+drawYear+"' style='width:4em;margin-left:2px;'>";
 
   return html.replace(new RegExp('<select class=\'ui-datepicker-year\'.*</select>', 'gm'), yearshtml);
 };
 
-$.datepicker._selectMonthYear = debounce(function(id, select, period) {
+$.datepicker._selectMonthYear = debounce(function(this: any, id: any, select: any, period: any) {
   if (period === 'M') {
     origSelectMonthYear.call(this, id, select, period);
   }
   else {
-    var target = $(id),
+    const target = $(id),
       inst = this._getInst(target[0]),
       val = parseInt(select.value, 10);
 
@@ -42,26 +45,27 @@ $.datepicker._selectMonthYear = debounce(function(id, select, period) {
 
 
 // plugin definition
-jQuery.fn.pwgDatepicker = function(settings) {
-  var options = jQuery.extend(true, {
+jQuery.fn.pwgDatepicker = function(this: JQuery, settings: any) {
+  const options: any = jQuery.extend(true, {
     showTimepicker: false,
     cancelButton: false,
   }, settings || {});
 
   return this.each(function() {
-    var $this = jQuery(this),
-        originalValue = $this.val(),
-        originalDate,
-        $target = jQuery('[name="'+ $this.data('datepicker') +'"]'),
-        linked = !!$target.length,
-        $start, $end;
+    const $this = jQuery(this);
+    let originalValue: any = $this.val();
+    // eslint-disable-next-line prefer-const -- declared here (not at its own real assignment further down) so the `options.beforeShow` closure above can close over the same binding; assigned exactly once, but genuinely can't be `const` given where it's read.
+    let originalDate: any;
+    const $target = jQuery('[name="'+ $this.data('datepicker') +'"]');
+    const linked = !!$target.length;
+    let $start: any, $end: any;
 
     if (linked) {
       originalValue = $target.val();
     }
 
     // custom setter
-    function set(date, init) {
+    function set(date: any, init: boolean) {
       if (date === '') date = null;
       $this.datetimepicker('setDate', date);
 
@@ -83,7 +87,7 @@ jQuery.fn.pwgDatepicker = function(settings) {
     if (options.cancelButton) {
       options.beforeShow = options.onChangeMonthYear = function() {
         setTimeout(function() {
-          var buttonPane = $this.datepicker('widget')
+          const buttonPane = $this.datepicker('widget')
               .find('.ui-datepicker-buttonpane');
 
           if (buttonPane.find('.pwg-datepicker-cancel').length == 0) {
@@ -121,7 +125,7 @@ jQuery.fn.pwgDatepicker = function(settings) {
     if ($this.data('datepicker-start')) {
       $start = jQuery('[data-datepicker="'+ $this.data('datepicker-start') +'"]');
 
-      $this.datetimepicker('option', 'onClose', function(date) {
+      $this.datetimepicker('option', 'onClose', function(date: any) {
         $start.datetimepicker('option', 'maxDate', date);
       });
 
@@ -130,7 +134,7 @@ jQuery.fn.pwgDatepicker = function(settings) {
     else if ($this.data('datepicker-end')) {
       $end = jQuery('[data-datepicker="'+ $this.data('datepicker-end') +'"]');
 
-      $this.datetimepicker('option', 'onClose', function(date) {
+      $this.datetimepicker('option', 'onClose', function(date: any) {
         $end.datetimepicker('option', 'minDate', date);
       });
     }
@@ -145,12 +149,12 @@ jQuery.fn.pwgDatepicker = function(settings) {
 
     // set value from linked input
     if (linked) {
-      var splitted = originalValue.split(' ');
+      const splitted = String(originalValue).split(' ');
       if (splitted.length == 2 && options.showTimepicker) {
         set(jQuery.datepicker.parseDateTime('yy-mm-dd', 'HH:mm:ss', originalValue), true);
       }
-      else if (splitted[0].length == 10) {
-        set(jQuery.datepicker.parseDate('yy-mm-dd', splitted[0]), true);
+      else if (splitted[0]!.length == 10) {
+        set(jQuery.datepicker.parseDate('yy-mm-dd', splitted[0]!), true);
       }
       else {
         set(null, true);
@@ -161,20 +165,21 @@ jQuery.fn.pwgDatepicker = function(settings) {
 
     // autoSize not handled by timepicker
     if (options.showTimepicker) {
-      $this.attr('size', parseInt($this.attr('size'))+6);
+      $this.attr('size', parseInt($this.attr('size')!)+6);
     }
   });
 };
 
-function debounce(func, wait, immediate) {
-  var timeout;
-  return function() {
-    var context = this, args = arguments;
-    var later = function() {
+function debounce(func: (...args: any[]) => void, wait: number, immediate?: boolean) {
+  let timeout: any;
+  return function(this: any, ...args: any[]) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside later(), which has its own `this`.
+    const context = this;
+    const later = function() {
       timeout = null;
       if (!immediate) func.apply(context, args);
     };
-    var callNow = immediate && !timeout;
+    const callNow = immediate && !timeout;
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
     if (callNow) func.apply(context, args);

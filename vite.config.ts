@@ -153,6 +153,11 @@ export default defineConfig({
         configurationSizes: r("themes/admin/default/js/configuration_sizes.ts"),
         configurationMain: r("themes/admin/default/js/configuration_main.ts"),
         maintenanceActions: r("themes/admin/default/js/maintenance_actions.ts"),
+        // P46-C part 15 -- addAlbum.ts/datepicker.ts, the real
+        // declarers of pwgAddAlbum/pwgDatepicker (already ambient-typed
+        // `any` and consumed by several already-converted files).
+        addAlbum: r("themes/admin/default/js/addAlbum.ts"),
+        datepicker: r("themes/admin/default/js/datepicker.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

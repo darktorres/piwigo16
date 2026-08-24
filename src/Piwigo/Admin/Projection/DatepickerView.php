@@ -106,7 +106,7 @@ final readonly class DatepickerView implements View, HasPageAssets
             $require[] = 'jquery.ui.timepicker-' . $this->jqueryCode;
         }
 
-        $assets[] = AssetContribution::script('datepicker', 'themes/admin/default/js/datepicker.js', loadMode: $loadMode, dependsOn: $require);
+        $assets[] = AssetContribution::script('datepicker', 'themes/admin/default/js/datepicker.ts', loadMode: $loadMode, dependsOn: $require);
 
         $assets[] = AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui');
         $assets[] = AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css');

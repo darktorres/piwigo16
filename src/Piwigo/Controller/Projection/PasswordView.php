@@ -64,7 +64,7 @@ final readonly class PasswordView implements View, HasPageAssets, ExposesPageDat
                 AssetContribution::css('themes/standard_pages/skins/' . $this->standardPagesSelectedSkin . '.css', id: 'standard_pages_css', order: 100),
                 AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
                 AssetContribution::css('themes/standard_pages/css/pages/password.css', id: 'password'),
-                AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+                AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             ];
         }
 

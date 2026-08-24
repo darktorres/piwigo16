@@ -1,5 +1,5 @@
 export {};
 
-jQuery().ready(function(){
-  jQuery(".illustration a").colorbox({ rel: 'group1' });
+jQuery().ready(function () {
+  jQuery(".illustration a").colorbox({ rel: "group1" });
 });

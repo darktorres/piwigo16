@@ -63,7 +63,7 @@ test('pageAssets includes the merged-in ToasterView contribution for standard_pa
     $view = makeProfileView(true);
 
     expect($view->pageAssets())
-        ->toContainEqual(AssetContribution::script('toaster_js', 'themes/standard_pages/js/toaster.js', loadMode: LoadMode::Async, dependsOn: ['jquery']))
+        ->toContainEqual(AssetContribution::script('toaster_js', 'themes/standard_pages/js/toaster.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']))
         ->toContainEqual(AssetContribution::css('themes/standard_pages/css/pages/toaster.css', id: 'toaster'));
 });
 

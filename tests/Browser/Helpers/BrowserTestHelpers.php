@@ -1639,7 +1639,7 @@ final class BrowserTestHelpers
      * image-loading pipeline (the <img> already exists in the DOM, its
      * bytes just aren't in yet) -- and, for admin-comments specifically,
      * the <img class="comment-img"> elements not existing in the DOM AT
-     * ALL until themes/admin/default/js/comments.js's own
+     * ALL until themes/admin/default/js/comments.ts's own
      * pwg.userComments.getList ajax call resolves and displayComments()
      * inserts them. navigateOk() only waits for the initial document to
      * load, not that ajax round trip, so this function can otherwise be

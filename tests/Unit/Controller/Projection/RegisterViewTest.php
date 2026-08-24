@@ -43,7 +43,7 @@ test('pageAssets registers the standard_pages theme\'s own asset list when stand
         ->toEqual([
             AssetContribution::css('themes/standard_pages/skins/default.css', id: 'standard_pages_css', order: 100),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
         ]);
 });
 

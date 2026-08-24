@@ -1,0 +1,1266 @@
+export {};
+
+//Get the data
+let dataTags: any = $(".tag-container").data("tags");
+
+//Initiate Select
+$("#select-100").prop("checked", true);
+
+//Orphan tags
+$(".info-warning p a").on("click", () => {
+  const url = $(".info-warning p a").data("url");
+  const tags = orphan_tag_names;
+  const str_orphans = str_orphan_tags
+    .replace("%s1", String(tags.length))
+    .replace("%s2", tags.join(", "));
+  $.confirm({
+    content: str_orphans,
+    title: str_delete_orphan_tags,
+    draggable: false,
+    theme: "modern",
+    animation: "zoom",
+    boxWidth: "30%",
+    useBootstrap: false,
+    type: "red",
+    animateFromElement: false,
+    backgroundDismiss: true,
+    typeAnimated: false,
+    buttons: {
+      delete: {
+        text: str_delete_them,
+        btnClass: "btn-red",
+        action: function () {
+          window.location.href = String(url).replace(/amp;/g, "");
+        },
+      },
+      keep: {
+        text: str_keep_them,
+        action: function () {
+          $(".info-warning").hide();
+        },
+      },
+    },
+  });
+});
+
+//Create and recycle tag box
+function createTagBox(
+  id: any,
+  name: any,
+  url_name: any,
+  count: any,
+  raw_name: any = null,
+) {
+  if (raw_name === null) {
+    raw_name = name;
+  }
+  const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
+  const u_view = "index.php?/tags/" + id + "-" + url_name;
+  let html = $(".tag-template")
+    .html()
+    .replace(/%name%/g, unescape(name))
+    .replace("%U_VIEW%", u_view)
+    .replace("%U_EDIT%", u_edit)
+    .replace("%raw_name%", raw_name);
+  if (name == raw_name) {
+    html = html.replace("icon-globe", "");
+  }
+  const newTag = $(
+    '<div class="tag-box test" data-id=' +
+      id +
+      ' data-selected="0">' +
+      html +
+      "</div>",
+  );
+  if ($("#toggleSelectionMode").is(":checked")) {
+    newTag.addClass("selection");
+    newTag.find(".in-selection-mode").show();
+  }
+  if (count > 0) {
+    newTag
+      .find(".dropdown-option.view, .dropdown-option.manage")
+      .css("display", "block");
+    newTag
+      .find(".tag-dropdown-header i")
+      .html(str_number_photos.replace("%d", count));
+  } else {
+    newTag.find(".tag-dropdown-header i").html(str_no_photos);
+  }
+  return newTag;
+}
+
+function recycleTagBox(
+  tagBox: any,
+  id: any,
+  name: any,
+  url_name: any,
+  count: any,
+  raw_name: any = null,
+) {
+  if (raw_name === null) {
+    raw_name = name;
+  }
+  tagBox = tagBox.first();
+  tagBox.attr("data-id", id);
+  tagBox.find(".tag-name, .tag-dropdown-header b").html(name);
+  tagBox.find(".tag-name-editable").val(name);
+  tagBox.attr("data-selected", 0);
+  tagBox.find(".tag-name").data("rawname", raw_name);
+
+  //Dropdown
+  const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
+  const u_view = "index.php?/tags/" + id + "-" + url_name;
+  tagBox.find(".dropdown-option.view").attr("href", u_view);
+  tagBox.find(".dropdown-option.manage").attr("href", u_edit);
+
+  if (count > 0) {
+    tagBox
+      .find(".dropdown-option.view, .dropdown-option.manage")
+      .css("display", "block");
+    tagBox
+      .find(".tag-dropdown-header i")
+      .html(str_number_photos.replace("%d", count));
+  } else {
+    tagBox.find(".tag-dropdown-header i").html(str_no_photos);
+  }
+}
+
+//Number On Badge
+function updateBadge() {
+  $(".badge-number").html(dataTags.length);
+  if (dataTags.length == 0) {
+    $(".tag-header #add-tag .add-tag-label").addClass("highlight");
+  } else {
+    $(".tag-header #add-tag .add-tag-label").removeClass("highlight");
+  }
+}
+
+//Add a tag
+$(".add-tag-container").on("click", function () {
+  $("#add-tag").addClass("input-mode");
+  $("#add-tag-input").focus();
+  $(".tag-info").hide();
+});
+
+$("#add-tag .icon-cancel-circled").on("click", function () {
+  $("#add-tag").removeClass("input-mode");
+  $(".tag-info").hide();
+});
+
+//Display/Hide tag option
+$(".tag-box").each(function () {
+  setupTagbox($(this));
+});
+
+//Call the API when rename a tag
+$(".TagSubmit").on("click", function () {
+  $(".TagSubmit").hide();
+  $(".TagLoading").show();
+  const $tagboxid = $(".RenameTagPopInContainer")
+    .find(".tag-property-input")
+    .attr("id");
+  renameTag(
+    $tagboxid,
+    $(".RenameTagPopInContainer").find(".tag-property-input").val(),
+  )
+    .then(() => {
+      $(".TagSubmit").show();
+      $(".TagLoading").hide();
+      rename_tag_close();
+      cleanCheckmark();
+      $("[data-id=" + $tagboxid + "]").wrap('<div class="tag-changed"></div>');
+      $(".tag-changed").prepend('<i class="icon-ok tag-checkmark"></i>');
+    })
+    .catch((message: any) => {
+      $(".TagSubmit").show();
+      $(".TagLoading").hide();
+      console.error(message);
+    });
+});
+
+function cleanCheckmark() {
+  $(".tag-changed > *").unwrap();
+  $(".tag-checkmark").remove();
+}
+
+/*-------
+ Add a tag
+-------*/
+
+$("#add-tag").submit(function (e) {
+  e.preventDefault();
+  if ($("#add-tag-input").val() != "") {
+    const loadState = new window.TemporaryState();
+    loadState.removeClass($("#add-tag .icon-validate"), "icon-plus");
+    loadState.changeHTML(
+      $("#add-tag .icon-validate"),
+      "<i class='icon-spin6 animate-spin'> </i>",
+    );
+    loadState.changeAttribute(
+      $("#add-tag .icon-validate"),
+      "style",
+      "pointer-event:none",
+    );
+    addTag($("#add-tag-input").val())
+      .then(function () {
+        showMessage(
+          str_tag_created.replace("%s", String($("#add-tag-input").val())),
+        );
+        $("#add-tag-input").val("");
+        $("#add-tag").removeClass("input-mode");
+        $("#search-tag .search-input").trigger("input");
+        loadState.reverse();
+      })
+      .catch((message: any) => {
+        loadState.reverse();
+        showError(message?.message ?? message);
+      });
+  }
+});
+
+$("#add-tag .icon-validate").on("click", function () {
+  if ($("#add-tag").hasClass("input-mode")) {
+    $("#add-tag").submit();
+  }
+});
+
+function addTag(name: any) {
+  return new Promise<void>((resolve, reject) => {
+    jQuery.ajax({
+      url: "api/v1/tags",
+      type: "POST",
+      contentType: "application/json",
+      headers: {
+        "X-CSRF-Token": pwg_token,
+      },
+      data: JSON.stringify({
+        name: name,
+      }),
+      dataType: "json",
+      success: function (data: any) {
+        const newTag = createTagBox(data.id, data.name, data.urlName, 0);
+        $(".tag-container").prepend(newTag);
+        setupTagbox(newTag);
+        updateSearchInfo();
+
+        //Update the data
+        dataTags.unshift({
+          name: data.name,
+          raw_name: data.name,
+          id: data.id,
+          url_name: data.urlName,
+        });
+        updateBadge();
+        resolve();
+      },
+      error: function (err: any) {
+        if (err.status === 422) {
+          reject(new Error(str_already_exist.replace("%s", name)));
+          return;
+        }
+        reject(new Error(err));
+      },
+    });
+  });
+}
+/*-------
+ Setup Tag Box
+-------*/
+
+function setupTagbox(tagBox: any) {
+  //Dropdown options
+  tagBox.find(".showOptions").on("click", function () {
+    tagBox.find(".tag-dropdown-block").css("display", "grid");
+  });
+
+  $(document).mouseup(function (e: any) {
+    e.stopPropagation();
+    let option_is_clicked = false;
+    tagBox.find(".dropdown-option").each(function (this: any) {
+      if (!($(this).has(e.target).length === 0)) {
+        option_is_clicked = true;
+      }
+    });
+    if (!option_is_clicked) {
+      tagBox.find(".tag-dropdown-block").hide();
+    }
+  });
+
+  // Selection behaviour
+  tagBox.on("click", function () {
+    if ($(".tag-container").hasClass("selection")) {
+      if (tagBox.attr("data-selected") == "1") {
+        tagBox.attr("data-selected", "0");
+        removeSelectedItem(tagBox.attr("data-id"));
+      } else {
+        tagBox.attr("data-selected", "1");
+        addSelectedItem(tagBox.attr("data-id"));
+      }
+      updateSelectionContent();
+    }
+  });
+
+  //Edit Name
+  tagBox.find(".dropdown-option.edit").on("click", function (this: any) {
+    const id = $(this).closest(".tag-box").data("id");
+    const tagIndex = dataTags.findIndex((tag: any) => tag.id == id);
+    const tagRawName =
+      dataTags[tagIndex].raw_name ?? tagBox.find(".tag-name").data("rawname");
+    const tagName = dataTags[tagIndex].name ?? tagBox.find(".tag-name").html();
+    set_up_popin(tagBox.data("id"), tagRawName, tagName);
+    rename_tag_open();
+  });
+
+  //Delete Tag
+  tagBox.find(".dropdown-option.delete").on("click", function () {
+    $.confirm({
+      title: str_delete.replace("%s", tagBox.find(".tag-name").html()),
+      buttons: {
+        confirm: {
+          text: str_yes_delete_confirmation,
+          btnClass: "btn-red",
+          action: function () {
+            removeTag(tagBox.data("id"), tagBox.find(".tag-name").html());
+          },
+        },
+        cancel: {
+          text: str_no_delete_confirmation,
+        },
+      },
+      ...jConfirm_confirm_options,
+    });
+  });
+
+  //Duplicate Tag
+  tagBox.find(".dropdown-option.duplicate").on("click", function () {
+    void duplicateTag(
+      tagBox.data("id"),
+      tagBox.find(".tag-name").data("rawname"),
+    ).then((data) => {
+      showMessage(str_tag_created.replace("%s", data.name));
+    });
+  });
+}
+
+function set_up_popin(id: any, tagRawName: any, tagName: any) {
+  $(".RenameTagPopInContainer").find(".tag-property-input").attr("id", id);
+
+  $(".AddIconTitle span").html(str_tag_rename.replace("%s", tagName));
+  $(".ClosePopIn, .TagCancel").on("click", function () {
+    rename_tag_close();
+  });
+  $(".TagSubmit").html(str_yes_rename_confirmation);
+  $(".RenameTagPopInContainer").find(".tag-property-input").val(tagRawName);
+}
+
+function rename_tag_close() {
+  $("#RenameTag").fadeOut();
+}
+
+function rename_tag_open() {
+  $("#RenameTag").fadeIn();
+  $(".tag-property-input").first().focus();
+}
+
+function removeTag(id: any, name: any) {
+  $.alert({
+    title: str_tag_deleted.replace("%s", name),
+    content: function () {
+      return jQuery.ajax({
+        url: "api/v1/tags/" + id,
+        type: "DELETE",
+        headers: {
+          "X-CSRF-Token": pwg_token,
+        },
+        dataType: "json",
+        success: function (_data: any) {
+          $(".tag-box[data-id=" + id + "]").remove();
+          //Update data
+          dataTags = dataTags.filter((tag: any) => tag.id != id);
+          showMessage(str_tag_deleted.replace("%s", name));
+          updateBadge();
+          updateSearchInfo();
+          updatePaginationMenu();
+        },
+        error: function () {
+          showError("A problem has occured");
+        },
+      });
+    },
+    ...jConfirm_alert_options,
+  });
+}
+
+function renameTag(id: any, new_name: any) {
+  return new Promise<any>((resolve, reject) => {
+    jQuery.ajax({
+      url: "api/v1/tags/" + id,
+      type: "PATCH",
+      contentType: "application/json",
+      headers: {
+        "X-CSRF-Token": pwg_token,
+      },
+      data: JSON.stringify({
+        name: new_name,
+      }),
+      dataType: "json",
+      success: function (data: any) {
+        $(
+          ".tag-box[data-id=" +
+            id +
+            "] p, .tag-box[data-id=" +
+            id +
+            "] .tag-dropdown-header b",
+        ).html(data.name);
+        $(".tag-box[data-id=" + id + "] .tag-name-editable").attr(
+          "value",
+          data.name,
+        );
+        $(".tag-box[data-id=" + id + "] .tag-name").attr(
+          "data-rawname",
+          data.nameRaw,
+        );
+        const u_view = "index.php?/tags/" + id + "-" + data.urlName;
+        $(".dropdown-option.view").attr("href", u_view);
+
+        //Update the data
+        const index = dataTags.findIndex((tag: any) => tag.id == id);
+        dataTags[index].name = data.name;
+        dataTags[index].raw_name = data.nameRaw;
+        dataTags[index].url_name = data.urlName;
+
+        resolve(data);
+      },
+      error: function (XMLHttpRequest: any) {
+        if (XMLHttpRequest.status === 422) {
+          reject(new Error(str_already_exist.replace("%s", new_name)));
+          return;
+        }
+        reject(new Error(XMLHttpRequest.statusText));
+      },
+    });
+  });
+}
+
+function duplicateTag(id: any, name: any) {
+  return new Promise<any>((resolve, reject) => {
+    let copy_name = name + str_copy;
+
+    const name_exist = function (name: any) {
+      let exist = false;
+      $(".tag-box .tag-name").each(function () {
+        if ($(this).html() === name) exist = true;
+      });
+      return exist;
+    };
+
+    let i = 1;
+    while (name_exist(copy_name)) {
+      copy_name = name + str_other_copy.replace("%s", String(i++));
+    }
+
+    jQuery.ajax({
+      url: "api/v1/tags/" + id + "/actions/duplicate",
+      type: "POST",
+      contentType: "application/json",
+      headers: {
+        "X-CSRF-Token": pwg_token,
+      },
+      data: JSON.stringify({
+        name: copy_name,
+      }),
+      dataType: "json",
+      success: function (data: any) {
+        const newTag = createTagBox(
+          data.id,
+          data.name,
+          data.urlName,
+          data.count,
+        );
+        newTag.insertAfter($(".tag-box[data-id=" + id + "]"));
+        setupTagbox(newTag);
+
+        //Update Data
+        const index = dataTags.findIndex((tag: any) => tag.id == id);
+        dataTags.splice(index + 1, 0, {
+          name: data.name,
+          id: data.id,
+          url_name: data.urlName,
+          counter: data.count,
+        });
+        updateBadge();
+        updateSearchInfo();
+        resolve(data);
+      },
+      error: function (XMLHttpRequest: any) {
+        reject(new Error(XMLHttpRequest.statusText));
+      },
+    });
+  });
+}
+
+/*-------
+ Selection mode
+-------*/
+let selected: any[] = [];
+const maxItemDisplayed = 5;
+
+$("#toggleSelectionMode").prop("checked", false);
+$("#toggleSelectionMode").click(function () {
+  selectionMode($(this).is(":checked"));
+  $(".tag-info").hide();
+});
+
+function selectionMode(isSelection: any) {
+  if (isSelection) {
+    $(".in-selection-mode").addClass("show");
+    $(".not-in-selection-mode").addClass("hide");
+    $(".tag-container").addClass("selection");
+    $(".tag-box").removeClass("edit-name");
+  } else {
+    $(".in-selection-mode").removeClass("show");
+    $(".not-in-selection-mode").removeClass("hide");
+    $(".tag-container").removeClass("selection");
+    $(".tag-box").attr("data-selected", "0");
+    $(".tag-select-message").slideUp();
+    clearSelection();
+  }
+}
+
+function clearSelection() {
+  selected = [];
+  $(".selection-mode-tag .tag-list").html("");
+  $(".selection-other-tags").hide();
+  updateSelectionContent();
+}
+
+function addSelectedItem(id: any) {
+  if (!selected.includes(id)) {
+    selected.push(id);
+
+    if (selected.length > maxItemDisplayed) {
+      $(".selection-other-tags").show();
+      const numberDisplayed = $(".selection-mode-tag .tag-list div").length;
+      $(".selection-other-tags").html(
+        str_and_others_tags.replace(
+          "%s",
+          String(selected.length - numberDisplayed),
+        ),
+      );
+    } else {
+      $(".selection-other-tags").hide();
+      if (dataTags.findIndex((tag: any) => tag.id == id) > -1) {
+        createSelectionItem(id, dataTags.find((tag: any) => tag.id == id).name);
+      }
+    }
+  }
+}
+
+function createSelectionItem(id: any, name: any) {
+  const newItemStructure = $(
+    '<div data-id="' +
+      id +
+      '"><a class="icon-cancel"></a><p>' +
+      name +
+      "</p> </div>",
+  );
+  $(".selection-mode-tag .tag-list").prepend(newItemStructure);
+  $(".selection-mode-tag .tag-list div[data-id=" + id + "] a").on(
+    "click",
+    function () {
+      removeSelectedItem(id);
+    },
+  );
+}
+
+function removeSelectedItem(id: any) {
+  if (selected.findIndex((tag: any) => tag == id) > -1) {
+    selected = selected.filter((tag: any) => {
+      return parseInt(tag) != parseInt(id);
+    });
+
+    $(".tag-box[data-id=" + id + "]").attr("data-selected", "0");
+    if (
+      $(".selection-mode-tag .tag-list div[data-id=" + id + "]").length != 0
+    ) {
+      $(".selection-mode-tag .tag-list div[data-id=" + id + "]").remove();
+
+      if (selected.length >= maxItemDisplayed) {
+        let i = 0;
+        let isNotCreate = true;
+        while (i < selected.length && isNotCreate) {
+          if (
+            $(".selection-mode-tag .tag-list div[data-id=" + selected[i] + "]")
+              .length == 0
+          ) {
+            isNotCreate = false;
+            const indexOfTag = dataTags.findIndex(
+              (tag: any) => tag.id == selected[i],
+            );
+            createSelectionItem(selected[i], dataTags[indexOfTag].name);
+          }
+          i++;
+        }
+      }
+    }
+
+    const numberDisplayed = $(".selection-mode-tag .tag-list div").length;
+    $(".selection-other-tags").html(
+      str_and_others_tags.replace(
+        "%s",
+        String(selected.length - numberDisplayed),
+      ),
+    );
+    if (selected.length - numberDisplayed <= 0) {
+      $(".selection-other-tags").hide();
+    }
+
+    //Remove the selection message
+    $(".tag-select-message").slideUp();
+  }
+}
+
+function updateMergeItems() {
+  $("#MergeOptionsChoices").html("");
+  selected.forEach((id: any) => {
+    $("#MergeOptionsChoices").append(
+      $(
+        '<option value="' +
+          id +
+          '">' +
+          dataTags.find((tag: any) => tag.id == id).name +
+          "</option>",
+      ),
+    );
+  });
+}
+
+let mergeOption = false;
+
+function updateSelectionContent() {
+  const number = selected.length;
+  if (number == 0) {
+    mergeOption = false;
+    $("#nothing-selected").show();
+    $(".selection-mode-tag").hide();
+    $("#MergeOptionsBlock").hide();
+  } else if (number == 1) {
+    mergeOption = false;
+    $("#nothing-selected").hide();
+    $(".selection-mode-tag").show();
+    $("#MergeOptionsBlock").hide();
+    $("#MergeSelectionMode").addClass("unavailable");
+  } else if (number > 1) {
+    $("#nothing-selected").hide();
+    $("#MergeSelectionMode").removeClass("unavailable");
+    if (mergeOption) {
+      $("#MergeOptionsBlock").show();
+      $(".selection-mode-tag").hide();
+      updateMergeItems();
+    } else {
+      $("#MergeOptionsBlock").hide();
+      $(".selection-mode-tag").show();
+    }
+  }
+}
+
+$("#MergeSelectionMode").on("click", function () {
+  mergeOption = true;
+  updateSelectionContent();
+});
+
+$("#CancelMerge").on("click", function () {
+  mergeOption = false;
+  updateSelectionContent();
+});
+
+$("#selectAll").on("click", function () {
+  void selectAll(tagToDisplay());
+  updateSelectionContent();
+  if (selected.length < dataTags.length) {
+    showSelectMessage(
+      str_selection_done.replace("%d", String($(".tag-box").length)),
+      str_select_all_tag.replace("%d", String(dataTags.length)),
+      function () {
+        $(".tag-select-message a").html("");
+        $(".tag-select-message div").html(
+          "<i class='icon-spin6 animate-spin'> </i>",
+        );
+        setTimeout(() => {
+          void selectAll(dataTags).then(() => {
+            updateSelectionContent();
+            showSelectMessage(
+              str_tag_selected.replace(/%d/g, String(selected.length)),
+              str_clear_selection,
+              function () {
+                selectNone();
+                $(".tag-select-message").slideUp();
+              },
+            );
+          });
+        }, 5);
+      },
+    );
+  }
+});
+
+function selectAll(data: any) {
+  const promises: Promise<any>[] = [];
+  data.forEach((tag: any) => {
+    promises.push(
+      new Promise<void>((res, rej) => {
+        $(".tag-box[data-id=" + tag.id + "]").attr("data-selected", 1);
+        addSelectedItem(tag.id);
+        res();
+      }),
+    );
+  });
+  return Promise.all(promises);
+}
+
+function showSelectMessage(str1: any, str2: any, callback: any) {
+  if (!$(".tag-select-message").is(":visible")) {
+    $(".tag-select-message").slideDown({
+      start: function () {
+        $(this).css({
+          display: "flex",
+        });
+      },
+    });
+  }
+
+  $(".tag-select-message div").html(str1);
+  $(".tag-select-message a").html(str2);
+  $(".tag-select-message a").off("click");
+  $(".tag-select-message a").on("click", callback);
+}
+
+$("#selectNone").on("click", function () {
+  $(".tag-select-message").slideUp();
+  selectNone();
+});
+
+function selectNone() {
+  $(".tag-box").attr("data-selected", "0");
+  clearSelection();
+}
+
+$("#selectInvert").on("click", function () {
+  $(".tag-select-message").slideUp();
+  selectInvert(tagToDisplay());
+});
+
+function selectInvert(data: any) {
+  data.forEach((tag: any) => {
+    const tagBox = $(".tag-box[data-id=" + tag.id + "]");
+    if (tagBox.attr("data-selected") == "1") {
+      tagBox.attr("data-selected", "0");
+      removeSelectedItem(tag.id);
+    } else {
+      tagBox.attr("data-selected", "1");
+      addSelectedItem(tag.id);
+    }
+  });
+  updateSelectionContent();
+}
+
+/*-------
+ Actions in selection mode
+-------*/
+
+//Remove tags
+$("#DeleteSelectionMode").on("click", function () {
+  const names: any[] = [];
+  selected.forEach(function (id: any) {
+    names.push(dataTags.find((tag: any) => tag.id == id).name);
+  });
+
+  $.confirm({
+    title: str_delete_tags.replace("%s", tagListToString(names)),
+    buttons: {
+      confirm: {
+        text: str_yes_delete_confirmation,
+        btnClass: "btn-red",
+        action: function () {
+          removeSelectedTags();
+        },
+      },
+      cancel: {
+        text: str_no_delete_confirmation,
+      },
+    },
+    ...jConfirm_confirm_options,
+  });
+});
+
+function removeSelectedTags() {
+  const names: any[] = [];
+  selected.forEach(function (id: any) {
+    names.push(dataTags.find((tag: any) => tag.id == id).name);
+  });
+
+  $.alert({
+    title: str_tags_deleted.replace("%s", tagListToString(names)),
+    content: function () {
+      // No bulk-delete endpoint (a REST single-resource DELETE per tag,
+      // per P27's own design) -- fire one DELETE per selected tag.
+      return Promise.all(
+        selected.map(function (id: any) {
+          return jQuery.ajax({
+            url: "api/v1/tags/" + id,
+            type: "DELETE",
+            headers: {
+              "X-CSRF-Token": pwg_token,
+            },
+            dataType: "json",
+          });
+        }),
+      ).then(function () {
+        selected.forEach(function (id: any) {
+          $(".tag-box[data-id=" + id + "]").remove();
+        });
+
+        // Update Data
+        dataTags = dataTags.filter((tag: any) => !selected.includes(tag.id));
+
+        clearSelection();
+        updatePaginationMenu();
+        updateBadge();
+        updateSearchInfo();
+      });
+    },
+    ...jConfirm_alert_options,
+  });
+}
+
+//Merge Tags
+$(".ConfirmMergeButton").on("click", () => {
+  const dest_id = $("#MergeOptionsChoices").val();
+  mergeGroups(dest_id, selected);
+});
+
+function mergeGroups(destination_id: any, merge_ids: any) {
+  const destination_name = $(
+    ".tag-box[data-id=" + destination_id + "] .tag-name",
+  ).html();
+  const merge_name: any[] = [];
+
+  merge_ids.forEach((id: any) => {
+    merge_name.push($(".tag-box[data-id=" + id + "] .tag-name").html());
+  });
+
+  const str_message = str_merged_into
+    .replace("%s1", tagListToString(merge_name))
+    .replace("%s2", destination_name);
+
+  $.alert({
+    title: str_message,
+    content: function () {
+      return jQuery.ajax({
+        url: "api/v1/tags/actions/merge",
+        type: "POST",
+        contentType: "application/json",
+        headers: {
+          "X-CSRF-Token": pwg_token,
+        },
+        data: JSON.stringify({
+          destinationTagId: Number(destination_id),
+          mergeTagIds: merge_ids,
+        }),
+        dataType: "json",
+        success: function (data: any) {
+          data.deletedTagIds.forEach((id: any) => {
+            if (data.destinationTagId != id) {
+              $(".tag-box[data-id=" + id + "]").remove();
+              // Update data
+              dataTags = dataTags.filter((tag: any) => id != tag.id);
+            }
+          });
+          if (data.imagesInMergedTag.length > 0) {
+            const tagBox = $(".tag-box[data-id=" + data.destinationTagId + "]");
+            tagBox
+              .find(
+                ".dropdown-option.view," +
+                  ".dropdown-option.manage," +
+                  ".tag-dropdown-header i",
+              )
+              .show();
+            $(".tag-dropdown-header i").html(
+              str_number_photos.replace("%d", data.imagesInMergedTag.length),
+            );
+
+            // Update data
+            const index = dataTags.findIndex(
+              (tag: any) => tag.id == data.destinationTagId,
+            );
+            dataTags[index].counter = data.imagesInMergedTag.length;
+          }
+          $(".tag-box").attr("data-selected", "0");
+          clearSelection();
+          updatePaginationMenu();
+          updateBadge();
+          updateSearchInfo();
+        },
+      });
+    },
+    ...jConfirm_alert_options,
+  });
+}
+
+function tagListToString(list: any) {
+  if (list.length > 5) {
+    return (
+      list.slice(0, 5).join(", ") +
+      " " +
+      str_and_others_tags.replace("%s", String(list.length - 5))
+    );
+  } else {
+    return list.join(", ");
+  }
+}
+
+/*-------
+ Filter research
+-------*/
+
+const maxShown = 100;
+let searchTimeOut: any;
+const delaySearchInput = 300;
+
+$("#search-tag .search-input").on("input", function () {
+  actualPage = 1;
+
+  clearTimeout(searchTimeOut);
+  searchTimeOut = setTimeout(() => {
+    updatePaginationMenu();
+    if (dataTags.filter(isDataSearched).length == 0) {
+      $(".emptyResearch").show();
+    } else {
+      $(".emptyResearch").hide();
+    }
+  }, delaySearchInput);
+});
+
+function isSearched(tagBox: any, stringSearch: any) {
+  const name = tagBox.find("p").text().toLowerCase();
+  if (name.startsWith(stringSearch.toLowerCase())) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function isDataSearched(tagObj: any) {
+  const name = tagObj.raw_name.toLowerCase();
+  const stringSearch = String($("#search-tag .search-input").val());
+  if (name.includes(stringSearch.toLowerCase())) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/*-------
+ Show Info
+-------*/
+function showError(message: any) {
+  $(".info-error p").html(message);
+  $(".info-error").attr("title", message);
+  $(".info-info").hide();
+  $(".info-error").css("display", "flex");
+}
+
+function showMessage(message: any) {
+  $(".info-message p").html(message);
+  $(".info-message").attr("title", message);
+  $(".info-info").hide();
+  $(".info-message").css("display", "flex");
+}
+
+/*-------
+ Pagination
+-------*/
+let per_page: any = $(".tag-container").data("per_page");
+const pageItem = '<a data-page="%d">%d</a>';
+const pageEllipsis = "<span>...</span>";
+let promisePending = false;
+const delay = 100;
+let updateAsk = false;
+
+let actualPage = 1;
+
+//Avoid 2 update at the same time
+function askUpdatePage() {
+  if (!promisePending) {
+    promisePending = true;
+    void updatePage().then(promiseFinish);
+  } else {
+    updateAsk = true;
+  }
+}
+
+function promiseFinish() {
+  promisePending = false;
+  if (updateAsk) {
+    updateAsk = false;
+    askUpdatePage();
+  }
+}
+
+function updatePaginationMenu() {
+  $(".pagination-item-container").html("");
+
+  actualPage = Math.min(actualPage, getNumberPages());
+
+  if (getNumberPages() > 1) {
+    $(".pagination-container").show();
+    createPaginationMenu();
+  } else {
+    $(".pagination-container").hide();
+  }
+
+  updateArrows();
+  askUpdatePage();
+
+  //Remove the selection message
+  $(".tag-select-message").slideUp();
+}
+
+function createPaginationMenu() {
+  const nbPage = getNumberPages();
+
+  appendPaginationItem(1);
+
+  if (actualPage > 2) {
+    appendPaginationItem();
+  }
+
+  if (actualPage != 1 && actualPage != nbPage) {
+    appendPaginationItem(actualPage);
+  }
+
+  if (actualPage < nbPage - 1) {
+    appendPaginationItem();
+  }
+
+  appendPaginationItem(nbPage);
+}
+
+function appendPaginationItem(page: any = null) {
+  if (page != null) {
+    const newTag = $(pageItem.replace(/%d/g, page));
+    $(".pagination-item-container").append(newTag);
+    if (actualPage == page) {
+      newTag.addClass("actual");
+    }
+    newTag.on("click", () => {
+      actualPage = newTag.data("page");
+      updatePaginationMenu();
+    });
+  } else {
+    $(".pagination-item-container").append($(pageEllipsis));
+  }
+}
+
+function updateArrows() {
+  if (actualPage == 1) {
+    $(".pagination-arrow.left").addClass("unavailable");
+  } else {
+    $(".pagination-arrow.left").removeClass("unavailable");
+  }
+
+  if (actualPage == getNumberPages()) {
+    $(".pagination-arrow.rigth").addClass("unavailable");
+  } else {
+    $(".pagination-arrow.rigth").removeClass("unavailable");
+  }
+}
+
+function getNumberPages() {
+  const dataVisible = dataTags.filter(isDataSearched).length;
+  return Math.floor((dataVisible - 1) / per_page) + 1;
+}
+
+function movePage(toRigth: any = true) {
+  $(".tag-box").removeClass("edit-name");
+  if (toRigth) {
+    if (actualPage < getNumberPages()) {
+      actualPage++;
+      updatePaginationMenu();
+    }
+  } else {
+    if (actualPage > 1) {
+      actualPage--;
+      updatePaginationMenu();
+    }
+  }
+}
+
+function updatePage() {
+  return new Promise<void>((resolve, reject) => {
+    const newPage = actualPage;
+    const dataToDisplay = tagToDisplay();
+    const tagBoxes = $(".tag-box");
+    cleanCheckmark();
+    $(".pageLoad").fadeIn();
+    $(".tag-box")
+      .animate({ opacity: 0 }, 500)
+      .promise()
+      .then(() => {
+        const displayTags: Promise<void> = new Promise((res, rej) => {
+          const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
+
+          for (let i = 0; i < boxToRecycle; i++) {
+            const tag = dataToDisplay[i];
+            recycleTagBox(
+              $(tagBoxes[i]!),
+              tag.id,
+              tag.name,
+              tag.url_name,
+              tag.counter,
+              tag.raw_name,
+            );
+          }
+
+          if (dataToDisplay.length < tagBoxes.length) {
+            for (let j = boxToRecycle; j < tagBoxes.length; j++) {
+              $(tagBoxes[j]!).remove();
+            }
+          } else if (dataToDisplay.length > tagBoxes.length) {
+            for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
+              const tag = dataToDisplay[j];
+              const newTag = createTagBox(
+                tag.id,
+                tag.name,
+                tag.url_name,
+                tag.counter,
+                tag.raw_name,
+              );
+              newTag.css("opacity", 0);
+              $(".tag-container").append(newTag);
+              setupTagbox(newTag);
+            }
+          }
+
+          //Select selected tags
+          selected.forEach((id) => {
+            $(".tag-box[data-id=" + id + "]").attr("data-selected", 1);
+          });
+
+          res();
+        });
+
+        void displayTags.then(() => {
+          $(".pageLoad").fadeOut();
+          $(".tag-box").animate({ opacity: 1 }, 500);
+          if (getNumberPages() > 1) {
+            $(".tag-pagination").animate({ opacity: 1 }, 500);
+          }
+          updateSearchInfo();
+          resolve();
+        });
+      });
+  });
+}
+
+function tagToDisplay() {
+  return dataTags
+    .filter(isDataSearched)
+    .slice((actualPage - 1) * per_page, actualPage * per_page);
+}
+
+$(".pagination-arrow.rigth").on("click", () => {
+  movePage();
+});
+
+$(".pagination-arrow.left").on("click", () => {
+  movePage(false);
+});
+
+if (getNumberPages() > 1) {
+  $(".pagination-container").show();
+  createPaginationMenu();
+  updateArrows();
+} else {
+  $(".pagination-container").hide();
+}
+
+$(".pagination-per-page a").on("click", function () {
+  per_page = parseInt($(this).html());
+  updatePaginationMenu();
+  $(".pagination-per-page .selected").removeClass("selected");
+  $(this).addClass("selected");
+  $.cookie("pwg_tags_per_page", per_page);
+});
+
+function updateSearchInfo() {
+  if ($(".search-input").val() != "") {
+    const number = dataTags.filter(isDataSearched).length;
+    if (number > 1) {
+      $(".search-info").html(str_tags_found.replace("%d", number));
+    } else {
+      $(".search-info").html(str_tag_found.replace("%d", number));
+    }
+  } else {
+    $(".search-info").html("");
+  }
+}
+
+const pwg_token = pwg_getPageData("csrf_token");
+const orphan_tag_names = JSON.parse(pwg_getPageData("orphan_tag_names_array"));
+const str_delete = pwg_getPageString('Delete tag "%s"?');
+const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
+const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
+const str_no_delete_confirmation = pwg_getPageString(
+  "No, I have changed my mind",
+);
+const str_yes_rename_confirmation = pwg_getPageString("Yes, rename");
+const str_tag_deleted = pwg_getPageString('Tag "%s" succesfully deleted');
+const str_tags_deleted = pwg_getPageString("Tags {%s} succesfully deleted");
+const str_already_exist = pwg_getPageString('Tag "%s" already exists');
+const str_tag_created = pwg_getPageString('Tag "%s" created');
+const str_tag_renamed = pwg_getPageString('Tag "%s1" renamed in "%s2"');
+const str_tag_rename = pwg_getPageString('Rename "%s"');
+const str_delete_orphan_tags = pwg_getPageString("Delete orphan tags ?");
+const str_orphan_tags = pwg_getPageString("You have %s1 orphan : %s2");
+const str_delete_them = pwg_getPageString("Delete them");
+const str_keep_them = pwg_getPageString("Keep them");
+const str_copy = pwg_getPageString(" (copy)");
+const str_other_copy = pwg_getPageString(" (copy %s)");
+const str_merged_into = pwg_getPageString(
+  'Tag(s) {%s1} succesfully merged into "%s2"',
+);
+const str_and_others_tags = pwg_getPageString("and %s others");
+const str_others_tags_available = pwg_getPageString(
+  "%s other tags available...",
+);
+const str_number_photos = pwg_getPageString("%d photos");
+const str_no_photos = pwg_getPageString("no photo");
+const str_select_all_tag = pwg_getPageString("Select all %d tags");
+const str_clear_selection = pwg_getPageString("Clear Selection");
+const str_selection_done = pwg_getPageString(
+  "The %d tags on this page are selected",
+);
+const str_tag_selected = pwg_getPageString("<b>%d</b> tag selected");
+const str_tags_found = pwg_getPageString("<b>%d</b> tags found");
+const str_tag_found = pwg_getPageString("<b>%d</b> tag found");
+
+$(document).ready(function () {
+  $("h1").append(
+    '<span class="badge-number">' + pwg_getPageData("total") + "</span>",
+  );
+});
+
+if (!$.cookie("pwg_tags_per_page")) {
+  $.cookie("pwg_tags_per_page", "100");
+}
+
+$(function () {
+  function setPagination() {
+    const test = $.cookie("pwg_tags_per_page");
+    $(".pagination-per-page .selected").removeClass("selected");
+    $("#" + test).trigger("click");
+  }
+
+  setPagination();
+});

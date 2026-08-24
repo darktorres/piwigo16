@@ -73,7 +73,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
             AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.geoip', 'themes/admin/default/js/jquery.geoip.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Footer),
-            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui', 'page-data']),
+            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui', 'page-data']),
         ];
     }
 

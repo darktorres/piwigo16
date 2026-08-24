@@ -57,7 +57,7 @@ final readonly class PluginsNewView implements View, HasPageAssets, ExposesPageD
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'page-data']),
+            AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'page-data']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
         ];
     }

@@ -125,7 +125,7 @@ final class SqlDialect
      * `enum('true','false')` schema shape this project no longer has) --
      * one real caller remains, {@see \Piwigo\Admin\AlbumsPageRenderer}'s
      * `visible` field, kept as a string on purpose:
-     * `themes/admin/default/js/albums.js`'s `node.visible == 'false'`
+     * `themes/admin/default/js/albums.ts`'s `node.visible == 'false'`
      * check is a loose JS string comparison against the JSON tree this
      * renderer builds, and a real JSON boolean there would silently break
      * it (`true == 'false'` is `true` under JS's own loose-equality string

@@ -1,28 +1,26 @@
 interface PwgPageDataPayload {
-	data: Record<string, unknown>;
-	strings: Record<string, string>;
+  data: Record<string, unknown>;
+  strings: Record<string, string>;
 }
 
 let pwg_pageDataPayload: PwgPageDataPayload | null = null;
 
-function pwg_getPageDataPayload(): PwgPageDataPayload
-{
-	if (pwg_pageDataPayload === null)
-	{
-		const el = document.getElementById('page-data');
-		pwg_pageDataPayload = el ? JSON.parse(el.textContent ?? '{}') : { data: {}, strings: {} };
-	}
-	return pwg_pageDataPayload!;
+function pwg_getPageDataPayload(): PwgPageDataPayload {
+  if (pwg_pageDataPayload === null) {
+    const el = document.getElementById("page-data");
+    pwg_pageDataPayload = el
+      ? JSON.parse(el.textContent ?? "{}")
+      : { data: {}, strings: {} };
+  }
+  return pwg_pageDataPayload!;
 }
 
-function pwg_getPageData(key: string): any
-{
-	return pwg_getPageDataPayload().data[key];
+function pwg_getPageData(key: string): any {
+  return pwg_getPageDataPayload().data[key];
 }
 
-function pwg_getPageString(key: string): string
-{
-	return pwg_getPageDataPayload().strings[key]!;
+function pwg_getPageString(key: string): string {
+  return pwg_getPageDataPayload().strings[key]!;
 }
 
 // Explicit `window.` exposure -- required, not decorative. Vite/Rollup

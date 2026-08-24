@@ -136,14 +136,14 @@ test('resolveScripts() resolves jquery.ui from a zero-param registration, real r
 
 test('resolveScripts() resolves jquery.ui as an undeclared dependency, real updates_ext.latte/plugins_new.latte case', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.js', dependsOn: ['jquery.ui', 'jquery.sort']));
+    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', dependsOn: ['jquery.ui', 'jquery.sort']));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
 
     expect($paths)
         ->toContain('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js')
         ->and(pageAssetsTestIndexOf($paths, 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js'))
-        ->toBeLessThan(pageAssetsTestIndexOf($paths, 'themes/admin/default/js/plugins_new.js'));
+        ->toBeLessThan(pageAssetsTestIndexOf($paths, 'themes/admin/default/js/plugins_new.ts'));
 });
 
 test('scripts dedupe by id, unioning dependsOn and promoting to the more eager load mode', function (): void {

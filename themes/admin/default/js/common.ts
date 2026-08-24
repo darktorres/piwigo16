@@ -1,47 +1,48 @@
-jQuery.fn.fontCheckbox = function(this: JQuery): JQuery {
+jQuery.fn.fontCheckbox = function (this: JQuery): JQuery {
   /* checkbox */
-  this.find('input[type=checkbox]').each(function() {
-    if (!jQuery(this).is(':checked')) {
-      jQuery(this).prev().toggleClass('icon-check icon-check-empty');
+  this.find("input[type=checkbox]").each(function () {
+    if (!jQuery(this).is(":checked")) {
+      jQuery(this).prev().toggleClass("icon-check icon-check-empty");
     }
   });
-  this.find('input[type=checkbox]').on('change', function() {
+  this.find("input[type=checkbox]").on("change", function () {
     jQuery(this).prev().removeClass();
-    if (!jQuery(this).is(':checked')) {
-      jQuery(this).prev().addClass('icon-check-empty');
-    }
-    else {
-      jQuery(this).prev().addClass('icon-check');
+    if (!jQuery(this).is(":checked")) {
+      jQuery(this).prev().addClass("icon-check-empty");
+    } else {
+      jQuery(this).prev().addClass("icon-check");
     }
   });
 
   /* radio */
-  this.find('input[type=radio]').each(function() {
-    if (!jQuery(this).is(':checked')) {
-      jQuery(this).prev().toggleClass('icon-dot-circled icon-circle-empty');
-    }
-    else {
-      jQuery(this).closest('label').addClass('selected');
+  this.find("input[type=radio]").each(function () {
+    if (!jQuery(this).is(":checked")) {
+      jQuery(this).prev().toggleClass("icon-dot-circled icon-circle-empty");
+    } else {
+      jQuery(this).closest("label").addClass("selected");
     }
   });
-  this.find('input[type=radio]').on('change', function() {
-    jQuery('.font-checkbox input[type=radio][name="'+ jQuery(this).attr('name') +'"]').each(function() {
+  this.find("input[type=radio]").on("change", function () {
+    jQuery(
+      '.font-checkbox input[type=radio][name="' +
+        jQuery(this).attr("name") +
+        '"]',
+    ).each(function () {
       jQuery(this).prev().removeClass();
-      jQuery(this).closest('label').removeClass('selected');
-      if (!jQuery(this).is(':checked')) {
-        jQuery(this).prev().addClass('icon-circle-empty');
+      jQuery(this).closest("label").removeClass("selected");
+      if (!jQuery(this).is(":checked")) {
+        jQuery(this).prev().addClass("icon-circle-empty");
+      } else {
+        jQuery(this).prev().addClass("icon-dot-circled");
+        jQuery(this).closest("label").addClass("selected");
       }
-      else {
-        jQuery(this).prev().addClass('icon-dot-circled');
-        jQuery(this).closest('label').addClass('selected');
-      }
-    })
+    });
   });
   return this;
 };
 
 // init fontChecbox everywhere
-jQuery('.font-checkbox').fontCheckbox();
+jQuery(".font-checkbox").fontCheckbox();
 
 function array_delete(arr: any[], item: any): void {
   const i = arr.indexOf(item);
@@ -51,27 +52,19 @@ function array_delete(arr: any[], item: any): void {
 function str_repeat(i: string, m: number): string {
   const o: string[] = [];
   for (; m > 0; o[--m] = i);
-  return o.join('');
+  return o.join("");
 }
 
-if (!Array.prototype.indexOf)
-{
-  Array.prototype.indexOf = function(elt: any, fromArg?: number): number
-  {
+if (!Array.prototype.indexOf) {
+  Array.prototype.indexOf = function (elt: any, fromArg?: number): number {
     const len = this.length;
 
     let from = Number(fromArg) || 0;
-    from = (from < 0)
-         ? Math.ceil(from)
-         : Math.floor(from);
-    if (from < 0)
-      from += len;
+    from = from < 0 ? Math.ceil(from) : Math.floor(from);
+    if (from < 0) from += len;
 
-    for (; from < len; from++)
-    {
-      if (from in this &&
-          this[from] === elt)
-        return from;
+    for (; from < len; from++) {
+      if (from in this && this[from] === elt) return from;
     }
     return -1;
   };
@@ -84,64 +77,93 @@ function getRandomInt(min: number, max: number): number {
 }
 
 function sprintf(...args: any[]): string {
-  let i = 0, a: any, f = args[i++], m: RegExpExecArray | null, p: string, c: string, x: number;
-  const o: string[] = [], s = '';
+  let i = 0,
+    a: any,
+    f = args[i++],
+    m: RegExpExecArray | null,
+    p: string,
+    c: string,
+    x: number;
+  const o: string[] = [],
+    s = "";
   while (f) {
     if ((m = /^[^\x25]+/.exec(f))) {
       o.push(m[0]);
-    }
-    else if ((m = /^\x25{2}/.exec(f))) {
-      o.push('%');
-    }
-    else if ((m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))) {
-      if (((a = args[m[1] ? Number(m[1]) : i++]) == null) || (a == undefined)) {
-        throw new Error('Too few arguments.');
+    } else if ((m = /^\x25{2}/.exec(f))) {
+      o.push("%");
+    } else if (
+      (m =
+        /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(
+          f,
+        ))
+    ) {
+      if ((a = args[m[1] ? Number(m[1]) : i++]) == null || a == undefined) {
+        throw new Error("Too few arguments.");
       }
-      if (/[^s]/.test(m[7]!) && (typeof(a) != 'number')) {
-        throw new Error('Expecting number but found ' + typeof(a));
+      if (/[^s]/.test(m[7]!) && typeof a != "number") {
+        throw new Error("Expecting number but found " + typeof a);
       }
 
       switch (m[7]) {
-        case 'b': a = a.toString(2); break;
-        case 'c': a = String.fromCharCode(a); break;
-        case 'd': a = parseInt(a); break;
-        case 'e': a = m[6] ? a.toExponential(Number(m[6])) : a.toExponential(); break;
-        case 'f': a = m[6] ? parseFloat(a).toFixed(Number(m[6])) : parseFloat(a); break;
-        case 'o': a = a.toString(8); break;
-        case 's': a = ((a = String(a)) && m[6] ? a.substring(0, Number(m[6])) : a); break;
-        case 'u': a = Math.abs(a); break;
-        case 'x': a = a.toString(16); break;
-        case 'X': a = a.toString(16).toUpperCase(); break;
+        case "b":
+          a = a.toString(2);
+          break;
+        case "c":
+          a = String.fromCharCode(a);
+          break;
+        case "d":
+          a = parseInt(a);
+          break;
+        case "e":
+          a = m[6] ? a.toExponential(Number(m[6])) : a.toExponential();
+          break;
+        case "f":
+          a = m[6] ? parseFloat(a).toFixed(Number(m[6])) : parseFloat(a);
+          break;
+        case "o":
+          a = a.toString(8);
+          break;
+        case "s":
+          a = (a = String(a)) && m[6] ? a.substring(0, Number(m[6])) : a;
+          break;
+        case "u":
+          a = Math.abs(a);
+          break;
+        case "x":
+          a = a.toString(16);
+          break;
+        case "X":
+          a = a.toString(16).toUpperCase();
+          break;
       }
 
-      a = (/[def]/.test(m[7]!) && m[2] && a >= 0 ? '+'+ a : a);
-      c = m[3] ? m[3] == '0' ? '0' : m[3].charAt(1) : ' ';
+      a = /[def]/.test(m[7]!) && m[2] && a >= 0 ? "+" + a : a;
+      c = m[3] ? (m[3] == "0" ? "0" : m[3].charAt(1)) : " ";
       x = Number(m[5]) - String(a).length - s.length;
-      p = m[5] ? str_repeat(c, x) : '';
+      p = m[5] ? str_repeat(c, x) : "";
       o.push(s + (m[4] ? a + p : p + a));
-    }
-    else {
-      throw new Error('Huh ?!');
+    } else {
+      throw new Error("Huh ?!");
     }
 
     f = f.substring(m[0].length);
   }
 
-  return o.join('');
+  return o.join("");
 }
 
-$('.search-cancel').on('click', function () {
-  $('.search-input').val('');
-  $('.search-input').trigger ("input");
-})
+$(".search-cancel").on("click", function () {
+  $(".search-input").val("");
+  $(".search-input").trigger("input");
+});
 
-$('.search-input').on('input', function() {
-  if ($('.search-input').val() == '') {
-    $('.search-cancel').hide();
+$(".search-input").on("input", function () {
+  if ($(".search-input").val() == "") {
+    $(".search-cancel").hide();
   } else {
-    $('.search-cancel').show();
+    $(".search-cancel").show();
   }
-})
+});
 
 interface TemporaryStateAttrChange {
   object: JQuery;
@@ -184,10 +206,10 @@ class TemporaryState {
       this.attrChanges.push({
         object: $(obj[i]!),
         attribute: attr,
-        value: $(obj[i]!).attr(attr)
-      })
+        value: $(obj[i]!).attr(attr),
+      });
     }
-    obj.attr(attr, tempVal)
+    obj.attr(attr, tempVal);
   }
 
   /**
@@ -202,12 +224,10 @@ class TemporaryState {
         this.classChanges.push({
           object: $(obj[i]!),
           state: !st,
-          class: tempclass
-        })
-        if (st)
-          $(obj[i]!).addClass(tempclass)
-        else
-          $(obj[i]!).removeClass(tempclass)
+          class: tempclass,
+        });
+        if (st) $(obj[i]!).addClass(tempclass);
+        else $(obj[i]!).removeClass(tempclass);
       }
     }
   }
@@ -238,9 +258,9 @@ class TemporaryState {
   changeHTML(obj: JQuery, temphtml: string): void {
     for (let i = 0; i < obj.length; i++) {
       this.htmlChanges.push({
-        object:$(obj[i]!),
-        html:$(obj[i]!).html()
-      })
+        object: $(obj[i]!),
+        html: $(obj[i]!).html(),
+      });
     }
     obj.html(temphtml);
   }
@@ -249,22 +269,20 @@ class TemporaryState {
    * Reverse all the changes and clear the history
    */
   reverse(): void {
-    this.attrChanges.forEach(function(change) {
+    this.attrChanges.forEach(function (change) {
       if (change.value == undefined) {
         change.object.removeAttr(change.attribute);
       } else {
-        change.object.attr(change.attribute, change.value)
+        change.object.attr(change.attribute, change.value);
       }
-    })
-    this.classChanges.forEach(function(change) {
-      if (change.state)
-        change.object.addClass(change.class)
-      else
-        change.object.removeClass(change.class)
-    })
-    this.htmlChanges.forEach(function(change) {
+    });
+    this.classChanges.forEach(function (change) {
+      if (change.state) change.object.addClass(change.class);
+      else change.object.removeClass(change.class);
+    });
+    this.htmlChanges.forEach(function (change) {
       change.object.html(change.html);
-    })
+    });
     this.attrChanges = [];
     this.classChanges = [];
     this.htmlChanges = [];
@@ -272,90 +290,99 @@ class TemporaryState {
 }
 
 const jConfirm_alert_options = {
-  icon: 'icon-ok',
+  icon: "icon-ok",
   titleClass: "jconfirmAlert",
-  theme:"modern",
+  theme: "modern",
   closeIcon: true,
   draggable: false,
   animation: "zoom",
-  boxWidth: '20%',
+  boxWidth: "20%",
   useBootstrap: false,
   backgroundDismiss: true,
   animateFromElement: false,
   typeAnimated: false,
-}
+};
 
 const jConfirm_confirm_options = {
   draggable: false,
   titleClass: "jconfirmDeleteConfirm",
   theme: "modern",
   animation: "zoom",
-  boxWidth: '40%',
+  boxWidth: "40%",
   useBootstrap: false,
-  type: 'red',
+  type: "red",
   animateFromElement: false,
   backgroundDismiss: true,
   typeAnimated: false,
-}
+};
 
 const jConfirm_warning_options = {
   icon: "icon-attention",
   draggable: false,
   titleClass: "jconfirmWarning jconfirmAlert",
-  theme:"modern",
-  type: 'orange',
+  theme: "modern",
+  type: "orange",
   closeIcon: true,
   animation: "zoom",
-  boxWidth: '20%',
+  boxWidth: "20%",
   useBootstrap: false,
   backgroundDismiss: true,
   animateFromElement: false,
   typeAnimated: false,
-}
+};
 
 const jConfirm_confirm_with_content_options = {
   draggable: false,
   theme: "modern",
   animation: "zoom",
-  boxWidth: '40%',
+  boxWidth: "40%",
   useBootstrap: false,
-  type: 'red',
+  type: "red",
   animateFromElement: false,
   backgroundDismiss: true,
   typeAnimated: false,
-}
+};
 
-
-
-jQuery.fn.pwg_jconfirm_follow_href = function(this: JQuery, {
-  alert_title = "TITLE",
-  alert_confirm = "CONFIRM",
-  alert_cancel = "CANCEL",
-  alert_content = ""
-}: { alert_title?: string; alert_confirm?: string; alert_cancel?: string; alert_content?: string } = {}): void {
-  const button_href = $(this).attr('href');
-  const options = alert_content === "" ? jConfirm_confirm_options : jConfirm_confirm_with_content_options
-  $(this).click(function() {
+jQuery.fn.pwg_jconfirm_follow_href = function (
+  this: JQuery,
+  {
+    alert_title = "TITLE",
+    alert_confirm = "CONFIRM",
+    alert_cancel = "CANCEL",
+    alert_content = "",
+  }: {
+    alert_title?: string;
+    alert_confirm?: string;
+    alert_cancel?: string;
+    alert_content?: string;
+  } = {},
+): void {
+  const button_href = $(this).attr("href");
+  const options =
+    alert_content === ""
+      ? jConfirm_confirm_options
+      : jConfirm_confirm_with_content_options;
+  $(this).click(function () {
     $.confirm({
       content: alert_content,
       title: alert_title,
       buttons: {
         confirm: {
           text: alert_confirm,
-          btnClass: 'btn-red',
+          btnClass: "btn-red",
           action: function () {
             window.location.href = button_href!;
-          }
+          },
         },
         cancel: {
-          text: alert_cancel
-        }
+          text: alert_cancel,
+        },
       },
-      ...options
+      ...options,
     });
-    return (false);
+    return false;
   });
-}
+};
 
 // Explicit `window.` exposure -- required, not decorative (see
 // page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
@@ -368,5 +395,6 @@ window.sprintf = sprintf;
 window.jConfirm_alert_options = jConfirm_alert_options;
 window.jConfirm_confirm_options = jConfirm_confirm_options;
 window.jConfirm_warning_options = jConfirm_warning_options;
-window.jConfirm_confirm_with_content_options = jConfirm_confirm_with_content_options;
+window.jConfirm_confirm_with_content_options =
+  jConfirm_confirm_with_content_options;
 window.TemporaryState = TemporaryState;

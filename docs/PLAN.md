@@ -4202,13 +4202,37 @@ filter set and `lint:latte` registers that extension, so gating earlier
 only churns the config. `lint:vartype` is **never** wired — P40 deletes
 it along with the `{varType}` blocks it generates.
 
-**P46 — JS → TS mechanical conversion.** `.js` → `.ts` renames, minimal
-types to satisfy the existing strict `tsconfig.json`, real Vite entries
-replacing the `noop` placeholder (the 68 entries `vite.config.ts` already
-earmarks). Same code, same behavior. Vendored third-party files
-(`jquery.js`/`.min.js`/`.cookie.js`, `themes/default/js/ui/**`,
-`themes/default/js/plugins/**`, `jquery.geoip.js`) stay out of scope —
-already ESLint-ignore-listed, decided in P49. Depends on P38.
+**P46 — JS → TS mechanical conversion (landed).** `.js` → `.ts` renames,
+minimal types to satisfy the existing strict `tsconfig.json`, real Vite
+entries replacing the `noop` placeholder. Same code, same behavior.
+Vendored third-party files (`jquery.js`/`.min.js`/`.cookie.js`,
+`themes/default/js/ui/**`, `themes/default/js/plugins/**`,
+`jquery.geoip.js`) stayed out of scope — already ESLint-ignore-listed,
+decided in P49. Depended on P38.
+
+Real count: **79 files converted, not the 68 `vite.config.ts` originally
+guessed at** — `mcs.js` (`themes/default/js/`) was missed by the initial
+survey entirely and only found by an end-of-campaign directory sweep
+after every other file had already converted; every file converted
+in place (stayed under its own `themes/*/js/` directory, not relocated
+into `build/`). A P46-0 sub-phase (landed first, independently) migrated
+20 vendored libraries this campaign's own files depend on
+(jQuery/jQuery UI/selectize/jqtree/etc.) off self-hosted copies onto
+CDN URLs, deleting the vendored files; 3 libraries with no findable
+real source stayed vendored with a source-attribution comment. Also
+fixed several genuine pre-existing bugs strict TypeScript/ESLint
+surfaced along the way (never caught before since neither was
+CI-gated) — a `.contents()`/`.children()` mixup that silently deleted a
+reusable DOM template, an inverted string/number comparison that broke
+tag multi-select, a missing localized string, a stray `const`
+reassignment, and (found only via live-browser verification after the
+conversion itself was done) a missing `dependsOn: ['jquery']` on a
+CDN-loaded script and a client/server empty-string-vs-null mismatch
+that 422'd every plain-text photo search. Full validation green:
+`bun run typecheck`/`lint:js`/`format`, `bun knip`, a real `vite build`
+with compiled-output inspection, PHPStan, ECS, and the full test
+suite (Unit, Arch, Integration, golden-html, Browser, Visual
+Regression).
 
 **P47 — `getPageData<T>()` typing + `any` reduction (TS half).**
 `getPageData<T>()` consumes P37's island; TypeScript `any` driven to zero

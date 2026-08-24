@@ -6,78 +6,101 @@ export {};
 // real `const` declarations, no ambient binding needed (same reasoning
 // as intro_tooltips.ts's own copy of this comment).
 //
-// Also reads `data`/`str_album_found` bare, both real top-level `var`s
-// in themes/admin/default/js/albums.js (a real `dependsOn: ['albums']`
+// Also reads `data`/`str_album_found` -- both real top-level `const`s in
+// themes/admin/default/js/albums.ts (a real `dependsOn: ['albums']`
 // registration -- AlbumsView.php) -- a genuine cross-file relationship
 // the plan's own full 61-file sweep missed (both names are exactly the
 // kind of generic/short identifier the sweep's own false-positive
-// filtering excluded). `albums.js` hasn't converted yet, so these get
-// the same "consumer converts before its declarer" ambient `declare
-// const` treatment as plugins_installated.ts's own pwg_token/nb_plugin/
-// etc. -- remove both once albums.js itself converts and supplies its
-// own real declarations.
-declare const data: any;
-declare const str_album_found: string;
+// filtering excluded). Correction found by real strict typechecking
+// (deferred to the end of the P46 conversion, per session instruction):
+// unlike every other declarer-converts-later case, albums.ts *does*
+// have `export {}` -- its own real declarations are module-private, not
+// ambient, so a bare `data` read here is a genuine TS2304 "Cannot find
+// name" compile error (`str_album_found` happened to typecheck anyway,
+// coincidentally resolved by album_selector.ts's own independent,
+// still-non-module `const str_album_found` -- a landmine for a future
+// reader, not a real fix, left alone since it's harmless: same message
+// text). Fixed by reading `data` through `window.data` explicitly --
+// TS-valid via the shared `Window` interface, and behaviorally
+// identical at runtime (a bare, undeclared-in-this-file identifier read
+// already resolves through the global object the same way).
 
 const RESULT_LIMIT = 100;
 const editLink = "admin.php?page=album-";
-const colors = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
+const colors = [
+  "icon-red",
+  "icon-blue",
+  "icon-yellow",
+  "icon-purple",
+  "icon-green",
+];
 
-$(function() {
+$(function () {
   $(".limit-album-reached").hide();
 
-  $('#cat_search_input').on('input', () => {
+  $("#cat_search_input").on("input", () => {
     updateSearch();
   });
-})
+});
 
 // Update the page according to the search field
-function updateSearch () {
-  const string = String($('.search-input').val());
-  $('.search-album-result').html("");
-  $('.search-album-noresult').hide();
+function updateSearch() {
+  const string = String($(".search-input").val());
+  $(".search-album-result").html("");
+  $(".search-album-noresult").hide();
   $(".limit-album-reached").hide();
-  if (string == '') {
+  if (string == "") {
     // help button unnecessary so do not show
     // $('.search-album-help').show();
-    $('.search-album-ghost').show();
-    $('.search-album-num-result').hide();
+    $(".search-album-ghost").show();
+    $(".search-album-num-result").hide();
     hideSearchContainer();
   } else {
-    $('.search-album-ghost').hide();
-    $('.search-album-help').hide();
-    $('.search-album-num-result').show();
+    $(".search-album-ghost").hide();
+    $(".search-album-help").hide();
+    $(".search-album-num-result").show();
     showSearchContainer();
 
     let nbResult = 0;
 
-    nbResult = searchAlbumByName(data, string, nbResult);
+    nbResult = searchAlbumByName(window.data, string, nbResult);
 
     if (nbResult != 1) {
       if (nbResult >= RESULT_LIMIT) {
-        $('.search-album-num-result').html(str_result_limit.replace('%d', String(nbResult)));
+        $(".search-album-num-result").html(
+          str_result_limit.replace("%d", String(nbResult)),
+        );
       } else {
-        $('.search-album-num-result').html(str_albums_found.replace('%d', String(nbResult)));
+        $(".search-album-num-result").html(
+          str_albums_found.replace("%d", String(nbResult)),
+        );
       }
     } else {
-      $('.search-album-num-result').html(str_album_found);
+      $(".search-album-num-result").html(str_album_found);
     }
 
     if (nbResult != 0) {
-      resultAppear($('.search-album-result .search-album-elem').first());
+      resultAppear($(".search-album-result .search-album-elem").first());
     } else {
-      $('.search-album-noresult').show();
+      $(".search-album-noresult").show();
     }
   }
 }
 
-function searchAlbumByName(categories: any, search: string, nbResult: number, children?: boolean, name: string = ''): number {
+function searchAlbumByName(
+  categories: any,
+  search: string,
+  nbResult: number,
+  children?: boolean,
+  name: string = "",
+): number {
   for (const c of categories) {
     if (nbResult >= RESULT_LIMIT) {
       return nbResult;
     }
 
-    const currentName = name + `<a href="${editLink + c.id}">${c.name}</a>` + ' / ';
+    const currentName =
+      name + `<a href="${editLink + c.id}">${c.name}</a>` + " / ";
 
     if (c.name.toString().toLowerCase().includes(search.toLowerCase())) {
       const haveChild = c.children && c.children.length ? true : false;
@@ -86,37 +109,49 @@ function searchAlbumByName(categories: any, search: string, nbResult: number, ch
     }
 
     if (c.children && c.children.length) {
-      nbResult = searchAlbumByName(c.children, search, nbResult, true, currentName);
+      nbResult = searchAlbumByName(
+        c.children,
+        search,
+        nbResult,
+        true,
+        currentName,
+      );
     }
-
   }
   return nbResult;
 }
 
 // Add an album as a result in the page
-function addAlbumResult (cat: any, nbResult: number, haveChildren: boolean, name: string) {
+function addAlbumResult(
+  cat: any,
+  nbResult: number,
+  haveChildren: boolean,
+  name: string,
+) {
   const id = +cat.id;
-  const template = $('.search-album-elem-template').html();
+  const template = $(".search-album-elem-template").html();
   const newCatNode = $(template);
 
   if (haveChildren) {
-    newCatNode.find('.search-album-icon').addClass('icon-sitemap');
+    newCatNode.find(".search-album-icon").addClass("icon-sitemap");
   } else {
-    newCatNode.find('.search-album-icon').addClass('icon-folder-open');
+    newCatNode.find(".search-album-icon").addClass("icon-folder-open");
   }
 
-  const colorId = id%5;
-  newCatNode.find('.search-album-icon').addClass(colors[colorId]!);
-  newCatNode.find('.search-album-name').html(name.slice(0, -2));
+  const colorId = id % 5;
+  newCatNode.find(".search-album-icon").addClass(colors[colorId]!);
+  newCatNode.find(".search-album-name").html(name.slice(0, -2));
 
   const href = "admin.php?page=album-" + id;
-  newCatNode.find('.search-album-edit').attr('href', href);
+  newCatNode.find(".search-album-edit").attr("href", href);
 
-  $('.search-album-result').append(newCatNode);
+  $(".search-album-result").append(newCatNode);
 
-  if(nbResult >= RESULT_LIMIT) {
+  if (nbResult >= RESULT_LIMIT) {
     $(".limit-album-reached").show(1000);
-    $('.limit-album-reached').html(str_result_limit.replace('%d', String(nbResult)));
+    $(".limit-album-reached").html(
+      str_result_limit.replace("%d", String(nbResult)),
+    );
   }
 }
 
@@ -124,16 +159,18 @@ function addAlbumResult (cat: any, nbResult: number, haveChildren: boolean, name
 function resultAppear(result: JQuery) {
   result.fadeIn();
   if (result.next().length != 0) {
-    setTimeout(() => {resultAppear(result.next().first())}, 50);
+    setTimeout(() => {
+      resultAppear(result.next().first());
+    }, 50);
   }
 }
 
 function showSearchContainer() {
-  $('.tree').hide();
-  $('.album-search-result-container').show();
+  $(".tree").hide();
+  $(".album-search-result-container").show();
 }
 
 function hideSearchContainer() {
-  $('.album-search-result-container').hide();
-  $('.tree').fadeIn();
+  $(".album-search-result-container").hide();
+  $(".tree").fadeIn();
 }

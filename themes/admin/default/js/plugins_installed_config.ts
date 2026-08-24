@@ -25,9 +25,12 @@
 // compiled output directly rather than trusting typecheck/lint alone.
 
 /* incompatible message */
-const incompatible_msg = pwg_getPageString('WARNING! This plugin does not seem to be compatible with this version of Piwigo.');
-const activate_msg = '\n' + pwg_getPageString('Do you want to activate anyway?');
-const deactivate_all_msg = pwg_getPageString('Deactivate all');
+const incompatible_msg = pwg_getPageString(
+  "WARNING! This plugin does not seem to be compatible with this version of Piwigo.",
+);
+const activate_msg =
+  "\n" + pwg_getPageString("Do you want to activate anyway?");
+const deactivate_all_msg = pwg_getPageString("Deactivate all");
 
 /* group action */
 // `pwg_token`/`confirm_msg`/`cancel_msg` genuinely need `var`, not
@@ -38,37 +41,49 @@ const deactivate_all_msg = pwg_getPageString('Deactivate all');
 // own `var`/`const` declaration of the same name outright (a real
 // TS2451 error, confirmed while landing this file).
 // eslint-disable-next-line no-var
-var pwg_token = pwg_getPageData('csrf_token');
-const count_types_plugins = pwg_getPageData('count_types_plugins');
+var pwg_token = pwg_getPageData("csrf_token");
+const count_types_plugins = pwg_getPageData("count_types_plugins");
 const nb_plugin = {
-  'all' : count_types_plugins.active + count_types_plugins.inactive + count_types_plugins.missing + count_types_plugins.merged,
-  'active' : count_types_plugins.active,
-  'inactive' : count_types_plugins.inactive,
-  'other' : count_types_plugins.missing + count_types_plugins.merged,
+  all:
+    count_types_plugins.active +
+    count_types_plugins.inactive +
+    count_types_plugins.missing +
+    count_types_plugins.merged,
+  active: count_types_plugins.active,
+  inactive: count_types_plugins.inactive,
+  other: count_types_plugins.missing + count_types_plugins.merged,
 };
 // eslint-disable-next-line no-var
-var confirm_msg = pwg_getPageString('Yes, I am sure');
+var confirm_msg = pwg_getPageString("Yes, I am sure");
 // eslint-disable-next-line no-var
-var cancel_msg = pwg_getPageString('No, I have changed my mind');
-const delete_plugin_msg = pwg_getPageString('Are you sure you want to delete the plugin "%s"?');
+var cancel_msg = pwg_getPageString("No, I have changed my mind");
+const delete_plugin_msg = pwg_getPageString(
+  'Are you sure you want to delete the plugin "%s"?',
+);
 const deleted_plugin_msg = pwg_getPageString('Plugin "%s" deleted!');
-const restore_plugin_msg = pwg_getPageString('Are you sure you want to restore the plugin "%s"?');
-const uninstall_plugin_msg = pwg_getPageString('Are you sure you want to uninstall the plugin "%s"?');
-const plugin_added_str = pwg_getPageString('Activated');
-const plugin_deactivated_str = pwg_getPageString('Deactivated');
-const plugin_restored_str = pwg_getPageString('Restored');
-const plugin_action_error = pwg_getPageString('an error happened');
-const not_webmaster = pwg_getPageString('Webmaster status required');
-const nothing_found = pwg_getPageString('No plugins found');
-const x_plugins_found = pwg_getPageString('%s plugins found');
-const plugin_found = pwg_getPageString('%s plugin found');
-const isWebmaster = pwg_getPageData('is_webmaster');
-const str_restore_def = pwg_getPageString('While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset');
+const restore_plugin_msg = pwg_getPageString(
+  'Are you sure you want to restore the plugin "%s"?',
+);
+const uninstall_plugin_msg = pwg_getPageString(
+  'Are you sure you want to uninstall the plugin "%s"?',
+);
+const plugin_added_str = pwg_getPageString("Activated");
+const plugin_deactivated_str = pwg_getPageString("Deactivated");
+const plugin_restored_str = pwg_getPageString("Restored");
+const plugin_action_error = pwg_getPageString("an error happened");
+const not_webmaster = pwg_getPageString("Webmaster status required");
+const nothing_found = pwg_getPageString("No plugins found");
+const x_plugins_found = pwg_getPageString("%s plugins found");
+const plugin_found = pwg_getPageString("%s plugin found");
+const isWebmaster = pwg_getPageData("is_webmaster");
+const str_restore_def = pwg_getPageString(
+  "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset",
+);
 
-const show_details = pwg_getPageData('show_details');
+const show_details = pwg_getPageData("show_details");
 
 const searchParams = new URLSearchParams(window.location.search);
-const plugin_filter = searchParams.get('filter');
+const plugin_filter = searchParams.get("filter");
 
 // Explicit `window.` exposure -- required at runtime, not decorative
 // (see this file's own leading comment for the full explanation).

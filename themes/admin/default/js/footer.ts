@@ -6,20 +6,22 @@ export {};
 // pattern (docs/PLAN.md P46-C's own finding) needs the same `window.X
 // = X` exposure as a cross-file bare read, once this file's own
 // top-level declarations become IIFE-private at build time.
-jQuery('.tiptip').tipTip({
+jQuery(".tiptip").tipTip({
   delay: 0,
   fadeIn: 200,
-  fadeOut: 200
+  fadeOut: 200,
 });
 
-jQuery('a.externalLink').click(function() {
+jQuery("a.externalLink").click(function () {
   window.open(jQuery(this).attr("href"));
   return false;
 });
 
 function hide_user_whats_new() {
   $.ajax({
-    url: "api/v1/session/preferences/show_whats_new_" + pwg_getPageData('whats_new_major_version'),
+    url:
+      "api/v1/session/preferences/show_whats_new_" +
+      pwg_getPageData("whats_new_major_version"),
     type: "PUT",
     contentType: "application/json",
     dataType: "JSON",
@@ -27,16 +29,16 @@ function hide_user_whats_new() {
       value: JSON.stringify(false),
       isJson: true,
     }),
-  })
-  $('#whats_new').hide();
+  });
+  $("#whats_new").hide();
 }
 
 function show_user_whats_new() {
-  $('#whats_new').show();
+  $("#whats_new").show();
 }
 
-if (pwg_getPageData('show_whats_new')) {
-  show_user_whats_new()
+if (pwg_getPageData("show_whats_new")) {
+  show_user_whats_new();
 }
 
 window.hide_user_whats_new = hide_user_whats_new;

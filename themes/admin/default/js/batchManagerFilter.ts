@@ -8,106 +8,115 @@ export {};
 // different theme, a different page, never co-loaded) -- this file's
 // own `export {}` module isolation keeps the two from ever colliding
 // regardless.
-const dimensions = pwg_getPageData('dimensions');
-const filesizeData = pwg_getPageData('filesize');
+const dimensions = pwg_getPageData("dimensions");
+const filesizeData = pwg_getPageData("filesize");
 
 const sliders = {
   widths: {
-    values: dimensions.widths.split(',').map(Number),
+    values: dimensions.widths.split(",").map(Number),
     selected: {
       min: Number(dimensions.selected.min_width),
       max: Number(dimensions.selected.max_width),
     },
-    text: pwg_getPageString('between %d and %d pixels')
+    text: pwg_getPageString("between %d and %d pixels"),
   },
 
   heights: {
-    values: dimensions.heights.split(',').map(Number),
+    values: dimensions.heights.split(",").map(Number),
     selected: {
       min: Number(dimensions.selected.min_height),
       max: Number(dimensions.selected.max_height),
     },
-    text: pwg_getPageString('between %d and %d pixels')
+    text: pwg_getPageString("between %d and %d pixels"),
   },
 
   ratios: {
-    values: dimensions.ratios.split(',').map(Number),
+    values: dimensions.ratios.split(",").map(Number),
     selected: {
       min: Number(dimensions.selected.min_ratio),
       max: Number(dimensions.selected.max_ratio),
     },
-    text: pwg_getPageString('between %.2f and %.2f')
+    text: pwg_getPageString("between %.2f and %.2f"),
   },
 
   filesizes: {
-    values: filesizeData.list.split(',').map(Number),
+    values: filesizeData.list.split(",").map(Number),
     selected: {
       min: Number(filesizeData.selected.min),
       max: Number(filesizeData.selected.max),
     },
-    text: pwg_getPageString('between %s and %s MB')
-  }
+    text: pwg_getPageString("between %s and %s MB"),
+  },
 };
 
-const filterCategorySelected = pwg_getPageData('filter_category_selected');
-const selected_filter_cat_ids = filterCategorySelected ? [String(filterCategorySelected)] : [];
+const filterCategorySelected = pwg_getPageData("filter_category_selected");
+const selected_filter_cat_ids = filterCategorySelected
+  ? [String(filterCategorySelected)]
+  : [];
 
-const str_select_album = pwg_getPageString('Select at least one album');
-const str_select_tag = pwg_getPageString('Select at least one tag');
-let errorFilters = '';
+const str_select_album = pwg_getPageString("Select at least one album");
+const str_select_tag = pwg_getPageString("Select at least one tag");
+let errorFilters = "";
 
 /* ********** Filters*/
 function filter_enable(filter: string) {
-	/* show the filter*/
-	$("#"+filter).show();
+  /* show the filter*/
+  $("#" + filter).show();
 
-	/* check the checkbox to declare we use this filter */
-	$("input[type=checkbox][name="+filter+"_use]").prop("checked", true);
+  /* check the checkbox to declare we use this filter */
+  $("input[type=checkbox][name=" + filter + "_use]").prop("checked", true);
 
-	/* forbid to select this filter in the addFilter list */
-  $("#addFilter").find("a[data-value="+filter+"]").addClass("disabled");
+  /* forbid to select this filter in the addFilter list */
+  $("#addFilter")
+    .find("a[data-value=" + filter + "]")
+    .addClass("disabled");
 
   /* hide the no filter message */
-  $('.noFilter').hide();
-  $('.addFilter-button').removeClass('highlight');
+  $(".noFilter").hide();
+  $(".addFilter-button").removeClass("highlight");
 }
 
 function filter_disable(filter: string) {
-	/* hide the filter line */
-	$("#"+filter).hide();
+  /* hide the filter line */
+  $("#" + filter).hide();
 
-	/* uncheck the checkbox to declare we do not use this filter */
-	$("input[name="+filter+"_use]").prop("checked", false);
+  /* uncheck the checkbox to declare we do not use this filter */
+  $("input[name=" + filter + "_use]").prop("checked", false);
 
-	/* give the possibility to show it again */
-  $("#addFilter").find("a[data-value="+filter+"]").removeClass("disabled");
+  /* give the possibility to show it again */
+  $("#addFilter")
+    .find("a[data-value=" + filter + "]")
+    .removeClass("disabled");
 
   /* show the no filter message if no filter selected */
-  if ($('#filterList li:visible').length == 0) {
-    $('.noFilter').show();
-    $('.addFilter-button').addClass('highlight');
+  if ($("#filterList li:visible").length == 0) {
+    $(".noFilter").show();
+    $(".addFilter-button").addClass("highlight");
   }
-
 }
 // Album Selector
-function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }: any) {
-  $('#selectedAlbumNameFilter').html(album.name);
+function select_album_filter({
+  album,
+  newSelectedAlbum,
+  getSelectedAlbum,
+}: any) {
+  $("#selectedAlbumNameFilter").html(album.name);
   newSelectedAlbum();
   hide_filters_error(str_select_album);
-  $('#filterCategoryValue').val(+getSelectedAlbum()[0]);
-  $('#selectAlbumFilter').hide();
-  $('#selectedAlbumFilterArea').fadeIn();
+  $("#filterCategoryValue").val(+getSelectedAlbum()[0]);
+  $("#selectAlbumFilter").hide();
+  $("#selectedAlbumFilterArea").fadeIn();
 }
 
 // Tags and Albums validation
 function show_filters_error(message: string) {
   errorFilters = message;
-  $('#errorFilter').html(`<p>${message}</p>`).fadeIn();
+  $("#errorFilter").html(`<p>${message}</p>`).fadeIn();
 }
 
 function hide_filters_error(message: string) {
   if (message === errorFilters) {
-    $('#errorFilter').hide();
+    $("#errorFilter").hide();
   }
 }
 
@@ -118,81 +127,84 @@ $(document).ready(function () {
     adminMode: true,
   });
 
-  $('#selectAlbumFilter, #selectedAlbumEditFilter').on('click', function() {
+  $("#selectAlbumFilter, #selectedAlbumEditFilter").on("click", function () {
     ab_filter.open();
   });
 
   $(".removeFilter").addClass("icon-cancel-circled");
 
   $(".removeFilter").click(function () {
-    const filter = $(this).parent('li').attr("id")!;
+    const filter = $(this).parent("li").attr("id")!;
     filter_disable(filter);
 
     return false;
   });
 
-  $("#addFilter a").on('click', function () {
+  $("#addFilter a").on("click", function () {
     const filter = $(this).attr("data-value")!;
     filter_enable(filter);
   });
 
-  $("#removeFilters").click(function() {
-    $("#filterList li").each(function() {
+  $("#removeFilters").click(function () {
+    $("#filterList li").each(function () {
       const filter = $(this).attr("id")!;
       filter_disable(filter);
     });
     return false;
   });
 
-  $('[data-slider=widths]').pwgDoubleSlider(sliders.widths);
-  $('[data-slider=heights]').pwgDoubleSlider(sliders.heights);
-  $('[data-slider=ratios]').pwgDoubleSlider(sliders.ratios);
-  $('[data-slider=filesizes]').pwgDoubleSlider(sliders.filesizes);
+  $("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
+  $("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
+  $("[data-slider=ratios]").pwgDoubleSlider(sliders.ratios);
+  $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
 
   $(document).mouseup(function (e) {
     e.stopPropagation();
-    if (!$(event!.target as unknown as Element).hasClass('addFilter-button')) {
-      $('.addFilter-dropdown').slideUp();
+    if (!$(event!.target as unknown as Element).hasClass("addFilter-button")) {
+      $(".addFilter-dropdown").slideUp();
     }
   });
 
-
   // Filter JS Validation
-  $('.filterBlock select[data-selectize="tags"]').on('change', function() {
+  $('.filterBlock select[data-selectize="tags"]').on("change", function () {
     if ($(this).val()) {
       hide_filters_error(str_select_tag);
     }
-  })
+  });
 
-  $('#applyFilter').on('click', function(e) {
-    if ($('#filter_tags').is(':visible')) {
+  $("#applyFilter").on("click", function (e) {
+    if ($("#filter_tags").is(":visible")) {
       const tags = $('.filterBlock select[data-selectize="tags"]');
       if (!tags.val()) {
         e.preventDefault();
         show_filters_error(str_select_tag);
-        $('#filter_tags .removeFilter').off('click.apply').on('click.apply', function() {
-          hide_filters_error(str_select_tag);
-        });
+        $("#filter_tags .removeFilter")
+          .off("click.apply")
+          .on("click.apply", function () {
+            hide_filters_error(str_select_tag);
+          });
       }
     }
 
-    if ($('#filter_category').is(':visible')) {
+    if ($("#filter_category").is(":visible")) {
       const albums = ab_filter.get_selected_albums();
       if (albums.length === 0) {
         e.preventDefault();
         show_filters_error(str_select_album);
-        $('#filter_category .removeFilter').off('click.apply').on('click.apply', function() {
-          hide_filters_error(str_select_album);
-        });
+        $("#filter_category .removeFilter")
+          .off("click.apply")
+          .on("click.apply", function () {
+            hide_filters_error(str_select_album);
+          });
       }
     }
   });
 
-  $('.help-popin-search').on('click', function() {
-    $('#modalQuickSearch').fadeIn();
+  $(".help-popin-search").on("click", function () {
+    $("#modalQuickSearch").fadeIn();
   });
 
-  $('#closeModalQuickSearch').on('click', function() {
-    $('#modalQuickSearch').fadeOut();
+  $("#closeModalQuickSearch").on("click", function () {
+    $("#modalQuickSearch").fadeOut();
   });
-})
+});

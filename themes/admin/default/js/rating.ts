@@ -1,14 +1,14 @@
 export {};
 
 const categoriesCache = new window.CategoriesCache({
-  serverKey: pwg_getPageData('cache_key_categories'),
-  serverId: pwg_getPageData('cache_key_hash'),
-  rootUrl: pwg_getPageData('root_url')
+  serverKey: pwg_getPageData("cache_key_categories"),
+  serverId: pwg_getPageData("cache_key_hash"),
+  rootUrl: pwg_getPageData("root_url"),
 });
 
-categoriesCache.selectize(jQuery('[data-selectize=categories]'));
+categoriesCache.selectize(jQuery("[data-selectize=categories]"));
 
-jQuery("#removeAlbumFilter").click(function() {
+jQuery("#removeAlbumFilter").click(function () {
   (jQuery("select[name=cat]")[0] as any).selectize.setValue(null);
   return false;
 });
@@ -16,47 +16,59 @@ jQuery("#removeAlbumFilter").click(function() {
 function checkCatFilter() {
   if (jQuery("select[name=cat]").val() === "") {
     jQuery("#removeAlbumFilter").hide();
-  }
-  else {
+  } else {
     jQuery("#removeAlbumFilter").show();
   }
 }
 
 checkCatFilter();
-jQuery("select[name=cat]").change(function(){
+jQuery("select[name=cat]").change(function () {
   checkCatFilter();
 });
 
-$(document).ready(function() {
-  $('h1').append("<span class='badge-number'>" + pwg_getPageData('nb_elements') + "</span>")
+$(document).ready(function () {
+  $("h1").append(
+    "<span class='badge-number'>" + pwg_getPageData("nb_elements") + "</span>",
+  );
 });
 
-const pwg_token = pwg_getPageData('csrf_token');
+const pwg_token = pwg_getPageData("csrf_token");
 
-$(document).on('click', 'a.icon-trash[data-image-id]', function() {
-  return del(this, Number(this.dataset.imageId), Number(this.dataset.userId), this.dataset.anonymousId || null);
+$(document).on("click", "a.icon-trash[data-image-id]", function () {
+  return del(
+    this,
+    Number(this.dataset.imageId),
+    Number(this.dataset.userId),
+    this.dataset.anonymousId || null,
+  );
 });
 
-function del(node: any,id: any,uid: any,aid: any){
+function del(node: any, id: any, uid: any, aid: any) {
   const tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),
     data = {
       imageId: id,
-      anonymousId: aid || null
+      anonymousId: aid || null,
     };
 
   $.ajax({
-    url: pwg_getPageData('root_url') + "api/v1/users/" + uid + "/actions/delete-ratings",
+    url:
+      pwg_getPageData("root_url") +
+      "api/v1/users/" +
+      uid +
+      "/actions/delete-ratings",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify(data),
-    headers: {'X-CSRF-Token': pwg_token},
-    error: function(jqXHR: any) { tr.stop(); tr.fadeTo(0,1); alert(jqXHR.status + " " + jqXHR.statusText); },
-    success: function(result: any){
-      if (result.deletedCount)
-        tr.remove();
-      else
-        alert(result.deletedCount);
-    }
+    headers: { "X-CSRF-Token": pwg_token },
+    error: function (jqXHR: any) {
+      tr.stop();
+      tr.fadeTo(0, 1);
+      alert(jqXHR.status + " " + jqXHR.statusText);
+    },
+    success: function (result: any) {
+      if (result.deletedCount) tr.remove();
+      else alert(result.deletedCount);
+    },
   });
   return false;
 }

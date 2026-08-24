@@ -1,21 +1,23 @@
-$(document).ready(function() {
-  $("a.externalLink").click(function() {
+export {};
+
+$(document).ready(function () {
+  $("a.externalLink").click(function () {
     window.open($(this).attr("href"));
     return false;
   });
 
-  $("#admin_mail").keyup(function() {
-    $(".adminEmail").text($(this).val());
+  $("#admin_mail").keyup(function () {
+    $(".adminEmail").text(String($(this).val()));
   });
 
-  var dbCheckXhr = null;
-  var dbCheckTimer = null;
+  let dbCheckXhr: any = null;
+  let dbCheckTimer: any = null;
 
   function dbCheckReady() {
-    var host = $.trim($("#dbhost").val());
-    var user = $.trim($("#dbuser").val());
-    var name = $.trim($("#dbname").val());
-    var port = $.trim($("#dbport").val());
+    const host = String($("#dbhost").val()).trim();
+    const user = String($("#dbuser").val()).trim();
+    const name = String($("#dbname").val()).trim();
+    const port = String($("#dbport").val()).trim();
     if (host === "" || user === "" || name === "") {
       return false;
     }
@@ -28,7 +30,7 @@ $(document).ready(function() {
     return true;
   }
 
-  function showDbCheckStatus(cssClass, text) {
+  function showDbCheckStatus(cssClass: string, text: string) {
     $("#db-check-row").removeClass("install-hidden-row");
     $("#db-check-status")
       .removeClass("db-check-pending db-check-success db-check-error")
@@ -52,8 +54,11 @@ $(document).ready(function() {
   // fails the match); null/false hide the checkbox row (the null case's
   // own distinct message is shown via db-check-status instead, see
   // runDbCheck()'s success handler below).
-  function toggleOverwriteWarning(hasExistingInstall, overwriteToken) {
-    var row = $("#overwrite-confirm-row");
+  function toggleOverwriteWarning(
+    hasExistingInstall: any,
+    overwriteToken: any,
+  ) {
+    const row = $("#overwrite-confirm-row");
     if (hasExistingInstall === true) {
       row.removeClass("install-hidden-row");
       if (overwriteToken) {
@@ -75,7 +80,10 @@ $(document).ready(function() {
       return;
     }
 
-    showDbCheckStatus("db-check-pending", pwg_getPageString("Testing connection..."));
+    showDbCheckStatus(
+      "db-check-pending",
+      pwg_getPageString("Testing connection..."),
+    );
 
     dbCheckXhr = $.ajax({
       url: "install.php?ajax=check-db",
@@ -87,14 +95,22 @@ $(document).ready(function() {
         dbpasswd: $("#dbpasswd").val(),
         dbname: $("#dbname").val(),
         dbdriver: $("#dbdriver").val(),
-        dbport: $("#dbport").val()
+        dbport: $("#dbport").val(),
       },
-      success: function(data) {
+      success: function (data: any) {
         if (data.ok) {
           if (data.hasExistingInstall === null) {
-            showDbCheckStatus("db-check-warning", pwg_getPageString("Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables"));
+            showDbCheckStatus(
+              "db-check-warning",
+              pwg_getPageString(
+                "Connected to the database, but couldn't verify whether it already contains a Piwigo installation — check the database user's privileges to list tables",
+              ),
+            );
           } else {
-            showDbCheckStatus("db-check-success", pwg_getPageString("Connection successful"));
+            showDbCheckStatus(
+              "db-check-success",
+              pwg_getPageString("Connection successful"),
+            );
           }
           toggleOverwriteWarning(data.hasExistingInstall, data.overwriteToken);
         } else {
@@ -102,16 +118,16 @@ $(document).ready(function() {
           toggleOverwriteWarning(false, null);
         }
       },
-      error: function(jqXHR, textStatus) {
+      error: function (jqXHR: any, textStatus: any) {
         if (textStatus === "abort") {
           return;
         }
         hideDbCheckStatus();
         toggleOverwriteWarning(false, null);
       },
-      complete: function() {
+      complete: function () {
         dbCheckXhr = null;
-      }
+      },
     });
   }
 
@@ -129,10 +145,14 @@ $(document).ready(function() {
   // the "empty login" branch isn't mirrored, the field's own required
   // attribute already blocks that natively.
   function checkWebmasterLogin() {
-    var value = $.trim($("#admin_name").val()).replace(/\s{2,}/g, " ");
-    var error = $("#admin_name-error");
+    const value = String($("#admin_name").val())
+      .trim()
+      .replace(/\s{2,}/g, " ");
+    const error = $("#admin_name-error");
     if (value !== "" && /['"]/.test(value)) {
-      error.text(pwg_getPageString("webmaster login can't contain characters ' or \""));
+      error.text(
+        pwg_getPageString("webmaster login can't contain characters ' or \""),
+      );
     } else {
       error.text("");
     }
@@ -140,9 +160,9 @@ $(document).ready(function() {
 
   // Mirrors analyzeForm()'s own $this->adminPass1 !== $this->adminPass2.
   function checkPasswordMatch() {
-    var pass1 = $("#admin_pass1").val();
-    var pass2 = $("#admin_pass2").val();
-    var error = $("#admin_pass2-error");
+    const pass1 = $("#admin_pass1").val();
+    const pass2 = $("#admin_pass2").val();
+    const error = $("#admin_pass2-error");
     if (pass2 !== "" && pass1 !== pass2) {
       error.text(pwg_getPageString("please enter your password again"));
     } else {
@@ -154,10 +174,14 @@ $(document).ready(function() {
   // byte-for-byte mirror (not practically replicable in JS) -- the
   // server remains authoritative on submit.
   function checkAdminEmailFormat() {
-    var value = $.trim($("#admin_mail").val());
-    var error = $("#admin_mail-error");
+    const value = String($("#admin_mail").val()).trim();
+    const error = $("#admin_mail-error");
     if (value !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      error.text(pwg_getPageString("mail address must be like xxx@yyy.eee (example : jack@altern.org)"));
+      error.text(
+        pwg_getPageString(
+          "mail address must be like xxx@yyy.eee (example : jack@altern.org)",
+        ),
+      );
     } else {
       error.text("");
     }
@@ -178,17 +202,17 @@ $(document).ready(function() {
   // also means no "submit" event fires here at all, so this can't be
   // implemented as a submit handler -- confirmed nothing else in this
   // file needs one.
-  $("#language").on("change", function() {
-    var form = this.form;
+  $("#language").on("change", function (this: HTMLSelectElement) {
+    const form = this.form!;
     form.action = "install.php?language=" + encodeURIComponent(this.value);
     form.submit();
   });
 });
 
-jQuery().ready(function(){
-  jQuery('.cluetip').cluetip({
+jQuery().ready(function () {
+  jQuery(".cluetip").cluetip({
     width: 300,
-    splitTitle: '|',
-    positionBy: 'bottomTop'
+    splitTitle: "|",
+    positionBy: "bottomTop",
   });
 });

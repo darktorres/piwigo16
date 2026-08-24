@@ -16,21 +16,21 @@ export {};
 /*--------------
 Variables
 --------------*/
-const btnFirstAlbum = $('#btnFirstAlbum');
-const modalFirstAlbum = $('#addFirstAlbum');
-const closeModalFirstAlbum = $('#closeFirstAlbum');
-const inputFirstAlbum = $('#inputFirstAlbum');
-const btnAddFirstAlbum = $('#btnAddFirstAlbum');
-const firstAlbum = $('.addAlbumEmptyCenter');
-const uploadForm = $('#uploadForm');
-const addPhotosAS = $('#addPhotosAS');
-const btnPhotosAS = $('#btnPhotosAS');
-const selectedAlbum = $('#selectedAlbum');
-const selectedAlbumName = $('#selectedAlbumName');
-const selectedAlbumEdit = $('#selectedAlbumEdit');
-const btnAddFiles = $('#addFiles');
-const chooseAlbumFirst = $('#chooseAlbumFirst');
-const uploaderPhotos = $('#uploader');
+const btnFirstAlbum = $("#btnFirstAlbum");
+const modalFirstAlbum = $("#addFirstAlbum");
+const closeModalFirstAlbum = $("#closeFirstAlbum");
+const inputFirstAlbum = $("#inputFirstAlbum");
+const btnAddFirstAlbum = $("#btnAddFirstAlbum");
+const firstAlbum = $(".addAlbumEmptyCenter");
+const uploadForm = $("#uploadForm");
+const addPhotosAS = $("#addPhotosAS");
+const btnPhotosAS = $("#btnPhotosAS");
+const selectedAlbum = $("#selectedAlbum");
+const selectedAlbumName = $("#selectedAlbumName");
+const selectedAlbumEdit = $("#selectedAlbumEdit");
+const btnAddFiles = $("#addFiles");
+const chooseAlbumFirst = $("#chooseAlbumFirst");
+const uploaderPhotos = $("#uploader");
 const formatsUpdated: any[] = [];
 const formats: any[] = [];
 
@@ -40,21 +40,21 @@ On DOM load
 $(function () {
   // First album event
   if (!nb_albums) {
-    btnFirstAlbum.on('click', function () {
+    btnFirstAlbum.on("click", function () {
       open_new_album_modal();
     });
 
-    closeModalFirstAlbum.on('click', function () {
+    closeModalFirstAlbum.on("click", function () {
       close_new_album_modal();
     });
 
-    btnAddFirstAlbum.on('click', function () {
+    btnAddFirstAlbum.on("click", function () {
       add_first_album(ab.select_album.bind(ab));
     });
 
-    inputFirstAlbum.on('keyup', function(e) {
-      if (e.key === 'Enter') {
-        btnAddFirstAlbum.trigger('click');
+    inputFirstAlbum.on("keyup", function (e) {
+      if (e.key === "Enter") {
+        btnAddFirstAlbum.trigger("click");
       }
     });
   }
@@ -67,10 +67,10 @@ $(function () {
   });
 
   // Open album selector event
-  btnPhotosAS.on('click', function () {
+  btnPhotosAS.on("click", function () {
     ab.open();
   });
-  selectedAlbumEdit.on('click', function () {
+  selectedAlbumEdit.on("click", function () {
     ab.open();
   });
 
@@ -86,36 +86,36 @@ $(function () {
       }),
       success: function (_res: any) {
         jQuery(".promote-apps").hide();
-      }
-    })
+      },
+    });
   });
 
-  $("#uploadWarningsSummary a.showInfo").on('click', function () {
+  $("#uploadWarningsSummary a.showInfo").on("click", function () {
     $("#uploadWarningsSummary").hide();
     $("#uploadWarnings").show();
     return false;
   });
 
-  $("#showPermissions").on('click', function () {
+  $("#showPermissions").on("click", function () {
     $(this).parent(".showFieldset").hide();
     $("#permissions").show();
     return false;
   });
 
   $("#uploadOptionsContent").hide();
-  $("#uploadOptions").on("click", function(){
+  $("#uploadOptions").on("click", function () {
     $("#uploadOptionsContent").slideToggle();
-    $("#uploadOptions").toggleClass('options-open');
+    $("#uploadOptions").toggleClass("options-open");
     $(".moxie-shim-html5").css("display", "none");
-  })
+  });
 
   $("#uploader").pluploadQueue({
     // General settings
-    browse_button: 'addFiles',
-    container: 'uploadForm',
+    browse_button: "addFiles",
+    container: "uploadForm",
 
     // runtimes : 'html5,flash,silverlight,html4',
-    runtimes: 'html5',
+    runtimes: "html5",
 
     // Plupload owns file selection/drag-drop/queue UI only -- this `url`
     // is never actually requested. The real transport is a tus.Upload
@@ -123,7 +123,7 @@ $(function () {
     // through this same up.trigger() event pipeline so every handler in
     // `init` below keeps working exactly as if plupload's own uploader
     // had run.
-    url: 'api/v1/uploads',
+    url: "api/v1/uploads",
 
     chunk_size,
 
@@ -132,8 +132,11 @@ $(function () {
       max_file_size,
       // Specify what files to browse for
       mime_types: [
-        { title: "Image files", extensions: formatMode ? format_ext : file_ext }
-      ]
+        {
+          title: "Image files",
+          extensions: formatMode ? format_ext : file_ext,
+        },
+      ],
     },
 
     // Rename files by clicking on their titles
@@ -144,38 +147,38 @@ $(function () {
 
     preinit: {
       Init: function (up: any, _info: any) {
-        $('#uploader_container').removeAttr("title"); //remove the "using runtime" text
+        $("#uploader_container").removeAttr("title"); //remove the "using runtime" text
 
-        $('#startUpload').on('click', function (e) {
+        $("#startUpload").on("click", function (e) {
           e.preventDefault();
           startTusUploads(up);
         });
 
-        $('#cancelUpload').on('click', function (e) {
+        $("#cancelUpload").on("click", function (e) {
           e.preventDefault();
           cancelTusUploads();
-          up.trigger('UploadComplete', up.files);
+          up.trigger("UploadComplete", up.files);
         });
-      }
+      },
     },
 
     init: {
       // update custom button state on queue change
       QueueChanged: function (up: any) {
-        $('#addFiles').addClass("addFilesButtonChanged");
-        $('#startUpload').prop('disabled', up.files.length == 0);
-        $("#addFiles").removeClass('buttonLike').addClass('buttonLike');
+        $("#addFiles").addClass("addFilesButtonChanged");
+        $("#startUpload").prop("disabled", up.files.length == 0);
+        $("#addFiles").removeClass("buttonLike").addClass("buttonLike");
 
         if (up.files.length > 0) {
-          $('.plupload_filelist_footer').show();
-          $('.plupload_filelist').css("overflow-y", "scroll");
+          $(".plupload_filelist_footer").show();
+          $(".plupload_filelist").css("overflow-y", "scroll");
         }
 
         if (up.files.length == 0) {
-          $('#addFiles').removeClass("addFilesButtonChanged");
-          $("#addFiles").removeClass('buttonLike').addClass('buttonLike');
-          $('.plupload_filelist_footer').hide();
-          $('.plupload_filelist').css("overflow-y", "hidden");
+          $("#addFiles").removeClass("addFilesButtonChanged");
+          $("#addFiles").removeClass("buttonLike").addClass("buttonLike");
+          $(".plupload_filelist_footer").hide();
+          $(".plupload_filelist").css("overflow-y", "hidden");
         }
       },
 
@@ -185,18 +188,18 @@ $(function () {
         const exts: Record<string, any> = {};
         files.forEach((file: any) => {
           fileNames[file.id] = file.name;
-          exts[file.id] = file.name.substr(file.name.lastIndexOf('.') + 1);
+          exts[file.id] = file.name.substr(file.name.lastIndexOf(".") + 1);
         });
 
         if (formatMode) {
           formats.forEach((forms) => {
-            $("#"+forms[0]+" > .plupload_file_name").append(`
+            $("#" + forms[0] + " > .plupload_file_name").append(`
             <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-properties">
               <span class="icon-eye">
               </span>
             </a>`);
-            if(formatsUpdated.includes(forms[0])){
-              $("#"+forms[0]+" > .plupload_file_name").after(`
+            if (formatsUpdated.includes(forms[0])) {
+              $("#" + forms[0] + " > .plupload_file_name").after(`
               <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-formats">
                 <span class="icon-attention update-warning">
                   ${format_update_warning}
@@ -207,7 +210,7 @@ $(function () {
                 </span>
                 ${format_remove}
               </a>`);
-              $("#remove_"+forms[0]).on("click", function(){
+              $("#remove_" + forms[0]).on("click", function () {
                 up.removeFile(forms[0]);
               });
             }
@@ -225,27 +228,26 @@ $(function () {
                   filenames: fileNames,
                 }),
                 success: function (data: any) {
-                  res(data.results)
-                }
-              })
-            })
+                  res(data.results);
+                },
+              });
+            });
 
             const notFound: any[] = [];
             const multiple: any[] = [];
 
             files.forEach((f: any) => {
               const search = images_search[f.id];
-              if (search.status == "found"){
+              if (search.status == "found") {
                 f.format_of = String(search.imageId);
-                formats.push([f.id,f.format_of]);
-                $("#"+f.id+" > .plupload_file_name").append(`
+                formats.push([f.id, f.format_of]);
+                $("#" + f.id + " > .plupload_file_name").append(`
                 <a target="_blank" href="admin.php?page=photo-${f.format_of.trim()}-properties">
                   <span class="icon-eye">
                   </span>
                 </a>`);
-                if (search.formatExists)
-                {
-                  $("#"+f.id+" > .plupload_file_name").after(`
+                if (search.formatExists) {
+                  $("#" + f.id + " > .plupload_file_name").after(`
                   <a target="_blank" href="admin.php?page=photo-${f.format_of.trim()}-formats">
                     <span class="icon-attention update-warning">
                       ${format_update_warning}
@@ -257,19 +259,16 @@ $(function () {
                     ${format_remove}
                   </a>`);
                   formatsUpdated.push(f.id);
-                  $("#remove_"+f.id).on("click", function(){
+                  $("#remove_" + f.id).on("click", function () {
                     up.removeFile(f.id);
                   });
                 }
-              }
-              else {
-                if (search.status == "multiple")
-                  multiple.push(f.name);
-                else
-                  notFound.push(f.name);
+              } else {
+                if (search.status == "multiple") multiple.push(f.name);
+                else notFound.push(f.name);
                 up.removeFile(f.id);
               }
-            })
+            });
 
             files.filter((f: any) => images_search[f.id].status === "found");
 
@@ -277,46 +276,50 @@ $(function () {
             if (notFound.length || multiple.length) {
               const [multStr, notFoundStr] = [multiple, notFound].map((tab) => {
                 //Get names
-                tab = tab.map((f: any) => f.slice(0, f.indexOf('.')))
+                tab = tab.map((f: any) => f.slice(0, f.indexOf(".")));
                 // Remove duplicates
-                tab = tab.filter((f: any, i: number) => i === tab.indexOf(f))
+                tab = tab.filter((f: any, i: number) => i === tab.indexOf(f));
 
                 // Add "and X more" if necessary
                 if (tab.length > 5) {
-                  tab[5] = str_and_X_others.replace('%d', String(tab.length - 5));
+                  tab[5] = str_and_X_others.replace(
+                    "%d",
+                    String(tab.length - 5),
+                  );
                   tab = tab.splice(0, 6);
                 }
                 return tab;
-              })
+              });
 
               $.alert({
                 title: str_format_warning,
-                content: (notFound.length ? `<p>${str_format_warning_notFound.replace('%s', notFoundStr!.join(', '))}</p>` : "")
-                  + (multiple.length ? `<p>${str_format_warning_multiple.replace('%s', multStr!.join(', '))}</p>` : ""),
-                ...jConfirm_warning_options
-              })
+                content:
+                  (notFound.length
+                    ? `<p>${str_format_warning_notFound.replace("%s", notFoundStr!.join(", "))}</p>`
+                    : "") +
+                  (multiple.length
+                    ? `<p>${str_format_warning_multiple.replace("%s", multStr!.join(", "))}</p>`
+                    : ""),
+                ...jConfirm_warning_options,
+              });
             }
           } else {
             let $forms_exts: any;
-            if (imageFormatsExtensions)
-            {
+            if (imageFormatsExtensions) {
               $forms_exts = JSON.parse(imageFormatsExtensions);
-            }
-            else
-            {
+            } else {
               $forms_exts = [];
             }
             files.forEach((f: any) => {
               f.format_of = originalImageId;
-              formats.push([f.id,f.format_of]);
-              $("#"+f.id+" > .plupload_file_name").append(`
+              formats.push([f.id, f.format_of]);
+              $("#" + f.id + " > .plupload_file_name").append(`
               <a target="_blank" href="admin.php?page=photo-${f.format_of.trim()}-properties">
                 <span class="icon-eye">
                 </span>
               </a>`);
-              if ($forms_exts.indexOf(exts[f.id]) != -1)
-              {
-                $("#"+f.id+" > .plupload_file_name").after(`
+              if ($forms_exts.indexOf(exts[f.id]) != -1) {
+                $("#" + f.id + " > .plupload_file_name").after(`
                 <a target="_blank" href="admin.php?page=photo-${originalImageId.trim()}-formats">
                   <span class="icon-attention update-warning">
                     ${format_update_warning}
@@ -328,24 +331,24 @@ $(function () {
                   ${format_remove}
                 </a>`);
                 formatsUpdated.push(f.id);
-                $("#remove_"+f.id).on("click", function(){
+                $("#remove_" + f.id).on("click", function () {
                   up.removeFile(f.id);
                 });
               }
-            })
+            });
           }
         }
       },
 
-      FilesRemoved: function(up: any, _file: any){
+      FilesRemoved: function (up: any, _file: any) {
         formats.forEach((forms) => {
-          $("#"+forms[0]+" > .plupload_file_name").append(`
+          $("#" + forms[0] + " > .plupload_file_name").append(`
           <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-properties">
             <span class="icon-eye">
             </span>
           </a>`);
-          if(formatsUpdated.includes(forms[0])){
-            $("#"+forms[0]+" > .plupload_file_name").after(`
+          if (formatsUpdated.includes(forms[0])) {
+            $("#" + forms[0] + " > .plupload_file_name").after(`
             <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-formats">
               <span class="icon-attention update-warning">
                 ${format_update_warning}
@@ -356,7 +359,7 @@ $(function () {
               </span>
               ${format_remove}
             </a>`);
-            $("#remove_"+forms[0]).on("click", function(){
+            $("#remove_" + forms[0]).on("click", function () {
               up.removeFile(forms[0]);
             });
           }
@@ -364,16 +367,16 @@ $(function () {
       },
 
       UploadProgress: function (up: any, _file: any) {
-        $('#uploadingActions .progressbar').width(up.total.percent + '%');
+        $("#uploadingActions .progressbar").width(up.total.percent + "%");
         Piecon.setProgress(up.total.percent);
       },
 
       BeforeUpload: function (up: any, file: any) {
         // hide buttons
-        $('#startUpload, .selectFilesButtonBlock').hide();
-        $('#uploadingActions').show();
-        $('.format-mode-group-manager').hide();
-        $('#selectedAlbumEdit').hide();
+        $("#startUpload, .selectFilesButtonBlock").hide();
+        $("#uploadingActions").show();
+        $(".format-mode-group-manager").hide();
+        $("#selectedAlbumEdit").hide();
         // if (!formatMode) {
         //   var categorySelectedId = $("select[name=category] option:selected").val();
         //   var categorySelectedPath = $("select[name=category]")[0].selectize.getItem(categorySelectedId).text();
@@ -381,7 +384,7 @@ $(function () {
         // }
 
         // warn user if she wants to leave page while upload is running
-        $(window).bind('beforeunload', function () {
+        $(window).bind("beforeunload", function () {
           return str_upload_in_progress;
         });
 
@@ -390,7 +393,7 @@ $(function () {
 
         // You can override settings before the file is uploaded
         const options: Record<string, any> = {
-          pwg_token: pwg_token
+          pwg_token: pwg_token,
         };
 
         if (formatMode) {
@@ -402,9 +405,9 @@ $(function () {
           options.name = file.name;
         }
 
-        options.update_mode = $('#toggleUpdateMode').is(':checked');
+        options.update_mode = $("#toggleUpdateMode").is(":checked");
 
-        up.setOption('multipart_params', options);
+        up.setOption("multipart_params", options);
       },
 
       FileUploaded: function (up: any, file: any, info: any) {
@@ -414,24 +417,37 @@ $(function () {
         // squareSrc/name from a follow-up GET /api/v1/images/{id}.
 
         // hide item line
-        $('#' + file.id).hide();
+        $("#" + file.id).hide();
 
         $("#uploadedPhotos").parent("fieldset").show();
 
-        let html = '<a href="admin.php?page=photo-' + info.imageId + '" style="position : relative" target="_blank">';
-        html += '<img src="' + info.squareSrc + '" class="thumbnail" title="' + info.name + '">';
-        if (formatMode) html += '<div class="format-ext-name" title="' + file.name + '"><span>' + file.name.slice(file.name.indexOf('.')) + '</span></div>';
-        html += '</a> ';
+        let html =
+          '<a href="admin.php?page=photo-' +
+          info.imageId +
+          '" style="position : relative" target="_blank">';
+        html +=
+          '<img src="' +
+          info.squareSrc +
+          '" class="thumbnail" title="' +
+          info.name +
+          '">';
+        if (formatMode)
+          html +=
+            '<div class="format-ext-name" title="' +
+            file.name +
+            '"><span>' +
+            file.name.slice(file.name.indexOf(".")) +
+            "</span></div>";
+        html += "</a> ";
 
         $("#uploadedPhotos").prepend(html);
 
         // do not remove file, or it will reset the progress bar :-/
         // up.removeFile(file);
         uploadedPhotos.push(info.imageId);
-        if(info.addStatus=="add"){
+        if (info.addStatus == "add") {
           addedPhotos.push(info.imageId);
-        }
-        else{
+        } else {
           updatedPhotos.push(info.imageId);
         }
       },
@@ -440,7 +456,7 @@ $(function () {
         // Called when file has finished uploading. `error` is a plain
         // {message, file} object built in uploadNextTusFile() below, from
         // a real HTTP status returned by the tus endpoint.
-        $(".errors ul").append('<li>' + error.message + '</li>');
+        $(".errors ul").append("<li>" + error.message + "</li>");
         $(".errors").show();
       },
 
@@ -455,7 +471,7 @@ $(function () {
             url: "api/v1/uploads/actions/complete-batch",
             type: "POST",
             contentType: "application/json",
-            headers: {'X-CSRF-Token': pwg_token},
+            headers: { "X-CSRF-Token": pwg_token },
             data: JSON.stringify({
               categoryId: Number(uploadCategory.id),
             }),
@@ -467,32 +483,43 @@ $(function () {
               // this batch-complete summary line renders.
               const summaryHtml = sprintf(
                 albumSummary_label,
-                '<a href="admin.php?page=album-' + data.category.id + '">' + data.category.label + '</a>',
-                data.category.nbPhotos
+                '<a href="admin.php?page=album-' +
+                  data.category.id +
+                  '">' +
+                  data.category.label +
+                  "</a>",
+                data.category.nbPhotos,
               );
-              $(".infos ul").append('<li>' + summaryHtml + '</li>');
-            }
+              $(".infos ul").append("<li>" + summaryHtml + "</li>");
+            },
           });
         }
 
         $("#uploadForm, #permissions, .showFieldset").hide();
 
-        const infoTextAdd = formatMode ?
-          sprintf(formatsAdded_label, addedPhotos.length, [...new Set(addedPhotos)].length)
+        const infoTextAdd = formatMode
+          ? sprintf(
+              formatsAdded_label,
+              addedPhotos.length,
+              [...new Set(addedPhotos)].length,
+            )
           : sprintf(photosAdded_label, addedPhotos.length);
 
-        const infoTextUpdate = formatMode ?
-          sprintf(formatsUpdated_label, updatedPhotos.length, [...new Set(updatedPhotos)].length)
+        const infoTextUpdate = formatMode
+          ? sprintf(
+              formatsUpdated_label,
+              updatedPhotos.length,
+              [...new Set(updatedPhotos)].length,
+            )
           : sprintf(photosUpdated_label, updatedPhotos.length);
 
-        if (addedPhotos.length && updatedPhotos.length)
-        {
-          $(".infos").append( '<ul><li>' + infoTextAdd + ', ' + infoTextUpdate + '</li></ul>');
-        }
-        else
-        {
+        if (addedPhotos.length && updatedPhotos.length) {
+          $(".infos").append(
+            "<ul><li>" + infoTextAdd + ", " + infoTextUpdate + "</li></ul>",
+          );
+        } else {
           const infoText = addedPhotos.length ? infoTextAdd : infoTextUpdate;
-          $(".infos").append('<ul><li>' + infoText + '</li></ul>');
+          $(".infos").append("<ul><li>" + infoText + "</li></ul>");
         }
 
         $(".infos").show();
@@ -501,17 +528,23 @@ $(function () {
         // pwg.caddie.add(uploadedPhotos) instead of relying on huge GET parameter
         // (and remove useless code from admin/photos_add_direct.php)
 
-        $(".batchLink").attr("href", "admin.php?page=photos_add&section=direct&batch=" + [...new Set(uploadedPhotos)].join(",") + "&pwg_token=" + pwg_token);
+        $(".batchLink").attr(
+          "href",
+          "admin.php?page=photos_add&section=direct&batch=" +
+            [...new Set(uploadedPhotos)].join(",") +
+            "&pwg_token=" +
+            pwg_token,
+        );
         $(".batchLink").html(sprintf(batch_Label, uploadedPhotos.length));
 
         $(".afterUploadActions").show();
-        $('#uploadingActions').hide();
-        $('#selectedAlbumEdit').show();
+        $("#uploadingActions").hide();
+        $("#selectedAlbumEdit").show();
 
         // user can safely leave page without warning
-        $(window).unbind('beforeunload');
-      }
-    }
+        $(window).unbind("beforeunload");
+      },
+    },
   });
 });
 
@@ -540,9 +573,9 @@ function computeAggregatePercent(files: any) {
   let totalSize = 0;
   files.forEach(function (f: any) {
     totalSize += f.size || 0;
-    totalLoaded += (f.status === plupload.DONE) ? (f.size || 0) : (f.loaded || 0);
+    totalLoaded += f.status === plupload.DONE ? f.size || 0 : f.loaded || 0;
   });
-  return totalSize ? Math.round(totalLoaded / totalSize * 100) : 0;
+  return totalSize ? Math.round((totalLoaded / totalSize) * 100) : 0;
 }
 
 function extractTusErrorDetail(err: any) {
@@ -557,7 +590,7 @@ function extractTusErrorDetail(err: any) {
       // through to the generic message below.
     }
   }
-  return (err && err.message) ? err.message : 'Upload failed';
+  return err && err.message ? err.message : "Upload failed";
 }
 
 function startTusUploads(up: any) {
@@ -566,7 +599,7 @@ function startTusUploads(up: any) {
   });
 
   if (pendingFiles.length === 0) {
-    up.trigger('UploadComplete', up.files);
+    up.trigger("UploadComplete", up.files);
     return;
   }
 
@@ -583,7 +616,7 @@ function cancelTusUploads() {
 function uploadNextTusFile(up: any, files: any, index: number) {
   if (index >= files.length) {
     activeTusUpload = null;
-    up.trigger('UploadComplete', up.files);
+    up.trigger("UploadComplete", up.files);
     return;
   }
 
@@ -594,8 +627,8 @@ function uploadNextTusFile(up: any, files: any, index: number) {
   // (album selector read, format_of/update_mode) -- only the destination
   // (tus metadata instead of plupload's native multipart form fields)
   // differs from here on.
-  up.trigger('BeforeUpload', file);
-  const options = up.getOption('multipart_params') || {};
+  up.trigger("BeforeUpload", file);
+  const options = up.getOption("multipart_params") || {};
 
   const metadata: Record<string, any> = { filename: file.name };
   if (formatMode) {
@@ -608,25 +641,30 @@ function uploadNextTusFile(up: any, files: any, index: number) {
     }
   }
   if (options.update_mode) {
-    metadata.updateMode = '1';
+    metadata.updateMode = "1";
   }
 
   activeTusUpload = new tus.Upload(file.getNative(), {
-    endpoint: 'api/v1/uploads',
+    endpoint: "api/v1/uploads",
     chunkSize: parseInt(chunk_size) * 1024,
     retryDelays: [0, 1000, 3000, 5000],
-    headers: {'X-CSRF-Token': pwg_token},
+    headers: { "X-CSRF-Token": pwg_token },
     metadata: metadata,
     onProgress: function (bytesUploaded: number, bytesTotal: number) {
       file.loaded = bytesUploaded;
       file.size = bytesTotal;
-      file.percent = bytesTotal ? Math.round(bytesUploaded / bytesTotal * 100) : 0;
+      file.percent = bytesTotal
+        ? Math.round((bytesUploaded / bytesTotal) * 100)
+        : 0;
       up.total.percent = computeAggregatePercent(up.files);
-      up.trigger('UploadProgress', file);
+      up.trigger("UploadProgress", file);
     },
     onError: function (error: any) {
       file.status = plupload.FAILED;
-      up.trigger('Error', { message: extractTusErrorDetail(error), file: file });
+      up.trigger("Error", {
+        message: extractTusErrorDetail(error),
+        file: file,
+      });
       uploadNextTusFile(up, files, index + 1);
     },
     onSuccess: async function (payload: any) {
@@ -642,28 +680,38 @@ function uploadNextTusFile(up: any, files: any, index: number) {
       }
 
       if (!result.imageId) {
-        up.trigger('Error', { message: 'Upload finished but the server response was unreadable.', file: file });
+        up.trigger("Error", {
+          message: "Upload finished but the server response was unreadable.",
+          file: file,
+        });
         uploadNextTusFile(up, files, index + 1);
         return;
       }
 
       let imageInfo: any = {};
       try {
-        imageInfo = await $.ajax({ url: 'api/v1/images/' + result.imageId, type: 'GET', dataType: 'json' });
+        imageInfo = await $.ajax({
+          url: "api/v1/images/" + result.imageId,
+          type: "GET",
+          dataType: "json",
+        });
       } catch (_e) {
         // Enrichment fetch failed -- the photo itself was uploaded
         // successfully, so still report it as such, just with a
         // fallback thumbnail/name.
       }
 
-      up.trigger('FileUploaded', file, {
+      up.trigger("FileUploaded", file, {
         imageId: result.imageId,
         addStatus: result.addStatus,
-        squareSrc: (imageInfo.derivatives && imageInfo.derivatives.square) ? imageInfo.derivatives.square.url : '',
-        name: imageInfo.name || file.name
+        squareSrc:
+          imageInfo.derivatives && imageInfo.derivatives.square
+            ? imageInfo.derivatives.square.url
+            : "",
+        name: imageInfo.name || file.name,
       });
       uploadNextTusFile(up, files, index + 1);
-    }
+    },
   });
 
   activeTusUpload.start();
@@ -674,9 +722,11 @@ General functions
 --------------*/
 
 function add_related_category({ album, newSelectedAlbum }: any) {
-  let text = '';
+  let text = "";
   $(album.full_name_with_admin_links).each(function (i: number, s: any) {
-    if ($(s).html()) { text += $(s).html() }
+    if ($(s).html()) {
+      text += $(s).html();
+    }
   });
   newSelectedAlbum();
 
@@ -691,7 +741,7 @@ function add_related_category({ album, newSelectedAlbum }: any) {
 }
 
 function enable_uploader() {
-  btnAddFiles.removeAttr('disabled');
+  btnAddFiles.removeAttr("disabled");
   chooseAlbumFirst.hide();
   uploaderPhotos.show();
 }
@@ -701,9 +751,9 @@ First album functions
 -------------------*/
 
 function open_new_album_modal() {
-  inputFirstAlbum.val('');
+  inputFirstAlbum.val("");
   modalFirstAlbum.fadeIn();
-  inputFirstAlbum.trigger('focus');
+  inputFirstAlbum.trigger("focus");
 }
 
 function close_new_album_modal() {
@@ -725,51 +775,65 @@ function hide_first_album(cat_name: any) {
 function add_first_album(add_cat: any) {
   const params = {
     name: String(inputFirstAlbum.val()),
-  }
+  };
 
   $.ajax({
-    url: 'api/v1/categories',
-    method: 'POST',
-    contentType: 'application/json',
-    headers: {'X-CSRF-Token': pwg_token},
-    dataType: 'json',
+    url: "api/v1/categories",
+    method: "POST",
+    contentType: "application/json",
+    headers: { "X-CSRF-Token": pwg_token },
+    dataType: "json",
     data: JSON.stringify(params),
     success: function (res: any) {
       add_cat(res.id);
       hide_first_album(params.name);
     },
-    error: function() {
-      console.error('An error has occurred');
-    }
+    error: function () {
+      console.error("An error has occurred");
+    },
   });
 }
 
-const formatMode = pwg_getPageData('display_formats');
-const haveFormatsOriginal = pwg_getPageData('have_formats_original');
-const originalImageId = haveFormatsOriginal ? pwg_getPageData('original_image_id_str') : -1;
-const imageFormatsExtensions = pwg_getPageData('formats_ext_info') || '';
-const nb_albums = pwg_getPageData('nb_albums');
-const chunk_size = pwg_getPageData('chunk_size') + 'kb';
-const max_file_size = pwg_getPageData('max_file_size') + 'mb';
-const format_update_warning = pwg_getPageString('This format already exists, it will be overwritten !');
-const format_remove = pwg_getPageString('Remove');
-const pwg_token = pwg_getPageData('csrf_token');
-const photosAdded_label = pwg_getPageString('%d photos uploaded');
-const photosUpdated_label = pwg_getPageString('%d photos updated');
-const formatsAdded_label = pwg_getPageString('%d formats added for %d photos');
-const formatsUpdated_label = pwg_getPageString('%d formats updated for %d photos');
-const batch_Label = pwg_getPageString('Manage this set of %d photos');
-const albumSummary_label = pwg_getPageString('Album "%s" now contains %d photos');
-const str_format_warning = pwg_getPageString('Error when trying to detect formats');
-const str_format_warning_multiple = pwg_getPageString('There is multiple image in the database with the following names : %s.');
-const str_format_warning_notFound = pwg_getPageString('No picture found with the following name : %s.');
-const str_and_X_others = pwg_getPageString('and %d more');
-const str_upload_in_progress = pwg_getPageString('Upload in progress');
-const str_drop_album_ab = pwg_getPageString('Drop into album');
-const file_ext = pwg_getPageData('file_exts');
-const format_ext = pwg_getPageData('format_ext');
+const formatMode = pwg_getPageData("display_formats");
+const haveFormatsOriginal = pwg_getPageData("have_formats_original");
+const originalImageId = haveFormatsOriginal
+  ? pwg_getPageData("original_image_id_str")
+  : -1;
+const imageFormatsExtensions = pwg_getPageData("formats_ext_info") || "";
+const nb_albums = pwg_getPageData("nb_albums");
+const chunk_size = pwg_getPageData("chunk_size") + "kb";
+const max_file_size = pwg_getPageData("max_file_size") + "mb";
+const format_update_warning = pwg_getPageString(
+  "This format already exists, it will be overwritten !",
+);
+const format_remove = pwg_getPageString("Remove");
+const pwg_token = pwg_getPageData("csrf_token");
+const photosAdded_label = pwg_getPageString("%d photos uploaded");
+const photosUpdated_label = pwg_getPageString("%d photos updated");
+const formatsAdded_label = pwg_getPageString("%d formats added for %d photos");
+const formatsUpdated_label = pwg_getPageString(
+  "%d formats updated for %d photos",
+);
+const batch_Label = pwg_getPageString("Manage this set of %d photos");
+const albumSummary_label = pwg_getPageString(
+  'Album "%s" now contains %d photos',
+);
+const str_format_warning = pwg_getPageString(
+  "Error when trying to detect formats",
+);
+const str_format_warning_multiple = pwg_getPageString(
+  "There is multiple image in the database with the following names : %s.",
+);
+const str_format_warning_notFound = pwg_getPageString(
+  "No picture found with the following name : %s.",
+);
+const str_and_X_others = pwg_getPageString("and %d more");
+const str_upload_in_progress = pwg_getPageString("Upload in progress");
+const str_drop_album_ab = pwg_getPageString("Drop into album");
+const file_ext = pwg_getPageData("file_exts");
+const format_ext = pwg_getPageData("format_ext");
 const uploadedPhotos: any[] = [];
 let uploadCategory: any = null;
 const addedPhotos: any[] = [];
 const updatedPhotos: any[] = [];
-const related_categories_ids = pwg_getPageData('related_categories_ids');
+const related_categories_ids = pwg_getPageData("related_categories_ids");

@@ -43,7 +43,7 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('history', 'themes/admin/default/js/history.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('history', 'themes/admin/default/js/history.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

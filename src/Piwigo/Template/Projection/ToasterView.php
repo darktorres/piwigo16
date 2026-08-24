@@ -32,7 +32,7 @@ final readonly class ToasterView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('toaster_js', 'themes/standard_pages/js/toaster.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::script('toaster_js', 'themes/standard_pages/js/toaster.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::css('themes/standard_pages/css/pages/toaster.css', id: 'toaster'),
         ];
     }

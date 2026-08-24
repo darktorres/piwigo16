@@ -9,66 +9,72 @@ export {};
 // `.fn` is its one shared prototype object every entry mutates in
 // place -- same reasoning as common.ts's own `jQuery.fn.fontCheckbox`/
 // `pwg_jconfirm_follow_href` and admin.ts's own `lightAccordion`.
-(function($: JQueryStatic){
+(function ($: JQueryStatic) {
+  /**
+   * OPTIONS:
+   * values {mixed[]}
+   * selected {object} min and max
+   * text {string}
+   */
+  $.fn.pwgDoubleSlider = function (this: JQuery, options: any) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside onChange(), which has its own `this`.
+    const that = this;
 
-/**
- * OPTIONS:
- * values {mixed[]}
- * selected {object} min and max
- * text {string}
- */
-$.fn.pwgDoubleSlider = function(this: JQuery, options: any) {
-  // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside onChange(), which has its own `this`.
-  const that = this;
+    function onChange(e: any, ui: any) {
+      that.find("[data-input=min]").val(options.values[ui.values[0]]);
+      that.find("[data-input=max]").val(options.values[ui.values[1]]);
 
-  function onChange(e: any, ui: any) {
-    that.find('[data-input=min]').val(options.values[ui.values[0]]);
-    that.find('[data-input=max]').val(options.values[ui.values[1]]);
+      that
+        .find(".slider-info")
+        .html(
+          sprintf(
+            options.text,
+            options.values[ui.values[0]],
+            options.values[ui.values[1]],
+          ),
+        );
+    }
 
-    that.find('.slider-info').html(sprintf(
-      options.text,
-      options.values[ui.values[0]],
-      options.values[ui.values[1]]
-    ));
-  }
+    function findClosest(array: any[], value: any) {
+      let closest: any = null,
+        index = -1;
+      $.each(array, function (i, v) {
+        if (
+          closest == null ||
+          Math.abs(v - value) < Math.abs(closest - value)
+        ) {
+          closest = v;
+          index = i;
+        }
+      });
+      return index;
+    }
 
-  function findClosest(array: any[], value: any) {
-    let closest: any = null, index = -1;
-    $.each(array, function(i, v){
-      if (closest == null || Math.abs(v - value) < Math.abs(closest - value)) {
-        closest = v;
-        index = i;
-      }
+    const values = [
+      options.values.indexOf(options.selected.min),
+      options.values.indexOf(options.selected.max),
+    ];
+    if (values[0] == -1) {
+      values[0] = findClosest(options.values, options.selected.min);
+    }
+    if (values[1] == -1) {
+      values[1] = findClosest(options.values, options.selected.max);
+    }
+
+    const slider = this.find(".slider-slider").slider({
+      range: true,
+      min: 0,
+      max: options.values.length - 1,
+      values: values,
+      slide: onChange,
+      change: onChange,
     });
-    return index;
-  }
 
-  const values = [
-    options.values.indexOf(options.selected.min),
-    options.values.indexOf(options.selected.max)
-  ];
-  if (values[0] == -1) {
-    values[0] = findClosest(options.values, options.selected.min);
-  }
-  if (values[1] == -1) {
-    values[1] = findClosest(options.values, options.selected.max);
-  }
+    this.find(".slider-choice").on("click", function () {
+      slider.slider("values", 0, options.values.indexOf($(this).data("min")));
+      slider.slider("values", 1, options.values.indexOf($(this).data("max")));
+    });
 
-  const slider = this.find('.slider-slider').slider({
-    range: true,
-    min: 0,
-    max: options.values.length - 1,
-    values: values,
-    slide: onChange,
-    change: onChange
-  });
-
-  this.find('.slider-choice').on('click', function(){
-    slider.slider('values', 0, options.values.indexOf($(this).data('min')));
-    slider.slider('values', 1, options.values.indexOf($(this).data('max')));
-  });
-
-  return this;
-};
-
-}(jQuery));
+    return this;
+  };
+})(jQuery);

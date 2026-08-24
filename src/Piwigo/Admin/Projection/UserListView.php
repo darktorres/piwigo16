@@ -76,7 +76,7 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
      * `{capture $tmpFooterScript}...{/capture}{do footerScript(...)}`
      * block (100% static JS, zero Latte/PHP interpolation) is NOT
      * declared here as page data -- its content was moved directly
-     * into `themes/admin/default/js/user_list.js`, the same real asset
+     * into `themes/admin/default/js/user_list.ts`, the same real asset
      * file the `user_list` script id below already registers.
      */
     #[Override]
@@ -93,7 +93,7 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
             AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
-            AssetContribution::script('user_list', 'themes/admin/default/js/user_list.js', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('user_list', 'themes/admin/default/js/user_list.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/user_list.css', id: 'user_list'),
         ];

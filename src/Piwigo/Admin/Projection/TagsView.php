@@ -54,7 +54,7 @@ final readonly class TagsView implements View, HasPageAssets, ExposesPageData
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/tags.css', id: 'tags'),
             AssetContribution::script('tiptip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
-            AssetContribution::script('tags', 'themes/admin/default/js/tags.js', loadMode: LoadMode::Footer, dependsOn: ['page-data', 'jquery.cookie']),
+            AssetContribution::script('tags', 'themes/admin/default/js/tags.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data', 'jquery.cookie']),
             AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
         ];
     }

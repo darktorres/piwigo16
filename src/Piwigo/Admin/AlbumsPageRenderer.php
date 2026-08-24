@@ -356,14 +356,14 @@ final class AlbumsPageRenderer
             // structurally regardless).
             $orderedCat['name'] = is_scalar($cat_row_name) ? (string) $cat_row_name : '';
             $orderedCat['status'] = is_scalar($cat_row_status) ? (string) $cat_row_status : '';
-            // themes/admin/default/js/albums.js embeds this tree as JSON and
+            // themes/admin/default/js/albums.ts embeds this tree as JSON and
             // later compares node ids against the DOM's `data-id` attribute
             // (always a string, per jQuery's .attr()) via a strict-equality
             // Array.includes() -- a native int here (DBAL) instead of the
             // pre-migration numeric string (mysqli) breaks that comparison,
             // so keep it a string across the DBAL migration.
             $orderedCat['id'] = $cat_id;
-            // themes/admin/default/js/albums.js's node.visible == 'false'
+            // themes/admin/default/js/albums.ts's node.visible == 'false'
             // check is a loose string comparison -- same JSON-wire-format
             // reasoning as $orderedCat['id'] above, kept as the 'true'/
             // 'false' string this tree has always sent, not the tinyint

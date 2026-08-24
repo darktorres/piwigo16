@@ -1,8 +1,8 @@
 export {};
 
-jQuery().ready(function(){
-  jQuery('.cluetip').cluetip({
+jQuery().ready(function () {
+  jQuery(".cluetip").cluetip({
     width: 300,
-    splitTitle: '|'
+    splitTitle: "|",
   });
 });

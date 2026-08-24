@@ -88,7 +88,9 @@ export default defineConfig({
         // P46-C part 2 — the genuinely bidirectional pair (see both
         // files' own leading comments for the real ordering-safety
         // analysis).
-        batchManagerGlobalUnderscore: r("themes/admin/default/js/batch_manager_global.ts"),
+        batchManagerGlobalUnderscore: r(
+          "themes/admin/default/js/batch_manager_global.ts",
+        ),
         batchManagerGlobal: r("themes/admin/default/js/batchManagerGlobal.ts"),
         // P46-C part 3 -- the first consumer-only file (its declarer,
         // plugins_installed_config.js, hasn't converted yet).
@@ -116,39 +118,53 @@ export default defineConfig({
         // P46-C part 11 -- first batch of the remaining ~47
         // non-consumer, non-declarer admin files: 12 trivial ones.
         adminHelp: r("themes/admin/default/js/admin_help.ts"),
-        photosAddApplications: r("themes/admin/default/js/photos_add_applications.ts"),
+        photosAddApplications: r(
+          "themes/admin/default/js/photos_add_applications.ts",
+        ),
         autosizeAdmin: r("themes/admin/default/js/autosize.ts"),
         languagesNew: r("themes/admin/default/js/languages_new.ts"),
         siteUpdate: r("themes/admin/default/js/site_update.ts"),
         languagesInstalled: r("themes/admin/default/js/languages_installed.ts"),
         updatesPwg: r("themes/admin/default/js/updates_pwg.ts"),
         permalinks: r("themes/admin/default/js/permalinks.ts"),
-        notificationByMail: r("themes/admin/default/js/notification_by_mail.ts"),
+        notificationByMail: r(
+          "themes/admin/default/js/notification_by_mail.ts",
+        ),
         siteManager: r("themes/admin/default/js/site_manager.ts"),
         themesNew: r("themes/admin/default/js/themes_new.ts"),
         menubarAdmin: r("themes/admin/default/js/menubar.ts"),
         // P46-C part 12 -- plugins_installated.ts's own declarer, now
         // real (retires that file's earlier ambient declare-const
         // bindings).
-        pluginsInstalledConfig: r("themes/admin/default/js/plugins_installed_config.ts"),
+        pluginsInstalledConfig: r(
+          "themes/admin/default/js/plugins_installed_config.ts",
+        ),
         // P46-C part 13 -- second batch of small, self-contained admin
         // files (14 files).
         footerAdmin: r("themes/admin/default/js/footer.ts"),
         checkIntegrity: r("themes/admin/default/js/check_integrity.ts"),
-        configurationWatermark: r("themes/admin/default/js/configuration_watermark.ts"),
+        configurationWatermark: r(
+          "themes/admin/default/js/configuration_watermark.ts",
+        ),
         elementSetRanks: r("themes/admin/default/js/element_set_ranks.ts"),
         albumNotification: r("themes/admin/default/js/album_notification.ts"),
         adminShell: r("themes/admin/default/js/admin.ts"),
-        configurationSearch: r("themes/admin/default/js/configuration_search.ts"),
+        configurationSearch: r(
+          "themes/admin/default/js/configuration_search.ts",
+        ),
         themesInstalled: r("themes/admin/default/js/themes_installed.ts"),
-        themesStandardPages: r("themes/admin/default/js/themes_standard_pages.ts"),
+        themesStandardPages: r(
+          "themes/admin/default/js/themes_standard_pages.ts",
+        ),
         maintenance: r("themes/admin/default/js/maintenance.ts"),
         pictureFormats: r("themes/admin/default/js/picture_formats.ts"),
         catPerm: r("themes/admin/default/js/cat_perm.ts"),
         ratingAdmin: r("themes/admin/default/js/rating.ts"),
         doubleSlider: r("themes/admin/default/js/doubleSlider.ts"),
         // P46-C part 14 -- 5 more small, self-contained admin files.
-        configurationComments: r("themes/admin/default/js/configuration_comments.ts"),
+        configurationComments: r(
+          "themes/admin/default/js/configuration_comments.ts",
+        ),
         pictureCoi: r("themes/admin/default/js/picture_coi.ts"),
         configurationSizes: r("themes/admin/default/js/configuration_sizes.ts"),
         configurationMain: r("themes/admin/default/js/configuration_main.ts"),
@@ -158,6 +174,26 @@ export default defineConfig({
         // `any` and consumed by several already-converted files).
         addAlbum: r("themes/admin/default/js/addAlbum.ts"),
         datepicker: r("themes/admin/default/js/datepicker.ts"),
+        // P46-C part 16 -- migrating the remaining files in bulk;
+        // validation (typecheck/lint/build/test) deferred to the end
+        // per direct instruction, not per-file from here on.
+        ratingUser: r("themes/admin/default/js/rating_user.ts"),
+        updatesExt: r("themes/admin/default/js/updates_ext.ts"),
+        install: r("themes/admin/default/js/install.ts"),
+        stats: r("themes/admin/default/js/stats.ts"),
+        pluginsNew: r("themes/admin/default/js/plugins_new.ts"),
+        catList: r("themes/admin/default/js/cat_list.ts"),
+        comments: r("themes/admin/default/js/comments.ts"),
+        history: r("themes/admin/default/js/history.ts"),
+        userActivity: r("themes/admin/default/js/user_activity.ts"),
+        albums: r("themes/admin/default/js/albums.ts"),
+        groupList: r("themes/admin/default/js/group_list.ts"),
+        tags: r("themes/admin/default/js/tags.ts"),
+        userList: r("themes/admin/default/js/user_list.ts"),
+        toaster: r("themes/standard_pages/js/toaster.ts"),
+        standardPages: r("themes/standard_pages/js/standard_pages.ts"),
+        profile: r("themes/standard_pages/js/profile.ts"),
+        mcs: r("themes/default/js/mcs.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

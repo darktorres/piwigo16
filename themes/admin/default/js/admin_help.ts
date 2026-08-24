@@ -1,3 +1,3 @@
 export {};
 
-jQuery('.help-popin').colorbox({ width:"500px" });
+jQuery(".help-popin").colorbox({ width: "500px" });

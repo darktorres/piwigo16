@@ -85,7 +85,7 @@ test('pageAssets always registers the 5 static assets regardless of themes', fun
             AssetContribution::script('jquery', 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js'),
             AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install'),
             AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
-            AssetContribution::script('install', 'themes/admin/default/js/install.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
+            AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
             AssetContribution::script('page-data', 'themes/default/js/page-data.ts', loadMode: LoadMode::Footer),
         ]);
 });

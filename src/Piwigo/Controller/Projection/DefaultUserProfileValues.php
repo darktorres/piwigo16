@@ -13,7 +13,7 @@ namespace Piwigo\Controller\Projection;
  * ProfileFormHandler::loadIntoTemplate()}'s existing convention for the
  * identical case). Genuinely live on this branch, unlike the reference
  * campaign's own equivalent commit's "entirely dead in the template"
- * finding: `themes/standard_pages/js/profile.js` reads all 5 fields back
+ * finding: `themes/standard_pages/js/profile.ts` reads all 5 fields back
  * out of `ProfileView::exposedPageData()`'s own `default_user_values`
  * JS page-data key (`nb_image_page`/`recent_period`/`expand` (as
  * `opt_album`)/`show_nb_comments` (as `opt_comment`)/`show_nb_hits` (as

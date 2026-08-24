@@ -47,7 +47,7 @@ use Piwigo\Validation\InputValidator;
  * files this project has kept as real includes elsewhere.
  *
  * The batch action requires a valid CSRF token (see checkOrFail() below):
- * its JS trigger (themes/admin/default/js/photos_add_direct.js) carries
+ * its JS trigger (themes/admin/default/js/photos_add_direct.ts) carries
  * no token of its own, so the check must happen here.
  */
 final readonly class PhotosAddDirectPageRenderer

@@ -131,7 +131,7 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('piecon', 'https://cdn.jsdelivr.net/gh/lipka/piecon@0.5.0/piecon.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('add_photo', 'themes/admin/default/js/photos_add_direct.js', loadMode: LoadMode::Footer, dependsOn: ['tus-js-client', 'page-data']),
+            AssetContribution::script('add_photo', 'themes/admin/default/js/photos_add_direct.ts', loadMode: LoadMode::Footer, dependsOn: ['tus-js-client', 'page-data']),
             AssetContribution::css('themes/admin/default/css/pages/photos_add_direct.css', id: 'photos_add_direct'),
             ...new AlbumSelectorView()
                 ->pageAssets(),

@@ -110,6 +110,9 @@ export default defineConfig({
         // P46-C part 9 -- the 4th of the 5 remaining AlbumSelector
         // consumers.
         batchManagerUnit: r("themes/admin/default/js/batchManagerUnit.ts"),
+        // P46-C part 10 -- the 5th and last of the AlbumSelector
+        // consumers.
+        photosAddDirect: r("themes/admin/default/js/photos_add_direct.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

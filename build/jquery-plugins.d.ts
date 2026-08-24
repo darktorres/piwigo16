@@ -262,6 +262,16 @@ declare const str_restore_def: string;
 declare const uninstall_plugin_msg: string;
 declare const x_plugins_found: string;
 
+// Vendored standalone-library globals (not jQuery plugins) --
+// `photos_add_direct.ts` is the first real converted call site for all
+// 3. Loosely typed, matching this whole file's own "minimal types to
+// satisfy strict tsconfig" convention -- these are P46-0's own CDN-
+// migrated vendored libraries, not first-party code this phase re-derives
+// real types for.
+declare const plupload: any;
+declare const Piecon: { setProgress(percent: number): void; reset(): void };
+declare const tus: { Upload: new (file: any, options: Record<string, any>) => any };
+
 interface JQueryStatic {
 	// jquery.ajaxmanager (vendored, never published to npm -- P46-0's own
 	// CDN table) -- `thumbnails.loader.ts`'s own queued-thumbnail loader is
@@ -346,4 +356,9 @@ interface JQuery {
 	// declaring it itself (same reasoning as `pwgDatepicker`/
 	// `pwgAddAlbum` above).
 	pwgDoubleSlider(options?: Record<string, unknown>): JQuery;
+
+	// plupload's own jQuery-UI queue widget (vendored -- P46-0's own CDN
+	// table). `photos_add_direct.ts`'s own upload-queue setup is the one
+	// real first-party call site.
+	pluploadQueue(options?: Record<string, unknown>): JQuery;
 }

@@ -554,5 +554,20 @@
                 <file name="src/Piwigo/Controller/Admin/ConfigurationSubController.php"/>
             </errorLevel>
         </RiskyTruthyFalsyComparison>
+        <ArgumentTypeCoercion>
+            <errorLevel type="suppress">
+                <!-- $cookieJar sites: tempnam(), once its `=== false`
+                     failure case is excluded, always returns a real
+                     non-empty temp file path. PHPStan's own tempnam()
+                     stub already types the non-false branch as
+                     `non-falsy-string` (confirmed: adding a redundant `===
+                     ''` guard gets `identical.alwaysFalse` from PHPStan);
+                     Psalm's stub only narrows to plain `string`, which
+                     doesn't satisfy these test helpers' own `@param
+                     non-empty-string` docblocks. -->
+                <file name="tests/Browser/ImageDerivativeControllerTest.php"/>
+                <file name="tests/Browser/PictureControllerTest.php"/>
+            </errorLevel>
+        </ArgumentTypeCoercion>
     </issueHandlers>
 </psalm>

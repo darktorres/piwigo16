@@ -49,7 +49,7 @@ final readonly class NotificationByMailView implements View, HasPageAssets
         return [
             ...new AutosizeView()
                 ->pageAssets(),
-            AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notification_by_mail.js', loadMode: LoadMode::Footer),
+            AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notification_by_mail.ts', loadMode: LoadMode::Footer),
         ];
     }
 }

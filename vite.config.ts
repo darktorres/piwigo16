@@ -113,6 +113,20 @@ export default defineConfig({
         // P46-C part 10 -- the 5th and last of the AlbumSelector
         // consumers.
         photosAddDirect: r("themes/admin/default/js/photos_add_direct.ts"),
+        // P46-C part 11 -- first batch of the remaining ~47
+        // non-consumer, non-declarer admin files: 12 trivial ones.
+        adminHelp: r("themes/admin/default/js/admin_help.ts"),
+        photosAddApplications: r("themes/admin/default/js/photos_add_applications.ts"),
+        autosizeAdmin: r("themes/admin/default/js/autosize.ts"),
+        languagesNew: r("themes/admin/default/js/languages_new.ts"),
+        siteUpdate: r("themes/admin/default/js/site_update.ts"),
+        languagesInstalled: r("themes/admin/default/js/languages_installed.ts"),
+        updatesPwg: r("themes/admin/default/js/updates_pwg.ts"),
+        permalinks: r("themes/admin/default/js/permalinks.ts"),
+        notificationByMail: r("themes/admin/default/js/notification_by_mail.ts"),
+        siteManager: r("themes/admin/default/js/site_manager.ts"),
+        themesNew: r("themes/admin/default/js/themes_new.ts"),
+        menubarAdmin: r("themes/admin/default/js/menubar.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

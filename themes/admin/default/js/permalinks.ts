@@ -1,3 +1,5 @@
+export {};
+
 jQuery(document).ready(function(){
   $("h1").append("<span class='badge-number'>" + pwg_getPageData('nb_cats') + "</span>")
   jQuery("#addPermalinkOpen").click(function(){

@@ -1,3 +1,5 @@
+export {};
+
 jQuery(document).ready(function(){
 
   jQuery("#checkAllLink").click(function () {

@@ -41,7 +41,7 @@ final readonly class AutosizeView implements View, HasPageAssets
     {
         return [
             AssetContribution::script('jquery.autogrow', 'themes/default/js/plugins/jquery.autogrow-textarea.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
-            AssetContribution::script('autosize', 'themes/admin/default/js/autosize.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow']),
+            AssetContribution::script('autosize', 'themes/admin/default/js/autosize.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow']),
         ];
     }
 }

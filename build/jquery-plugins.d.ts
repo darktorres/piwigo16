@@ -361,4 +361,21 @@ interface JQuery {
 	// table). `photos_add_direct.ts`'s own upload-queue setup is the one
 	// real first-party call site.
 	pluploadQueue(options?: Record<string, unknown>): JQuery;
+
+	// jquery.autogrow-textarea.js (vendored, one of the 3 genuinely-
+	// unresolved libraries P46-0's own CDN migration kept vendored --
+	// see docs/PLAN.md's own "2 libraries remain genuinely unresolvable"
+	// note). `autosize.ts`'s own textarea auto-grow setup is the one real
+	// first-party call site.
+	autogrow(): JQuery;
+
+	// jQuery UI's `sortable` widget (vendored -- P46-0's own CDN table,
+	// the one full-bundle `jquery.ui` id). `menubar.ts`'s own drag-to-
+	// reorder menu setup is the one real first-party call site so far --
+	// both the options-object form and the single-string "command" form
+	// (`.sortable('toArray')`, returning the sorted elements' own `id`
+	// attributes) are real, distinct call shapes jQuery UI itself
+	// supports.
+	sortable(options?: Record<string, unknown>): JQuery;
+	sortable(command: string): any;
 }

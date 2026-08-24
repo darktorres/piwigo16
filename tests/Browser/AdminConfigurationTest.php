@@ -1160,14 +1160,22 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         'w[minh]' => '10',
     ];
 
-    $pngPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+    $pngTmp = tempnam(sys_get_temp_dir(), 'pwg_watermark_');
+    if ($pngTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $pngPath = $pngTmp . '.png';
     $img = imagecreatetruecolor(20, 20);
     if ($img === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
     }
     imagepng($img, $pngPath);
 
-    $jpgPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.jpg';
+    $jpgTmp = tempnam(sys_get_temp_dir(), 'pwg_watermark_');
+    if ($jpgTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $jpgPath = $jpgTmp . '.jpg';
     $imgJpg = imagecreatetruecolor(20, 20);
     if ($imgJpg === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
@@ -1557,14 +1565,22 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
 
     $sharedName = 'ctdupmark' . uniqid();
 
-    $firstPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+    $firstTmp = tempnam(sys_get_temp_dir(), 'pwg_watermark_');
+    if ($firstTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $firstPath = $firstTmp . '.png';
     $img1 = imagecreatetruecolor(20, 20);
     if ($img1 === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
     }
     imagepng($img1, $firstPath);
 
-    $secondPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+    $secondTmp = tempnam(sys_get_temp_dir(), 'pwg_watermark_');
+    if ($secondTmp === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
+    $secondPath = $secondTmp . '.png';
     $img2 = imagecreatetruecolor(20, 20);
     if ($img2 === false) {
         throw new RuntimeException('imagecreatetruecolor failed');
@@ -1846,7 +1862,11 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
             ->not->toBe('');
 
         $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
-        $pngPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
+        $pngTmp = tempnam(sys_get_temp_dir(), 'pwg_watermark_');
+        if ($pngTmp === false) {
+            throw new RuntimeException('tempnam() failed');
+        }
+        $pngPath = $pngTmp . '.png';
         $img = imagecreatetruecolor(20, 20);
         if ($img === false) {
             throw new RuntimeException('imagecreatetruecolor failed');

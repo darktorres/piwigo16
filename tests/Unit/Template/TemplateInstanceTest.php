@@ -1113,7 +1113,12 @@ function templateInstanceTestStrpos(string $haystack, string $needle): int
 function templateInstanceTestScriptTags(Template $t): array
 {
     $result = $t->finalizeHtml(Template::COMBINED_SCRIPTS_TAG . '||' . Template::COMBINED_FOOTER_SCRIPTS_TAG);
-    [$header, $footer] = explode('||', $result, 2);
+    // The literal '||' separator survives finalizeHtml() unchanged (it's
+    // not one of the two placeholder tags being resolved), so this always
+    // splits into exactly 2 parts.
+    $resultParts = explode('||', $result, 2);
+    assert(count($resultParts) === 2);
+    [$header, $footer] = $resultParts;
 
     return [
         'header' => $header,
@@ -1461,7 +1466,11 @@ test('registerPageAssets forwards every contribution in the list to PageAssets',
     // regardless of whether a script placeholder was even present in that
     // call's $html, so CSS and scripts must be resolved together here.
     $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG . '||' . Template::COMBINED_SCRIPTS_TAG);
-    [$css, $header] = explode('||', $result, 2);
+    // Same "literal separator survives finalizeHtml() unchanged" guarantee
+    // as templateInstanceTestScriptTags() above.
+    $resultParts = explode('||', $result, 2);
+    assert(count($resultParts) === 2);
+    [$css, $header] = $resultParts;
 
     expect($css)
         ->toContain('href="style.css">')

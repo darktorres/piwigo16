@@ -287,7 +287,28 @@
                      possibly-undefined. Confirmed by trying the `?? 0`
                      guard and having PHPStan reject it as dead code. -->
                 <file name="src/Piwigo/Core/DateHelper.php"/>
+                <!-- DbConnection::params()'s own return type is a 3-way
+                     union discriminated by the 'driver' key (mysqli/pgsql/
+                     sqlite3), only the mysqli arm carrying user/password/
+                     dbname/driverOptions unconditionally. Both affected
+                     tests narrow with `assert($params['driver'] ===
+                     'mysqli')` right after asserting the same via Pest's
+                     `expect()`: confirmed PHPStan (which does support
+                     assert()-based discriminated-union-by-literal-key
+                     narrowing on array shapes) is already 100% clean on
+                     this file with no guards added. Psalm doesn't narrow
+                     the array shape off that assert(), so it still sees
+                     these keys as possibly-undefined/possibly-null. -->
+                <file name="tests/Unit/Db/DbConnectionTest.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
+        <PossiblyNullArrayAccess>
+            <errorLevel type="suppress">
+                <!-- Same assert()-narrowing gap as this file's own
+                     PossiblyUndefinedArrayOffset entry above, applied to
+                     $params['driverOptions']'s own value type once read. -->
+                <file name="tests/Unit/Db/DbConnectionTest.php"/>
+            </errorLevel>
+        </PossiblyNullArrayAccess>
     </issueHandlers>
 </psalm>

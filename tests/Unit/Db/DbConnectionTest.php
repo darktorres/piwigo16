@@ -29,7 +29,8 @@ beforeEach(function () use ($envVars, &$originalEnvVars): void {
 
 afterEach(function () use ($envVars, &$originalEnvVars): void {
     foreach ($envVars as $var) {
-        putenv($originalEnvVars[$var] === null ? $var : $var . '=' . $originalEnvVars[$var]);
+        $original_value = $originalEnvVars[$var] ?? null;
+        putenv($original_value === null ? $var : $var . '=' . $original_value);
     }
 });
 

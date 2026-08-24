@@ -60,7 +60,10 @@ final class BoundedSendmailTransport extends AbstractTransport
     protected function doSend(SentMessage $message): void
     {
         $binaryAndFlags = preg_split('/\s+/', trim($this->sendmailPath));
-        if ($binaryAndFlags === false || $binaryAndFlags === [] || $binaryAndFlags[0] === '') {
+        // preg_split() without PREG_SPLIT_NO_EMPTY always returns at least
+        // one element for any string input (even '', as ['']) -- only the
+        // regex-failure (false) and empty-first-element cases are real.
+        if ($binaryAndFlags === false || $binaryAndFlags[0] === '') {
             throw new TransportException('BoundedSendmailTransport: sendmail_path is empty or invalid: "' . $this->sendmailPath . '"');
         }
 

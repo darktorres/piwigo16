@@ -308,7 +308,8 @@ final readonly class BatchManagerUnitPageRenderer
                 // This image's own storage category (the album it's physically
                 // stored under), used below to highlight STORAGE_CATEGORY among
                 // its linked categories.
-                $storage_category_id = is_numeric($row['storage_category_id'] ?? null) ? (int) $row['storage_category_id'] : null;
+                $storage_category_id_raw = $row['storage_category_id'] ?? null;
+                $storage_category_id = is_numeric($storage_category_id_raw) ? (int) $storage_category_id_raw : null;
 
                 $src_image = new SrcImage(SrcImageInfo::fromRow($row));
 
@@ -411,11 +412,16 @@ final readonly class BatchManagerUnitPageRenderer
                 $selected_level = $row['level'] ?? null;
                 $row_filesize = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                 $row_date_available = is_string($row['date_available']) ? $row['date_available'] : '';
-                $row_width = is_scalar($row['width'] ?? null) ? (string) $row['width'] : '';
-                $row_height = is_scalar($row['height'] ?? null) ? (string) $row['height'] : '';
-                $row_name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
-                $row_author = is_scalar($row['author'] ?? null) ? (string) $row['author'] : '';
-                $row_comment = is_scalar($row['comment'] ?? null) ? (string) $row['comment'] : '';
+                $row_width_raw = $row['width'] ?? null;
+                $row_width = is_scalar($row_width_raw) ? (string) $row_width_raw : '';
+                $row_height_raw = $row['height'] ?? null;
+                $row_height = is_scalar($row_height_raw) ? (string) $row_height_raw : '';
+                $row_name_raw = $row['name'] ?? null;
+                $row_name = is_scalar($row_name_raw) ? (string) $row_name_raw : '';
+                $row_author_raw = $row['author'] ?? null;
+                $row_author = is_scalar($row_author_raw) ? (string) $row_author_raw : '';
+                $row_comment_raw = $row['comment'] ?? null;
+                $row_comment = is_scalar($row_comment_raw) ? (string) $row_comment_raw : '';
                 $row_added_by_raw = $row['added_by'] ?? null;
                 $row_added_by = (is_int($row_added_by_raw) || is_string($row_added_by_raw)) ? $row_added_by_raw : null;
 
@@ -430,7 +436,7 @@ final readonly class BatchManagerUnitPageRenderer
                             'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str,
                             'NAME' => $row_name,
                             'AUTHOR' => $row_author,
-                            'LEVEL' => ($row['level'] ?? '') !== '' && $row['level'] !== '0' ? ($row['level'] ?? '0') : '0',
+                            'LEVEL' => $selected_level !== null && $selected_level !== '' && $selected_level !== '0' ? $selected_level : '0',
                             'DESCRIPTION' => $row_comment,
                             'DATE_CREATION' => $row['date_creation'],
                             'TAGS' => $tag_selection,
@@ -465,6 +471,9 @@ final readonly class BatchManagerUnitPageRenderer
             $element_ids_value = implode(',', $element_ids);
         }
 
+        $jquery_code_raw = $this->lang->langInfo()['jquery_code'] ?? null;
+        $jquery_code = is_string($jquery_code_raw) ? $jquery_code_raw : '';
+
         $adminContent = $this->renderer->render(new BatchManagerUnitView(
             uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
             levelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
@@ -477,7 +486,7 @@ final readonly class BatchManagerUnitPageRenderer
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
             elements: $elements,
             rootPath: $this->paths->root,
-            jqueryCode: is_string($this->lang->langInfo()['jquery_code'] ?? null) ? $this->lang->langInfo()['jquery_code'] : '',
+            jqueryCode: $jquery_code,
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $this->urlService->getRootUrl(),
             associatedCategories: is_array($associated_categories_raw) ? $associated_categories_raw : [],

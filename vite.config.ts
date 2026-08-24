@@ -93,6 +93,8 @@ export default defineConfig({
         // P46-C part 3 -- the first consumer-only file (its declarer,
         // plugins_installed_config.js, hasn't converted yet).
         pluginsInstallated: r("themes/admin/default/js/plugins_installated.ts"),
+        // P46-C part 4 -- consumer of the already-converted intro.ts.
+        introTooltips: r("themes/admin/default/js/intro_tooltips.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

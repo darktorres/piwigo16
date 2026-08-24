@@ -39,7 +39,7 @@ final readonly class C13yTreatmentRequest
     {
         $selection_raw = $post['c13y_selection'] ?? null;
         $has_selection = is_array($selection_raw);
-        $selection = $has_selection
+        $selection = is_array($selection_raw)
             ? array_values(array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $selection_raw))
             : [];
 

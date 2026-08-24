@@ -238,6 +238,9 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
         $channel = $xml->channel;
         expect($channel)
             ->not->toBeNull();
+        if ($channel === null) {
+            throw new RuntimeException('expected a <channel> element in the feed');
+        }
         // Anonymous, non-personalized feed.php always switches identity to
         // guest (FeedController::__invoke()) -- the title always reflects
         // that, regardless of the configurable gallery_title.
@@ -245,10 +248,16 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
             ->toContain(' (as guest)');
 
         $items = $channel->item;
+        if ($items === null) {
+            throw new RuntimeException('expected at least one <item> element in the feed');
+        }
         expect(count($items))
             ->toBe(1);
 
         $item = $items[0];
+        if ($item === null) {
+            throw new RuntimeException('expected a real <item> element in the feed');
+        }
         // guid is 'pics-' . the literal date_available string
         // (FeedController's own rss_items construction), htmlspecialchars()'d
         // -- a space/colon aren't special chars, so this is an exact match.

@@ -103,8 +103,11 @@ final readonly class CategoryImagesController implements ControllerInterface
             );
 
             $orderBy = PhotoSortOrder::fromApiOrderParam($order);
-            if ($orderBy->isEmpty() && count($catIds) === 1 && ($cats[$catIds[0]]->imageOrder ?? null) !== null) {
-                $orderBy = PhotoSortOrder::fromConfigFragment($cats[$catIds[0]]->imageOrder);
+            if ($orderBy->isEmpty() && count($catIds) === 1) {
+                $catImageOrder = $cats[$catIds[0]]->imageOrder ?? null;
+                if ($catImageOrder !== null) {
+                    $orderBy = PhotoSortOrder::fromConfigFragment($catImageOrder);
+                }
             }
             $favoriteIds = $this->urlService->getUserFavorites();
 

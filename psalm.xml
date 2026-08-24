@@ -477,6 +477,47 @@
                      `identical.alwaysFalse` from PHPStan, dead code);
                      Psalm's stub doesn't narrow this. -->
                 <file name="tools/phpstan/Latte/ContextVariableExtractor.php"/>
+                <!-- RateService::updateRate()'s $savedAnonymousId: only
+                     non-null when $userAnonymous is true (either from
+                     CookieService::getAnonymousRaterId() or the fallback
+                     $anonymousId, both real strings); the closure re-checks
+                     $userAnonymous before both read sites. PHPStan proves
+                     the correlation; Psalm can't (confirmed: `?? ''` guards
+                     get `nullCoalesce.variable` from PHPStan). -->
+                <file name="src/Piwigo/Rate/RateService.php"/>
+                <!-- ActivityRepository::insertMany()'s $column = $kind?->
+                     referenceColumn(): PHPStan proves `$column !== null`
+                     already implies `$kind !== null` (nullsafe-operator
+                     backward narrowing); Psalm doesn't. Confirmed: adding
+                     an explicit `$kind !== null` clause gets
+                     `notIdentical.alwaysTrue` from PHPStan (dead code). -->
+                <file name="src/Piwigo/Activity/ActivityRepository.php"/>
+                <!-- CalendarWeekly::initialize()'s $cday_labels: PHPStan
+                     tracks $calendar_levels[self::CDAY]['labels']'s real
+                     type more precisely than its bare `array` property
+                     declaration lets Psalm see (own comment: "Always a
+                     real array here: ... Lang::days(), which never returns
+                     null"). Confirmed: adding an `is_array()` guard gets
+                     `function.alreadyNarrowedType` from PHPStan. -->
+                <file name="src/Piwigo/Calendar/CalendarWeekly.php"/>
+                <!-- CategoryService::createCategory()'s $parentId: PHPStan
+                     proves `! $parentIdIsEmpty` already implies `$parentId
+                     !== null` (from `$parentIdIsEmpty = $parentId === null
+                     || $parentId === 0`); Psalm can't do this
+                     flag-to-variable correlation. Confirmed: adding an
+                     explicit `$parentId !== null` clause gets
+                     `notIdentical.alwaysTrue` from PHPStan. -->
+                <file name="src/Piwigo/Category/CategoryService.php"/>
+                <!-- PasswordController's $email: PHPStan proves `!
+                     $skip_mail` already implies `$email !== null` (from
+                     `$skip_mail = ! $is_user_found || $email === null ||
+                     $email === ''`, own comment: "$skip_mail already
+                     covers $email === null/'', so $email is provably a
+                     non-empty string here"); Psalm can't do this
+                     flag-to-variable correlation. Confirmed: adding an
+                     explicit `$email !== null` clause gets
+                     `notIdentical.alwaysTrue` from PHPStan. -->
+                <file name="src/Piwigo/Controller/PasswordController.php"/>
             </errorLevel>
         </PossiblyNullArgument>
         <PossiblyNullPropertyFetch>

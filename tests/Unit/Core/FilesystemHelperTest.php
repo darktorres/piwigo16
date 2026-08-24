@@ -649,7 +649,8 @@ test('deltree takes the trash_path branch and returns null when rmdir fails, eve
         ->toBeTrue()
         ->and(file_exists($victim . '/leaf.txt'))->toBeFalse();
 
-    $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..']));
+    $trashScan = scandir($trash);
+    $trashEntries = array_values(array_diff($trashScan !== false ? $trashScan : [], ['.', '..']));
     expect($trashEntries)
         ->toBe(['.htaccess']);
 });
@@ -681,7 +682,8 @@ test('deltree actually renames an undeletable directory into the trash path when
         ->and(is_dir($victim))
         ->toBeFalse();
 
-    $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..', '.htaccess']));
+    $trashScan = scandir($trash);
+    $trashEntries = array_values(array_diff($trashScan !== false ? $trashScan : [], ['.', '..', '.htaccess']));
     expect($trashEntries)
         ->toHaveCount(1);
     // Kills line 251's UnwrapMd5: an md5() hash is always exactly 32

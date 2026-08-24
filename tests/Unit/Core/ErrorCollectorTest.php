@@ -79,6 +79,9 @@ test('recordFatal appends a real [ERROR]-prefixed entry and writes the real mess
     // no subprocess needed) rather than treating the message as an
     // unverifiable diagnostic side effect.
     $errorLogFile = tempnam(sys_get_temp_dir(), 'piwigo-error-collector-recordfatal-');
+    if ($errorLogFile === false) {
+        throw new RuntimeException('tempnam() failed');
+    }
     $originalErrorLog = ini_get('error_log');
     ini_set('error_log', $errorLogFile);
 

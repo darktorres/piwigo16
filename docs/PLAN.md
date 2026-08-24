@@ -3589,11 +3589,15 @@ don't exist under their cited names (`UpdatesPwg` step chain,
 scaffold (never existed on this branch) are moot — nothing to convert
 or remove.
 
-**Only remaining, open item: Section 15** (Psalm-suppression cleanup)
-— genuinely unrelated to the array-to-object pattern per the handoff
-doc's own framing ("Not part of the VO campaign"), likely moot here
-per `feedback_no_psalm_gating.md` (Psalm isn't a gate on this branch).
-Not yet formally closed out either way.
+**Section 15 (Psalm-suppression cleanup) is now closed, superseded.**
+Rather than clean up suppressions, Psalm was removed from the project
+entirely on 2026-08-24, after a full errorLevel-1 sweep found the
+overwhelming majority of remaining findings were Psalm-only false
+positives against a codebase PHPStan already covers with more precision
+(see `docs/REFERENCE.md`'s "Key design decisions" for the full
+reasoning). Every inline `@psalm-suppress` and `psalm.xml` itself were
+removed in the same pass — there is no longer a suppression surface to
+clean up.
 
 **Full-repo validation re-run and confirmed clean** after every item
 above landed (including the Dimensions VO fix, the last of this
@@ -4593,10 +4597,10 @@ k6 run tests/Load/*.js                      # non-blocking, tests/Load/ doesn't 
 ahead of PHPStan; a bare `vendor/bin/phpstan analyse` skips template
 checking entirely.
 
-**Deliberately not in this list**: `vendor/bin/psalm`, a real working
-dependency again since 2026-08-11 but with no CI job and no composer
-script; and `composer lint:latte`/`precompile:templates`, which exist and
-work but are gated nowhere until P45.
+**Deliberately not in this list**: `composer lint:latte`/
+`precompile:templates`, which exist and work but are gated nowhere until
+P45. (`vendor/bin/psalm` was removed from the project entirely on
+2026-08-24 — see `docs/REFERENCE.md`'s "Key design decisions".)
 
 **SEC traceability has no automated cross-check.** The original design
 had every `SEC-NN` reachable from threat model → phase checklist →

@@ -101,8 +101,7 @@
     "studio-design/gesso": "v2.6.0",
     "symfony/yaml": "v8.1.2",
     "symplify/easy-coding-standard": "13.2.17",
-    "tracy/tracy": "v2.12.1",
-    "vimeo/psalm": "dev-master#290eaec245d021880976e69aaec2ef095a63f0f8"
+    "tracy/tracy": "v2.12.1"
   },
   "suggest": {
     "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",
@@ -155,9 +154,6 @@
       },
       "pestphp/pest-plugin-mutate": {
         "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch"
-      },
-      "vimeo/psalm": {
-        "Fix StatementsAnalyzer referencing two of its own properties, $depth and $root_scope, without ever declaring either as a class property -- confirmed absent from the class, every parent, and every trait in the installed source. $depth is a plain recursion-depth counter (incremented on analyze() entry, decremented in its own finally block, gating checkUnreferencedVars()/var-initialization-alteration to only the outermost call); reading/writing it under PHP 8.2+'s dynamic-property deprecation throws PHP Error: Creation of dynamic property ... is deprecated on literally the first statement analyzed in any file. $root_scope is read at two sites gating that same logic but is never assigned anywhere in the codebase, so reading it throws PHP Error: Undefined property once $depth's crash is patched around. Psalm's own ErrorHandler (by design) escalates both from a PHP notice/deprecation into a hard RuntimeException; inside a forked amphp/parallel worker that crash cascades into an unhandled Future, then an uncaught-in-event-loop-callback error, which leaves that worker's Revolt driver Fiber marked running so the next worker spawn's own EventLoop::run() call fails with 'The event loop is already running' -- i.e. Psalm 7.x-dev crashes on every real run, in exactly this shape, purely from its own missing property declarations. No upstream fix found (the file's own commit history has no matching change) and no existing GitHub issue found for this exact crash; declares `private int $depth = 0;` and `private bool $root_scope = false;` next to the class's other simple fields, matching each one's existing usage/semantics exactly (root_scope stays unwired/always-false, matching its current always-undefined behavior, rather than inventing new analysis logic upstream doesn't have)": "patches/vimeo-psalm-dev-master-statementsanalyzer-undeclared-properties.patch"
       }
     },
     "phpstan/extension-installer": {

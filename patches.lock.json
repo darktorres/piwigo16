@@ -1,5 +1,5 @@
 {
-    "_hash": "b022787affbd1dbecc0050413756ee8ebed101449d399d80a9fdfbf9a6bd30d3",
+    "_hash": "f522c8087c945c94d5b27f7f67481fd44b72215a51a6d73e2e6f0be339c74f96",
     "patches": {
         "doctrine/dbal": [
             {
@@ -73,18 +73,6 @@
                 "description": "Bound the composed --filter argument length in MutationTest::start() -- a mutation covered by hundreds/thousands of tests can build a --filter regex past Linux's 128 KiB MAX_ARG_STRLEN, crashing proc_open() with ProcessStartFailedException (\"Argument list too long\") and killing the entire test:mutate run; falls back to running the full testsuite for that one mutant instead, which is always correctness-preserving",
                 "url": "patches/pest-plugin-mutate-5.0.1-bound-filter-argument-length.patch",
                 "sha256": "de97dde126381265b371d6a66c9bfe32b6edd25f5bf8ff3fe8e15b46903a2f22",
-                "depth": 1,
-                "extra": {
-                    "provenance": "root"
-                }
-            }
-        ],
-        "vimeo/psalm": [
-            {
-                "package": "vimeo/psalm",
-                "description": "Fix StatementsAnalyzer referencing two of its own properties, $depth and $root_scope, without ever declaring either as a class property -- confirmed absent from the class, every parent, and every trait in the installed source. $depth is a plain recursion-depth counter (incremented on analyze() entry, decremented in its own finally block, gating checkUnreferencedVars()/var-initialization-alteration to only the outermost call); reading/writing it under PHP 8.2+'s dynamic-property deprecation throws PHP Error: Creation of dynamic property ... is deprecated on literally the first statement analyzed in any file. $root_scope is read at two sites gating that same logic but is never assigned anywhere in the codebase, so reading it throws PHP Error: Undefined property once $depth's crash is patched around. Psalm's own ErrorHandler (by design) escalates both from a PHP notice/deprecation into a hard RuntimeException; inside a forked amphp/parallel worker that crash cascades into an unhandled Future, then an uncaught-in-event-loop-callback error, which leaves that worker's Revolt driver Fiber marked running so the next worker spawn's own EventLoop::run() call fails with 'The event loop is already running' -- i.e. Psalm 7.x-dev crashes on every real run, in exactly this shape, purely from its own missing property declarations. No upstream fix found (the file's own commit history has no matching change) and no existing GitHub issue found for this exact crash; declares `private int $depth = 0;` and `private bool $root_scope = false;` next to the class's other simple fields, matching each one's existing usage/semantics exactly (root_scope stays unwired/always-false, matching its current always-undefined behavior, rather than inventing new analysis logic upstream doesn't have)",
-                "url": "patches/vimeo-psalm-dev-master-statementsanalyzer-undeclared-properties.patch",
-                "sha256": "ac7d6b14dcafe48613cc484108c9712654206c030101b925638028cd8bcfb5f6",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

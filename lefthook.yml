@@ -29,7 +29,3 @@ pre-push:
       # directly would silently skip template type-checking. phpstan
       # auto-disables progress output on non-TTY, no --no-progress needed.
       run: composer analyse:phpstan
-    # Psalm (vimeo/psalm) is installed and psalm.xml is maintained, but
-    # nothing gates on it here yet -- composer.json's own `analyse` script
-    # doesn't invoke it either (analyse:phpstan only).
-

@@ -108,14 +108,14 @@ jobs:
       # directly would silently skip template type-checking.
       - run: composer analyse:phpstan
 
-  # Psalm was never gated in CI (see docs/REFERENCE.md's "Psalm gating is
-  # moot, not just paused — but Psalm itself is back" decision) — its
-  # global-function-resolution scanner didn't hold up at this codebase's
-  # scale/style (non-namespaced procedural legacy code), so gating stays
-  # moot regardless of whether the dependency is installed. `vimeo/psalm`
-  # was dropped from composer.json entirely 2026-08-07, then reinstalled
-  # 2026-08-11 (pinned to 7.x-dev) for real, local, best-effort use — no
-  # CI job, no composer script wired to it.
+  # Psalm was never gated in CI (see docs/REFERENCE.md). `vimeo/psalm` was
+  # dropped entirely 2026-08-24: PHPStan (already at max level 10 with
+  # phpstan-strict-rules) already covers everything Psalm found here that
+  # mattered, and this codebase has no Doctrine/PHPUnit-aware Psalm plugin
+  # (the actual Doctrine one is stale and version-locked against this
+  # project's Psalm dev-master), so a full errorLevel-1 sweep found the
+  # overwhelming majority of findings were Psalm-only false positives, not
+  # real gaps -- not worth the suppression-maintenance cost of keeping it.
 
   rector:
     name: Rector (dry-run, non-blocking)
@@ -1092,7 +1092,7 @@ jobs:
           # here as a regression guard on the rule itself.
           for path in tools/index.php install/config.sql tests/Fixtures/piwigo-17.0.sql \
               vendor/autoload.php node_modules/.bin/vite docs/PLAN.md deploy/helm/piwigo/values.yaml \
-              composer.json composer.lock package.json bun.lock phpstan.neon psalm.xml rector.php ecs.php \
+              composer.json composer.lock package.json bun.lock phpstan.neon rector.php ecs.php \
               knip.json lefthook.yml tsconfig.json .stylelintrc.json .prettierrc.json .markdownlint-cli2.jsonc \
               lighthouserc.json .size-limit.json \
               renovate.json release-please-config.json .release-please-manifest.json eslint-suppressions.json \
@@ -1207,7 +1207,7 @@ jobs:
         run: |
           for path in tools/index.php install/config.sql config/anything \
               vendor/autoload.php deploy/helm/piwigo/values.yaml \
-              composer.json composer.lock package.json bun.lock phpstan.neon psalm.xml rector.php ecs.php \
+              composer.json composer.lock package.json bun.lock phpstan.neon rector.php ecs.php \
               knip.json lefthook.yml tsconfig.json .stylelintrc.json .prettierrc.json .markdownlint-cli2.jsonc \
               lighthouserc.json .size-limit.json \
               renovate.json release-please-config.json .release-please-manifest.json eslint-suppressions.json \

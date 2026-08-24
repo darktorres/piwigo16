@@ -99,6 +99,8 @@ export default defineConfig({
         // finding beyond the plan's own sweep) of not-yet-converted
         // albums.js's own `data`/`str_album_found` globals.
         catSearch: r("themes/admin/default/js/cat_search.ts"),
+        // P46-C part 6 -- one of the 5 remaining AlbumSelector consumers.
+        pictureModify: r("themes/admin/default/js/picture_modify.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

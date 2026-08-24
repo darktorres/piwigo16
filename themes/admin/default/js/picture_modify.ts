@@ -1,10 +1,26 @@
-var related_categories_ids = pwg_getPageData('related_categories_ids');
-var str_assoc_album_ab = pwg_getPageString('Associate to album');
-var str_orphan = pwg_getPageString('This photo is an orphan');
+export {};
+
+// Consumer of album_selector.ts's own real, top-level `class
+// AlbumSelector` -- resolves directly via that file's own real
+// declaration (album_selector.ts stays a global script, no `export
+// {}`), same "every themes/**/*.ts file shares one global
+// type-checking program" reasoning as every other consumer file this
+// session. `CategoriesCache`/`TagsCache` are different: LocalStorageCache.ts
+// wraps them in its own real, pre-existing IIFE, so they're only
+// reachable via `window.` -- same `window.` prefixing already used in
+// batch_manager_global.ts's own copy of this pattern.
+//
+// `add_related_category`/`remove_related_category` are declared here
+// too, independently of the same-named functions in mcs.js/
+// batchManagerUnit.js/cat_modify.js/photos_add_direct.js (docs/PLAN.md
+// P46-B's own finding) -- safe since none of these pages ever co-load.
+const related_categories_ids = pwg_getPageData('related_categories_ids');
+const str_assoc_album_ab = pwg_getPageString('Associate to album');
+const str_orphan = pwg_getPageString('This photo is an orphan');
 
 (function(){
 	// <!-- CATEGORIES -->
-	var categoriesCache = new CategoriesCache({
+	const categoriesCache = new window.CategoriesCache({
 		serverKey: pwg_getPageData('cache_key_categories'),
 		serverId: pwg_getPageData('cache_key_hash'),
 		rootUrl: pwg_getPageData('root_url')
@@ -13,7 +29,7 @@ var str_orphan = pwg_getPageString('This photo is an orphan');
 	categoriesCache.selectize(jQuery('[data-selectize=categories]'));
 
 	// <!-- TAGS -->
-	var tagsCache = new TagsCache({
+	const tagsCache = new window.TagsCache({
 		serverKey: pwg_getPageData('cache_key_tags'),
 		serverId: pwg_getPageData('cache_key_hash'),
 		rootUrl: pwg_getPageData('root_url')
@@ -36,10 +52,10 @@ var str_orphan = pwg_getPageString('This photo is an orphan');
 		photo: true
 	});
 
-	var str_are_you_sure = pwg_getPageString('Are you sure?');
-	var str_yes = pwg_getPageString('Yes, delete');
-	var str_no = pwg_getPageString('No, I have changed my mind');
-	var url_delete = pwg_getPageData('u_delete');
+	const str_are_you_sure = pwg_getPageString('Are you sure?');
+	const str_yes = pwg_getPageString('Yes, delete');
+	const str_no = pwg_getPageString('No, I have changed my mind');
+	const url_delete = pwg_getPageData('u_delete');
 
 	$('#action-delete-picture').on('click', function() {
 		$.confirm({
@@ -100,7 +116,7 @@ $(document).ready(function () {
   $('#pictureModify').find(':input').on('change', function () {
     if (user_interacted) {
       form_unsaved = true;
-      console.log($(this)[0].name, $(this));
+      console.log(($(this)[0] as any).name, $(this));
     }
   });
   $(window).on('beforeunload', function () {
@@ -113,14 +129,14 @@ $(document).ready(function () {
   });
 })
 
-function remove_related_category({ id_album, getSelectedAlbum }) {
+function remove_related_category({ id_album, getSelectedAlbum }: any) {
   $(".invisible-related-categories-select option[value="+ id_album +"]").remove();
   $(".invisible-related-categories-select").trigger('change');
   $("#" + id_album).parent().remove();
   check_related_categories(getSelectedAlbum());
 }
 
-function add_related_category({ album, addSelectedAlbum, getSelectedAlbum }) {
+function add_related_category({ album, addSelectedAlbum, getSelectedAlbum }: any) {
   if (!getSelectedAlbum().includes(album.id)) {
     $(".related-categories-container").append(
       `<div class="breadcrumb-item">
@@ -136,7 +152,7 @@ function add_related_category({ album, addSelectedAlbum, getSelectedAlbum }) {
   check_related_categories(getSelectedAlbum());
 }
 
-function check_related_categories(selected_cat) {
+function check_related_categories(selected_cat: any) {
   $(".linked-albums-badge").html(selected_cat.length);
 
   if (selected_cat.length == 0) {

@@ -21,7 +21,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * conditionally-omitted key. No `$title`, `$dimensions`, `$filesize`,
  * `$registrationDate`, `$uCoi`, `$storageCategory`, `$associatedAlbums`,
  * or `$storageAlbum` field -- confirmed dead against both the
- * template's own body and `picture_modify.js`'s `pwg_getPageData()`
+ * template's own body and `picture_modify.ts`'s `pwg_getPageData()`
  * reads.
  */
 #[Template('picture_modify.latte')]
@@ -87,7 +87,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/admin/default/css/pages/picture_modify.css', id: 'picture_modify'),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('picture_modify', 'themes/admin/default/js/picture_modify.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox', 'page-data']),
+            AssetContribution::script('picture_modify', 'themes/admin/default/js/picture_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox', 'page-data']),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             ...new AlbumSelectorView()

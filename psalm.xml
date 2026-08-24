@@ -319,6 +319,40 @@
                      ... on left side of ??"); Psalm can't do this
                      across-loop, self-mutating-array narrowing. -->
                 <file name="src/Piwigo/Calendar/CalendarMonthly.php"/>
+                <!-- ImageUpdateController::patch()'s $currentValues is a
+                     literal array{name, author, comment, level,
+                     dateCreation} keyed by the exact same 5 strings as
+                     self::INFO_COLUMNS, the const array the enclosing
+                     foreach() iterates over as $key. PHPStan correlates the
+                     const string-list with the literal shape's keys and
+                     proves $currentValues[$key] always exists; Psalm
+                     doesn't do this const-array-to-shape-key correlation.
+                     Confirmed: adding a `?? null` guard gets
+                     `nullCoalesce.unnecessary` from PHPStan. -->
+                <file name="src/Piwigo/Controller/Api/Images/ImageUpdateController.php"/>
+                <!-- PictureController::pictureAction()'s $format loop: the
+                     `! isset($format['download_url'])` branch is only
+                     reached for the Projection\ImageFormat::toArray() rows
+                     (format_id/image_id/ext/filesize), never the
+                     differently-shaped array_unshift()'d literal
+                     (download_url/ext/filesize): see this exact branch's
+                     own comment. PHPStan proves 'format_id' always exists
+                     inside that branch; Psalm can't correlate "which of the
+                     2 literal shapes this iteration's $format came from"
+                     with the isset() check on a different key. Confirmed:
+                     adding a `?? ''` guard gets `nullCoalesce.offset` from
+                     PHPStan. -->
+                <file name="src/Piwigo/Controller/PictureController.php"/>
+                <!-- AdvisorySessionLock::sqliteLockFilePath(): same
+                     DbConnection::params() 3-way-union-by-'driver'-key gap
+                     as this file's own DbConnectionTest.php entry above,
+                     just narrowed via an inline ternary condition instead
+                     of assert(). PHPStan proves $params['path'] always
+                     exists once `$params['driver'] === 'sqlite3'` is true;
+                     Psalm doesn't narrow the array shape off that ternary
+                     condition either. Confirmed: adding a `?? ''` guard
+                     gets `nullCoalesce.offset` from PHPStan. -->
+                <file name="src/Piwigo/Db/AdvisorySessionLock.php"/>
             </errorLevel>
         </PossiblyUndefinedArrayOffset>
         <PossiblyNullArrayAccess>

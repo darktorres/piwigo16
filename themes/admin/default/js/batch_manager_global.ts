@@ -271,7 +271,9 @@ $(document).ready(function () {
     else
       jQuery(".thumbnails input[type=checkbox]").each(function () {
         if (jQuery(this).is(":checked")) {
-          derivatives.elements!.push(jQuery(this).val());
+          // Checkbox `.val()` is always its plain `value` attribute string
+          // (never string[]/undefined) -- never a multi-select.
+          derivatives.elements!.push(jQuery(this).val() as string);
         }
       });
 

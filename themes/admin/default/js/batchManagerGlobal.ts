@@ -38,7 +38,7 @@ jQuery(document).ready(function () {
         },
       );
       $(this).click(function (event) {
-        $(this).triggerHandler("shclick", event as any);
+        $(this).triggerHandler("shclick", event);
       });
     });
     return this;
@@ -66,11 +66,7 @@ jQuery(document).ready(function () {
 function select_album_action({
   album,
   addSelectedAlbum,
-}: {
-  album: any;
-  addSelectedAlbum: () => void;
-  getSelectedAlbum?: () => any[];
-}) {
+}: AlbumSelectorCallbackArgs) {
   $("#associate_as p").html(window.str_add_alb_associate);
   $(".selected-associate-action").append(
     `<div class="selected-associate-item">
@@ -84,10 +80,7 @@ function select_album_action({
 function remove_album_action({
   id_album,
   getSelectedAlbum,
-}: {
-  id_album: any;
-  getSelectedAlbum: () => any[];
-}) {
+}: AlbumSelectorRemoveCallbackArgs) {
   $(".selected-associate-item").find(`#${id_album}`).parent().remove();
   const selected = getSelectedAlbum();
   if (!selected.length) {
@@ -140,7 +133,7 @@ $("input[name=remove_date_creation]").click(function () {
 });
 
 interface Derivatives {
-  elements: any[] | null;
+  elements: (string | number)[] | null;
   done: number;
   total: number;
   finished(): boolean;
@@ -212,7 +205,9 @@ function getDerivativeUrls() {
     },
     data: JSON.stringify(params),
     dataType: "json",
-    success: function (data: any) {
+    success: function (
+      data: import("../../../../openapi/client/schema").operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"],
+    ) {
       derivatives.total += data.urls.length;
       jQuery("#regenerationStatus .badge-number").html(
         derivatives.done.toString() + "/" + derivatives.total.toString(),
@@ -223,14 +218,14 @@ function getDerivativeUrls() {
           type: "GET",
           url: data.urls[i] + "&ajaxload=true",
           dataType: "json",
-          success: function (_data: any) {
+          success: function (_data: unknown) {
             derivatives.done++;
             jQuery("#regenerationStatus .badge-number").html(
               derivatives.done.toString() + "/" + derivatives.total.toString(),
             );
             progress(true);
           },
-          error: function (_data: any) {
+          error: function (_data: unknown) {
             derivatives.done++;
             jQuery("#regenerationStatus .badge-number").html(
               derivatives.done.toString() + "/" + derivatives.total.toString(),
@@ -310,7 +305,7 @@ $(window).on("keypress", function (e) {
 // wrapper) reproduces that same cross-click persistence via closure,
 // without actually leaking it onto `window` -- nothing else in the
 // codebase relies on a shared global named `elements` (confirmed).
-let elements: any[] | undefined;
+let elements: (string | number)[] | undefined;
 
 /* sync metadatas or delete photos by blocks, with progress bar */
 jQuery("#applyAction").click(function (e) {
@@ -333,7 +328,9 @@ jQuery("#applyAction").click(function (e) {
       jQuery('input[name="selection[]"]')
         .filter(":checked")
         .each(function () {
-          elements!.push(jQuery(this).val());
+          // Checkbox `.val()` is always its plain `value` attribute string
+          // (never string[]/undefined) -- never a multi-select.
+          elements!.push(jQuery(this).val() as string);
         });
     }
 
@@ -375,7 +372,9 @@ jQuery("#applyAction").click(function (e) {
             imageIds: ids,
           }),
           dataType: "json",
-          success: function (data: any) {
+          success: function (
+            data: import("../../../../openapi/client/schema").operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
+          ) {
             todo += thisBatchSize;
             if (data.nbSynchronized != thisBatchSize) {
               /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/
@@ -385,7 +384,7 @@ jQuery("#applyAction").click(function (e) {
             );
             progress_bar(todo, progressBar_max, false);
           },
-          error: function (_data: any) {
+          error: function (_data: unknown) {
             todo += thisBatchSize;
             /*TODO: user feedback*/
             jQuery("#regenerationStatus .badge-number").html(
@@ -426,7 +425,9 @@ jQuery("#applyAction").click(function (e) {
     jQuery('input[name="selection[]"]')
       .filter(":checked")
       .each(function () {
-        elements!.push(jQuery(this).val());
+        // Checkbox `.val()` is always its plain `value` attribute string
+        // (never string[]/undefined) -- never a multi-select.
+        elements!.push(jQuery(this).val() as string);
       });
   }
 
@@ -464,7 +465,9 @@ jQuery("#applyAction").click(function (e) {
           imageIds: ids.map(Number),
         }),
         dataType: "json",
-        success: function (data: any) {
+        success: function (
+          data: import("../../../../openapi/client/schema").operations["imageDelete"]["responses"][200]["content"]["application/json"],
+        ) {
           todo += thisBatchSize;
           if (data.deletedCount != thisBatchSize) {
             /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/
@@ -475,7 +478,7 @@ jQuery("#applyAction").click(function (e) {
           );
           progress_bar(todo, progressBar_max, false);
         },
-        error: function (_data: any) {
+        error: function (_data: unknown) {
           todo += thisBatchSize;
           /*TODO: user feedback*/
           jQuery("#regenerationStatus .badge-number").html(
@@ -548,8 +551,10 @@ function add_md5sum_block(blockSize?: number) {
     data: JSON.stringify({
       blockSize: blockSize,
     }),
-    success: function (data: any) {
-      jQuery("#md5sum_to_add").html(data.remainingCount);
+    success: function (
+      data: import("../../../../openapi/client/schema").operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"],
+    ) {
+      jQuery("#md5sum_to_add").html(String(data.remainingCount));
 
       const percent_remaining = Number(
         (
@@ -571,7 +576,7 @@ function add_md5sum_block(blockSize?: number) {
         window.location.href = redirect_to;
       }
     },
-    error: function (XMLHttpRequest: any) {
+    error: function (XMLHttpRequest: JQuery.jqXHR) {
       jQuery("#add_md5sum").hide();
       jQuery("#add_md5sum_error")
         .show()
@@ -608,8 +613,10 @@ function delete_orphans_block(blockSize?: number) {
       blockSize: blockSize,
     }),
     dataType: "json",
-    success: function (data: any) {
-      jQuery("#orphans_to_delete").html(data.nbOrphans);
+    success: function (
+      data: import("../../../../openapi/client/schema").operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"],
+    ) {
+      jQuery("#orphans_to_delete").html(String(data.nbOrphans));
 
       const percent_remaining = Number(
         (
@@ -632,7 +639,7 @@ function delete_orphans_block(blockSize?: number) {
         window.location.href = redirect_to;
       }
     },
-    error: function (XMLHttpRequest: any) {
+    error: function (XMLHttpRequest: JQuery.jqXHR) {
       jQuery("#orphans_deletion").hide();
       jQuery("#orphans_deletion_error")
         .show()

@@ -17,6 +17,7 @@ function makeSearchFiltersView(
     ?array $width = null,
     string $userRank = 'none',
     string $colorscheme = 'light',
+    string $csrfToken = 'token',
 ): SearchFiltersView {
     return new SearchFiltersView(
         displayFilter: [],
@@ -41,6 +42,7 @@ function makeSearchFiltersView(
         dateCreated: null,
         colorscheme: $colorscheme,
         userRank: $userRank,
+        csrfToken: $csrfToken,
     );
 }
 
@@ -52,6 +54,7 @@ test('exposedPageData omits every nullable field when unset', function (): void 
             'global_params_json' => '{}',
             'user_rank' => 'none',
             'show_filter_ratings' => true,
+            'csrf_token' => 'token',
         ]);
 });
 
@@ -79,6 +82,7 @@ test('exposedPageData includes every nullable field once set', function (): void
             'global_params_json' => '{}',
             'user_rank' => 'admin',
             'show_filter_ratings' => true,
+            'csrf_token' => 'token',
             'fullname_of_cat_json' => '{"1":"Album"}',
             'search_id' => 'abc123',
             'filesize' => [

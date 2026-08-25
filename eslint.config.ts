@@ -95,6 +95,39 @@ export default tseslint.config(
     },
   },
   {
+    // album_selector.ts's own P48 module conversion (docs/PLAN.md) --
+    // real consumers of its `AlbumSelector` class, imported through the
+    // `?dup` suffix (build/vite-modules.d.ts's own ambient ``declare
+    // module "*album_selector?dup"`` with real named re-exports, Design
+    // §4). `tsc --noEmit` resolves this cleanly (confirmed directly,
+    // clean end-to-end), but typescript-eslint's own `projectService`
+    // does not resolve the same ambient wildcard module the same way
+    // `tsc` does (confirmed directly: every real `AlbumSelector` usage
+    // in these files reports as "unsafe call/member access on an error
+    // type" under `eslint`, even though the exact same code type-checks
+    // fine under `tsc`) -- a real tool divergence, not a real type-safety
+    // gap, so only the 4 rules that misfire from it are relaxed here,
+    // not `no-explicit-any` (unlike the P47 block above, nothing in
+    // these files is a real, deliberate `any`). mcs.ts's own copy of
+    // this same usage needs no entry here -- already covered by the
+    // broader P47 block above.
+    files: [
+      "themes/admin/default/js/batchManagerFilter.ts",
+      "themes/admin/default/js/batchManagerGlobal.ts",
+      "themes/admin/default/js/batchManagerUnit.ts",
+      "themes/admin/default/js/cat_modify.ts",
+      "themes/admin/default/js/cat_search.ts",
+      "themes/admin/default/js/photos_add_direct.ts",
+      "themes/admin/default/js/picture_modify.ts",
+    ],
+    rules: {
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+    },
+  },
+  {
     // Match the plain-JS block's own `^_`-prefixed-means-intentionally-
     // unused convention (see the `no-unused-vars` rule above) --
     // `recommendedTypeChecked` enables `@typescript-eslint/no-unused-vars`

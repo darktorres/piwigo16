@@ -154,10 +154,11 @@ interface Window {
   // real exposure" note as common.ts's own copy of this comment).
   // `EntityCacheCtor<T>`/`ProcessedCategory`/`ProcessedTag`/
   // `ProcessedGroup`/`UserEntity` (P47) are LocalStorageCache.ts's own
-  // top-level ambient types -- that file is a genuinely non-module IIFE,
-  // same technique as album_selector.ts's `AlbumSelectorInstance`, so
-  // referencing them bare here is a real (not `any`) cross-file ambient
-  // dependency, not a redeclaration.
+  // top-level ambient types -- that file is a genuinely non-module IIFE
+  // (same technique `AlbumSelectorInstance`/`AlbumSelectorOptions`/etc.
+  // below used to back for album_selector.ts, before that file's own
+  // P48 module conversion), so referencing them bare here is a real
+  // (not `any`) cross-file ambient dependency, not a redeclaration.
   CategoriesCache: EntityCacheCtor<ProcessedCategory>;
   TagsCache: EntityCacheCtor<ProcessedTag>;
   GroupsCache: EntityCacheCtor<ProcessedGroup>;
@@ -167,18 +168,6 @@ interface Window {
   // .js, even though no other real file reads it bare today; typed for
   // the same "same code" completeness reason, not because it's used.
   LocalStorageCache: LocalStorageCacheCtor;
-
-  // album_selector.ts's own established shared-global set (confirmed via
-  // the P46-C full 61-file sweep, not this plan's earlier 5-minute
-  // spot-check -- see docs/PLAN.md's own sweep writeup for the full
-  // per-name evidence). Return type tightened from `any` to
-  // `AlbumSelectorInstance` (P47) -- the real class's own internal
-  // fields stay loosely typed until album_selector.ts's own P47-B turn,
-  // this ambient type only promises the public contract its consumers
-  // actually rely on.
-  str_albums_found: string;
-  str_result_limit: string;
-  AlbumSelector: new (options: AlbumSelectorOptions) => AlbumSelectorInstance;
 
   // batchManagerGlobal.ts's own 4 functions, called from
   // batch_manager_global.latte's own `href="javascript:

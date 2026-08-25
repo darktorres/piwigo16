@@ -2,12 +2,19 @@
 // existing OpenAPI schema. Declared as top-level `type X =
 // import(...)` aliases, not real `import` statements -- this file is
 // a genuinely non-module IIFE (`(function ($, exports) {...})(jQuery,
-// window)`), same technique already verified safe in album_selector.ts.
-// `CategoryAdmin` itself is NOT redeclared here: album_selector.ts is
-// also non-module, so its own identical `type CategoryAdmin = ...`
-// alias is already a real ambient global visible here too -- a second
-// declaration of the same name would be a real duplicate-identifier
-// conflict, not just redundant.
+// window)`).
+//
+// `CategoryAdmin` duplicates album_selector.ts's own identically-named,
+// identically-defined type alias -- until that file's own P48 module
+// conversion (docs/PLAN.md), its non-exported `type CategoryAdmin` was
+// a real ambient global visible here too, so this file didn't need its
+// own copy; a second declaration would have been a real
+// duplicate-identifier conflict. Now that album_selector.ts is a real
+// module, its own types are module-private, so this file needs (and,
+// since this file itself is still non-module, safely can have) its own
+// local copy -- a pure type alias, safe to duplicate.
+type CategoryAdmin =
+  import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
 type TagAdmin =
   import("../../../../openapi/client/schema").operations["tagList"]["responses"][200]["content"]["application/json"]["tags"][number];
 type GroupEntity =

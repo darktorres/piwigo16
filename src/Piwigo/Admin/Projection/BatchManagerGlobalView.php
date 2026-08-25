@@ -22,7 +22,7 @@ use Piwigo\Template\Projection\QuickSearchView;
  * `count($cat_elements_id) > 0` branch. No `$usedMetadata` field -- the
  * template's own body (and `batch_manager_global.js`'s
  * `pwg_getPageData()` reads) never reference it. No `$fAction`/
- * `$start`/`$csrfToken`/`$uDisplay`/`$selection` field either -- those
+ * `$start`/`$uDisplay`/`$selection` field either -- those
  * stay genuinely ambient here: `FilterPanelRenderer::render()` (called
  * earlier in the same request, still on the old assignContext()
  * mechanism) assigns them directly onto the same `Template` instance's
@@ -39,7 +39,14 @@ use Piwigo\Template\Projection\QuickSearchView;
  * always included (even empty) since
  * the template reads it with `{if !empty($thumbnails)}`, not `isset()`.
  * Each `$thumbnails` row stays a loose, dynamically `array_merge()`-built
- * shape, same precedent as `PluginsInstalledView::$plugins`.
+ * shape, same precedent as `PluginsInstalledView::$plugins`. `$csrfToken`
+ * is a real constructor property (not read back from the ambient bag
+ * like the 5 above) -- that bag only ever fed the Latte template's own
+ * direct reads, never this class's own `exposedPageData()` JSON island,
+ * a real pre-existing gap found via album_selector.ts's own P48 module
+ * conversion (docs/PLAN.md): this page embeds `AlbumSelectorView`,
+ * whose real `#create_album()` reads the CSRF token via
+ * `pwg_getPageData<string>("csrf_token")` -- never exposed here before.
  */
 #[Template('batch_manager_global.latte')]
 final readonly class BatchManagerGlobalView implements View, HasPageAssets, ExposesPageData
@@ -79,6 +86,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         public array $filterDimensions,
         public array $filterFilesize,
         public ?int $filterCategorySelected,
+        public string $csrfToken,
     ) {}
 
     /**
@@ -178,6 +186,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             'dimensions' => $this->filterDimensions,
             'filesize' => $this->filterFilesize,
             'filter_category_selected' => $this->filterCategorySelected,
+            'csrf_token' => $this->csrfToken,
         ];
     }
 

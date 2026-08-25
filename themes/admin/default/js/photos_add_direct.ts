@@ -4,6 +4,12 @@ import type {
   HttpResponse as TusHttpResponse,
 } from "tus-js-client";
 import type { operations, components } from "../../../../openapi/client/schema";
+// Real consumer of album_selector.ts's own top-level `class
+// AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
+// see that file's own leading comment for the full real-consumer
+// list). `?dup` since album_selector.ts has several real registrant
+// pages (Design §4).
+import { AlbumSelector } from "./album_selector?dup";
 
 export {};
 
@@ -54,13 +60,10 @@ interface MultipartParams {
   update_mode?: boolean;
 }
 
-// Consumer of album_selector.ts's own real, top-level `class
-// AlbumSelector` -- resolves directly via that file's own real
-// declaration, same reasoning as every other AlbumSelector consumer
-// this batch (the last of the 5). `add_related_category` is declared
-// here too, independently of the same-named functions in mcs.js/
-// cat_modify.ts/batchManagerUnit.ts/picture_modify.ts (docs/PLAN.md
-// P46-B's own finding) -- safe since these pages never co-load.
+// `add_related_category` is declared here too, independently of the
+// same-named functions in mcs.js/cat_modify.ts/batchManagerUnit.ts/
+// picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
+// these pages never co-load.
 //
 // First file in P46 to use the vendored plupload/Piecon/tus-js-client
 // globals -- their ambient types (loosely typed, matching every other

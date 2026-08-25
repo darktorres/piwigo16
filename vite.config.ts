@@ -35,8 +35,8 @@ export default defineConfig({
     // duplicates the real compiled code into each consuming entry
     // instead. The fixed (no wildcard-in-the-middle) `?dup` suffix is
     // also what makes `build/vite-modules.d.ts`'s own ambient
-    // `declare module "*?dup"` valid -- TypeScript's wildcard module
-    // patterns only support a single `*`, confirmed directly (a
+    // `declare module "*?dup"` patterns valid -- TypeScript's wildcard
+    // module patterns only support a single `*`, confirmed directly (a
     // `"*?dup=*"`-shaped pattern, tried first, left both real
     // importers as real `tsc` errors). `enforce: "pre"` is load-bearing,
     // confirmed directly -- without it, Vite's own core resolver
@@ -138,10 +138,12 @@ export default defineConfig({
         // found: common.ts/LocalStorageCache.ts were already known;
         // album_selector.ts/intro.ts are new findings). intro.ts is no
         // longer its own entry (docs/PLAN.md P48) -- see the pages/
-        // entries below, its one real registrant.
+        // entries below, its one real registrant. album_selector.ts is
+        // no longer its own entry either (docs/PLAN.md P48, its own
+        // later batch) -- it has 8 real consumer files, each importing
+        // its code directly via a `?dup` import instead.
         adminCommon: r("themes/admin/default/js/common.ts"),
         localStorageCache: r("themes/admin/default/js/LocalStorageCache.ts"),
-        albumSelector: r("themes/admin/default/js/album_selector.ts"),
         // P46-C part 2 — the genuinely bidirectional pair (see both
         // files' own leading comments for the real ordering-safety
         // analysis). Neither is its own entry any more (docs/PLAN.md

@@ -41,6 +41,7 @@ use Piwigo\Core\PaginationService;
 use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SortRenderer;
 use Piwigo\History\HistoryService;
 use Piwigo\Html\HtmlService;
@@ -109,6 +110,7 @@ final readonly class GalleryController implements ControllerInterface
         private PermissionService $permissionService,
         private EntityManagerInterface $entityManager,
         private Renderer $renderer,
+        private CsrfService $csrfService,
     ) {}
 
     #[Override]
@@ -309,6 +311,7 @@ final readonly class GalleryController implements ControllerInterface
                 dateCreated: $searchFilterResult->data->dateCreated,
                 colorscheme: $template->themeConf('colorscheme'),
                 userRank: $user_rank,
+                csrfToken: $this->csrfService->getToken(),
             ));
             $template->assignContext(new SearchFiltersHtmlPageContext($searchFiltersHtml));
         }

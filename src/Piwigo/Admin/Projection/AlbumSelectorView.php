@@ -40,33 +40,29 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * `$load_mode` default it fed) was removed once that coverage was
  * confirmed complete.
  *
- * `$load_mode` is genuinely optional -- the template's own
- * `{if empty($load_mode)}{var $load_mode = 'footer'}{/if}` default
- * applies at all 7 real call sites, none of which pass it explicitly.
+ * No `$load_mode` constructor param any more (docs/PLAN.md's P48) --
+ * it only ever fed `album_selector.ts`'s own standalone script
+ * registration below, vestigial now that album_selector.ts has 8 real
+ * consumer files, each with its own real `?dup` import instead (see
+ * that file's own leading comment).
  */
 #[TemplateAttr('include/album_selector.inc.latte')]
 final readonly class AlbumSelectorView implements View, HasPageAssets, ExposesPageData
 {
-    public function __construct(
-        public ?string $load_mode = null,
-    ) {}
-
     /**
      * @return list<AssetContribution>
      */
     #[Override]
     public function pageAssets(): array
     {
-        $loadMode = match ($this->load_mode) {
-            'header' => LoadMode::Header,
-            'async' => LoadMode::Async,
-            default => LoadMode::Footer,
-        };
-
         return [
             AssetContribution::css('themes/admin/default/css/components/album_selector.css'),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            AssetContribution::script('albumSelector', 'themes/admin/default/js/album_selector.ts', loadMode: $loadMode, dependsOn: ['page-data']),
+            // album_selector.ts's own registration is no longer here
+            // (docs/PLAN.md P48) -- it has 8 real consumer files, each
+            // folding its code in via its own `?dup` import instead of
+            // one shared standalone script tag (the same reasoning as
+            // AutosizeView/DatepickerView's own P48 batches).
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
         ];
     }

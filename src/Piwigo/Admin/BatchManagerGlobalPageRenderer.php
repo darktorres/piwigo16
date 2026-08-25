@@ -598,6 +598,7 @@ final readonly class BatchManagerGlobalPageRenderer
             filterDimensions: is_array($filter_dimensions_raw) ? $filter_dimensions_raw : [],
             filterFilesize: is_array($filter_filesize_raw) ? $filter_filesize_raw : [],
             filterCategorySelected: is_int($filter_category_selected_raw) ? $filter_category_selected_raw : null,
+            csrfToken: $this->csrfService->getToken(),
         ));
 
         $this->eventDispatcher->dispatch(new BatchManagerGlobalRendered());

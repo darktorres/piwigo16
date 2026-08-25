@@ -1,26 +1,35 @@
+// Real consumer of album_selector.ts's own top-level `str_albums_found`/
+// `str_result_limit`/`str_album_found` (docs/PLAN.md P48 -- was a bare
+// ambient-global read, coincidentally type-checking with no real
+// runtime source at all: this page (albums.php/cat_list.php) never
+// embedded album_selector.ts's script before this batch, a real
+// pre-existing gap, fixed here by AlbumsView.php gaining a real
+// registration for this file's own new dependency). `str_album_found`
+// specifically is a real, genuinely coincidental duplicate of
+// albums.ts's own identically-worded `const str_album_found` --
+// imported from album_selector.ts here purely because that's where the
+// bare read already (coincidentally) resolved before this batch, not
+// because it's the semantically "correct" owner; see album_selector.ts's
+// own leading comment.
+import {
+  str_albums_found,
+  str_result_limit,
+  str_album_found,
+} from "./album_selector?dup";
+
 export {};
 
-// Consumer of album_selector.ts's own established shared-global set
-// (docs/PLAN.md P46-C's full sweep): str_albums_found/str_result_limit,
-// both read bare below -- already resolved by album_selector.ts's own
-// real `const` declarations, no ambient binding needed (same reasoning
-// as intro_tooltips.ts's own copy of this comment).
-//
-// Also reads `data`/`str_album_found` -- both real top-level `const`s in
+// Also reads `data` -- a real top-level `const` in
 // themes/admin/default/js/albums.ts (a real `dependsOn: ['albums']`
 // registration -- AlbumsView.php) -- a genuine cross-file relationship
-// the plan's own full 61-file sweep missed (both names are exactly the
-// kind of generic/short identifier the sweep's own false-positive
-// filtering excluded). Correction found by real strict typechecking
-// (deferred to the end of the P46 conversion, per session instruction):
-// unlike every other declarer-converts-later case, albums.ts *does*
-// have `export {}` -- its own real declarations are module-private, not
-// ambient, so a bare `data` read here is a genuine TS2304 "Cannot find
-// name" compile error (`str_album_found` happened to typecheck anyway,
-// coincidentally resolved by album_selector.ts's own independent,
-// still-non-module `const str_album_found` -- a landmine for a future
-// reader, not a real fix, left alone since it's harmless: same message
-// text). Fixed by reading `data` through `window.data` explicitly --
+// the plan's own full 61-file sweep missed (a generic/short identifier
+// the sweep's own false-positive filtering excluded). Correction found
+// by real strict typechecking (deferred to the end of the P46
+// conversion, per session instruction): unlike every other
+// declarer-converts-later case, albums.ts *does* have `export {}` --
+// its own real declarations are module-private, not ambient, so a bare
+// `data` read here is a genuine TS2304 "Cannot find name" compile
+// error. Fixed by reading `data` through `window.data` explicitly --
 // TS-valid via the shared `Window` interface, and behaviorally
 // identical at runtime (a bare, undeclared-in-this-file identifier read
 // already resolves through the global object the same way).

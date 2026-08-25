@@ -1,4 +1,10 @@
 import type { operations } from "../../../openapi/client/schema";
+// Real consumer of album_selector.ts's own top-level `class
+// AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector` read,
+// see that file's own leading comment for the full real-consumer
+// list). `?dup` since album_selector.ts has several real registrant
+// pages (Design §4).
+import { AlbumSelector } from "../../admin/default/js/album_selector?dup";
 
 export {};
 
@@ -447,7 +453,7 @@ $(document).ready(function () {
     });
 
     // Load Album Selector
-    ab = new window.AlbumSelector({
+    ab = new AlbumSelector({
       selectedCategoriesIds: global_params.fields.cat.words,
       selectAlbum: add_related_category,
       removeSelectedAlbum: remove_related_category,

@@ -1,14 +1,14 @@
 export {};
 
-// Consumer of album_selector.ts's own real, top-level `class
-// AlbumSelector` -- resolves directly via that file's own real
-// declaration (album_selector.ts stays a global script, no `export
-// {}`), same "every themes/**/*.ts file shares one global
-// type-checking program" reasoning as every other consumer file this
-// session. `CategoriesCache`/`TagsCache` are different: LocalStorageCache.ts
-// wraps them in its own real, pre-existing IIFE, so they're only
-// reachable via `window.` -- same `window.` prefixing already used in
-// batch_manager_global.ts's own copy of this pattern.
+// Real consumer of album_selector.ts's own top-level `class
+// AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
+// see that file's own leading comment for the full real-consumer
+// list). `?dup` since album_selector.ts has several real registrant
+// pages (Design §4). `CategoriesCache`/`TagsCache` are different:
+// LocalStorageCache.ts wraps them in its own real, pre-existing IIFE,
+// so they're only reachable via `window.` -- same `window.` prefixing
+// already used in batch_manager_global.ts's own copy of this pattern.
+import { AlbumSelector } from "./album_selector?dup";
 //
 // `add_related_category`/`remove_related_category` are declared here
 // too, independently of the same-named functions in mcs.js/

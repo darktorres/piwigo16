@@ -1,13 +1,24 @@
+// Real consumer of album_selector.ts's own top-level `class
+// AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
+// see that file's own leading comment for the full real-consumer
+// list). `?dup` since album_selector.ts has several real registrant
+// pages (Design §4). This file is itself its own single Vite entry,
+// registered (as the identical compiled file) on 2 real pages
+// (batch_manager_unit.php, batch_manager_global.php) -- each of those
+// pages also separately `?dup`-imports album_selector.ts from its own
+// other real consumer (batchManagerUnit.ts / batchManagerGlobal.ts),
+// so this file's own copy here is the 2nd of 2 independent
+// `AlbumSelector` class copies coexisting on either page -- a real,
+// accepted consequence documented in album_selector.ts's own leading
+// comment.
+import { AlbumSelector } from "./album_selector?dup";
+
 export {};
 
-// Consumer of album_selector.ts's own real, top-level `class
-// AlbumSelector` -- resolves directly via that file's own real
-// declaration, same reasoning as picture_modify.ts's own copy of this
-// comment. `sliders` here is a genuinely independent, unrelated
-// top-level `var` from search_filters.ts's own `window.sliders` (a
-// different theme, a different page, never co-loaded) -- this file's
-// own `export {}` module isolation keeps the two from ever colliding
-// regardless.
+// `sliders` here is a genuinely independent, unrelated top-level `var`
+// from search_filters.ts's own `window.sliders` (a different theme, a
+// different page, never co-loaded) -- this file's own `export {}`
+// module isolation keeps the two from ever colliding regardless.
 interface DimensionsData {
   widths: string;
   heights: string;

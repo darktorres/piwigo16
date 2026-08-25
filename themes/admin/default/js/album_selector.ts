@@ -1,10 +1,37 @@
+// Real module now (docs/PLAN.md P48 -- was a non-module ambient-global
+// declarer pre-P48, see git history for the pre-P48 shape). 8 real
+// consumer files (all found via a direct grep, not just this file's own
+// prior "12 real registrant pages" comment further down, which named
+// only 6): cat_search.ts (bare `str_albums_found`/`str_result_limit`
+// reads only, no `AlbumSelector` instantiation -- registered on
+// albums.php via a NEW `AssetContribution` this same batch adds, a
+// real pre-existing gap: cat_search.ts's own bare reads never had a
+// real runtime source before, since albums.php never embedded this
+// file's script), and picture_modify.ts/photos_add_direct.ts/
+// cat_modify.ts/batchManagerUnit.ts/batchManagerGlobal.ts/
+// batchManagerFilter.ts/mcs.ts (all `new AlbumSelector(...)`).
+//
+// Every real consumer imports via the `?dup` suffix (Design §4) --
+// this file has many real registrant pages. On the 2 pages where 2
+// real consumer files coexist (batch_manager_unit.php:
+// batchManagerUnit.ts + batchManagerFilter.ts; batch_manager_global.php:
+// batchManagerGlobal.ts + batchManagerFilter.ts), each file's own
+// independent `?dup` import means 2 separate `AlbumSelector` class
+// copies load on that one page -- a real, accepted behavior change
+// (docs/PLAN.md's own Design §6 precedent for documented, unavoidable
+// changes): `activeAlbumSelector`'s single-active-popup coordination
+// (below) no longer spans both widgets on those 2 pages specifically,
+// since each copy tracks its own independent module state. No safe
+// single-copy alternative exists here -- unlike batchManagerGlobal.ts/
+// batch_manager_global.ts's own circular pair, batchManagerFilter.ts is
+// itself shared across 2 different pages, so it can't statically import
+// "the one true copy" from either page's own hub file.
+//
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),
 // via the existing OpenAPI schema. Kept as top-level `type X = import(...)`
-// aliases, not a real `import` statement -- confirmed via a local tsc
-// repro that this does NOT turn this non-module declarer file into a
-// module (its own top-level `class AlbumSelector` must stay a real
-// ambient global for every bare `new AlbumSelector(...)` consumer).
+// aliases -- real `import(...)` type-only references, distinct from this
+// file's own real `export`s below.
 type CategoryAdmin =
   import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
 type CategoryAvailable =
@@ -35,9 +62,19 @@ const str_plus_albums_found = pwg_getPageString(
 );
 const str_album_selected = pwg_getPageString("Album already selected");
 const str_no_search_in_progress = pwg_getPageString("No search in progress");
-const str_albums_found = pwg_getPageString("<b>%d</b> albums found");
-const str_album_found = pwg_getPageString("<b>1</b> album found");
-const str_result_limit = pwg_getPageString(
+// Real cross-file exports -- cat_search.ts's own sole real need from
+// this file (docs/PLAN.md P48, see the leading comment further down).
+export const str_albums_found = pwg_getPageString("<b>%d</b> albums found");
+// A real, genuinely coincidental duplicate of albums.ts's own
+// identically-named, identically-worded `const str_album_found`
+// (cat_search.ts's own leading comment has the full history) --
+// exported here (not fixed to import from albums.ts instead, that
+// file's own P48 conversion is a separate future batch) purely because
+// this file becoming a real module would otherwise silently turn
+// cat_search.ts's existing bare read into a real TS2304 compile error,
+// not because this is the semantically "correct" owner.
+export const str_album_found = pwg_getPageString("<b>1</b> album found");
+export const str_result_limit = pwg_getPageString(
   "<b>%d+</b> albums found, try to refine the search",
 );
 const str_add_subcat_of = pwg_getPageString("Add a sub-album to “%s”");
@@ -89,7 +126,7 @@ const pwg_token = pwg_getPageData<string>("csrf_token");
  * @param {String} modalTitle - Custom title for the album selector modal.
  * @param {String} modalSearchPlaceholder - Custom placeholder text for the search input in the modal.
  */
-class AlbumSelector {
+export class AlbumSelector {
   instanceId: string;
   #in_admin_mode: boolean;
   #methodPwg: string;
@@ -904,13 +941,3 @@ class AlbumSelector {
     });
   }
 }
-
-// Explicit `window.` exposure -- required, not decorative (see
-// page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
-// full explanation). `cat_search.ts` reads the 2 strings bare;
-// batchManagerFilter.ts/batchManagerGlobal.ts/batchManagerUnit.ts/
-// cat_modify.ts/photos_add_direct.ts/picture_modify.ts all instantiate
-// `new AlbumSelector(...)` bare, confirmed via the P46-C full sweep.
-window.str_albums_found = str_albums_found;
-window.str_result_limit = str_result_limit;
-window.AlbumSelector = AlbumSelector;

@@ -1,4 +1,12 @@
 import type { operations } from "../../../../openapi/client/schema";
+// Real consumer of album_selector.ts's own top-level `class
+// AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
+// see that file's own leading comment for the full real-consumer
+// list, including the real, accepted "2 independent class copies on
+// this page" consequence of batchManagerFilter.ts's own separate
+// `?dup` import). `?dup` since album_selector.ts has several real
+// registrant pages (Design §4).
+import { AlbumSelector } from "./album_selector?dup";
 
 export {};
 
@@ -29,13 +37,10 @@ interface ImageUpdateBody {
   [key: string]: unknown;
 }
 
-// Consumer of album_selector.ts's own real, top-level `class
-// AlbumSelector` -- resolves directly via that file's own real
-// declaration, same reasoning as every other AlbumSelector consumer
-// this batch. `CategoriesCache`/`TagsCache` are different:
-// LocalStorageCache.ts wraps them in its own real, pre-existing IIFE,
-// so they're only reachable via `window.` -- same prefixing already
-// used in batch_manager_global.ts/picture_modify.ts.
+// `CategoriesCache`/`TagsCache` are different: LocalStorageCache.ts
+// wraps them in its own real, pre-existing IIFE, so they're only
+// reachable via `window.` -- same prefixing already used in
+// batch_manager_global.ts/picture_modify.ts.
 //
 // `add_related_category` is declared here too, independently of the
 // same-named functions in mcs.js/cat_modify.ts/photos_add_direct.js/

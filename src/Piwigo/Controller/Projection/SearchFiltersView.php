@@ -77,6 +77,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
         public ?array $dateCreated,
         public string $colorscheme,
         public string $userRank,
+        public string $csrfToken,
     ) {}
 
     /**
@@ -104,7 +105,13 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/default/css/' . $this->colorscheme . '-search.css', order: -100),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
             AssetContribution::script('search_filters', 'themes/default/js/search_filters.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
-            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            // 'page-data' added to this registration's own dependsOn
+            // (docs/PLAN.md's P48, album_selector.ts's own batch): this
+            // file's real `?dup` import of album_selector.ts embeds that
+            // file's own top-level `pwg_getPageString()` calls directly
+            // into this bundle, a real new dependency on page-data.ts
+            // having already run that didn't exist before this batch.
+            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'page-data']),
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')
@@ -128,6 +135,17 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             'global_params_json' => $this->gp,
             'user_rank' => $this->userRank,
             'show_filter_ratings' => $this->showFilterRatings,
+            // Real pre-existing gap, found via album_selector.ts's own
+            // P48 module conversion (docs/PLAN.md): this view embeds
+            // AlbumSelectorView, whose real `#create_album()` reads the
+            // CSRF token via `pwg_getPageData<string>("csrf_token")` --
+            // never exposed here before. Unreachable in practice today
+            // (mcs.ts's own `new AlbumSelector(...)` call never passes
+            // `adminMode: true`, so `#create_album()` itself is never
+            // reachable), but exposed anyway for the same defensive
+            // correctness as BatchManagerGlobalView's/PictureModifyView's
+            // own copy of this fix.
+            'csrf_token' => $this->csrfToken,
         ];
 
         if ($this->fullnameOf !== null) {

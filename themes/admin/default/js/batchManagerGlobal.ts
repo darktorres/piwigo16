@@ -16,6 +16,14 @@ import {
   str_add_alb_associate,
   str_select_alb_associate,
 } from "./batch_manager_global";
+// Real consumer of album_selector.ts's own top-level `class
+// AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector`
+// read, see that file's own leading comment for the full real-consumer
+// list, including the real, accepted "2 independent class copies on
+// this page" consequence of batchManagerFilter.ts's own separate
+// `?dup` import). `?dup` since album_selector.ts has several real
+// registrant pages (Design §4).
+import { AlbumSelector } from "./album_selector?dup";
 
 /* ********** Thumbs */
 
@@ -64,7 +72,7 @@ jQuery(document).ready(function () {
   };
   jQuery("ul.thumbnails").enableShiftClick();
 
-  const ab_action = new window.AlbumSelector({
+  const ab_action = new AlbumSelector({
     adminMode: true,
     selectAlbum: select_album_action,
     removeSelectedAlbum: remove_album_action,

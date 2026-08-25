@@ -1,17 +1,36 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
+
+type HistorySearchResponse =
+  operations["historySearch"]["responses"][200]["content"]["application/json"];
+type HistoryLine = HistorySearchResponse["lines"][number];
+type HistorySummary = HistorySearchResponse["summary"];
+type HistorySearchDetails = NonNullable<HistoryLine["searchDetails"]>;
+
+interface HistoryFilterParams {
+  start: string;
+  end: string;
+  types: Record<number, string>;
+  user_id: string | number;
+  image_id: string | number;
+  filename: string;
+  ip: string;
+  pageNumber: number;
+}
 
 const dateObj = new Date();
 let month: number | string = dateObj.getUTCMonth() + 1; //months from 1-12
 let day: number | string = dateObj.getUTCDate();
 const year = dateObj.getUTCFullYear();
 
-const filter_user_name = pwg_getPageData("user_name");
+const filter_user_name = pwg_getPageData<string>("user_name");
 
 if (month < 10) month = "0" + month;
 if (day < 10) day = "0" + day;
 
 const today = year + "-" + month + "-" + day;
-const current_param: Record<string, any> = {
+const current_param: HistoryFilterParams = {
   start: "",
   end: today,
   types: {
@@ -20,10 +39,10 @@ const current_param: Record<string, any> = {
     2: "high",
     3: "other",
   },
-  user_id: pwg_getPageData("user_id"),
-  image_id: pwg_getPageData("image_id"),
+  user_id: pwg_getPageData<number>("user_id"),
+  image_id: pwg_getPageData<string>("image_id"),
   filename: "",
-  ip: pwg_getPageData("ip"),
+  ip: pwg_getPageData<string>("ip"),
   pageNumber: 0, // fetch lines from line 0 to line 100
 };
 
@@ -55,7 +74,7 @@ const str_search_details: Record<string, string> = {
 };
 const str_and_more = pwg_getPageString("and %d more");
 
-const guest_id = pwg_getPageData("guest_id");
+const guest_id = pwg_getPageData<number>("guest_id");
 
 $(document).ready(() => {
   activateLineOptions();
@@ -102,7 +121,8 @@ $(document).ready(() => {
     if (
       current_param.start != $('.date-start input[name="start"]').attr("value")
     ) {
-      current_param.start = $('.date-start input[name="start"]').attr("value");
+      current_param.start =
+        $('.date-start input[name="start"]').attr("value") ?? "";
       current_param.pageNumber = 0;
       fillHistoryResult(current_param);
     }
@@ -111,7 +131,7 @@ $(document).ready(() => {
   $(".date-end").on("change", function () {
     const newValue = $('.date-end input[name="end"]').attr("value");
     if (current_param.end != newValue) {
-      current_param.end = $('.date-end input[name="end"]').attr("value");
+      current_param.end = $('.date-end input[name="end"]').attr("value") ?? "";
       current_param.pageNumber = 0;
       // The datepicker first fills the end-date with '1899-12-31',
       // which triggers an unnecessary ajax request
@@ -182,11 +202,11 @@ function activateLineOptions() {
 
   /* Hide img options and rename field on click on the screen */
 
-  $(document).mouseup(function (e: any) {
+  $(document).mouseup(function (e) {
     e.stopPropagation();
     let option_is_clicked = false;
     $(".img-option span").each(function () {
-      if (!($(this).has(e.target).length === 0)) {
+      if (!($(this).has(e.target as unknown as Element).length === 0)) {
         option_is_clicked = true;
       }
     });
@@ -196,12 +216,12 @@ function activateLineOptions() {
   });
 }
 
-function fillSummaryResult(summary: any) {
+function fillSummaryResult(summary: HistorySummary) {
   $(".user-list").empty();
 
   $(".summary-lines .summary-data").html(summary.nbLinesText);
   $(".summary-weight .summary-data").html(
-    unit_MB.replace("%s", summary.filesizeMb),
+    unit_MB.replace("%s", String(summary.filesizeMb)),
   );
   $(".summary-users .summary-data").html(summary.usersText);
   $(".summary-guests .summary-data").html(summary.guestsText);
@@ -228,19 +248,19 @@ function fillSummaryResult(summary: any) {
   }
 
   const user_dot_title = summary.members
-    .map((member: any) => member.username)
+    .map((member) => member.username)
     .join(", ");
   $(".user-dot").attr("title", user_dot_title).addClass("tiptip");
 
   let tmp = 0;
   $(".user-dot").hide();
   // summary.members is already ordered most-active-first
-  summary.members.forEach((member: any) => {
+  summary.members.forEach((member) => {
     if (tmp < 5) {
       const new_user_item = $("#-2").clone();
 
       new_user_item.removeClass("hide");
-      new_user_item.find(".user-item-name").html(member.username);
+      new_user_item.find(".user-item-name").html(member.username ?? "");
       new_user_item.data("user-id", member.userId);
 
       new_user_item.on("click", function () {
@@ -269,8 +289,8 @@ function showResults(doShow: boolean) {
   }
 }
 
-function fillHistoryResult(ajaxParam: any) {
-  let maxPage: any;
+function fillHistoryResult(ajaxParam: HistoryFilterParams) {
+  let maxPage = 0;
   $.ajax({
     url: "api/v1/history/search",
     data: ajaxParam,
@@ -280,7 +300,7 @@ function fillHistoryResult(ajaxParam: any) {
       $(".noResults").hide();
       $(".tab").empty();
     },
-    success: function (raw_data: any) {
+    success: function (raw_data: HistorySearchResponse) {
       const data = raw_data.lines;
       maxPage = raw_data.maxPage;
       const summary = raw_data.summary;
@@ -289,7 +309,7 @@ function fillHistoryResult(ajaxParam: any) {
 
       if (data.length > 0) {
         let id = 0;
-        data.forEach((line: any) => {
+        data.forEach((line) => {
           lineConstructor(line, id);
           id++;
         });
@@ -302,7 +322,7 @@ function fillHistoryResult(ajaxParam: any) {
         $(".noResults").show();
       }
     },
-    error: function (e: any) {
+    error: function (e: JQuery.jqXHR) {
       console.log(e);
     },
   }).done(() => {
@@ -318,7 +338,7 @@ function fillHistoryResult(ajaxParam: any) {
   });
 }
 
-function lineConstructor(line: any, id: any) {
+function lineConstructor(line: HistoryLine, id: number) {
   const newLine = $("#-1").clone();
 
   const sections = [
@@ -354,7 +374,7 @@ function lineConstructor(line: any, id: any) {
   newLine.attr("id", id);
   // console.log(id);
 
-  newLine.find(".date-day").html(line.dateFormatted);
+  newLine.find(".date-day").html(line.dateFormatted ?? "");
   newLine.find(".date-hour").html(line.time);
 
   newLine
@@ -407,7 +427,16 @@ function lineConstructor(line: any, id: any) {
       });
   }
 
-  switch (line.SECTION) {
+  // Genuine pre-existing bug found via strict typing: this read
+  // `line.SECTION` (uppercase) -- a property that has never existed on
+  // any real history line (confirmed via grep, no PHP source ever
+  // writes it; the real field is `section`, read correctly two other
+  // places in this same function, below). Every line therefore always
+  // fell through to `default`, showing a generic "unrecognized" entry
+  // with no type-specific label/detail text, even though its section
+  // icon (via the separate `sections.indexOf(line.section)` lookup
+  // further down) rendered correctly. Fixed to the real field.
+  switch (line.section) {
     case "tags": {
       if (line.tagNames.length > 1 && line.tagNames.length <= 2) {
         newLine
@@ -439,12 +468,12 @@ function lineConstructor(line: any, id: any) {
               ", ...",
           );
       } else {
-        newLine.find(".type-name").html(line.tagNames[0]);
+        newLine.find(".type-name").html(line.tagNames[0] ?? "");
         newLine.find(".type-id").html("#" + line.tagIds[0]);
       }
 
       let detail_str = "";
-      line.tagNames.forEach((tag: any) => {
+      line.tagNames.forEach((tag) => {
         detail_str += tag + ", ";
       });
       detail_str = detail_str.slice(0, -2);
@@ -479,6 +508,12 @@ function lineConstructor(line: any, id: any) {
       // for debug
       // console.log('search n° : ', line.searchId, ' ', line.searchDetails);
       const search_details = line.searchDetails;
+      // Genuinely heterogeneous per-filter-type search-criteria data
+      // (same nature as search_filters.ts's own global_params/
+      // fullname_of_cat, deferred to P48) -- each key's real value
+      // shape (string[], a nested object, or an opaque `filetypes`
+      // blob) varies by which filter was active on the saved search
+      // this line's `searchId` refers to.
       const search_icons: Record<string, any> = {
         allwords: "gallery-icon-search",
         tags: "gallery-icon-tag",
@@ -488,7 +523,7 @@ function lineConstructor(line: any, id: any) {
         addedBy: "gallery-icon-user",
         filetypes: "gallery-icon-file-image",
       };
-      newLine.find(".type-name").html(line.section);
+      newLine.find(".type-name").html(line.section ?? "");
       newLine.find(".type-id").html("#" + line.searchId);
       if (!line.searchId) {
         newLine.find(".type-id").hide();
@@ -499,9 +534,10 @@ function lineConstructor(line: any, id: any) {
         break;
       }
       const active_search_details: Record<string, any> = {};
-      Object.keys(search_details).forEach((key: any) => {
-        if (search_details[key] !== null) {
-          active_search_details[key] = search_details[key];
+      Object.keys(search_details).forEach((key) => {
+        const value = search_details[key as keyof HistorySearchDetails];
+        if (value !== null) {
+          active_search_details[key] = value;
         }
       });
       let count_item = 1;
@@ -564,8 +600,10 @@ function lineConstructor(line: any, id: any) {
           const badge_to_add =
             active_items.length == 1 ? 1 : count_item == 1 ? 2 : 1;
           let badge_added = 0;
-          active_items.some((key: any) => {
+          active_items.some((key) => {
             if (key !== "allwords" && key !== "cat" && key !== "tags") {
+              // Genuinely heterogeneous per-key value shape, same as
+              // active_search_details/search_icons above.
               let array_key: any;
               if (Array.isArray(active_search_details[key])) {
                 array_key = active_search_details[key];
@@ -659,10 +697,10 @@ function lineConstructor(line: any, id: any) {
       newLine.find(".type-id").hide();
       break;
     case "categories":
-      newLine.find(".type-name").html(line.categoryName);
+      newLine.find(".type-name").html(line.categoryName ?? "");
       newLine
         .find(".detail-item-1")
-        .html(line.categoryName)
+        .html(line.categoryName ?? "")
         .addClass("icon-folder-open tiptip")
         .attr("title", line.categoryPath);
       if (!line.imageThumbnailUrl) {
@@ -686,7 +724,7 @@ function lineConstructor(line: any, id: any) {
       newLine
         .find(".type-icon i")
         .addClass("line-icon icon-help-puzzle icon-grey");
-      newLine.find(".type-name").html(line.section);
+      newLine.find(".type-name").html(line.section ?? "");
       newLine.find(".type-id").hide();
       break;
   }
@@ -696,7 +734,7 @@ function lineConstructor(line: any, id: any) {
       .attr("src", line.imageThumbnailUrl)
       .attr("alt", line.imageLabel || "")
       .attr("title", line.imageLabel || "");
-    newLine.find(".type-name").html(line.imageLabel);
+    newLine.find(".type-name").html(line.imageLabel ?? "");
     newLine.find(".type-icon").empty().append(img);
     newLine.find(".type-id").html("#" + line.imageId);
     newLine
@@ -712,8 +750,8 @@ function lineConstructor(line: any, id: any) {
     newLine.find(".type-icon .icon-file-image").removeClass("icon-file-image");
     newLine.find(".toggle-img-option").hide();
 
-    if (sections.indexOf(line.section) != -1) {
-      const lineIconClass = icons[sections.indexOf(line.section)]!;
+    if (sections.indexOf(line.section ?? "") != -1) {
+      const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
       newLine.find(".type-icon i").addClass(lineIconClass);
     } else {
       console.log("Unhandled section : " + line.section);
@@ -735,15 +773,15 @@ function lineConstructor(line: any, id: any) {
   displayLine(newLine);
 }
 
-function displayLine(line: any) {
+function displayLine(line: JQuery) {
   $(".tab").append(line);
 }
 
-function addUserFilter(username: any) {
+function addUserFilter(username: string | null) {
   const newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
-  newFilter.find(".filter-title").html(username);
+  newFilter.find(".filter-title").html(username ?? "");
   newFilter.find(".filter-icon").addClass("icon-user");
 
   newFilter.find(".remove-filter").on("click", function () {
@@ -761,7 +799,7 @@ function addUserFilter(username: any) {
   checkFilters();
 }
 
-function addGuestFilter(username: any) {
+function addGuestFilter(username: string) {
   const newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
@@ -781,7 +819,7 @@ function addGuestFilter(username: any) {
   checkFilters();
 }
 
-function addIpFilter(ip: any) {
+function addIpFilter(ip: string) {
   const newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
@@ -801,7 +839,7 @@ function addIpFilter(ip: any) {
   checkFilters();
 }
 
-function addImageFilter(img_id: any) {
+function addImageFilter(img_id: string | number) {
   const newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
@@ -821,7 +859,7 @@ function addImageFilter(img_id: any) {
   checkFilters();
 }
 
-function updateArrows(actualPage: any, maxPage: any) {
+function updateArrows(actualPage: number, maxPage: number) {
   if (actualPage == 0) {
     $(".pagination-arrow.left").addClass("unavailable");
   } else {
@@ -835,7 +873,7 @@ function updateArrows(actualPage: any, maxPage: any) {
   }
 }
 
-function updatePagination(maxPage: any) {
+function updatePagination(maxPage: number) {
   updateArrows(current_param.pageNumber, maxPage);
 
   $(".pagination-item-container").empty();
@@ -859,13 +897,22 @@ function checkFilters() {
 
 /* global GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the same page's own combineScript() call */
 
+// Same real shape as rating_user.ts's own GeoIpResult -- GeoIp itself
+// stays untyped (no real type source for this vendored plugin).
+interface GeoIpResult {
+  fullName?: string;
+  latitude?: number;
+  longitude?: number;
+  region_name?: string;
+}
+
 jQuery(document).ready(function () {
   jQuery(".IP").one("mouseenter", function () {
     const that = $(this);
     that.data("isOver", true).one("mouseleave", function () {
       that.removeData("isOver");
     });
-    GeoIp.get(that.text(), function (data: any) {
+    GeoIp.get(that.text(), function (data: GeoIpResult) {
       if (!data.fullName) return;
 
       let content = data.fullName;

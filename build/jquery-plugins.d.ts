@@ -102,10 +102,10 @@ interface Window {
   // common.ts's own established shared-global set (P46-A/eslint.config.ts's
   // pre-existing globals block for this exact file, now enforced by real
   // exposure instead of just an ESLint no-undef exemption).
-  array_delete: (arr: any[], item: any) => void;
+  array_delete: <T>(arr: T[], item: T) => void;
   str_repeat: (i: string, m: number) => string;
   getRandomInt: (min: number, max: number) => number;
-  sprintf: (...args: any[]) => string;
+  sprintf: (...args: (string | number)[]) => string;
   jConfirm_alert_options: Record<string, unknown>;
   jConfirm_confirm_options: Record<string, unknown>;
   jConfirm_warning_options: Record<string, unknown>;
@@ -181,7 +181,7 @@ interface Window {
     AreYouSure: string;
     generateMsg: string;
   };
-  all_elements: any[];
+  all_elements: (string | number)[];
   str_add_alb_associate: string;
   str_select_alb_associate: string;
   derivatives: {
@@ -340,7 +340,7 @@ declare function pwgAddEventListener(
   evt: string,
   fn: EventListenerOrEventListenerObject,
 ): void;
-declare function sprintf(...args: any[]): string;
+declare function sprintf(...args: (string | number)[]): string;
 
 // `pwg_token` (the CSRF token) is independently declared per-page by
 // whichever file happens to be that page's own top-level script
@@ -538,8 +538,12 @@ interface JQuery {
   // jquery.Jcrop (vendored -- P46-0's own CDN table). `picture_coi.ts`'s
   // own crop-of-interest setup is the one real first-party call site.
   // The optional callback runs with `this` bound to the real Jcrop API
-  // object (`.animateTo(...)` etc.), not the jQuery collection.
-  Jcrop(options: Record<string, any>, callback?: (this: any) => void): JQuery;
+  // object -- `.animateTo(...)` is the one real method called (P47),
+  // not the jQuery collection.
+  Jcrop(
+    options: Record<string, any>,
+    callback?: (this: { animateTo(coords: number[]): void }) => void,
+  ): JQuery;
 
   // `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
   // extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` -- both
@@ -598,7 +602,11 @@ interface JQuery {
   // extension -- `batchManagerFilter.ts` was the first *consumer*-only
   // file that needed the ambient type without declaring it itself
   // (same reasoning as `pwgDatepicker`/`pwgAddAlbum` above).
-  pwgDoubleSlider(options?: Record<string, unknown>): JQuery;
+  // `PwgDoubleSliderOptions` (below) replaces the former
+  // `Record<string, unknown>` (P47) -- declared here, not inside
+  // doubleSlider.ts's own IIFE, since this ambient signature needs the
+  // same shape.
+  pwgDoubleSlider(options?: PwgDoubleSliderOptions): JQuery;
 
   // plupload's own jQuery-UI queue widget (vendored -- P46-0's own CDN
   // table). `photos_add_direct.ts`'s own upload-queue setup is the one
@@ -667,4 +675,14 @@ interface StorageDetails {
     total: { filesize: number; nb_files: number };
     details?: Record<string, { filesize: number; nb_files: number }>;
   };
+}
+
+// `doubleSlider.ts`'s own real options shape (P47) -- matches its own
+// leading docblock comment (`values {mixed[]}`, `selected {object} min
+// and max`, `text {string}`) and every real caller's own literal shape
+// (`batchManagerFilter.ts`'s `sliders.widths`/etc.).
+interface PwgDoubleSliderOptions {
+  values: number[];
+  selected: { min: number; max: number };
+  text: string;
 }

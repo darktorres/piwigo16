@@ -12,9 +12,9 @@ jQuery(document).ready(function () {
   });
 
   jQuery("#checkAutomaticCorrectionsLink").click(function () {
-    DeselectAll(document.getElementById("c13y"));
-    const ids = pwg_getPageData("c13y_do_check_ids") || [];
-    ids.forEach(function (id: any) {
+    DeselectAll(document.getElementById("c13y") as HTMLFormElement);
+    const ids = pwg_getPageData<string[] | null>("c13y_do_check_ids") || [];
+    ids.forEach(function (id: string) {
       (
         document.getElementById("c13y_selection-" + id) as HTMLInputElement
       ).checked = true;
@@ -23,9 +23,11 @@ jQuery(document).ready(function () {
   });
 });
 
-function DeselectAll(formulaire: any) {
+function DeselectAll(formulaire: HTMLFormElement) {
   const elts = formulaire.elements;
   for (let i = 0; i < elts.length; i++) {
-    if (elts[i].type === "checkbox") elts[i].checked = false;
+    if ((elts[i] as HTMLInputElement).type === "checkbox") {
+      (elts[i] as HTMLInputElement).checked = false;
+    }
   }
 }

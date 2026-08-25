@@ -2,12 +2,11 @@ export {};
 
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");
-const selected: any[] = [];
 $(".lock-gallery-button").each(function () {
   const gallery_tip = pwg_getPageString(
     "A locked gallery is only visible to administrators",
   );
-  const title = pwg_getPageData("u_maint_lock_gallery")
+  const title = pwg_getPageData<string | null>("u_maint_lock_gallery")
     ? pwg_getPageString("Are you sure you want to lock the gallery?")
     : pwg_getPageString("Are you sure you want to unlock the gallery?");
 
@@ -74,12 +73,15 @@ $(".delete-size-check:first").change(function () {
 const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
 $(".delete-size-check").change(function () {
   const delete_deriv_with_token =
-    delete_deriv_URL + "pwg_token=" + pwg_getPageData("pwg_token") + "&";
+    delete_deriv_URL +
+    "pwg_token=" +
+    pwg_getPageData<string>("pwg_token") +
+    "&";
   let types_str;
-  const selected: any[] = [];
+  const selected: string[] = [];
   $(".delete-size-check").each(function () {
     if ($(this).attr("data-selected") === "1") {
-      selected.push($(this).attr("name"));
+      selected.push($(this).attr("name")!);
     }
   });
   if (selected.length === 0) {

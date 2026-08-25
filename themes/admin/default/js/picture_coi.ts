@@ -8,7 +8,14 @@ function to_coi(v: number, total: number) {
   return v / total;
 }
 
-function jOnChange(sel: any) {
+interface JcropSelection {
+  x: number;
+  y: number;
+  x2: number;
+  y2: number;
+}
+
+function jOnChange(sel: JcropSelection) {
   const $img = jQuery("#jcrop");
   jQuery("#l").val(to_coi(sel.x, $img.width()!));
   jQuery("#t").val(to_coi(sel.y, $img.height()!));
@@ -19,7 +26,9 @@ function jOnRelease() {
   jQuery("#l,#t,#r,#b").val("");
 }
 
-const coi = pwg_getPageData("coi");
+const coi = pwg_getPageData<
+  { l: number; t: number; r: number; b: number } | undefined
+>("coi");
 
 jQuery("#jcrop").Jcrop(
   {
@@ -29,7 +38,7 @@ jQuery("#jcrop").Jcrop(
     onRelease: jOnRelease,
   },
   coi
-    ? function (this: any) {
+    ? function (this: { animateTo(coords: number[]): void }) {
         const $img = jQuery("#jcrop");
         this.animateTo([
           from_coi(coi.l, $img.width()!),

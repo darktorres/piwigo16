@@ -16,27 +16,30 @@ export {};
    * selected {object} min and max
    * text {string}
    */
-  $.fn.pwgDoubleSlider = function (this: JQuery, options: any) {
+  $.fn.pwgDoubleSlider = function (
+    this: JQuery,
+    options: PwgDoubleSliderOptions,
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside onChange(), which has its own `this`.
     const that = this;
 
-    function onChange(e: any, ui: any) {
-      that.find("[data-input=min]").val(options.values[ui.values[0]]);
-      that.find("[data-input=max]").val(options.values[ui.values[1]]);
+    function onChange(_e: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      that.find("[data-input=min]").val(options.values[ui.values![0]!]!);
+      that.find("[data-input=max]").val(options.values[ui.values![1]!]!);
 
       that
         .find(".slider-info")
         .html(
           sprintf(
             options.text,
-            options.values[ui.values[0]],
-            options.values[ui.values[1]],
+            options.values[ui.values![0]!]!,
+            options.values[ui.values![1]!]!,
           ),
         );
     }
 
-    function findClosest(array: any[], value: any) {
-      let closest: any = null,
+    function findClosest(array: number[], value: number) {
+      let closest: number | null = null,
         index = -1;
       $.each(array, function (i, v) {
         if (

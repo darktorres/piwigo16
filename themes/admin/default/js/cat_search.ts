@@ -25,6 +25,17 @@ export {};
 // identical at runtime (a bare, undeclared-in-this-file identifier read
 // already resolves through the global object the same way).
 
+// Real shape of albums.ts's own `data` (window.data) tree nodes, as
+// actually read here -- albums.ts's own `pwg_getPageData("album_data")`
+// stays untyped until its own P47-B turn (a much larger file), but
+// `window.data` is `any`-typed in the interim, so passing it here needs
+// no cast either way.
+interface AlbumTreeNode {
+  id: string | number;
+  name: string;
+  children?: AlbumTreeNode[];
+}
+
 const RESULT_LIMIT = 100;
 const editLink = "admin.php?page=album-";
 const colors = [
@@ -88,7 +99,7 @@ function updateSearch() {
 }
 
 function searchAlbumByName(
-  categories: any,
+  categories: AlbumTreeNode[],
   search: string,
   nbResult: number,
   children?: boolean,
@@ -123,7 +134,7 @@ function searchAlbumByName(
 
 // Add an album as a result in the page
 function addAlbumResult(
-  cat: any,
+  cat: AlbumTreeNode,
   nbResult: number,
   haveChildren: boolean,
   name: string,

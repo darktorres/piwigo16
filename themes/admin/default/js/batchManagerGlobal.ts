@@ -57,7 +57,7 @@ jQuery(document).ready(function () {
 
   $(".selected-associate-action").on("click", (e) => {
     if (e.target.classList.contains("remove-associate")) {
-      ab_action.remove_selected_album($(e.target).attr("id"));
+      ab_action.remove_selected_album($(e.target).attr("id")!);
     }
   });
 });

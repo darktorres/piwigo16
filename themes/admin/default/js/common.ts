@@ -44,7 +44,7 @@ jQuery.fn.fontCheckbox = function (this: JQuery): JQuery {
 // init fontChecbox everywhere
 jQuery(".font-checkbox").fontCheckbox();
 
-function array_delete(arr: any[], item: any): void {
+function array_delete<T>(arr: T[], item: T): void {
   const i = arr.indexOf(item);
   if (i != -1) arr.splice(i, 1);
 }
@@ -56,6 +56,13 @@ function str_repeat(i: string, m: number): string {
 }
 
 if (!Array.prototype.indexOf) {
+  // Genuinely irreducible `any`: this assigns to the shared
+  // `Array.prototype` object itself, not one array instance -- lib.es5's
+  // own ambient `indexOf` signature for that shared prototype has no
+  // real element type to narrow to. The guard itself is realistically
+  // dead in any evergreen browser this project's own P35 browserslist
+  // floor targets (indexOf has been standard since ES5), but left
+  // as-is -- removing a guarded fallback isn't this phase's job.
   Array.prototype.indexOf = function (elt: any, fromArg?: number): number {
     const len = this.length;
 
@@ -76,10 +83,17 @@ function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function sprintf(...args: any[]): string {
+function sprintf(...args: (string | number)[]): string {
   let i = 0,
+    // Genuinely polymorphic per format specifier (%b/%d/%x reinterpret
+    // as number, %s coerces to string, %c reinterprets as a char code)
+    // -- irreducible without a much larger rewrite of this well-known
+    // sprintf implementation, not this phase's job.
     a: any,
-    f = args[i++],
+    // The first argument is always the format-pattern string, never one
+    // of the `%s`/`%d`-substituted values `args`'s own looser type
+    // covers -- every real call site passes a literal string here.
+    f = args[i++] as string,
     m: RegExpExecArray | null,
     p: string,
     c: string,

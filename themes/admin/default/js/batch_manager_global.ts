@@ -24,9 +24,9 @@ window.lang = {
 jQuery(document).ready(function () {
   // <!-- TAGS -->
   const tagsCache = new window.TagsCache({
-    serverKey: pwg_getPageData("cache_key_tags"),
-    serverId: pwg_getPageData("cache_key_hash"),
-    rootUrl: pwg_getPageData("root_url"),
+    serverKey: pwg_getPageData<string>("cache_key_tags"),
+    serverId: pwg_getPageData<string>("cache_key_hash"),
+    rootUrl: pwg_getPageData<string>("root_url"),
   });
 
   tagsCache.selectize(jQuery("[data-selectize=tags]"), {
@@ -37,22 +37,32 @@ jQuery(document).ready(function () {
 
   // <!-- CATEGORIES -->
   const categoriesCache = new window.CategoriesCache({
-    serverKey: pwg_getPageData("cache_key_categories"),
-    serverId: pwg_getPageData("cache_key_hash"),
-    rootUrl: pwg_getPageData("root_url"),
+    serverKey: pwg_getPageData<string>("cache_key_categories"),
+    serverId: pwg_getPageData<string>("cache_key_hash"),
+    rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  const associated_categories = pwg_getPageData("associated_categories");
+  const associated_categories = pwg_getPageData<
+    Record<string | number, unknown>
+  >("associated_categories");
+
+  interface SelectizeCategoryOption {
+    id: string | number;
+  }
 
   categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
-    filter: function (this: any, categories: any[], options: any) {
+    filter: function (
+      this: { name: string },
+      categories: SelectizeCategoryOption[],
+      options: { default?: string | number },
+    ) {
       if (this.name === "dissociate") {
-        const filtered = jQuery.grep(categories, function (cat: any) {
+        const filtered = jQuery.grep(categories, function (cat) {
           return Boolean(associated_categories[cat.id]);
         });
 
         if (filtered.length > 0) {
-          options.default = filtered[0].id;
+          options.default = filtered[0]!.id;
         }
 
         return filtered;
@@ -63,10 +73,11 @@ jQuery(document).ready(function () {
   });
 });
 
-const _nb_thumbs_page = pwg_getPageData("nb_thumbs_page");
-const nb_thumbs_set = pwg_getPageData("nb_thumbs_set");
+const _nb_thumbs_page = pwg_getPageData<number>("nb_thumbs_page");
+const nb_thumbs_set = pwg_getPageData<number>("nb_thumbs_set");
 const applyOnDetails_pattern = pwg_getPageString("on the %d selected photos");
-window.all_elements = pwg_getPageData("all_elements") || [];
+window.all_elements =
+  pwg_getPageData<(string | number)[]>("all_elements") || [];
 
 const selectedMessage_pattern = pwg_getPageString("%d of %d photos selected");
 const selectedMessage_none = pwg_getPageString(
@@ -139,7 +150,7 @@ $(document).ready(function () {
     const li = $(this).closest("li");
     const checkbox = $(this).children("input[type=checkbox]");
 
-    checkbox.triggerHandler("shclick", event as any);
+    checkbox.triggerHandler("shclick", event);
 
     if ($(checkbox).is(":checked")) {
       $(li).addClass("thumbSelected");

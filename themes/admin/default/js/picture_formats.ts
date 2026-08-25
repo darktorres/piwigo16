@@ -1,6 +1,6 @@
 export {};
 
-const pwg_token = pwg_getPageData("csrf_token");
+const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_confirm_delete_format = pwg_getPageString("Delete %s format ?");
 const str_confirm_msg = pwg_getPageString("Yes, I am sure");
 const str_cancel_msg = pwg_getPageString("No, I have changed my mind");
@@ -51,13 +51,14 @@ function deleteFormat(card: JQuery) {
     data: JSON.stringify({
       formatIds: [Number(card.data("id"))],
     }),
-    success: function (_raw_data: any) {
+    // 204 No Content -- imageFormatDelete's real response has no body.
+    success: function (_raw_data: unknown) {
       card.fadeOut("slow", () => {
         card.remove();
         if ($(".format-card").length == 0) $(".no-formats").show();
       });
     },
-    error: function (message: any) {
+    error: function (message: JQuery.jqXHR) {
       console.log(message);
     },
   });

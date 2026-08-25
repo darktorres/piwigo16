@@ -1,4 +1,33 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
+
+// Real shape confirmed via BatchManagerUnitPageRenderer.php's own
+// `$related_category_ids[] = $item_category_id; ... json_encode(...)`
+// -- a plain array of category ids per picture id, not wrapped in any
+// object.
+type RelatedCategoryIds = Record<string, (string | number)[]>;
+
+interface PluginValueEntry {
+  selector: string;
+  api_key: string;
+}
+
+interface ImageUpdateBody {
+  name?: string;
+  author?: string;
+  dateCreation?: string;
+  comment?: string;
+  categories?: string;
+  tagIds?: string;
+  level?: number;
+  singleValueMode?: string;
+  multipleValueMode?: string;
+  // Plugin extension fields (Skeleton extension's own
+  // `pluginValues`-driven save method), genuinely dynamic per active
+  // plugin -- see pluginValues below.
+  [key: string]: unknown;
+}
 
 // Consumer of album_selector.ts's own real, top-level `class
 // AlbumSelector` -- resolves directly via that file's own real
@@ -12,12 +41,12 @@ export {};
 // same-named functions in mcs.js/cat_modify.ts/photos_add_direct.js/
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
-const activePlugins = pwg_getPageData("active_plugins");
+const activePlugins = pwg_getPageData<string[]>("active_plugins");
 
 const tagsCache = new window.TagsCache({
-  serverKey: pwg_getPageData("cache_key_tags"),
-  serverId: pwg_getPageData("cache_key_hash"),
-  rootUrl: pwg_getPageData("root_url"),
+  serverKey: pwg_getPageData<string>("cache_key_tags"),
+  serverId: pwg_getPageData<string>("cache_key_hash"),
+  rootUrl: pwg_getPageData<string>("root_url"),
 });
 tagsCache.selectize(jQuery("[data-selectize=tags]"), {
   lang: {
@@ -26,22 +55,28 @@ tagsCache.selectize(jQuery("[data-selectize=tags]"), {
 });
 
 const categoriesCache = new window.CategoriesCache({
-  serverKey: pwg_getPageData("cache_key_categories"),
-  serverId: pwg_getPageData("cache_key_hash"),
-  rootUrl: pwg_getPageData("root_url"),
+  serverKey: pwg_getPageData<string>("cache_key_categories"),
+  serverId: pwg_getPageData<string>("cache_key_hash"),
+  rootUrl: pwg_getPageData<string>("root_url"),
 });
 
-const associated_categories = pwg_getPageData("associated_categories");
+const associated_categories = pwg_getPageData<Record<string, unknown>>(
+  "associated_categories",
+);
 
 categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
-  filter: function (this: any, categories: any[], options: any) {
+  filter: function (
+    this: { name?: string },
+    categories: { id: string | number }[],
+    options: { default?: string | number },
+  ) {
     if (this.name === "dissociate") {
-      const filtered = jQuery.grep(categories, function (cat: any) {
+      const filtered = jQuery.grep(categories, function (cat) {
         return Boolean(associated_categories[cat.id]);
       });
 
       if (filtered.length > 0) {
-        options.default = filtered[0].id;
+        options.default = filtered[0]!.id;
       }
 
       return filtered;
@@ -73,9 +108,9 @@ const str_meta_warning = pwg_getPageString(
 const str_meta_yes = pwg_getPageString("I want to continue");
 const str_title_ab = pwg_getPageString("Associate to album");
 
-let b_current_picture_id: any;
+let b_current_picture_id: string | number | undefined;
 // Check Skeleton extension for more details about extensibility
-const pluginValues: any[] = [];
+const pluginValues: PluginValueEntry[] = [];
 
 $(document).ready(function () {
   // Detect unsaved changes on any inputs
@@ -149,10 +184,12 @@ $(document).ready(function () {
                 imageIds: [pictureId],
               }),
               dataType: "json",
-              success: function (_data: any) {
+              success: function (
+                _data: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
+              ) {
                 updateBlock(pictureId);
               },
-              error: function (_data: any) {
+              error: function (_data: JQuery.jqXHR) {
                 console.error("Error occurred");
                 showErrorLocalBadge(pictureId);
                 enableLocalButton(pictureId);
@@ -189,7 +226,7 @@ $(document).ready(function () {
           btnClass: "btn-red",
           action: function () {
             const image_ids = [pictureId];
-            (function (ids: any[]) {
+            (function (ids: (string | number)[]) {
               $.ajax({
                 type: "POST",
                 url: "api/v1/images/actions/delete",
@@ -201,7 +238,9 @@ $(document).ready(function () {
                   imageIds: ids.map(Number),
                 }),
                 dataType: "json",
-                success: function (_data: any) {
+                success: function (
+                  _data: operations["imageDelete"]["responses"][200]["content"]["application/json"],
+                ) {
                   $fieldset.remove();
                   $(".pagination-container").css({
                     "pointer-events": "none",
@@ -213,7 +252,7 @@ $(document).ready(function () {
                     "flex",
                   );
                 },
-                error: function (_data: any) {
+                error: function (_data: JQuery.jqXHR) {
                   console.error("Error occurred");
                   showErrorLocalBadge(pictureId);
                 },
@@ -248,36 +287,44 @@ $(document).ready(function () {
   });
   $(".linked-albums.add-item").on("click", function () {
     b_current_picture_id = $(this).parents("fieldset").data("image_id");
-    ab.hardUpdate(all_related_categories_ids[b_current_picture_id]);
+    ab.hardUpdate(all_related_categories_ids[b_current_picture_id!] ?? []);
     ab.open();
   });
   $(".related-categories-container").on("click", (e) => {
     if (e.target.classList.contains("remove-item")) {
-      const cat_id = $(e.target).attr("id");
+      const cat_id = $(e.target).attr("id")!;
       const picture_id = $(e.target).parents("fieldset").data("image_id");
 
       remove_selected_category(cat_id, picture_id);
       check_related_categories(
         picture_id,
-        all_related_categories_ids[picture_id],
+        all_related_categories_ids[picture_id] ?? [],
       );
     }
   });
   pluginFunctionMapInit(activePlugins);
 });
 
-function get_related_category(pictureId: any) {
-  return (
-    all_related_categories_ids.find((c: any) => c.id == pictureId)?.cat_ids ??
-    []
-  );
+// Genuinely dead code (zero callers, confirmed via grep) whose own
+// `.find(c => c.id == pictureId)?.cat_ids` logic never matched
+// all_related_categories_ids's real shape anyway (a plain
+// picture-id-keyed object of category-id arrays, not an array of
+// `{id, cat_ids}` objects -- see RelatedCategoryIds above) -- fixed to
+// the real access pattern used by every other function in this file
+// rather than left uncompilable, since there's no real behavior to
+// preserve here either way.
+function get_related_category(pictureId: string | number) {
+  return all_related_categories_ids[String(pictureId)] ?? [];
 }
 
-function remove_selected_category(cat_id: any, picture_id: any) {
+function remove_selected_category(
+  cat_id: string | number,
+  picture_id: string | number,
+) {
   const cat_to_remove_index =
-    all_related_categories_ids[picture_id].indexOf(cat_id);
+    all_related_categories_ids[picture_id]!.indexOf(cat_id);
   if (cat_to_remove_index > -1) {
-    all_related_categories_ids[picture_id].splice(cat_to_remove_index, 1);
+    all_related_categories_ids[picture_id]!.splice(cat_to_remove_index, 1);
     showUnsavedLocalBadge(picture_id);
   }
 
@@ -290,7 +337,7 @@ function add_related_category({
   album,
   getSelectedAlbum,
   addSelectedAlbum,
-}: any) {
+}: AlbumSelectorCallbackArgs) {
   if (!getSelectedAlbum().includes(album.id)) {
     $("#" + b_current_picture_id + " .related-categories-container").append(
       `<div class="breadcrumb-item album-listed">
@@ -298,17 +345,29 @@ function add_related_category({
       </div>`,
     );
 
-    showUnsavedLocalBadge(b_current_picture_id);
+    showUnsavedLocalBadge(b_current_picture_id!);
     addSelectedAlbum();
-    all_related_categories_ids[b_current_picture_id].cat_ids =
-      getSelectedAlbum();
+    // Genuine pre-existing bug found via strict typing: this assigned
+    // to a `.cat_ids` property that doesn't exist on the real value
+    // (a plain array, not `{cat_ids: [...]}` -- see RelatedCategoryIds
+    // above), silently attaching a stray property to the array object
+    // while leaving its actual elements (what every other reader here
+    // -- remove_selected_category, the "reopen picker" hardUpdate call,
+    // and saveChanges's own `.join(";")` -- indexes/mutates/reads
+    // directly) untouched. Newly-added albums were therefore never
+    // actually reflected in the tracked state: lost on save, and absent
+    // when the picker was reopened. Fixed to a real replacement.
+    all_related_categories_ids[b_current_picture_id!] = getSelectedAlbum();
   }
-  check_related_categories(b_current_picture_id, getSelectedAlbum());
+  check_related_categories(b_current_picture_id!, getSelectedAlbum());
 }
 
-function check_related_categories(pictureId: any, selectedAlbum: any) {
+function check_related_categories(
+  pictureId: string | number,
+  selectedAlbum: (string | number)[],
+) {
   $("#picture-" + pictureId + " .linked-albums-badge").html(
-    selectedAlbum.length,
+    String(selectedAlbum.length),
   );
   if (selectedAlbum.length == 0) {
     $("#" + pictureId + " .linked-albums-badge").addClass("badge-red");
@@ -340,14 +399,14 @@ function updateUnsavedGlobalBadge() {
   }
 }
 
-function showUnsavedLocalBadge(pictureId: any) {
+function showUnsavedLocalBadge(pictureId: string | number) {
   hideSuccesLocalBadge(pictureId);
   hideErrorLocalBadge(pictureId);
   $("#picture-" + pictureId + " .local-unsaved-badge").css("display", "block");
   updateUnsavedGlobalBadge();
 }
 
-function hideUnsavedLocalBadge(pictureId: any) {
+function hideUnsavedLocalBadge(pictureId: string | number) {
   $("#picture-" + pictureId + " .local-unsaved-badge").css("display", "none");
   updateUnsavedGlobalBadge();
 }
@@ -357,11 +416,11 @@ function hideUnsavedLocalBadge(pictureId: any) {
 //   }
 // });
 //Error badge
-function showErrorLocalBadge(pictureId: any) {
+function showErrorLocalBadge(pictureId: string | number) {
   $("#picture-" + pictureId + " .local-error-badge").css("display", "block");
 }
 
-function hideErrorLocalBadge(pictureId: any) {
+function hideErrorLocalBadge(pictureId: string | number) {
   $("#picture-" + pictureId + " .local-error-badge").css("display", "none");
 }
 //Succes badge
@@ -376,7 +435,7 @@ function updateSuccessGlobalBadge() {
   }
 }
 
-function showSuccessLocalBadge(pictureId: any) {
+function showSuccessLocalBadge(pictureId: string | number) {
   const badge = $("#picture-" + pictureId + " .local-success-badge");
   badge.css({
     display: "block",
@@ -389,7 +448,7 @@ function showSuccessLocalBadge(pictureId: any) {
   }, 3000);
 }
 
-function hideSuccesLocalBadge(pictureId: any) {
+function hideSuccesLocalBadge(pictureId: string | number) {
   $("#picture-" + pictureId + " .local-success-badge").css("display", "none");
 }
 
@@ -410,7 +469,7 @@ function hideSuccesGlobalBadge() {
   $("global-succes-badge").css("display", "none");
 }
 
-function showMetasyncSuccesBadge(pictureId: any) {
+function showMetasyncSuccesBadge(pictureId: string | number) {
   const badge = $("#picture-" + pictureId + " .metasync-success");
   badge.css({
     display: "block",
@@ -423,7 +482,7 @@ function showMetasyncSuccesBadge(pictureId: any) {
   }, 3000);
 }
 
-function disableLocalButton(pictureId: any) {
+function disableLocalButton(pictureId: string | number) {
   $("#picture-" + pictureId + " .action-save-picture").addClass("disabled");
   $("#picture-" + pictureId + " .action-save-picture i")
     .removeClass("icon-floppy")
@@ -431,7 +490,7 @@ function disableLocalButton(pictureId: any) {
   disableGlobalButton();
 }
 
-function enableLocalButton(pictureId: any) {
+function enableLocalButton(pictureId: string | number) {
   $("#picture-" + pictureId + " .action-save-picture").removeClass("disabled");
   $("#picture-" + pictureId + " .action-save-picture i")
     .removeClass("icon-spin6 animate-spin")
@@ -452,29 +511,35 @@ function enableGlobalButton() {
     .addClass("icon-floppy");
 }
 
-async function saveChanges(pictureId: any) {
+async function saveChanges(pictureId: string | number) {
   if (
     $("#picture-" + pictureId + " .local-unsaved-badge").css("display") ===
     "block"
   ) {
     disableLocalButton(pictureId);
     // Retrieve Infos
-    const name = $("#picture-" + pictureId + " #name").val();
-    const author = $("#picture-" + pictureId + " #author").val();
-    const date_creation = $("#picture-" + pictureId + " #date_creation").val();
-    const comment = $("#picture-" + pictureId + " #description").val();
-    const level = $("#picture-" + pictureId + " #level option:selected").val();
+    const name = $("#picture-" + pictureId + " #name").val() as string;
+    const author = $("#picture-" + pictureId + " #author").val() as string;
+    const date_creation = $(
+      "#picture-" + pictureId + " #date_creation",
+    ).val() as string;
+    const comment = $(
+      "#picture-" + pictureId + " #description",
+    ).val() as string;
+    const level = $(
+      "#picture-" + pictureId + " #level option:selected",
+    ).val() as string;
     // Get Categories
-    const categories = all_related_categories_ids[pictureId];
+    const categories = all_related_categories_ids[pictureId]!;
     const categoriesStr = categories.join(";");
     // Get Tags
-    const tags: any[] = [];
+    const tags: (string | number)[] = [];
     $("#picture-" + pictureId + " #tags option").each(function () {
-      const tagId = $(this).val();
+      const tagId = $(this).val() as string;
       tags.push(tagId);
     });
     const tagsStr = tags.join(",");
-    const ajax_data: Record<string, any> = {
+    const ajax_data: ImageUpdateBody = {
       name: name,
       author: author,
       dateCreation: date_creation,
@@ -487,12 +552,12 @@ async function saveChanges(pictureId: any) {
     };
 
     for (const key_index of pluginValues.keys()) {
-      const pluginValues_selector = pluginValues[key_index].selector;
+      const pluginValues_selector = pluginValues[key_index]!.selector;
       const full_selector = $(
         "#picture-" + pictureId + " " + pluginValues_selector,
       );
       const pluginValues_value = full_selector.val();
-      ajax_data[pluginValues[key_index].api_key] = pluginValues_value;
+      ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
     }
 
     await $.ajax({
@@ -504,7 +569,9 @@ async function saveChanges(pictureId: any) {
       },
       dataType: "json",
       data: JSON.stringify(ajax_data),
-      success: function (_data: any) {
+      success: function (
+        _data: operations["imageUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         enableLocalButton(pictureId);
         enableGlobalButton();
         hideUnsavedLocalBadge(pictureId);
@@ -513,7 +580,7 @@ async function saveChanges(pictureId: any) {
         // Method 1 for extension's save (see Skeleton extension for more details)
         pluginSaveLoop(activePlugins, pictureId);
       },
-      error: function (xhr: any, status: any, error: any) {
+      error: function (xhr: JQuery.jqXHR, status: string, error: string) {
         enableLocalButton(pictureId);
         enableGlobalButton();
         hideUnsavedLocalBadge(pictureId);
@@ -533,18 +600,23 @@ async function saveAllChanges() {
   }
 }
 //PLUGINS SAVE METHOD
-const pluginFunctionMap: Record<string, any> = {};
+const pluginFunctionMap: Record<string, (pictureId: string | number) => void> =
+  {};
 
-function pluginFunctionMapInit(activePlugins: any[]) {
+function pluginFunctionMapInit(activePlugins: string[]) {
   activePlugins.forEach(function (pluginId) {
     const functionName = pluginId + "_batchManagerSave";
-    if (typeof (window as any)[functionName] === "function") {
-      pluginFunctionMap[pluginId] = (window as any)[functionName];
+    // Genuinely dynamic third-party extension hook (Skeleton
+    // extension's own convention: `<pluginId>_batchManagerSave`) --
+    // no static type source for an arbitrary plugin-defined global.
+    const fn = (window as unknown as Record<string, unknown>)[functionName];
+    if (typeof fn === "function") {
+      pluginFunctionMap[pluginId] = fn as (pictureId: string | number) => void;
     }
   });
 }
 
-function pluginSaveLoop(activePlugins: any[], pictureId: any) {
+function pluginSaveLoop(activePlugins: string[], pictureId: string | number) {
   if (activePlugins.length === 0) {
     return;
   }
@@ -556,28 +628,32 @@ function pluginSaveLoop(activePlugins: any[], pictureId: any) {
   });
 }
 // UPDATE BLOCKS
-function updateBlock(pictureId: any) {
+function updateBlock(pictureId: string | number) {
   $.ajax({
     url: "api/v1/images/" + pictureId,
     type: "GET",
     dataType: "json",
-    success: function (response: any) {
+    success: function (
+      response: operations["imageGet"]["responses"][200]["content"]["application/json"],
+    ) {
       $("#picture-" + pictureId + " #name").val(response.name);
-      $("#picture-" + pictureId + " #author").val(response.author);
-      $("#picture-" + pictureId + " #date_creation").val(response.dateCreation); //TODO
+      $("#picture-" + pictureId + " #author").val(response.author ?? "");
+      $("#picture-" + pictureId + " #date_creation").val(
+        response.dateCreation ?? "",
+      ); //TODO
       $("#picture-" + pictureId + " #description").val(response.comment);
       $("#picture-" + pictureId + " #level").val(response.level);
       $("#picture-" + pictureId + " #filename").text(response.file);
-      $("#picture-" + pictureId + " #filesize").text(response.filesize);
+      $("#picture-" + pictureId + " #filesize").text(response.filesize ?? 0);
       $("#picture-" + pictureId + " #dimensions").text(
-        response.width + "x" + response.height,
+        (response.width ?? 0) + "x" + (response.height ?? 0),
       );
       // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)
       showMetasyncSuccesBadge(pictureId);
       enableLocalButton(pictureId);
       enableGlobalButton();
     },
-    error: function (xhr: any, status: any, error: any) {
+    error: function (xhr: JQuery.jqXHR, status: string, error: string) {
       console.error("Error:", status, error);
       showErrorLocalBadge(pictureId);
       enableLocalButton(pictureId);
@@ -585,7 +661,7 @@ function updateBlock(pictureId: any) {
   });
 }
 
-const all_related_categories_ids = pwg_getPageData(
+const all_related_categories_ids = pwg_getPageData<RelatedCategoryIds>(
   "all_related_categories_ids",
 );
 pluginFunctionMapInit(activePlugins);

@@ -1,3 +1,5 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
 // Consumer of album_selector.ts's own real, top-level `class
@@ -11,17 +13,19 @@ export {};
 // (docs/PLAN.md P46-B's own finding) -- safe since these pages never
 // co-load, and this file's own `export {}` module isolation makes the
 // safety even more robust than before.
-const album_id = pwg_getPageData("cat_id");
-let parent_album = pwg_getPageData("parent_cat_id");
-let default_parent_album = pwg_getPageData("parent_cat_id");
-const album_name = pwg_getPageData("cat_name");
-const nb_sub_albums = pwg_getPageData("nb_subcats");
-const pwg_token = pwg_getPageData("csrf_token");
-const u_delete = pwg_getPageData("u_delete");
-let is_visible: string = pwg_getPageData("is_visible") ? "true" : "false";
+const album_id = pwg_getPageData<number>("cat_id");
+let parent_album = pwg_getPageData<number | string>("parent_cat_id");
+let default_parent_album = pwg_getPageData<number | string>("parent_cat_id");
+const album_name = pwg_getPageData<string>("cat_name");
+const nb_sub_albums = pwg_getPageData<number>("nb_subcats");
+const pwg_token = pwg_getPageData<string>("csrf_token");
+const u_delete = pwg_getPageData<string>("u_delete");
+let is_visible: string = pwg_getPageData<boolean>("is_visible")
+  ? "true"
+  : "false";
 const related_categories_ids = [
-  String(pwg_getPageData("cat_id")),
-  String(pwg_getPageData("parent_cat_id")),
+  String(pwg_getPageData<number>("cat_id")),
+  String(pwg_getPageData<number | string>("parent_cat_id")),
 ];
 
 const str_cancel = pwg_getPageString("No, I have changed my mind");
@@ -69,7 +73,9 @@ jQuery(document).ready(function () {
       data: JSON.stringify({
         visible: true,
       }),
-      success: function (_data: any) {
+      success: function (
+        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         is_visible = "true";
         if ($("#cat-locked").is(":checked")) {
           $("input[id='cat-locked']").trigger("click");
@@ -80,7 +86,11 @@ jQuery(document).ready(function () {
           $(".info-message").hide();
         }, 5000);
       },
-      error: function (XMLHttpRequest: any, textStatus: any, errorThrows: any) {
+      error: function (
+        XMLHttpRequest: JQuery.jqXHR,
+        textStatus: string,
+        errorThrows: string,
+      ) {
         save_button_set_loading(false);
 
         $(".info-error").show();
@@ -114,7 +124,9 @@ jQuery(document).ready(function () {
         visible: !$("#cat-locked").is(":checked"),
         commentable: $("#cat-commentable").is(":checked"),
       }),
-      success: function (_data: any) {
+      success: function (
+        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         save_button_set_loading(false);
 
         $(".info-message").show();
@@ -128,7 +140,11 @@ jQuery(document).ready(function () {
           $(".info-message").hide();
         }, 5000);
       },
-      error: function (XMLHttpRequest: any, textStatus: any, errorThrows: any) {
+      error: function (
+        XMLHttpRequest: JQuery.jqXHR,
+        textStatus: string,
+        errorThrows: string,
+      ) {
         save_button_set_loading(false);
 
         $(".info-error").show();
@@ -150,16 +166,18 @@ jQuery(document).ready(function () {
           categoryIds: [album_id],
           parentId: parent_album,
         }),
-        success: function (data: any) {
+        success: function (
+          data: operations["categoryMove"]["responses"][200]["content"]["application/json"],
+        ) {
           $(".cat-modify-ariane").html(data.newArianeString);
           default_parent_album = parent_album;
         },
-        error: function (e: any) {
+        error: function (e: JQuery.jqXHR) {
           $(".info-error").show();
           setTimeout(function () {
             $(".info-error").hide();
           }, 5000);
-          console.log(e.message);
+          console.log(e.responseText);
         },
       });
     }
@@ -179,17 +197,28 @@ jQuery(document).ready(function () {
     $("#cat-properties-save").prop("disabled", state);
   }
 
+  // jquery-confirm's own modal instance -- no real type source (this
+  // campaign's own established list of loosely-typed vendor libraries),
+  // narrowed to just the 3 real methods actually called on it here.
+  interface JConfirmModalInstance {
+    setContent(html: string): void;
+    showLoading(): void;
+    close(): void;
+  }
+
   $(".deleteAlbum").on("click", function () {
     $.confirm({
       title: str_delete_album,
-      content: function (this: any) {
+      content: function (this: JConfirmModalInstance) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this;
         return $.ajax({
           url: "api/v1/categories/" + album_id + "/orphan-impact",
           type: "GET",
           dataType: "json",
-          success: function (data: any) {
+          success: function (
+            data: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
+          ) {
             let message =
               "<p>" +
               str_delete_album_and_his_x_subalbums
@@ -214,13 +243,13 @@ jQuery(document).ready(function () {
             if (data.nbImagesBecomingOrphan)
               message += `<div>
                 <input type="radio" name="deletion-mode" value="delete_orphans" id="delete_orphans">
-                <label for="delete_orphans">${str_delete_orphans.replace("%d", data.nbImagesBecomingOrphan)}</label>
+                <label for="delete_orphans">${str_delete_orphans.replace("%d", String(data.nbImagesBecomingOrphan))}</label>
               </div>`;
             message += `</div>`;
 
             self.setContent(message);
           },
-          error: function (message: any) {
+          error: function (message: JQuery.jqXHR) {
             console.log(message);
             self.setContent("An error has occured while calculating orphans");
           },
@@ -230,12 +259,14 @@ jQuery(document).ready(function () {
         deleteAlbum: {
           text: str_delete_album,
           btnClass: "btn-red",
-          action: function (this: any) {
+          action: function (this: JConfirmModalInstance) {
             this.showLoading();
-            const deletionMode = $('input[name="deletion-mode"]:checked').val();
+            const deletionMode = String(
+              $('input[name="deletion-mode"]:checked').val(),
+            );
             delete_album(deletionMode)
               .then(() => (window.location.href = u_delete))
-              .catch((err: any) => {
+              .catch((err: JQuery.jqXHR) => {
                 this.close();
                 console.log(err);
               });
@@ -250,7 +281,7 @@ jQuery(document).ready(function () {
     });
   });
 
-  function delete_album(photo_deletion_mode: any) {
+  function delete_album(photo_deletion_mode: string) {
     return new Promise<void>((res, rej) => {
       $.ajax({
         url: "api/v1/categories/" + album_id,
@@ -260,10 +291,12 @@ jQuery(document).ready(function () {
         data: JSON.stringify({
           photoDeletionMode: photo_deletion_mode,
         }),
-        success: function (_raw_data: any) {
+        success: function (
+          _raw_data: operations["categoryDelete"]["responses"][200]["content"]["application/json"],
+        ) {
           res();
         },
-        error: function (message: any) {
+        error: function (message: JQuery.jqXHR) {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- rejects with the real jqXHR error object, matching the original .catch()'s own console.log(err) usage; not a new Error, same as pre-P46.
           rej(message);
         },
@@ -283,11 +316,13 @@ jQuery(document).ready(function () {
       contentType: "application/json",
       headers: { "X-CSRF-Token": pwg_token },
       dataType: "json",
-      success: function (data: any) {
+      success: function (
+        data: operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"],
+      ) {
         jQuery("#deleteRepresentative").show();
 
         jQuery(".cat-modify-representative")
-          .attr("style", `background-image:url('${data.src}')`)
+          .attr("style", `background-image:url('${String(data.src)}')`)
           .removeClass("icon-dice-solid");
 
         $("#refreshRepresentative i")
@@ -295,7 +330,11 @@ jQuery(document).ready(function () {
           .removeClass("icon-spin6")
           .removeClass("animate-spin");
       },
-      error: function (XMLHttpRequest: any, textStatus: any, errorThrows: any) {
+      error: function (
+        XMLHttpRequest: JQuery.jqXHR,
+        textStatus: string,
+        errorThrows: string,
+      ) {
         console.error(errorThrows);
         $("#refreshRepresentative i")
           .addClass("icon-ccw")
@@ -319,7 +358,8 @@ jQuery(document).ready(function () {
       contentType: "application/json",
       headers: { "X-CSRF-Token": pwg_token },
       dataType: "json",
-      success: function (_data: any) {
+      // 204 No Content -- categoryDeleteRepresentative's real response has no body.
+      success: function (_data: unknown) {
         jQuery("#deleteRepresentative").hide();
         jQuery(".cat-modify-representative")
           .attr("style", ``)
@@ -330,7 +370,11 @@ jQuery(document).ready(function () {
           .removeClass("icon-spin6")
           .removeClass("animate-spin");
       },
-      error: function (XMLHttpRequest: any, textStatus: any, errorThrows: any) {
+      error: function (
+        XMLHttpRequest: JQuery.jqXHR,
+        textStatus: string,
+        errorThrows: string,
+      ) {
         console.error(errorThrows);
         $("#deleteRepresentative i")
           .addClass("icon-cancel")
@@ -364,7 +408,9 @@ jQuery(document).ready(function () {
       beforeSend: function () {
         save_button_set_loading(true);
       },
-      success: function (_data: any) {
+      success: function (
+        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         save_button_set_loading(false);
         if (!$("#cat-commentable").is(":checked")) {
           $("#cat-commentable").trigger("click");
@@ -379,7 +425,7 @@ jQuery(document).ready(function () {
           $(".info-message").text(temp_txt);
         }, 5000);
       },
-      error: function (e: any) {
+      error: function (e: JQuery.jqXHR) {
         console.log(e);
         save_button_set_loading(false);
         $(".info-error").show();
@@ -403,7 +449,9 @@ jQuery(document).ready(function () {
       beforeSend: function () {
         save_button_set_loading(true);
       },
-      success: function (_data: any) {
+      success: function (
+        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         save_button_set_loading(false);
         if ($("#cat-commentable").is(":checked")) {
           $("#cat-commentable").trigger("click");
@@ -418,7 +466,7 @@ jQuery(document).ready(function () {
           $(".info-message").text(temp_txt);
         }, 5000);
       },
-      error: function (e: any) {
+      error: function (e: JQuery.jqXHR) {
         console.log(e);
         save_button_set_loading(false);
         $(".info-error").show();
@@ -445,7 +493,7 @@ jQuery(document).ready(function () {
     desc_modal.fadeToggle();
   });
   textareas.keyup(function () {
-    textareas.val($(this).val() as any);
+    textareas.val($(this).val() as string);
   });
   $(window).on("click", function (e) {
     if ((e.target as unknown as Element) == desc_modal[0]) {
@@ -474,9 +522,9 @@ function add_related_category({
   album,
   newSelectedAlbum,
   getSelectedAlbum,
-}: any) {
+}: AlbumSelectorCallbackArgs) {
   if (parent_album != album.id) {
-    $("#cat-parent").html(album.full_name_with_admin_links ?? album.root);
+    $("#cat-parent").html(album.full_name_with_admin_links ?? album.root ?? "");
 
     $(".search-result-item #" + album.id).addClass("notClickable");
     $(".invisible-related-categories-select").append(
@@ -484,7 +532,7 @@ function add_related_category({
     );
 
     newSelectedAlbum();
-    parent_album = getSelectedAlbum()[0];
+    parent_album = getSelectedAlbum()[0]!;
   }
 }
 

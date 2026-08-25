@@ -21,7 +21,7 @@ function hide_user_whats_new() {
   $.ajax({
     url:
       "api/v1/session/preferences/show_whats_new_" +
-      pwg_getPageData("whats_new_major_version"),
+      pwg_getPageData<string>("whats_new_major_version"),
     type: "PUT",
     contentType: "application/json",
     dataType: "JSON",
@@ -37,7 +37,7 @@ function show_user_whats_new() {
   $("#whats_new").show();
 }
 
-if (pwg_getPageData("show_whats_new")) {
+if (pwg_getPageData<boolean>("show_whats_new")) {
   show_user_whats_new();
 }
 

@@ -32,7 +32,9 @@ export {};
 })();
 
 (function () {
-  const max_fields = Math.ceil(pwg_getPageData("order_by_options_count") / 2);
+  const max_fields = Math.ceil(
+    pwg_getPageData<number>("order_by_options_count") / 2,
+  );
 
   function updateFilters() {
     const $selects = jQuery("#order_filters select");

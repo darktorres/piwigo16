@@ -11,7 +11,10 @@ function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
   jQuery("#derivativeSwitchBox .switchCheck").css("visibility", "hidden");
   jQuery("#derivativeChecked" + typeMap).css("visibility", "visible");
   document.cookie =
-    "picture_deriv=" + typeSave + ";path=" + pwg_getPageData("cookie_path");
+    "picture_deriv=" +
+    typeSave +
+    ";path=" +
+    pwg_getPageData<string>("cookie_path");
 }
 
 const derivativeSwitchBox = document.getElementById("derivativeSwitchBox");
@@ -66,11 +69,11 @@ function addToCadie(
   if (aElement.disabled) return;
   aElement.disabled = true;
   $.ajax({
-    url: pwg_getPageData("root_url") + "api/v1/session/caddie",
+    url: pwg_getPageData<string>("root_url") + "api/v1/session/caddie",
     method: "POST",
     contentType: "application/json",
     data: JSON.stringify({ imageIds: [id] }),
-    headers: { "X-CSRF-Token": pwg_getPageData("csrf_token") },
+    headers: { "X-CSRF-Token": pwg_getPageData<string>("csrf_token") },
     error: function (jqXHR) {
       alert(jqXHR.status + " " + jqXHR.statusText);
       document.location.href = aElement.href;
@@ -86,7 +89,7 @@ const caddieLink = document.getElementById("caddieLink") as
 if (caddieLink) {
   caddieLink.addEventListener("click", function (e) {
     e.preventDefault();
-    addToCadie(caddieLink, pwg_getPageData("image_id"));
+    addToCadie(caddieLink, pwg_getPageData<string | number>("image_id"));
   });
 }
 
@@ -104,8 +107,8 @@ if (caddieLink) {
 // every wrapped entry can still reach directly.
 window._pwgRatingAutoQueue = window._pwgRatingAutoQueue || [];
 window._pwgRatingAutoQueue.push({
-  rootUrl: pwg_getPageData("root_url"),
-  image_id: pwg_getPageData("image_id"),
+  rootUrl: pwg_getPageData<string>("root_url"),
+  image_id: pwg_getPageData<string | number>("image_id"),
   onSuccess: function (rating: { score: number; count: number }) {
     let e: HTMLElement | null = document.getElementById("updateRate");
     if (e) e.innerHTML = pwg_getPageString("Update your rating");

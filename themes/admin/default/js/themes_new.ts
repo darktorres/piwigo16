@@ -4,7 +4,7 @@ document
   .querySelectorAll<HTMLImageElement>(".themeShotImg")
   .forEach(function (img) {
     img.addEventListener("error", function () {
-      img.src = pwg_getPageData("default_screenshot");
+      img.src = pwg_getPageData<string>("default_screenshot");
     });
   });
 

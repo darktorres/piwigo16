@@ -192,7 +192,7 @@ interface Window {
   incompatible_msg: string;
   activate_msg: string;
   deactivate_all_msg: string;
-  pwg_token: any;
+  pwg_token: string;
   nb_plugin: { all: number; active: number; inactive: number; other: number };
   confirm_msg: string;
   cancel_msg: string;
@@ -208,9 +208,9 @@ interface Window {
   nothing_found: string;
   x_plugins_found: string;
   plugin_found: string;
-  isWebmaster: any;
+  isWebmaster: number;
   str_restore_def: string;
-  show_details: any;
+  show_details: boolean;
   plugin_filter: string | null;
 
   // footer.ts's own 2 functions, called from layout.latte's own

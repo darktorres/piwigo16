@@ -41,8 +41,16 @@ const deactivate_all_msg = pwg_getPageString("Deactivate all");
 // own `var`/`const` declaration of the same name outright (a real
 // TS2451 error, confirmed while landing this file).
 // eslint-disable-next-line no-var
-var pwg_token = pwg_getPageData("csrf_token");
-const count_types_plugins = pwg_getPageData("count_types_plugins");
+var pwg_token = pwg_getPageData<string>("csrf_token");
+interface CountTypesPlugins {
+  active: number;
+  inactive: number;
+  missing: number;
+  merged: number;
+}
+const count_types_plugins = pwg_getPageData<CountTypesPlugins>(
+  "count_types_plugins",
+);
 const nb_plugin = {
   all:
     count_types_plugins.active +
@@ -75,12 +83,12 @@ const not_webmaster = pwg_getPageString("Webmaster status required");
 const nothing_found = pwg_getPageString("No plugins found");
 const x_plugins_found = pwg_getPageString("%s plugins found");
 const plugin_found = pwg_getPageString("%s plugin found");
-const isWebmaster = pwg_getPageData("is_webmaster");
+const isWebmaster = pwg_getPageData<number>("is_webmaster");
 const str_restore_def = pwg_getPageString(
   "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset",
 );
 
-const show_details = pwg_getPageData("show_details");
+const show_details = pwg_getPageData<boolean>("show_details");
 
 const searchParams = new URLSearchParams(window.location.search);
 const plugin_filter = searchParams.get("filter");

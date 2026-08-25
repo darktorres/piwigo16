@@ -2,7 +2,9 @@ export {};
 
 jQuery(document).ready(function () {
   $("h1").append(
-    "<span class='badge-number'>" + pwg_getPageData("nb_cats") + "</span>",
+    "<span class='badge-number'>" +
+      pwg_getPageData<number>("nb_cats") +
+      "</span>",
   );
   jQuery("#addPermalinkOpen").click(function () {
     jQuery("#addPermalink").show();

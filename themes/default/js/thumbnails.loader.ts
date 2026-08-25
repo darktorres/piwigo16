@@ -1,6 +1,6 @@
 export {};
 
-let max_requests = pwg_getPageData("max_requests");
+let max_requests = pwg_getPageData<number | undefined>("max_requests");
 if (typeof max_requests == "undefined") max_requests = 3;
 
 const thumbnails_queue = jQuery.manageAjax.create("queued", {
@@ -25,7 +25,7 @@ function add_thumbnail_to_queue(img: JQuery, loop: number) {
     },
     error: function () {
       if (loop < 3) add_thumbnail_to_queue(img, ++loop); // Retry 3 times
-      const error_icon = pwg_getPageData("error_icon");
+      const error_icon = pwg_getPageData<string>("error_icon");
       if (typeof error_icon != "undefined") img.attr("src", error_icon);
       jQuery(".loader").hide();
     },

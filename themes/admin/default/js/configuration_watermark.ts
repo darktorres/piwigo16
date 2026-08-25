@@ -5,7 +5,7 @@ export {};
     const val = String(jQuery("#wSelect").val());
     if (val.length) {
       jQuery("#wImg")
-        .attr("src", pwg_getPageData("root_url") + val)
+        .attr("src", pwg_getPageData<string>("root_url") + val)
         .show();
     } else {
       jQuery("#wImg").hide();

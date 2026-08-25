@@ -7,18 +7,18 @@ export {};
 (function () {
   // <!-- GROUPS -->
   const groupsCache = new window.GroupsCache({
-    serverKey: pwg_getPageData("cache_key_groups"),
-    serverId: pwg_getPageData("cache_key_hash"),
-    rootUrl: pwg_getPageData("root_url"),
+    serverKey: pwg_getPageData<string>("cache_key_groups"),
+    serverId: pwg_getPageData<string>("cache_key_hash"),
+    rootUrl: pwg_getPageData<string>("root_url"),
   });
 
   groupsCache.selectize(jQuery("[data-selectize=groups]"));
 
   // <!-- USERS -->
   const usersCache = new window.UsersCache({
-    serverKey: pwg_getPageData("cache_key_users"),
-    serverId: pwg_getPageData("cache_key_hash"),
-    rootUrl: pwg_getPageData("root_url"),
+    serverKey: pwg_getPageData<string>("cache_key_users"),
+    serverId: pwg_getPageData<string>("cache_key_hash"),
+    rootUrl: pwg_getPageData<string>("root_url"),
   });
 
   usersCache.selectize(jQuery("[data-selectize=users]"));

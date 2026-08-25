@@ -178,7 +178,9 @@ export default defineConfig({
         photosAddApplications: r(
           "themes/admin/default/js/photos_add_applications.ts",
         ),
-        autosizeAdmin: r("themes/admin/default/js/autosize.ts"),
+        // autosize.ts is no longer its own entry (docs/PLAN.md P48) --
+        // it has 3 real registrant pages, each with their own pages/
+        // entry below folding its code in via a `?dup` import.
         languagesNew: r("themes/admin/default/js/languages_new.ts"),
         siteUpdate: r("themes/admin/default/js/site_update.ts"),
         languagesInstalled: r("themes/admin/default/js/languages_installed.ts"),
@@ -272,6 +274,16 @@ export default defineConfig({
         introPage: r("themes/admin/default/js/pages/intro.ts"),
         pluginsInstalledPage: r(
           "themes/admin/default/js/pages/plugins_installed.ts",
+        ),
+        // autosize.ts's own batch (docs/PLAN.md P48) -- each of its 3
+        // real registrant pages gets its own bundle, extended by later
+        // batches as more of that page's shared-library files convert.
+        batchManagerUnitPage: r(
+          "themes/admin/default/js/pages/batch_manager_unit.ts",
+        ),
+        pictureModifyPage: r("themes/admin/default/js/pages/picture_modify.ts"),
+        notificationByMailPage: r(
+          "themes/admin/default/js/pages/notification_by_mail.ts",
         ),
       },
       output: {

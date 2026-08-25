@@ -85,6 +85,12 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
         return [
             ...new AutosizeView()
                 ->pageAssets(),
+            // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
+            // autosize.ts's code in via a real `?dup` import instead of
+            // the separate script tag AutosizeView used to register
+            // directly (autosize.ts has 3 real registrant pages, so a
+            // plain import isn't safe here -- Design §4).
+            AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow']),
             ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             ...new ColorboxView()

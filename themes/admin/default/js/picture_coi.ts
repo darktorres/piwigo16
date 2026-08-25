@@ -1,3 +1,4 @@
+import { pwg_getPageData } from "../../../default/js/page-data?dup";
 export {};
 
 function from_coi(f: number, total: number) {

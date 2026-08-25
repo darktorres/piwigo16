@@ -152,43 +152,6 @@ interface Window {
   };
   show_filter_ratings: boolean;
 
-  // common.ts's own established shared-global set (P46-A/eslint.config.ts's
-  // pre-existing globals block for this exact file, now enforced by real
-  // exposure instead of just an ESLint no-undef exemption).
-  array_delete: <T>(arr: T[], item: T) => void;
-  str_repeat: (i: string, m: number) => string;
-  getRandomInt: (min: number, max: number) => number;
-  sprintf: (...args: (string | number)[]) => string;
-  jConfirm_alert_options: Record<string, unknown>;
-  jConfirm_confirm_options: Record<string, unknown>;
-  jConfirm_warning_options: Record<string, unknown>;
-  jConfirm_confirm_with_content_options: Record<string, unknown>;
-  // A real ES6 `class`, not a plain function/object like the rest of this
-  // interface -- `typeof TemporaryStateCtor` (a constructor type) is what
-  // lets a consumer file write `new TemporaryState()` against the bare
-  // global the same way it already could pre-P46.
-  TemporaryState: TemporaryStateCtor;
-
-  // LocalStorageCache.ts's own established shared-global set (same
-  // eslint.config.ts pre-existing globals block, same "now enforced by
-  // real exposure" note as common.ts's own copy of this comment).
-  // `EntityCacheCtor<T>`/`ProcessedCategory`/`ProcessedTag`/
-  // `ProcessedGroup`/`UserEntity` (P47) are LocalStorageCache.ts's own
-  // top-level ambient types -- that file is a genuinely non-module IIFE
-  // (same technique `AlbumSelectorInstance`/`AlbumSelectorOptions`/etc.
-  // below used to back for album_selector.ts, before that file's own
-  // P48 module conversion), so referencing them bare here is a real
-  // (not `any`) cross-file ambient dependency, not a redeclaration.
-  CategoriesCache: EntityCacheCtor<ProcessedCategory>;
-  TagsCache: EntityCacheCtor<ProcessedTag>;
-  GroupsCache: EntityCacheCtor<ProcessedGroup>;
-  UsersCache: EntityCacheCtor<UserEntity>;
-  // The base class the 4 above inherit from -- exported (`exports.
-  // LocalStorageCache = ...`) same as the others in the real pre-P46
-  // .js, even though no other real file reads it bare today; typed for
-  // the same "same code" completeness reason, not because it's used.
-  LocalStorageCache: LocalStorageCacheCtor;
-
   // batchManagerGlobal.ts's own 4 functions, called from
   // batch_manager_global.latte's own `href="javascript:
   // selectGenerateDerivAll()"`-style pseudo-protocol links (docs/
@@ -218,13 +181,6 @@ interface Window {
   resetIgnored: () => void;
   updateExtension: (type: string, id: string, revision: string) => void;
   ignoreExtension: (type: string, id: string) => void;
-
-  // albums.ts's own shared-global set (docs/PLAN.md P46-C's full
-  // sweep) -- cat_search.ts reads both of these bare. `AlbumTreeNode`
-  // (P47) is the real recursive shape of each row, traced to
-  // AlbumsPageRenderer.php's own `assocToOrderedTree()`.
-  data: AlbumTreeNode[];
-  str_album_found: string;
 
   // group_list.ts's own 2 functions -- `hideAddGroupForm` is called
   // from group_list.latte's own `onclick="hideAddGroupForm()"`
@@ -262,45 +218,6 @@ interface Window {
   // other cross-file/cross-module-boundary global in this file.
   Chart: typeof Chart;
 }
-
-// Declared outside `Window` (TS doesn't allow forward-referencing a
-// same-file class-as-type from inside an interface merge) -- mirrors
-// common.ts's own `TemporaryState` class shape exactly. Kept minimal
-// (method signatures only) since the real implementation lives in
-// common.ts; this is purely the ambient type consumer files need.
-interface TemporaryStateCtor {
-  new (): {
-    attrChanges: {
-      object: JQuery;
-      attribute: string;
-      value: string | undefined;
-    }[];
-    classChanges: { object: JQuery; state: boolean; class: string }[];
-    htmlChanges: { object: JQuery; html: string }[];
-    changeAttribute(obj: JQuery, attr: string, tempVal: string): void;
-    changeClass(obj: JQuery, st: boolean, tempclass: string): void;
-    addClass(obj: JQuery, tempclass: string): void;
-    removeClass(obj: JQuery, tempclass: string): void;
-    changeHTML(obj: JQuery, temphtml: string): void;
-    reverse(): void;
-  };
-}
-
-// These (declared as real functions in page-data.ts, exposed onto
-// `window` there) are also called as *bare* identifiers by consumer
-// files (several call `pwg_getPageData`/`pwg_getPageString`) -- those
-// files never write `window.` themselves, relying on the same "global
-// script, no module scope" assumption every pre-P46 .js file already
-// relied on. Declaring them as ambient `declare function` bindings
-// (not just `Window` properties above) is what makes the bare
-// reference type-check in every *consuming* file. `phpWGOpenWindow`/
-// `pwgAddEventListener` no longer need a binding here (docs/PLAN.md
-// P48, scripts.ts's own module conversion) -- their own real
-// consumers (picture.ts/rating.ts) use a real `import` now, not a bare
-// reference relying on this ambient declaration.
-declare function pwg_getPageData<T = unknown>(key: string): T;
-declare function pwg_getPageString(key: string): string;
-declare function sprintf(...args: (string | number)[]): string;
 
 // `pwg_token` (the CSRF token) is independently declared per-page by
 // whichever file happens to be that page's own top-level script

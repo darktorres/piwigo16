@@ -67,7 +67,6 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
         return [
             AssetContribution::script('jquery.dataTables', 'https://cdn.jsdelivr.net/npm/datatables.net@1.10.11/js/jquery.dataTables.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/rating_user.css', id: 'rating_user'),
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::script('jquery.geoip', 'themes/admin/default/js/jquery.geoip.js', loadMode: LoadMode::Async),

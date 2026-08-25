@@ -5,7 +5,12 @@ import type { operations } from "../../../../openapi/client/schema";
 // list). `?dup` since album_selector.ts has several real registrant
 // pages (Design §4).
 import { AlbumSelector } from "./album_selector?dup";
+import { jConfirm_confirm_options } from "./common?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // `add_related_category` is declared here too, independently of the
@@ -237,7 +242,7 @@ jQuery(document).ready(function () {
               let t = 0;
               message += `<div>
                 <input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", (_) => String([data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++]))}</label>
+                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", (_: string) => String([data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++]))}</label>
               </div>`;
             }
 

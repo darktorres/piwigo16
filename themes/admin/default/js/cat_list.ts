@@ -1,3 +1,5 @@
+import "./common?dup";
+
 export {};
 
 function setDisplayCompact() {

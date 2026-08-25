@@ -104,8 +104,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'LocalStorageCache', 'jquery.colorbox', 'page-data']),
+            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'jquery.colorbox', 'page-data']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
                 ->pageAssets(),
@@ -120,12 +119,10 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // contribution has to resolve first -- see
             // BatchManagerGlobalView's own identical comment, confirmed
             // there via a real golden-html diff.
-            AssetContribution::script('doubleSlider', 'themes/admin/default/js/doubleSlider.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js'),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via

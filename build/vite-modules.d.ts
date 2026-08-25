@@ -47,3 +47,32 @@ declare module "*scripts?dup" {
     pwgAddEventListener,
   } from "../themes/default/js/scripts";
 }
+declare module "*doubleSlider?dup" {}
+declare module "*page-data?dup" {
+  export {
+    pwg_getPageData,
+    pwg_getPageString,
+  } from "../themes/default/js/page-data";
+}
+declare module "*switchbox?dup" {}
+declare module "*albums?dup" {
+  export { data } from "../themes/admin/default/js/albums";
+}
+declare module "*LocalStorageCache?dup" {
+  export {
+    CategoriesCache,
+    TagsCache,
+    GroupsCache,
+    UsersCache,
+  } from "../themes/admin/default/js/LocalStorageCache";
+}
+declare module "*common?dup" {
+  export {
+    getRandomInt,
+    sprintf,
+    jConfirm_alert_options,
+    jConfirm_confirm_options,
+    jConfirm_warning_options,
+    TemporaryState,
+  } from "../themes/admin/default/js/common";
+}

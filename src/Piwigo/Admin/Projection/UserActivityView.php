@@ -49,14 +49,12 @@ final readonly class UserActivityView implements View, HasPageAssets, ExposesPag
         return [
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/user_activity.css', id: 'user_activity'),
-            AssetContribution::script('user_activity', 'themes/admin/default/js/user_activity.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'page-data', 'LocalStorageCache']),
+            AssetContribution::script('user_activity', 'themes/admin/default/js/user_activity.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'page-data']),
         ];
     }
 

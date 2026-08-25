@@ -1,3 +1,4 @@
+import { pwg_getPageData } from "./page-data?dup";
 export {};
 
 document.onkeydown = function (e: KeyboardEvent) {

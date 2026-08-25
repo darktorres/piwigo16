@@ -83,7 +83,6 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', dependsOn: ['jquery']),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js'),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('jquery.ui', ''),

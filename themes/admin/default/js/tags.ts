@@ -1,5 +1,14 @@
 import type { operations } from "../../../../openapi/client/schema";
+import {
+  jConfirm_alert_options,
+  jConfirm_confirm_options,
+  TemporaryState,
+} from "./common?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
@@ -222,7 +231,7 @@ function cleanCheckmark() {
 $("#add-tag").submit(function (e) {
   e.preventDefault();
   if ($("#add-tag-input").val() != "") {
-    const loadState = new window.TemporaryState();
+    const loadState = new TemporaryState();
     loadState.removeClass($("#add-tag .icon-validate"), "icon-plus");
     loadState.changeHTML(
       $("#add-tag .icon-validate"),

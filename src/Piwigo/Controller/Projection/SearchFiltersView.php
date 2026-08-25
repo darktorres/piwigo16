@@ -89,7 +89,6 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
         return [
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui', order: -999),
-            AssetContribution::script('doubleSlider', 'themes/admin/default/js/doubleSlider.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
@@ -104,14 +103,44 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/default/css/search.css', order: -100),
             AssetContribution::css('themes/default/css/' . $this->colorscheme . '-search.css', order: -100),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            AssetContribution::script('search_filters', 'themes/default/js/search_filters.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
-            // 'page-data' added to this registration's own dependsOn
-            // (docs/PLAN.md's P48, album_selector.ts's own batch): this
+            // search_filters.ts's own registration dropped (docs/PLAN.md
+            // P48, search_filters.ts's own batch) -- mcs.ts is its one
+            // real consumer file anywhere, so its code folds directly
+            // into mcs.ts's own bundle via a plain `import` instead
+            // (Design §4: exactly one real reaching entry). Real,
+            // accepted timing change: search_filters.ts's own data-setup
+            // code ran at this page's Footer before, now runs at mcs.ts's
+            // own Async instead -- safe since search_filters.ts has zero
+            // independent runtime behavior of its own (pure
+            // `pwg_getPageData()`/`pwg_getPageString()` value setup, no
+            // event handlers, no template reads it directly either).
+            // 'page-data' added to mcs.ts's own registration's dependsOn
+            // below (docs/PLAN.md's P48, album_selector.ts's own batch): this
             // file's real `?dup` import of album_selector.ts embeds that
             // file's own top-level `pwg_getPageString()` calls directly
             // into this bundle, a real new dependency on page-data.ts
             // having already run that didn't exist before this batch.
-            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'page-data']),
+            //
+            // Real, necessary fix found via golden-html review, not
+            // assumed: doubleSlider.ts's own `.pwgDoubleSlider()` calls
+            // jQuery UI's real `.slider()` widget method internally, and
+            // that file's own code now folds into this bundle too
+            // (docs/PLAN.md P48, doubleSlider.ts's own batch). Before
+            // that fold, `doubleSlider`'s own separate registration
+            // (`loadMode: Footer, dependsOn: ['jquery.ui']`) structurally
+            // guaranteed jquery.ui loaded first via
+            // `PageAssets::promoteLoadModes()` ("a dependency can't load
+            // more loosely than its dependent"); folding its code into
+            // this bundle without carrying that same guarantee forward
+            // would have left a real Async-depends-on-Async race (the
+            // exact documented anti-pattern `promoteLoadModes()`'s own
+            // class docblock already warns about -- promotion only
+            // fires on a strict LoadMode difference, so leaving `mcs`
+            // itself Async here would silently no-op the dependency).
+            // `loadMode: Footer` (was Async) + `dependsOn: ['jquery.ui']`
+            // restores the identical real ordering guarantee doubleSlider
+            // used to carry on its own.
+            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui', 'page-data']),
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')

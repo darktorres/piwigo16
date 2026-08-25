@@ -128,7 +128,11 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            // switchbox.ts's own registration dropped (docs/PLAN.md P48,
+            // switchbox.ts's own batch) -- folds into picture.ts's own
+            // bundle via a real `?dup` import instead, same real,
+            // accepted Async-to-Footer timing change as IndexView's own
+            // identical copy of this comment.
             AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
             // 'picture' folds scripts.ts's own code in via a real `?dup`
             // import now (docs/PLAN.md P48) -- both of this method's own

@@ -39,7 +39,6 @@ final readonly class ConfigurationCommentsView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('configuration_comments', 'themes/admin/default/js/configuration_comments.ts', loadMode: LoadMode::Footer),
         ];
     }

@@ -1,3 +1,8 @@
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
+
 const piwigo_need_update_msg =
   '<a href="admin.php?page=updates">' +
   pwg_getPageString("A new version of Piwigo is available.") +

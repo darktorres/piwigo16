@@ -1,14 +1,16 @@
-export {};
-
 // Real consumer of album_selector.ts's own top-level `class
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer
 // list). `?dup` since album_selector.ts has several real registrant
-// pages (Design §4). `CategoriesCache`/`TagsCache` are different:
-// LocalStorageCache.ts wraps them in its own real, pre-existing IIFE,
-// so they're only reachable via `window.` -- same `window.` prefixing
-// already used in batch_manager_global.ts's own copy of this pattern.
+// pages (Design §4).
 import { AlbumSelector } from "./album_selector?dup";
+import { CategoriesCache, TagsCache } from "./LocalStorageCache?dup";
+
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
+export {};
 //
 // `add_related_category`/`remove_related_category` are declared here
 // too, independently of the same-named functions in mcs.js/
@@ -22,7 +24,7 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
 
 (function () {
   // <!-- CATEGORIES -->
-  const categoriesCache = new window.CategoriesCache({
+  const categoriesCache = new CategoriesCache({
     serverKey: pwg_getPageData<string>("cache_key_categories"),
     serverId: pwg_getPageData<string>("cache_key_hash"),
     rootUrl: pwg_getPageData<string>("root_url"),
@@ -31,7 +33,7 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   categoriesCache.selectize(jQuery("[data-selectize=categories]"));
 
   // <!-- TAGS -->
-  const tagsCache = new window.TagsCache({
+  const tagsCache = new TagsCache({
     serverKey: pwg_getPageData<string>("cache_key_tags"),
     serverId: pwg_getPageData<string>("cache_key_hash"),
     rootUrl: pwg_getPageData<string>("root_url"),

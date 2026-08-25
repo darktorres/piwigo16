@@ -98,7 +98,6 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.plupload', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/plupload.full.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::script('jquery.plupload.queue', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/jquery.plupload.queue.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::script('tus-js-client', 'https://cdn.jsdelivr.net/npm/tus-js-client@4.3.0/dist/tus.min.js', loadMode: LoadMode::Footer),
@@ -132,7 +131,15 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
 
         return [
             ...$assets,
-            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
+            // LocalStorageCache.ts's own registration dropped outright
+            // (docs/PLAN.md's P48, LocalStorageCache.ts's own batch) --
+            // a real, pre-existing dead registration, confirmed
+            // directly: neither this page's own photos_add_direct.ts
+            // nor album_selector.ts's own AlbumSelector class (the only
+            // other first-party file this page loads) reads any of
+            // LocalStorageCache.ts's 4 real exported classes, and that
+            // file has zero top-level side effects of its own to
+            // preserve either.
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('piecon', 'https://cdn.jsdelivr.net/gh/lipka/piecon@0.5.0/piecon.js', loadMode: LoadMode::Footer),

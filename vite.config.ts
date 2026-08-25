@@ -112,8 +112,23 @@ export default defineConfig({
     target: "es2022",
     rollupOptions: {
       input: {
-        // Placeholder only — 61 more real entries land across P46-C
-        // onward.
+        // Placeholder only. 72 real entries total as of P48-Z's own
+        // final count (docs/PLAN.md) -- down from the 79 P46-C left
+        // this file with (2 build/*, 77 themes/**/*.ts, one file per
+        // page/shared-library file, no consolidation): P48's own real
+        // `import`/`export` conversion + bundle consolidation removed
+        // every shared-library file's own standalone entry (common.ts/
+        // page-data.ts/scripts.ts/album_selector.ts/LocalStorageCache.ts/
+        // doubleSlider.ts/switchbox.ts/search_filters.ts/intro.ts/
+        // intro_tooltips.ts/plugins_installed_config.ts/
+        // plugins_installated.ts/batchManagerGlobal.ts/
+        // batch_manager_global.ts/addAlbum.ts/datepicker.ts/autosize.ts/
+        // toaster.ts, 18 entries gone) and added 11 new real per-page
+        // bundle entries under themes/**/pages/: 9 where 2+ real files
+        // needed merging into one LoadMode group, plus 2
+        // (configurationDefaultPage/configurationDisplayPage) whose only
+        // first-party JS need was a single shared-library file's own
+        // side effects, with no other page-specific file of their own.
         noop: r("build/noop.ts"),
         // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.
@@ -121,7 +136,11 @@ export default defineConfig({
         // P46-B — themes/default/js/*.js's first 12 real entries (2 more,
         // autosize.js/search.js, turned out to be dead code and were
         // deleted rather than converted).
-        pageData: r("themes/default/js/page-data.ts"),
+        // page-data.ts is no longer its own entry either (docs/PLAN.md
+        // P48, its own later, heaviest batch -- 48 real consumer files)
+        // -- every real consumer folds its code in via its own `?dup`
+        // import instead of the separate centralized script tag
+        // `Template::finalizeHtml()` used to register directly.
         // scripts.ts is no longer its own entry (docs/PLAN.md P48, its
         // own later batch) -- it has several real registrant pages,
         // each with their own bundle folding its code in via a `?dup`
@@ -129,14 +148,20 @@ export default defineConfig({
         // rating.ts's own direct imports for its 2 real symbol
         // consumers).
         picture: r("themes/default/js/picture.ts"),
-        searchFilters: r("themes/default/js/search_filters.ts"),
+        // search_filters.ts is no longer its own entry (docs/PLAN.md
+        // P48) -- mcs.ts is its one real consumer file anywhere, so its
+        // code folds directly into mcs.ts's own bundle via a plain
+        // import instead.
         rating: r("themes/default/js/rating.ts"),
         index: r("themes/default/js/index.ts"),
         menubarLinks: r("themes/default/js/menubar-links.ts"),
         menubarQuicksearch: r("themes/default/js/menubar-quicksearch.ts"),
         pictureNavButtons: r("themes/default/js/picture_nav_buttons.ts"),
         popuphelp: r("themes/default/js/popuphelp.ts"),
-        switchbox: r("themes/default/js/switchbox.ts"),
+        // switchbox.ts is no longer its own entry (docs/PLAN.md P48)
+        // -- its 2 real registrant pages (IndexView/PictureView) fold
+        // its code in via their own `?dup` import instead (their own
+        // index.ts/picture.ts, its 2 real "pusher" files).
         thumbnailsLoader: r("themes/default/js/thumbnails.loader.ts"),
         // P46-C — themes/admin/default/js/*.js's first 4 real entries
         // (the shared-global foundation files the P46-C full sweep
@@ -147,8 +172,16 @@ export default defineConfig({
         // no longer its own entry either (docs/PLAN.md P48, its own
         // later batch) -- it has 8 real consumer files, each importing
         // its code directly via a `?dup` import instead.
-        adminCommon: r("themes/admin/default/js/common.ts"),
-        localStorageCache: r("themes/admin/default/js/LocalStorageCache.ts"),
+        // common.ts is no longer its own entry either (docs/PLAN.md
+        // P48, its own later batch) -- 30+ real registrant pages, each
+        // folding its code in via a `?dup` import instead (its own real
+        // consumer files, or a new minimal pages/ entry for the 2 pages
+        // whose only first-party JS need was common.ts's own side
+        // effects).
+        // LocalStorageCache.ts is no longer its own entry either (docs/
+        // PLAN.md P48, its own later batch) -- its 4 real exported
+        // classes fold into their own 7 real consumer files' bundles
+        // via a `?dup` import instead.
         // P46-C part 2 — the genuinely bidirectional pair (see both
         // files' own leading comments for the real ordering-safety
         // analysis). Neither is its own entry any more (docs/PLAN.md
@@ -223,7 +256,10 @@ export default defineConfig({
         pictureFormats: r("themes/admin/default/js/picture_formats.ts"),
         catPerm: r("themes/admin/default/js/cat_perm.ts"),
         ratingAdmin: r("themes/admin/default/js/rating.ts"),
-        doubleSlider: r("themes/admin/default/js/doubleSlider.ts"),
+        // doubleSlider.ts is no longer its own entry (docs/PLAN.md P48)
+        // -- its 2 real file-level consumers (batchManagerFilter.ts/
+        // mcs.ts, each its own real registrant-page entry) fold its
+        // code in via their own `?dup` import instead.
         // P46-C part 14 -- 5 more small, self-contained admin files.
         configurationComments: r(
           "themes/admin/default/js/configuration_comments.ts",
@@ -308,6 +344,16 @@ export default defineConfig({
         // identification.php/profile.php's default-theme branch,
         // comment_list.inc.latte's own conditional branch).
         coreScriptsPage: r("themes/default/js/pages/core_scripts.ts"),
+        // common.ts's own batch (docs/PLAN.md P48) -- the 2 real pages
+        // whose only first-party JS need was common.ts's own side
+        // effects, with no other page-specific file to fold that import
+        // into instead.
+        configurationDefaultPage: r(
+          "themes/admin/default/js/pages/configuration_default.ts",
+        ),
+        configurationDisplayPage: r(
+          "themes/admin/default/js/pages/configuration_display.ts",
+        ),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

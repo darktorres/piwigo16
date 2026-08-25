@@ -1,3 +1,9 @@
+import { jConfirm_confirm_options } from "./common?dup";
+
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 const pwg_token = pwg_getPageData<string>("csrf_token");

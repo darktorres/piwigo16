@@ -1,3 +1,4 @@
+import { pwg_getPageData } from "./page-data?dup";
 export {};
 
 let max_requests = pwg_getPageData<number | undefined>("max_requests");

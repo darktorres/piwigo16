@@ -1,12 +1,11 @@
-export {};
+import "./common?dup";
+import { GroupsCache, UsersCache } from "./LocalStorageCache?dup";
 
-// `GroupsCache`/`UsersCache` are only reachable via `window.` --
-// LocalStorageCache.ts wraps them in its own real, pre-existing IIFE
-// (same reasoning as every other GroupsCache/UsersCache/
-// CategoriesCache/TagsCache consumer this session).
+import { pwg_getPageData } from "../../../default/js/page-data?dup";
+export {};
 (function () {
   // <!-- GROUPS -->
-  const groupsCache = new window.GroupsCache({
+  const groupsCache = new GroupsCache({
     serverKey: pwg_getPageData<string>("cache_key_groups"),
     serverId: pwg_getPageData<string>("cache_key_hash"),
     rootUrl: pwg_getPageData<string>("root_url"),
@@ -15,7 +14,7 @@ export {};
   groupsCache.selectize(jQuery("[data-selectize=groups]"));
 
   // <!-- USERS -->
-  const usersCache = new window.UsersCache({
+  const usersCache = new UsersCache({
     serverKey: pwg_getPageData<string>("cache_key_users"),
     serverId: pwg_getPageData<string>("cache_key_hash"),
     rootUrl: pwg_getPageData<string>("root_url"),

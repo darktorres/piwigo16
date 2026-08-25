@@ -46,7 +46,6 @@ final readonly class ConfigurationMainView implements View, HasPageAssets, Expos
         return [
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('configuration_main', 'themes/admin/default/js/configuration_main.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.tipTip', 'jquery.colorbox', 'page-data']),
             AssetContribution::css('themes/admin/default/css/pages/configuration_main.css', id: 'configuration_main'),
         ];

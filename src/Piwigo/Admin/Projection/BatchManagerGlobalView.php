@@ -120,7 +120,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // way addAlbum.ts's `?dup` import is. Footer (not
             // batchManagerGlobal.ts's former Async) is the merged mode,
             // matching batch_manager_global.ts's own former mode --
-            // `jquery.ui.timepicker-addon`/`jquery.colorbox`/`doubleSlider`
+            // `jquery.ui.timepicker-addon`/`jquery.colorbox`
             // below cascade-promote to Footer too via
             // PageAssets::promoteLoadModes() ("a dependency can't load
             // more loosely than its dependent"), a real, intentional
@@ -130,8 +130,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // wasn't previously guaranteed to run after
             // batch_manager_global.ts set it (Async vs Footer, no
             // `dependsOn` between them).
-            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon', 'jquery.colorbox', 'doubleSlider', 'page-data']),
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon', 'jquery.colorbox', 'page-data']),
             AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Async),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
@@ -151,12 +150,10 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // ColorboxView/AddAlbumView), so album_selector's own
             // contribution has to resolve first, matching the accepted
             // golden-html baseline confirmed by a real diff, not assumed.
-            AssetContribution::script('doubleSlider', 'themes/admin/default/js/doubleSlider.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js'),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via

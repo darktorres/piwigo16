@@ -48,7 +48,6 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             // register directly (datepicker.ts has 4 real registrant
             // pages, so a plain import isn't safe here -- Design §4).
             AssetContribution::script('history_page', 'themes/admin/default/js/pages/history.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('history', 'themes/admin/default/js/history.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             // order 10 is required, see issue 1080

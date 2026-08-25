@@ -56,7 +56,11 @@ final readonly class ConfigurationDefaultView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
+            // Real per-page bundle entry (docs/PLAN.md's P48) -- this
+            // page's only first-party JS need is common.ts's own side
+            // effects, folded in via a real `?dup` import instead of the
+            // separate script tag common.ts used to register directly.
+            AssetContribution::script('configuration_default_page', 'themes/admin/default/js/pages/configuration_default.ts', loadMode: LoadMode::Footer),
         ];
     }
 }

@@ -99,6 +99,15 @@ final readonly class ThemeBaseAssets
      * calls this alongside its own `page-data` registration, for admin
      * layouts only, at that same last-insertion point.
      *
+     * `footer` (`themes/admin/default/js/footer.ts`) stays a real
+     * standalone script tag here, not folded into any per-page bundle
+     * (docs/PLAN.md's P48, footer.ts's own catalog line -- see that
+     * file's own leading comment for the full reasoning): this method's
+     * whole point is a page-agnostic, centrally-ordered late injection,
+     * which a per-page `?dup` fold would have to re-derive per View
+     * instead, for a file with zero real exports to gain from module
+     * conversion.
+     *
      * @return list<AssetContribution>
      */
     public static function lateAdminScripts(): array

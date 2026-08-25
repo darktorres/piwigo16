@@ -1,5 +1,18 @@
 import type { operations } from "../../../../openapi/client/schema";
+// common.ts's own side effects only (font-checkbox init, search-cancel
+// bindings) -- this page has no other first-party consumer of
+// common.ts's own real exports. Real, accepted behavior change (docs/
+// PLAN.md's own Design §6 precedent): common.ts used to load at
+// UserActivityView's own explicit `LoadMode::Footer`; folded into this
+// file, it now runs at this file's own `LoadMode::Async` instead (the
+// only registrant page where common.ts's timing actually changes).
+import "./common?dup";
+import { UsersCache } from "./LocalStorageCache?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 type UserListResponse =
@@ -39,7 +52,7 @@ interface MergedActivityLine {
   counter: number;
 }
 
-const usersCache = new window.UsersCache({
+const usersCache = new UsersCache({
   serverKey: pwg_getPageData<string>("cache_key_users"),
   serverId: pwg_getPageData<string>("cache_key_hash"),
   rootUrl: pwg_getPageData<string>("root_url"),

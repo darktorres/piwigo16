@@ -1,5 +1,10 @@
 import type { components, operations } from "../../../../openapi/client/schema";
+import { getRandomInt, sprintf, jConfirm_confirm_options } from "./common?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/

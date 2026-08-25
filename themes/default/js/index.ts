@@ -1,3 +1,10 @@
+// switchbox.ts's own side effect only (docs/PLAN.md P48) -- drains
+// `window.SwitchBox` once loaded; this file is one of its 2 real
+// pushers (the other, PictureView's own picture.ts, has its own
+// separate `?dup` import). `?dup` since switchbox.ts has 2 real
+// registrant pages (Design §4).
+import "./switchbox?dup";
+
 export {};
 
 window.SwitchBox = window.SwitchBox || [];

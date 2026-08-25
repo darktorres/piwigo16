@@ -1,5 +1,10 @@
 import type { operations } from "../../../../openapi/client/schema";
+import { jConfirm_confirm_options } from "./common?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // jqtree's own custom `tree.open`/`tree.close`/`tree.move` jQuery events
@@ -23,7 +28,7 @@ interface JqTreeMoveEvent extends JQuery.TriggeredEvent {
   move_info: JqTreeMoveInfo;
 }
 
-const data = pwg_getPageData<AlbumTreeNode[]>("album_data");
+export const data = pwg_getPageData<AlbumTreeNode[]>("album_data");
 const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_are_you_sure = pwg_getPageString(
   "The status of the album '%s' and its sub-albums will change to private. Are you sure?",
@@ -41,14 +46,16 @@ const x_nb_subcats = pwg_getPageString("%d sub-albums");
 const x_nb_images = pwg_getPageString("%d photos");
 const x_nb_sub_photos = pwg_getPageString("%d pictures in sub-albums");
 
-// Not `str_albums_found`/`str_result_limit` too -- AlbumsView.php's own
-// exposedStrings() carries both, but the real reader is cat_search.ts,
-// which reads them bare through album_selector.ts's own identically-
-// named non-module `const`s (a real ambient global, since that file has
-// no `export {}`) -- same coincidental-duplicate situation cat_search.ts's
-// own leading comment already documents for `str_album_found` below.
-// Declaring local copies here would just be genuinely dead weight.
-const str_album_found = pwg_getPageString("<b>1</b> album found");
+// Not `str_albums_found`/`str_result_limit`/`str_album_found` too --
+// AlbumsView.php's own exposedStrings() carries all 3, but the real
+// reader is cat_search.ts, which imports them from album_selector.ts's
+// own real exports instead (cat_search.ts's own leading comment: a
+// genuine, coincidental same-wording duplicate, not the semantically
+// "correct" owner). This file's own former local `const str_album_found`
+// copy was real dead code -- confirmed zero consumers anywhere, `.ts`
+// or `.latte` -- and was removed outright rather than exported to
+// nothing (docs/PLAN.md P48, common.ts's own batch already established
+// this same precedent for `array_delete`).
 const str_albs_drag_drop = pwg_getPageString("Drag and drop to reorder albums");
 
 const delay_autoOpen = pwg_getPageData<number>("delay_auto_open");
@@ -1294,10 +1301,5 @@ function openNodeOnDemand(node: AlbumJqTreeNode) {
   }
 }
 
-// Explicit `window.` exposure -- required at runtime, not decorative
-// (see plugins_installed_config.ts's own leading comment for the full
-// explanation: this file's own top-level declarations become
-// IIFE-private at build time, so a bare cross-file read needs this to
-// resolve). cat_search.ts reads both of these bare.
-window.data = data;
-window.str_album_found = str_album_found;
+// `data` is a real export now (docs/PLAN.md P48) -- cat_search.ts
+// imports it directly, no more `window.` latching.

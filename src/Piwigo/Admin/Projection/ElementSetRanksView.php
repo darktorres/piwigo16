@@ -47,7 +47,6 @@ final readonly class ElementSetRanksView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('element_set_ranks', 'themes/admin/default/js/element_set_ranks.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.tipTip']),
             AssetContribution::css('themes/admin/default/css/pages/element_set_ranks.css', id: 'element_set_ranks'),
         ];

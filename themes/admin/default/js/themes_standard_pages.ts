@@ -1,3 +1,5 @@
+import "./common?dup";
+
 export {};
 
 // Update preview when user clicks on mini previews

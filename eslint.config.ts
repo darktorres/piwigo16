@@ -107,11 +107,16 @@ export default tseslint.config(
     // directly: every real usage in these files reports as "unsafe
     // call/member access on an error type" under `eslint`, even though
     // the exact same code type-checks fine under `tsc`) -- a real tool
-    // divergence, not a real type-safety gap, so only the 4 rules that
+    // divergence, not a real type-safety gap, so only the 5 rules that
     // misfire from it are relaxed here, not `no-explicit-any` (unlike
     // the P47 block above, nothing in these files is a real, deliberate
     // `any`). mcs.ts's own copy of this same usage needs no entry here
-    // -- already covered by the broader P47 block above.
+    // -- already covered by the broader P47 block above. `no-unsafe-
+    // return` joined the other 4 once page-data.ts's own batch landed
+    // (docs/PLAN.md P48) -- its generic `pwg_getPageData<T>()`, consumed
+    // via `?dup`, surfaces the identical divergence as a real "unsafe
+    // return" instead in a handful of files whose own functions return
+    // a value derived from it.
     files: [
       "themes/admin/default/js/batchManagerFilter.ts",
       "themes/admin/default/js/batchManagerGlobal.ts",
@@ -122,12 +127,72 @@ export default tseslint.config(
       "themes/admin/default/js/picture_modify.ts",
       "themes/default/js/picture.ts",
       "themes/default/js/rating.ts",
+      // common.ts's own batch (docs/PLAN.md P48) -- every real named
+      // (not bare side-effect-only) `?dup` consumer of common.ts hits
+      // the same divergence.
+      "themes/admin/default/js/user_list.ts",
+      "themes/admin/default/js/doubleSlider.ts",
+      "themes/admin/default/js/batch_manager_global.ts",
+      "themes/admin/default/js/album_selector.ts",
+      "themes/admin/default/js/plugins_installated.ts",
+      "themes/admin/default/js/group_list.ts",
+      "themes/admin/default/js/comments.ts",
+      "themes/admin/default/js/tags.ts",
+      "themes/admin/default/js/picture_formats.ts",
+      "themes/admin/default/js/rating_user.ts",
+      "themes/admin/default/js/albums.ts",
+      // LocalStorageCache.ts's own batch (docs/PLAN.md P48) -- same
+      // divergence, its own real named `?dup` consumers.
+      "themes/admin/default/js/cat_perm.ts",
+      "themes/admin/default/js/rating.ts",
+      "themes/admin/default/js/user_activity.ts",
+      // updates_ext.ts's own real named `?dup` consumer of common.ts
+      // (jConfirm_confirm_options) -- a real gap from common.ts's own
+      // batch, found and fixed here.
+      "themes/admin/default/js/updates_ext.ts",
+      // page-data.ts's own batch (docs/PLAN.md P48) -- same divergence,
+      // its own 45 real named `?dup` consumers not already covered by
+      // an entry above or by the broader P47 "any" block (search_filters.ts/
+      // history.ts/profile.ts).
+      "themes/admin/default/js/admin.ts",
+      "themes/admin/default/js/check_integrity.ts",
+      "themes/admin/default/js/configuration_main.ts",
+      "themes/admin/default/js/configuration_search.ts",
+      "themes/admin/default/js/configuration_sizes.ts",
+      "themes/admin/default/js/configuration_watermark.ts",
+      "themes/admin/default/js/footer.ts",
+      "themes/admin/default/js/install.ts",
+      "themes/admin/default/js/intro.ts",
+      // intro_tooltips.ts imports plain (no `?dup`) from intro.ts, but
+      // still inherits the same divergence -- confirmed directly:
+      // intro.ts's own exports resolve to an "error" type under
+      // eslint's projectService (the same tool disagreement, one hop
+      // further) even though `tsc` resolves the whole chain cleanly.
+      "themes/admin/default/js/intro_tooltips.ts",
+      "themes/admin/default/js/languages_installed.ts",
+      "themes/admin/default/js/maintenance_actions.ts",
+      "themes/admin/default/js/maintenance.ts",
+      "themes/admin/default/js/permalinks.ts",
+      "themes/admin/default/js/picture_coi.ts",
+      "themes/admin/default/js/plugins_installed_config.ts",
+      "themes/admin/default/js/plugins_new.ts",
+      "themes/admin/default/js/site_manager.ts",
+      "themes/admin/default/js/stats.ts",
+      "themes/admin/default/js/themes_installed.ts",
+      "themes/admin/default/js/themes_new.ts",
+      "themes/admin/default/js/updates_pwg.ts",
+      "themes/default/js/menubar-quicksearch.ts",
+      "themes/default/js/picture_nav_buttons.ts",
+      "themes/default/js/scripts.ts",
+      "themes/default/js/thumbnails.loader.ts",
+      "themes/standard_pages/js/standard_pages.ts",
     ],
     rules: {
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
     },
   },
   {

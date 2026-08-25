@@ -1,3 +1,5 @@
+import { pwg_getPageData, pwg_getPageString } from "./page-data?dup";
+
 const global_params_json = pwg_getPageData<string | false>(
   "global_params_json",
 );
@@ -133,34 +135,35 @@ const show_filter_ratings =
     ? false
     : show_filter_ratings_value;
 
-// Explicit `window.` exposure -- required, not decorative (see
-// page-data.ts's own copy of this comment for the full explanation).
-// mcs.js/mcs.ts is the one real consumer, reading every one of these as
-// a bare global (confirmed via grep, not the plan's own original
-// guess -- `user_rank`/`filesize`/`height`/`width` turned out to have
-// zero real bare-identifier readers there despite being declared here,
-// so they're deliberately NOT exposed).
-window.global_params = global_params;
-window.fullname_of_cat = fullname_of_cat;
-window.search_id = search_id;
-window.str_word_widget_label = str_word_widget_label;
-window.str_tags_widget_label = str_tags_widget_label;
-window.str_album_widget_label = str_album_widget_label;
-window.str_author_widget_label = str_author_widget_label;
-window.str_added_by_widget_label = str_added_by_widget_label;
-window.str_filetypes_widget_label = str_filetypes_widget_label;
-window.str_rating_widget_label = str_rating_widget_label;
-window.str_no_rating = str_no_rating;
-window.str_between_rating = str_between_rating;
-window.str_filesize_widget_label = str_filesize_widget_label;
-window.str_width_widget_label = str_width_widget_label;
-window.str_height_widget_label = str_height_widget_label;
-window.str_ratio_widget_label = str_ratio_widget_label;
-window.str_ratios_label = str_ratios_label;
-window.str_expert_widget_label = str_expert_widget_label;
-window.str_empty_search_top_alt = str_empty_search_top_alt;
-window.str_empty_search_bot_alt = str_empty_search_bot_alt;
-window.str_search_in_ab = str_search_in_ab;
-window.prefix_icon = prefix_icon;
-window.sliders = sliders;
-window.show_filter_ratings = show_filter_ratings;
+// Real exports now (docs/PLAN.md P48) -- mcs.ts is the one real
+// consumer of most of these, history.ts of `global_params`/
+// `fullname_of_cat` too (both previously bare-global reads, no more
+// `window.` latching). `user_rank`/`filesize`/`height`/`width` stay
+// module-private -- zero real bare-identifier readers anywhere despite
+// being declared here (confirmed via grep, not assumed).
+export {
+  global_params,
+  fullname_of_cat,
+  search_id,
+  str_word_widget_label,
+  str_tags_widget_label,
+  str_album_widget_label,
+  str_author_widget_label,
+  str_added_by_widget_label,
+  str_filetypes_widget_label,
+  str_rating_widget_label,
+  str_no_rating,
+  str_between_rating,
+  str_filesize_widget_label,
+  str_width_widget_label,
+  str_height_widget_label,
+  str_ratio_widget_label,
+  str_ratios_label,
+  str_expert_widget_label,
+  str_empty_search_top_alt,
+  str_empty_search_bot_alt,
+  str_search_in_ab,
+  prefix_icon,
+  sliders,
+  show_filter_ratings,
+};

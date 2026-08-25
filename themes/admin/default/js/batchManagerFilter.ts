@@ -12,7 +12,16 @@
 // accepted consequence documented in album_selector.ts's own leading
 // comment.
 import { AlbumSelector } from "./album_selector?dup";
+// doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
+// file's real `.pwgDoubleSlider(...)` call sites below) -- `?dup` since
+// this file is itself registered on 2 real pages, same reasoning as
+// album_selector.ts's own import above.
+import "./doubleSlider?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // `sliders` here is a genuinely independent, unrelated top-level `var`

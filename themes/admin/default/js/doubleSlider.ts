@@ -1,3 +1,5 @@
+import { sprintf } from "./common?dup";
+
 export {};
 
 // Real declarer of `pwgDoubleSlider` (docs/PLAN.md P46-C's own sweep --

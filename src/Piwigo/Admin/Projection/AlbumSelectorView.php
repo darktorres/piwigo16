@@ -7,7 +7,6 @@ namespace Piwigo\Admin\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
-use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
@@ -63,7 +62,6 @@ final readonly class AlbumSelectorView implements View, HasPageAssets, ExposesPa
             // folding its code in via its own `?dup` import instead of
             // one shared standalone script tag (the same reasoning as
             // AutosizeView/DatepickerView's own P48 batches).
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
         ];
     }
 

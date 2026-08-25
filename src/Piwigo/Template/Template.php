@@ -164,10 +164,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Set by `applyThemeBaseAssets()` (docs/PLAN.md's P42) -- lets
      * `finalizeHtml()` know whether to also register
-     * `ThemeBaseAssets::lateAdminScripts()` alongside its own `page-data`
-     * registration; both sat at `layout.latte`'s own tail originally,
-     * admin-only, so this flag scopes that lazy registration correctly
-     * instead of adding admin-only scripts on every theme family.
+     * `ThemeBaseAssets::lateAdminScripts()`, which sat at `layout.latte`'s
+     * own tail originally, admin-only, so this flag scopes that lazy
+     * registration correctly instead of adding admin-only scripts on
+     * every theme family.
      */
     private bool $isAdminLayout = false;
 
@@ -175,11 +175,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Set by `applyThemeBaseAssets()` -- true only when this instance is
      * rendering one of the 3 real `layout.latte` families (that method's
      * own `$path !== 'template'` early return skips it otherwise, e.g.
-     * `InstallWizard`'s separately-rooted `Template`, which has no
-     * `{=getPageDataScript()}`/`page-data` script call at all). Gates
-     * `finalizeHtml()`'s own lazy `page-data` registration below --
-     * unconditional there would add `page-data.js` to a page family
-     * that never wanted it.
+     * `InstallWizard`'s separately-rooted `Template`). Gates
+     * `finalizeHtml()`'s own lazy `ThemeBaseAssets::lateAdminScripts()`
+     * registration below, alongside `$isAdminLayout` -- unconditional
+     * there would add admin-only scripts to a page family that never
+     * wanted them. No longer also gates a `page-data` script
+     * registration (docs/PLAN.md's P48, page-data.ts's own batch) --
+     * that centralized registration is gone; every real consumer
+     * imports page-data.ts's exports directly instead.
      */
     private bool $themeBaseApplied = false;
 
@@ -833,22 +836,41 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $this->scriptsResolved = true;
 
             // Registered here, not in `ThemeBaseAssets` (docs/PLAN.md's
-            // P42), so both insert *last* among same-priority scripts --
+            // P42), so it inserts *last* among same-priority scripts --
             // matching every real `layout.latte`'s own original
             // imperative call order, right before this same resolution --
             // see `ThemeBaseAssets`'s own class docblock for why theme-
             // init timing would reorder same-priority ties instead.
-            // `jquery.tipTip` before `page-data`: admin's own original
-            // tail literally called `combineScript('jquery.tipTip', ...)`
-            // before `combineScript('page-data', ...)`, and same-rank
-            // ties break by insertion order.
-            if ($this->themeBaseApplied) {
-                if ($this->isAdminLayout) {
-                    foreach (ThemeBaseAssets::lateAdminScripts() as $lateAsset) {
-                        $this->pageAssets->add($lateAsset);
-                    }
+            //
+            // No more separate `page-data` script registration here
+            // (docs/PLAN.md's P48, page-data.ts's own batch): every real
+            // `.ts` consumer of `pwg_getPageData`/`pwg_getPageString`
+            // (48 files, confirmed via a direct grep, not assumed) now
+            // imports them directly via a real `?dup` import instead of
+            // reading a bare global this centralized registration used
+            // to provide -- confirmed safe against every real page:
+            // no `.latte` template anywhere reads either function
+            // directly, no `AssetContribution::inlineScript()` call site
+            // does either, and every real top-level page with at least
+            // one `<script>` tag of its own has a first-party `.ts` file
+            // to carry the import (the few genuinely script-free pages
+            // -- `maintenance_sys`/`help`/`redirect`/`slideshow`/
+            // `double_select`/`selected_tags` among others -- need
+            // neither function at all). The many pre-existing
+            // `dependsOn: ['page-data']` entries left scattered across
+            // this codebase's own `AssetContribution::script()` calls
+            // are now vestigial but harmless -- `PageAssets::
+            // promoteLoadModes()`'s own dependency lookup silently no-ops
+            // on a missing id (confirmed directly in its own source),
+            // same as this file's own former `dependsOn: ['core.scripts']`/
+            // `['core.switchbox']` precedents -- not swept out here,
+            // since the real ordering guarantee they used to encode is
+            // now provided structurally by each consumer's own direct
+            // `import` instead.
+            if ($this->themeBaseApplied && $this->isAdminLayout) {
+                foreach (ThemeBaseAssets::lateAdminScripts() as $lateAsset) {
+                    $this->pageAssets->add($lateAsset);
                 }
-                $this->pageAssets->add(AssetContribution::script('page-data', 'themes/default/js/page-data.ts', loadMode: LoadMode::Footer));
             }
 
             $scripts = $this->pageAssets->resolveScripts();
@@ -1433,13 +1455,22 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * index.js`'s own `#derivativeSwitchLink`/`#derivativeSwitchBox` etc.)
      * is wired via a `window.SwitchBox.push(link, box)` call --
      * `themes/default/js/switchbox.ts`'s own generic toggle/hide
-     * behavior, already an unconditional page asset on both
-     * `IndexView`/`PictureView` (`core.switchbox`). Registered here, once
-     * per action, rather than requiring `index.latte`/`picture.latte` to
-     * emit this JS themselves -- a plugin author gets working toggle
-     * behavior for free, with no JS of their own to write (matching the
-     * real `language_switch_17.0.0` plugin's own pre-P43 flag-picker,
-     * which had to hand-write this same wiring itself). `json_encode()`
+     * behavior, folded into both `IndexView`/`PictureView`'s own
+     * `index`/`picture` bundles now (docs/PLAN.md P48, switchbox.ts's
+     * own batch -- was its own standalone `core.switchbox` asset id
+     * before that, which this method's own `dependsOn` used to
+     * reference; no replacement needed, since switchbox.ts's own "queue
+     * array, then live handler" shape-shifting design
+     * (build/jquery-plugins.d.ts's own `SwitchBoxQueue` comment) is
+     * already safe regardless of load order, and this inline script
+     * renders in Footer position after every footer-sync `<script src>`
+     * tag regardless -- `ScriptLoader::addInline()`'s own real
+     * behavior). Registered here, once per action, rather than
+     * requiring `index.latte`/`picture.latte` to emit this JS
+     * themselves -- a plugin author gets working toggle behavior for
+     * free, with no JS of their own to write (matching the real
+     * `language_switch_17.0.0` plugin's own pre-P43 flag-picker, which
+     * had to hand-write this same wiring itself). `json_encode()`
      * around each selector, not raw string concatenation, since `$id` is
      * plugin-supplied and this is a JS string literal rendered inside an
      * inline `<script>` tag -- the same `JSON_HEX_*` flag set
@@ -1456,8 +1487,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $link = json_encode('#' . $action->id . 'Link', $flags);
         $box = json_encode('#' . $action->id . 'Box', $flags);
         $this->pageAssets->add(AssetContribution::inlineScript(
-            "window.SwitchBox=window.SwitchBox||[];window.SwitchBox.push({$link},{$box});",
-            ['core.switchbox']
+            "window.SwitchBox=window.SwitchBox||[];window.SwitchBox.push({$link},{$box});"
         ));
     }
 

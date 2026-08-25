@@ -16,29 +16,24 @@ import {
   str_result_limit,
   str_album_found,
 } from "./album_selector?dup";
+// Real consumer of albums.ts's own top-level `data` (docs/PLAN.md P48,
+// albums.ts's own batch -- was a `window.data` read before that).
+// `?dup`, NOT a plain import (a real bug found and fixed via a live
+// `vite build` + manifest.json inspection, confirmed directly: albums.ts
+// stays its own separate standalone Vite entry, unlike every other
+// declarer this campaign folded away -- so it's reachable from 2 real
+// entries, its own `albums` entry and this file's own `catSearch` entry,
+// the same 2-entry threshold as any other `?dup` case, "one real
+// registrant page" alone isn't the right test when the declarer itself
+// is still independently registered).
+import { data } from "./albums?dup";
 
 export {};
 
-// Also reads `data` -- a real top-level `const` in
-// themes/admin/default/js/albums.ts (a real `dependsOn: ['albums']`
-// registration -- AlbumsView.php) -- a genuine cross-file relationship
-// the plan's own full 61-file sweep missed (a generic/short identifier
-// the sweep's own false-positive filtering excluded). Correction found
-// by real strict typechecking (deferred to the end of the P46
-// conversion, per session instruction): unlike every other
-// declarer-converts-later case, albums.ts *does* have `export {}` --
-// its own real declarations are module-private, not ambient, so a bare
-// `data` read here is a genuine TS2304 "Cannot find name" compile
-// error. Fixed by reading `data` through `window.data` explicitly --
-// TS-valid via the shared `Window` interface, and behaviorally
-// identical at runtime (a bare, undeclared-in-this-file identifier read
-// already resolves through the global object the same way).
-
-// Real shape of albums.ts's own `data` (window.data) tree nodes, as
-// actually read here -- albums.ts's own `pwg_getPageData("album_data")`
-// stays untyped until its own P47-B turn (a much larger file), but
-// `window.data` is `any`-typed in the interim, so passing it here needs
-// no cast either way.
+// Narrower local shape than albums.ts's own real `AlbumTreeNode` --
+// only the fields `searchAlbumByName()` below actually reads. TS's
+// structural typing accepts the real (wider) `data` value here without
+// a cast either way.
 interface AlbumTreeNode {
   id: string | number;
   name: string;
@@ -83,7 +78,7 @@ function updateSearch() {
 
     let nbResult = 0;
 
-    nbResult = searchAlbumByName(window.data, string, nbResult);
+    nbResult = searchAlbumByName(data, string, nbResult);
 
     if (nbResult != 1) {
       if (nbResult >= RESULT_LIMIT) {

@@ -40,7 +40,6 @@ final readonly class CatListView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('alternativeView', 'themes/admin/default/js/cat_list.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/cat_list.css', id: 'cat_list'),

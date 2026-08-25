@@ -44,11 +44,11 @@ jQuery.fn.fontCheckbox = function (this: JQuery): JQuery {
 // init fontChecbox everywhere
 jQuery(".font-checkbox").fontCheckbox();
 
-function array_delete<T>(arr: T[], item: T): void {
-  const i = arr.indexOf(item);
-  if (i != -1) arr.splice(i, 1);
-}
-
+// str_repeat stays module-private (P48) -- sprintf() below is its only
+// real caller anywhere in this codebase; array_delete (the same
+// original comment's other established shared-global) had zero real
+// callers anywhere, `.ts` or `.latte`, and was removed outright rather
+// than exported to nothing (Legacy porting: no permanent facades).
 function str_repeat(i: string, m: number): string {
   const o: string[] = [];
   for (; m > 0; o[--m] = i);
@@ -77,13 +77,13 @@ if (!Array.prototype.indexOf) {
   };
 }
 
-function getRandomInt(min: number, max: number): number {
+export function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function sprintf(...args: (string | number)[]): string {
+export function sprintf(...args: (string | number)[]): string {
   let i = 0,
     // Genuinely polymorphic per format specifier (%b/%d/%x reinterpret
     // as number, %s coerces to string, %c reinterprets as a char code)
@@ -197,7 +197,7 @@ interface TemporaryStateHtmlChange {
 }
 
 // Class to implement a temporary state and reverse it
-class TemporaryState {
+export class TemporaryState {
   attrChanges: TemporaryStateAttrChange[];
   classChanges: TemporaryStateClassChange[];
   htmlChanges: TemporaryStateHtmlChange[];
@@ -303,7 +303,7 @@ class TemporaryState {
   }
 }
 
-const jConfirm_alert_options = {
+export const jConfirm_alert_options = {
   icon: "icon-ok",
   titleClass: "jconfirmAlert",
   theme: "modern",
@@ -317,7 +317,7 @@ const jConfirm_alert_options = {
   typeAnimated: false,
 };
 
-const jConfirm_confirm_options = {
+export const jConfirm_confirm_options = {
   draggable: false,
   titleClass: "jconfirmDeleteConfirm",
   theme: "modern",
@@ -330,7 +330,7 @@ const jConfirm_confirm_options = {
   typeAnimated: false,
 };
 
-const jConfirm_warning_options = {
+export const jConfirm_warning_options = {
   icon: "icon-attention",
   draggable: false,
   titleClass: "jconfirmWarning jconfirmAlert",
@@ -398,17 +398,10 @@ jQuery.fn.pwg_jconfirm_follow_href = function (
   });
 };
 
-// Explicit `window.` exposure -- required, not decorative (see
-// page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
-// full explanation of why every P46 entry needs this for any name read
-// bare by another file).
-window.array_delete = array_delete;
-window.str_repeat = str_repeat;
-window.getRandomInt = getRandomInt;
-window.sprintf = sprintf;
-window.jConfirm_alert_options = jConfirm_alert_options;
-window.jConfirm_confirm_options = jConfirm_confirm_options;
-window.jConfirm_warning_options = jConfirm_warning_options;
-window.jConfirm_confirm_with_content_options =
-  jConfirm_confirm_with_content_options;
-window.TemporaryState = TemporaryState;
+// getRandomInt/sprintf/jConfirm_alert_options/jConfirm_confirm_options/
+// jConfirm_warning_options/TemporaryState are real exports now
+// (docs/PLAN.md P48) -- every real consumer imports them directly, no
+// more `window.` latching. array_delete had zero real callers anywhere
+// and was deleted outright. str_repeat/jConfirm_confirm_with_content_options
+// stay module-private -- each has exactly one real caller, both inside
+// this same file (sprintf() and pwg_jconfirm_follow_href() above).

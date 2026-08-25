@@ -7,7 +7,14 @@
 // as a result (previously non-module) -- `window._pwgRatingAutoQueue`
 // below is a separate, already-established queue-based deferred-init
 // pattern (P47's RatingAutoQueue redesign), not a plain function
-// exposure, and stays exactly as it is.
+// exposure, and stays exactly as it is. This file's own standalone
+// Vite entry/registration also stays exactly as it is (docs/PLAN.md
+// P48, its own catalog line's investigation, alongside switchbox.ts's
+// own real fold): it has exactly one real registrant page (PictureView)
+// but that registration is *conditional* ($rating may be null), so
+// folding it into picture.ts's own always-present bundle would make it
+// unconditionally present instead -- a real behavior change, not just
+// a request-count optimization, so it's excluded here.
 import { pwgAddEventListener } from "./scripts?dup";
 
 export {};

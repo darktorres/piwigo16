@@ -20,6 +20,12 @@ import {
   progress,
   getDerivativeUrls,
 } from "./batchManagerGlobal";
+import { sprintf } from "./common?dup";
+import { CategoriesCache, TagsCache } from "./LocalStorageCache?dup";
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 
 export const lang = {
   Cancel: pwg_getPageString("Cancel"),
@@ -31,7 +37,7 @@ export const lang = {
 
 jQuery(document).ready(function () {
   // <!-- TAGS -->
-  const tagsCache = new window.TagsCache({
+  const tagsCache = new TagsCache({
     serverKey: pwg_getPageData<string>("cache_key_tags"),
     serverId: pwg_getPageData<string>("cache_key_hash"),
     rootUrl: pwg_getPageData<string>("root_url"),
@@ -44,7 +50,7 @@ jQuery(document).ready(function () {
   });
 
   // <!-- CATEGORIES -->
-  const categoriesCache = new window.CategoriesCache({
+  const categoriesCache = new CategoriesCache({
     serverKey: pwg_getPageData<string>("cache_key_categories"),
     serverId: pwg_getPageData<string>("cache_key_hash"),
     rootUrl: pwg_getPageData<string>("root_url"),

@@ -57,8 +57,6 @@ final readonly class CatPermView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('cat_perm', 'themes/admin/default/js/cat_perm.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.selectize', 'page-data']),

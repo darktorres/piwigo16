@@ -390,10 +390,20 @@ jQuery("#applyAction").click(function (e) {
       maxRequests: 1,
     });
 
-    progressBar_max = elements.length;
+    // Narrowed once, right after the assignment above -- TS's own
+    // control-flow narrowing of the outer `let elements` doesn't
+    // survive the intervening `.each(function () {...})` call above
+    // (a closure that could, as far as the type checker can tell,
+    // reassign it), so every later read below needs this local
+    // definitely-assigned alias instead of re-reading `elements`
+    // directly (confirmed pre-existing TS18048 errors, not a P48
+    // regression -- this file itself is untouched by that campaign).
+    const syncElements = elements!;
+
+    progressBar_max = syncElements.length;
     let todo = 0;
     const syncBlockSize = Math.min(
-      Number((elements.length / 2).toFixed()),
+      Number((syncElements.length / 2).toFixed()),
       1000,
     );
     let image_ids = [];
@@ -403,9 +413,12 @@ jQuery("#applyAction").click(function (e) {
     jQuery("#confirmDel").hide();
     jQuery("#regenerationMsg").show();
     progress_bar_start();
-    for (let i = 0; i < elements.length; i++) {
-      image_ids.push(elements[i]);
-      if (i % syncBlockSize != syncBlockSize - 1 && i != elements.length - 1) {
+    for (let i = 0; i < syncElements.length; i++) {
+      image_ids.push(syncElements[i]);
+      if (
+        i % syncBlockSize != syncBlockSize - 1 &&
+        i != syncElements.length - 1
+      ) {
         continue;
       }
 
@@ -481,10 +494,14 @@ jQuery("#applyAction").click(function (e) {
       });
   }
 
-  progressBar_max = elements.length;
+  // Narrowed once -- see syncElements's own identical comment above
+  // for why (confirmed pre-existing, not a P48 regression).
+  const deleteElements = elements!;
+
+  progressBar_max = deleteElements.length;
   let todo = 0;
   const deleteBlockSize = Math.min(
-    Number((elements.length / 2).toFixed()),
+    Number((deleteElements.length / 2).toFixed()),
     1000,
   );
   let image_ids = [];
@@ -495,11 +512,11 @@ jQuery("#applyAction").click(function (e) {
   jQuery("#regenerationText").html(lang.deleteProgressMessage);
   jQuery("#regenerationMsg").show();
   progress_bar_start();
-  for (let i = 0; i < elements.length; i++) {
-    image_ids.push(elements[i]);
+  for (let i = 0; i < deleteElements.length; i++) {
+    image_ids.push(deleteElements[i]);
     if (
       i % deleteBlockSize != deleteBlockSize - 1 &&
-      i != elements.length - 1
+      i != deleteElements.length - 1
     ) {
       continue;
     }
@@ -545,7 +562,7 @@ jQuery("#applyAction").click(function (e) {
   /* tell PHP how many photos were deleted */
   jQuery("form").append(
     '<input type="hidden" name="nb_photos_deleted" value="' +
-      elements.length +
+      deleteElements.length +
       '">',
   );
 

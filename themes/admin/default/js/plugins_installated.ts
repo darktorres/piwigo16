@@ -1,11 +1,8 @@
 // Consumer of themes/admin/default/js/plugins_installed_config.ts's own
 // real exports now (docs/PLAN.md P48 -- was ambient window-global
-// latching). jConfirm_alert_options/jConfirm_confirm_options still need
-// no import: common.ts hasn't converted yet (a later P48 batch), so its
-// own real top-level `const` declarations of those names are still real
-// ambient globals, visible here regardless of this file's own module
-// status -- fix that bare read when common.ts's own batch lands, not
-// before.
+// latching). jConfirm_alert_options/jConfirm_confirm_options now import
+// from common.ts too (its own P48 batch landed).
+import { jConfirm_alert_options, jConfirm_confirm_options } from "./common?dup";
 import {
   activate_msg,
   cancel_msg,

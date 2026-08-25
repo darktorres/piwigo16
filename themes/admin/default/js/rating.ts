@@ -7,10 +7,13 @@ import type { operations } from "../../../../openapi/client/schema";
 // `[data-confirm]` click guard). `?dup` since scripts.ts has many real
 // registrant pages (Design §4).
 import "../../../default/js/scripts?dup";
+import "./common?dup";
+import { CategoriesCache } from "./LocalStorageCache?dup";
 
+import { pwg_getPageData } from "../../../default/js/page-data?dup";
 export {};
 
-const categoriesCache = new window.CategoriesCache({
+const categoriesCache = new CategoriesCache({
   serverKey: pwg_getPageData<string>("cache_key_categories"),
   serverId: pwg_getPageData<string>("cache_key_hash"),
   rootUrl: pwg_getPageData<string>("root_url"),

@@ -94,7 +94,15 @@ final readonly class IndexView implements View, HasPageAssets
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            // switchbox.ts's own registration dropped (docs/PLAN.md P48,
+            // switchbox.ts's own batch) -- folds into index.ts's own
+            // bundle via a real `?dup` import instead. Real, accepted
+            // timing change: switchbox.ts used to load at this page's
+            // own Async, now runs at index.ts's own Footer instead --
+            // safe since switchbox.ts's own "queue array, then live
+            // handler" shape-shifting design (build/jquery-plugins.d.ts's
+            // own `SwitchBoxQueue` comment) is already safe regardless
+            // of load order relative to its 2 real pushers.
             AssetContribution::script('index', 'themes/default/js/index.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
         ];

@@ -1,3 +1,5 @@
+import "./common?dup";
+
 export {};
 
 jQuery(document).ready(function () {

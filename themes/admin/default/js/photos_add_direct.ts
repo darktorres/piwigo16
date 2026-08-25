@@ -10,7 +10,12 @@ import type { operations, components } from "../../../../openapi/client/schema";
 // list). `?dup` since album_selector.ts has several real registrant
 // pages (Design §4).
 import { AlbumSelector } from "./album_selector?dup";
+import { sprintf, jConfirm_warning_options } from "./common?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // `@types/plupload`'s own File shape is an untyped `TODO` (its own

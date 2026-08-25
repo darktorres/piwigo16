@@ -7,7 +7,12 @@ import type { operations } from "../../../../openapi/client/schema";
 // `?dup` import). `?dup` since album_selector.ts has several real
 // registrant pages (Design §4).
 import { AlbumSelector } from "./album_selector?dup";
+import { CategoriesCache, TagsCache } from "./LocalStorageCache?dup";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own
@@ -37,18 +42,13 @@ interface ImageUpdateBody {
   [key: string]: unknown;
 }
 
-// `CategoriesCache`/`TagsCache` are different: LocalStorageCache.ts
-// wraps them in its own real, pre-existing IIFE, so they're only
-// reachable via `window.` -- same prefixing already used in
-// batch_manager_global.ts/picture_modify.ts.
-//
 // `add_related_category` is declared here too, independently of the
 // same-named functions in mcs.js/cat_modify.ts/photos_add_direct.js/
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 const activePlugins = pwg_getPageData<string[]>("active_plugins");
 
-const tagsCache = new window.TagsCache({
+const tagsCache = new TagsCache({
   serverKey: pwg_getPageData<string>("cache_key_tags"),
   serverId: pwg_getPageData<string>("cache_key_hash"),
   rootUrl: pwg_getPageData<string>("root_url"),
@@ -59,7 +59,7 @@ tagsCache.selectize(jQuery("[data-selectize=tags]"), {
   },
 });
 
-const categoriesCache = new window.CategoriesCache({
+const categoriesCache = new CategoriesCache({
   serverKey: pwg_getPageData<string>("cache_key_categories"),
   serverId: pwg_getPageData<string>("cache_key_hash"),
   rootUrl: pwg_getPageData<string>("root_url"),

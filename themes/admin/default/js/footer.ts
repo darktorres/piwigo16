@@ -1,5 +1,35 @@
+// Real consumer of page-data.ts's own top-level `pwg_getPageData`
+// (docs/PLAN.md P48, page-data.ts's own batch -- was a bare
+// ambient-global read before that). `?dup` since page-data.ts has many
+// real registrant pages (Design §4) -- this import doesn't change this
+// file's own "stays its own standalone entry, unfolded" status below:
+// nothing else imports footer.ts itself, so it's safe for it to become
+// a real module (gaining this import) without needing to be folded
+// into anyone else's bundle.
+import { pwg_getPageData } from "../../../default/js/page-data?dup";
+
 export {};
 
+// This file's own registration stays its own standalone Vite entry,
+// unfolded (docs/PLAN.md P48, this file's own catalog line's
+// investigation, confirmed not just assumed): every OTHER shared-
+// library file in this campaign folds into its real registrant pages'
+// own bundles via `?dup` because each is registered by an individual
+// View's own `pageAssets()`, giving a concrete per-page file to attach
+// the import to. `footer.ts` is different -- it's injected exactly
+// once, centrally, by `Template::finalizeHtml()` (via
+// `ThemeBaseAssets::lateAdminScripts()`), deliberately decoupled from
+// any specific View to preserve the exact same-priority script
+// insertion ORDER every real `layout.latte` originally had (see
+// `ThemeBaseAssets`'s own class docblock) -- `finalizeHtml()` has no
+// notion of "the current page's own primary script id" to fold into.
+// Manually threading a footer import through every admin View's own
+// `pageAssets()` instead would mean re-deriving that centralized
+// ordering guarantee per-page, a real regression risk for a file with
+// zero real exports to gain from module conversion in the first place
+// (both its exposures below are confirmed category-2 `onclick`
+// targets, not real cross-file symbols) -- not attempted here.
+//
 // hide_user_whats_new/show_user_whats_new are called from
 // layout.latte's own `onclick="show_user_whats_new()"` / `onClick=
 // "hide_user_whats_new()"` attributes -- the `javascript:`/`onclick=`

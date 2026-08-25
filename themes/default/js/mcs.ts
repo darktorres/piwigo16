@@ -5,6 +5,48 @@ import type { operations } from "../../../openapi/client/schema";
 // list). `?dup` since album_selector.ts has several real registrant
 // pages (Design §4).
 import { AlbumSelector } from "../../admin/default/js/album_selector?dup";
+import { sprintf } from "../../admin/default/js/common?dup";
+// doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
+// file's real `.pwgDoubleSlider(...)` call sites below). This file has
+// exactly one real registrant page (SearchFiltersView), but
+// doubleSlider.ts itself has 2 real file-level consumers (this file and
+// batchManagerFilter.ts, each its own separate Vite entry) -- `?dup`
+// per Design §4.
+import "../../admin/default/js/doubleSlider?dup";
+// Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,
+// search_filters.ts's own batch -- was bare-global reads before that).
+// No `?dup`: this file is search_filters.ts's only real consumer
+// anywhere (confirmed directly -- history.ts's own leading comment
+// mentions `global_params`/`fullname_of_cat` only in prose, not a real
+// bare-identifier read), so a plain import is safe (Design §4) --
+// search_filters.ts's own former standalone entry/registration is gone
+// too (SearchFiltersView's own leading comment).
+import {
+  global_params,
+  fullname_of_cat,
+  search_id,
+  str_word_widget_label,
+  str_tags_widget_label,
+  str_album_widget_label,
+  str_author_widget_label,
+  str_added_by_widget_label,
+  str_filetypes_widget_label,
+  str_rating_widget_label,
+  str_no_rating,
+  str_between_rating,
+  str_filesize_widget_label,
+  str_width_widget_label,
+  str_height_widget_label,
+  str_ratio_widget_label,
+  str_ratios_label,
+  str_expert_widget_label,
+  str_empty_search_top_alt,
+  str_empty_search_bot_alt,
+  str_search_in_ab,
+  prefix_icon,
+  sliders,
+  show_filter_ratings,
+} from "./search_filters";
 
 export {};
 

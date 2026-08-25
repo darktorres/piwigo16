@@ -27,6 +27,23 @@
 // itself shared across 2 different pages, so it can't statically import
 // "the one true copy" from either page's own hub file.
 //
+// This file's own `sprintf` need is satisfied by a *nested* `?dup`
+// import (common.ts, itself imported via `?dup` since it too has many
+// real registrant pages) -- the first real use of this pattern in the
+// codebase, since this file is itself already `?dup`-imported by its 8
+// own consumers above. Confirmed sound directly from vite.config.ts's
+// own plugin: each `resolveId` call for THIS import receives the
+// *current* importer (the caller's own already-unique dup'd virtual
+// id, which differs per outer consumer), so the resulting nested id
+// stays uniquely keyed per outer page just the same -- no shared-chunk
+// collision risk, just (accepted, Design §4) code duplicated once per
+// outer consumer that reaches this file.
+import { sprintf } from "./common?dup";
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
+
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),
 // via the existing OpenAPI schema. Kept as top-level `type X = import(...)`

@@ -3,6 +3,10 @@
 // see this file's own history for the pre-P48 shape). Both files fold
 // into one real page bundle (themes/admin/default/js/pages/*.ts) as
 // part of this same batch.
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 
 /* incompatible message */
 export const incompatible_msg = pwg_getPageString(

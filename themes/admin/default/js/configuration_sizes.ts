@@ -1,3 +1,6 @@
+import "./common?dup";
+
+import { pwg_getPageString } from "../../../default/js/page-data?dup";
 export {};
 
 const title_msg = pwg_getPageString(

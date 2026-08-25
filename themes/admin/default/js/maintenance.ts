@@ -1,5 +1,6 @@
 import type { operations } from "../../../../openapi/client/schema";
 
+import { pwg_getPageString } from "../../../default/js/page-data?dup";
 export {};
 
 const no_time_elapsed = pwg_getPageString("right now");

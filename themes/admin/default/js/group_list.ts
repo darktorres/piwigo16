@@ -1,11 +1,21 @@
 import type { components, operations } from "../../../../openapi/client/schema";
+import { jConfirm_alert_options, TemporaryState } from "./common?dup";
+import { UsersCache } from "./LocalStorageCache?dup";
+// Type-only -- erased at compile time, so no `?dup` needed regardless
+// of LocalStorageCache.ts's own many real registrant pages (Design §4
+// only applies to real runtime imports; `import type` never reaches
+// Rollup's module graph at all).
+import type { EntityCacheInstance, UserEntity } from "./LocalStorageCache";
 
+import {
+  pwg_getPageData,
+  pwg_getPageString,
+} from "../../../default/js/page-data?dup";
 export {};
 
-// `UserEntity`/`EntityCacheInstance<T>` (below, `usersCache`'s own real
-// type) are LocalStorageCache.ts's own top-level ambient types -- that
-// file is a genuinely non-module IIFE, same cross-file ambient-global
-// technique as cat_modify.ts's own `AlbumSelectorCallbackArgs` reuse.
+// `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own
+// real exported types now (docs/PLAN.md P48, that file's own module
+// conversion -- was a bare ambient-global read before that).
 type Group = components["schemas"]["Group"];
 // The real `GET /api/v1/users?groupIds[]=...` response shape (same
 // underlying schema LocalStorageCache.ts's own `UserEntity` alias
@@ -114,7 +124,7 @@ jQuery(document).ready(function () {
   $("#addGroupForm form").on("submit", function (e) {
     e.preventDefault();
     const name = String($("#addGroupForm input[type=text]").val());
-    const loadState = new window.TemporaryState();
+    const loadState = new TemporaryState();
     loadState.changeHTML(
       $(".actionButtons button"),
       "<i class='icon-spin6 animate-spin'> </i>",
@@ -422,7 +432,7 @@ const deleteGroup = function (id: string | number) {
 };
 
 const renameGroup = function (id: string | number, newName: string) {
-  const loadState = new window.TemporaryState();
+  const loadState = new TemporaryState();
   loadState.changeHTML(
     $("#group-" + id + " .group-rename .validate"),
     "<i class='animate-spin icon-spin6'></i>",
@@ -631,7 +641,7 @@ const setupDefaultActions = function (
 };
 
 const duplicateAction = function (id: string | number) {
-  const loadState = new window.TemporaryState();
+  const loadState = new TemporaryState();
   loadState.changeHTML(
     $("#group-" + id + " #GroupDuplicate"),
     "<i class='icon-spin6 animate-spin'> </i>",
@@ -811,7 +821,7 @@ const buttonUnavailable = function (button: JQuery) {
  -------*/
 
 $(".ConfirmMergeButton").on("click", function () {
-  const loadState = new window.TemporaryState();
+  const loadState = new TemporaryState();
   loadState.changeAttribute(
     $(".ConfirmMergeButton"),
     "style",
@@ -920,7 +930,7 @@ $(".ConfirmDeleteButton").on("click", function () {
     ids.push(id);
   });
 
-  const loadState = new window.TemporaryState();
+  const loadState = new TemporaryState();
   loadState.changeAttribute(
     $(".ConfirmDeleteButton"),
     "style",
@@ -980,7 +990,7 @@ $(".ConfirmDeleteButton").on("click", function () {
 let selectize: Selectize.IApi<string | number, UserSelectOption>;
 
 // Initialize the cache -- placeholder cast, real init happens via
-// `new window.UsersCache(...)` inside updateUserSearch()/at module load
+// `new UsersCache(...)` inside updateUserSearch()/at module load
 // (below) before any handler that reads it can actually run.
 let usersCache = {} as EntityCacheInstance<UserEntity>;
 
@@ -1034,12 +1044,12 @@ $(function () {
     // ran anyway; TS-forced fix via `no-cond-assign`, not just a type
     // gap. Same observable behavior: usersCache is unconditionally
     // rebuilt on every call.
-    usersCache = new window.UsersCache({
+    usersCache = new UsersCache({
       serverKey: serverKey,
       serverId: serverId,
       rootUrl: rootUrl,
     });
-    // Non-null: `new window.UsersCache(...)` above synchronously
+    // Non-null: `new UsersCache(...)` above synchronously
     // seeds this storage slot before any handler that reads it can run
     // (the P46-preserved "temporary fix for #1283" behavior, see the
     // module-load call at the bottom of this file).
@@ -1069,7 +1079,7 @@ $(function () {
 
 // Display the user manager for a specific group
 const openUserManager = function (grp_id: string | number) {
-  const loadState = new window.TemporaryState();
+  const loadState = new TemporaryState();
   loadState.removeClass(
     $("#group-" + grp_id + " #UserListTrigger"),
     "icon-user-1",
@@ -1237,7 +1247,7 @@ $(".AddUserBlock button").on("click", function () {
   const id = selectize.getValue() as string | number;
 
   if (id != "") {
-    const loadState = new window.TemporaryState();
+    const loadState = new TemporaryState();
     loadState.changeHTML(
       $("#UserSubmit"),
       "<i class='icon-spin6 animate-spin'> </i>",
@@ -1403,7 +1413,7 @@ $(document).on("click", function (e) {
 });
 
 // temporary fix for #1283 (begin) : force user local storage cache on page load.
-usersCache = new window.UsersCache({
+usersCache = new UsersCache({
   serverKey: serverKey,
   serverId: serverId,
   rootUrl: rootUrl,

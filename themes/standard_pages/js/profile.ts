@@ -1,19 +1,55 @@
+import type { operations } from "../../../openapi/client/schema";
+
 export {};
 
-let user: Record<string, any> = {
-  username: pwg_getPageData("username"),
-  email: pwg_getPageData("email"),
-  nb_image_page: $('input[name="nb_image_page"]').val(),
-  theme: $('select[name="theme"]').val(),
-  language: $('select[name="language"]').val(),
-  recent_period: $('input[name="recent_period"]').val(),
+interface DefaultUserValues {
+  nb_image_page: number;
+  // "true"/"false" literal strings, matching DefaultUserProfileValues.php's
+  // own JS-inline-expression convention -- not real booleans.
+  expand: string;
+  show_nb_comments: string;
+  show_nb_hits: string;
+  recent_period: number;
+}
+
+interface UserPreferences {
+  username: string;
+  email: string | null;
+  nb_image_page: string;
+  theme: string;
+  language: string;
+  recent_period: string;
+  opt_album: boolean;
+  opt_comment: boolean;
+  opt_hits: boolean;
+}
+
+// Genuinely heterogeneous per-caller field set (email-only, the full
+// preferences form, the password form, a dynamic plugin-extension
+// form's own field names, or one of the API-key endpoints' own small
+// param shapes) -- narrowed from `any` to the real primitive value
+// types every one of these fields actually holds, not further.
+type ProfileParams = Record<string, string | number | boolean | undefined>;
+
+type ApiKeyEntry =
+  operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"]["apiKeys"][number];
+
+let user: UserPreferences = {
+  username: pwg_getPageData<string>("username"),
+  email: pwg_getPageData<string | null>("email"),
+  nb_image_page: $('input[name="nb_image_page"]').val() as string,
+  theme: $('select[name="theme"]').val() as string,
+  language: $('select[name="language"]').val() as string,
+  recent_period: $('input[name="recent_period"]').val() as string,
   opt_album: $("#opt_album").is(":checked"),
   opt_comment: $("#opt_comment").is(":checked"),
   opt_hits: $("#opt_hits").is(":checked"),
 };
 
-const canUpdatePreferences = pwg_getPageData("allow_user_customization");
-const canUpdatePassword = pwg_getPageData("can_update_password");
+const canUpdatePreferences = pwg_getPageData<boolean>(
+  "allow_user_customization",
+);
+const canUpdatePassword = pwg_getPageData<boolean>("can_update_password");
 // One '#save_<block id>' selector per plugin-extension block that opts into
 // the standard save button (profile.latte's PLUGINS_PROFILE extension
 // point) -- read from the DOM instead of a per-iteration exposeData() push,
@@ -23,7 +59,18 @@ const canUpdatePassword = pwg_getPageData("can_update_password");
 const standardSaveSelector = Array.from(
   document.querySelectorAll('.form.plugins .save button[id^="save_"]'),
 ).map((el) => "#" + el.id);
-const defaultUserValues = pwg_getPageData("default_user_values");
+const defaultUserValues = pwg_getPageData<DefaultUserValues>(
+  "default_user_values",
+);
+// Real, pre-existing behavior, not a bug this phase fixes: opt_album/
+// opt_comment/opt_hits below are the "true"/"false" *string* literals
+// DefaultUserProfileValues.php's own docblock describes -- and
+// `#opt_album`'s own `.prop("checked", preferencesDefaultValues.opt_album)`
+// call site (below) treats any non-empty string, including the literal
+// text "false", as truthy. "Reset to defaults" therefore always checks
+// these 3 boxes regardless of the real default value. No compile error
+// forces a fix here (`.prop()`'s value param isn't narrowly typed), so
+// left as-is rather than silently changed; flagged for visibility.
 const preferencesDefaultValues = {
   nb_image_page: defaultUserValues.nb_image_page,
   recent_period: defaultUserValues.recent_period,
@@ -31,8 +78,8 @@ const preferencesDefaultValues = {
   opt_comment: defaultUserValues.show_nb_comments,
   opt_hits: defaultUserValues.show_nb_hits,
 };
-const selected_date = pwg_getPageData("selected_date");
-const can_manage_api = pwg_getPageData("api_can_manage");
+const selected_date = pwg_getPageData<string>("selected_date");
+const can_manage_api = pwg_getPageData<boolean>("api_can_manage");
 
 const str_copy_key_id = pwg_getPageString("ID copied.");
 const str_copy_key_secret = pwg_getPageString(
@@ -59,9 +106,9 @@ const str_api_edited = pwg_getPageString(
 );
 const no_time_elapsed = pwg_getPageString("right now");
 
-let PWG_TOKEN: any;
+let PWG_TOKEN: string;
 $(function () {
-  PWG_TOKEN = $("#pwg_token").val();
+  PWG_TOKEN = $("#pwg_token").val() as string;
   $(".profile-section .display-section").on("click", function () {
     const display = $(this).data("display");
     const selector = $(`#${display}`);
@@ -88,7 +135,7 @@ $(function () {
   }, 100);
 
   $("#save_account").on("click", function () {
-    const mail = $("#email").val();
+    const mail = $("#email").val() as string;
     if (!mail || mail == "") {
       $("#email_error").show();
       return;
@@ -99,10 +146,10 @@ $(function () {
   if (canUpdatePreferences) {
     $("#save_preferences").on("click", function () {
       const values = {
-        nb_image_page: $("#nb_image_page").val(),
-        theme: $('select[name="theme"]').val(),
-        language: $('select[name="language"]').val(),
-        recent_period: $("#recent_period").val(),
+        nb_image_page: $("#nb_image_page").val() as string,
+        theme: $('select[name="theme"]').val() as string,
+        language: $('select[name="language"]').val() as string,
+        recent_period: $("#recent_period").val() as string,
         expand: $("#opt_album").is(":checked"),
         show_nb_comments: $("#opt_comment").is(":checked"),
         show_nb_hits: $("#opt_hits").is(":checked"),
@@ -147,9 +194,9 @@ $(function () {
   if (canUpdatePassword) {
     $("#save_password").on("click", function () {
       const passwords = {
-        password: $("#password").val(),
-        new_password: $("#password_new").val(),
-        conf_new_password: $("#password_conf").val(),
+        password: $("#password").val() as string,
+        new_password: $("#password_new").val() as string,
+        conf_new_password: $("#password_conf").val() as string,
       };
       if (
         passwords.password == "" ||
@@ -201,15 +248,15 @@ $(function () {
     })();
   }
 
-  standardSaveSelector.forEach((selector: any, i: any) => {
+  standardSaveSelector.forEach((selector, i) => {
     $(selector).on("click", function () {
-      const values: Record<string, any> = {};
+      const values: ProfileParams = {};
       $(`#${i}-section`)
         .find("input, textarea, select")
-        .each((i: any, element: any) => {
+        .each((_i, element) => {
           const el = $(element);
           const inputName = el.attr("name");
-          const inputValue = el.val();
+          const inputValue = el.val() as string;
           values[inputName!] = inputValue;
         });
       setInfos({ ...values });
@@ -293,8 +340,8 @@ $(function () {
 // snake_case field names -- translated to PATCH /api/v1/session's
 // camelCase body here. Any key this doesn't recognise passes through
 // unchanged and is silently ignored server-side.
-function myInfoBody(params: any) {
-  const rename: Record<string, any> = {
+function myInfoBody(params: ProfileParams) {
+  const rename: Record<string, string> = {
     nb_image_page: "nbImagePage",
     recent_period: "recentPeriod",
     show_nb_comments: "showNbComments",
@@ -303,7 +350,7 @@ function myInfoBody(params: any) {
     conf_new_password: "confNewPassword",
   };
   const numeric = ["nbImagePage", "recentPeriod"];
-  const body: Record<string, any> = {};
+  const body: ProfileParams = {};
   Object.keys(params).forEach((key) => {
     const newKey = rename[key] || key;
     body[newKey] = numeric.includes(newKey) ? Number(params[key]) : params[key];
@@ -311,7 +358,16 @@ function myInfoBody(params: any) {
   return body;
 }
 
-const API_KEY_ENDPOINTS: Record<string, (params: any) => any> = {
+interface ApiKeyRequestSpec {
+  url: string;
+  httpMethod: string;
+  body: ProfileParams | null;
+}
+
+const API_KEY_ENDPOINTS: Record<
+  string,
+  (params: ProfileParams) => ApiKeyRequestSpec
+> = {
   "pwg.users.setMyInfo": (params) => ({
     url: "api/v1/session",
     httpMethod: "PATCH",
@@ -335,10 +391,14 @@ const API_KEY_ENDPOINTS: Record<string, (params: any) => any> = {
 };
 
 function setInfos(
-  params: any,
-  method: any = "pwg.users.setMyInfo",
-  callback: any = null,
-  errCallback: any = null,
+  params: ProfileParams,
+  method: keyof typeof API_KEY_ENDPOINTS = "pwg.users.setMyInfo",
+  // The real response shape genuinely differs per dispatched endpoint
+  // (SessionStatus / ApiKeyCreated / no body at all for the 204 edit
+  // and revoke endpoints) -- each real call site below narrows its own
+  // `data`/`res` parameter to the shape that endpoint actually returns.
+  callback: ((data: any) => void) | null = null,
+  errCallback: ((e: JQuery.jqXHR) => void) | null = null,
 ) {
   // for debug
   // console.log('setInfos', params);
@@ -358,7 +418,7 @@ function setInfos(
       }
       pwgToaster({ text: str_infos_saved, icon: "success" });
     },
-    error: function (e) {
+    error: function (e: JQuery.jqXHR) {
       pwgToaster({
         text: e.responseJSON?.detail ?? str_handle_error,
         icon: "error",
@@ -371,19 +431,21 @@ function setInfos(
   });
 }
 
-function getAllApiKeys(reset: any = false) {
+function getAllApiKeys(reset: boolean = false) {
   $.ajax({
     url: "api/v1/session/api-keys",
     type: "GET",
     dataType: "json",
-    success: function (res) {
+    success: function (
+      res: operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"],
+    ) {
       if (!res.apiKeys || res.apiKeys.length === 0) {
         // No keys
       } else {
         AddApiLine(res.apiKeys, reset);
       }
     },
-    error: function (e) {
+    error: function (e: JQuery.jqXHR) {
       pwgToaster({
         text: e.responseJSON?.detail ?? str_handle_error + "getAllApiKeys",
         icon: "error",
@@ -392,7 +454,7 @@ function getAllApiKeys(reset: any = false) {
   });
 }
 
-function AddApiLine(lines: any, reset: any) {
+function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
   const api_list = $("#api_key_list");
   const api_list_expired = $("#api_key_list_expired");
 
@@ -403,7 +465,7 @@ function AddApiLine(lines: any, reset: any) {
     "#api_key_list_expired .api-tab-line:not(.template-api), #api_key_list_expired .api-tab-collapse:not(.template-api)",
   ).remove();
 
-  lines.forEach((line: any, i: any) => {
+  lines.forEach((line) => {
     const api_line = $("#api_line").clone();
     const api_collapse = $("#api_collapse").clone();
     const tmp_id = line.authKey.slice(24, 34);
@@ -510,9 +572,9 @@ function apiLineEvent() {
 }
 
 function resetSection(
-  selector: any,
-  scroll: any = true,
-  maxContent: any = false,
+  selector: string,
+  scroll: boolean = true,
+  maxContent: boolean = false,
 ) {
   const el = $(`#${selector}`);
   const element = el.get(0)!;
@@ -551,7 +613,7 @@ function closeApiModal() {
   unbindApiKeyEvents();
 }
 
-function successApiModal(secret: any, id: any) {
+function successApiModal(secret: string, id: string) {
   $("#api_secret_key").val(secret);
   $("#api_id_key").val(id);
 
@@ -579,7 +641,7 @@ function successApiModal(secret: any, id: any) {
 }
 
 //api edit modal
-function openApiEditModal(selector: any) {
+function openApiEditModal(selector: string) {
   const value = $(selector).find(".api_name").text();
   const pkid = $(selector).find(".api-icon-action").data("pkid");
   $("#api_key_edit").val(value);
@@ -595,9 +657,9 @@ function closeApiEditModal() {
   });
 }
 
-function saveApiEditEvents(pkid: any) {
+function saveApiEditEvents(pkid: string) {
   $("#save_api_edit").on("click", function () {
-    const value = $("#api_key_edit").val();
+    const value = $("#api_key_edit").val() as string;
 
     if ("" == value) {
       $("#error_api_key_edit").show();
@@ -609,7 +671,8 @@ function saveApiEditEvents(pkid: any) {
         key_name: value,
       },
       "pwg.users.api_key.edit",
-      (res: any) => {
+      // 204 No Content -- sessionApiKeyUpdate's real response has no body.
+      (_res: unknown) => {
         pwgToaster({ text: str_api_edited, icon: "success" });
         getAllApiKeys(true);
         closeApiEditModal();
@@ -623,7 +686,7 @@ function unbindApiEditEvents() {
 }
 
 // api revoke modal
-function openApiRevokeModal(selector: any) {
+function openApiRevokeModal(selector: string) {
   const apiName = $(selector).find(".api_name").text();
   const pkid = $(selector).find(".api-icon-action").data("pkid");
   const text = sprintf(str_revoke_key, apiName);
@@ -640,14 +703,15 @@ function closeApiRevokeModal() {
   });
 }
 
-function saveApiRevokeEvents(pkid: any) {
+function saveApiRevokeEvents(pkid: string) {
   $("#revoke_api_key").on("click", function () {
     setInfos(
       {
         pkid,
       },
       "pwg.users.api_key.revoke",
-      (res: any) => {
+      // 204 No Content -- sessionApiKeyRevoke's real response has no body.
+      (_res: unknown) => {
         pwgToaster({ text: str_api_revoked, icon: "success" });
         getAllApiKeys(true);
         closeApiRevokeModal();
@@ -660,7 +724,11 @@ function unbindApiRevokeEvents() {
   $("#revoke_api_key").off("click");
 }
 
-function copyToClipboard(copy: any, message: any, selector: any = null) {
+function copyToClipboard(
+  copy: string,
+  message: string,
+  selector: string | null = null,
+) {
   if (window.isSecureContext && navigator.clipboard) {
     void navigator.clipboard.writeText(copy);
     if (selector) {
@@ -681,7 +749,7 @@ function copyToClipboard(copy: any, message: any, selector: any = null) {
 
 function saveApiKeyEvent() {
   const handler = () => {
-    const api_name = $("#api_key_name").val();
+    const api_name = $("#api_key_name").val() as string;
     let api_duration = $('select[name="api_expiration"]').val();
 
     if (api_name == "") {
@@ -719,12 +787,14 @@ function saveApiKeyEvent() {
         duration: api_duration,
       },
       "pwg.users.api_key.create",
-      (res: any) => {
+      (
+        res: operations["sessionApiKeyCreate"]["responses"][201]["content"]["application/json"],
+      ) => {
         pwgToaster({ text: str_api_added, icon: "success" });
         getAllApiKeys(true);
         successApiModal(res.apikeySecret, res.authKey);
       },
-      (err: any) => {
+      (_err: unknown) => {
         saveApiKeyEvent();
       },
     );

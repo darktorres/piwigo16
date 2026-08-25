@@ -94,7 +94,8 @@ function activatePlugin(id: string) {
     headers: { "X-CSRF-Token": pwg_token },
     url: "api/v1/plugins/" + id + "/actions/perform",
     data: JSON.stringify({ action: "activate" }),
-    success: function (_data: any) {
+    // 204 No Content -- pluginPerformAction's real response has no body.
+    success: function (_data: unknown) {
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .AddPluginSuccess label span:first").html(
         plugin_added_str,
@@ -105,7 +106,7 @@ function activatePlugin(id: string) {
       nb_plugin.inactive -= 1;
       actualizeFilter();
     },
-    error: function (e: any) {
+    error: function (e: JQuery.jqXHR) {
       console.log(e.responseText);
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
@@ -116,7 +117,7 @@ function activatePlugin(id: string) {
         .delay(1500)
         .fadeOut(2500);
     },
-  }).done(function (_data: any) {
+  }).done(function (_data: unknown) {
     $("#" + id + " .switch").prop("disabled", false);
     $("#" + id + " .AddPluginSuccess").fadeOut(3000);
   });
@@ -132,7 +133,8 @@ function disactivatePlugin(id: string) {
     headers: { "X-CSRF-Token": pwg_token },
     url: "api/v1/plugins/" + id + "/actions/perform",
     data: JSON.stringify({ action: "deactivate" }),
-    success: function (_data: any) {
+    // 204 No Content -- pluginPerformAction's real response has no body.
+    success: function (_data: unknown) {
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .DeactivatePluginSuccess label span:first").html(
         plugin_deactivated_str,
@@ -143,7 +145,7 @@ function disactivatePlugin(id: string) {
       nb_plugin.active -= 1;
       actualizeFilter();
     },
-    error: function (e: any) {
+    error: function (e: JQuery.jqXHR) {
       console.log(e);
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
@@ -154,7 +156,7 @@ function disactivatePlugin(id: string) {
         .delay(1500)
         .fadeOut(2500);
     },
-  }).done(function (_data: any) {
+  }).done(function (_data: unknown) {
     $("#" + id + " .switch").prop("disabled", false);
     $("#" + id + " .DeactivatePluginSuccess").fadeOut(3000);
   });
@@ -171,13 +173,14 @@ function deletePlugin(id: string, name: string) {
         headers: { "X-CSRF-Token": pwg_token },
         url: "api/v1/plugins/" + id + "/actions/perform",
         data: JSON.stringify({ action: "delete" }),
-        success: function (_data: any) {
+        // 204 No Content -- pluginPerformAction's real response has no body.
+        success: function (_data: unknown) {
           $("#" + id).remove();
           nb_plugin.inactive -= 1;
           nb_plugin.all -= 1;
           actualizeFilter();
         },
-        error: function (e: any) {
+        error: function (e: JQuery.jqXHR) {
           console.log(e);
           $("#" + id + " .pluginNotif").stop(false, true);
           $("#" + id + " .PluginActionError label span:first").html(
@@ -202,14 +205,15 @@ function restorePlugin(id: string) {
     headers: { "X-CSRF-Token": pwg_token },
     url: "api/v1/plugins/" + id + "/actions/perform",
     data: JSON.stringify({ action: "restore" }),
-    success: function (_data: any) {
+    // 204 No Content -- pluginPerformAction's real response has no body.
+    success: function (_data: unknown) {
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .RestorePluginSuccess label span:first").html(
         plugin_restored_str,
       );
       $("#" + id + " .RestorePluginSuccess").css("display", "flex");
     },
-    error: function (e: any) {
+    error: function (e: JQuery.jqXHR) {
       console.log(e);
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
@@ -220,7 +224,7 @@ function restorePlugin(id: string) {
         .delay(1500)
         .fadeOut(2500);
     },
-  }).done(function (_data: any) {
+  }).done(function (_data: unknown) {
     $("#" + id + " .RestorePluginSuccess").fadeOut(3000);
   });
 }
@@ -233,13 +237,14 @@ function uninstallPlugin(id: string) {
     headers: { "X-CSRF-Token": pwg_token },
     url: "api/v1/plugins/" + id + "/actions/perform",
     data: JSON.stringify({ action: "uninstall" }),
-    success: function (_data: any) {
+    // 204 No Content -- pluginPerformAction's real response has no body.
+    success: function (_data: unknown) {
       $("#" + id).remove();
       nb_plugin.other -= 1;
       nb_plugin.all -= 1;
       actualizeFilter();
     },
-    error: function (e: any) {
+    error: function (e: JQuery.jqXHR) {
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
         plugin_action_error,
@@ -248,7 +253,11 @@ function uninstallPlugin(id: string) {
       $("#" + id + " .PluginActionError")
         .delay(1500)
         .fadeOut(2500);
-      console.log(e.message);
+      // Was `e.message` -- jqXHR has no such property (confirmed via
+      // @types/jquery's own jqXHR interface); the real server error body
+      // is JSON on `.responseText`, matching activatePlugin's own
+      // sibling error handler above.
+      console.log(e.responseText);
     },
   });
 }
@@ -575,7 +584,8 @@ function performPluginDeactivate(id: string) {
     data: JSON.stringify({
       action: "deactivate",
     }),
-    success: function (_data: any) {
+    // 204 No Content -- pluginPerformAction's real response has no body.
+    success: function (_data: unknown) {
       jQuery("#" + id)
         .removeClass("active")
         .addClass("inactive");
@@ -646,7 +656,11 @@ jQuery(document).ready(function () {
     url: "admin.php",
     data: { page: "plugins_installed", incompatible_plugins: true },
     dataType: "json",
-    success: function (data: any) {
+    // Real shape confirmed via PluginsInstalledPageRenderer.php's own
+    // `echo json_encode($incompatible_plugins);` -- a plain array of
+    // plugin id strings, no OpenAPI coverage (legacy admin.php endpoint,
+    // not api/v1).
+    success: function (data: string[]) {
       for (let i = 0; i < data.length; i++) {
         if (show_details)
           jQuery("#" + data[i] + " .pluginName").prepend(

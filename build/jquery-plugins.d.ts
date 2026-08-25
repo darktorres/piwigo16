@@ -204,35 +204,6 @@ interface Window {
   progress: (success?: boolean) => void;
   getDerivativeUrls: () => void;
 
-  // plugins_installed_config.ts's own shared-global set
-  // (docs/PLAN.md P46-C's full sweep) -- plugins_installated.ts reads
-  // every one of these bare. `window.` exposure here is required at
-  // runtime (not just documentation): see plugins_installed_config.ts's
-  // own leading comment for the real IIFE-wrapping bug this caught.
-  incompatible_msg: string;
-  activate_msg: string;
-  deactivate_all_msg: string;
-  pwg_token: string;
-  nb_plugin: { all: number; active: number; inactive: number; other: number };
-  confirm_msg: string;
-  cancel_msg: string;
-  delete_plugin_msg: string;
-  deleted_plugin_msg: string;
-  restore_plugin_msg: string;
-  uninstall_plugin_msg: string;
-  plugin_added_str: string;
-  plugin_deactivated_str: string;
-  plugin_restored_str: string;
-  plugin_action_error: string;
-  not_webmaster: string;
-  nothing_found: string;
-  x_plugins_found: string;
-  plugin_found: string;
-  isWebmaster: number;
-  str_restore_def: string;
-  show_details: boolean;
-  plugin_filter: string | null;
-
   // footer.ts's own 2 functions, called from layout.latte's own
   // `onclick="show_user_whats_new()"` / `onClick=
   // "hide_user_whats_new()"` attributes -- the `javascript:`/`onclick=`

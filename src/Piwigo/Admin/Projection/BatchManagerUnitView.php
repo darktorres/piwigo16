@@ -164,6 +164,13 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             'filesize' => $this->filterFilesize,
             'filter_category_selected' => $this->filterCategorySelected,
             'all_related_categories_ids' => $allSelectedAlbum,
+            // Real pre-existing gap, found via album_selector.ts's own
+            // P48 module conversion (docs/PLAN.md): this page embeds
+            // AlbumSelectorView, whose real `#create_album()` reads the
+            // CSRF token via `pwg_getPageData<string>("csrf_token")` --
+            // never exposed here, so its own X-CSRF-Token header has
+            // been `undefined` on this page at runtime.
+            'csrf_token' => $this->csrfToken,
         ];
     }
 

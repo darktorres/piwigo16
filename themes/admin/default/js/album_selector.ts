@@ -60,6 +60,23 @@ $(window).on("keypress", function (e) {
   }
 });
 
+// Real pre-existing bug, found via plugins_installed_config.ts's own
+// P48 module conversion: this file's own `#create_album()` reads
+// `pwg_token` bare with no local declaration of its own, relying on
+// TypeScript's ambient whole-program resolution to satisfy the
+// type-checker (any non-module file's own top-level `pwg_token`
+// declaration, anywhere in the program, used to suffice). At runtime
+// this had no real source at all on any of this file's own 12 real
+// registrant pages -- `plugins_installed_config.ts`, the only file
+// that ever set `window.pwg_token`, is registered on exactly one real
+// page (`plugins_installed.php`), which never embeds `AlbumSelector`.
+// The `X-CSRF-Token` header `#create_album()` sends has been
+// `undefined` at runtime on every real page using this class. Fixed
+// with the same local-declaration pattern every other real consumer
+// (tags.ts, comments.ts, etc.) already uses -- `page-data.ts` exposes
+// the real CSRF token per-page already, no cross-file sharing needed.
+const pwg_token = pwg_getPageData<string>("csrf_token");
+
 /**
  * Album selector instance
  * @param {Array} selectedCategoriesIds - Array of IDs for elements already selected.

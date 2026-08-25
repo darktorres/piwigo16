@@ -1,19 +1,36 @@
-// Consumer of themes/admin/default/js/plugins_installed_config.js's own
-// shared globals (docs/PLAN.md P46-C's full sweep): activate_msg/
-// cancel_msg/confirm_msg/deactivate_all_msg/delete_plugin_msg/
-// deleted_plugin_msg/incompatible_msg/isWebmaster/nb_plugin/
-// not_webmaster/nothing_found/plugin_action_error/plugin_added_str/
-// plugin_deactivated_str/plugin_filter/plugin_found/plugin_restored_str/
-// pwg_token/restore_plugin_msg/show_details/str_restore_def/
-// uninstall_plugin_msg/x_plugins_found -- all read bare, declared with
-// ambient `declare const` bindings in build/jquery-plugins.d.ts (same
-// "consumer converts before its declarer" technique already used for
-// pwg_token in album_selector.ts). jConfirm_alert_options/
-// jConfirm_confirm_options need no such binding: common.ts's own real
-// `const` declarations of those names already resolve this file's bare
-// reads, since every themes/**/*.ts file shares one global
-// type-checking program (same reasoning as batchManagerGlobal.ts's own
-// `derivatives` case).
+// Consumer of themes/admin/default/js/plugins_installed_config.ts's own
+// real exports now (docs/PLAN.md P48 -- was ambient window-global
+// latching). jConfirm_alert_options/jConfirm_confirm_options still need
+// no import: common.ts hasn't converted yet (a later P48 batch), so its
+// own real top-level `const` declarations of those names are still real
+// ambient globals, visible here regardless of this file's own module
+// status -- fix that bare read when common.ts's own batch lands, not
+// before.
+import {
+  activate_msg,
+  cancel_msg,
+  confirm_msg,
+  deactivate_all_msg,
+  delete_plugin_msg,
+  deleted_plugin_msg,
+  incompatible_msg,
+  isWebmaster,
+  nb_plugin,
+  not_webmaster,
+  nothing_found,
+  plugin_action_error,
+  plugin_added_str,
+  plugin_deactivated_str,
+  plugin_filter,
+  plugin_found,
+  plugin_restored_str,
+  pwg_token,
+  restore_plugin_msg,
+  show_details,
+  str_restore_def,
+  uninstall_plugin_msg,
+  x_plugins_found,
+} from "./plugins_installed_config";
 function setDisplayClassic() {
   $(".pluginContainer")
     .removeClass("line-form")

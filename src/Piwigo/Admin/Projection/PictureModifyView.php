@@ -108,6 +108,13 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
             'root_url' => $this->rootUrl,
             'u_delete' => $this->uDelete,
             'related_categories_ids' => $this->relatedCategoriesIds,
+            // Real pre-existing gap, found via album_selector.ts's own
+            // P48 module conversion (docs/PLAN.md): this page embeds
+            // AlbumSelectorView, whose real `#create_album()` reads the
+            // CSRF token via `pwg_getPageData<string>("csrf_token")` --
+            // never exposed here, so its own X-CSRF-Token header has
+            // been `undefined` on this page at runtime.
+            'csrf_token' => $this->csrfToken,
         ];
     }
 

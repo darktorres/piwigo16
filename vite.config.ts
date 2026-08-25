@@ -149,9 +149,9 @@ export default defineConfig({
           "themes/admin/default/js/batch_manager_global.ts",
         ),
         batchManagerGlobal: r("themes/admin/default/js/batchManagerGlobal.ts"),
-        // P46-C part 3 -- the first consumer-only file (its declarer,
-        // plugins_installed_config.js, hasn't converted yet).
-        pluginsInstallated: r("themes/admin/default/js/plugins_installated.ts"),
+        // P46-C part 3 -- the first consumer-only file. plugins_installated.ts
+        // is no longer its own entry (docs/PLAN.md P48) -- see the pages/
+        // entries below, its one real registrant.
         // P46-C part 4 -- consumer of the already-converted intro.ts.
         // intro_tooltips.ts is no longer its own entry either
         // (docs/PLAN.md P48) -- folded into the same pages/intro.ts
@@ -192,12 +192,9 @@ export default defineConfig({
         siteManager: r("themes/admin/default/js/site_manager.ts"),
         themesNew: r("themes/admin/default/js/themes_new.ts"),
         menubarAdmin: r("themes/admin/default/js/menubar.ts"),
-        // P46-C part 12 -- plugins_installated.ts's own declarer, now
-        // real (retires that file's earlier ambient declare-const
-        // bindings).
-        pluginsInstalledConfig: r(
-          "themes/admin/default/js/plugins_installed_config.ts",
-        ),
+        // P46-C part 12 -- plugins_installated.ts's own declarer.
+        // Also no longer its own entry (docs/PLAN.md P48) -- see the
+        // pages/ entries below.
         // P46-C part 13 -- second batch of small, self-contained admin
         // files (14 files).
         footerAdmin: r("themes/admin/default/js/footer.ts"),
@@ -267,6 +264,9 @@ export default defineConfig({
           "themes/admin/default/js/pages/batch_manager_global_async.ts",
         ),
         introPage: r("themes/admin/default/js/pages/intro.ts"),
+        pluginsInstalledPage: r(
+          "themes/admin/default/js/pages/plugins_installed.ts",
+        ),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

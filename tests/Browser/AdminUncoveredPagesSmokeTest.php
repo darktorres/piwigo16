@@ -74,24 +74,44 @@ it('languages add-new tab connects to the real mirror and lists a real 17.0.0-co
     $page->assertDontSee('Connection to server unavailable.');
 });
 
-it('plugins add-new tab lists a real plugin from the local mirror', function (): void {
+it('plugins add-new tab connects to the real mirror but currently lists no 17.0.0-compatible plugin', function (): void {
+    // piwigo16-plugins' own most recent commit ("revert: remove all 27
+    // ported *_17.0.0 plugins, re-port fresh") deleted every entry this
+    // test used to assert on (language_switch_17.0.0, the first plugin
+    // ever ported to this fork's PluginConfig\ExtensionInterface
+    // contract) -- a real, deliberate, in-flight reset of a separate
+    // re-porting effort in that repo, not a P48 regression here.
+    // PemCatalog::isCompatible() filters every mirror entry by its own
+    // declared `piwigo_compat` (confirmed directly:
+    // language_switch_16.3.0, the only remaining same-named entry,
+    // declares `"piwigo_compat": ["16"]`, not 17), so with zero
+    // 17.0.0-declared entries left in the mirror, the tab now
+    // genuinely has nothing compatible to list -- this asserts that
+    // real, current state (the mirror itself is reachable, matching
+    // the languages test's own "There is no other language available."
+    // precedent from before *that* mirror was ported) rather than a
+    // specific entry name. Revisit once the separate re-porting effort
+    // lands a new real 17.0.0-compatible plugin.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
-    // language_switch_17.0.0 -- the first plugin ever ported to this
-    // fork's PluginConfig\ExtensionInterface contract (piwigo16-plugins'
-    // own CLAUDE.md), a stable, always-present entry.
-    $page->assertSee('Language Switch');
+    $page->assertSee('There is no other plugin available.');
     $page->assertDontSee('Connection to server unavailable.');
 });
 
-it('themes add-new tab lists a real theme from the local mirror', function (): void {
+it('themes add-new tab connects to the real mirror but currently lists no 17.0.0-compatible theme', function (): void {
+    // Same real, in-flight mirror reset as the plugins test above --
+    // piwigo16-themes' own most recent commit removed every ported
+    // *_17.0.0 theme (clear_17.0.0 included), and PemCatalog::
+    // isCompatible() filters out every remaining (pre-fork-version)
+    // entry by its own declared `piwigo_compat`. Revisit once the
+    // separate re-porting effort lands a new real 17.0.0-compatible
+    // theme.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes&tab=new');
 
     $page->assertSee('Add a new theme');
-    // clear_17.0.0 -- a core-ish, stable, always-present ported entry.
-    $page->assertSee('Clear');
+    $page->assertSee('There is no other theme available.');
     $page->assertDontSee('Connection to server unavailable.');
 });
 

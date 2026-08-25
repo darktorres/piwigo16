@@ -1,4 +1,58 @@
+import type {
+  Upload as TusUpload,
+  DetailedError as TusDetailedError,
+  HttpResponse as TusHttpResponse,
+} from "tus-js-client";
+import type { operations, components } from "../../../../openapi/client/schema";
+
 export {};
+
+// `@types/plupload`'s own File shape is an untyped `TODO` (its own
+// comment: "Make plupload.File typing" -- `Uploader.files: any[]`)
+// -- these are the real properties/methods this file actually uses,
+// including `format_of`, an app-specific field this file itself
+// attaches (never part of plupload's own File shape).
+interface PluploadFile {
+  id: string;
+  name: string;
+  status: number;
+  loaded?: number;
+  size?: number;
+  percent?: number;
+  format_of?: string;
+  getNative(): File;
+}
+
+type ImageFormatSearchResponse =
+  operations["imageFormatSearch"]["responses"][200]["content"]["application/json"];
+
+// The real payload FileUploaded/Error are triggered with here -- both
+// hand-built in uploadNextTusFile() below, not plupload's own native
+// event payloads (this app's tus-js-client transport stands in for
+// plupload's real uploader entirely, see the comment further down).
+interface TusUploadInfo {
+  imageId: number | string;
+  addStatus: string;
+  squareSrc: string;
+  name: string;
+}
+
+interface TusErrorInfo {
+  message: string;
+  file: PluploadFile;
+}
+
+interface TusOnSuccessPayload {
+  lastResponse: TusHttpResponse;
+}
+
+interface MultipartParams {
+  pwg_token: string;
+  format_of?: string;
+  category?: string | number;
+  name?: string;
+  update_mode?: boolean;
+}
 
 // Consumer of album_selector.ts's own real, top-level `class
 // AlbumSelector` -- resolves directly via that file's own real
@@ -31,15 +85,21 @@ const selectedAlbumEdit = $("#selectedAlbumEdit");
 const btnAddFiles = $("#addFiles");
 const chooseAlbumFirst = $("#chooseAlbumFirst");
 const uploaderPhotos = $("#uploader");
-const formatsUpdated: any[] = [];
-const formats: any[] = [];
+const formatsUpdated: string[] = [];
+const formats: [string, string][] = [];
 
 /*--------------
 On DOM load
 --------------*/
 $(function () {
   // First album event
-  if (!nb_albums) {
+  // Genuine pre-existing bug found via strict typing: PhotosAddDirectView.php's
+  // own exposedPageData() exposes `nb_albums` as a *string* (`(string)
+  // $this->nbAlbums`), so a brand-new gallery's real "0" value was
+  // truthy (`!"0"` is `false`, unlike `!0`) -- the "add your first
+  // album" onboarding flow this check exists for could never actually
+  // trigger. Fixed to a real numeric comparison.
+  if (Number(nb_albums) === 0) {
     btnFirstAlbum.on("click", function () {
       open_new_album_modal();
     });
@@ -84,7 +144,9 @@ $(function () {
       data: JSON.stringify({
         value: "false",
       }),
-      success: function (_res: any) {
+      success: function (
+        _res: operations["sessionPreferenceSet"]["responses"][200]["content"]["application/json"],
+      ) {
         jQuery(".promote-apps").hide();
       },
     });
@@ -146,7 +208,7 @@ $(function () {
     dragdrop: true,
 
     preinit: {
-      Init: function (up: any, _info: any) {
+      Init: function (up: plupload.Uploader, _info: unknown) {
         $("#uploader_container").removeAttr("title"); //remove the "using runtime" text
 
         $("#startUpload").on("click", function (e) {
@@ -164,7 +226,7 @@ $(function () {
 
     init: {
       // update custom button state on queue change
-      QueueChanged: function (up: any) {
+      QueueChanged: function (up: plupload.Uploader) {
         $("#addFiles").addClass("addFilesButtonChanged");
         $("#startUpload").prop("disabled", up.files.length == 0);
         $("#addFiles").removeClass("buttonLike").addClass("buttonLike");
@@ -182,11 +244,14 @@ $(function () {
         }
       },
 
-      FilesAdded: async function (up: any, files: any) {
+      FilesAdded: async function (
+        up: plupload.Uploader,
+        files: PluploadFile[],
+      ) {
         // Création de la liste avec plupload_id : image_name
-        const fileNames: Record<string, any> = {};
-        const exts: Record<string, any> = {};
-        files.forEach((file: any) => {
+        const fileNames: Record<string, string> = {};
+        const exts: Record<string, string> = {};
+        files.forEach((file) => {
           fileNames[file.id] = file.name;
           exts[file.id] = file.name.substr(file.name.lastIndexOf(".") + 1);
         });
@@ -218,26 +283,27 @@ $(function () {
 
           // If no original image is specified
           if (!haveFormatsOriginal) {
-            const images_search: any = await new Promise((res, _rej) => {
-              //ajax qui renvois les id des images dans la gallerie.
-              $.ajax({
-                url: "api/v1/images/formats/actions/search",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({
-                  filenames: fileNames,
-                }),
-                success: function (data: any) {
-                  res(data.results);
-                },
+            const images_search: ImageFormatSearchResponse["results"] =
+              await new Promise((res, _rej) => {
+                //ajax qui renvois les id des images dans la gallerie.
+                $.ajax({
+                  url: "api/v1/images/formats/actions/search",
+                  type: "POST",
+                  contentType: "application/json",
+                  data: JSON.stringify({
+                    filenames: fileNames,
+                  }),
+                  success: function (data: ImageFormatSearchResponse) {
+                    res(data.results);
+                  },
+                });
               });
-            });
 
-            const notFound: any[] = [];
-            const multiple: any[] = [];
+            const notFound: string[] = [];
+            const multiple: string[] = [];
 
-            files.forEach((f: any) => {
-              const search = images_search[f.id];
+            files.forEach((f) => {
+              const search = images_search[f.id]!;
               if (search.status == "found") {
                 f.format_of = String(search.imageId);
                 formats.push([f.id, f.format_of]);
@@ -270,15 +336,15 @@ $(function () {
               }
             });
 
-            files.filter((f: any) => images_search[f.id].status === "found");
+            files.filter((f) => images_search[f.id]!.status === "found");
 
             // If a file is not found or found more than one time
             if (notFound.length || multiple.length) {
               const [multStr, notFoundStr] = [multiple, notFound].map((tab) => {
                 //Get names
-                tab = tab.map((f: any) => f.slice(0, f.indexOf(".")));
+                tab = tab.map((f) => f.slice(0, f.indexOf(".")));
                 // Remove duplicates
-                tab = tab.filter((f: any, i: number) => i === tab.indexOf(f));
+                tab = tab.filter((f, i) => i === tab.indexOf(f));
 
                 // Add "and X more" if necessary
                 if (tab.length > 5) {
@@ -304,23 +370,23 @@ $(function () {
               });
             }
           } else {
-            let $forms_exts: any;
+            let $forms_exts: string[];
             if (imageFormatsExtensions) {
               $forms_exts = JSON.parse(imageFormatsExtensions);
             } else {
               $forms_exts = [];
             }
-            files.forEach((f: any) => {
-              f.format_of = originalImageId;
+            files.forEach((f) => {
+              f.format_of = String(originalImageId);
               formats.push([f.id, f.format_of]);
               $("#" + f.id + " > .plupload_file_name").append(`
               <a target="_blank" href="admin.php?page=photo-${f.format_of.trim()}-properties">
                 <span class="icon-eye">
                 </span>
               </a>`);
-              if ($forms_exts.indexOf(exts[f.id]) != -1) {
+              if ($forms_exts.indexOf(exts[f.id]!) != -1) {
                 $("#" + f.id + " > .plupload_file_name").after(`
-                <a target="_blank" href="admin.php?page=photo-${originalImageId.trim()}-formats">
+                <a target="_blank" href="admin.php?page=photo-${String(originalImageId).trim()}-formats">
                   <span class="icon-attention update-warning">
                     ${format_update_warning}
                   </span>
@@ -340,7 +406,7 @@ $(function () {
         }
       },
 
-      FilesRemoved: function (up: any, _file: any) {
+      FilesRemoved: function (up: plupload.Uploader, _file: PluploadFile) {
         formats.forEach((forms) => {
           $("#" + forms[0] + " > .plupload_file_name").append(`
           <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-properties">
@@ -366,12 +432,12 @@ $(function () {
         });
       },
 
-      UploadProgress: function (up: any, _file: any) {
+      UploadProgress: function (up: plupload.Uploader, _file: PluploadFile) {
         $("#uploadingActions .progressbar").width(up.total.percent + "%");
         Piecon.setProgress(up.total.percent);
       },
 
-      BeforeUpload: function (up: any, file: any) {
+      BeforeUpload: function (up: plupload.Uploader, file: PluploadFile) {
         // hide buttons
         $("#startUpload, .selectFilesButtonBlock").hide();
         $("#uploadingActions").show();
@@ -392,7 +458,7 @@ $(function () {
         $("select[name=level]").attr("disabled", "disabled");
 
         // You can override settings before the file is uploaded
-        const options: Record<string, any> = {
+        const options: MultipartParams = {
           pwg_token: pwg_token,
         };
 
@@ -410,7 +476,11 @@ $(function () {
         up.setOption("multipart_params", options);
       },
 
-      FileUploaded: function (up: any, file: any, info: any) {
+      FileUploaded: function (
+        up: plupload.Uploader,
+        file: PluploadFile,
+        info: TusUploadInfo,
+      ) {
         // Called when file has finished uploading. Unlike a plain plupload
         // setup, `info` here is a plain object built in uploadNextTusFile()
         // below: imageId/addStatus from the tus completion response,
@@ -452,7 +522,7 @@ $(function () {
         }
       },
 
-      Error: function (up: any, error: any) {
+      Error: function (up: plupload.Uploader, error: TusErrorInfo) {
         // Called when file has finished uploading. `error` is a plain
         // {message, file} object built in uploadNextTusFile() below, from
         // a real HTTP status returned by the tus endpoint.
@@ -460,7 +530,10 @@ $(function () {
         $(".errors").show();
       },
 
-      UploadComplete: function (_up: any, _files: any) {
+      UploadComplete: function (
+        _up: plupload.Uploader,
+        _files: PluploadFile[],
+      ) {
         // Called when all files are either uploaded or failed
         //console.log('[UploadComplete]');
 
@@ -476,7 +549,9 @@ $(function () {
               categoryId: Number(uploadCategory.id),
             }),
             dataType: "json",
-            success: function (data: any) {
+            success: function (
+              data: operations["uploadCompleteBatch"]["responses"][200]["content"]["application/json"],
+            ) {
               // A real, fresh nb_photos/label straight from the server --
               // read here instead of a value captured mid-upload, since
               // that captured value would otherwise be stale by the time
@@ -566,23 +641,25 @@ album selector, UploadProgress still reads up.total.percent, FileUploaded/
 Error/UploadComplete still update the same DOM.
 --------------*/
 
-let activeTusUpload: any = null;
+let activeTusUpload: TusUpload | null = null;
 
-function computeAggregatePercent(files: any) {
+function computeAggregatePercent(files: PluploadFile[]) {
   let totalLoaded = 0;
   let totalSize = 0;
-  files.forEach(function (f: any) {
+  files.forEach(function (f) {
     totalSize += f.size || 0;
     totalLoaded += f.status === plupload.DONE ? f.size || 0 : f.loaded || 0;
   });
   return totalSize ? Math.round((totalLoaded / totalSize) * 100) : 0;
 }
 
-function extractTusErrorDetail(err: any) {
-  if (err && err.originalResponse) {
+function extractTusErrorDetail(err: Error | TusDetailedError) {
+  if (err && "originalResponse" in err && err.originalResponse) {
     try {
-      const body = JSON.parse(err.originalResponse.getBody());
-      if (body && body.detail) {
+      const body: components["schemas"]["Problem"] = JSON.parse(
+        err.originalResponse.getBody(),
+      );
+      if (body?.detail) {
         return body.detail;
       }
     } catch (_e) {
@@ -593,8 +670,8 @@ function extractTusErrorDetail(err: any) {
   return err && err.message ? err.message : "Upload failed";
 }
 
-function startTusUploads(up: any) {
-  const pendingFiles = up.files.filter(function (f: any) {
+function startTusUploads(up: plupload.Uploader) {
+  const pendingFiles = (up.files as PluploadFile[]).filter(function (f) {
     return f.status !== plupload.DONE;
   });
 
@@ -608,19 +685,26 @@ function startTusUploads(up: any) {
 
 function cancelTusUploads() {
   if (activeTusUpload) {
-    activeTusUpload.abort();
+    // Fire-and-forget: real tus-js-client type, previously masked by
+    // `any` -- cancelling is best-effort, the caller proceeds to
+    // trigger UploadComplete immediately either way (same as before).
+    void activeTusUpload.abort();
     activeTusUpload = null;
   }
 }
 
-function uploadNextTusFile(up: any, files: any, index: number) {
+function uploadNextTusFile(
+  up: plupload.Uploader,
+  files: PluploadFile[],
+  index: number,
+) {
   if (index >= files.length) {
     activeTusUpload = null;
     up.trigger("UploadComplete", up.files);
     return;
   }
 
-  const file = files[index];
+  const file = files[index]!;
   file.status = plupload.UPLOADING;
 
   // Reuses BeforeUpload's own multipart_params-building logic verbatim
@@ -628,14 +712,14 @@ function uploadNextTusFile(up: any, files: any, index: number) {
   // (tus metadata instead of plupload's native multipart form fields)
   // differs from here on.
   up.trigger("BeforeUpload", file);
-  const options = up.getOption("multipart_params") || {};
+  const options: MultipartParams = up.getOption("multipart_params") || {};
 
-  const metadata: Record<string, any> = { filename: file.name };
+  const metadata: Record<string, string> = { filename: file.name };
   if (formatMode) {
     metadata.formatOf = String(options.format_of);
   } else {
     metadata.category = String(options.category);
-    metadata.name = options.name;
+    metadata.name = options.name ?? "";
     if (!uploadCategory) {
       uploadCategory = { id: options.category };
     }
@@ -656,10 +740,10 @@ function uploadNextTusFile(up: any, files: any, index: number) {
       file.percent = bytesTotal
         ? Math.round((bytesUploaded / bytesTotal) * 100)
         : 0;
-      up.total.percent = computeAggregatePercent(up.files);
+      up.total.percent = computeAggregatePercent(up.files as PluploadFile[]);
       up.trigger("UploadProgress", file);
     },
-    onError: function (error: any) {
+    onError: function (error: Error | TusDetailedError) {
       file.status = plupload.FAILED;
       up.trigger("Error", {
         message: extractTusErrorDetail(error),
@@ -667,11 +751,14 @@ function uploadNextTusFile(up: any, files: any, index: number) {
       });
       uploadNextTusFile(up, files, index + 1);
     },
-    onSuccess: async function (payload: any) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async completion handler, same as the click handlers elsewhere in this campaign: tus-js-client's own real onSuccess type expects void, but nothing here awaits or needs to await the returned promise.
+    onSuccess: async function (payload: TusOnSuccessPayload) {
       file.status = plupload.DONE;
       file.percent = 100;
 
-      let result: any = {};
+      let result: Partial<
+        operations["uploadPatch"]["responses"][200]["content"]["application/json"]
+      > = {};
       try {
         result = JSON.parse(payload.lastResponse.getBody());
       } catch (_e) {
@@ -688,7 +775,9 @@ function uploadNextTusFile(up: any, files: any, index: number) {
         return;
       }
 
-      let imageInfo: any = {};
+      let imageInfo: Partial<
+        operations["imageGet"]["responses"][200]["content"]["application/json"]
+      > = {};
       try {
         imageInfo = await $.ajax({
           url: "api/v1/images/" + result.imageId,
@@ -701,15 +790,24 @@ function uploadNextTusFile(up: any, files: any, index: number) {
         // fallback thumbnail/name.
       }
 
-      up.trigger("FileUploaded", file, {
-        imageId: result.imageId,
-        addStatus: result.addStatus,
-        squareSrc:
-          imageInfo.derivatives && imageInfo.derivatives.square
-            ? imageInfo.derivatives.square.url
-            : "",
-        name: imageInfo.name || file.name,
-      });
+      // @types/plupload's own Uploader.trigger(name, Multiple) is
+      // 2-arity only -- a real gap in that package, not this code: the
+      // FileUploaded event genuinely fires with 2 extra args (file,
+      // info), matching plupload_event_FileUploaded's own 3-param
+      // handler shape a few lines up in the same package.
+      (up.trigger as (name: string, ...args: unknown[]) => unknown)(
+        "FileUploaded",
+        file,
+        {
+          imageId: result.imageId,
+          addStatus: result.addStatus,
+          squareSrc:
+            imageInfo.derivatives && imageInfo.derivatives.square
+              ? imageInfo.derivatives.square.url
+              : "",
+          name: imageInfo.name || file.name,
+        },
+      );
       uploadNextTusFile(up, files, index + 1);
     },
   });
@@ -721,9 +819,12 @@ function uploadNextTusFile(up: any, files: any, index: number) {
 General functions
 --------------*/
 
-function add_related_category({ album, newSelectedAlbum }: any) {
+function add_related_category({
+  album,
+  newSelectedAlbum,
+}: AlbumSelectorCallbackArgs) {
   let text = "";
-  $(album.full_name_with_admin_links).each(function (i: number, s: any) {
+  $(album.full_name_with_admin_links ?? "").each(function (i, s) {
     if ($(s).html()) {
       text += $(s).html();
     }
@@ -760,7 +861,7 @@ function close_new_album_modal() {
   modalFirstAlbum.fadeOut();
 }
 
-function hide_first_album(cat_name: any) {
+function hide_first_album(cat_name: string) {
   modalFirstAlbum.hide();
   firstAlbum.hide();
 
@@ -772,7 +873,7 @@ function hide_first_album(cat_name: any) {
   uploadForm.fadeIn();
 }
 
-function add_first_album(add_cat: any) {
+function add_first_album(add_cat: (id: string | number) => void) {
   const params = {
     name: String(inputFirstAlbum.val()),
   };
@@ -784,7 +885,9 @@ function add_first_album(add_cat: any) {
     headers: { "X-CSRF-Token": pwg_token },
     dataType: "json",
     data: JSON.stringify(params),
-    success: function (res: any) {
+    success: function (
+      res: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
+    ) {
       add_cat(res.id);
       hide_first_album(params.name);
     },
@@ -794,20 +897,21 @@ function add_first_album(add_cat: any) {
   });
 }
 
-const formatMode = pwg_getPageData("display_formats");
-const haveFormatsOriginal = pwg_getPageData("have_formats_original");
-const originalImageId = haveFormatsOriginal
-  ? pwg_getPageData("original_image_id_str")
+const formatMode = pwg_getPageData<boolean>("display_formats");
+const haveFormatsOriginal = pwg_getPageData<boolean>("have_formats_original");
+const originalImageId: string | number = haveFormatsOriginal
+  ? pwg_getPageData<string>("original_image_id_str")
   : -1;
-const imageFormatsExtensions = pwg_getPageData("formats_ext_info") || "";
-const nb_albums = pwg_getPageData("nb_albums");
-const chunk_size = pwg_getPageData("chunk_size") + "kb";
-const max_file_size = pwg_getPageData("max_file_size") + "mb";
+const imageFormatsExtensions =
+  pwg_getPageData<string | false | null>("formats_ext_info") || "";
+const nb_albums = pwg_getPageData<string>("nb_albums");
+const chunk_size = pwg_getPageData<number>("chunk_size") + "kb";
+const max_file_size = pwg_getPageData<number>("max_file_size") + "mb";
 const format_update_warning = pwg_getPageString(
   "This format already exists, it will be overwritten !",
 );
 const format_remove = pwg_getPageString("Remove");
-const pwg_token = pwg_getPageData("csrf_token");
+const pwg_token = pwg_getPageData<string>("csrf_token");
 const photosAdded_label = pwg_getPageString("%d photos uploaded");
 const photosUpdated_label = pwg_getPageString("%d photos updated");
 const formatsAdded_label = pwg_getPageString("%d formats added for %d photos");
@@ -830,10 +934,12 @@ const str_format_warning_notFound = pwg_getPageString(
 const str_and_X_others = pwg_getPageString("and %d more");
 const str_upload_in_progress = pwg_getPageString("Upload in progress");
 const str_drop_album_ab = pwg_getPageString("Drop into album");
-const file_ext = pwg_getPageData("file_exts");
-const format_ext = pwg_getPageData("format_ext");
-const uploadedPhotos: any[] = [];
-let uploadCategory: any = null;
-const addedPhotos: any[] = [];
-const updatedPhotos: any[] = [];
-const related_categories_ids = pwg_getPageData("related_categories_ids");
+const file_ext = pwg_getPageData<string>("file_exts");
+const format_ext = pwg_getPageData<string>("format_ext");
+const uploadedPhotos: (number | string)[] = [];
+let uploadCategory: { id: string | number | undefined } | null = null;
+const addedPhotos: (number | string)[] = [];
+const updatedPhotos: (number | string)[] = [];
+const related_categories_ids = pwg_getPageData<number[]>(
+  "related_categories_ids",
+);

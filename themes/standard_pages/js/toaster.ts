@@ -1,4 +1,10 @@
-function pwgToaster(info: any) {
+interface PwgToasterInfo {
+  text: string;
+  icon: "success" | "error";
+  time?: number;
+}
+
+function pwgToaster(info: PwgToasterInfo) {
   if (!info.text || !info.icon) {
     console.log("set info.text or info.icon");
     return;

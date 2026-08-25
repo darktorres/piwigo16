@@ -38,7 +38,19 @@ function pwgAddEventListener(
 ): void {
   if (typeof window.addEventListener !== "undefined")
     elem.addEventListener(evt, fn, false);
-  else (elem as any).attachEvent("on" + evt, fn);
+  // Legacy IE-only fallback, realistically dead in any evergreen browser
+  // this project's own P35 browserslist floor targets -- lib.dom.d.ts
+  // itself has no ambient type for `attachEvent` (removed with IE),
+  // hence the local interface rather than a real DOM type.
+  else
+    (
+      elem as unknown as {
+        attachEvent(
+          event: string,
+          handler: EventListenerOrEventListenerObject,
+        ): boolean;
+      }
+    ).attachEvent("on" + evt, fn);
 }
 
 function pwg_tryFocus(id: string): void {

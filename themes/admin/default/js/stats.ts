@@ -12,14 +12,28 @@ const str_unit_format = {
   month: "MMM YYYY",
 };
 const str_avg = pwg_getPageString("Average last 12 months");
-const str_months_tosplit = pwg_getPageData("month_labels");
+const str_months_tosplit = pwg_getPageData<string>("month_labels");
 const str_months = str_months_tosplit.split("~");
-moment.locale(pwg_getPageData("lang_code"));
+moment.locale(pwg_getPageData<string>("lang_code"));
 
 /*-------
 Data Get
 -------*/
-const data: Record<string, any> = {};
+// Each of hours/days/months/years/compare-years is keyed by a
+// date-parseable string, valued by a real hit count (real usage: `new
+// Date(key)` + `y: data[key]` in getValues() below). month-stats is a
+// different real shape: one such record per calendar day-of-month
+// across every month shown, plus a single running average.
+type StatDataPoint = Record<string, number>;
+interface StatData {
+  hours: StatDataPoint;
+  days: StatDataPoint;
+  months: StatDataPoint;
+  years: StatDataPoint;
+  "compare-years": StatDataPoint;
+  "month-stats": { month: StatDataPoint[]; avg: number };
+}
+const data = {} as StatData;
 data["hours"] = $("#data").data("hours");
 data["days"] = $("#data").data("days");
 data["months"] = $("#data").data("months");
@@ -27,7 +41,7 @@ data["years"] = $("#data").data("years");
 data["compare-years"] = $("#data").data("compare-years");
 data["month-stats"] = $("#data").data("month-stats");
 
-const data_unit: Record<string, string> = {
+const data_unit: Record<string, Chart.TimeUnit> = {
   hours: "day",
   days: "month",
   months: "year",
@@ -72,7 +86,10 @@ const displayOptions = {
   lineTension: 0.2,
 };
 
-function changeData(dataType: any, options: any = displayOptions) {
+function changeData(
+  dataType: "hours" | "days" | "months" | "years",
+  options: typeof displayOptions = displayOptions,
+) {
   if (!compareMode) {
     statGraph.data = {
       datasets: [
@@ -114,10 +131,10 @@ function changeData(dataType: any, options: any = displayOptions) {
         intersect: false,
       },
     };
-    statGraph.options.scales!.xAxes!.forEach((axe: any) => {
-      axe.time.tooltipFormat = str_tooltip_format[dataType];
-      axe.time.unit = data_unit[dataType];
-      axe.time.displayFormats = str_unit_format;
+    statGraph.options.scales!.xAxes!.forEach((axe) => {
+      axe.time!.tooltipFormat = str_tooltip_format[dataType]!;
+      axe.time!.unit = data_unit[dataType]!;
+      axe.time!.displayFormats = str_unit_format;
     });
     statGraph.update();
   } else {
@@ -187,12 +204,12 @@ function changeData(dataType: any, options: any = displayOptions) {
 }
 
 //Make Data readable by Chart.js
-function getValues(data: any) {
-  const values: any[] = [];
-  Object.keys(data).forEach(function (key) {
+function getValues(statDataPoint: StatDataPoint) {
+  const values: { x: Date; y: number }[] = [];
+  Object.keys(statDataPoint).forEach(function (key) {
     const newPoint = {
       x: new Date(key),
-      y: data[key],
+      y: statDataPoint[key]!,
     };
     values.push(newPoint);
   });
@@ -209,24 +226,30 @@ function getComparedYearDataset() {
   // implicit global, no cross-file reliance" fix already applied
   // throughout this campaign (e.g. phpWGOpenWindow's img/newWin).
   const colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-  const values: Record<string, any> = {};
-  const dataset: any[] = [];
+  const values: Record<string, number[]> = {};
+  const dataset: {
+    label: string;
+    data: number[];
+    lineTension: number;
+    borderColor: string;
+    backgroundColor: string;
+  }[] = [];
 
   Object.keys(data["compare-years"]).forEach(function (key) {
     const date = new Date(key);
     if (values[date.getFullYear()] == undefined) {
       values[date.getFullYear()] = [];
     }
-    values[date.getFullYear()][parseInt(String(date.getMonth()))] =
-      data["compare-years"][key];
+    values[date.getFullYear()]![parseInt(String(date.getMonth()))] =
+      data["compare-years"][key]!;
   });
 
   Object.keys(values).forEach(function (key) {
     dataset.push({
       label: key,
-      data: values[key],
+      data: values[key]!,
       lineTension: 0.2,
-      borderColor: colors[parseInt(key) % colors.length],
+      borderColor: colors[parseInt(key) % colors.length]!,
       backgroundColor: "rgba(0,0,0,0)",
     });
   });
@@ -236,27 +259,33 @@ function getComparedYearDataset() {
 
 function getMonthStatsDataset() {
   const colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-  const dataset: any[] = [];
+  const dataset: {
+    label: string;
+    data: number[];
+    lineTension: number;
+    borderColor: string;
+    backgroundColor: string;
+  }[] = [];
   let colorIndice = 0;
-  let date: Date;
+  let date!: Date;
 
-  data["month-stats"]["month"].forEach((values: any) => {
-    const days_data: any[] = [];
+  data["month-stats"]["month"].forEach((values: StatDataPoint) => {
+    const days_data: number[] = [];
     Object.keys(values).forEach(function (key) {
       date = new Date(key);
-      days_data[parseInt(String(date.getUTCDate())) - 1] = values[key];
+      days_data[parseInt(String(date.getUTCDate())) - 1] = values[key]!;
     });
     dataset.push({
       label: str_months[date.getMonth()] + " " + date.getFullYear(),
       data: days_data,
       lineTension: 0.2,
-      borderColor: colors[colorIndice % colors.length],
+      borderColor: colors[colorIndice % colors.length]!,
       backgroundColor: "rgba(0,0,0,0)",
     });
     colorIndice++;
   });
 
-  const averageTab: any[] = [];
+  const averageTab: number[] = [];
   for (let i = 0; i < 31; i++) {
     averageTab[i] = data["month-stats"]["avg"];
   }
@@ -264,7 +293,7 @@ function getMonthStatsDataset() {
     label: str_avg,
     data: averageTab,
     lineTension: 0.2,
-    borderColor: colors[4],
+    borderColor: colors[4]!,
     backgroundColor: "rgba(0,0,0,0)",
   });
 

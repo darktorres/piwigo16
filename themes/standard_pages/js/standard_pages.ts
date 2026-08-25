@@ -59,9 +59,11 @@ jQuery(document).ready(function () {
   });
 });
 
-function toggle_mode(mode: any) {
+function toggle_mode(mode: string) {
   setCookie("mode", mode, 30);
-  const logo: any = document.getElementById("piwigo-logo");
+  const logo = document.getElementById(
+    "piwigo-logo",
+  ) as HTMLImageElement | null;
   if ("dark" === mode) {
     //Dark mode
     jQuery("#toggle_mode_light").hide();
@@ -69,7 +71,7 @@ function toggle_mode(mode: any) {
     jQuery("#mode").addClass("dark");
     jQuery("#mode").removeClass("light");
     if (logo) {
-      logo.src = logo.dataset.logoDark;
+      logo.src = logo.dataset.logoDark!;
     }
   } else {
     //Light mode
@@ -78,12 +80,12 @@ function toggle_mode(mode: any) {
     jQuery("#mode").addClass("light");
     jQuery("#mode").removeClass("dark");
     if (logo) {
-      logo.src = logo.dataset.logoLight;
+      logo.src = logo.dataset.logoLight!;
     }
   }
 }
 
-function setCookie(cname: any, cvalue: any, exdays: any) {
+function setCookie(cname: string, cvalue: string, exdays: number) {
   const d = new Date();
   d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
   const expires = "expires=" + d.toUTCString();
@@ -93,7 +95,7 @@ function setCookie(cname: any, cvalue: any, exdays: any) {
   }
 }
 
-function getCookie(cname: any) {
+function getCookie(cname: string) {
   const name = cname + "=";
   const decodedCookie = decodeURIComponent(document.cookie);
   const ca = decodedCookie.split(";");
@@ -111,7 +113,7 @@ function getCookie(cname: any) {
 
 jQuery(".togglePassword").click(function (e) {
   const toggle = jQuery(e.target);
-  const input: any = jQuery(toggle).siblings("input")[0];
+  const input = jQuery(toggle).siblings("input")[0] as HTMLInputElement;
   if (input.type === "password") {
     input.type = "text";
     jQuery(toggle).css("color", "#ff7700");
@@ -155,9 +157,9 @@ jQuery("#other-languages").on("click", "[data-lang-code]", function () {
 // paired with #password_new, not #password) -- an unscoped bind here
 // would silently misfire there.
 function pwg_checkPasswordMatchStdPages(
-  rootId: any,
-  pass1Id: any,
-  pass2Id: any,
+  rootId: string,
+  pass1Id: string,
+  pass2Id: string,
 ) {
   const root = jQuery("#" + rootId);
   if (root.length === 0) {
@@ -187,7 +189,7 @@ function pwg_checkPasswordMatchStdPages(
   pass2.on("blur keyup", check);
 }
 
-function pwg_checkEmailFormatStdPages(rootId: any, fieldId: any) {
+function pwg_checkEmailFormatStdPages(rootId: string, fieldId: string) {
   const root = jQuery("#" + rootId);
   if (root.length === 0) {
     return;

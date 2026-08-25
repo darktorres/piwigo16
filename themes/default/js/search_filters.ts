@@ -1,17 +1,31 @@
-const global_params_json = pwg_getPageData("global_params_json");
+const global_params_json = pwg_getPageData<string | false>(
+  "global_params_json",
+);
+// Deferred to P48 (real modules/type-design pass), matching this same
+// key's own established ambient-type comment below: the parsed shape
+// is a complex nested search-filter query object, not something this
+// phase re-derives real types for.
 let global_params: any;
 if (typeof global_params_json !== "undefined") {
-  global_params = JSON.parse(global_params_json);
+  // String(...) makes explicit the same coercion JSON.parse() already
+  // did implicitly pre-P47 whenever this value was `false` (JSON.parse
+  // itself calls ToString on a non-string argument) -- same behavior,
+  // just satisfies the stricter real parameter type now that this
+  // value's real `string | false` shape is known.
+  global_params = JSON.parse(String(global_params_json));
 }
 
-const fullname_of_cat_json = pwg_getPageData("fullname_of_cat_json");
+const fullname_of_cat_json = pwg_getPageData<string | false | null>(
+  "fullname_of_cat_json",
+);
 let fullname_of_cat: any;
 if (typeof fullname_of_cat_json !== "undefined") {
-  fullname_of_cat = JSON.parse(fullname_of_cat_json);
+  // Same String(...) coercion note as global_params_json above.
+  fullname_of_cat = JSON.parse(String(fullname_of_cat_json));
 }
 
-const search_id_from_page = pwg_getPageData("search_id");
-let search_id: any;
+const search_id_from_page = pwg_getPageData<string | undefined>("search_id");
+let search_id: string | undefined;
 if (typeof search_id_from_page !== "undefined") {
   search_id = search_id_from_page;
 }
@@ -21,7 +35,7 @@ if (typeof search_id_from_page !== "undefined") {
 // not deleted, since `pwg_getPageData` is a pure getter with no
 // side effect either way and this phase's own "same code" scope
 // doesn't extend to removing genuinely-dead-but-harmless reads.
-pwg_getPageData("user_rank");
+pwg_getPageData<string>("user_rank");
 
 const str_word_widget_label = pwg_getPageString("Search for words");
 const str_tags_widget_label = pwg_getPageString("Tag");
@@ -67,7 +81,15 @@ const sliders: {
   widths?: PwgSliderConfig;
 } = {};
 
-const filesize = pwg_getPageData("filesize");
+// Real shape of the filesize/height/width page-data keys (SearchFiltersView.php's
+// own `array<string, mixed>|null` docblock, narrowed to the real fields
+// this file itself reads).
+interface PageDataSliderSource {
+  list: string;
+  selected: { min: number | string; max: number | string };
+}
+
+const filesize = pwg_getPageData<PageDataSliderSource | null>("filesize");
 if (filesize) {
   sliders.filesizes = {
     values: filesize.list.split(",").map(Number),
@@ -79,7 +101,7 @@ if (filesize) {
   };
 }
 
-const height = pwg_getPageData("height");
+const height = pwg_getPageData<PageDataSliderSource | null>("height");
 if (height) {
   sliders.heights = {
     values: height.list.split(",").map(Number),
@@ -91,7 +113,7 @@ if (height) {
   };
 }
 
-const width = pwg_getPageData("width");
+const width = pwg_getPageData<PageDataSliderSource | null>("width");
 if (width) {
   sliders.widths = {
     values: width.list.split(",").map(Number),
@@ -103,7 +125,9 @@ if (width) {
   };
 }
 
-const show_filter_ratings_value = pwg_getPageData("show_filter_ratings");
+const show_filter_ratings_value = pwg_getPageData<boolean | undefined>(
+  "show_filter_ratings",
+);
 const show_filter_ratings =
   typeof show_filter_ratings_value === "undefined"
     ? false

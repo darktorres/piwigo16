@@ -1,7 +1,7 @@
 export {};
 
 (function () {
-  const sbFunc = function (link: any, box: any) {
+  const sbFunc = function (link: string, box: string) {
     jQuery(link).click(function () {
       const elt = jQuery(box);
       elt

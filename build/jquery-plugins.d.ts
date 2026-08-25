@@ -70,34 +70,41 @@ interface Window {
   pwg_tryFocus: (id: string) => void;
 
   // search_filters.ts's own page-data-derived globals, all real bare
-  // reads confirmed in (still-.js, not yet type-checked) mcs.js --
-  // `any` throughout: these are page-data-JSON-derived or translated
-  // strings, not first-party logic this phase re-derives real types
-  // for (that's P48's job, not P46's).
+  // reads confirmed in mcs.ts (P47). `global_params`/`fullname_of_cat`
+  // stay `any` -- the parsed JSON's own shape is a complex nested
+  // search-filter query object, not first-party logic this phase
+  // re-derives real types for (that's P48's job). Every other one here
+  // is either a real page-data-typed primitive or a translated string
+  // (`pwg_getPageString()`'s own real `string` return), both squarely
+  // this phase's own job.
   global_params: any;
   fullname_of_cat: any;
-  search_id: any;
-  str_word_widget_label: any;
-  str_tags_widget_label: any;
-  str_album_widget_label: any;
-  str_author_widget_label: any;
-  str_added_by_widget_label: any;
-  str_filetypes_widget_label: any;
-  str_rating_widget_label: any;
-  str_no_rating: any;
-  str_between_rating: any;
-  str_filesize_widget_label: any;
-  str_width_widget_label: any;
-  str_height_widget_label: any;
-  str_ratio_widget_label: any;
-  str_ratios_label: any;
-  str_expert_widget_label: any;
-  str_empty_search_top_alt: any;
-  str_empty_search_bot_alt: any;
-  str_search_in_ab: any;
-  prefix_icon: any;
-  sliders: any;
-  show_filter_ratings: any;
+  search_id: string | undefined;
+  str_word_widget_label: string;
+  str_tags_widget_label: string;
+  str_album_widget_label: string;
+  str_author_widget_label: string;
+  str_added_by_widget_label: string;
+  str_filetypes_widget_label: string;
+  str_rating_widget_label: string;
+  str_no_rating: string;
+  str_between_rating: string;
+  str_filesize_widget_label: string;
+  str_width_widget_label: string;
+  str_height_widget_label: string;
+  str_ratio_widget_label: string;
+  str_ratios_label: Record<string, string>;
+  str_expert_widget_label: string;
+  str_empty_search_top_alt: string;
+  str_empty_search_bot_alt: string;
+  str_search_in_ab: string;
+  prefix_icon: string;
+  sliders: {
+    filesizes?: PwgSliderConfig;
+    heights?: PwgSliderConfig;
+    widths?: PwgSliderConfig;
+  };
+  show_filter_ratings: boolean;
 
   // common.ts's own established shared-global set (P46-A/eslint.config.ts's
   // pre-existing globals block for this exact file, now enforced by real
@@ -257,7 +264,7 @@ interface Window {
   updateSelectionPanel: (changedState?: any) => void;
 
   // toaster.ts's own function -- profile.ts calls this bare (P46-G).
-  pwgToaster: (info: any) => void;
+  pwgToaster: (info: PwgToasterInfo) => void;
 
   // Chart.js (vendored -- P46-0's own CDN table, real types from
   // `@types/chart.js`, P47). `@types/chart.js`'s own `.d.ts` has a real

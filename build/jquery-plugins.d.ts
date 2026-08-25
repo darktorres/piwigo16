@@ -255,10 +255,24 @@ interface Window {
   // `button.attr("OnClick", onClick)`) -- the same exposure
   // requirement either way.
   hideAddGroupForm: () => void;
-  updateSelectionPanel: (changedState?: any) => void;
+  // Real param type (P47) -- was `any` here from before group_list.ts's
+  // own typing pass ever landed; that pass retyped the real function's
+  // own signature but never circled back to update this copy.
+  updateSelectionPanel: (changedState?: string) => void;
 
   // toaster.ts's own function -- profile.ts calls this bare (P46-G).
   pwgToaster: (info: PwgToasterInfo) => void;
+
+  // user_list.ts's own real public plugin extension point (P47) --
+  // JSDoc-documented for third-party plugins to call from their own
+  // separately-loaded `<script>` tags.
+  plugin_add_tab_in_user_modal: (
+    tab_name: string,
+    content_id: string,
+    users_table?: string | null,
+    set_data_function?: ((...args: unknown[]) => unknown) | null,
+    get_data_function?: ((...args: unknown[]) => unknown) | null,
+  ) => void;
 
   // Chart.js (vendored -- P46-0's own CDN table, real types from
   // `@types/chart.js`, P47). `@types/chart.js`'s own `.d.ts` has a real

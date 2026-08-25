@@ -1,4 +1,36 @@
+import type { components, operations } from "../../../../openapi/client/schema";
+
 export {};
+
+// The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/
+// `guest_user` are both populated straight from that endpoint's own
+// response (`current_users = data.users` / `guest_user = data.users[0]`,
+// below), and every `fill_user_edit_*` helper reads real User schema
+// fields (status/level/email/groups/enabledHigh/nbImagePage/theme/
+// language/expand/showNbComments/showNbHits/registration*/lastVisit*).
+type UserRow = components["schemas"]["User"];
+type UserListResponse =
+  operations["userList"]["responses"][200]["content"]["application/json"];
+
+// `selectAllPage`/`selectInvert`'s own real pushed shape -- only `id`/
+// `username` are ever read off a `selection` entry. `username` is
+// genuinely optional: `select_whole_set()` (below) pushes id-only
+// entries for a whole-database selection (fetching every username
+// upfront would be wasteful), lazily backfilled for just the first 50
+// via `get_first_selection_usernames()` -- callers already defensively
+// check `typeof ... !== "undefined"` before reading it.
+interface SelectionEntry {
+  id: number;
+  username?: string;
+}
+
+// `groupOptions`'s own real per-item shape (below), fed to the 3 real
+// group-picker Selectize instances.
+interface GroupOption {
+  value: number;
+  label: string;
+  isSelected: boolean;
+}
 
 const color_icons = [
   "icon-red",
@@ -10,25 +42,28 @@ const color_icons = [
 const status_arr = ["webmaster", "admin", "normal", "generic", "guest"];
 const level_arr = ["0", "1", "2", "4", "8"];
 const king_template = '<p class="icon-king" id="the_king"></p>';
-let current_users: any[] = [];
+let current_users: UserRow[] = [];
 let guest_id = 0;
-let guest_user: Record<string, any> = {};
+let guest_user: UserRow;
 let connected_user = 0;
-let groups_arr: any[] = [];
+let groups_arr: [number, string][] = [];
 let nb_days = "";
 let nb_photos = "";
 let nb_photos_per_page = "";
 let last_user_index = -1;
 let last_user_id = -1;
 let pwg_token = "";
-let selection: any[] = [];
+let selection: SelectionEntry[] = [];
 let first_update = true;
 let total_users = 0;
 let filter_by = "id DESC";
-const plugins_set_functions: Record<string, any> = {};
-const plugins_get_functions: Record<string, any> = {};
-const plugins_load: any[] = [];
-const plugins_users_infos_table: any[] = [];
+const plugins_set_functions: Record<string, (...args: unknown[]) => unknown> =
+  {};
+const plugins_get_functions: Record<string, (...args: unknown[]) => unknown> =
+  {};
+const plugins_load: string[] = [];
+const plugins_users_infos_table: { content_id: string; users_table: string }[] =
+  [];
 let owner_username = "";
 /*----------------
 Escape of pop-in
@@ -62,12 +97,12 @@ jQuery("[data-selectize=groups]").selectize({
   plugins: ["remove_button"],
 });
 
-const groupSelectize: any = (jQuery("[data-selectize=groups]")[0] as any)
-  .selectize;
-const groupGuestSelectize: any = (jQuery("[data-selectize=groups]")[1] as any)
-  .selectize;
-const groupAddUserSelectize: any = ($("[data-selectize=groups]")[2] as any)
-  .selectize;
+const groupSelectize = jQuery("[data-selectize=groups]")[0]!
+  .selectize as Selectize.IApi<string | number, GroupOption>;
+const groupGuestSelectize = jQuery("[data-selectize=groups]")[1]!
+  .selectize as Selectize.IApi<string | number, GroupOption>;
+const groupAddUserSelectize = $("[data-selectize=groups]")[2]!
+  .selectize as Selectize.IApi<string | number, GroupOption>;
 
 /*-----------------
 OnClick functions
@@ -210,10 +245,10 @@ $(document).ready(function () {
   jQuery("#selectAllPage").click(function () {
     const selection_ids = selection.map((x) => x.id);
     for (let i = 0; i < current_users.length; i++) {
-      if (!selection_ids.includes(current_users[i].id)) {
+      if (!selection_ids.includes(current_users[i]!.id)) {
         selection.push({
-          id: current_users[i].id,
-          username: current_users[i].username,
+          id: current_users[i]!.id,
+          username: current_users[i]!.username,
         });
       }
     }
@@ -230,15 +265,15 @@ $(document).ready(function () {
   jQuery("#selectInvert").click(function () {
     const selection_ids = selection.map((x) => x.id);
     for (let i = 0; i < current_users.length; i++) {
-      if (selection_ids.includes(current_users[i].id)) {
+      if (selection_ids.includes(current_users[i]!.id)) {
         selection.splice(
-          selection.findIndex((x) => x.id == current_users[i].id),
+          selection.findIndex((x) => x.id == current_users[i]!.id),
           1,
         );
       } else {
         selection.push({
-          id: current_users[i].id,
-          username: current_users[i].username,
+          id: current_users[i]!.id,
+          username: current_users[i]!.username,
         });
       }
     }
@@ -442,7 +477,7 @@ $(document).ready(function () {
   });
 });
 
-function set_view_selector(view_type: any) {
+function set_view_selector(view_type: string) {
   $.ajax({
     url: "api/v1/session/preferences/user-manager-view",
     type: "PUT",
@@ -493,7 +528,7 @@ function setDisplayCompact() {
 Checkboxes
 ----------------*/
 
-function checkbox_change(this: any) {
+function checkbox_change(this: HTMLElement) {
   if ($(this).attr("data-selected") == "1") {
     $(this).find("i").hide();
   } else {
@@ -501,7 +536,7 @@ function checkbox_change(this: any) {
   }
 }
 
-function checkbox_click(this: any) {
+function checkbox_click(this: HTMLElement) {
   if ($(this).attr("data-selected") == "1") {
     $(this).attr("data-selected", "0");
     $(this).find("i").hide();
@@ -534,21 +569,27 @@ const nb_image_page_init = 0;
 /**
  * find the key from a value in the startStopValues array
  */
-function getSliderKeyFromValue(value: any, values: any) {
-  for (const key in values) {
-    if (values[key] >= value) {
+// Was `for (const key in values)`, returning the for-in string key
+// directly -- real strict typing (and eslint's no-for-in-array) reject
+// that outright. Rewritten to iterate real numeric indices, so this
+// always returns a genuine `number` (previously a numeric-looking
+// *string* on every non-fallback path) to jQuery UI's own slider
+// `value` option, which expects one.
+function getSliderKeyFromValue(value: number, values: number[]): number {
+  for (let key = 0; key < values.length; key++) {
+    if (values[key]! >= value) {
       return key;
     }
   }
   return 0;
 }
 
-function getNbImagePageInfoFromIdx(idx: any) {
-  return sprintf(nb_photos, nb_image_page_values[idx]);
+function getNbImagePageInfoFromIdx(idx: number) {
+  return sprintf(nb_photos, nb_image_page_values[idx]!);
 }
 
-function getRecentPeriodInfoFromIdx(idx: any) {
-  return sprintf(nb_days, recent_period_values[idx]);
+function getRecentPeriodInfoFromIdx(idx: number) {
+  return sprintf(nb_days, recent_period_values[idx]!);
   //return recent_period_values[idx].toString();
 }
 
@@ -558,19 +599,19 @@ jQuery("#UserList .photos-select-bar .slider-bar-container").slider({
   min: 0,
   max: nb_image_page_values.length - 1,
   value: nb_image_page_init,
-  change: function (event: any, ui: any) {
+  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#UserList .photos-select-bar .nb-img-page-infos").html(
-      getNbImagePageInfoFromIdx(ui.value),
+      getNbImagePageInfoFromIdx(ui.value!),
     );
   },
-  slide: function (event: any, ui: any) {
+  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#UserList .photos-select-bar .nb-img-page-infos").html(
-      getNbImagePageInfoFromIdx(ui.value),
+      getNbImagePageInfoFromIdx(ui.value!),
     );
   },
-  stop: function (event: any, ui: any) {
+  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#UserList .photos-select-bar input[name=nb_image_page]")
-      .val(nb_image_page_values[ui.value]!)
+      .val(nb_image_page_values[ui.value!]!)
       .trigger("change");
   },
 });
@@ -580,19 +621,19 @@ jQuery("#GuestUserList .photos-select-bar .slider-bar-container").slider({
   min: 0,
   max: nb_image_page_values.length - 1,
   value: nb_image_page_init,
-  change: function (event: any, ui: any) {
+  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#GuestUserList .photos-select-bar .nb-img-page-infos").html(
-      getNbImagePageInfoFromIdx(ui.value),
+      getNbImagePageInfoFromIdx(ui.value!),
     );
   },
-  slide: function (event: any, ui: any) {
+  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#GuestUserList .photos-select-bar .nb-img-page-infos").html(
-      getNbImagePageInfoFromIdx(ui.value),
+      getNbImagePageInfoFromIdx(ui.value!),
     );
   },
-  stop: function (event: any, ui: any) {
+  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#GuestUserList .photos-select-bar input[name=nb_image_page]")
-      .val(nb_image_page_values[ui.value]!)
+      .val(nb_image_page_values[ui.value!]!)
       .trigger("change");
   },
 });
@@ -606,19 +647,19 @@ jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
     min: 0,
     max: nb_image_page_values.length - 1,
     value: nb_image_page_init,
-    change: function (event: any, ui: any) {
+    change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
       $("#permitActionUserList .photos-select-bar .nb-img-page-infos").html(
-        getNbImagePageInfoFromIdx(ui.value),
+        getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: any, ui: any) {
+    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
       $("#permitActionUserList .photos-select-bar .nb-img-page-infos").html(
-        getNbImagePageInfoFromIdx(ui.value),
+        getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: any, ui: any) {
+    stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
       $("#permitActionUserList .photos-select-bar input[name=nb_image_page]")
-        .val(nb_image_page_values[ui.value]!)
+        .val(nb_image_page_values[ui.value!]!)
         .trigger("change");
     },
   },
@@ -630,19 +671,19 @@ $("#UserList .period-select-bar .slider-bar-container").slider({
   min: 0,
   max: recent_period_values.length - 1,
   value: recent_period_init,
-  change: function (event: any, ui: any) {
+  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#UserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value),
+      getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
-  slide: function (event: any, ui: any) {
+  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#UserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value),
+      getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
-  stop: function (event: any, ui: any) {
+  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#UserList .period-select-bar input[name=recent_period]")
-      .val(recent_period_values[ui.value]!)
+      .val(recent_period_values[ui.value!]!)
       .trigger("change");
   },
 });
@@ -652,19 +693,19 @@ $("#GuestUserList .period-select-bar .slider-bar-container").slider({
   min: 0,
   max: recent_period_values.length - 1,
   value: recent_period_init,
-  change: function (event: any, ui: any) {
+  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#GuestUserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value),
+      getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
-  slide: function (event: any, ui: any) {
+  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#GuestUserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value),
+      getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
-  stop: function (event: any, ui: any) {
+  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#GuestUserList .period-select-bar input[name=recent_period]")
-      .val(recent_period_values[ui.value]!)
+      .val(recent_period_values[ui.value!]!)
       .trigger("change");
   },
 });
@@ -674,19 +715,19 @@ $("#permitActionUserList .period-select-bar .slider-bar-container").slider({
   min: 0,
   max: recent_period_values.length - 1,
   value: recent_period_init,
-  change: function (event: any, ui: any) {
+  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#permitActionUserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value),
+      getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
-  slide: function (event: any, ui: any) {
+  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#permitActionUserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value),
+      getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
-  stop: function (event: any, ui: any) {
+  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
     $("#permitActionUserList .period-select-bar input[name=recent_period]")
-      .val(recent_period_values[ui.value]!)
+      .val(recent_period_values[ui.value!]!)
       .trigger("change");
   },
 });
@@ -713,7 +754,7 @@ const page_item = '<a data-page="%d">%d</a>';
 const promise_pending = false;
 const update_ask = false;
 
-function move_to_page(page: any) {
+function move_to_page(page: number) {
   if (page < 1 || page > max_page) return;
   actual_page = page;
   update_pagination_menu();
@@ -749,9 +790,9 @@ $(".pagination-per-page a").on("click", function () {
   $(this).addClass("selected-pagination");
 });
 
-function append_pagination_item(page: any = null) {
+function append_pagination_item(page: number | null = null) {
   if (page != null) {
-    const new_tag = $(page_item.replace(/%d/g, page));
+    const new_tag = $(page_item.replace(/%d/g, String(page)));
     $(".pagination-item-container").append(new_tag);
     if (actual_page == page) {
       new_tag.addClass("actual");
@@ -829,44 +870,44 @@ function advanced_filter_hide() {
   );
 }
 
-let months: any[] = [];
+let months: string[] = [];
 
-function getDateStr(date: any) {
+function getDateStr(date: string) {
   const date_arr = date.split("-");
-  const curr_month = months[parseInt(date_arr[1]) - 1];
+  const curr_month = months[parseInt(date_arr[1]!) - 1];
   return curr_month + " " + date_arr[0];
 }
 
-function setupRegisterDates(register_dates: any) {
+function setupRegisterDates(register_dates: string[]) {
   $(".advanced-filter .dates-select-bar .slider-bar-container").slider({
     range: true,
     min: 0,
     max: register_dates.length - 1,
     values: [0, register_dates.length - 1],
-    change: function (event: any, ui: any) {
+    change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
       $(".advanced-filter .dates-infos").html(
         sprintf(
           dates_infos,
-          getDateStr(register_dates[ui.values[0]]),
-          getDateStr(register_dates[ui.values[1]]),
+          getDateStr(register_dates[ui.values![0]!]!),
+          getDateStr(register_dates[ui.values![1]!]!),
         ),
       );
     },
-    slide: function (event: any, ui: any) {
+    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
       $(".advanced-filter .dates-infos").html(
         sprintf(
           dates_infos,
-          getDateStr(register_dates[ui.values[0]]),
-          getDateStr(register_dates[ui.values[1]]),
+          getDateStr(register_dates[ui.values![0]!]!),
+          getDateStr(register_dates[ui.values![1]!]!),
         ),
       );
     },
-    stop: function (event: any, ui: any) {
+    stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
       $(".advanced-filter .dates-infos").html(
         sprintf(
           dates_infos,
-          getDateStr(register_dates[ui.values[0]]),
-          getDateStr(register_dates[ui.values[1]]),
+          getDateStr(register_dates[ui.values![0]!]!),
+          getDateStr(register_dates[ui.values![1]!]!),
         ),
       );
       update_user_list();
@@ -876,8 +917,8 @@ function setupRegisterDates(register_dates: any) {
   $(".advanced-filter .dates-infos").html(
     sprintf(
       dates_infos,
-      getDateStr(register_dates[0]),
-      getDateStr(register_dates[register_dates.length - 1]),
+      getDateStr(register_dates[0]!),
+      getDateStr(register_dates[register_dates.length - 1]!),
     ),
   );
 }
@@ -934,7 +975,7 @@ function add_user_open() {
 Selection mode
 ------------------*/
 
-function checkbox_container_change(this: any) {
+function checkbox_container_change(this: HTMLElement) {
   if ($(this).attr("data-selected") == "1") {
     $(this).attr("data-selected", "0");
     $(this).find("i").hide();
@@ -944,12 +985,16 @@ function checkbox_container_change(this: any) {
   }
 }
 
-function checkbox_container_click(this: any) {
+function checkbox_container_click(this: HTMLElement) {
   const curr_container = $(this).closest(".user-container");
   const in_container = curr_container.length != 0;
-  const curr_user = in_container
-    ? current_users[parseInt(curr_container.attr("key")!)]
-    : { id: -1 };
+  // Non-null: `parseInt(curr_container.attr("key"))` is only ever
+  // evaluated when `in_container` is true, and every rendered
+  // container's `key` attribute is a real, in-bounds `current_users`
+  // index.
+  const curr_user: { id: number; username: string } = in_container
+    ? current_users[parseInt(curr_container.attr("key")!)]!
+    : { id: -1, username: "" };
   if ($(this).attr("data-selected") == "1") {
     $(this).attr("data-selected", "0");
     $(this).find("i").hide();
@@ -970,10 +1015,12 @@ function checkbox_container_click(this: any) {
   }
 }
 
-function create_user_selected_item(user: any) {
+function create_user_selected_item(user: SelectionEntry) {
   const new_elem = $("#template .user-selected-item").clone();
   new_elem.attr("data-id", user.id.toString());
-  new_elem.find("p").html(user.username);
+  // Non-null: only ever called after the caller's own `typeof ...
+  // !== "undefined"` guard confirms `username` is really set.
+  new_elem.find("p").html(user.username!);
   new_elem.find("a").click(() => {
     selection.splice(
       selection.findIndex((i) => i.id == user.id),
@@ -989,8 +1036,8 @@ function generate_user_selected_items() {
   const others = selection.length - 5;
   $(".user-selected-list .user-selected-item").remove();
   for (let i = 0; i < selection.length && items_created < 5; i++) {
-    if (typeof selection[i].username !== "undefined") {
-      $(".user-selected-list").append(create_user_selected_item(selection[i]));
+    if (typeof selection[i]!.username !== "undefined") {
+      $(".user-selected-list").append(create_user_selected_item(selection[i]!));
       items_created += 1;
     }
   }
@@ -1008,7 +1055,7 @@ function generate_user_selected_items() {
 function fill_user_selected_list() {
   let elems_with_username = 0;
   for (let i = 0; i < selection.length && elems_with_username < 5; i++) {
-    if (typeof selection[i].username !== "undefined") {
+    if (typeof selection[i]!.username !== "undefined") {
       elems_with_username += 1;
     }
   }
@@ -1039,9 +1086,9 @@ function set_selected_to_selection() {
   if (!$("#toggleSelectionMode").is(":checked")) {
     return;
   }
-  $(".user-container-wrapper .user-container").each(function (index: any) {
-    const selection_ids = selection.map((x: any) => x.id);
-    if (selection_ids.includes(current_users[index].id)) {
+  $(".user-container-wrapper .user-container").each(function (index) {
+    const selection_ids = selection.map((x) => x.id);
+    if (selection_ids.includes(current_users[index]!.id)) {
       $(this).addClass("container-selected");
       $(this).find(".user-list-checkbox").attr("data-selected", "1");
       $(this).find(".user-list-checkbox i").show();
@@ -1053,7 +1100,7 @@ function set_selected_to_selection() {
   });
 }
 
-function selectionMode(isSelection: any) {
+function selectionMode(isSelection: boolean) {
   $("#permitActionUserList select[name=selectAction]").val("-1");
   $("#permitActionUserList select[name=selectAction]").trigger("change");
   if (isSelection) {
@@ -1099,18 +1146,18 @@ function hide_temporary_messages() {
   $(".error-msg").hide();
 }
 
-function get_group_name_from_id(id: any) {
+function get_group_name_from_id(id: number) {
   for (let i = 0; i < groups_arr.length; i++) {
-    if (groups_arr[i][0] == id) {
-      return groups_arr[i][1];
+    if (groups_arr[i]![0] == id) {
+      return groups_arr[i]![1];
     }
   }
   return "group_id error";
 }
 
-function get_container_index_from_uid(uid: any) {
+function get_container_index_from_uid(uid: number) {
   for (let i = 0; i < current_users.length; i++) {
-    if (current_users[i].id == uid) {
+    if (current_users[i]!.id == uid) {
       return i;
     }
   }
@@ -1142,7 +1189,7 @@ function editTabsBind() {
     });
 }
 
-function check_tabs(title_tab_name_id: any) {
+function check_tabs(title_tab_name_id: string) {
   if (plugins_load.length > 2) {
     $(".edit-user-tab-title").css({
       gap: "0px",
@@ -1208,11 +1255,11 @@ function check_tabs(title_tab_name_id: any) {
  * @returns {void} Displays the new tab in the user's modal
  */
 function plugin_add_tab_in_user_modal(
-  tab_name: any,
-  content_id: any,
-  users_table: any = null,
-  set_data_function: any = null,
-  get_data_function: any = null,
+  tab_name: string,
+  content_id: string,
+  users_table: string | null = null,
+  set_data_function: ((...args: unknown[]) => unknown) | null = null,
+  get_data_function: ((...args: unknown[]) => unknown) | null = null,
 ) {
   // verification
   if (typeof tab_name !== "string") {
@@ -1331,7 +1378,7 @@ function hide_modals() {
   reset_main_user_modals();
 }
 
-function display_long_string(username: any) {
+function display_long_string(username: string) {
   const formatedUsername =
     username.length > 20 ? username.slice(0, 17) + "..." : username;
   return formatedUsername;
@@ -1351,7 +1398,7 @@ function generate_random_string() {
 /* ---------------
 Who is the king functions (main user)
 ----------------*/
-function open_main_user_modal(user_to_edit: any) {
+function open_main_user_modal(user_to_edit: UserRow) {
   const modal = $(".user-property-main-user-change");
   reset_main_user_modals();
   $(".main-user-proceed-desc").html(
@@ -1405,9 +1452,9 @@ function set_main_user_success() {
 }
 
 function event_check_string_main_user(
-  new_main_username: any,
-  new_main_id: any,
-  stringToCheck: any,
+  new_main_username: string,
+  new_main_id: number,
+  stringToCheck: string,
 ) {
   const icon = $("#main_user_rewrite_icon");
   $("#main_user_rewrite")
@@ -1433,7 +1480,7 @@ function event_check_string_main_user(
     });
 }
 
-function event_validate_main_user(new_main_username: any, user_id: any) {
+function event_validate_main_user(new_main_username: string, user_id: number) {
   $(".main-user-btn-validate")
     .off("click")
     .on("click", function () {
@@ -1444,16 +1491,18 @@ function event_validate_main_user(new_main_username: any, user_id: any) {
 /*-----------------------
 Generate User Containers
 -----------------------*/
-function user_container_click(this: any) {
+function user_container_click(this: HTMLElement) {
   if (!isSelectionMode()) {
     return;
   }
   const curr_container = $(this);
   const in_container = curr_container.length != 0;
   const container_checkbox = $(this).find(".user-list-checkbox");
-  const curr_user = in_container
-    ? current_users[parseInt(curr_container.attr("key")!)]
-    : { id: -1 };
+  // Non-null: same "always a real, in-bounds index when in_container"
+  // invariant as checkbox_container_click()'s own copy of this comment.
+  const curr_user: { id: number; username: string } = in_container
+    ? current_users[parseInt(curr_container.attr("key")!)]!
+    : { id: -1, username: "" };
   if (container_checkbox.attr("data-selected") == "1") {
     container_checkbox.attr("data-selected", "0");
     container_checkbox.find("i").hide();
@@ -1474,28 +1523,28 @@ function user_container_click(this: any) {
   }
 }
 
-function generate_groups(container: any, groups: any) {
+function generate_groups(container: JQuery, groups: number[]) {
   container.find(".user-container-groups").html("");
   if (groups.length >= 1) {
     const primary_grp = $("#template .group-primary").clone();
-    primary_grp.html(get_group_name_from_id(groups[0]));
-    primary_grp.addClass(color_icons[groups[0] % 5]!);
+    primary_grp.html(get_group_name_from_id(groups[0]!));
+    primary_grp.addClass(color_icons[groups[0]! % 5]!);
     container.find(".user-container-groups").append(primary_grp);
   }
   if (groups.length >= 2) {
     const primary_grp = $("#template .group-primary").clone();
-    primary_grp.html(get_group_name_from_id(groups[1]));
-    primary_grp.addClass(color_icons[groups[1] % 5]!);
+    primary_grp.html(get_group_name_from_id(groups[1]!));
+    primary_grp.addClass(color_icons[groups[1]! % 5]!);
     container.find(".user-container-groups").append(primary_grp);
   }
   if (groups.length >= 3) {
     const bonus_grp = $("#template .group-bonus").clone();
     bonus_grp.html("...");
-    bonus_grp.addClass(color_icons[groups[2] % 5]!);
+    bonus_grp.addClass(color_icons[groups[2]! % 5]!);
     bonus_grp.addClass("tiptip");
     let groups_in_title = "";
     for (let i = 2; i < groups.length; i++) {
-      groups_in_title += get_group_name_from_id(groups[i]) + ", ";
+      groups_in_title += get_group_name_from_id(groups[i]!) + ", ";
     }
     groups_in_title = groups_in_title.substring(0, groups_in_title.length - 2);
     bonus_grp.prop("title", groups_in_title);
@@ -1503,19 +1552,19 @@ function generate_groups(container: any, groups: any) {
   }
 }
 
-function get_initials(username: any) {
+function get_initials(username: string): string {
   const words = username.toUpperCase().split(" ");
-  let res = words[0][0];
+  let res = words[0]![0]!;
 
-  if (words.length > 1 && words[1][0] !== undefined) {
-    res += words[1][0];
+  if (words.length > 1 && words[1]![0] !== undefined) {
+    res += words[1]![0];
   }
   return res;
 }
 
-function fill_container_user_info(container: any, user_index: any) {
-  const user = current_users[user_index];
-  const registration_dates = user.registrationDate.split(" ");
+function fill_container_user_info(container: JQuery, user_index: number) {
+  const user = current_users[user_index]!;
+  const registration_dates = (user.registrationDate ?? "").split(" ");
   container.attr("key", user_index);
   container.find(".user-container-username span").html(user.username);
   if (user.id === owner_id && !$("#the_king").length) {
@@ -1526,7 +1575,7 @@ function fill_container_user_info(container: any, user_index: any) {
   }
   const initial_to_fill = get_initials(user.username);
   const initialSpan = container.find(".user-container-initials span");
-  initialSpan.html(initial_to_fill).addClass(color_icons[user.id % 5]);
+  initialSpan.html(initial_to_fill).addClass(color_icons[user.id % 5]!);
   if (initial_to_fill.length > 1) {
     initialSpan.addClass("small");
   } else {
@@ -1534,15 +1583,18 @@ function fill_container_user_info(container: any, user_index: any) {
   }
   container
     .find(".user-container-status span")
-    .html(status_to_str[user.status]);
-  container.find(".user-container-email span").html(user.email);
+    // Non-null: every real, listed user has a real status; `null` is
+    // only a schema allowance for an edge case this admin listing
+    // doesn't actually surface.
+    .html(status_to_str[user.status!]!);
+  container.find(".user-container-email span").html(user.email ?? "");
   generate_groups(container, user.groups);
   container
     .find(".user-container-registration-date")
-    .html(registration_dates[0]);
+    .html(registration_dates[0] ?? "");
   container
     .find(".user-container-registration-time")
-    .html(registration_dates[1]);
+    .html(registration_dates[1] ?? "");
   container
     .find(".user-container-registration-date-since")
     .html(user.registrationDateSince);
@@ -1562,24 +1614,24 @@ function generate_user_list() {
   $(".user-container").click(user_container_click);
 }
 
-function copyToClipboard(toCopy: any) {
+function copyToClipboard(toCopy: string) {
   void navigator.clipboard.writeText(toCopy);
 }
 /*---------------------
 Fill the pop-in values
 ---------------------*/
 
-function get_formatted_date(date_str: any) {
+function get_formatted_date(date_str: string | null) {
   if (date_str === null) {
     return "N/A";
   }
-  const first_part = date_str.split(" ")[0];
+  const first_part = date_str.split(" ")[0]!;
   const formatted = first_part.split("-").join("/");
   // console.log(formatted);
   return formatted;
 }
 
-function get_status_index(status: any) {
+function get_status_index(status: string | null) {
   for (let i = 0; i < status_arr.length; i++) {
     if (status_arr[i] === status) {
       return i;
@@ -1588,39 +1640,43 @@ function get_status_index(status: any) {
   return 0;
 }
 
-function get_level_index(level: any) {
+function get_level_index(level: number | null) {
   // level_arr holds string literals; /api/v1/users returns a real
   // JSON number for `level`, so this needs a loose match rather than
   // the strict one status_arr's own still-string `status` comparison
   // above can keep using.
   for (let i = 0; i < level_arr.length; i++) {
-    if (level_arr[i] == level) {
+    if (level_arr[i]! == String(level)) {
       return i;
     }
   }
   return 0;
 }
 
-function set_selected_groups(groups: any) {
+function set_selected_groups(groups: number[]) {
   for (let i = 0; i < groupOptions.length; i++) {
-    groupOptions[i].isSelected = groups.includes(groupOptions[i].value);
+    groupOptions[i]!.isSelected = groups.includes(groupOptions[i]!.value);
   }
 }
 
-function fill_user_edit_summary(user_to_edit: any, pop_in: any, isGuest: any) {
+function fill_user_edit_summary(
+  user_to_edit: UserRow,
+  pop_in: JQuery,
+  isGuest: boolean,
+) {
   // console.log(isGuest);
   if (isGuest) {
     pop_in
       .find(".user-property-initials span")
       .removeClass(color_icons.join(" "))
-      .addClass(color_icons[user_to_edit.id % 5]);
+      .addClass(color_icons[user_to_edit.id % 5]!);
   } else {
     const initial_to_fill = get_initials(user_to_edit.username);
     const initialSpan = pop_in.find(".user-property-initials span");
     initialSpan
       .html(initial_to_fill)
       .removeClass(color_icons.join(" "))
-      .addClass(color_icons[user_to_edit.id % 5]);
+      .addClass(color_icons[user_to_edit.id % 5]!);
     if (initial_to_fill.length > 1) {
       initialSpan.addClass("small");
     } else {
@@ -1678,23 +1734,25 @@ function fill_user_edit_summary(user_to_edit: any, pop_in: any, isGuest: any) {
   }
 }
 
-function fill_user_edit_properties(user_to_edit: any, pop_in: any) {
+function fill_user_edit_properties(user_to_edit: UserRow, pop_in: JQuery) {
   const status_index = get_status_index(user_to_edit.status);
   const level_index = get_level_index(user_to_edit.level);
   const current_group_selectize =
     user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
 
-  pop_in.find(".user-property-email input").val(user_to_edit.email);
+  pop_in.find(".user-property-email input").val(user_to_edit.email ?? "");
   pop_in
     .find(`.user-property-status select option:eq(${status_index})`)
     .prop("selected", true);
   pop_in
     .find(`.user-property-level select option:eq(${level_index})`)
     .prop("selected", true);
-  pop_in.find(".photos-select-bar input").val(user_to_edit.recentPeriod);
+  pop_in.find(".photos-select-bar input").val(user_to_edit.recentPeriod ?? "");
   set_selected_groups(user_to_edit.groups);
   current_group_selectize.clear();
-  current_group_selectize.load(function (callback: any) {
+  current_group_selectize.load(function (
+    callback: (data: GroupOption[]) => void,
+  ) {
     callback(groupOptions);
   });
   jQuery.each(
@@ -1710,25 +1768,29 @@ function fill_user_edit_properties(user_to_edit: any, pop_in: any) {
     .attr("data-selected", user_to_edit.enabledHigh ? "1" : "0");
 }
 
-function fill_user_edit_preferences(user_to_edit: any, pop_in: any) {
+function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: JQuery) {
   const slider_key_photos = getSliderKeyFromValue(
-    parseInt(user_to_edit.nbImagePage),
+    parseInt(String(user_to_edit.nbImagePage)),
     nb_image_page_values,
   );
   const slider_key_period = getSliderKeyFromValue(
-    parseInt(user_to_edit.recentPeriod),
+    parseInt(String(user_to_edit.recentPeriod)),
     recent_period_values,
   );
 
   pop_in
     .find(".photos-select-bar .slider-bar-container")
     .slider("option", "value", slider_key_photos);
-  pop_in.find(".user-property-theme select option").each(function (this: any) {
+  pop_in.find(".user-property-theme select option").each(function (
+    this: HTMLElement,
+  ) {
     if ($(this).val() == user_to_edit.theme) {
       $(this).prop("selected", true);
     }
   });
-  pop_in.find(".user-property-lang select option").each(function (this: any) {
+  pop_in.find(".user-property-lang select option").each(function (
+    this: HTMLElement,
+  ) {
     if ($(this).val() == user_to_edit.language) {
       $(this).prop("selected", true);
     }
@@ -1747,7 +1809,7 @@ function fill_user_edit_preferences(user_to_edit: any, pop_in: any) {
     .attr("data-selected", user_to_edit.showNbHits ? "1" : "0");
 }
 
-function fill_user_edit_update(user_to_edit: any, pop_in: any) {
+function fill_user_edit_update(user_to_edit: UserRow, pop_in: JQuery) {
   pop_in
     .find(".update-user-button")
     .unbind("click")
@@ -1805,7 +1867,7 @@ function fill_user_edit_update(user_to_edit: any, pop_in: any) {
         );
       } else {
         if (window.isSecureContext && navigator.clipboard) {
-          copyToClipboard(inputValue);
+          copyToClipboard(String(inputValue));
         }
       }
       $(".user-property-password-choice").hide();
@@ -1821,7 +1883,7 @@ function fill_user_edit_update(user_to_edit: any, pop_in: any) {
           if (window.isSecureContext && navigator.clipboard) {
             const success = $("#result_send_mail_copy");
             success.fadeOut(100);
-            copyToClipboard($("#result_send_mail_copy_input").val());
+            copyToClipboard(String($("#result_send_mail_copy_input").val()));
             success.fadeIn(100);
           }
         });
@@ -1869,7 +1931,7 @@ function fill_user_edit_update(user_to_edit: any, pop_in: any) {
     });
 }
 
-function fill_user_edit_permissions(user_to_edit: any, pop_in: any) {
+function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: JQuery) {
   if (user_to_edit.id != connected_user) {
     // I'm not the connected user
     if (!is_owner(connected_user)) {
@@ -1986,11 +2048,11 @@ function fill_user_edit_permissions(user_to_edit: any, pop_in: any) {
   $(".notClickable").parent().addClass("notClickableBefore");
 }
 
-function is_owner(user_id: any) {
+function is_owner(user_id: number) {
   return user_id === owner_id;
 }
 
-function fill_user_edit(user_to_edit: any) {
+function fill_user_edit(user_to_edit: UserRow) {
   const pop_in = $("#UserList");
   fill_user_edit_summary(user_to_edit, pop_in, false);
   fill_user_edit_properties(user_to_edit, pop_in);
@@ -2008,10 +2070,11 @@ function fill_user_edit(user_to_edit: any) {
     });
   }
   const keyUserToEdit = Object.keys(user_to_edit);
+  const userToEditRecord = user_to_edit as unknown as Record<string, unknown>;
   plugins_users_infos_table.forEach((i) => {
     $("#" + i.content_id).val("");
     if (keyUserToEdit.includes(i.users_table)) {
-      $("#" + i.content_id).val(user_to_edit[i.users_table]);
+      $("#" + i.content_id).val(String(userToEditRecord[i.users_table]));
     } else {
       console.error(i.users_table, " doesn't exist in USER_INFOS_TABLE");
     }
@@ -2035,7 +2098,9 @@ function fill_new_user() {
   const level_index = get_level_index(guest_user.level);
   set_selected_groups(guest_user.groups);
   groupAddUserSelectize.clear();
-  groupAddUserSelectize.load(function (callback: any) {
+  groupAddUserSelectize.load(function (
+    callback: (data: GroupOption[]) => void,
+  ) {
     callback(groupOptions);
   });
   jQuery.each(
@@ -2057,7 +2122,7 @@ function fill_new_user() {
     .attr("data-selected", guest_user.enabledHigh ? "1" : "0");
 }
 
-function fill_who_is_the_king(user_to_edit: any, pop_in: any) {
+function fill_who_is_the_king(user_to_edit: UserRow, pop_in: JQuery) {
   const who_is_the_king = pop_in.find("#who_is_the_king");
   // By default I'm an admin and I only see who is the Main User
   who_is_the_king
@@ -2112,10 +2177,13 @@ function fill_who_is_the_king(user_to_edit: any, pop_in: any) {
 Fill data for setInfo
 -------------------*/
 
-function fill_ajax_data_from_properties(ajax_data: any, pop_in: any) {
+function fill_ajax_data_from_properties(
+  ajax_data: Record<string, unknown>,
+  pop_in: JQuery,
+) {
   const groups_selected = pop_in
     .find(".user-property-group .selectize-input .item")
-    .map(function (this: any) {
+    .map(function (this: HTMLElement) {
       return parseInt($(this).attr("data-value")!);
     })
     .get();
@@ -2142,7 +2210,10 @@ function fill_ajax_data_from_properties(ajax_data: any, pop_in: any) {
   return ajax_data;
 }
 
-function fill_ajax_data_from_preferences(ajax_data: any, pop_in: any) {
+function fill_ajax_data_from_preferences(
+  ajax_data: Record<string, unknown>,
+  pop_in: JQuery,
+) {
   ajax_data["theme"] = pop_in.find(".user-property-theme select").val();
   ajax_data["language"] = pop_in.find(".user-property-lang select").val();
   ajax_data["nbImagePage"] =
@@ -2178,7 +2249,10 @@ function fill_ajax_data_from_preferences(ajax_data: any, pop_in: any) {
   return ajax_data;
 }
 
-function fill_ajax_data_from_container(ajax_data: any, pop_in: any) {
+function fill_ajax_data_from_container(
+  ajax_data: Record<string, unknown>,
+  pop_in: JQuery,
+) {
   ajax_data = fill_ajax_data_from_properties(ajax_data, pop_in);
   ajax_data = fill_ajax_data_from_preferences(ajax_data, pop_in);
   return ajax_data;
@@ -2188,7 +2262,7 @@ function fill_ajax_data_from_container(ajax_data: any, pop_in: any) {
 Ajax Requests
 ----------------*/
 
-function get_first_selection_usernames(callback: any) {
+function get_first_selection_usernames(callback: () => void) {
   const first_ids = selection.slice(0, 50).map((x) => x.id);
   jQuery.ajax({
     url: "api/v1/users",
@@ -2202,9 +2276,9 @@ function get_first_selection_usernames(callback: any) {
     success: function (data) {
       const result = data.users;
       for (let i = 0; i < result.length; i++) {
-        const index = selection.findIndex((x) => x.id === result[i].id);
+        const index = selection.findIndex((x) => x.id === result[i]!.id);
         if (index != -1) {
-          selection[index].username = result[i].username;
+          selection[index]!.username = result[i]!.username;
         }
       }
       callback();
@@ -2247,8 +2321,8 @@ function select_whole_set() {
     beforeSend: function () {
       $("#checkActions .loading").show();
     },
-    success: function (data: any) {
-      selection = data.users.map((x: any) => {
+    success: function (data: UserListResponse) {
+      selection = data.users.map((x) => {
         return { id: x.id };
       });
       $("#checkActions .loading").hide();
@@ -2262,11 +2336,12 @@ function select_whole_set() {
 
 function update_user_username() {
   const pop_in_container = $("#UserList");
-  const ajax_data: Record<string, any> = {};
-  ajax_data["username"] = pop_in_container
-    .find(".user-property-input-username")
-    .val();
-  if (ajax_data.username.replace(/\s/g, "").length == 0) {
+  const ajax_data: Record<string, unknown> = {};
+  const newUsername = String(
+    pop_in_container.find(".user-property-input-username").val(),
+  );
+  ajax_data["username"] = newUsername;
+  if (newUsername.replace(/\s/g, "").length == 0) {
     $(".update-user-fail")
       .html(fieldNotEmpty)
       .fadeIn()
@@ -2281,14 +2356,21 @@ function update_user_username() {
     headers: { "X-CSRF-Token": pwg_token },
     data: JSON.stringify(ajax_data),
     dataType: "json",
-    success: (data) => {
+    success: (
+      data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
+    ) => {
       if (last_user_index != -1) {
-        current_users[last_user_index].username = data.username;
+        // "username" may be missing from a defensive-fallback response
+        // (the row couldn't be re-fetched right after the update) --
+        // the value we just successfully submitted is still correct.
+        const updatedUsername =
+          "username" in data ? data.username : newUsername;
+        current_users[last_user_index]!.username = updatedUsername;
         $("#UserList .user-property-username .edit-username-title").html(
-          current_users[last_user_index].username,
+          updatedUsername,
         );
         $("#UserList .user-property-initials span").html(
-          get_initials(current_users[last_user_index].username),
+          get_initials(updatedUsername),
         );
         fill_container_user_info(
           $("#user-table-content .user-container").eq(last_user_index),
@@ -2308,10 +2390,11 @@ function update_user_username() {
 
 function update_user_password() {
   const pop_in_container = $("#UserList");
-  const ajax_data: Record<string, any> = {};
-  ajax_data["password"] = pop_in_container
-    .find(".user-property-input-password")
-    .val();
+  const ajax_data: Record<string, unknown> = {};
+  const newPassword = String(
+    pop_in_container.find(".user-property-input-password").val(),
+  );
+  ajax_data["password"] = newPassword;
   jQuery.ajax({
     url: "api/v1/users/" + last_user_id,
     type: "PATCH",
@@ -2319,13 +2402,13 @@ function update_user_password() {
     headers: { "X-CSRF-Token": pwg_token },
     data: JSON.stringify(ajax_data),
     dataType: "json",
-    success: (data) => {
+    success: () => {
       $(".user-property-password-change-inputs").hide();
       $("#edit_password_success_change").fadeIn();
 
       if (window.isSecureContext && navigator.clipboard) {
         $("#copy_password").on("click", function () {
-          copyToClipboard(ajax_data["password"]);
+          copyToClipboard(newPassword);
           $("#password_msg_success").html(passwordCopied);
         });
       }
@@ -2347,9 +2430,9 @@ function update_user_info() {
     .addClass("icon-spin6 animate-spin");
   $(".update-user-button").addClass("unclickable");
   const pop_in_container = $(".UserListPopInContainer");
-  let ajax_data: Record<string, any> = {};
+  let ajax_data: Record<string, unknown> = {};
   if (plugins_users_infos_table.length > 0) {
-    const keyCurrentUsers = Object.keys(current_users[last_user_index]);
+    const keyCurrentUsers = Object.keys(current_users[last_user_index]!);
     plugins_users_infos_table.forEach((i) => {
       if (keyCurrentUsers.includes(i.users_table)) {
         ajax_data[i.users_table] = $("#" + i.content_id).val();
@@ -2371,10 +2454,12 @@ function update_user_info() {
       $("#UserList .update-user-fail").fadeOut();
       $("#UserList .update-user-success").fadeOut();
     },
-    success: function (result_user) {
+    success: function (
+      result_user: operations["userUpdate"]["responses"][200]["content"]["application/json"],
+    ) {
       if (last_user_index != -1) {
         current_users[last_user_index] = {
-          ...current_users[last_user_index],
+          ...current_users[last_user_index]!,
           ...result_user,
         };
         fill_container_user_info(
@@ -2397,8 +2482,14 @@ function update_user_info() {
         });
       }
 
-      // update who is the king
-      fill_who_is_the_king(result_user, $("#UserList"));
+      // update who is the king -- `result_user` may be a defensive
+      // fallback (`{id}` only, missing `.status`); the merged
+      // `current_users` entry (old data overlaid with whatever the
+      // response did carry) is always a real, complete UserRow.
+      fill_who_is_the_king(
+        last_user_index != -1 ? current_users[last_user_index]! : guest_user,
+        $("#UserList"),
+      );
     },
     error: function (jqXHR) {
       const message =
@@ -2428,14 +2519,14 @@ function get_guest_info() {
     dataType: "json",
     success: (data) => {
       if (data.users.length) {
-        guest_user = data.users[0];
+        guest_user = data.users[0]!;
         fill_guest_edit();
       }
     },
   });
 }
 
-function get_user_info(uid: any, callback: any = null) {
+function get_user_info(uid: number, callback: (() => void) | null = null) {
   jQuery.ajax({
     url: "api/v1/users",
     type: "GET",
@@ -2445,9 +2536,9 @@ function get_user_info(uid: any, callback: any = null) {
     dataType: "json",
     success: (data) => {
       if (data.users.length) {
-        const result_user = data.users[0];
+        const result_user = data.users[0]!;
         fill_user_edit(result_user);
-        callback();
+        callback?.();
       }
     },
   });
@@ -2461,7 +2552,7 @@ function update_guest_info() {
   $(".update-user-button").addClass("unclickable");
 
   const pop_in_container = $(".GuestUserListPopInContainer");
-  let ajax_data: Record<string, any> = {};
+  let ajax_data: Record<string, unknown> = {};
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
   ajax_data.email = undefined;
   ajax_data.status = undefined;
@@ -2493,7 +2584,7 @@ function update_guest_info() {
 }
 
 function update_user_list() {
-  const update_data: Record<string, any> = {
+  const update_data: Record<string, unknown> = {
     order: filter_by, // We want the most recent user first
     page: actual_page - 1,
     perPage: per_page,
@@ -2541,7 +2632,7 @@ function update_user_list() {
     beforeSend: function () {
       $(".user-update-spinner").show();
     },
-    success: function (data) {
+    success: function (data: UserListResponse) {
       total_users = data.totalCount;
       if (first_update) {
         $("h1").append(`<span class='badge-number'>${total_users}</span>`);
@@ -2555,9 +2646,9 @@ function update_user_list() {
         const uid_index = Number(
           $(this).closest(".user-container").attr("key"),
         );
-        last_user_id = current_users[uid_index].id;
+        last_user_id = current_users[uid_index]!.id;
         last_user_index = uid_index;
-        fill_user_edit(current_users[uid_index]);
+        fill_user_edit(current_users[uid_index]!);
         $("#UserList").fadeIn();
         $("#tab_properties")[0]!.scrollIntoView({
           behavior: "instant",
@@ -2599,11 +2690,11 @@ function update_user_list() {
 }
 
 function add_user() {
-  const ajax_data: Record<string, any> = {};
+  const ajax_data: Record<string, unknown> = {};
   const groups_selected = $(
     ".AddUserInputContainer .user-property-group .selectize-input .item",
   )
-    .map(function (this: any) {
+    .map(function (this: HTMLElement) {
       return parseInt($(this).attr("data-value")!);
     })
     .get();
@@ -2626,7 +2717,7 @@ function add_user() {
   // for debug
   // console.log(ajax_data);
 
-  const data: Record<string, any> = {
+  const data: Record<string, unknown> = {
     username: ajax_data.username,
     email: ajax_data.email,
   };
@@ -2672,10 +2763,14 @@ function add_user() {
         }
       }
     },
-    success: (data) => {
+    success: (
+      data: operations["userCreate"]["responses"][201]["content"]["application/json"],
+    ) => {
       const new_user_id = data.id;
-      const default_group = data.groups ?? [];
-      ajax_data.groupIds = ajax_data.groupIds.concat(default_group);
+      const default_group = "groups" in data ? data.groups : [];
+      ajax_data.groupIds = (ajax_data.groupIds as number[]).concat(
+        default_group,
+      );
       add_infos_to_new_user(new_user_id, ajax_data);
     },
     error: (jqXHR) => {
@@ -2689,7 +2784,10 @@ function add_user() {
   });
 }
 
-function add_infos_to_new_user(user_id: any, ajax_data: any) {
+function add_infos_to_new_user(
+  user_id: number,
+  ajax_data: Record<string, unknown>,
+) {
   $.ajax({
     url: "api/v1/users/" + user_id,
     type: "PATCH",
@@ -2710,11 +2808,11 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
         .removeClass("icon-red icon-cancel")
         .addClass("icon-green border-green icon-ok");
       $("#AddUserUpdatedText").html(
-        user_added_str.replace("%s", ajax_data.username),
+        user_added_str.replace("%s", String(ajax_data.username)),
       );
       const status = ["webmaster", "admin", "normal"];
-      if (status.includes(ajax_data.status)) {
-        send_new_user_password(new_user_id, ajax_data.email);
+      if (status.includes(String(ajax_data.status))) {
+        send_new_user_password(new_user_id, String(ajax_data.email));
       } else {
         add_user_close();
       }
@@ -2725,14 +2823,14 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
           last_user_id = new_user_id;
           last_user_index = get_container_index_from_uid(new_user_id);
           if (last_user_index != -1) {
-            fill_user_edit(current_users[last_user_index]);
+            fill_user_edit(current_users[last_user_index]!);
             open_user_list();
           } else {
             get_user_info(new_user_id, open_user_list);
           }
         });
       $("#AddUserSuccess label span:first").html(
-        user_added_str.replace("%s", ajax_data.username),
+        user_added_str.replace("%s", String(ajax_data.username)),
       );
       $("#AddUserSuccess").css("display", "flex");
       $(".badge-number").html(String(+$(".badge-number").html() + 1));
@@ -2748,7 +2846,7 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
   });
 }
 
-function send_new_user_password(user_id: any, mail: any) {
+function send_new_user_password(user_id: number, mail: string) {
   const send_by_mail = mail === "" ? false : true;
   $.ajax({
     url: "api/v1/users/" + user_id + "/actions/generate-password-link",
@@ -2759,7 +2857,9 @@ function send_new_user_password(user_id: any, mail: any) {
     data: JSON.stringify({
       sendByMail: send_by_mail,
     }),
-    success: function (response) {
+    success: function (
+      response: operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"],
+    ) {
       const password_container = $("#AddUserPasswordInputContainer");
       password_container.show();
       $("#AddUserFieldContainer").hide();
@@ -2816,7 +2916,7 @@ function send_new_user_password(user_id: any, mail: any) {
   });
 }
 
-function delete_user(uid: any) {
+function delete_user(uid: number) {
   jQuery.ajax({
     url: "api/v1/users/" + uid,
     type: "DELETE",
@@ -2838,7 +2938,7 @@ function delete_user(uid: any) {
   });
 }
 
-function show_filter_infos(nb_filters: any) {
+function show_filter_infos(nb_filters: number) {
   if (String($("#user_search").val() ?? "").length != 0 || nb_filters != 0) {
     if (String(total_users) != "1") {
       $(".filtered-users").html(
@@ -2857,7 +2957,7 @@ function show_filter_infos(nb_filters: any) {
     $(".advanced-filter-btn").css({
       width: "80px",
     });
-    $(".filter-counter").html(nb_filters).css("display", "flex");
+    $(".filter-counter").html(String(nb_filters)).css("display", "flex");
   } else {
     $(".advanced-filter-btn").css({
       width: "70px",
@@ -2867,10 +2967,10 @@ function show_filter_infos(nb_filters: any) {
 }
 
 function send_link_password(
-  email: any,
-  username: any,
-  user_id: any,
-  send_by_mail: any,
+  email: string | null,
+  username: string,
+  user_id: number,
+  send_by_mail: boolean,
 ) {
   $.ajax({
     url: "api/v1/users/" + user_id + "/actions/generate-password-link",
@@ -2881,7 +2981,9 @@ function send_link_password(
     data: JSON.stringify({
       sendByMail: send_by_mail,
     }),
-    success: function (response) {
+    success: function (
+      response: operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"],
+    ) {
       $("#result_send_mail_copy_input").val(response.generatedLink);
       if (send_by_mail) {
         if (response.sendByMail) {
@@ -2894,8 +2996,8 @@ function send_link_password(
           const curr_mail = String(
             $(".user-property-email .user-property-input").val() ?? "",
           ).length
-            ? $(".user-property-email .user-property-input").val()
-            : email;
+            ? String($(".user-property-email .user-property-input").val())
+            : (email ?? "");
           $("#password_msg_result_mail").html(
             sprintf(mailSentAt, username, curr_mail),
           );
@@ -2958,7 +3060,7 @@ function send_link_password(
   });
 }
 
-function set_main_user(user_id: any, new_username: any) {
+function set_main_user(user_id: number, new_username: string) {
   $.ajax({
     url: "api/v1/users/" + user_id + "/actions/set-main-user",
     dataType: "json",
@@ -3047,9 +3149,9 @@ const dates_infos = pwg_getPageString("between %s and %s");
 const user_added_str = pwg_getPageString("User %s added");
 const filtered_users = pwg_getPageString("<b>%d</b> filtered users");
 const filtered_user = pwg_getPageString("<b>%d</b> filtered user");
-const history_base_url = pwg_getPageData("u_history");
+const history_base_url = pwg_getPageData<string>("u_history");
 
-const status_to_str: Record<string, any> = {
+const status_to_str: Record<string, string> = {
   webmaster: pwg_getPageString("user_status_webmaster"),
   admin: pwg_getPageString("user_status_admin"),
   normal: pwg_getPageString("user_status_normal"),
@@ -3057,8 +3159,8 @@ const status_to_str: Record<string, any> = {
   guest: pwg_getPageString("user_status_guest"),
 };
 
-const view_selector = pwg_getPageData("view_selector");
-const pagination = String(pwg_getPageData("pagination"));
+const view_selector = pwg_getPageData<string>("view_selector");
+const pagination = String(pwg_getPageData<number>("pagination"));
 per_page = parseInt(pagination);
 
 months = [
@@ -3077,27 +3179,32 @@ months = [
 ];
 
 /* Template variables */
-connected_user = pwg_getPageData("connected_user");
-const connected_user_status = pwg_getPageData("connected_user_status");
-let owner_id = pwg_getPageData("owner");
-owner_username = pwg_getPageData("owner_username");
-const groups_arr_name = JSON.parse(pwg_getPageData("groups_arr_name"));
-const groups_arr_id: any[] = pwg_getPageData("groups_arr_id")
-  ? pwg_getPageData("groups_arr_id").split(",").map(Number)
+connected_user = pwg_getPageData<number>("connected_user");
+const connected_user_status = pwg_getPageData<string>("connected_user_status");
+let owner_id = pwg_getPageData<number>("owner");
+owner_username = pwg_getPageData<string>("owner_username");
+const groups_arr_name: string[] = JSON.parse(
+  pwg_getPageData<string>("groups_arr_name"),
+);
+const groups_arr_id: number[] = pwg_getPageData<string>("groups_arr_id")
+  ? pwg_getPageData<string>("groups_arr_id").split(",").map(Number)
   : [];
-groups_arr = groups_arr_id.map((elem, index) => [elem, groups_arr_name[index]]);
-guest_id = pwg_getPageData("guest_id");
+groups_arr = groups_arr_id.map((elem, index) => [
+  elem,
+  groups_arr_name[index]!,
+]);
+guest_id = pwg_getPageData<number>("guest_id");
 nb_days = pwg_getPageString("%d days");
 //per page is too long for the popin
 nb_photos = pwg_getPageString("%d photos");
 nb_photos_per_page = pwg_getPageString("%d photos per page");
-pwg_token = pwg_getPageData("csrf_token");
-const has_group = pwg_getPageData("filter_group");
+pwg_token = pwg_getPageData<string>("csrf_token");
+const has_group = pwg_getPageData<string | null>("filter_group");
 
-const register_dates_str = pwg_getPageData("register_dates");
+const register_dates_str = pwg_getPageData<string>("register_dates");
 const register_dates = register_dates_str.split(",");
-const groupOptions: any[] = groups_arr.map(function (x: any) {
-  return { value: x[0], label: x[1], isSelected: 0 };
+const groupOptions: GroupOption[] = groups_arr.map(function (x) {
+  return { value: x[0], label: x[1], isSelected: false };
 });
 
 /* Startup */
@@ -3124,7 +3231,7 @@ $(document).ready(function () {
   // see #1571 on Github
   jQuery("#applyAction").click(function () {
     const action = jQuery("select[name=selectAction]").prop("value");
-    const data: Record<string, any> = {};
+    const data: Record<string, unknown> = {};
     switch (action) {
       case "delete":
         if (
@@ -3218,7 +3325,7 @@ $(document).ready(function () {
     // -- one bulk group action, or one PATCH/DELETE per selected user
     // (there is no bulk-multi-id endpoint for Users).
     const userIds = selection.map((x) => x.id);
-    const fieldByAction: Record<string, any> = {
+    const fieldByAction: Record<string, string> = {
       status: "status",
       enabled_high: "enabledHigh",
       level: "level",
@@ -3232,7 +3339,7 @@ $(document).ready(function () {
     };
     const numericFields = ["level", "nbImagePage", "recentPeriod"];
 
-    let request: any;
+    let request: Promise<unknown> | JQuery.jqXHR;
     jQuery("#applyActionLoading").show();
     jQuery("#applyActionBlock .infos").fadeOut();
 
@@ -3250,7 +3357,7 @@ $(document).ready(function () {
       request = jQuery.ajax({
         url:
           "api/v1/groups/" +
-          data.group_id +
+          String(data.group_id) +
           "/actions/" +
           (action === "group_associate" ? "add-user" : "remove-user"),
         method: "POST",
@@ -3259,7 +3366,7 @@ $(document).ready(function () {
         headers: { "X-CSRF-Token": pwg_token },
       });
     } else {
-      const field = fieldByAction[action];
+      const field = fieldByAction[action]!;
       const value = numericFields.includes(field)
         ? Number(data[action])
         : data[action];
@@ -3276,7 +3383,7 @@ $(document).ready(function () {
       );
     }
 
-    request
+    Promise.resolve(request)
       .then(function () {
         jQuery("#applyActionLoading").hide();
         jQuery("#applyActionBlock .infos").fadeIn();
@@ -3293,3 +3400,13 @@ $(document).ready(function () {
     return false;
   });
 });
+
+// Explicit `window.` exposure -- required at runtime, not decorative
+// (see plugins_installed_config.ts's own leading comment for the full
+// explanation): `plugin_add_tab_in_user_modal`'s own JSDoc documents it
+// as a real public extension point third-party plugins call from their
+// own, separately-loaded `<script>` tags -- this file's own top-level
+// declarations are module-private otherwise (`export {}` above), so
+// without this, no external plugin could actually reach it, unlike
+// before this file became a real ES module.
+window.plugin_add_tab_in_user_modal = plugin_add_tab_in_user_modal;

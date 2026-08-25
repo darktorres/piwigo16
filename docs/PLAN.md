@@ -137,7 +137,7 @@ Three structural changes produced that drift:
 | P44 | Escaping, Input Validation & Security Hardening Campaign | Complete — all of P44-A/B/C/D/F/H/I/J/K/L/M landed (see below); P44-A's full `\|noescape` corpus reclassification sweep found and fixed 2 previously-unknown XSS bugs (`InstallWizard`, `NoPhotoYetRenderer`) across 3 rounds; P44-G (this doc's own entry) kept current per batch | 11 |
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Done — 79 files (not the 68 originally guessed at), full validation green | 19 |
-| P47 | `getPageData<T>()` typing + `any` reduction | Not started | 0 |
+| P47 | `getPageData<T>()` typing + `any` reduction | Done — all 168 `pwg_getPageData()` call sites across 57 files typed, 782+ `: any`/`as any`/`<any>` sites eliminated; 6 new `@types/*` vendor packages added (jqueryui, selectize, jquery.colorbox, jquery.cookie, chart.js, plupload); `eslint.config.ts`'s blanket P46/P47 any-tolerance override narrowed to 6 first-party files with a confirmed-justified remaining `any` (`search_filters.ts`, `mcs.ts`, `history.ts`, `common.ts`, `datepicker.ts`, `profile.ts`) plus `jquery-plugins.d.ts`'s own unsourced vendor entries (`jquery-confirm`, `jquery.cluetip`, `jquery.Jcrop`, `jquery.jgrowl`, `jquery.ajaxmanager`, `jquery.progressbar`, `jquery.sort`, `jquery.autogrow-textarea`, DataTables). Full validation green: `typecheck`/`lint:js`/`format`/`knip`/`vite build`, Unit+Arch (5526), Integration (2172), golden-html (74), Visual Regression (66), Browser (787) | 27 |
 | P48 | Refactor TS into modules | Not started | 0 |
 | P49 | Remove jQuery | Not started | 0 |
 | P50 | Lit component catalog (conditional on P49) | Not started | 0 |
@@ -4234,9 +4234,38 @@ with compiled-output inspection, PHPStan, ECS, and the full test
 suite (Unit, Arch, Integration, golden-html, Browser, Visual
 Regression).
 
-**P47 — `getPageData<T>()` typing + `any` reduction (TS half).**
-`getPageData<T>()` consumes P37's island; TypeScript `any` driven to zero
-across P46's output. Real type-design work, not a mechanical rename.
+**P47 — `getPageData<T>()` typing + `any` reduction (TS half). Done.**
+`pwg_getPageData<T = unknown>(key)` replaced the old untyped
+`pwg_getPageData(key): any`; all 168 real call sites across 57 files
+(the 46-file `any`-count list and the 36-file `pwg_getPageData`-caller
+list overlap in 24, so the real scope is their 57-file union) now
+declare their real type, sourced from each key's real PHP
+`ExposesPageData::exposedPageData()` writer. First-party ajax callback
+params reuse `openapi/client/schema.d.ts`'s existing generated types
+(`operations[...]`, `components["schemas"]`) instead of hand-written
+interfaces. 6 real npm `@types/*` packages (jqueryui, selectize,
+jquery.colorbox, jquery.cookie, chart.js, plupload) replaced
+hand-rolled ambient stubs in `build/jquery-plugins.d.ts`; DataTables and
+a handful of un-typed vendored plugins (`jquery-confirm`,
+`jquery.cluetip`, `jquery.Jcrop`, `jquery.jgrowl`, `jquery.ajaxmanager`,
+`jquery.progressbar`, `jquery.sort`, `jquery.autogrow-textarea`) stay
+loosely typed — no real type source exists for the vendored/pinned
+versions actually in use. `eslint.config.ts`'s P46-era blanket
+`themes/**/*.ts` any-tolerance override is gone; it now names only
+those 6 files plus `jquery-plugins.d.ts`'s own irreducible vendor
+entries, so `no-explicit-any`/`no-unsafe-*` are real enforced gates
+across the theme tree going forward. Along the way: several real
+pre-P47 bugs surfaced and fixed (a `node.visble` typo breaking
+lock-icon inheritance in the album tree, a `.attr("checked", false)`
+that never worked, an `open_nodes.includes(node)` object/id comparison
+that always failed, a guest-filter reading a nonexistent `.username`
+field, a `duplicateTag()` call missing a required field, an unexposed
+`plugin_add_tab_in_user_modal()` public plugin API, and
+`picture_nav_buttons.ts`, which P46's own "done" list had claimed but
+was never actually converted). Full validation green end to end:
+`typecheck`/`lint:js`/`format`/`knip`/`vite build`, and the full test
+suite (Unit+Arch, Integration, golden-html, Visual Regression, Browser)
+— see the table entry above for exact counts.
 
 **P48 — Refactor TS into modules.** Breaks up monolithic per-page scripts
 into proper ES modules (shared utils, per-feature entry points), one Vite

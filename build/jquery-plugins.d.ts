@@ -34,6 +34,30 @@ interface SwitchBoxQueue {
   length?: number;
   [index: number]: string | undefined;
 }
+// Duplicates rating.ts's own identically-named, identically-shaped
+// local interfaces -- until that file's own P48 module conversion
+// (docs/PLAN.md), both were real ambient globals (that file was a
+// genuinely non-module IIFE), referenced bare here, not redeclared.
+// Now that it's a real module, its own copies are module-private, so
+// `RatingAutoQueue` below (which can't `import` from a module file
+// without becoming one itself, breaking its own other ambient
+// declarations) needs its own local copy -- a pure type duplication,
+// safe since both stay structurally identical by construction (rating.ts
+// is the only real writer of either shape).
+interface PwgRatingResult {
+  score: number;
+  count: number;
+  average?: number;
+}
+interface PwgRatingOptions {
+  rootUrl: string;
+  image_id: string | number;
+  onSuccess?: (result: PwgRatingResult) => void;
+  updateRateElement?: HTMLElement;
+  updateRateText?: string;
+  ratingSummaryElement?: HTMLElement;
+  ratingSummaryText?: string;
+}
 interface RatingAutoQueue {
   push(opts: PwgRatingOptions): void;
   // Only present during the real "queue array" phase -- see
@@ -69,13 +93,9 @@ interface Window {
   // comment) -- a `var` inside that wrapper is scoped to the wrapper,
   // no longer a real global at all. `window.` property access (here,
   // like `SwitchBox` above) is the one form that's safe both ways.
-  // `PwgRatingOptions` is rating.ts's own top-level ambient interface
-  // (that file is a genuinely non-module IIFE, same cross-file ambient
-  // reuse as every other consumer-declares-nothing-itself case P47
-  // established) -- referenced bare here, not redeclared.
   _pwgRatingAutoQueue?: RatingAutoQueue;
 
-  // Explicit `window.` exposure of these 6 names is required for the
+  // Explicit `window.` exposure of these names is required for the
   // same reason documented at each assignment site (page-data.ts,
   // scripts.ts): Vite/Rollup bundles each P46 entry as its own isolated
   // module graph, and a top-level declaration with no call site *inside
@@ -84,15 +104,15 @@ interface Window {
   // global. Declared here (not inferred from the assignment) so every
   // consumer file's own bare reference -- e.g. `pwg_getPageData(...)`
   // in picture.ts, which never imports anything -- type-checks too.
+  // `phpWGOpenWindow`/`pwgAddEventListener` no longer need an entry here
+  // (docs/PLAN.md P48, scripts.ts's own module conversion) -- real
+  // exports now, imported directly by their own real consumers.
+  // `popuphelp`/`pwg_tryFocus` stay -- both real, permanent `window.X`
+  // exposures even after that conversion (see scripts.ts's own leading
+  // comment for why neither converts).
   pwg_getPageData: <T = unknown>(key: string) => T;
   pwg_getPageString: (key: string) => string;
-  phpWGOpenWindow: (theURL: string, winName: string, features: string) => void;
   popuphelp: (url: string) => void;
-  pwgAddEventListener: (
-    elem: EventTarget,
-    evt: string,
-    fn: EventListenerOrEventListenerObject,
-  ) => void;
   pwg_tryFocus: (id: string) => void;
 
   // search_filters.ts's own page-data-derived globals, all real bare
@@ -266,30 +286,20 @@ interface TemporaryStateCtor {
   };
 }
 
-// These 4 (declared as real functions in page-data.ts/scripts.ts,
-// exposed onto `window` there) are also called as *bare* identifiers by
-// consumer files (picture.ts calls `phpWGOpenWindow`, rating.ts calls
-// `pwgAddEventListener`, several call `pwg_getPageData`/
-// `pwg_getPageString`) -- those files never write `window.` themselves,
-// relying on the same "global script, no module scope" assumption every
-// pre-P46 .js file already relied on. Declaring them as ambient
-// `declare function` bindings (not just `Window` properties above) is
-// what makes the bare reference type-check in every *consuming* file.
-// Add the other 2 (`popuphelp`/`pwg_tryFocus`) here too the first time a
-// converted .ts file actually calls one of them bare -- no real
-// consumer yet, so no ambient binding needed for them yet either.
+// These (declared as real functions in page-data.ts, exposed onto
+// `window` there) are also called as *bare* identifiers by consumer
+// files (several call `pwg_getPageData`/`pwg_getPageString`) -- those
+// files never write `window.` themselves, relying on the same "global
+// script, no module scope" assumption every pre-P46 .js file already
+// relied on. Declaring them as ambient `declare function` bindings
+// (not just `Window` properties above) is what makes the bare
+// reference type-check in every *consuming* file. `phpWGOpenWindow`/
+// `pwgAddEventListener` no longer need a binding here (docs/PLAN.md
+// P48, scripts.ts's own module conversion) -- their own real
+// consumers (picture.ts/rating.ts) use a real `import` now, not a bare
+// reference relying on this ambient declaration.
 declare function pwg_getPageData<T = unknown>(key: string): T;
 declare function pwg_getPageString(key: string): string;
-declare function phpWGOpenWindow(
-  theURL: string,
-  winName: string,
-  features: string,
-): void;
-declare function pwgAddEventListener(
-  elem: EventTarget,
-  evt: string,
-  fn: EventListenerOrEventListenerObject,
-): void;
 declare function sprintf(...args: (string | number)[]): string;
 
 // `pwg_token` (the CSRF token) is independently declared per-page by

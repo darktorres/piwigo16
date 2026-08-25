@@ -148,7 +148,7 @@ test('resolveScripts() resolves jquery.ui as an undeclared dependency, real upda
 
 test('scripts dedupe by id, unioning dependsOn and promoting to the more eager load mode', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Async, dependsOn: ['core.scripts']));
+    $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Async, dependsOn: ['jquery.ui']));
     $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Header, dependsOn: ['jquery']));
 
     $resolved = $assets->resolveScripts();

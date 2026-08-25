@@ -84,7 +84,10 @@ final class PageAssets
      * @var array<string, string>
      */
     private static array $knownPaths = [
-        'core.scripts' => 'themes/default/js/scripts.ts',
+        // 'core.scripts' entry removed (docs/PLAN.md P48, scripts.ts's
+        // own module conversion) -- no `dependsOn` references it any
+        // more (every real registrant page now `?dup`-imports the file
+        // directly instead of registering it as its own script tag).
         'jquery' => 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
         // One full bundle, not the old per-widget minified files
         // (docs/PLAN.md P46's vendor-CDN migration). cdnjs specifically,
@@ -395,13 +398,18 @@ final class PageAssets
      * to port forward). The general loop below only fires on strictly
      * `>`, so an Async-depends-on-Async pair (both value 2) silently
      * passed through unpromoted -- a real regression from that
-     * migration, not a hypothetical: `PictureView`'s own
+     * migration, not a hypothetical: `PictureView`'s own former
      * `AssetContribution::script('rating', ..., dependsOn: ['core.scripts'])`
-     * has both ends `LoadMode::Async`, and `<script async>` tags execute
+     * had both ends `LoadMode::Async`, and `<script async>` tags execute
      * whenever they finish downloading, in no guaranteed order --
      * caught via a real, intermittent `picture-1` VR failure
      * (`Uncaught ReferenceError: pwgAddEventListener is not defined`,
-     * defined in `core.scripts`'s own `scripts.js`).
+     * defined in `core.scripts`'s own `scripts.js`). That specific
+     * `dependsOn` no longer exists (docs/PLAN.md P48, scripts.ts's own
+     * module conversion made it structurally impossible instead: a real
+     * `import` guarantees evaluation order, no script-tag race left to
+     * promote around) -- this method itself stays, for every other real
+     * Async-depends-on-Async pair still registered elsewhere.
      */
     private function promoteLoadModes(): void
     {

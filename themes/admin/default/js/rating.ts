@@ -1,4 +1,12 @@
 import type { operations } from "../../../../openapi/client/schema";
+// Folds scripts.ts's own code in via a real `?dup` import (docs/
+// PLAN.md P48) instead of the separate `core.scripts` script tag
+// RatingView used to register directly -- this page doesn't read any
+// of scripts.ts's own real exports, just needs its side effects
+// (`popuphelp`/`pwg_tryFocus`'s own `window.X` assignments, the
+// `[data-confirm]` click guard). `?dup` since scripts.ts has many real
+// registrant pages (Design §4).
+import "../../../default/js/scripts?dup";
 
 export {};
 

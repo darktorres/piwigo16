@@ -42,12 +42,12 @@ function makeProfileView(bool $isStandardPagesTheme): ProfileView
     );
 }
 
-test('pageAssets registers core.scripts for the default theme (profile_content.latte\'s own password-match check)', function (): void {
+test('pageAssets registers core_scripts_page for the default theme (profile_content.latte\'s own password-match check)', function (): void {
     $view = makeProfileView(false);
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer),
         ]);
 });
 

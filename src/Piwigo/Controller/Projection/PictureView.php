@@ -130,16 +130,20 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         $assets = [
             AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
+            // 'picture' folds scripts.ts's own code in via a real `?dup`
+            // import now (docs/PLAN.md P48) -- both of this method's own
+            // former conditional `core.scripts` registrations below are
+            // dropped, since 'picture' is unconditional and already
+            // covers them regardless of $uOriginal/$rating.
             AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
         ];
 
-        if ($this->uOriginal !== null) {
-            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async);
-        }
-
         if ($this->rating !== null) {
-            $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async);
-            $assets[] = AssetContribution::script('rating', 'themes/default/js/rating.ts', loadMode: LoadMode::Async, dependsOn: ['core.scripts']);
+            // 'rating' folds scripts.ts's own code in via its own real
+            // `?dup` import too (docs/PLAN.md P48) -- no more
+            // `dependsOn: ['core.scripts']`, that id no longer exists as
+            // a separate registration.
+            $assets[] = AssetContribution::script('rating', 'themes/default/js/rating.ts', loadMode: LoadMode::Async);
         }
 
         return [...$assets, ...$this->pictureNavButtonsView()->pageAssets()];

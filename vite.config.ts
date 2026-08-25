@@ -122,7 +122,12 @@ export default defineConfig({
         // autosize.js/search.js, turned out to be dead code and were
         // deleted rather than converted).
         pageData: r("themes/default/js/page-data.ts"),
-        scripts: r("themes/default/js/scripts.ts"),
+        // scripts.ts is no longer its own entry (docs/PLAN.md P48, its
+        // own later batch) -- it has several real registrant pages,
+        // each with their own bundle folding its code in via a `?dup`
+        // import (see the pages/ entries below, and picture.ts's/
+        // rating.ts's own direct imports for its 2 real symbol
+        // consumers).
         picture: r("themes/default/js/picture.ts"),
         searchFilters: r("themes/default/js/search_filters.ts"),
         rating: r("themes/default/js/rating.ts"),
@@ -295,6 +300,14 @@ export default defineConfig({
         // above with a `?dup` import each; historyPage is its 4th real
         // registrant page, with no prior page bundle to extend.
         historyPage: r("themes/admin/default/js/pages/history.ts"),
+        // scripts.ts's own batch (docs/PLAN.md P48) -- extends
+        // batchManagerUnitPage/batchManagerGlobalPage above with a
+        // `?dup` import each; coreScriptsPage is the shared bundle for
+        // every other real registrant page with no other file of its
+        // own to fold scripts.ts into (register.php/password.php/
+        // identification.php/profile.php's default-theme branch,
+        // comment_list.inc.latte's own conditional branch).
+        coreScriptsPage: r("themes/default/js/pages/core_scripts.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

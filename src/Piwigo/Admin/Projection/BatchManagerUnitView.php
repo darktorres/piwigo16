@@ -88,10 +88,11 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // autosize.ts's and datepicker.ts's own code in via real
-            // `?dup` imports instead of the separate script tags
-            // AutosizeView/DatepickerView used to register directly
-            // (both have several real registrant pages, so a plain
+            // autosize.ts's, datepicker.ts's, and scripts.ts's own code
+            // in via real `?dup` imports instead of the separate script
+            // tags AutosizeView/DatepickerView/this method's own former
+            // `core.scripts` registration used to register directly
+            // (all 3 have several real registrant pages, so a plain
             // import isn't safe here -- Design §4).
             AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow', 'jquery.ui.timepicker-addon']),
             ...new ColorboxView()
@@ -133,7 +134,6 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // above, matching the accepted golden-html baseline.
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')
                 ->pageAssets(),
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async),
         ];
     }
 

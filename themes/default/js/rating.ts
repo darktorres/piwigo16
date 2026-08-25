@@ -1,3 +1,17 @@
+// Real consumer of scripts.ts's own top-level `pwgAddEventListener`
+// (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
+// own leading comment for the full real-consumer list, and Design §6
+// for the real Async-depends-on-Async race this file was already the
+// documented example of). `?dup` since scripts.ts has many real
+// registrant pages (Design §4). This file itself becomes a real module
+// as a result (previously non-module) -- `window._pwgRatingAutoQueue`
+// below is a separate, already-established queue-based deferred-init
+// pattern (P47's RatingAutoQueue redesign), not a plain function
+// exposure, and stays exactly as it is.
+import { pwgAddEventListener } from "./scripts?dup";
+
+export {};
+
 interface RatingButton extends HTMLInputElement {
   initialRateValue: string;
 }
@@ -62,7 +76,14 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
     pwgAddEventListener(rateButton, "mouseout", function () {
       updateRatingStarDisplay(gUserRating);
     });
-    pwgAddEventListener(rateButton, "mouseover", function (e) {
+    // Explicit `e: Event` needed now (docs/PLAN.md P48) -- TS's own
+    // contextual parameter typing doesn't flow through a union-typed
+    // parameter (`EventListenerOrEventListenerObject`) the same way
+    // through a real `import`ed function as it did through the old
+    // ambient `declare function`, confirmed directly: this callback's
+    // own `e` silently typed as `Event` before, `any` (a real
+    // `noImplicitAny` error) after.
+    pwgAddEventListener(rateButton, "mouseover", function (e: Event) {
       const target = (e.target ?? e.srcElement) as RatingButton;
       updateRatingStarDisplay(target.initialRateValue);
     });

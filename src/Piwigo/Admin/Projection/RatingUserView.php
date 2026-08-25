@@ -70,9 +70,12 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.geoip', 'themes/admin/default/js/jquery.geoip.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Footer),
+            // 'rating_user' folds scripts.ts's own code in via a real
+            // `?dup` import now (docs/PLAN.md P48) -- the separate
+            // `core.scripts` registration this page used to carry is
+            // dropped.
             AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui', 'page-data']),
         ];
     }

@@ -72,7 +72,14 @@ final readonly class CommentListView implements View, HasPageAssets, ExposesPage
 
         foreach ($this->comments as $comment) {
             if (isset($comment['U_DELETE'])) {
-                $assets[] = AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']);
+                // Real shared per-page bundle entry (docs/PLAN.md's
+                // P48) -- folds scripts.ts's own code in via a real
+                // `?dup` import instead of the separate `core.scripts`
+                // script tag this branch used to register directly;
+                // shared with the other real pages that need
+                // scripts.ts for nothing but its own side effects (see
+                // that bundle file's own leading comment).
+                $assets[] = AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']);
                 break;
             }
         }

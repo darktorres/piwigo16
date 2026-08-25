@@ -101,7 +101,14 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
             // registration calls of its own (see this class's own
             // docblock), so it's registered here instead.
             return [
-                AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
+                // Real shared per-page bundle entry (docs/PLAN.md's
+                // P48) -- folds scripts.ts's own code in via a real
+                // `?dup` import instead of the separate `core.scripts`
+                // script tag this branch used to register directly;
+                // shared with the other real pages that need
+                // scripts.ts for nothing but its own side effects (see
+                // that bundle file's own leading comment).
+                AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer),
             ];
         }
 

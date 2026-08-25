@@ -133,7 +133,30 @@ jQuery("[data-datepicker]").pwgDatepicker({
   cancelButton: lang.Cancel,
 });
 
-jQuery("[data-add-album]").pwgAddAlbum();
+// Real regression found live (docs/PLAN.md P48, this pair's own merge
+// into one bundle): `pwgAddAlbum()` needs `[data-add-album]`'s own
+// target `<select>` to already have its selectize widget initialized
+// (`addAlbum.ts`'s own `jQuery.error('pwgAddAlbum: target must use
+// selectize')` guard), which happens inside batch_manager_global.ts's
+// own `jQuery(document).ready(...)` callback. jQuery 3.x's `.ready()`
+// resolves via a real Deferred, not truly synchronously even when the
+// document is already ready (Footer scripts run after the DOM is
+// already parsed) -- confirmed live via Playwright: calling this bare,
+// synchronously, ran it *before* that deferred callback's own body,
+// throwing every time. Before this batch, batchManagerGlobal.ts
+// (Async) and batch_manager_global.ts (Footer) were 2 separate script
+// tags with enough real wall-clock time between them for this to never
+// surface; merging them into one bundle removed that gap. Wrapping
+// this in its own `.ready()` call re-establishes correct relative
+// order: batch_manager_global.ts's own `.ready()` callback (the
+// selectize setup) is registered first, since its module fully
+// evaluates before this file's own subsequent code runs (the same
+// circular-import ordering this file's own leading comment already
+// documents for `lang.Cancel`) -- jQuery's ready queue runs callbacks
+// in registration order.
+jQuery(document).ready(function () {
+  jQuery("[data-add-album]").pwgAddAlbum();
+});
 
 $("input[name=remove_author]").click(function () {
   if ($(this).is(":checked")) {

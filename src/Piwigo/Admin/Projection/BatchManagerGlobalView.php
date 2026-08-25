@@ -103,10 +103,11 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             ...new AddAlbumView(colorscheme: $this->colorscheme)
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // addAlbum.ts's and datepicker.ts's own code in via real
-            // `?dup` imports instead of the separate script tags
-            // AddAlbumView/DatepickerView used to register directly
-            // (both have several real registrant pages, so a plain
+            // addAlbum.ts's, datepicker.ts's, and scripts.ts's own code
+            // in via real `?dup` imports instead of the separate script
+            // tags AddAlbumView/DatepickerView/this method's own former
+            // `core.scripts` registration used to register directly
+            // (all 3 have several real registrant pages, so a plain
             // import isn't safe here -- Design §4), plus both of this
             // page's own real shared-library files, batchManagerGlobal.ts
             // and batch_manager_global.ts, which this pair's own batch
@@ -164,7 +165,6 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // above, matching the accepted golden-html baseline.
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')
                 ->pageAssets(),
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async),
         ];
     }
 

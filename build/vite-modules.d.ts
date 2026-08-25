@@ -41,3 +41,9 @@ declare module "*album_selector?dup" {
     str_album_found,
   } from "../themes/admin/default/js/album_selector";
 }
+declare module "*scripts?dup" {
+  export {
+    phpWGOpenWindow,
+    pwgAddEventListener,
+  } from "../themes/default/js/scripts";
+}

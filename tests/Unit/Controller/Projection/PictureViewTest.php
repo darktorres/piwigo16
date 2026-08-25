@@ -86,14 +86,19 @@ test('pageAssets registers only the 3 unconditional entries when uOriginal and r
         ]);
 });
 
-test('pageAssets registers core.scripts when uOriginal is set', function (): void {
+test('pageAssets registers only the 3 unconditional entries when uOriginal is set (no separate core.scripts any more, picture.ts already carries it via ?dup)', function (): void {
     $view = makePictureView(uOriginal: 'http://example.com/original.jpg');
 
     expect($view->pageAssets())
-        ->toContainEqual(AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async));
+        ->toEqual([
+            AssetContribution::script('core.switchbox', 'themes/default/js/switchbox.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
+            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
+            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+        ]);
 });
 
-test('pageAssets registers core.scripts + rating when rating is set', function (): void {
+test('pageAssets registers rating when rating is set (no separate core.scripts dependsOn any more, rating.ts already carries it via ?dup)', function (): void {
     $view = makePictureView(rating: [
         'F_ACTION' => '',
         'USER_RATE' => null,
@@ -103,8 +108,7 @@ test('pageAssets registers core.scripts + rating when rating is set', function (
     $assets = $view->pageAssets();
 
     expect($assets)
-        ->toContainEqual(AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Async))
-        ->toContainEqual(AssetContribution::script('rating', 'themes/default/js/rating.ts', loadMode: LoadMode::Async, dependsOn: ['core.scripts']));
+        ->toContainEqual(AssetContribution::script('rating', 'themes/default/js/rating.ts', loadMode: LoadMode::Async));
 });
 
 test('exposedPageData includes image_id and merges in picture_nav_buttons data', function (): void {

@@ -26,7 +26,7 @@ test('pageAssets registers only the 3 unconditional entries when no comment has 
         ]);
 });
 
-test('pageAssets registers core.scripts when any comment has U_DELETE', function (): void {
+test('pageAssets registers core_scripts_page when any comment has U_DELETE', function (): void {
     $view = new CommentListView(
         comments: [
             [
@@ -43,7 +43,7 @@ test('pageAssets registers core.scripts when any comment has U_DELETE', function
     );
 
     expect($view->pageAssets())
-        ->toContainEqual(AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']));
+        ->toContainEqual(AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']));
 });
 
 test('exposedPageData omits error_icon when commentDerivativeParams is null', function (): void {

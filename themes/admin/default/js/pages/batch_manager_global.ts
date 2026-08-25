@@ -21,5 +21,12 @@
 // Do not reorder without re-verifying both.
 import "../addAlbum?dup";
 import "../datepicker?dup";
+// scripts.ts also has several real registrant pages (`?dup` needed --
+// Design §4); this import replaces the separate `core.scripts` script
+// tag BatchManagerGlobalView used to register directly. This page
+// doesn't read any of scripts.ts's own real exports, just needs its
+// side effects, so its own ordering relative to the other imports here
+// isn't load-bearing.
+import "../../../../default/js/scripts?dup";
 import "../batchManagerGlobal";
 import "../batch_manager_global";

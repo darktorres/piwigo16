@@ -24,12 +24,12 @@ function makeIdentificationView(bool $isStandardPagesTheme): IdentificationView
     );
 }
 
-test('pageAssets registers the default theme\'s core.scripts + footerScript when not standard_pages', function (): void {
+test('pageAssets registers the default theme\'s core_scripts_page bundle + footerScript when not standard_pages', function (): void {
     $view = makeIdentificationView(false);
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('core.scripts', 'themes/default/js/scripts.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer),
             AssetContribution::inlineScript("pwg_tryFocus('username');"),
         ]);
 });

@@ -1,4 +1,24 @@
-function phpWGOpenWindow(
+// Real module now (docs/PLAN.md P48 -- was a non-module ambient-global
+// declarer pre-P48, see git history for the pre-P48 shape). Only
+// `phpWGOpenWindow` (picture.ts's own real consumer) and
+// `pwgAddEventListener` (rating.ts's own real consumer) convert to real
+// exports -- `pwg_tryFocus` stays a permanent `window.X`: not a real
+// `.ts` consumer, but a real 4th category-2-like mechanism, confirmed
+// directly -- IdentificationView/RegisterView/PasswordView each call it
+// via `AssetContribution::inlineScript("pwg_tryFocus('...');")`, a
+// literal `<script>` tag embedded raw in the page's own HTML, which
+// (like an `onclick=` attribute) executes as a classic, non-module
+// script with no `import` available. `popuphelp` also stays permanent
+// window.X, conservatively -- no real caller found anywhere in this
+// codebase today (checked every `.ts` file, every `.latte` template's
+// `onclick=`/`href="javascript:"`, and every `AssetContribution::
+// inlineScript()` call site), but `AdminPopuphelpController`'s own
+// docblock explicitly describes `popuphelp.php` as reached from this
+// exact function, so treating it as safely-unused dead code and
+// converting it would risk silently breaking a real caller this
+// investigation simply didn't find (Design §1's own "don't assume the
+// taxonomy is exhaustive" caution).
+export function phpWGOpenWindow(
   theURL: string,
   winName: string,
   features: string,
@@ -31,7 +51,7 @@ function popuphelp(url: string): void {
   );
 }
 
-function pwgAddEventListener(
+export function pwgAddEventListener(
   elem: EventTarget,
   evt: string,
   fn: EventListenerOrEventListenerObject,
@@ -136,7 +156,8 @@ pwg_checkPasswordMatch("use_new_pwd", "passwordConf", "passwordConf-error");
 // page-data.ts's own copy of this comment for the full explanation).
 // `pwg_checkPasswordMatch`/`pwg_checkEmailFormat` don't need this: both
 // are only ever called from within this same file, immediately above.
-window.phpWGOpenWindow = phpWGOpenWindow;
+// `phpWGOpenWindow`/`pwgAddEventListener` no longer need this either
+// (docs/PLAN.md P48) -- real exports now, imported directly by their
+// own real consumers.
 window.popuphelp = popuphelp;
-window.pwgAddEventListener = pwgAddEventListener;
 window.pwg_tryFocus = pwg_tryFocus;

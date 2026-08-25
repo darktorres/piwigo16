@@ -1,3 +1,16 @@
+// Real consumer of scripts.ts's own top-level `phpWGOpenWindow`
+// (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
+// own leading comment for the full real-consumer list). `?dup` since
+// scripts.ts has many real registrant pages (Design §4). This file
+// itself becomes a real module as a result (previously non-module) --
+// `window.SwitchBox`/`window._pwgRatingAutoQueue` below are a separate,
+// already-established queue-based deferred-init pattern (P47's
+// SwitchBoxQueue/RatingAutoQueue redesign), not a plain function
+// exposure, and stay exactly as they are.
+import { phpWGOpenWindow } from "./scripts?dup";
+
+export {};
+
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
   const theImg = document.getElementById(
     "theMainImage",

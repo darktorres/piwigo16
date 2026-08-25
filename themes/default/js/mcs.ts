@@ -1,12 +1,27 @@
+import type { operations } from "../../../openapi/client/schema";
+
 export {};
 
 let PS_params: Record<string, any> = {};
 
 $(document).ready(function () {
-  /** @type {AlbumSelector} */
-  let ab: any;
+  let ab: AlbumSelectorInstance;
+  // Genuinely heterogeneous -- pushed values are `PS_params[key]`
+  // (search_filters.ts's own `global_params: any` is deferred to P48;
+  // `PS_params: Record<string, any>` mirrors it, matching this
+  // campaign's own "Record<string, any> only where genuinely
+  // heterogeneous" allowance), whose real shape varies per filter
+  // (string, array, or number depending on which filter pushed it).
   const empty_filters_list: any[] = [];
-  const filters_to_remove: any[] = [];
+  // Confirmed via grep: never pushed to anywhere in this file, so
+  // `filters_to_remove.length > 0` (below) is always false and
+  // `performSearch(PS_params, true)` there never actually runs -- a
+  // real, pre-existing dead branch, not something this typing pass
+  // fixes (deciding what should populate it is a design question, not
+  // a type gap). Typed to its most plausible intended shape (filter
+  // name strings, matching `updateFilters()`'s own `filterName` param)
+  // rather than left as `any[]`.
+  const filters_to_remove: string[] = [];
 
   $(".linkedAlbumPopInContainer .ClosePopIn").addClass(prefix_icon + "cancel");
   $(".linkedAlbumPopInContainer .searching")
@@ -46,11 +61,11 @@ $(document).ready(function () {
     $(".filter-manager-controller.word").prop("checked", true);
 
     let word_search_str = "";
-    const word_search_words: any[] =
+    const word_search_words: string[] =
       global_params.fields.allwords.words != null
         ? global_params.fields.allwords.words
         : [];
-    word_search_words.forEach((word: any) => {
+    word_search_words.forEach((word) => {
       word_search_str += word + " ";
     });
     $("#word-search").val(word_search_str.slice(0, -1));
@@ -66,7 +81,7 @@ $(document).ready(function () {
     }
 
     const word_search_fields = global_params.fields.allwords.fields;
-    Object.keys(word_search_fields).forEach((field_key: any) => {
+    Object.keys(word_search_fields).forEach((field_key) => {
       $("#" + word_search_fields[field_key]).prop("checked", true);
     });
 
@@ -118,14 +133,20 @@ $(document).ready(function () {
     ).prop("checked", true);
 
     let tag_search_str = "";
-    ($("#tag-search")[0] as any).selectize.getValue().forEach((id: any) => {
-      tag_search_str +=
-        ($("#tag-search")[0] as any).selectize
-          .getItem(id)
-          .text()
-          .replace(/\(\d+ \w+\)×/, "")
-          .trim() + ", ";
-    });
+    // `@types/selectize`'s own `getValue(): any` is a real, incomplete
+    // vendor declaration (the ambient `HTMLElement.selectize` property
+    // ships unparameterized, `IApi<any, any>`), narrowed to this file's
+    // real value shape.
+    ($("#tag-search")[0]!.selectize.getValue() as (string | number)[]).forEach(
+      (id) => {
+        tag_search_str +=
+          $("#tag-search")[0]!
+            .selectize.getItem(id)
+            .text()
+            .replace(/\(\d+ \w+\)×/, "")
+            .trim() + ", ";
+      },
+    );
     if (
       global_params.fields.tags.words &&
       global_params.fields.tags.words.length > 0
@@ -137,7 +158,7 @@ $(document).ready(function () {
     }
 
     $(".filter-tag .filter-actions .clear").on("click", function () {
-      ($("#tag-search")[0] as any).selectize.clear();
+      $("#tag-search")[0]!.selectize.clear();
       $(".filter-tag .search-params input[value='AND']").prop("checked", true);
     });
 
@@ -178,7 +199,13 @@ $(document).ready(function () {
         date_posted_str = "";
         const customArray = global_params.fields.date_posted.custom;
 
-        $(customArray).each(function (index: any) {
+        $(customArray).each(function (index) {
+          // `customArray` is rooted in `global_params.fields.date_posted
+          // .custom` -- `global_params: any` is deferred to P48
+          // (search_filters.ts's own established precedent), so
+          // `this` here (each raw string entry, jQuery-wrapped as if
+          // it were an element) is genuinely `any` too, not a gap this
+          // file's own pass resolves.
           const customValue: any = this.substring(1, $(this).length);
 
           $("#date_posted_" + customValue)
@@ -221,13 +248,13 @@ $(document).ready(function () {
     $("#date_posted_custom").attr("disabled", "disabled");
 
     // Handle toggle between preset and custom options
-    $(".custom_posted_date_toggle").on("click", function (e: any) {
+    $(".custom_posted_date_toggle").on("click", function (e) {
       $(".custom_posted_date").toggle();
       $(".preset_posted_date").toggle();
     });
 
     // Handle accoridan features in custom options
-    $(".custom_posted_date .accordion-toggle").on("click", function (e: any) {
+    $(".custom_posted_date .accordion-toggle").on("click", function (e) {
       const clickedOption = $(this).parent();
       $(clickedOption).toggleClass("show-child");
       if ("year" == $(this).data("type")) {
@@ -308,7 +335,7 @@ $(document).ready(function () {
         date_created_str = "";
         const customArray = global_params.fields.date_created.custom;
 
-        $(customArray).each(function (index: any) {
+        $(customArray).each(function (index) {
           const customValue: any = this.substring(1, $(this).length);
 
           $("#date_created_" + customValue)
@@ -354,13 +381,13 @@ $(document).ready(function () {
     $("#date_created_custom").attr("disabled", "disabled");
 
     // Handle toggle between preset and custom options
-    $(".custom_created_date_toggle").on("click", function (e: any) {
+    $(".custom_created_date_toggle").on("click", function (e) {
       $(".custom_created_date").toggle();
       $(".preset_created_date").toggle();
     });
 
     // Handle accoridan features in custom options
-    $(".custom_created_date .accordion-toggle").on("click", function (e: any) {
+    $(".custom_created_date .accordion-toggle").on("click", function (e) {
       const clickedOption = $(this).parent();
       $(clickedOption).toggleClass("show-child");
       if ("year" == $(this).data("type")) {
@@ -414,13 +441,13 @@ $(document).ready(function () {
     $(".filter-manager-controller.album").prop("checked", true);
 
     let album_widget_value = "";
-    global_params.fields.cat.words.forEach((cat_id: any) => {
+    global_params.fields.cat.words.forEach((cat_id: string | number) => {
       display_related_category(cat_id, fullname_of_cat[cat_id]);
       album_widget_value += fullname_of_cat[cat_id] + ", ";
     });
 
     // Load Album Selector
-    ab = new (window as any).AlbumSelector({
+    ab = new window.AlbumSelector({
       selectedCategoriesIds: global_params.fields.cat.words,
       selectAlbum: add_related_category,
       removeSelectedAlbum: remove_related_category,
@@ -431,9 +458,9 @@ $(document).ready(function () {
       ab.open();
     });
 
-    $(".selected-categories-container").on("click", (e: any) => {
+    $(".selected-categories-container").on("click", (e) => {
       if (e.target.classList.contains("remove-item")) {
-        ab.remove_selected_album($(e.target).attr("id"));
+        ab.remove_selected_album($(e.target).attr("id")!);
       }
     });
 
@@ -481,14 +508,18 @@ $(document).ready(function () {
       $(".filter-manager-controller.author").prop("checked", true);
 
       let author_search_str = "";
-      ($("#authors")[0] as any).selectize.getValue().forEach((id: any) => {
-        author_search_str +=
-          ($("#authors")[0] as any).selectize
-            .getItem(id)
-            .text()
-            .replace(/\(\d+ \w+\)×/, "")
-            .trim() + ", ";
-      });
+      // Same real-but-incomplete `@types/selectize` vendor gap as
+      // tag-search's own copy of this comment above.
+      ($("#authors")[0]!.selectize.getValue() as (string | number)[]).forEach(
+        (id) => {
+          author_search_str +=
+            $("#authors")[0]!
+              .selectize.getItem(id)
+              .text()
+              .replace(/\(\d+ \w+\)×/, "")
+              .trim() + ", ";
+        },
+      );
 
       if (
         global_params.fields.author.words &&
@@ -503,7 +534,7 @@ $(document).ready(function () {
       }
 
       $(".filter-authors .filter-actions .clear").on("click", function () {
-        ($("#authors")[0] as any).selectize.clear();
+        $("#authors")[0]!.selectize.clear();
       });
 
       PS_params.authors =
@@ -526,11 +557,11 @@ $(document).ready(function () {
     ) {
       $(".filter-added_by").addClass("filter-filled");
 
-      const added_by_names: any[] = [];
+      const added_by_names: string[] = [];
 
       $(".added_by-option").each(function () {
         const input = $(this).find("input");
-        const added_by_id: any = parseInt(String(input.attr("name")));
+        const added_by_id = parseInt(String(input.attr("name")));
 
         if (jQuery.inArray(added_by_id, global_params.fields.added_by) >= 0) {
           input.prop("checked", true);
@@ -565,7 +596,7 @@ $(document).ready(function () {
     $(".filter-manager-controller.filetypes").prop("checked", true);
 
     let filetypes_search_str = "";
-    global_params.fields.filetypes.forEach((ft: any) => {
+    global_params.fields.filetypes.forEach((ft: string) => {
       filetypes_search_str += ft + ", ";
     });
 
@@ -607,7 +638,7 @@ $(document).ready(function () {
     $(".filter-manager-controller.ratios").prop("checked", true);
 
     let ratios_search_str = "";
-    global_params.fields.ratios.forEach((ft: any) => {
+    global_params.fields.ratios.forEach((ft: string) => {
       ratios_search_str += str_ratios_label[ft] + ", ";
     });
 
@@ -642,7 +673,7 @@ $(document).ready(function () {
     $(".filter-manager-controller.ratings").prop("checked", true);
 
     let ratings_search_str = "";
-    global_params.fields.ratings.forEach(function (ft: any, i: any) {
+    global_params.fields.ratings.forEach(function (ft: number, i: number) {
       if (0 == ft) {
         ratings_search_str += str_no_rating;
         if (global_params.fields.ratings.length > 1) {
@@ -701,18 +732,15 @@ $(document).ready(function () {
       ),
     );
 
-    $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes! as any);
+    $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
 
-    $("[data-slider=filesizes]").on(
-      "slidestop",
-      function (event: any, ui: any) {
-        const min = $("[data-slider=filesizes]").find("[data-input=min]").val();
-        const max = $("[data-slider=filesizes]").find("[data-input=max]").val();
+    $("[data-slider=filesizes]").on("slidestop", function (event, ui) {
+      const min = $("[data-slider=filesizes]").find("[data-input=min]").val();
+      const max = $("[data-slider=filesizes]").find("[data-input=max]").val();
 
-        $("input[name=filter_filesize_min_text]").val(min!).trigger("change");
-        $("input[name=filter_filesize_max_text]").val(max!).trigger("change");
-      },
-    );
+      $("input[name=filter_filesize_min_text]").val(min!).trigger("change");
+      $("input[name=filter_filesize_max_text]").val(max!).trigger("change");
+    });
 
     if (
       global_params.fields.filesize_min != null &&
@@ -735,7 +763,7 @@ $(document).ready(function () {
     $(".filter-filesize .filter-actions .clear").on("click", function () {
       updateFilters("filesize", "add");
       $(".filter-filesize").trigger("click");
-      $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes! as any);
+      $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
       if ($(".filter-filesize").hasClass("filter-filled")) {
         $(".filter-filesize").removeClass("filter-filled");
         $(".filter.filter-filesize .search-words").text(
@@ -772,7 +800,7 @@ $(document).ready(function () {
       ),
     );
 
-    $("[data-slider=heights]").pwgDoubleSlider(sliders.heights! as any);
+    $("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
 
     if (
       global_params.fields.height_min > 0 &&
@@ -793,7 +821,7 @@ $(document).ready(function () {
     $(".filter-height .filter-actions .clear").on("click", function () {
       updateFilters("height", "add");
       $(".filter-height").trigger("click");
-      $("[data-slider=heights]").pwgDoubleSlider(sliders.heights! as any);
+      $("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
       if ($(".filter-height").hasClass("filter-filled")) {
         $(".filter-height").removeClass("filter-filled");
         $(".filter.filter-height .search-words").text(str_height_widget_label);
@@ -828,7 +856,7 @@ $(document).ready(function () {
       ),
     );
 
-    $("[data-slider=widths]").pwgDoubleSlider(sliders.widths! as any);
+    $("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
 
     if (
       global_params.fields.width_min > 0 &&
@@ -849,7 +877,7 @@ $(document).ready(function () {
     $(".filter-width .filter-actions .clear").on("click", function () {
       updateFilters("width", "add");
       $(".filter-width").trigger("click");
-      $("[data-slider=widths]").pwgDoubleSlider(sliders.widths! as any);
+      $("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
       if ($(".filter-width").hasClass("filter-filled")) {
         $(".filter-width").removeClass("filter-filled");
         $(".filter.filter-width .search-words").text(str_width_widget_label);
@@ -943,7 +971,7 @@ $(document).ready(function () {
     $(".filter-manager-popin").show();
   });
 
-  $(document).on("keyup", function (e: any) {
+  $(document).on("keyup", function (e) {
     // 27 is 'Escape'
     if (e.keyCode === 27) {
       $(".filter-manager-popin .filter-manager-close").trigger("click");
@@ -959,7 +987,7 @@ $(document).ready(function () {
     }
   });
 
-  $(".filter-manager-popin").on("click", function (e: any) {
+  $(".filter-manager-popin").on("click", function (e) {
     if ($(this).is(e.target) && $(this).has(e.target).length === 0) {
       $(".filter-manager-popin .filter-manager-close").trigger("click");
     }
@@ -969,7 +997,7 @@ $(document).ready(function () {
     ".filter-manager-popin .filter-cancel, .filter-manager-popin .filter-manager-close",
   ).on("click", function () {
     $(".filter-manager-popin").hide();
-    $(".filter-manager-controller-container input").each(function (e: any) {
+    $(".filter-manager-controller-container input").each(function (e) {
       if ($(this).is(":checked")) {
         if (!$(".filter.filter-" + $(this).data("wid")).is(":visible")) {
           $(this).prop("checked", false);
@@ -983,7 +1011,7 @@ $(document).ready(function () {
   });
 
   $(".filter-manager-popin .filter-validate").on("click", function () {
-    $(".filter-manager-controller-container input").each(function (e: any) {
+    $(".filter-manager-controller-container input").each(function (e) {
       if ($(this).is(":checked")) {
         if (!$(".filter.filter-" + $(this).data("wid")).is(":visible")) {
           updateFilters($(this).data("wid"), "add");
@@ -1008,7 +1036,7 @@ $(document).ready(function () {
     $(".albums-found-popin").show();
   });
 
-  $(document).on("keyup", function (e: any) {
+  $(document).on("keyup", function (e) {
     // 27 is 'Escape'
     if (e.keyCode === 27) {
       $(".tags-found-popin .tags-found-close").trigger("click");
@@ -1016,7 +1044,7 @@ $(document).ready(function () {
     }
   });
 
-  $(".tags-found-popin").on("click", function (e: any) {
+  $(".tags-found-popin").on("click", function (e) {
     if ($(this).is(e.target) && $(this).has(e.target).length === 0) {
       $(".tags-found-popin .tags-found-close").trigger("click");
     }
@@ -1025,7 +1053,7 @@ $(document).ready(function () {
     $(".tags-found-popin").hide();
   });
 
-  $(".albums-found-popin").on("click", function (e: any) {
+  $(".albums-found-popin").on("click", function (e) {
     if ($(this).is(e.target) && $(this).has(e.target).length === 0) {
       $(".albums-found-popin .albums-found-close").trigger("click");
     }
@@ -1037,7 +1065,7 @@ $(document).ready(function () {
   /**
    * Filter Word
    */
-  $(".filter-word").on("click", function (e: any) {
+  $(".filter-word").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form")
@@ -1062,7 +1090,7 @@ $(document).ready(function () {
           "value",
         );
 
-        const new_fields: any[] = [];
+        const new_fields: (string | undefined)[] = [];
         $(".filter-word-form .search-params input:checked").each(function () {
           if ($(this).attr("name") == "tags") {
             global_params.fields.search_in_tags = true;
@@ -1096,7 +1124,7 @@ $(document).ready(function () {
   /**
    * Filter Tag
    */
-  $(".filter-tag").on("click", function (e: any) {
+  $(".filter-tag").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1113,13 +1141,12 @@ $(document).ready(function () {
         global_params.fields.tags.mode = $(
           ".filter-tag-form .search-params input:checked",
         ).val();
-        global_params.fields.tags.words = (
-          $("#tag-search")[0] as any
-        ).selectize.getValue();
+        global_params.fields.tags.words =
+          $("#tag-search")[0]!.selectize.getValue();
 
         PS_params.tags =
-          ($("#tag-search")[0] as any).selectize.getValue().length > 0
-            ? ($("#tag-search")[0] as any).selectize.getValue()
+          $("#tag-search")[0]!.selectize.getValue().length > 0
+            ? $("#tag-search")[0]!.selectize.getValue()
             : "";
         PS_params.tags_mode = $(
           ".filter-tag-form .search-params input:checked",
@@ -1143,7 +1170,7 @@ $(document).ready(function () {
   /**
    * Filter Date posted
    */
-  $(".filter-date_posted").on("click", function (e: any) {
+  $(".filter-date_posted").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form")
@@ -1164,7 +1191,7 @@ $(document).ready(function () {
         PS_params.date_posted_preset = presetValue != null ? presetValue : "";
 
         if ("custom" == presetValue) {
-          const customDates: any[] = [];
+          const customDates: (string | number | string[] | undefined)[] = [];
 
           $(".custom_posted_date .date_posted-option input:checked").each(
             function () {
@@ -1197,7 +1224,7 @@ $(document).ready(function () {
   /**
    * Filter Date created
    */
-  $(".filter-date_created").on("click", function (e: any) {
+  $(".filter-date_created").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form")
@@ -1218,7 +1245,7 @@ $(document).ready(function () {
         PS_params.date_created_preset = presetValue != null ? presetValue : "";
 
         if ("custom" == presetValue) {
-          const customDates: any[] = [];
+          const customDates: (string | number | string[] | undefined)[] = [];
 
           $(".custom_created_date .date_created-option input:checked").each(
             function () {
@@ -1251,7 +1278,7 @@ $(document).ready(function () {
   /**
    * Filter Album
    */
-  $(".filter-album").on("click", function (e: any) {
+  $(".filter-album").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1293,7 +1320,7 @@ $(document).ready(function () {
   /**
    * Author Widget
    */
-  $(".filter-authors").on("click", function (e: any) {
+  $(".filter-authors").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1308,13 +1335,12 @@ $(document).ready(function () {
         $(".filter-authors").removeClass("show-filter-dropdown");
         global_params.fields.author = {};
         global_params.fields.author.mode = "OR";
-        global_params.fields.author.words = (
-          $("#authors")[0] as any
-        ).selectize.getValue();
+        global_params.fields.author.words =
+          $("#authors")[0]!.selectize.getValue();
 
         PS_params.authors =
-          ($("#authors")[0] as any).selectize.getValue().length > 0
-            ? ($("#authors")[0] as any).selectize.getValue()
+          $("#authors")[0]!.selectize.getValue().length > 0
+            ? $("#authors")[0]!.selectize.getValue()
             : "";
       }
     });
@@ -1335,7 +1361,7 @@ $(document).ready(function () {
   /**
    * Added by Widget
    */
-  $(".filter-added_by").on("click", function (e: any) {
+  $(".filter-added_by").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1351,7 +1377,7 @@ $(document).ready(function () {
         global_params.fields.added_by = {};
         global_params.fields.added_by.mode = "OR";
 
-        const added_by_array: any[] = [];
+        const added_by_array: (string | undefined)[] = [];
         $(".added_by-option input:checked").each(function () {
           added_by_array.push($(this).attr("name"));
         });
@@ -1378,7 +1404,7 @@ $(document).ready(function () {
   /**
    * File type Widget
    */
-  $(".filter-filetypes").on("click", function (e: any) {
+  $(".filter-filetypes").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1392,7 +1418,7 @@ $(document).ready(function () {
       } else {
         $(".filter-filetypes").removeClass("show-filter-dropdown");
 
-        const filetypes_array: any[] = [];
+        const filetypes_array: (string | undefined)[] = [];
         $(".filetypes-option input:checked").each(function () {
           filetypes_array.push($(this).attr("name"));
         });
@@ -1420,7 +1446,7 @@ $(document).ready(function () {
   /**
    * Ratios widget
    */
-  $(".filter-ratios").on("click", function (e: any) {
+  $(".filter-ratios").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1434,7 +1460,7 @@ $(document).ready(function () {
       } else {
         $(".filter-ratios").removeClass("show-filter-dropdown");
 
-        const ratios_array: any[] = [];
+        const ratios_array: (string | undefined)[] = [];
         $(".ratios-option input:checked").each(function () {
           ratios_array.push($(this).attr("name"));
         });
@@ -1462,7 +1488,7 @@ $(document).ready(function () {
   /**
    * Rating widget
    */
-  $(".filter-ratings").on("click", function (e: any) {
+  $(".filter-ratings").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1475,7 +1501,7 @@ $(document).ready(function () {
         $(".filter-ratings").addClass("show-filter-dropdown");
       } else {
         $(".filter-ratings").removeClass("show-filter-dropdown");
-        const ratings_array: any[] = [];
+        const ratings_array: (string | undefined)[] = [];
 
         $(".ratings-option input:checked").each(function () {
           ratings_array.push($(this).attr("name"));
@@ -1503,7 +1529,7 @@ $(document).ready(function () {
   /**
    * Filesize widget
    */
-  $(".filter-filesize").on("click", function (e: any) {
+  $(".filter-filesize").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1549,7 +1575,7 @@ $(document).ready(function () {
   /**
    * Height widget
    */
-  $(".filter-height").on("click", function (e: any) {
+  $(".filter-height").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1591,7 +1617,7 @@ $(document).ready(function () {
   /**
    * Width widget
    */
-  $(".filter-width").on("click", function (e: any) {
+  $(".filter-width").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1633,7 +1659,7 @@ $(document).ready(function () {
   /**
    * Expert widget
    */
-  $(".filter-expert").on("click", function (e: any) {
+  $(".filter-expert").on("click", function (e) {
     if (
       $(".filter-form").has(e.target).length != 0 ||
       $(e.target).hasClass("filter-form") ||
@@ -1667,7 +1693,7 @@ $(document).ready(function () {
   });
 });
 
-function performSearch(params: any, reload: any = false) {
+function performSearch(params: Record<string, any>, reload: boolean = false) {
   // PS_params uses snake_case field names (also used elsewhere in this
   // file to drive the active-filter-chip UI) -- translated to
   // POST /api/v1/images/searches's camelCase body shape here, the one
@@ -1715,12 +1741,14 @@ function performSearch(params: any, reload: any = false) {
     contentType: "application/json",
     dataType: "json",
     data: JSON.stringify(body),
-    success: function (data) {
+    success: function (
+      data: operations["imageFilteredSearchCreate"]["responses"][201]["content"]["application/json"],
+    ) {
       if (reload && typeof data.searchUrl !== "undefined") {
         reloadPage(data.searchUrl);
       }
     },
-    error: function (e: any) {
+    error: function (e: JQuery.jqXHR) {
       console.log(e);
       $(".filter-form ").append('<p class="error">Error</p>');
       $(".filter-validate").find(".validate-text").css("display", "block");
@@ -1732,7 +1760,10 @@ function performSearch(params: any, reload: any = false) {
   });
 }
 
-function add_related_category({ album, addSelectedAlbum }: any) {
+function add_related_category({
+  album,
+  addSelectedAlbum,
+}: AlbumSelectorCallbackArgs) {
   display_related_category(album.id, album.name);
   $(".invisible-related-categories-select").append(
     `<option selected value="${album.id}"></option>`,
@@ -1740,13 +1771,18 @@ function add_related_category({ album, addSelectedAlbum }: any) {
   addSelectedAlbum();
 }
 
-function remove_related_category({ id_album }: any) {
+function remove_related_category({
+  id_album,
+}: AlbumSelectorRemoveCallbackArgs) {
   $("#" + id_album)
     .parent()
     .remove();
 }
 
-function display_related_category(cat_id: any, cat_link_path: any) {
+function display_related_category(
+  cat_id: string | number,
+  cat_link_path: string | undefined,
+) {
   $(".selected-categories-container").append(
     `<div class="breadcrumb-item">
       <span class="link-path">${cat_link_path}</span><span id="${cat_id}" class="mcs-icon ${prefix_icon}cancel remove-item"></span>
@@ -1754,7 +1790,7 @@ function display_related_category(cat_id: any, cat_link_path: any) {
   );
 }
 
-function updateFilters(filterName: any, mode: any) {
+function updateFilters(filterName: string, mode: "add" | "del") {
   switch (filterName) {
     case "word":
       if (mode == "add") {
@@ -1896,11 +1932,11 @@ function updateFilters(filterName: any, mode: any) {
   }
 }
 
-function reloadPage(url: any) {
+function reloadPage(url: string) {
   window.location.href = url;
 }
 
-function updateDateFilters(selector: any) {
+function updateDateFilters(selector: string) {
   const ctx = $(selector);
   const inputYear = ctx.find(".year_input input");
   const iconYear = ctx.find(".year_input .mcs-icon");

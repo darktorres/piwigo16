@@ -474,6 +474,15 @@ declare namespace JQueryUI {
   }
 }
 
+// The real shape `datepicker.ts`'s own `pwgDatepicker` plugin accepts
+// (P47) -- confirmed against every real call site
+// (batchManagerGlobal.ts/batchManagerUnit.ts/picture_modify.ts/
+// history.ts's own zero-arg call).
+interface PwgDatepickerSettings {
+  showTimepicker?: boolean;
+  cancelButton?: string | false;
+}
+
 // jqtree's own bundled `IJQTreePlugin` (referenced above) never typed
 // its real `"getState"` command -- an upstream typings gap, not
 // something we can edit in `node_modules` directly. `albums.ts`'s own
@@ -558,7 +567,7 @@ interface JQuery {
   // the first *consumer*-only file that needed the ambient type
   // without declaring it itself (same reasoning as `pwg_token`, P46-C's
   // own `album_selector.ts`).
-  pwgDatepicker(options?: Record<string, unknown>): JQuery;
+  pwgDatepicker(options?: PwgDatepickerSettings): JQuery;
   pwgAddAlbum(options?: Record<string, unknown>): JQuery;
 
   // jQuery UI core datepicker + jquery-ui-timepicker-addon's own

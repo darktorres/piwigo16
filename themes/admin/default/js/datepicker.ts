@@ -5,18 +5,24 @@ export {};
   jQuery.timepicker.log = jQuery.noop; // that's ugly, but the timepicker is acting weird and throws parsing errors
 
   // modify DatePicker internal methods to replace year select by a numeric input
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- saved only to `.call(this, ...)` explicitly below, every time; never invoked detached from a receiver.
   const origGenerateMonthYearHeader = $.datepicker._generateMonthYearHeader,
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- same as above.
     origSelectMonthYear = $.datepicker._selectMonthYear;
 
   $.datepicker._generateMonthYearHeader = function (
+    // The internal per-instance state bag jQuery UI's datepicker engine
+    // keeps -- undocumented, no real type source; genuinely irreducible
+    // (this file never reads a property off it directly, only forwards
+    // it to the original implementation).
     inst: any,
-    drawMonth: any,
-    drawYear: any,
-    minDate: any,
-    maxDate: any,
-    secondary: any,
-    monthNames: any,
-    monthNamesShort: any,
+    drawMonth: number,
+    drawYear: number,
+    minDate: Date | null,
+    maxDate: Date | null,
+    secondary: boolean,
+    monthNames: string[],
+    monthNamesShort: string[],
   ) {
     const html = origGenerateMonthYearHeader.call(
       this,
@@ -41,11 +47,19 @@ export {};
     );
   };
 
+  // The datepicker widget's own internal `this` context -- undocumented,
+  // no real npm type; only these 3 methods are actually used here.
+  interface DatepickerWidgetContext {
+    _getInst(target: Element | undefined): any;
+    _notifyChange(inst: any): void;
+    _adjustDate(target: JQuery): void;
+  }
+
   $.datepicker._selectMonthYear = debounce(function (
-    this: any,
-    id: any,
-    select: any,
-    period: any,
+    this: DatepickerWidgetContext,
+    id: string,
+    select: HTMLInputElement | HTMLSelectElement,
+    period: "M" | "Y",
   ) {
     if (period === "M") {
       origSelectMonthYear.call(this, id, select, period);
@@ -67,32 +81,46 @@ export {};
     }
   }, 500);
 
+  interface PwgDatepickerResolvedOptions extends PwgDatepickerSettings {
+    showTimepicker: boolean;
+    cancelButton: string | false;
+    beforeShow?: () => void;
+    onChangeMonthYear?: () => void;
+  }
+
   // plugin definition
-  jQuery.fn.pwgDatepicker = function (this: JQuery, settings: any) {
-    const options: any = jQuery.extend(
+  jQuery.fn.pwgDatepicker = function (
+    this: JQuery,
+    settings?: PwgDatepickerSettings,
+  ) {
+    // jQuery.extend's own typed overloads can't statically express a
+    // 3-object deep merge -- real shape confirmed by tracing every
+    // pwgDatepicker() call site (batchManagerGlobal.ts/
+    // batchManagerUnit.ts/picture_modify.ts/history.ts).
+    const options = jQuery.extend(
       true,
       {
         showTimepicker: false,
         cancelButton: false,
       },
       settings || {},
-    );
+    ) as PwgDatepickerResolvedOptions;
 
     return this.each(function () {
       const $this = jQuery(this);
-      let originalValue: any = $this.val();
+      let originalValue = $this.val();
       // eslint-disable-next-line prefer-const -- declared here (not at its own real assignment further down) so the `options.beforeShow` closure above can close over the same binding; assigned exactly once, but genuinely can't be `const` given where it's read.
-      let originalDate: any;
+      let originalDate: Date | null;
       const $target = jQuery('[name="' + $this.data("datepicker") + '"]');
       const linked = !!$target.length;
-      let $start: any, $end: any;
+      let $start: JQuery | undefined, $end: JQuery | undefined;
 
       if (linked) {
         originalValue = $target.val();
       }
 
       // custom setter
-      function set(date: any, init: boolean) {
+      function set(date: Date | string | null, init: boolean) {
         if (date === "") date = null;
         $this.datetimepicker("setDate", date);
 
@@ -160,8 +188,8 @@ export {};
           '[data-datepicker="' + $this.data("datepicker-start") + '"]',
         );
 
-        $this.datetimepicker("option", "onClose", function (date: any) {
-          $start.datetimepicker("option", "maxDate", date);
+        $this.datetimepicker("option", "onClose", function (date: Date | null) {
+          $start!.datetimepicker("option", "maxDate", date);
         });
 
         $this.datetimepicker(
@@ -174,8 +202,8 @@ export {};
           '[data-datepicker="' + $this.data("datepicker-end") + '"]',
         );
 
-        $this.datetimepicker("option", "onClose", function (date: any) {
-          $end.datetimepicker("option", "minDate", date);
+        $this.datetimepicker("option", "onClose", function (date: Date | null) {
+          $end!.datetimepicker("option", "minDate", date);
         });
       }
 
@@ -195,7 +223,7 @@ export {};
             jQuery.datepicker.parseDateTime(
               "yy-mm-dd",
               "HH:mm:ss",
-              originalValue,
+              String(originalValue),
             ),
             true,
           );
@@ -215,17 +243,20 @@ export {};
     });
   };
 
+  // Generic pass-through utility -- wraps any function signature (here,
+  // `_selectMonthYear`'s own 3-arg one), so `args`/`this` genuinely stay
+  // unconstrained by design, not narrowed to a specific call site's shape.
   function debounce(
     func: (...args: any[]) => void,
     wait: number,
     immediate?: boolean,
   ) {
-    let timeout: any;
-    return function (this: any, ...args: any[]) {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    return function (this: unknown, ...args: any[]) {
       // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside later(), which has its own `this`.
       const context = this;
       const later = function () {
-        timeout = null;
+        timeout = undefined;
         if (!immediate) func.apply(context, args);
       };
       const callNow = immediate && !timeout;

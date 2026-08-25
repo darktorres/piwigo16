@@ -1,3 +1,118 @@
+// Real entity shapes for the 4 real per-list caches below, via the
+// existing OpenAPI schema. Declared as top-level `type X =
+// import(...)` aliases, not real `import` statements -- this file is
+// a genuinely non-module IIFE (`(function ($, exports) {...})(jQuery,
+// window)`), same technique already verified safe in album_selector.ts.
+// `CategoryAdmin` itself is NOT redeclared here: album_selector.ts is
+// also non-module, so its own identical `type CategoryAdmin = ...`
+// alias is already a real ambient global visible here too -- a second
+// declaration of the same name would be a real duplicate-identifier
+// conflict, not just redundant.
+type TagAdmin =
+  import("../../../../openapi/client/schema").operations["tagList"]["responses"][200]["content"]["application/json"]["tags"][number];
+type GroupEntity =
+  import("../../../../openapi/client/schema").operations["groupList"]["responses"][200]["content"]["application/json"]["groups"][number];
+type UserEntity =
+  import("../../../../openapi/client/schema").operations["userList"]["responses"][200]["content"]["application/json"]["users"][number];
+
+// This file's own `categoriesAdminList`/`tagsAdminList`/`groupsAdminList`/
+// `usersAdminList` loaders each reshape the raw API row before caching
+// it (see each *Cache's own `options.loader` below) -- these are the
+// real post-reshape shapes, not the raw API ones.
+type ProcessedCategory = Omit<CategoryAdmin, "comment" | "uppercats"> & {
+  pos: number;
+};
+type ProcessedTag = Omit<TagAdmin, "id" | "urlName" | "lastmodified"> & {
+  id: string;
+};
+type ProcessedGroup = Omit<GroupEntity, "lastmodified">;
+
+interface LocalStorageCacheOptions {
+  key?: string;
+  serverId?: string;
+  serverKey?: string;
+  rootUrl?: string;
+  lifetime?: number;
+  loader?: (callback: (data: SelectizeEntity[]) => void) => void;
+}
+
+// The real common structural contract `_selectize` (below) relies on --
+// every one of the 4 real entity shapes (Category/Tag/Group/User) has
+// a real `.id`, plus whatever other fields the render/filter functions
+// (each *Cache's own `.selectize()`, `AbstractSelectizer.getRender()`)
+// dynamically look up by field name.
+interface SelectizeEntity {
+  id: string | number;
+}
+
+interface LocalStorageCacheInstance {
+  key: string;
+  serverKey?: string;
+  lifetime: number;
+  loader: (callback: (data: SelectizeEntity[]) => void) => void;
+  storage: Storage;
+  ready: boolean;
+  _init(options: LocalStorageCacheOptions): void;
+  get(callback: (data: SelectizeEntity[]) => void): void;
+  set(data: SelectizeEntity[]): void;
+  clear(): void;
+}
+
+interface LocalStorageCacheCtor {
+  new (options: LocalStorageCacheOptions): LocalStorageCacheInstance;
+  prototype: LocalStorageCacheInstance;
+}
+
+interface SelectizeOptions {
+  value?: (string | number)[] | { id: string | number }[];
+  default?: string | number;
+  create?: boolean;
+  lang?: { Add?: string };
+  filter?: (
+    data: SelectizeEntity[],
+    options: SelectizeOptions,
+  ) => SelectizeEntity[];
+}
+
+interface AbstractSelectizerInstance extends LocalStorageCacheInstance {
+  _selectize(
+    $target: JQuery<HTMLSelectElement>,
+    globalOptions: SelectizeOptions,
+  ): void;
+}
+
+interface SelectizeRenderers {
+  option(data: SelectizeEntity, _escape: unknown): string;
+  item(data: SelectizeEntity, _escape: unknown): string;
+  option_create(data: { input: string }, _escape: unknown): string;
+}
+
+interface AbstractSelectizerCtor {
+  new (): AbstractSelectizerInstance;
+  prototype: AbstractSelectizerInstance;
+  getRender(
+    field_label: string,
+    lang: { Add?: string } | undefined,
+  ): SelectizeRenderers;
+}
+
+interface EntityCacheInstance<
+  T extends SelectizeEntity,
+> extends AbstractSelectizerInstance {
+  loader: (callback: (data: T[]) => void) => void;
+  get(callback: (data: T[]) => void): void;
+  set(data: T[]): void;
+  selectize(
+    $target: JQuery<HTMLSelectElement>,
+    options?: SelectizeOptions,
+  ): void;
+}
+
+interface EntityCacheCtor<T extends SelectizeEntity> {
+  new (options: LocalStorageCacheOptions): EntityCacheInstance<T>;
+  prototype: EntityCacheInstance<T>;
+}
+
 (function ($: JQueryStatic, exports: Window) {
   "use strict";
 
@@ -12,18 +127,24 @@
    *    - loader (required) function called to fetch data, takes a callback as first argument
    *        which must be called with the loaded date
    */
-  const LocalStorageCache: any = function (this: any, options: any) {
+  const LocalStorageCache = function (
+    this: LocalStorageCacheInstance,
+    options: LocalStorageCacheOptions,
+  ) {
     this._init(options);
-  };
+  } as unknown as LocalStorageCacheCtor;
 
   /*
    * Constructor (deported for easy inheritance)
    */
-  LocalStorageCache.prototype._init = function (this: any, options: any) {
+  LocalStorageCache.prototype._init = function (
+    this: LocalStorageCacheInstance,
+    options: LocalStorageCacheOptions,
+  ) {
     this.key = options.key + "_" + options.serverId;
     this.serverKey = options.serverKey;
     this.lifetime = options.lifetime ? options.lifetime * 1000 : 3600 * 1000;
-    this.loader = options.loader;
+    this.loader = options.loader!;
 
     this.storage = window.localStorage;
     this.ready = !!this.storage;
@@ -34,15 +155,22 @@
    * @param callback {function} called with the data as first parameter
    */
   LocalStorageCache.prototype.get = function (
-    this: any,
-    callback: (data: any) => void,
+    this: LocalStorageCacheInstance,
+    callback: (data: SelectizeEntity[]) => void,
   ) {
     const now = new Date().getTime(),
       // eslint-disable-next-line @typescript-eslint/no-this-alias -- pre-arrow-function idiom, needed so `this` survives into the loader's own callback below; a real behavior change (converting to a real arrow function here) is out of scope for a mechanical conversion.
       that = this;
 
-    if (this.ready && this.storage[this.key] != undefined) {
-      const cache = JSON.parse(this.storage[this.key]);
+    const stored = (this.storage as unknown as Record<string, string>)[
+      this.key
+    ];
+    if (this.ready && stored != undefined) {
+      const cache: {
+        timestamp: number;
+        key?: string;
+        data: SelectizeEntity[];
+      } = JSON.parse(stored);
 
       if (
         now - cache.timestamp <= this.lifetime &&
@@ -53,7 +181,7 @@
       }
     }
 
-    this.loader(function (data: any) {
+    this.loader(function (data) {
       that.set.call(that, data);
       callback(data);
     });
@@ -63,14 +191,18 @@
    * Manually set the cache content
    * @param data {mixed}
    */
-  LocalStorageCache.prototype.set = function (this: any, data: any) {
+  LocalStorageCache.prototype.set = function (
+    this: LocalStorageCacheInstance,
+    data: SelectizeEntity[],
+  ) {
     try {
       if (this.ready) {
-        this.storage[this.key] = JSON.stringify({
-          timestamp: new Date().getTime(),
-          key: this.serverKey,
-          data: data,
-        });
+        (this.storage as unknown as Record<string, string>)[this.key] =
+          JSON.stringify({
+            timestamp: new Date().getTime(),
+            key: this.serverKey,
+            data: data,
+          });
       }
     } catch (e) {
       console.log("Local storage error:");
@@ -82,7 +214,9 @@
   /*
    * Manually clear the cache
    */
-  LocalStorageCache.prototype.clear = function (this: any) {
+  LocalStorageCache.prototype.clear = function (
+    this: LocalStorageCacheInstance,
+  ) {
     if (this.ready) {
       this.storage.removeItem(this.key);
     }
@@ -91,8 +225,12 @@
   /**
    * Abstract class containing common initialization code for selectize
    */
-  const AbstractSelectizer: any = function (this: any) {};
-  AbstractSelectizer.prototype = new LocalStorageCache({});
+  const AbstractSelectizer = function (
+    this: AbstractSelectizerInstance,
+  ) {} as unknown as AbstractSelectizerCtor;
+  AbstractSelectizer.prototype = new LocalStorageCache(
+    {},
+  ) as unknown as AbstractSelectizerInstance;
 
   /*
    * Load Selectize with cache content
@@ -106,15 +244,17 @@
    *      must return new data
    */
   AbstractSelectizer.prototype._selectize = function (
-    this: any,
-    $target: JQuery,
-    globalOptions: any,
+    this: AbstractSelectizerInstance,
+    $target: JQuery<HTMLSelectElement>,
+    globalOptions: SelectizeOptions,
   ) {
     $target.data("cache", this);
 
-    this.get(function (data: any) {
-      $target.each(function (this: any) {
-        let filtered: any, value, defaultValue;
+    this.get(function (data) {
+      $target.each(function (this: HTMLSelectElement) {
+        let filtered: SelectizeEntity[];
+        let value: (string | number)[] | { id: string | number }[] | undefined;
+        let defaultValue: string | number | undefined;
         const options = $.extend({}, globalOptions);
 
         // apply filter function
@@ -134,8 +274,8 @@
 
         // load options
         this.selectize.load(function (
-          this: any,
-          callback: (data: any) => void,
+          this: { options: Record<string, unknown> },
+          callback: (data: SelectizeEntity[]) => void,
         ) {
           if ($.isEmptyObject(this.options)) {
             callback(filtered);
@@ -149,9 +289,13 @@
         if (options.value != undefined) {
           $.each(
             value,
-            $.proxy(function (this: any, i: number, cat: any) {
+            $.proxy(function (
+              this: HTMLSelectElement,
+              i: number,
+              cat: string | number | { id: string | number },
+            ) {
               if ($.isNumeric(cat)) this.selectize.addItem(cat);
-              else this.selectize.addItem(cat.id);
+              else this.selectize.addItem((cat as { id: string }).id);
             }, this),
           );
         }
@@ -174,20 +318,31 @@
           if (this.multiple) {
             this.selectize.getItem(options.default).find(".remove").hide();
 
-            this.selectize.on("item_remove", function (this: any, id: any) {
-              if (id == options.default) {
-                this.addItem(id);
-                this.getItem(id).find(".remove").hide();
-              }
-            });
+            this.selectize.on(
+              "item_remove",
+              function (
+                this: Selectize.IApi<string | number, SelectizeEntity>,
+                id: string | number,
+              ) {
+                if (id == options.default) {
+                  this.addItem(id);
+                  this.getItem(id).find(".remove").hide();
+                }
+              },
+            );
           }
           // if single: restore default on blur
           else {
-            this.selectize.on("dropdown_close", function (this: any) {
-              if (this.getValue() == "") {
-                this.addItem(options.default);
-              }
-            });
+            this.selectize.on(
+              "dropdown_close",
+              function (
+                this: Selectize.IApi<string | number, SelectizeEntity>,
+              ) {
+                if (this.getValue() == "") {
+                  this.addItem(options.default!);
+                }
+              },
+            );
           }
         }
       });
@@ -195,17 +350,28 @@
   };
 
   // redefine Selectize templates without escape
-  AbstractSelectizer.getRender = function (field_label: string, lang: any) {
+  AbstractSelectizer.getRender = function (
+    field_label: string,
+    lang: { Add?: string } | undefined,
+  ) {
     lang = lang || { Add: "Add" };
 
     return {
-      option: function (data: any, _escape: any) {
-        return '<div class="option">' + data[field_label] + "</div>";
+      option: function (data: SelectizeEntity, _escape: unknown) {
+        return (
+          '<div class="option">' +
+          String((data as unknown as Record<string, unknown>)[field_label]) +
+          "</div>"
+        );
       },
-      item: function (data: any, _escape: any) {
-        return '<div class="item">' + data[field_label] + "</div>";
+      item: function (data: SelectizeEntity, _escape: unknown) {
+        return (
+          '<div class="item">' +
+          String((data as unknown as Record<string, unknown>)[field_label]) +
+          "</div>"
+        );
       },
-      option_create: function (data: any, _escape: any) {
+      option_create: function (data: { input: string }, _escape: unknown) {
         return (
           '<div class="create">' +
           lang["Add"] +
@@ -225,35 +391,44 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  const CategoriesCache: any = function (this: any, options: any) {
+  const CategoriesCache = function (
+    this: EntityCacheInstance<ProcessedCategory>,
+    options: LocalStorageCacheOptions,
+  ) {
     options.key = "categoriesAdminList";
 
-    options.loader = function (callback: (data: any) => void) {
-      $.getJSON(options.rootUrl + "api/v1/categories", function (data: any) {
-        const cats = data.categories.map(function (c: any, i: number) {
-          c.pos = i;
-          delete c["comment"];
-          delete c["uppercats"];
-          return c;
-        });
+    options.loader = function (callback) {
+      $.getJSON(
+        options.rootUrl + "api/v1/categories",
+        function (
+          data: import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"],
+        ) {
+          const cats: ProcessedCategory[] = data.categories.map(
+            function (c, i) {
+              const { comment: _comment, uppercats: _uppercats, ...rest } = c;
+              return { ...rest, pos: i };
+            },
+          );
 
-        callback(cats);
-      });
+          callback(cats);
+        },
+      );
     };
 
     this._init(options);
-  };
+  } as unknown as EntityCacheCtor<ProcessedCategory>;
 
-  CategoriesCache.prototype = new AbstractSelectizer();
+  CategoriesCache.prototype =
+    new AbstractSelectizer() as unknown as EntityCacheInstance<ProcessedCategory>;
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
   CategoriesCache.prototype.selectize = function (
-    this: any,
-    $target: JQuery,
-    options: any,
+    this: EntityCacheInstance<ProcessedCategory>,
+    $target: JQuery<HTMLSelectElement>,
+    options?: SelectizeOptions,
   ) {
     options = options || {};
 
@@ -277,35 +452,46 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  const TagsCache: any = function (this: any, options: any) {
+  const TagsCache = function (
+    this: EntityCacheInstance<ProcessedTag>,
+    options: LocalStorageCacheOptions,
+  ) {
     options.key = "tagsAdminList";
 
-    options.loader = function (callback: (data: any) => void) {
-      $.getJSON(options.rootUrl + "api/v1/tags", function (data: any) {
-        const tags = data.tags.map(function (t: any) {
-          t.id = "~~" + t.id + "~~";
-          delete t["urlName"];
-          delete t["lastmodified"];
-          return t;
-        });
+    options.loader = function (callback) {
+      $.getJSON(
+        options.rootUrl + "api/v1/tags",
+        function (
+          data: import("../../../../openapi/client/schema").operations["tagList"]["responses"][200]["content"]["application/json"],
+        ) {
+          const tags: ProcessedTag[] = data.tags.map(function (t) {
+            const {
+              urlName: _urlName,
+              lastmodified: _lastmodified,
+              ...rest
+            } = t;
+            return { ...rest, id: "~~" + t.id + "~~" };
+          });
 
-        callback(tags);
-      });
+          callback(tags);
+        },
+      );
     };
 
     this._init(options);
-  };
+  } as unknown as EntityCacheCtor<ProcessedTag>;
 
-  TagsCache.prototype = new AbstractSelectizer();
+  TagsCache.prototype =
+    new AbstractSelectizer() as unknown as EntityCacheInstance<ProcessedTag>;
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
   TagsCache.prototype.selectize = function (
-    this: any,
-    $target: JQuery,
-    options: any,
+    this: EntityCacheInstance<ProcessedTag>,
+    $target: JQuery<HTMLSelectElement>,
+    options?: SelectizeOptions,
   ) {
     options = options || {};
 
@@ -329,33 +515,42 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  const GroupsCache: any = function (this: any, options: any) {
+  const GroupsCache = function (
+    this: EntityCacheInstance<ProcessedGroup>,
+    options: LocalStorageCacheOptions,
+  ) {
     options.key = "groupsAdminList";
 
-    options.loader = function (callback: (data: any) => void) {
-      $.getJSON(options.rootUrl + "api/v1/groups", function (data: any) {
-        const groups = data.groups.map(function (g: any) {
-          delete g["lastmodified"];
-          return g;
-        });
+    options.loader = function (callback) {
+      $.getJSON(
+        options.rootUrl + "api/v1/groups",
+        function (
+          data: import("../../../../openapi/client/schema").operations["groupList"]["responses"][200]["content"]["application/json"],
+        ) {
+          const groups: ProcessedGroup[] = data.groups.map(function (g) {
+            const { lastmodified: _lastmodified, ...rest } = g;
+            return rest;
+          });
 
-        callback(groups);
-      });
+          callback(groups);
+        },
+      );
     };
 
     this._init(options);
-  };
+  } as unknown as EntityCacheCtor<ProcessedGroup>;
 
-  GroupsCache.prototype = new AbstractSelectizer();
+  GroupsCache.prototype =
+    new AbstractSelectizer() as unknown as EntityCacheInstance<ProcessedGroup>;
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
   GroupsCache.prototype.selectize = function (
-    this: any,
-    $target: JQuery,
-    options: any,
+    this: EntityCacheInstance<ProcessedGroup>,
+    $target: JQuery<HTMLSelectElement>,
+    options?: SelectizeOptions,
   ) {
     options = options || {};
 
@@ -379,17 +574,22 @@
    *    - serverKey (required) state of collection server-side
    *    - rootUrl (required) used for the /api/v1 call
    */
-  const UsersCache: any = function (this: any, options: any) {
+  const UsersCache = function (
+    this: EntityCacheInstance<UserEntity>,
+    options: LocalStorageCacheOptions,
+  ) {
     options.key = "usersAdminList";
 
-    options.loader = function (callback: (data: any) => void) {
-      let users: any[] = [];
+    options.loader = function (callback) {
+      let users: UserEntity[] = [];
 
       // recursive loader
       (function load(page: number) {
         jQuery.getJSON(
           options.rootUrl + "api/v1/users?perPage=9999&page=" + page,
-          function (data: any) {
+          function (
+            data: import("../../../../openapi/client/schema").operations["userList"]["responses"][200]["content"]["application/json"],
+          ) {
             users = users.concat(data.users);
 
             if (data.users.length == data.perPage) {
@@ -403,18 +603,19 @@
     };
 
     this._init(options);
-  };
+  } as unknown as EntityCacheCtor<UserEntity>;
 
-  UsersCache.prototype = new AbstractSelectizer();
+  UsersCache.prototype =
+    new AbstractSelectizer() as unknown as EntityCacheInstance<UserEntity>;
 
   /*
    * Init Selectize with cache content
    * @see AbstractSelectizer._selectize
    */
   UsersCache.prototype.selectize = function (
-    this: any,
-    $target: JQuery,
-    options: any,
+    this: EntityCacheInstance<UserEntity>,
+    $target: JQuery<HTMLSelectElement>,
+    options?: SelectizeOptions,
   ) {
     options = options || {};
 

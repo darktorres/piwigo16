@@ -547,11 +547,6 @@ final class NotificationByMailSender
                             $nbmSendDetailedContent = $this->currentConfig->nbmSendDetailedContent;
                             $nbmSendHtmlMail = $this->currentConfig->nbmSendHtmlMail;
 
-                            // Only ever read below inside `if
-                            // ($nbmSendDetailedContent)` (where it's also
-                            // assigned) -- declared here so Psalm can see
-                            // it's always defined by the time it's used.
-                            $news = [];
                             if ($nbmSendDetailedContent) {
                                 $news = $this->notificationService->news($nbmUser->lastSend, $dbnow, false, $nbmSendHtmlMail, $auth);
                                 $existData = count($news) > 0;

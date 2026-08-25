@@ -337,9 +337,9 @@ final readonly class UploadService
 
         try {
             $file_path = null;
-            // Only ever read in the "new photo" branch below (where it's also
-            // assigned) -- declared here so Psalm can see it's always defined
-            // by the time it's used, without relying on the two branches'
+            // Real default, not just defensive scaffolding: only ever read
+            // in the "new photo" branch below (where it's also assigned),
+            // but declared here so it doesn't rely on the two branches'
             // isset($image_id) conditions staying in sync 200 lines apart.
             $dbnow = null;
 

@@ -228,9 +228,9 @@ final class ImageBackend implements ImageInterface
             [$width, $height] = [$height, $width];
         }
 
-        // Only ever read below when $crop is true (where they're also
-        // assigned) -- declared here so Psalm can see they're always
-        // defined by the time they're used, ~50 lines further down.
+        // Real default, not just defensive scaffolding: when $crop is true
+        // but $dest_ratio equals $img_ratio exactly, neither branch below
+        // reassigns $x/$y, so the read further down genuinely needs these.
         $x = 0;
         $y = 0;
 

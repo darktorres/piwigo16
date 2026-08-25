@@ -268,9 +268,10 @@ final readonly class CategoryCatsRenderer
         // see above) -- no second usort($categories, global_rank_compare(...))
         // pass is needed for recent_cats.
 
-        // Only ever read below inside this same `if` block (where it's also
-        // assigned) -- declared here so Psalm can see it's always defined
-        // regardless of the nesting further down.
+        // Real default, not just defensive scaffolding: read again ~70
+        // lines below inside a second, separate `if (count($categories) >
+        // 0)` check (not nested inside this one) -- declared here so it
+        // doesn't rely on the two checks staying logically in sync.
         $infosOfImage = [];
         if (count($categories) > 0) {
             $newImageIds = [];

@@ -441,10 +441,8 @@ return [
     // #[ORM\Entity(repositoryClass: ...)] attribute and instantiates the
     // custom repository class correctly, guaranteed by that same
     // attribute -- phpstan-doctrine's own generic tracking confirms it
-    // statically. TypedRepository::narrow() exists for Psalm, which has
-    // no equivalent repositoryClass-aware return-type resolution and
-    // would otherwise only ever see the generic EntityRepository<T>;
-    // its assert() is a real runtime check on top, not just a cast.
+    // statically. TypedRepository::narrow()'s own assert() is still a
+    // real runtime check on top, not just a cast.
     ConfigRepository::class => factory(static fn (EntityManagerInterface $em): ConfigRepository => TypedRepository::narrow($em->getRepository(ConfigEntry::class), ConfigRepository::class)),
 
     LangRepository::class => factory(static fn (EntityManagerInterface $em): LangRepository => TypedRepository::narrow($em->getRepository(LanguageEntity::class), LangRepository::class)),

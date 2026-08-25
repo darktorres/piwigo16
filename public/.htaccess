@@ -39,7 +39,7 @@
     # no reason to ever be fetched by a browser and would help fingerprint
     # the stack. Matched by basename (not anchored to root), so this also
     # covers a nested vendored copy, not just the repo root.
-    RewriteCond %{REQUEST_URI} /(composer\.(json|lock)|package\.json|bun\.lock|phpstan\.neon|psalm\.xml|rector\.php|ecs\.php|knip\.json|lefthook\.yml|tsconfig\.json|\.stylelintrc\.json|\.prettierrc\.json|\.markdownlint-cli2\.jsonc|lighthouserc\.json|\.size-limit\.json|renovate\.json|release-please-config\.json|\.release-please-manifest\.json|eslint-suppressions\.json|\.editorconfig|\.gitignore|\.dockerignore|Dockerfile|docker-compose\.ya?ml|justfile|\.env[^/]*|[^/]+\.ts)$ [NC]
+    RewriteCond %{REQUEST_URI} /(composer\.(json|lock)|package\.json|bun\.lock|phpstan\.neon|rector\.php|ecs\.php|knip\.json|lefthook\.yml|tsconfig\.json|\.stylelintrc\.json|\.prettierrc\.json|\.markdownlint-cli2\.jsonc|lighthouserc\.json|\.size-limit\.json|renovate\.json|release-please-config\.json|\.release-please-manifest\.json|eslint-suppressions\.json|\.editorconfig|\.gitignore|\.dockerignore|Dockerfile|docker-compose\.ya?ml|justfile|\.env[^/]*|[^/]+\.ts)$ [NC]
     RewriteRule ^ - [F,L]
 
     # Stable external contract for health/ready probes (Dockerfile

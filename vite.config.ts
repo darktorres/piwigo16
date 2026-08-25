@@ -136,11 +136,12 @@ export default defineConfig({
         // P46-C — themes/admin/default/js/*.js's first 4 real entries
         // (the shared-global foundation files the P46-C full sweep
         // found: common.ts/LocalStorageCache.ts were already known;
-        // album_selector.ts/intro.ts are new findings).
+        // album_selector.ts/intro.ts are new findings). intro.ts is no
+        // longer its own entry (docs/PLAN.md P48) -- see the pages/
+        // entries below, its one real registrant.
         adminCommon: r("themes/admin/default/js/common.ts"),
         localStorageCache: r("themes/admin/default/js/LocalStorageCache.ts"),
         albumSelector: r("themes/admin/default/js/album_selector.ts"),
-        intro: r("themes/admin/default/js/intro.ts"),
         // P46-C part 2 — the genuinely bidirectional pair (see both
         // files' own leading comments for the real ordering-safety
         // analysis).
@@ -152,7 +153,9 @@ export default defineConfig({
         // plugins_installed_config.js, hasn't converted yet).
         pluginsInstallated: r("themes/admin/default/js/plugins_installated.ts"),
         // P46-C part 4 -- consumer of the already-converted intro.ts.
-        introTooltips: r("themes/admin/default/js/intro_tooltips.ts"),
+        // intro_tooltips.ts is no longer its own entry either
+        // (docs/PLAN.md P48) -- folded into the same pages/intro.ts
+        // bundle as intro.ts itself.
         // P46-C part 5 -- consumer of album_selector.ts, and (a new
         // finding beyond the plan's own sweep) of not-yet-converted
         // albums.js's own `data`/`str_album_found` globals.
@@ -263,6 +266,7 @@ export default defineConfig({
         batchManagerGlobalAsyncPage: r(
           "themes/admin/default/js/pages/batch_manager_global_async.ts",
         ),
+        introPage: r("themes/admin/default/js/pages/intro.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

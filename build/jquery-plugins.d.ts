@@ -180,21 +180,6 @@ interface Window {
   str_result_limit: string;
   AlbumSelector: new (options: AlbumSelectorOptions) => AlbumSelectorInstance;
 
-  // intro.ts's own established shared-global set (matches this plan's
-  // own earlier 5-minute spot-check finding, confirmed by full reading
-  // during the P46-C sweep). `StorageDetails` (below) replaces the
-  // former `Record<string, any>` (P47) -- real shape traced to
-  // IntroView.php's own `storage_chart_data` (`array<string,
-  // array<string, array<string, mixed>>>`) and the actual
-  // `.total.filesize`/`.total.nb_files`/`.details[ext].filesize`/
-  // `.details[ext].nb_files` fields both intro.ts and
-  // intro_tooltips.ts read.
-  str_gb: string;
-  str_mb: string;
-  storage_details: StorageDetails;
-  translate_files: string;
-  translate_type: Record<string, string>;
-
   // batch_manager_global.ts / batchManagerGlobal.ts's own genuinely
   // bidirectional shared-global set (docs/PLAN.md P46-C's own full
   // sweep -- see both files' own leading comments for the real

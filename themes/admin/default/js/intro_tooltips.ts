@@ -1,12 +1,10 @@
-export {};
-
-// Consumer of intro.ts's own established shared-global set (docs/PLAN.md
-// P46-C's full sweep): str_gb/str_mb/storage_details/translate_files/
-// translate_type -- all read bare below. No ambient `declare const`
-// needed for any of them (unlike plugins_installated.ts's own copy of
-// this comment): intro.ts is already converted, so its own real `const`
-// declarations already resolve every bare read here, since every
-// themes/**/*.ts file shares one global type-checking program.
+import {
+  str_gb,
+  str_mb,
+  storage_details,
+  translate_files,
+  translate_type,
+} from "./intro";
 $(function () {
   Object.entries(storage_details).forEach(([type, infos]) => {
     // Determine if we use MB or GB and show it correctly

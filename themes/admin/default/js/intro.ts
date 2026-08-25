@@ -8,16 +8,17 @@ const ext_need_update_msg =
   ' <i class="icon-right"></i></a>';
 const str_gb_used = pwg_getPageString("%s GB used");
 const str_mb_used = pwg_getPageString("%s MB used");
-const str_gb = pwg_getPageString("%sGB").replace(" ", "&nbsp;");
-const str_mb = pwg_getPageString("%sMB").replace(" ", "&nbsp;");
+export const str_gb = pwg_getPageString("%sGB").replace(" ", "&nbsp;");
+export const str_mb = pwg_getPageString("%sMB").replace(" ", "&nbsp;");
 const storage_total = pwg_getPageData<number>("storage_total");
-const storage_details = pwg_getPageData<StorageDetails>("storage_chart_data");
-const translate_files = pwg_getPageString("%d files");
+export const storage_details =
+  pwg_getPageData<StorageDetails>("storage_chart_data");
+export const translate_files = pwg_getPageString("%d files");
 const newsletter_base_url = pwg_getPageData<string | null>(
   "subscribe_base_url",
 );
 
-const translate_type: Record<string, string> = {};
+export const translate_type: Record<string, string> = {};
 Object.keys(storage_details).forEach(function (type) {
   translate_type[type] = pwg_getPageString(type);
 });
@@ -101,12 +102,3 @@ jQuery().ready(function () {
       : (storage_total / 1000).toFixed(0);
   $(".chart-title-infos").html(size_info.replace("%s", size_nb));
 });
-
-// Explicit `window.` exposure -- required, not decorative (see
-// page-data.ts's own copy of this comment, docs/PLAN.md P46-B, for the
-// full explanation). `intro_tooltips.ts` reads all 5 bare.
-window.str_gb = str_gb;
-window.str_mb = str_mb;
-window.storage_details = storage_details;
-window.translate_files = translate_files;
-window.translate_type = translate_type;

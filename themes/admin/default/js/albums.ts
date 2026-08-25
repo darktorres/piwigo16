@@ -1,7 +1,30 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
-const data = pwg_getPageData("album_data");
-const pwg_token = pwg_getPageData("csrf_token");
+// jqtree's own custom `tree.open`/`tree.close`/`tree.move` jQuery events
+// aren't covered by `@types/jquery`'s own named-event overloads, and its
+// bundled `.d.ts` doesn't type them either (only `IJQTreePlugin`'s
+// command-string overloads) -- these payload shapes are real jqtree
+// public API (`event.move_info.{moved_node,target_node,position,
+// previous_parent,do_move()}`, `event.node`), not something the
+// vendored package exposes types for.
+interface JqTreeNodeEvent extends JQuery.TriggeredEvent {
+  node: AlbumJqTreeNode;
+}
+interface JqTreeMoveInfo {
+  moved_node: AlbumJqTreeNode;
+  target_node: AlbumJqTreeNode;
+  position: "before" | "after" | "inside" | "none";
+  previous_parent: AlbumJqTreeNode;
+  do_move(): void;
+}
+interface JqTreeMoveEvent extends JQuery.TriggeredEvent {
+  move_info: JqTreeMoveInfo;
+}
+
+const data = pwg_getPageData<AlbumTreeNode[]>("album_data");
+const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_are_you_sure = pwg_getPageString(
   "The status of the album '%s' and its sub-albums will change to private. Are you sure?",
 );
@@ -10,22 +33,25 @@ const str_no_change_parent = pwg_getPageString(
   "No, don't move this album here",
 );
 const str_root = pwg_getPageString("Root");
-const openCat = pwg_getPageData("open_cat");
-let nb_albums = pwg_getPageData("nb_albums");
-const light_album_manager = pwg_getPageData("light_album_manager");
+const openCat = pwg_getPageData<string>("open_cat");
+let nb_albums = pwg_getPageData<number>("nb_albums");
+const light_album_manager = pwg_getPageData<number>("light_album_manager");
 
 const x_nb_subcats = pwg_getPageString("%d sub-albums");
 const x_nb_images = pwg_getPageString("%d photos");
 const x_nb_sub_photos = pwg_getPageString("%d pictures in sub-albums");
 
-const str_albums_found = pwg_getPageString("<b>%d</b> albums found");
+// Not `str_albums_found`/`str_result_limit` too -- AlbumsView.php's own
+// exposedStrings() carries both, but the real reader is cat_search.ts,
+// which reads them bare through album_selector.ts's own identically-
+// named non-module `const`s (a real ambient global, since that file has
+// no `export {}`) -- same coincidental-duplicate situation cat_search.ts's
+// own leading comment already documents for `str_album_found` below.
+// Declaring local copies here would just be genuinely dead weight.
 const str_album_found = pwg_getPageString("<b>1</b> album found");
-const str_result_limit = pwg_getPageString(
-  "<b>%d+</b> albums found, try to refine the search",
-);
 const str_albs_drag_drop = pwg_getPageString("Drag and drop to reorder albums");
 
-const delay_autoOpen = pwg_getPageData("delay_auto_open");
+const delay_autoOpen = pwg_getPageData<number>("delay_auto_open");
 
 // Genuine pre-existing scope bug found only by real strict typechecking
 // (invisible to non-strict JS): the tree click/`tree.open`/`tree.close`
@@ -67,9 +93,9 @@ const tiptip_locked_album = pwg_getPageString("Locked album");
 
 $(document).ready(() => {
   const openUppercats =
-    openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(",");
-  const new_data = data.map((a: any) => {
-    const al = {
+    openCat == "-1" ? [] : findAlbumById(data, openCat)!.uppercats.split(",");
+  const new_data = data.map((a: AlbumTreeNode) => {
+    const al: AlbumTreeNode = {
       ...a,
       children: openUppercats.includes(a.id) ? a.children : [],
     };
@@ -88,22 +114,25 @@ $(document).ready(() => {
     dragAndDrop: true,
     openFolderDelay: delay_autoOpen,
     onCreateLi: createAlbumNode,
-    onCanSelectNode: function (node: any) {
+    onCanSelectNode: function () {
       return false;
     },
   });
 
   $(".tree").on("click", ".move-cat-toogler", function (e) {
     const node_id = $(this).attr("data-id");
-    const node: any = $(".tree").tree("getNodeById", node_id);
-
-    if (node.load_on_demand && node.haveChildren) {
-      loadOnDemand(node);
-    }
+    const node = $(".tree").tree(
+      "getNodeById",
+      node_id,
+    ) as AlbumJqTreeNode | null;
 
     if (node) {
-      const open_nodes: any = $(".tree").tree("getState").open_nodes;
-      if (!open_nodes.includes(node_id)) {
+      if (node.load_on_demand && node.haveChildren) {
+        loadOnDemand(node);
+      }
+
+      const open_nodes = $(".tree").tree("getState").open_nodes;
+      if (!open_nodes.includes(node.id)) {
         $(this).html(toggler_open);
         $(".tree").tree("openNode", node);
         // reset event here:
@@ -132,22 +161,36 @@ $(document).ready(() => {
     }
   });
 
-  $(".tree").on("tree.open", function (e: any) {
-    $(".move-cat-toogler[data-id=" + e.node.id + "]").html(toggler_open);
+  // jqtree's own custom events aren't in `@types/jquery`'s known-event
+  // map, so `.on()`'s generic overload resolves the handler param to
+  // the base `JQuery.TriggeredEvent` -- a real, strict-function-type
+  // contravariance rule (the same one `createAlbumNode`'s own
+  // `onCreateLi` assignment above works around) blocks declaring the
+  // handler's own param as the narrower `JqTreeNodeEvent`/
+  // `JqTreeMoveEvent` directly. Cast inside instead.
+  $(".tree").on("tree.open", function (e) {
+    const ev = e as unknown as JqTreeNodeEvent;
+    $(".move-cat-toogler[data-id=" + ev.node.id + "]").html(toggler_open);
   });
 
-  $(".tree").on("tree.close", function (e: any) {
-    $(".move-cat-toogler[data-id=" + e.node.id + "]").html(toggler_close);
+  $(".tree").on("tree.close", function (e) {
+    const ev = e as unknown as JqTreeNodeEvent;
+    $(".move-cat-toogler[data-id=" + ev.node.id + "]").html(toggler_close);
   });
 
-  $(".tree").on("tree.move", function (event: any) {
+  $(".tree").on("tree.move", function (e) {
+    const event = e as unknown as JqTreeMoveEvent;
     event.preventDefault();
 
     if (event.move_info.moved_node.status != "private") {
       let parentIsPrivate = false;
       if (event.move_info.position == "after") {
+        // Non-null: a same-level "after" move always has a real parent
+        // in this tree (there is no top-level move target with a null
+        // parent in practice) -- same unguarded assumption the
+        // pre-P47 `any`-typed code already made.
         parentIsPrivate =
-          event.move_info.target_node.parent.status == "private";
+          event.move_info.target_node.parent!.status == "private";
       } else if (event.move_info.position == "inside") {
         parentIsPrivate = event.move_info.target_node.status == "private";
       }
@@ -183,7 +226,10 @@ $(document).ready(() => {
 
   $(".tree").on("click", ".move-cat-order", function (e) {
     const node_id = $(this).attr("data-id");
-    const node: any = $(".tree").tree("getNodeById", node_id);
+    const node = $(".tree").tree(
+      "getNodeById",
+      node_id,
+    ) as AlbumJqTreeNode | null;
     if (node) {
       $(".cat-move-order-popin").fadeIn();
       $(".cat-move-order-popin .album-name").html(getPathNode(node));
@@ -199,7 +245,7 @@ $(document).ready(() => {
     $("input[name=simpleAutoOrder]").attr("value", str_root_order);
   });
 
-  $(".tree").on("mousedown mouseup", function mouseState(e: any) {
+  $(".tree").on("mousedown mouseup", function mouseState(e) {
     if (e.type == "mousedown") {
       $(".tree").addClass("dragging");
     } else if (e.type == "mouseup") {
@@ -207,8 +253,11 @@ $(document).ready(() => {
     }
   });
 
-  if (openCat != -1) {
-    const nodeToGo: any = $(".tree").tree("getNodeById", openCat);
+  if (openCat != "-1") {
+    // Non-null: `openCat`, when not the "-1" sentinel, is always a real
+    // album id present in this tree (same unguarded assumption the
+    // pre-P47 `any`-typed code already made).
+    const nodeToGo = $(".tree").tree("getNodeById", openCat) as AlbumJqTreeNode;
 
     goToNode(nodeToGo, nodeToGo);
     if (nodeToGo.children) {
@@ -250,12 +299,14 @@ $(document).ready(() => {
         name: $(".RenameAlbumLabelUsername input").val(),
       }),
       dataType: "json",
-      success: function (data: any) {
+      success: function (
+        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         const node_id = $("#cat-" + catToEdit)
           .find(".move-cat-toogler")
           .attr("data-id");
-        const node: any = $(".tree").tree("getNodeById", node_id);
-        node.name = $(".RenameAlbumLabelUsername input").val();
+        const node = $(".tree").tree("getNodeById", node_id) as AlbumJqTreeNode;
+        node.name = String($(".RenameAlbumLabelUsername input").val());
         $(".tree").tree(
           "updateNode",
           node,
@@ -277,7 +328,7 @@ $(document).ready(() => {
 
         closeRenameAlbumPopIn();
       },
-      error: function (message: any) {
+      error: function (message: JQuery.jqXHR) {
         console.log(message);
       },
     });
@@ -323,8 +374,13 @@ $(document).ready(() => {
         position: newAlbumPosition,
       }),
       dataType: "json",
-      success: function (data: any) {
-        const parent_node: any = $(".tree").tree("getNodeById", newAlbumParent);
+      success: function (
+        data: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
+      ) {
+        const parent_node = $(".tree").tree(
+          "getNodeById",
+          newAlbumParent,
+        ) as AlbumJqTreeNode | null;
         if (
           parent_node &&
           parent_node.load_on_demand &&
@@ -342,7 +398,7 @@ $(document).ready(() => {
               isEmptyFolder: true,
               name: newAlbumName,
             },
-            parent_node,
+            parent_node ?? undefined,
           );
         } else {
           $(".tree").tree(
@@ -352,7 +408,7 @@ $(document).ready(() => {
               isEmptyFolder: true,
               name: newAlbumName,
             },
-            parent_node,
+            parent_node ?? undefined,
           );
         }
 
@@ -364,9 +420,12 @@ $(document).ready(() => {
             ".move-cat-toogler",
             function (e) {
               const node_id = parent_node.id;
-              const node: any = $(".tree").tree("getNodeById", node_id);
+              const node = $(".tree").tree(
+                "getNodeById",
+                node_id,
+              ) as AlbumJqTreeNode | null;
               if (node) {
-                const open_nodes: any = $(".tree").tree("getState").open_nodes;
+                const open_nodes = $(".tree").tree("getState").open_nodes;
                 if (!open_nodes.includes(node_id)) {
                   $(this).html(toggler_open);
                   $(".tree").tree("openNode", node);
@@ -405,8 +464,8 @@ $(document).ready(() => {
         updateTitleBadge(nb_albums + 1);
 
         goToNode(
-          $(".tree").tree("getNodeById", data.id),
-          $(".tree").tree("getNodeById", data.id),
+          $(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
+          $(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
         );
         $("html,body").animate(
           {
@@ -418,7 +477,7 @@ $(document).ready(() => {
         closeAddAlbumPopIn();
         $(".AddAlbumSubmit").removeClass("notClickable");
       },
-      error: function (message: any) {
+      error: function (message: JQuery.jqXHR) {
         console.log(message);
         $(".AddAlbumErrors").text(str_album_name_empty).show();
         $(".AddAlbumSubmit").removeClass("notClickable");
@@ -444,17 +503,29 @@ $(document).ready(() => {
   }
 });
 
-function createAlbumNode(node: any, li: any) {
+function createAlbumNode(rawNode: INode, li: JQuery) {
+  const node = rawNode as AlbumJqTreeNode;
   const icon = "<span class='%icon%'></span>";
   let title =
     '<span data-id="' + node.id + '" class="move-cat-title-container ';
-  if (node.status == "private" || node.parent.status == "private") {
+  // Non-null: every real album node's `.parent` is either a real
+  // parent album, or jqtree's own invisible tree root (never a bare
+  // `null` for a node actually handed to `onCreateLi`) -- same
+  // assumption `getId()` further down already makes explicitly via
+  // `parent.getLevel()`.
+  if (node.status == "private" || node.parent!.status == "private") {
     node.status = "private";
     title += "icon-lock";
   }
   title += '">';
-  if (node.visible == "false" || node.parent.visble == "false") {
-    node.visble = "false";
+  // Was `node.parent.visble`/`node.visble = ...` -- a genuine typo
+  // (masked by this file's pre-P47 `any` typing, and by `INode`'s own
+  // `[key: string]: any` index signature even after that): the
+  // lock-icon inheritance from a private/hidden parent never actually
+  // worked, and the reassignment never actually persisted the
+  // propagated flag onto the node.
+  if (node.visible == "false" || node.parent!.visible == "false") {
+    node.visible = "false";
     title +=
       '<span class="tiptip icon-cone" title="' +
       tiptip_locked_album +
@@ -510,21 +581,25 @@ function createAlbumNode(node: any, li: any) {
 
   cont.append(actions);
 
-  cont.find(".toggle-cat-option").on("click", function (this: any) {
+  cont.find(".toggle-cat-option").on("click", function (this: HTMLElement) {
     $(".cat-option").hide();
     $(this).find(".cat-option").toggle();
   });
 
   let toggler: string;
   if (node.haveChildren || node.children.length != 0) {
-    const open_nodes: any = $(".tree").tree("getState").open_nodes;
+    const open_nodes = $(".tree").tree("getState").open_nodes;
     if (open_nodes.includes(node.id)) {
       toggler = toggler_open;
     } else {
       toggler = toggler_close;
     }
     cont.append(
-      $(toggler_cont.replace(/%content%/g, toggler).replace(/%id%/g, node.id)),
+      $(
+        toggler_cont
+          .replace(/%content%/g, toggler)
+          .replace(/%id%/g, String(node.id)),
+      ),
     );
   } else {
     cont.find(".move-cat-order").addClass("notClickable");
@@ -534,7 +609,7 @@ function createAlbumNode(node: any, li: any) {
         $(
           toggler_cont
             .replace(/%content%/g, toggler_close)
-            .replace(/%id%/g, node.id),
+            .replace(/%id%/g, String(node.id)),
         ),
       )
       .addClass("disabledToggle");
@@ -569,7 +644,7 @@ function createAlbumNode(node: any, li: any) {
     .after(
       "<div class='badge-container'>" +
         "<i class='icon-blue icon-sitemap nb-subcats'>" +
-        node.nb_subcats +
+        String(node.nb_subcats) +
         "</i>" +
         "<i class='icon-purple icon-picture nb-images'>" +
         node.nb_images +
@@ -579,13 +654,13 @@ function createAlbumNode(node: any, li: any) {
         "</i>" +
         "<div class='badge-dropdown'>" +
         "<span class='icon-blue icon-sitemap nb-subcats'>" +
-        x_nb_subcats.replace("%d", node.nb_subcats) +
+        x_nb_subcats.replace("%d", String(node.nb_subcats)) +
         "</span>" +
         "<span class='icon-purple icon-picture nb-images'>" +
-        x_nb_images.replace("%d", node.nb_images) +
+        x_nb_images.replace("%d", String(node.nb_images)) +
         "</span>" +
         "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
-        x_nb_sub_photos.replace("%d", node.nb_sub_photos) +
+        x_nb_sub_photos.replace("%d", String(node.nb_sub_photos)) +
         "</span>" +
         "</div>" +
         "</div>",
@@ -630,16 +705,19 @@ function checkbox_click(this: HTMLElement) {
   }
 }
 
-function isNumeric(num: any) {
-  return !isNaN(num);
+// Genuinely dead code -- zero real callers found (confirmed via grep)
+// -- typed rather than left broken, same policy as other confirmed-dead
+// functions found this campaign.
+function isNumeric(num: unknown): boolean {
+  return !isNaN(num as number);
 }
 
-function openAddAlbumPopIn(parentAlbumId: any) {
+function openAddAlbumPopIn(parentAlbumId: string | number) {
   if (parentAlbumId != 0) {
     $("#AddAlbum .AddIconTitle span").html(
       add_sub_album_of.replace(
         "%s",
-        $(".tree").tree("getNodeById", parentAlbumId).name,
+        $(".tree").tree("getNodeById", parentAlbumId)!.name,
       ),
     );
   } else {
@@ -656,7 +734,7 @@ function openAddAlbumPopIn(parentAlbumId: any) {
   });
 
   $("#AddAlbum").unbind("keyup");
-  $("#AddAlbum").on("keyup", function (e: any) {
+  $("#AddAlbum").on("keyup", function (e) {
     // 13 is 'Enter'
     if (e.keyCode === 13) {
       $(".AddAlbumSubmit").trigger("click");
@@ -674,17 +752,16 @@ function closeAddAlbumPopIn() {
   });
 }
 
-function openRenameAlbumPopIn(replacedAlbumName: any) {
+function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
+  const safeName = replacedAlbumName ?? "";
   $("#RenameAlbum").fadeIn();
-  $(".RenameAlbumTitle span").html(
-    rename_item.replace("%s", replacedAlbumName),
-  );
-  $(".RenameAlbumLabelUsername .user-property-input").val(replacedAlbumName);
+  $(".RenameAlbumTitle span").html(rename_item.replace("%s", safeName));
+  $(".RenameAlbumLabelUsername .user-property-input").val(safeName);
   $(".RenameAlbumLabelUsername .user-property-input").focus();
 
   $(document)
     .unbind("keypress")
-    .on("keypress", function (e: any) {
+    .on("keypress", function (e) {
       if (e.which == 13) {
         $(".RenameAlbumSubmit").trigger("click");
       }
@@ -695,12 +772,14 @@ function closeRenameAlbumPopIn() {
   $("#RenameAlbum").fadeOut();
 }
 
-function triggerDeleteAlbum(cat_id: any) {
+function triggerDeleteAlbum(cat_id: string | number) {
   $.ajax({
     url: "api/v1/categories/" + cat_id + "/orphan-impact",
     type: "GET",
     dataType: "json",
-    success: function (data: any) {
+    success: function (
+      data: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
+    ) {
       if (data.nbImagesRecursive == 0) {
         $(".deleteAlbumOptions").hide();
       } else {
@@ -711,8 +790,8 @@ function triggerDeleteAlbum(cat_id: any) {
           $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").html("");
           $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").append(
             has_images_associated_outside
-              .replace("%d", data.nbImagesRecursive)
-              .replace("%d", data.nbImagesAssociatedOutside),
+              .replace("%d", String(data.nbImagesRecursive))
+              .replace("%d", String(data.nbImagesAssociatedOutside)),
           );
         }
         if (data.nbImagesBecomingOrphan == 0) {
@@ -722,13 +801,13 @@ function triggerDeleteAlbum(cat_id: any) {
           $("#IMAGES_BECOMING_ORPHAN .innerText").append(
             has_images_becomming_orphans.replace(
               "%d",
-              data.nbImagesBecomingOrphan,
+              String(data.nbImagesBecomingOrphan),
             ),
           );
         }
       }
     },
-    error: function (message: any) {
+    error: function (message: JQuery.jqXHR) {
       console.log(message);
     },
   }).done(function () {
@@ -736,9 +815,9 @@ function triggerDeleteAlbum(cat_id: any) {
   });
 }
 
-function openDeleteAlbumPopIn(cat_to_delete: any) {
+function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   $("#DeleteAlbum").fadeIn();
-  const node: any = $(".tree").tree("getNodeById", cat_to_delete);
+  const node = $(".tree").tree("getNodeById", cat_to_delete) as AlbumJqTreeNode;
   if (node.children.length == 0) {
     $(".DeleteIconTitle span").html(
       delete_album_with_name.replace("%s", node.name),
@@ -748,7 +827,7 @@ function openDeleteAlbumPopIn(cat_to_delete: any) {
     $(".DeleteIconTitle span").html(
       delete_album_with_subs
         .replace("%s", node.name)
-        .replace("%d", getAllSubAlbumsFromNode(node, nb_sub_cats)),
+        .replace("%d", String(getAllSubAlbumsFromNode(node, nb_sub_cats))),
     );
   }
 
@@ -764,8 +843,13 @@ function openDeleteAlbumPopIn(cat_to_delete: any) {
         data: JSON.stringify({
           photoDeletionMode: $("input[name=photo_deletion_mode]:checked").val(),
         }),
-        success: function (raw_data: any) {
-          const parentOfDeletedNode = node.parent;
+        success: function (
+          _raw_data: operations["categoryDelete"]["responses"][200]["content"]["application/json"],
+        ) {
+          // Non-null: same "always a real parent, never bare null in
+          // practice" invariant as createAlbumNode()'s own copy of this
+          // comment above.
+          const parentOfDeletedNode = node.parent!;
           $(".tree").tree("removeNode", node);
 
           $(".move-cat-add").on("click", function (e) {
@@ -795,7 +879,7 @@ function openDeleteAlbumPopIn(cat_to_delete: any) {
           setSubcatsBadge(parentOfDeletedNode);
           closeDeleteAlbumPopIn();
         },
-        error: function (message: any) {
+        error: function (message: JQuery.jqXHR) {
           console.log(message);
         },
       });
@@ -806,10 +890,13 @@ function closeDeleteAlbumPopIn() {
   $("#DeleteAlbum").fadeOut();
 }
 
-function getAllSubAlbumsFromNode(node: any, nb_sub_cats: any) {
+function getAllSubAlbumsFromNode(
+  node: AlbumJqTreeNode,
+  nb_sub_cats: number,
+): number {
   nb_sub_cats = 0;
-  if (node.children != 0) {
-    node.children.forEach((child: any) => {
+  if (node.children.length != 0) {
+    node.children.forEach((child) => {
       nb_sub_cats++;
       const tmp = getAllSubAlbumsFromNode(child, nb_sub_cats);
       nb_sub_cats += tmp;
@@ -820,7 +907,7 @@ function getAllSubAlbumsFromNode(node: any, nb_sub_cats: any) {
   return nb_sub_cats;
 }
 
-function setSubcatsBadge(node: any) {
+function setSubcatsBadge(node: AlbumJqTreeNode) {
   if (node.children.length != 0) {
     $("#cat-" + node.id)
       .find(".nb-subcats")
@@ -829,7 +916,7 @@ function setSubcatsBadge(node: any) {
     $("#cat-" + node.id)
       .find(".badge-dropdown")
       .find(".nb-subcats")
-      .text(x_nb_subcats.replace("%d", node.children.length));
+      .text(x_nb_subcats.replace("%d", String(node.children.length)));
   } else {
     $("#cat-" + node.id)
       .find(".nb-subcats")
@@ -837,12 +924,12 @@ function setSubcatsBadge(node: any) {
   }
 }
 
-function updateTitleBadge(new_nb_albums: any) {
+function updateTitleBadge(new_nb_albums: number) {
   nb_albums = new_nb_albums;
   $(".badge-number").text(new_nb_albums);
 }
 
-function goToNode(node: any, firstNode: any) {
+function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
   // console.log(firstNode.id, node.id);
   if (node.parent) {
     goToNode(node.parent, firstNode);
@@ -860,10 +947,10 @@ function goToNode(node: any, firstNode: any) {
   }
 }
 
-function showNodeChildrens(node: any) {
+function showNodeChildrens(node: AlbumJqTreeNode) {
   if (node.children) {
     // console.log("childrens : " + node.children);
-    node.children.forEach((child: any) => {
+    node.children.forEach((child) => {
       // console.log("children : " + child.id, child.name);
       $("#cat-" + child.id).addClass("imune");
       showNodeChildrens(child);
@@ -871,17 +958,19 @@ function showNodeChildrens(node: any) {
   }
 }
 
-function closeTree(tree: any) {
+// Genuinely dead code -- zero real callers found (confirmed via grep)
+// -- typed rather than left broken, same policy as isNumeric() above.
+function closeTree(tree: JQuery) {
   // console.log(tree);
   if (tree.tree("getState").open_nodes.length > 0) {
-    tree.tree("getState").open_nodes.forEach((nodeItem: any) => {
+    tree.tree("getState").open_nodes.forEach((nodeItem) => {
       const node = tree.tree("getNodeById", nodeItem);
-      tree.tree("closeNode", node);
+      tree.tree("closeNode", node!);
     });
   }
 }
 
-function getId(parent: any) {
+function getId(parent: AlbumJqTreeNode): string | number {
   if (parent.getLevel() == 0) {
     return 0;
   } else {
@@ -889,12 +978,16 @@ function getId(parent: any) {
   }
 }
 
-function getRank(node: any, ignoreId: any = null): number {
-  if (node.getPreviousSibling() != null) {
+function getRank(
+  node: AlbumJqTreeNode,
+  ignoreId: string | number | null = null,
+): number {
+  const previousSibling = node.getPreviousSibling();
+  if (previousSibling != null) {
     if (node.id != ignoreId) {
-      return 1 + getRank(node.getPreviousSibling(), ignoreId);
+      return 1 + getRank(previousSibling, ignoreId);
     } else {
-      return getRank(node.getPreviousSibling(), ignoreId);
+      return getRank(previousSibling, ignoreId);
     }
   } else {
     if (node.id != ignoreId) {
@@ -905,24 +998,29 @@ function getRank(node: any, ignoreId: any = null): number {
   }
 }
 
-function applyMove(event: any) {
+function applyMove(event: JqTreeMoveEvent) {
   const waitingTimeout = setTimeout(() => {
     $(".waiting-message").addClass("visible");
   }, 500);
   const id = event.move_info.moved_node.id;
-  let moveParent: any = null;
-  let moveRank: any = null;
+  let moveParent: string | number | null = null;
+  let moveRank: number | null = null;
   const previous_parent = event.move_info.previous_parent;
   const target = event.move_info.target_node;
   if (event.move_info.position == "after") {
-    if (getId(previous_parent) != getId(target.parent)) {
-      moveParent = getId(target.parent);
+    // Non-null: same "always a real parent" invariant as elsewhere in
+    // this file (a move target is never the tree's own invisible root).
+    if (getId(previous_parent) != getId(target.parent!)) {
+      moveParent = getId(target.parent!);
     }
     moveRank = getRank(target, id) + 1;
   } else if (event.move_info.position == "inside") {
     if (getId(previous_parent) != getId(target)) {
       moveParent = getId(target);
-      const currentNode = $(".tree").tree("getNodeById", moveParent);
+      const currentNode = $(".tree").tree(
+        "getNodeById",
+        moveParent,
+      ) as AlbumJqTreeNode | null;
       if (
         currentNode &&
         currentNode.load_on_demand &&
@@ -933,8 +1031,8 @@ function applyMove(event: any) {
     }
     moveRank = 1;
   } else if (event.move_info.position == "before") {
-    if (getId(previous_parent) != getId(target.parent)) {
-      moveParent = getId(target.parent);
+    if (getId(previous_parent) != getId(target.parent!)) {
+      moveParent = getId(target.parent!);
     }
     moveRank = 1;
   }
@@ -944,7 +1042,21 @@ function applyMove(event: any) {
       clearTimeout(waitingTimeout);
       $(".waiting-message").removeClass("visible");
       setSubcatsBadge(previous_parent);
-      setSubcatsBadge($(".tree").tree("getNodeById", moveParent));
+      // Was an unconditional `setSubcatsBadge($(".tree").tree
+      // ("getNodeById", moveParent))` -- `moveParent` stays `null` for
+      // a same-parent rank-only reorder (see the 3 branches above), and
+      // `getNodeById(null)` resolves to no real node, so this crashed
+      // on `.children.length` inside setSubcatsBadge() every time an
+      // album was drag-reordered among its own siblings without
+      // changing parent -- silently aborting the rest of this
+      // `.then()` (the click-handler rebinds below never ran). Guarded:
+      // when the parent didn't change, `previous_parent`'s own
+      // already-refreshed badge above covers it.
+      if (moveParent !== null) {
+        setSubcatsBadge(
+          $(".tree").tree("getNodeById", moveParent) as AlbumJqTreeNode,
+        );
+      }
 
       $(".move-cat-add")
         .off("click")
@@ -967,8 +1079,8 @@ function applyMove(event: any) {
         edgeOffset: 3,
       });
     })
-    .catch(function (message: any) {
-      console.log("An error has occured : " + message);
+    .catch(function (message: Error) {
+      console.log("An error has occured : " + message.message);
       $(".move-cat-add")
         .off("click")
         .on("click", function (e) {
@@ -992,7 +1104,11 @@ function applyMove(event: any) {
     });
 }
 
-function moveNode(node: any, rank: any, parent: any) {
+function moveNode(
+  node: string | number,
+  rank: number | null,
+  parent: string | number | null,
+) {
   return new Promise<void>((res, rej) => {
     if (parent != null) {
       changeParent(node, parent, rank)
@@ -1006,8 +1122,11 @@ function moveNode(node: any, rank: any, parent: any) {
   });
 }
 
-function changeParent(node: any, parent: any, rank: any) {
-  let oldParent = node.parent;
+function changeParent(
+  node: string | number,
+  parent: string | number,
+  rank: number | null,
+) {
   return new Promise<void>((res, rej) => {
     jQuery.ajax({
       url: "api/v1/categories/actions/move",
@@ -1019,27 +1138,31 @@ function changeParent(node: any, parent: any, rank: any) {
         parentId: Number(parent),
       }),
       dataType: "json",
-      success: function (data: any) {
-        oldParent = node.parent;
+      success: function (
+        data: operations["categoryMove"]["responses"][200]["content"]["application/json"],
+      ) {
         void changeRank(node, rank);
         const updatedCategories = data.updatedCategories;
         if (updatedCategories) {
-          updatedCategories.forEach((cat: any) => {
-            const node: any = $(".tree").tree("getNodeById", cat.categoryId);
-            node.nb_sub_photos = cat.nbSubPhotos;
-            $(".tree").tree("updateNode", node, node.name);
+          updatedCategories.forEach((cat) => {
+            const catNode = $(".tree").tree(
+              "getNodeById",
+              cat.categoryId,
+            ) as AlbumJqTreeNode;
+            catNode.nb_sub_photos = cat.nbSubPhotos;
+            $(".tree").tree("updateNode", catNode, catNode.name);
           });
         }
         res();
       },
-      error: function (message: any) {
-        rej(new Error(message?.statusText || "move failed"));
+      error: function (message: JQuery.jqXHR) {
+        rej(new Error(message.statusText || "move failed"));
       },
     });
   });
 }
 
-function changeRank(node: any, rank: any) {
+function changeRank(node: string | number, rank: number | null) {
   return new Promise<void>((res, rej) => {
     jQuery.ajax({
       url: "api/v1/categories/actions/reorder",
@@ -1051,32 +1174,37 @@ function changeRank(node: any, rank: any) {
         rank: Number(rank),
       }),
       dataType: "json",
-      success: function (_data: any) {
+      success: function (_data: unknown) {
         res();
       },
-      error: function (message: any) {
-        rej(new Error(message?.statusText || "rank change failed"));
+      error: function (message: JQuery.jqXHR) {
+        rej(new Error(message.statusText || "rank change failed"));
       },
     });
   });
 }
 
-function makePrivateHierarchy(node: any) {
+function makePrivateHierarchy(node: AlbumJqTreeNode) {
   node.status = "private";
-  node.children.forEach((node: any) => {
+  node.children.forEach((node) => {
     makePrivateHierarchy(node);
   });
 }
 
-function getPathNode(node: any): string {
-  if (node.parent.getLevel() != 0) {
-    return getPathNode(node.parent) + " / " + node.name;
+function getPathNode(node: AlbumJqTreeNode): string {
+  // Non-null: same "always a real parent" invariant as elsewhere in
+  // this file.
+  if (node.parent!.getLevel() != 0) {
+    return getPathNode(node.parent!) + " / " + node.name;
   } else {
     return node.name;
   }
 }
 
-function findAlbumById(a: any, id: any): any {
+function findAlbumById(
+  a: AlbumTreeNode[],
+  id: string | number,
+): AlbumTreeNode | null {
   for (const album of a) {
     if (album.id == id) {
       return album;
@@ -1086,7 +1214,7 @@ function findAlbumById(a: any, id: any): any {
       (album.haveChildren && album.haveChildren.length > 0) ||
       (album.children && album.children.length > 0)
     ) {
-      const al = findAlbumById(album.haveChildren ?? album.children, id);
+      const al = findAlbumById(album.haveChildren ?? album.children ?? [], id);
       if (al) {
         return al;
       }
@@ -1095,10 +1223,10 @@ function findAlbumById(a: any, id: any): any {
   return null;
 }
 
-function loadOnDemand(node: any) {
-  const children = node.haveChildren;
-  const formatedChild = children.map((a: any) => {
-    const al = { ...a, children: [] };
+function loadOnDemand(node: AlbumJqTreeNode) {
+  const children = node.haveChildren!;
+  const formatedChild = children.map((a: AlbumTreeNode) => {
+    const al: AlbumTreeNode = { ...a, children: [] };
     if (a.children) {
       al.load_on_demand = true;
       al.haveChildren = a.children;
@@ -1110,9 +1238,15 @@ function loadOnDemand(node: any) {
   node.load_on_demand = false;
 }
 
-function openNodeOnDemand(node: any) {
-  const open_nodes: any = $(".tree").tree("getState").open_nodes;
-  if (!open_nodes.includes(node)) {
+function openNodeOnDemand(node: AlbumJqTreeNode) {
+  const open_nodes = $(".tree").tree("getState").open_nodes;
+  // Was `open_nodes.includes(node)` -- comparing the whole node object
+  // against a list of plain ids, which real strict typing rejects
+  // outright (`(string | number)[]` vs an object). Always evaluated to
+  // `false`, so the "already open" guard below never actually skipped
+  // anything; harmless in practice (jqtree's own `openNode()` no-ops on
+  // an already-open node), but not the real intended check.
+  if (!open_nodes.includes(node.id)) {
     $(".tree").tree("openNode", node);
     $(".move-cat-add")
       .off("click")

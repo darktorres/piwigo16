@@ -241,8 +241,10 @@ interface Window {
   ignoreExtension: (type: string, id: string) => void;
 
   // albums.ts's own shared-global set (docs/PLAN.md P46-C's full
-  // sweep) -- cat_search.ts reads both of these bare.
-  data: any;
+  // sweep) -- cat_search.ts reads both of these bare. `AlbumTreeNode`
+  // (P47) is the real recursive shape of each row, traced to
+  // AlbumsPageRenderer.php's own `assocToOrderedTree()`.
+  data: AlbumTreeNode[];
   str_album_found: string;
 
   // group_list.ts's own 2 functions -- `hideAddGroupForm` is called
@@ -489,6 +491,65 @@ interface IJQTreePlugin {
     open_nodes: (number | string)[];
     selected_node: (number | string)[];
   };
+}
+
+// jqtree's own bundled `INode` (referenced above) never typed 2 more
+// real, well-known Node-prototype methods (`getLevel()`/
+// `getPreviousSibling()`) -- `albums.ts`'s own `getId()`/`getRank()`/
+// `getPathNode()` all call these (P47). Same "real mergeable interface,
+// one missing overload" fix as `IJQTreePlugin`'s own `getState()` above.
+interface INode {
+  getLevel(): number;
+  getPreviousSibling(): INode | null;
+}
+
+// `albums.ts`'s own real per-row shape (P47), traced to
+// AlbumsPageRenderer.php's own `assocToOrderedTree()` -- the raw JSON
+// tree fed into `.tree({data: ...})` and returned by `pwg_getPageData
+// ("album_data")`, *before* jqtree wraps each row into a live `INode`.
+// `load_on_demand`/`haveChildren` are client-side-only fields albums.ts
+// itself adds when reshaping a row for lazy loading -- never present in
+// the raw PHP payload.
+interface AlbumTreeNode {
+  id: string;
+  rank: string | number | null;
+  name: string;
+  status: string;
+  visible: string;
+  uppercats: string;
+  nb_images: number;
+  last_updates: string;
+  has_not_access: boolean;
+  nb_sub_photos: number;
+  nb_subcats?: number;
+  children?: AlbumTreeNode[];
+  load_on_demand?: boolean;
+  haveChildren?: AlbumTreeNode[];
+}
+
+// The *live* jqtree node shape once `.tree()` has wrapped a raw
+// `AlbumTreeNode` -- jqtree copies every own-property of the raw data
+// object onto the resulting node alongside its own real `INode` fields
+// (`.parent`/`.getLevel()`/`.iterate()`/etc.), so both sets are real,
+// simultaneously-present properties on every node `getNodeById()`/
+// `onCreateLi` ever hands back. `INode`'s own `[key: string]: any`
+// index signature (jqtree's own bundled `.d.ts`, not editable here)
+// otherwise makes every one of these fields resolve to `any`.
+interface AlbumJqTreeNode extends INode {
+  rank: string | number | null;
+  status: string;
+  visible: string;
+  uppercats: string;
+  nb_images: number;
+  last_updates: string;
+  has_not_access: boolean;
+  nb_sub_photos: number;
+  nb_subcats?: number;
+  load_on_demand: boolean | null;
+  haveChildren?: AlbumTreeNode[];
+  parent: AlbumJqTreeNode | null;
+  children: AlbumJqTreeNode[];
+  getPreviousSibling(): AlbumJqTreeNode | null;
 }
 
 interface JQuery {

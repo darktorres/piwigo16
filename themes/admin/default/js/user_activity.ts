@@ -1,14 +1,57 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
-const usersCache = new window.UsersCache({
-  serverKey: pwg_getPageData("cache_key_users"),
-  serverId: pwg_getPageData("cache_key_hash"),
-  rootUrl: pwg_getPageData("root_url"),
-});
-const nb_users = pwg_getPageData("nb_users");
+type UserListResponse =
+  operations["userList"]["responses"][200]["content"]["application/json"];
 
-const additional_filt_type = pwg_getPageData("additional_filt_type");
-const additional_filt_value = pwg_getPageData("additional_filt_value");
+// `row.details` is genuinely a heterogeneous `object | null` blob at
+// the API layer (additionalProperties: true) -- these are the specific
+// fields this file itself either reads (`script`/`method`, presence-
+// checked via detailsType) or writes (`agent`, plus `users`/
+// `users_string` computed below for merged "user"-object lines).
+interface MergedActivityDetails {
+  agent?: string | null;
+  connected_with?: unknown;
+  script?: string;
+  method?: string;
+  users?: string[];
+  users_string?: string;
+  [key: string]: unknown;
+}
+
+// The real shape `fetchAndMergeActivityLines`'s own client-side merge
+// produces from consecutive-same-session/object/action `ActivityRow`s
+// (GetListHandler's own equivalent server-side step, done here instead
+// per activityList's own docblock).
+interface MergedActivityLine {
+  id: number;
+  object: string;
+  object_id: number[];
+  action: string;
+  ip_address: string | null;
+  date: string;
+  hour: string;
+  user_id: number | null;
+  username: string;
+  detailsType: "method" | "script" | null;
+  details: MergedActivityDetails;
+  counter: number;
+}
+
+const usersCache = new window.UsersCache({
+  serverKey: pwg_getPageData<string>("cache_key_users"),
+  serverId: pwg_getPageData<string>("cache_key_hash"),
+  rootUrl: pwg_getPageData<string>("root_url"),
+});
+const nb_users = pwg_getPageData<number>("nb_users");
+
+const additional_filt_type = pwg_getPageData<string | false>(
+  "additional_filt_type",
+);
+const additional_filt_value = pwg_getPageData<string | null>(
+  "additional_filt_value",
+);
 
 const color_icons = [
   "icon-red",
@@ -19,17 +62,17 @@ const color_icons = [
 ];
 let activity_page = 1;
 let current_page_offset = 0;
-let page_offsets: any[] = [0];
+let page_offsets: number[] = [0];
 let actual_page = 1;
 let end_page = false;
-let uid_filter: any;
-let action_filter: any;
-let object_filter: any;
-let date_min_filter = pwg_getPageData("activity_dates_min");
-let date_max_filter = pwg_getPageData("activity_dates_max");
+let uid_filter: string | number | undefined;
+let action_filter: string | undefined;
+let object_filter: string | undefined;
+let date_min_filter = pwg_getPageData<string>("activity_dates_min");
+let date_max_filter = pwg_getPageData<string>("activity_dates_max");
 
-const date_min = pwg_getPageData("activity_dates_min");
-const date_max = pwg_getPageData("activity_dates_max");
+const date_min = pwg_getPageData<string>("activity_dates_min");
+const date_max = pwg_getPageData<string>("activity_dates_max");
 
 const page_ellipsis = "<span>...</span>";
 const page_item = '<a data-page="%d">%d</a>';
@@ -131,20 +174,28 @@ void get_user_activity(
  * iterations of the while loop below.
  */
 async function fetchAndMergeActivityLines(
-  startOffset: any,
-  uid: any,
-  action: any,
-  object: any,
-  date: any[],
-  id: any,
+  startOffset: number,
+  uid: string | number | undefined,
+  action: string | undefined,
+  object: string | undefined,
+  date: (string | undefined)[],
+  id: string | number | null | undefined,
 ) {
   let offset = startOffset;
   let hasMore = true;
-  const lines = [];
+  const lines: MergedActivityLine[] = [];
   let currentKey = "";
 
   while (lines.length < ACTIVITY_DISPLAY_PAGE_SIZE && hasMore) {
-    const params: Record<string, any> = {
+    const params: {
+      offset: number;
+      dateMin?: string;
+      dateMax?: string;
+      userId?: string | number;
+      action?: string;
+      object?: string;
+      objectId?: string | number;
+    } = {
       offset: offset,
       dateMin: date[0],
       dateMax: date[1],
@@ -154,12 +205,13 @@ async function fetchAndMergeActivityLines(
     if (object !== undefined) params.object = object;
     if (id !== undefined && id !== null) params.objectId = id;
 
-    const data = await $.ajax({
-      url: "api/v1/activity",
-      type: "GET",
-      dataType: "json",
-      data: params,
-    });
+    const data: operations["activityList"]["responses"][200]["content"]["application/json"] =
+      await $.ajax({
+        url: "api/v1/activity",
+        type: "GET",
+        dataType: "json",
+        data: params,
+      });
 
     hasMore = data.hasMore;
 
@@ -179,8 +231,10 @@ async function fetchAndMergeActivityLines(
         last.counter++;
         last.object_id.push(row.objectId);
       } else {
-        const details = row.details ? { ...row.details } : {};
-        let detailsType = null;
+        const details: MergedActivityDetails = row.details
+          ? { ...row.details }
+          : {};
+        let detailsType: "method" | "script" | null = null;
         if ("method" in details) detailsType = "method";
         if ("script" in details) detailsType = "script";
         details.agent = row.userAgent;
@@ -192,7 +246,7 @@ async function fetchAndMergeActivityLines(
           action: row.action,
           ip_address: row.ipAddress,
           date: row.dateFormatted,
-          hour: row.occuredOn.split(" ")[1],
+          hour: row.occuredOn.split(" ")[1]!,
           user_id: row.performedBy,
           username: row.performedByUsername || "user#" + row.performedBy,
           detailsType: detailsType,
@@ -207,23 +261,23 @@ async function fetchAndMergeActivityLines(
 
   // Resolve display usernames for every merged "user"-object line's own
   // object_id list -- GetListHandler's own equivalent step.
-  const userLines = lines.filter((l: any) => l.object === "user");
+  const userLines = lines.filter((l) => l.object === "user");
   if (userLines.length > 0) {
-    const allUserIds = [...new Set(userLines.flatMap((l: any) => l.object_id))];
-    const userInfo = await $.ajax({
+    const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
+    const userInfo: UserListResponse = await $.ajax({
       url: "api/v1/users",
       type: "GET",
       dataType: "json",
       data: { userIds: allUserIds, perPage: 0 },
     });
-    const usernameOfId: Record<string, any> = {};
-    userInfo.users.forEach((u: any) => {
+    const usernameOfId: Record<string, string> = {};
+    userInfo.users.forEach((u) => {
       usernameOfId[u.id] = u.username;
     });
 
-    userLines.forEach((l: any) => {
+    userLines.forEach((l) => {
       const usernames = l.object_id.map(
-        (uid2: any) => usernameOfId[uid2] || "user#" + uid2,
+        (uid2) => usernameOfId[uid2] || "user#" + uid2,
       );
       l.details.users = usernames;
       l.details.users_string = [...new Set(usernames)].join(", ");
@@ -234,12 +288,12 @@ async function fetchAndMergeActivityLines(
 }
 
 async function get_user_activity(
-  page: any,
-  uid: any,
-  action: any,
-  object: any,
-  date: any[],
-  id: any,
+  page: number,
+  uid: string | number | undefined,
+  action: string | undefined,
+  object: string | undefined,
+  date: (string | undefined)[],
+  id: string | number | null | undefined,
 ) {
   // Genuine pre-existing bug found only by strict typechecking:
   // jQuery's `.contents()` takes no selector argument at all, so the
@@ -258,7 +312,7 @@ async function get_user_activity(
 
   try {
     const merged = await fetchAndMergeActivityLines(
-      page_offsets[page - 1],
+      page_offsets[page - 1]!,
       uid,
       action,
       object,
@@ -269,20 +323,20 @@ async function get_user_activity(
     uid_filter = uid;
     action_filter = action;
     object_filter = object;
-    date_min_filter = date[0];
-    date_max_filter = date[1];
+    date_min_filter = date[0]!;
+    date_max_filter = date[1]!;
 
     $(".loading").hide();
 
     if (merged.lines.length > 0) {
-      merged.lines.forEach((line: any) => {
+      merged.lines.forEach((line) => {
         lineConstructor(line);
       });
     } else {
       emptyLine();
     }
 
-    current_page_offset = page_offsets[page - 1];
+    current_page_offset = page_offsets[page - 1]!;
     end_page = merged.endPage;
     if (!page_offsets.includes(merged.nextOffset)) {
       page_offsets.push(merged.nextOffset);
@@ -291,13 +345,13 @@ async function get_user_activity(
     $(".user-update-spinner").removeClass("icon-spin6");
     $(".pagination-item-container").show();
     update_pagination_menu();
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log("ajax call failed");
     console.log(e);
   }
 }
 
-function lineConstructor(line: any) {
+function lineConstructor(line: MergedActivityLine) {
   const newLine = $("#-1").clone();
 
   $(".tab-title").show();
@@ -308,7 +362,7 @@ function lineConstructor(line: any) {
     {* console.log(line); *}*/
   newLine.attr("id", line.id);
 
-  let final_albumInfos: any;
+  let final_albumInfos: string;
 
   //{* Determines wich string need to be placed in the line constructed *}
 
@@ -317,7 +371,9 @@ function lineConstructor(line: any) {
     switch (line.action) {
       case "edit":
         newLine.find(".action-type").addClass("icon-blue");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-pencil");
 
         newLine.find(".action-name").html(actionType_edit);
@@ -325,7 +381,7 @@ function lineConstructor(line: any) {
           case "user":
             final_albumInfos = actionInfos_users_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-user-1");
 
@@ -333,7 +389,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_albums_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -341,7 +397,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_groups_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -349,7 +405,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photos_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -357,7 +413,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tags_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -372,7 +428,9 @@ function lineConstructor(line: any) {
 
       case "add":
         newLine.find(".action-type").addClass("icon-green");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-plus");
 
         newLine.find(".action-name").html(actionType_add);
@@ -380,7 +438,7 @@ function lineConstructor(line: any) {
           case "user":
             final_albumInfos = actionInfos_users_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-user-1");
 
@@ -388,7 +446,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_albums_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -396,7 +454,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_groups_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -404,7 +462,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photos_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -412,7 +470,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tags_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -427,7 +485,9 @@ function lineConstructor(line: any) {
 
       case "delete":
         newLine.find(".action-type").addClass("icon-red");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-trash-1");
 
         newLine.find(".action-name").html(actionType_delete);
@@ -435,7 +495,7 @@ function lineConstructor(line: any) {
           case "user":
             final_albumInfos = actionInfos_users_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-user-1");
 
@@ -443,7 +503,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_albums_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -451,7 +511,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_groups_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -459,7 +519,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photos_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -467,7 +527,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tags_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -482,7 +542,9 @@ function lineConstructor(line: any) {
 
       case "move":
         newLine.find(".action-type").addClass("icon-yellow");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-move");
 
         newLine.find(".action-name").html(actionType_move);
@@ -490,7 +552,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_albums_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -498,7 +560,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_groups_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -506,7 +568,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photos_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -514,7 +576,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tags_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -529,7 +591,9 @@ function lineConstructor(line: any) {
 
       case "login":
         newLine.find(".action-type").addClass("icon-purple");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-key");
         newLine.find(".action-section").addClass("icon-user-1");
 
@@ -537,7 +601,7 @@ function lineConstructor(line: any) {
 
         final_albumInfos = actionInfos_users_logged_in.replace(
           "%d",
-          line.counter,
+          String(line.counter),
         );
 
         break;
@@ -545,11 +609,13 @@ function lineConstructor(line: any) {
       case "logout":
         newLine.find(".action-type").addClass("icon-purple");
         if (line.user_id != 2) {
-          newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+          newLine
+            .find(".user-pic")
+            .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         } else {
           newLine
             .find(".user-pic")
-            .addClass(color_icons[line.object_id[0] % 5]!);
+            .addClass(color_icons[(line.object_id[0] ?? 0) % 5]!);
         }
         newLine.find(".action-icon").addClass("icon-logout");
         newLine.find(".action-section").addClass("icon-user-1");
@@ -558,14 +624,16 @@ function lineConstructor(line: any) {
 
         final_albumInfos = actionInfos_users_logged_out.replace(
           "%d",
-          line.counter,
+          String(line.counter),
         );
 
         break;
 
       default:
         newLine.find(".action-type").addClass("icon-purple");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-section").addClass("icon-user-1");
         newLine.find(".action-name").html(line.action);
         final_albumInfos = "x" + line.counter;
@@ -576,7 +644,9 @@ function lineConstructor(line: any) {
     switch (line.action) {
       case "edit":
         newLine.find(".action-type").addClass("icon-blue");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-pencil");
 
         newLine.find(".action-name").html(actionType_edit);
@@ -584,7 +654,7 @@ function lineConstructor(line: any) {
           case "user":
             final_albumInfos = actionInfos_user_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-user-1");
 
@@ -592,7 +662,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_album_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -600,7 +670,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_group_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -608,7 +678,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photo_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -616,7 +686,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tag_edited.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -630,7 +700,9 @@ function lineConstructor(line: any) {
         break;
       case "add":
         newLine.find(".action-type").addClass("icon-green");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-plus");
 
         newLine.find(".action-name").html(actionType_add);
@@ -638,7 +710,7 @@ function lineConstructor(line: any) {
           case "user":
             final_albumInfos = actionInfos_user_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-user-1");
 
@@ -646,7 +718,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_album_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -654,7 +726,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_group_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -662,7 +734,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photo_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -670,7 +742,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tag_added.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -685,7 +757,9 @@ function lineConstructor(line: any) {
         break;
       case "delete":
         newLine.find(".action-type").addClass("icon-red");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-trash-1");
 
         newLine.find(".action-name").html(actionType_delete);
@@ -693,7 +767,7 @@ function lineConstructor(line: any) {
           case "user":
             final_albumInfos = actionInfos_user_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-user-1");
 
@@ -701,7 +775,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_album_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -709,7 +783,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_group_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -717,7 +791,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photo_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -725,7 +799,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tag_deleted.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -739,7 +813,9 @@ function lineConstructor(line: any) {
         break;
       case "move":
         newLine.find(".action-type").addClass("icon-yellow");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-move");
 
         newLine.find(".action-name").html(actionType_move);
@@ -747,7 +823,7 @@ function lineConstructor(line: any) {
           case "album":
             final_albumInfos = actionInfos_album_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-folder-open");
 
@@ -755,7 +831,7 @@ function lineConstructor(line: any) {
           case "group":
             final_albumInfos = actionInfos_group_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-users-1");
 
@@ -763,7 +839,7 @@ function lineConstructor(line: any) {
           case "photo":
             final_albumInfos = actionInfos_photo_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-picture");
 
@@ -771,7 +847,7 @@ function lineConstructor(line: any) {
           case "tag":
             final_albumInfos = actionInfos_tag_moved.replace(
               "%d",
-              line.counter,
+              String(line.counter),
             );
             newLine.find(".action-section").addClass("icon-tags");
 
@@ -785,7 +861,9 @@ function lineConstructor(line: any) {
         break;
       case "login":
         newLine.find(".action-type").addClass("icon-purple");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-icon").addClass("icon-key");
         newLine.find(".action-section").addClass("icon-user-1");
 
@@ -793,18 +871,20 @@ function lineConstructor(line: any) {
 
         final_albumInfos = actionInfos_user_logged_in.replace(
           "%d",
-          line.counter,
+          String(line.counter),
         );
 
         break;
       case "logout":
         newLine.find(".action-type").addClass("icon-purple");
         if (line.user_id != 2) {
-          newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+          newLine
+            .find(".user-pic")
+            .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         } else {
           newLine
             .find(".user-pic")
-            .addClass(color_icons[line.object_id[0] % 5]!);
+            .addClass(color_icons[(line.object_id[0] ?? 0) % 5]!);
         }
         newLine.find(".action-icon").addClass("icon-logout");
         newLine.find(".action-section").addClass("icon-user-1");
@@ -813,14 +893,16 @@ function lineConstructor(line: any) {
 
         final_albumInfos = actionInfos_user_logged_out.replace(
           "%d",
-          line.counter,
+          String(line.counter),
         );
 
         break;
 
       default:
         newLine.find(".action-type").addClass("icon-purple");
-        newLine.find(".user-pic").addClass(color_icons[line.user_id % 5]!);
+        newLine
+          .find(".user-pic")
+          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
         newLine.find(".action-section").addClass("icon-user-1");
         newLine.find(".action-name").html(line.action);
         final_albumInfos = "x" + line.counter;
@@ -831,7 +913,7 @@ function lineConstructor(line: any) {
   newLine.find(".action-infos-test").html(final_albumInfos);
 
   /* Action_section */
-  newLine.find(".nb_items").html(line.counter);
+  newLine.find(".nb_items").html(String(line.counter));
 
   /* Date_section */
   newLine.find(".date-day").html(line.date);
@@ -842,14 +924,14 @@ function lineConstructor(line: any) {
   newLine.find(".user-pic").html(get_initials(line.username));
 
   /* Detail_section */
-  newLine.find(".detail-item-1").html(line.ip_address);
+  newLine.find(".detail-item-1").html(line.ip_address ?? "");
   newLine.find(".detail-item-1").attr("title", "IP: " + line.ip_address);
 
   if (line.detailsType == "script") {
-    newLine.find(".detail-item-2").html(line.details.script);
+    newLine.find(".detail-item-2").html(line.details.script ?? "");
     newLine.find(".detail-item-2").attr("title", "Script");
   } else if (line.detailsType == "method") {
-    newLine.find(".detail-item-2").html(line.details.method);
+    newLine.find(".detail-item-2").html(line.details.method ?? "");
     newLine.find(".detail-item-2").attr("title", "API Method");
   }
 
@@ -881,7 +963,7 @@ function lineConstructor(line: any) {
   displayLine(newLine);
 }
 
-function displayLine(line: any) {
+function displayLine(line: JQuery) {
   $(".tab").append(line);
 }
 
@@ -890,9 +972,9 @@ function emptyLine() {
   $(".activity-noresult").show();
 }
 
-function get_initials(username: any) {
+function get_initials(username: string) {
   const words = username.toUpperCase().split(" ");
-  let res = words[0]![0];
+  let res = words[0]![0]!;
 
   if (words.length > 1 && words[1]![0] !== undefined) {
     res += words[1]![0];
@@ -900,7 +982,7 @@ function get_initials(username: any) {
   return res;
 }
 
-function setCreationDate(startDate: any, endDate: any) {
+function setCreationDate(startDate: string, endDate: string) {
   $(".start-date").html(startDate);
 
   $(".end-date").html(endDate);
@@ -908,7 +990,7 @@ function setCreationDate(startDate: any, endDate: any) {
 
 //{* Pagination *}
 
-function move_to_page(page: any) {
+function move_to_page(page: number) {
   if (page < 0) return;
   actual_page = page;
   update_pagination_menu(page);
@@ -930,7 +1012,7 @@ $(".pagination-arrow.left").on("click", () => {
   move_to_page(actual_page - 1);
 });
 
-function update_pagination_menu(_page?: any) {
+function update_pagination_menu(_page?: number) {
   updateArrows();
   update_pagination_items();
   if (end_page && actual_page == 1) {
@@ -970,9 +1052,9 @@ function update_pagination_items() {
   }
 }
 
-function append_pagination_item(page: any = null) {
+function append_pagination_item(page: number | null = null) {
   if (page != null) {
-    const new_tag = $(page_item.replace(/%d/g, page));
+    const new_tag = $(page_item.replace(/%d/g, String(page)));
     $(".pagination-item-container").append(new_tag);
     if (actual_page == page) {
       new_tag.addClass("actual");
@@ -1085,7 +1167,7 @@ $(document).ready(function () {
       uid_filter,
       action_filter,
       object_filter,
-      [$("#date_min_activity").val(), date_max_filter],
+      [$("#date_min_activity").val() as string, date_max_filter],
       additional_filt_value,
     );
   });
@@ -1106,16 +1188,16 @@ $(document).ready(function () {
       uid_filter,
       action_filter,
       object_filter,
-      [date_min_filter, $("#date_max_activity").val()],
+      [date_min_filter, $("#date_max_activity").val() as string],
       additional_filt_value,
     );
   });
 
   jQuery(".user-selecter").selectize();
-  (jQuery(".user-selecter")[0] as any).selectize.setValue(null);
+  jQuery(".user-selecter")[0]!.selectize.setValue(null);
 
   jQuery(".action-selecter").selectize();
-  (jQuery(".action-selecter")[0] as any).selectize.setValue(null);
+  jQuery(".action-selecter")[0]!.selectize.setValue(null);
 
   if (additional_filt_type) {
     $("#activityMoreFilters").addClass("extend-padding");

@@ -160,7 +160,7 @@ interface Window {
   // actually rely on.
   str_albums_found: string;
   str_result_limit: string;
-  AlbumSelector: new (options: Record<string, any>) => AlbumSelectorInstance;
+  AlbumSelector: new (options: AlbumSelectorOptions) => AlbumSelectorInstance;
 
   // intro.ts's own established shared-global set (matches this plan's
   // own earlier 5-minute spot-check finding, confirmed by full reading
@@ -661,10 +661,31 @@ interface AlbumSelectorInstance {
   open(): void;
   close(): void;
   remove_selected_album(id: string | number): void;
-  get_selected_albums(): string[];
+  // Genuinely mixed at runtime (P47): most real callers only ever push
+  // stringified ids (`select_album()`'s own `id.toString()`), but the
+  // internal ajax-driven pick/create flows push a raw numeric
+  // `cat.id` -- matching `remove_selected_album`/`select_album`'s own
+  // already-established `string | number` id type above.
+  get_selected_albums(): (string | number)[];
   select_album(id: string | number): void;
   resetAll(): void;
-  hardUpdate(cats: string[]): void;
+  hardUpdate(cats: (string | number)[]): void;
+}
+
+// The real constructor options `class AlbumSelector`'s own destructured
+// param accepts (P47) -- every field optional, matching that
+// constructor's own default values; confirmed against every real
+// `new AlbumSelector({...})` call site.
+interface AlbumSelectorOptions {
+  selectedCategoriesIds?: (string | number)[];
+  selectAlbum?: (args: AlbumSelectorCallbackArgs) => void;
+  removeSelectedAlbum?: (args: AlbumSelectorRemoveCallbackArgs) => void;
+  showRootButton?: boolean;
+  adminMode?: boolean;
+  limitParam?: number;
+  currentAlbumId?: string | number;
+  modalTitle?: string;
+  modalSearchPlaceholder?: string;
 }
 
 // The real shape `album_selector.ts`'s own constructor passes to a
@@ -686,7 +707,7 @@ interface AlbumSelectorCallbackArgs {
   };
   newSelectedAlbum: () => void;
   addSelectedAlbum: (...args: any[]) => void;
-  getSelectedAlbum: () => string[];
+  getSelectedAlbum: () => (string | number)[];
 }
 
 // The real shape `album_selector.ts`'s constructor passes to a
@@ -697,7 +718,7 @@ interface AlbumSelectorCallbackArgs {
 // `remove_selected_album(id)`.
 interface AlbumSelectorRemoveCallbackArgs {
   id_album: string | number;
-  getSelectedAlbum: () => string[];
+  getSelectedAlbum: () => (string | number)[];
 }
 
 // `intro.ts`'s own `storage_details` shared global (P47) -- real shape

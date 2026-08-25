@@ -1,3 +1,35 @@
+// Real shapes for the 2 real GET endpoints this file's own #methodPwg
+// switches between (admin mode: /categories; non-admin: /categories/available),
+// via the existing OpenAPI schema. Kept as top-level `type X = import(...)`
+// aliases, not a real `import` statement -- confirmed via a local tsc
+// repro that this does NOT turn this non-module declarer file into a
+// module (its own top-level `class AlbumSelector` must stay a real
+// ambient global for every bare `new AlbumSelector(...)` consumer).
+type CategoryAdmin =
+  import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
+type CategoryAvailable =
+  import("../../../../openapi/client/schema").operations["categoryAvailableList"]["responses"][200]["content"]["application/json"]["categories"][number];
+type LimitInfo =
+  import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["limit"];
+// CategoryAdmin's own OpenAPI schema omits `nbCategories` entirely
+// (a real documentation gap, not fixed here -- out of this phase's own
+// scope) even though CategoryListController.php's own non-recursive
+// branch really does add it at runtime; CategoryAvailable's schema
+// documents it as always-present. `fullname` is CategoryAdmin-only in
+// the schema, read only when `#in_admin_mode` is true. Both added here
+// as optional so either real per-mode shape can be handled uniformly.
+type AlbumCategory = (CategoryAdmin | CategoryAvailable) & {
+  nbCategories?: number;
+  fullname?: string;
+};
+// Every real call site includes the `limit` request param unconditionally,
+// so `limit` is always present in the real response either way, even
+// though CategoryAvailable's own schema marks it optional (conditional
+// on that same param).
+type CategoryListOrAvailableResponse =
+  | import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]
+  | import("../../../../openapi/client/schema").operations["categoryAvailableList"]["responses"][200]["content"]["application/json"];
+
 const str_plus_albums_found = pwg_getPageString(
   "Only the first %d albums are displayed, out of %d.",
 );
@@ -46,15 +78,15 @@ class AlbumSelector {
   #methodPwg: string;
   #limitParam: number;
   #isAlbumCreationChecked: boolean;
-  #selectAlbum: (args: any) => void;
-  #removeSelectedAlbum: (args: any) => void;
-  #currentSelectedId: any;
-  #searchCat: Record<string, any>;
-  #cats: Record<string, any>;
-  #selected_categories: any[];
+  #selectAlbum: (args: { album: AlbumSelectorCallbackArgs["album"] }) => void;
+  #removeSelectedAlbum: (args: { id_album: string | number }) => void;
+  #currentSelectedId: string | number;
+  #searchCat: Record<string, AlbumCategory>;
+  #cats: Record<string, AlbumCategory>;
+  #selected_categories: (string | number)[];
   #show_root_btn: boolean;
   #put_to_root: boolean;
-  #current_cat: any;
+  #current_cat: string | number;
   #title: string;
   #searchPlaceholder: string;
   #loading_add: boolean;
@@ -92,25 +124,15 @@ class AlbumSelector {
 
   constructor({
     selectedCategoriesIds = [],
-    selectAlbum = (_args: any) => {},
-    removeSelectedAlbum = (_args: any) => {},
+    selectAlbum = (_args: AlbumSelectorCallbackArgs) => {},
+    removeSelectedAlbum = (_args: AlbumSelectorRemoveCallbackArgs) => {},
     showRootButton = false,
     adminMode = false,
     limitParam = 50,
     currentAlbumId = 0,
     modalTitle = "",
     modalSearchPlaceholder = "",
-  }: {
-    selectedCategoriesIds?: any[];
-    selectAlbum?: (args: any) => void;
-    removeSelectedAlbum?: (args: any) => void;
-    showRootButton?: boolean;
-    adminMode?: boolean;
-    limitParam?: number;
-    currentAlbumId?: any;
-    modalTitle?: string;
-    modalSearchPlaceholder?: string;
-  }) {
+  }: AlbumSelectorOptions) {
     this.instanceId = `AlbumSelector-${Math.random().toString(36).substring(2, 9)}`;
     this.#in_admin_mode = adminMode;
     this.#methodPwg = adminMode
@@ -184,7 +206,7 @@ class AlbumSelector {
     this.#close_album_selector();
   }
 
-  remove_selected_album(id: any) {
+  remove_selected_album(id: string | number) {
     if (this.#selected_categories.includes(id)) {
       const cat_to_remove_index = this.#selected_categories.indexOf(id);
       if (cat_to_remove_index > -1) {
@@ -199,7 +221,7 @@ class AlbumSelector {
     return [...this.#selected_categories];
   }
 
-  select_album(id: any) {
+  select_album(id: string | number) {
     this.#selected_categories.push(id.toString());
   }
 
@@ -212,7 +234,7 @@ class AlbumSelector {
     }
   }
 
-  hardUpdate(cats: any) {
+  hardUpdate(cats: (string | number)[]) {
     this.#selected_categories = cats;
   }
 
@@ -323,7 +345,7 @@ class AlbumSelector {
         .on(`click${instanceAb}`, (e) => {
           const curr = $(e.currentTarget);
           const cat_id = curr.attr("id")!;
-          const cat = this.#cats[cat_id];
+          const cat = this.#cats[cat_id]!;
           this.#switch_album_view(cat);
         });
     } else {
@@ -332,7 +354,7 @@ class AlbumSelector {
         .on(`click${instanceAb}`, (e) => {
           const curr = $(e.currentTarget);
           const cat_id = curr.attr("id")!;
-          const cat = this.#cats[cat_id];
+          const cat = this.#cats[cat_id]!;
 
           this.#currentSelectedId = cat.id;
           this.#selectAlbum({ album: cat });
@@ -348,7 +370,7 @@ class AlbumSelector {
       .on(`click${instanceAb}`, (e) => {
         const curr = e.currentTarget;
         const cat_id = $(curr).prop("id");
-        const cat = this.#cats[cat_id];
+        const cat = this.#cats[cat_id]!;
 
         if ($(curr).hasClass("open")) {
           $(curr).removeClass("open");
@@ -374,7 +396,7 @@ class AlbumSelector {
       });
   }
 
-  #loadFillResultEvent(tempSelect: any) {
+  #loadFillResultEvent(tempSelect: (string | number)[]) {
     const instanceAb = `.${this.instanceId}`;
 
     AlbumSelector.selectors.searchResult
@@ -383,7 +405,7 @@ class AlbumSelector {
       .on(`click${instanceAb}`, (e) => {
         const curr = $(e.currentTarget);
         const cat_id = curr.attr("id")!;
-        const cat = this.#searchCat[cat_id];
+        const cat = this.#searchCat[cat_id]!;
 
         const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);
         if (!tempSelect.includes(formated_cat_id)) {
@@ -502,7 +524,7 @@ class AlbumSelector {
     }
   }
 
-  #switch_album_view(cat: any) {
+  #switch_album_view(cat: AlbumCategory | "root") {
     const instanceAb = `.${this.instanceId}`;
 
     AlbumSelector.selectors.albumSelector.hide();
@@ -544,7 +566,7 @@ class AlbumSelector {
     AlbumSelector.selectors.addAlbumErrors.css("visibility", "visible");
   }
 
-  #select_new_album_and_close(cat: any) {
+  #select_new_album_and_close(cat: CategoryAdmin) {
     this.#currentSelectedId = cat.id;
     this.#selectAlbum({ album: cat });
     this.#close_album_selector();
@@ -568,7 +590,11 @@ class AlbumSelector {
   /*--------------
   Dom modification
   --------------*/
-  #prefill_results(rank: any, cats: any[], limit: any) {
+  #prefill_results(
+    rank: string | number,
+    cats: AlbumCategory[],
+    limit: LimitInfo,
+  ) {
     const isCreationMode = this.#isAlbumCreationChecked;
     const iconAlbum = this.#isAlbumCreationChecked
       ? "icon-add-album"
@@ -579,7 +605,7 @@ class AlbumSelector {
 
     this.#cats = {
       ...this.#cats,
-      ...Object.fromEntries(cats.map((c: any) => [c.id, c])),
+      ...Object.fromEntries(cats.map((c) => [c.id, c])),
     };
     let display_div = $("#subcat-" + rank);
     if ("root" == rank) {
@@ -591,7 +617,14 @@ class AlbumSelector {
 
     cats.forEach((cat) => {
       let subcat = "";
-      if (cat.nb_categories > 0) {
+      // Genuine pre-existing bug found via strict typing: read
+      // `cat.nb_categories` (snake_case) -- no such field exists on
+      // either real category shape (confirmed via the OpenAPI schema
+      // and CategoryListController.php's own source, which writes
+      // `nbCategories`, camelCase). Always undefined, so the "has
+      // sub-albums, show expand arrow" indicator has never actually
+      // rendered. Fixed to the real field.
+      if ((cat.nbCategories ?? 0) > 0) {
         subcat = `<span id="${cat.id}" class="display-subcat gallery-icon-up-open"></span>`;
       }
 
@@ -643,7 +676,7 @@ class AlbumSelector {
     }
   }
 
-  #fill_results(cats: any[]) {
+  #fill_results(cats: AlbumCategory[]) {
     const iconAlbum = this.#isAlbumCreationChecked
       ? "icon-add-album"
       : "gallery-icon-plus-circled";
@@ -651,11 +684,11 @@ class AlbumSelector {
       ? [...this.#selected_categories, this.#current_cat.toString()]
       : [...this.#selected_categories];
 
-    this.#searchCat = Object.fromEntries(cats.map((c: any) => [c.id, c]));
+    this.#searchCat = Object.fromEntries(cats.map((c) => [c.id, c]));
     AlbumSelector.selectors.searchResult.empty();
 
     cats.forEach((cat) => {
-      const cat_name = this.#in_admin_mode ? cat.fullname : cat.name;
+      const cat_name = this.#in_admin_mode ? cat.fullname! : cat.name;
 
       AlbumSelector.selectors.searchResult.append(
         `<div class='search-result-item' id="${cat.id}">
@@ -698,7 +731,7 @@ class AlbumSelector {
   // /api/v1/categories/available (non-admin mode) filters by catId --
   // the two endpoints were built at different times with different
   // query param names for the same "look at this category" concept.
-  #catIdParam(cat_id: any) {
+  #catIdParam(cat_id: string | number) {
     return this.#in_admin_mode ? { parentId: cat_id } : { catId: cat_id };
   }
 
@@ -716,23 +749,23 @@ class AlbumSelector {
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (data) => {
+      success: (data: CategoryListOrAvailableResponse) => {
         // for debug
         // console.log(data);
         $(".linkedAlbumPopInContainer .searching").hide();
         const cats = data.categories;
-        const limit = data.limit;
+        const limit = data.limit!;
         this.#prefill_results("root", cats, limit);
       },
-      error: function (e: any) {
+      error: function (e: JQuery.jqXHR) {
         $(".linkedAlbumPopInContainer .searching").hide();
-        console.log("error : ", e.message);
+        console.log("error : ", e.responseText);
       },
     });
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await -- the call site (`#loadSubCatEvent`) relies on this always returning a real Promise (`.then(...)`), even though the body never needs to `await` anything itself: `$.ajax`'s own `error` callback already handles failures internally, nothing here re-throws.
-  async #prefill_search_subcats(cat_id: any) {
+  async #prefill_search_subcats(cat_id: string | number) {
     const api_params = {
       ...this.#catIdParam(cat_id),
       recursive: false,
@@ -744,12 +777,12 @@ class AlbumSelector {
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (data) => {
-        const cats = data.categories.filter((c: any) => c.id != cat_id);
-        const limit = data.limit;
+      success: (data: CategoryListOrAvailableResponse) => {
+        const cats = data.categories.filter((c) => c.id != cat_id);
+        const limit = data.limit!;
         this.#prefill_results(cat_id, cats, limit);
       },
-      error: (e) => {
+      error: (e: JQuery.jqXHR) => {
         console.log("prefill search error :", e);
       },
     });
@@ -773,33 +806,33 @@ class AlbumSelector {
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (data) => {
+      success: (data: CategoryListOrAvailableResponse) => {
         AlbumSelector.selectors.iconSearchingSpin.hide();
         const categories = data.categories;
         this.#fill_results(categories);
 
         if (data.limit && data.limit.remainingCats > 0) {
           AlbumSelector.selectors.limitReached.html(
-            str_result_limit.replace("%d", categories.length),
+            str_result_limit.replace("%d", String(categories.length)),
           );
         } else {
           if (categories.length == 1) {
             AlbumSelector.selectors.limitReached.html(str_album_found);
           } else {
             AlbumSelector.selectors.limitReached.html(
-              str_albums_found.replace("%d", categories.length),
+              str_albums_found.replace("%d", String(categories.length)),
             );
           }
         }
       },
-      error: (e: any) => {
+      error: (e: JQuery.jqXHR) => {
         AlbumSelector.selectors.iconSearchingSpin.hide();
-        console.log(e.message);
+        console.log(e.responseText);
       },
     });
   }
 
-  #add_new_album(cat_id: any) {
+  #add_new_album(cat_id: string | number) {
     if (this.#loading_add) return;
     this.#loading_add = true;
     const cat_name = AlbumSelector.selectors.linkedAlbumInput.val();
@@ -824,7 +857,9 @@ class AlbumSelector {
       },
       data: JSON.stringify(api_params),
       dataType: "json",
-      success: (data) => {
+      success: (
+        data: import("../../../../openapi/client/schema").operations["categoryCreate"]["responses"][201]["content"]["application/json"],
+      ) => {
         this.#get_album_by_id(data.id);
       },
       error: () => {
@@ -833,7 +868,7 @@ class AlbumSelector {
     });
   }
 
-  #get_album_by_id(cat_id: any) {
+  #get_album_by_id(cat_id: string | number) {
     $.ajax({
       url: "api/v1/categories",
       type: "GET",
@@ -841,8 +876,10 @@ class AlbumSelector {
       data: {
         parentId: cat_id,
       },
-      success: (data) => {
-        this.#select_new_album_and_close(data.categories[0]);
+      success: (
+        data: import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"],
+      ) => {
+        this.#select_new_album_and_close(data.categories[0]!);
       },
       error: () => {
         this.#show_new_album_error(str_an_error_has_occured);

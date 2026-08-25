@@ -173,7 +173,7 @@ function add_related_category({
   check_related_categories(getSelectedAlbum());
 }
 
-function check_related_categories(selected_cat: string[]) {
+function check_related_categories(selected_cat: (string | number)[]) {
   $(".linked-albums-badge").html(String(selected_cat.length));
 
   if (selected_cat.length == 0) {

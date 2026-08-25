@@ -230,7 +230,10 @@ export default defineConfig({
         // several already-converted files). addAlbum.ts (its former
         // sibling here) is no longer its own entry (docs/PLAN.md P48)
         // -- see the pages/ entries below, its 2 real registrants.
-        datepicker: r("themes/admin/default/js/datepicker.ts"),
+        // datepicker.ts itself is no longer its own entry either
+        // (docs/PLAN.md P48, its own later batch) -- it has 4 real
+        // registrant pages, each with their own pages/ entry folding
+        // its code in via a `?dup` import.
         // P46-C part 16 -- migrating the remaining files in bulk;
         // validation (typecheck/lint/build/test) deferred to the end
         // per direct instruction, not per-file from here on.
@@ -285,6 +288,11 @@ export default defineConfig({
         notificationByMailPage: r(
           "themes/admin/default/js/pages/notification_by_mail.ts",
         ),
+        // datepicker.ts's own batch (docs/PLAN.md P48) -- extends
+        // batchManagerUnitPage/pictureModifyPage/batchManagerGlobalPage
+        // above with a `?dup` import each; historyPage is its 4th real
+        // registrant page, with no prior page bundle to extend.
+        historyPage: r("themes/admin/default/js/pages/history.ts"),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

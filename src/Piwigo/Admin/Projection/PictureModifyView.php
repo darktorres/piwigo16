@@ -77,14 +77,15 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         return [
             ...new AutosizeView()
                 ->pageAssets(),
-            // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // autosize.ts's code in via a real `?dup` import instead of
-            // the separate script tag AutosizeView used to register
-            // directly (autosize.ts has 3 real registrant pages, so a
-            // plain import isn't safe here -- Design §4).
-            AssetContribution::script('picture_modify_page', 'themes/admin/default/js/pages/picture_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow']),
             ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
+            // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
+            // autosize.ts's and datepicker.ts's own code in via real
+            // `?dup` imports instead of the separate script tags
+            // AutosizeView/DatepickerView used to register directly
+            // (both have several real registrant pages, so a plain
+            // import isn't safe here -- Design §4).
+            AssetContribution::script('picture_modify_page', 'themes/admin/default/js/pages/picture_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow', 'jquery.ui.timepicker-addon']),
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::script('LocalStorageCache', 'themes/admin/default/js/LocalStorageCache.ts', loadMode: LoadMode::Footer),

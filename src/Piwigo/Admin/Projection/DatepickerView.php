@@ -91,22 +91,27 @@ final readonly class DatepickerView implements View, HasPageAssets
             default => LoadMode::Footer,
         };
 
-        $require = ['jquery.ui.timepicker-addon'];
         $assets = [
             AssetContribution::script('jquery.ui.timepicker-addon', 'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js', loadMode: $loadMode, dependsOn: ['jquery.ui']),
         ];
 
         if (in_array($this->jqueryCode, self::DATEPICKER_LOCALES, true)) {
             $assets[] = AssetContribution::script('jquery.ui.datepicker-' . $this->jqueryCode, 'https://cdn.jsdelivr.net/gh/jquery/jquery-ui@1.10.4/ui/i18n/jquery.ui.datepicker-' . $this->jqueryCode . '.js', loadMode: $loadMode, dependsOn: ['jquery.ui']);
-            $require[] = 'jquery.ui.datepicker-' . $this->jqueryCode;
         }
 
         if (in_array($this->jqueryCode, self::TIMEPICKER_LOCALES, true)) {
             $assets[] = AssetContribution::script('jquery.ui.timepicker-' . $this->jqueryCode, 'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/i18n/jquery-ui-timepicker-' . $this->jqueryCode . '.js', loadMode: $loadMode, dependsOn: ['jquery.ui.timepicker-addon']);
-            $require[] = 'jquery.ui.timepicker-' . $this->jqueryCode;
         }
 
-        $assets[] = AssetContribution::script('datepicker', 'themes/admin/default/js/datepicker.ts', loadMode: $loadMode, dependsOn: $require);
+        // datepicker.ts's own registration is no longer here (docs/
+        // PLAN.md P48) -- it has 4 real registrant pages, each now
+        // folding its code in via its own page bundle's `?dup` import
+        // instead of one shared standalone script tag (the same
+        // reasoning as AutosizeView's own P48 batch). Each registrant
+        // page's own bundle depends on `jquery.ui.timepicker-addon`
+        // directly -- datepicker.ts's own top-level code doesn't need
+        // the optional per-locale files this method registers below,
+        // only jQuery UI core's datepicker/timepicker-addon.
 
         $assets[] = AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui');
         $assets[] = AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css');

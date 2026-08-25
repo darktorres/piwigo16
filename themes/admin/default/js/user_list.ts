@@ -798,7 +798,7 @@ function append_pagination_item(page: number | null = null) {
       new_tag.addClass("actual");
     }
     new_tag.on("click", () => {
-      move_to_page(new_tag.data("page"));
+      move_to_page(new_tag.data("page") as number);
     });
   } else {
     $(".pagination-item-container").append($(page_ellipsis));
@@ -2220,13 +2220,13 @@ function fill_ajax_data_from_preferences(
     nb_image_page_values[
       pop_in
         .find(".photos-select-bar .slider-bar-container")
-        .slider("option", "value")
+        .slider("option", "value") as number
     ];
   ajax_data["recentPeriod"] =
     recent_period_values[
       pop_in
         .find(".period-select-bar .slider-bar-container")
-        .slider("option", "value")
+        .slider("option", "value") as number
     ];
   ajax_data["expand"] =
     pop_in
@@ -2273,7 +2273,7 @@ function get_first_selection_usernames(callback: () => void) {
       exclude: [guest_id],
     },
     dataType: "json",
-    success: function (data) {
+    success: function (data: UserListResponse) {
       const result = data.users;
       for (let i = 0; i < result.length; i++) {
         const index = selection.findIndex((x) => x.id === result[i]!.id);
@@ -2304,17 +2304,21 @@ function select_whole_set() {
       maxLevel: filterLevel,
       minRegister:
         register_dates[
-          $(".dates-select-bar .slider-bar-container").slider(
-            "option",
-            "values",
-          )[0]
+          (
+            $(".dates-select-bar .slider-bar-container").slider(
+              "option",
+              "values",
+            ) as number[]
+          )[0]!
         ],
       maxRegister:
         register_dates[
-          $(".dates-select-bar .slider-bar-container").slider(
-            "option",
-            "values",
-          )[1]
+          (
+            $(".dates-select-bar .slider-bar-container").slider(
+              "option",
+              "values",
+            ) as number[]
+          )[1]!
         ],
     },
     dataType: "json",
@@ -2491,11 +2495,10 @@ function update_user_info() {
         $("#UserList"),
       );
     },
-    error: function (jqXHR) {
+    error: function (jqXHR: JQuery.jqXHR) {
       const message =
-        jqXHR.responseJSON && jqXHR.responseJSON.detail
-          ? jqXHR.responseJSON.detail
-          : errorStr;
+        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
+        errorStr;
       $("#UserList .update-user-fail").html(message);
       $("#UserList .update-user-fail").fadeIn();
       $(".update-user-button i")
@@ -2517,7 +2520,7 @@ function get_guest_info() {
       userIds: [guest_id],
     },
     dataType: "json",
-    success: (data) => {
+    success: (data: UserListResponse) => {
       if (data.users.length) {
         guest_user = data.users[0]!;
         fill_guest_edit();
@@ -2534,7 +2537,7 @@ function get_user_info(uid: number, callback: (() => void) | null = null) {
       userIds: [uid],
     },
     dataType: "json",
-    success: (data) => {
+    success: (data: UserListResponse) => {
       if (data.users.length) {
         const result_user = data.users[0]!;
         fill_user_edit(result_user);
@@ -2563,7 +2566,9 @@ function update_guest_info() {
     headers: { "X-CSRF-Token": pwg_token },
     data: JSON.stringify(ajax_data),
     dataType: "json",
-    success: function (data) {
+    success: function (
+      _data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
+    ) {
       $("#GuestUserList .update-user-success")
         .fadeIn()
         .delay(1500)
@@ -2611,16 +2616,20 @@ function update_user_list() {
     update_data["maxLevel"] = filterLevel;
     update_data["minRegister"] =
       register_dates[
-        $(".dates-select-bar .slider-bar-container").slider(
-          "option",
-          "values",
+        (
+          $(".dates-select-bar .slider-bar-container").slider(
+            "option",
+            "values",
+          ) as number[]
         )[0]!
       ];
     update_data["maxRegister"] =
       register_dates[
-        $(".dates-select-bar .slider-bar-container").slider(
-          "option",
-          "values",
+        (
+          $(".dates-select-bar .slider-bar-container").slider(
+            "option",
+            "values",
+          ) as number[]
         )[1]!
       ];
   }
@@ -2666,16 +2675,20 @@ function update_user_list() {
       if ($(".advanced-filter-select[name=filter_level]").val() != "")
         nb_filters += 1;
       if (
-        $(".dates-select-bar .slider-bar-container").slider(
-          "option",
-          "values",
+        (
+          $(".dates-select-bar .slider-bar-container").slider(
+            "option",
+            "values",
+          ) as number[]
         )[0] != 0
       )
         nb_filters += 1;
       if (
-        $(".dates-select-bar .slider-bar-container").slider(
-          "option",
-          "values",
+        (
+          $(".dates-select-bar .slider-bar-container").slider(
+            "option",
+            "values",
+          ) as number[]
         )[1] !=
         register_dates.length - 1
       )
@@ -2773,11 +2786,10 @@ function add_user() {
       );
       add_infos_to_new_user(new_user_id, ajax_data);
     },
-    error: (jqXHR) => {
+    error: (jqXHR: JQuery.jqXHR) => {
       const message =
-        jqXHR.responseJSON && jqXHR.responseJSON.detail
-          ? jqXHR.responseJSON.detail
-          : errorStr;
+        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
+        errorStr;
       $("#AddUser .AddUserErrors").html(message);
       $("#AddUser .AddUserErrors").css("visibility", "visible");
     },
@@ -2800,7 +2812,9 @@ function add_infos_to_new_user(
       enabledHigh: ajax_data.enabledHigh,
     }),
     dataType: "json",
-    success: function (data) {
+    success: function (
+      data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
+    ) {
       const new_user_id = data.id;
       update_user_list();
       // add_user_close();
@@ -2835,11 +2849,10 @@ function add_infos_to_new_user(
       $("#AddUserSuccess").css("display", "flex");
       $(".badge-number").html(String(+$(".badge-number").html() + 1));
     },
-    error: function (jqXHR) {
+    error: function (jqXHR: JQuery.jqXHR) {
       const message =
-        jqXHR.responseJSON && jqXHR.responseJSON.detail
-          ? jqXHR.responseJSON.detail
-          : errorStr;
+        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
+        errorStr;
       $("#AddUser .AddUserErrors").html(message);
       $("#AddUser .AddUserErrors").css("visibility", "visible");
     },
@@ -2903,11 +2916,10 @@ function send_new_user_password(user_id: number, mail: string) {
           add_user_close();
         });
     },
-    error: function (jqXHR) {
+    error: function (jqXHR: JQuery.jqXHR) {
       const message =
-        jqXHR.responseJSON && jqXHR.responseJSON.detail
-          ? jqXHR.responseJSON.detail
-          : errorStr;
+        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
+        errorStr;
       $("#AddUserUpdated")
         .removeClass("icon-green border-green icon-ok")
         .addClass("icon-red-error icon-cancel");
@@ -2924,7 +2936,9 @@ function delete_user(uid: number) {
     beforeSend: function () {
       //jQuery('#user'+uid+' .userDelete .loading').show();
     },
-    success: function (data) {
+    success: function (
+      _data: operations["userDelete"]["responses"][200]["content"]["application/json"],
+    ) {
       close_user_list();
       update_user_list();
       $(".badge-number").html(String(+$(".badge-number").html() - 1));
@@ -3183,9 +3197,9 @@ connected_user = pwg_getPageData<number>("connected_user");
 const connected_user_status = pwg_getPageData<string>("connected_user_status");
 let owner_id = pwg_getPageData<number>("owner");
 owner_username = pwg_getPageData<string>("owner_username");
-const groups_arr_name: string[] = JSON.parse(
+const groups_arr_name = JSON.parse(
   pwg_getPageData<string>("groups_arr_name"),
-);
+) as string[];
 const groups_arr_id: number[] = pwg_getPageData<string>("groups_arr_id")
   ? pwg_getPageData<string>("groups_arr_id").split(",").map(Number)
   : [];
@@ -3230,7 +3244,7 @@ $(document).ready(function () {
   // which is not possible if this JS part is in a JS file
   // see #1571 on Github
   jQuery("#applyAction").click(function () {
-    const action = jQuery("select[name=selectAction]").prop("value");
+    const action = jQuery("select[name=selectAction]").prop("value") as string;
     const data: Record<string, unknown> = {};
     switch (action) {
       case "delete":
@@ -3289,7 +3303,7 @@ $(document).ready(function () {
           recent_period_values[
             $(
               "#permitActionUserList .period-select-bar .slider-bar-container",
-            ).slider("option", "value")
+            ).slider("option", "value") as number
           ];
         break;
       case "expand":

@@ -141,7 +141,7 @@ jQuery("#toggle_mode_dark").click(function () {
 });
 
 jQuery("#other-languages").on("click", "[data-lang-code]", function () {
-  setCookie("lang", jQuery(this).data("langCode"), 30);
+  setCookie("lang", jQuery(this).data("langCode") as string, 30);
 });
 
 // Live mirrors of server-side checks already run on submit

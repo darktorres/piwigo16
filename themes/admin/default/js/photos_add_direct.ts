@@ -372,7 +372,7 @@ $(function () {
           } else {
             let $forms_exts: string[];
             if (imageFormatsExtensions) {
-              $forms_exts = JSON.parse(imageFormatsExtensions);
+              $forms_exts = JSON.parse(imageFormatsExtensions) as string[];
             } else {
               $forms_exts = [];
             }
@@ -656,9 +656,9 @@ function computeAggregatePercent(files: PluploadFile[]) {
 function extractTusErrorDetail(err: Error | TusDetailedError) {
   if (err && "originalResponse" in err && err.originalResponse) {
     try {
-      const body: components["schemas"]["Problem"] = JSON.parse(
+      const body = JSON.parse(
         err.originalResponse.getBody(),
-      );
+      ) as components["schemas"]["Problem"];
       if (body?.detail) {
         return body.detail;
       }
@@ -712,7 +712,7 @@ function uploadNextTusFile(
   // (tus metadata instead of plupload's native multipart form fields)
   // differs from here on.
   up.trigger("BeforeUpload", file);
-  const options: MultipartParams = up.getOption("multipart_params") || {};
+  const options = (up.getOption("multipart_params") || {}) as MultipartParams;
 
   const metadata: Record<string, string> = { filename: file.name };
   if (formatMode) {
@@ -760,7 +760,7 @@ function uploadNextTusFile(
         operations["uploadPatch"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
-        result = JSON.parse(payload.lastResponse.getBody());
+        result = JSON.parse(payload.lastResponse.getBody()) as typeof result;
       } catch (_e) {
         // Falls through with result = {}; the !result.imageId check
         // below reports it.
@@ -779,11 +779,11 @@ function uploadNextTusFile(
         operations["imageGet"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
-        imageInfo = await $.ajax({
+        imageInfo = (await $.ajax({
           url: "api/v1/images/" + result.imageId,
           type: "GET",
           dataType: "json",
-        });
+        })) as typeof imageInfo;
       } catch (_e) {
         // Enrichment fetch failed -- the photo itself was uploaded
         // successfully, so still report it as such, just with a

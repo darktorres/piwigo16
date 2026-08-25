@@ -369,7 +369,7 @@ class AlbumSelector {
       .off(`click${instanceAb}`)
       .on(`click${instanceAb}`, (e) => {
         const curr = e.currentTarget;
-        const cat_id = $(curr).prop("id");
+        const cat_id = $(curr).prop("id") as string;
         const cat = this.#cats[cat_id]!;
 
         if ($(curr).hasClass("open")) {

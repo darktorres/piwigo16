@@ -58,20 +58,33 @@ export default tseslint.config(
     },
   },
   {
-    // docs/PLAN.md P46's own stated scope for themes/**/*.ts is "same
-    // code, same behavior... minimal types to satisfy strict tsconfig,"
-    // explicitly NOT full plugin-author/business-logic typings -- these
-    // are mechanically-converted legacy global scripts trading in
-    // page-data-JSON-derived values and jQuery-plugin returns that
-    // genuinely don't have a narrower real type yet. recommendedTypeChecked's
-    // blanket `any` ban (and the no-unsafe-* family it implies) fights
-    // that goal directly rather than serving it -- found only once real
-    // .ts files existed under themes/ to lint (P46-B, the first themed
-    // batch). `build/jquery-plugins.d.ts` is the shared ambient-types
-    // file this same escape hatch lives in, so it needs the identical
-    // relaxation. A future typing-improvement phase narrowing these
-    // `any`s away (not this one) is the right place to remove this block.
-    files: ["themes/**/*.ts", "build/jquery-plugins.d.ts"],
+    // P47 (real type-design pass, following P46's own "same code, same
+    // behavior" mechanical conversion) narrowed themes/**/*.ts's `any`
+    // usage from 782+ sites down to 6 files with a real, deliberately-
+    // irreducible remainder each documents inline: `search_filters.ts`/
+    // `mcs.ts` (a genuinely heterogeneous, deferred-to-P48 nested
+    // search-filter query object -- `global_params`/`fullname_of_cat`
+    // and mcs.ts's own consumers of them), `history.ts` (the same
+    // family, read from a saved search's own `searchDetails`),
+    // `common.ts` (a `Array.prototype` polyfill guard and `sprintf`'s
+    // own genuinely-polymorphic format-spec argument), `datepicker.ts`
+    // (jQuery UI's own datepicker internals this file's `pwgDatepicker`
+    // plugin patches, no real upstream type source), and `profile.ts`
+    // (`setInfos`'s callback, whose real shape differs per dispatched
+    // endpoint). `build/jquery-plugins.d.ts` keeps the same relaxation
+    // for its own remaining confirmed-unsourced vendor entries
+    // (jquery-confirm/cluetip/Jcrop/jgrowl/ajaxmanager/progressbar/
+    // sort/autogrow-textarea/DataTables -- no real npm/CDN type
+    // package covers any of them).
+    files: [
+      "themes/default/js/search_filters.ts",
+      "themes/default/js/mcs.ts",
+      "themes/admin/default/js/history.ts",
+      "themes/admin/default/js/common.ts",
+      "themes/admin/default/js/datepicker.ts",
+      "themes/standard_pages/js/profile.ts",
+      "build/jquery-plugins.d.ts",
+    ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-argument": "off",

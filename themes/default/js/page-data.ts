@@ -9,10 +9,10 @@ function pwg_getPageDataPayload(): PwgPageDataPayload {
   if (pwg_pageDataPayload === null) {
     const el = document.getElementById("page-data");
     pwg_pageDataPayload = el
-      ? JSON.parse(el.textContent ?? "{}")
+      ? (JSON.parse(el.textContent ?? "{}") as PwgPageDataPayload)
       : { data: {}, strings: {} };
   }
-  return pwg_pageDataPayload!;
+  return pwg_pageDataPayload;
 }
 
 function pwg_getPageData<T = unknown>(key: string): T {

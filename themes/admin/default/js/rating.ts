@@ -38,14 +38,18 @@ $(document).ready(function () {
 
 const pwg_token = pwg_getPageData<string>("csrf_token");
 
-$(document).on("click", "a.icon-trash[data-image-id]", function () {
-  return del(
-    this,
-    Number(this.dataset.imageId),
-    Number(this.dataset.userId),
-    this.dataset.anonymousId || null,
-  );
-});
+$(document).on(
+  "click",
+  "a.icon-trash[data-image-id]",
+  function (this: HTMLElement) {
+    return del(
+      this,
+      Number(this.dataset.imageId),
+      Number(this.dataset.userId),
+      this.dataset.anonymousId || null,
+    );
+  },
+);
 
 function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
   const tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),

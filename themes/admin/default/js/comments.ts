@@ -278,7 +278,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
     .off("click")
     .on("click", function (e) {
       e.stopPropagation();
-      const id = $(this).data("idx");
+      const id = $(this).data("idx") as string | number;
       deleteComment([id]);
     });
 
@@ -286,14 +286,14 @@ function displayComments(comments: CommentListResponse["comments"]) {
     .off("click")
     .on("click", function (e) {
       e.stopPropagation();
-      const id = $(this).data("idx");
+      const id = $(this).data("idx") as string | number;
       validateComment([id]);
     });
 
   $(".comment-content")
     .off("click")
     .on("click", function () {
-      const id = $(this).data("idx");
+      const id = $(this).data("idx") as string | number;
       if (selectionMode) {
         const checkbox = $(this).find(".comment-select-checkbox");
 

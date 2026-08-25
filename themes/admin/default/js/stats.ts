@@ -34,12 +34,15 @@ interface StatData {
   "month-stats": { month: StatDataPoint[]; avg: number };
 }
 const data = {} as StatData;
-data["hours"] = $("#data").data("hours");
-data["days"] = $("#data").data("days");
-data["months"] = $("#data").data("months");
-data["years"] = $("#data").data("years");
-data["compare-years"] = $("#data").data("compare-years");
-data["month-stats"] = $("#data").data("month-stats");
+data["hours"] = $("#data").data("hours") as StatDataPoint;
+data["days"] = $("#data").data("days") as StatDataPoint;
+data["months"] = $("#data").data("months") as StatDataPoint;
+data["years"] = $("#data").data("years") as StatDataPoint;
+data["compare-years"] = $("#data").data("compare-years") as StatDataPoint;
+data["month-stats"] = $("#data").data("month-stats") as {
+  month: StatDataPoint[];
+  avg: number;
+};
 
 const data_unit: Record<string, Chart.TimeUnit> = {
   hours: "day",
@@ -302,7 +305,8 @@ function getMonthStatsDataset() {
 
 //Event listener
 $(".stat-data-selector label").on("click", function () {
-  const dataType = $(this).data("value");
+  const dataType = $(this).data("value") as
+    "hours" | "days" | "months" | "years";
   changeData(dataType);
 });
 
@@ -321,13 +325,19 @@ $(".stat-compare-mode input").on("change", function () {
       $("#hours-selector, #days-selector").prop("checked", false);
       changeData("years");
     } else {
-      changeData($(".stat-data-selector input:checked + label").data("value"));
+      changeData(
+        $(".stat-data-selector input:checked + label").data("value") as
+          "hours" | "days" | "months" | "years",
+      );
     }
   } else {
     $("#hours-selector + label, #days-selector + label").removeClass(
       "unavailable",
     );
-    changeData($(".stat-data-selector input:checked + label").data("value"));
+    changeData(
+      $(".stat-data-selector input:checked + label").data("value") as
+        "hours" | "days" | "months" | "years",
+    );
   }
 });
 
@@ -335,5 +345,8 @@ $(".stat-compare-mode input").on("change", function () {
 Initialize the page
 -------*/
 $(function () {
-  changeData($(".stat-data-selector input:checked + label").data("value"));
+  changeData(
+    $(".stat-data-selector input:checked + label").data("value") as
+      "hours" | "days" | "months" | "years",
+  );
 });

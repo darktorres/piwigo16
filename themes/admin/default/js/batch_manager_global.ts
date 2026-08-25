@@ -125,7 +125,7 @@ $(document).ready(function () {
   $("select[name=selectAction]").change(function () {
     $("[id^=action_]").hide();
 
-    const action = $(this).prop("value");
+    const action = $(this).prop("value") as string;
     // if (action == 'move') {
     //   action = 'associate';
     // }

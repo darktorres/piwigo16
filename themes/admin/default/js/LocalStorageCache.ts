@@ -166,11 +166,11 @@ interface EntityCacheCtor<T extends SelectizeEntity> {
       this.key
     ];
     if (this.ready && stored != undefined) {
-      const cache: {
+      const cache = JSON.parse(stored) as {
         timestamp: number;
         key?: string;
         data: SelectizeEntity[];
-      } = JSON.parse(stored);
+      };
 
       if (
         now - cache.timestamp <= this.lifetime &&
@@ -283,7 +283,10 @@ interface EntityCacheCtor<T extends SelectizeEntity> {
         });
 
         // load items
-        if ((value = $(this).data("value"))) {
+        if (
+          (value = $(this).data("value") as
+            (string | number)[] | { id: string | number }[] | undefined)
+        ) {
           options.value = value;
         }
         if (options.value != undefined) {
@@ -301,7 +304,7 @@ interface EntityCacheCtor<T extends SelectizeEntity> {
         }
 
         // set default
-        if ((defaultValue = $(this).data("default"))) {
+        if ((defaultValue = $(this).data("default") as string | number)) {
           options.default = defaultValue;
         }
         if (options.default == "first") {

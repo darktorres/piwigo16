@@ -35,7 +35,7 @@ if (derivativeSwitchBox) {
     );
   });
 }
-(window.SwitchBox = window.SwitchBox || []).push(
+(window.SwitchBox = window.SwitchBox || ([] as string[])).push(
   "#derivativeSwitchLink",
   "#derivativeSwitchBox",
 );
@@ -55,7 +55,7 @@ if (originalLink) {
 jQuery().ready(function () {
   if (document.getElementById("downloadSwitchBox")) {
     jQuery("#downloadSwitchLink").removeAttr("href");
-    (window.SwitchBox = window.SwitchBox || []).push(
+    (window.SwitchBox = window.SwitchBox || ([] as string[])).push(
       "#downloadSwitchLink",
       "#downloadSwitchBox",
     );

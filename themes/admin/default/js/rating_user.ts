@@ -69,12 +69,18 @@ jQuery("#rateTable").dataTable({
   ],
 });
 
-const oTable = jQuery("#rateTable").DataTable();
+// DataTables has no real type source (docs/PLAN.md's own confirmed-
+// unresolvable vendor list) -- narrowed to the one real method this
+// file actually calls, rather than left as the vendor's own bare `any`.
+interface DataTableApi {
+  row(selector: unknown): { remove(): { draw(): void } };
+}
+const oTable = jQuery("#rateTable").DataTable() as DataTableApi;
 
 function uidFromCell(cell: HTMLElement): RatingUserCellData {
   let tr: HTMLElement = cell;
   while (tr.nodeName !== "TR") tr = tr.parentNode as HTMLElement;
-  return $(tr).data("usr");
+  return $(tr).data("usr") as RatingUserCellData;
 }
 
 // -----DELETE-----

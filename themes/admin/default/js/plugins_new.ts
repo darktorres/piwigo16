@@ -33,12 +33,13 @@ const sortPlugins = function (a: HTMLElement, b: HTMLElement) {
     sortOrder == "revision" ||
     sortOrder == "date"
   )
-    return parseInt($(a).data(sortOrder)) < parseInt($(b).data(sortOrder))
+    return parseInt(String($(a).data(sortOrder))) <
+      parseInt(String($(b).data(sortOrder)))
       ? 1
       : -1;
   else
-    return $(a).data(sortOrder).toLowerCase() >
-      $(b).data(sortOrder).toLowerCase()
+    return String($(a).data(sortOrder)).toLowerCase() >
+      String($(b).data(sortOrder)).toLowerCase()
       ? 1
       : -1;
 };
@@ -107,7 +108,7 @@ $(function () {
   });
 
   $(".buttonInstall").each(function () {
-    const plugin_name = $(this).closest(".pluginBox").data("name");
+    const plugin_name = $(this).closest(".pluginBox").data("name") as string;
     $(this).pwg_jconfirm_follow_href({
       alert_title: str_install_title.replace("%s", plugin_name),
       alert_confirm: str_confirm_msg,
@@ -123,7 +124,7 @@ $(function () {
 
   $(".pluginRating").each((i, node) => {
     const ratingContainer = $(node);
-    const rating = ratingContainer.data("rating");
+    const rating = ratingContainer.data("rating") as number;
     displayStars(ratingContainer.find(".rating-star-container"), rating);
   });
 
@@ -138,14 +139,14 @@ $(function () {
 
   // read all plugin boxes to get author and tags
   $(".pluginBox").each((i, el) => {
-    const author = $(el).data("author");
+    const author = $(el).data("author") as string;
     author.split(", ").forEach((name: string) => {
       if (!authorNames.find((el) => el.value == name)) {
         authorNames.push({ value: name, text: name });
       }
     });
 
-    const tags = $(el).data("tags");
+    const tags = $(el).data("tags") as string;
     tags.split(", ").forEach((tag: string) => {
       if (!tagsNames.find((el) => el.value == tag)) {
         tagsNames.push({ value: tag, text: tag });
@@ -324,15 +325,16 @@ $(function () {
     (filters as Record<keyof PluginFilters, string | number>)[changed] = value;
 
     sort((pluginBox: JQuery) => {
-      const pluginRating = pluginBox.find(".pluginRating").data("rating") || 0;
+      const pluginRating =
+        (pluginBox.find(".pluginRating").data("rating") as number) || 0;
       const pluginCertification = pluginBox
         .find(".certification")
-        .data("certification");
-      const pluginAuthors = pluginBox.data("author").split(", ");
-      const pluginName = pluginBox.data("name").toUpperCase();
-      const pluginTags = pluginBox.data("tags").split(", ");
+        .data("certification") as number;
+      const pluginAuthors = (pluginBox.data("author") as string).split(", ");
+      const pluginName = (pluginBox.data("name") as string).toUpperCase();
+      const pluginTags = (pluginBox.data("tags") as string).split(", ");
       const pluginRevisionOld = monthDiff(
-        new Date(pluginBox.data("revision") * 1000),
+        new Date((pluginBox.data("revision") as number) * 1000),
         new Date(),
       ); // number of months between the last revision date and now
 

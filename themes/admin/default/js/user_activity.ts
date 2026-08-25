@@ -205,13 +205,12 @@ async function fetchAndMergeActivityLines(
     if (object !== undefined) params.object = object;
     if (id !== undefined && id !== null) params.objectId = id;
 
-    const data: operations["activityList"]["responses"][200]["content"]["application/json"] =
-      await $.ajax({
-        url: "api/v1/activity",
-        type: "GET",
-        dataType: "json",
-        data: params,
-      });
+    const data = (await $.ajax({
+      url: "api/v1/activity",
+      type: "GET",
+      dataType: "json",
+      data: params,
+    })) as operations["activityList"]["responses"][200]["content"]["application/json"];
 
     hasMore = data.hasMore;
 
@@ -264,12 +263,12 @@ async function fetchAndMergeActivityLines(
   const userLines = lines.filter((l) => l.object === "user");
   if (userLines.length > 0) {
     const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
-    const userInfo: UserListResponse = await $.ajax({
+    const userInfo = (await $.ajax({
       url: "api/v1/users",
       type: "GET",
       dataType: "json",
       data: { userIds: allUserIds, perPage: 0 },
-    });
+    })) as UserListResponse;
     const usernameOfId: Record<string, string> = {};
     userInfo.users.forEach((u) => {
       usernameOfId[u.id] = u.username;
@@ -1060,7 +1059,7 @@ function append_pagination_item(page: number | null = null) {
       new_tag.addClass("actual");
     }
     new_tag.on("click", () => {
-      move_to_page(new_tag.data("page"));
+      move_to_page(new_tag.data("page") as number);
     });
   } else {
     $(".pagination-item-container").append($(page_ellipsis));
@@ -1095,7 +1094,8 @@ $(document).ready(function () {
         //{* call ajax sur activity list avec uid en param *}
         void get_user_activity(
           1,
-          $(".user-selecter .selectize-input .item").data("value"),
+          $(".user-selecter .selectize-input .item").data("value") as
+            string | number | undefined,
           action_filter,
           object_filter,
           [date_min_filter, date_max_filter],
@@ -1133,12 +1133,12 @@ $(document).ready(function () {
         }
       } else {
         //{* call ajax sur activity list avec action et object en param *}
-        const object = $(".action-selecter .selectize-input .item")
-          .data("value")
-          .split("/")[0];
-        const action = $(".action-selecter .selectize-input .item")
-          .data("value")
-          .split("/")[1];
+        const object = (
+          $(".action-selecter .selectize-input .item").data("value") as string
+        ).split("/")[0];
+        const action = (
+          $(".action-selecter .selectize-input .item").data("value") as string
+        ).split("/")[1];
         void get_user_activity(
           1,
           uid_filter,

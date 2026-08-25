@@ -24,15 +24,37 @@
 // batch's real call sites need it, rather than guessing the full list
 // up front.
 
+// See `Window.SwitchBox`/`Window._pwgRatingAutoQueue` below for the real
+// "queue array, then live handler" shape-shifting story these 2 cover.
+interface SwitchBoxQueue {
+  push(link: string, box: string): void;
+  // Only present during the real "queue array" phase -- the live
+  // `{push: fn}` handler switchbox.ts's own IIFE replaces it with has
+  // neither.
+  length?: number;
+  [index: number]: string | undefined;
+}
+interface RatingAutoQueue {
+  push(opts: PwgRatingOptions): void;
+  // Only present during the real "queue array" phase -- see
+  // `SwitchBoxQueue`'s own copy of this comment above.
+  length?: number;
+  [index: number]: PwgRatingOptions | undefined;
+}
+
 interface Window {
   // `index.ts`/`picture.ts` push onto this before `switchbox.ts` (loaded
   // later, footer-positioned) replaces it with a live `{push: fn}`
   // handler -- same shape-shifting "queue array, then live handler"
-  // pattern as `_pwgRatingAutoQueue` below. `any` rather than a modeled
-  // union: both the array-push and live-handler-push call sites already
-  // agree on "2 string/Element args," so a precise union buys no real
-  // safety here.
-  SwitchBox?: any;
+  // pattern as `_pwgRatingAutoQueue` below. Both real shapes agree on
+  // "has a `push(link, box)` method" (an array's own real `.push`
+  // signature is looser, but every real call site already only ever
+  // passes 2 strings either way), and switchbox.ts's own queue-drain
+  // read needs the array-like `.length`/`[i]` members too -- one
+  // `SwitchBoxQueue` type covers both real phases (P47), not a modeled
+  // union: a precise union of the 2 distinct shapes buys no real safety
+  // here (every real caller/callee already agrees on the args).
+  SwitchBox?: SwitchBoxQueue;
 
   // `picture.ts` pushes a rating-options object onto this (queue array)
   // if `rating.ts` hasn't loaded yet; `rating.ts`'s own IIFE drains the
@@ -47,7 +69,11 @@ interface Window {
   // comment) -- a `var` inside that wrapper is scoped to the wrapper,
   // no longer a real global at all. `window.` property access (here,
   // like `SwitchBox` above) is the one form that's safe both ways.
-  _pwgRatingAutoQueue?: any;
+  // `PwgRatingOptions` is rating.ts's own top-level ambient interface
+  // (that file is a genuinely non-module IIFE, same cross-file ambient
+  // reuse as every other consumer-declares-nothing-itself case P47
+  // established) -- referenced bare here, not redeclared.
+  _pwgRatingAutoQueue?: RatingAutoQueue;
 
   // Explicit `window.` exposure of these 6 names is required for the
   // same reason documented at each assignment site (page-data.ts,
@@ -389,10 +415,16 @@ declare const tus: typeof import("tus-js-client");
 
 // jquery.geoip.js -- genuinely first-party (docs/PLAN.md's own scope
 // note), but excluded from this phase's real 61-file count and not yet
-// converted itself. `rating_user.ts`'s own tooltip content callback is
-// the one real first-party call site that needs the ambient type in
-// the meantime.
-declare const GeoIp: any;
+// converted itself. `rating_user.ts`/`history.ts` both call `.get()`
+// with their own tooltip-content callback (each independently declaring
+// an identical local `GeoIpResult` interface for the real lookup-result
+// shape) -- typed here only enough to stop the outer call itself from
+// resolving to `any` (P47); the callback's own `data` param stays
+// loosely `any` in this ambient signature since the real result shape
+// genuinely lives with jquery.geoip.js itself, not here.
+declare const GeoIp: {
+  get(query: string, callback: (data: any) => void): void;
+};
 
 // Chart.js (vendored -- P46-0's own CDN table). Real, verified types
 // from `@types/chart.js` (P47) -- no `declare const` needed any more

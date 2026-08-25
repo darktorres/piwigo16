@@ -1043,11 +1043,11 @@ $(function () {
     // seeds this storage slot before any handler that reads it can run
     // (the P46-preserved "temporary fix for #1283" behavior, see the
     // module-load call at the bottom of this file).
-    const cached: { data: UserEntity[] } = JSON.parse(
+    const cached = JSON.parse(
       (usersCache.storage as unknown as Record<string, string>)[
         usersCache.key
       ]!,
-    );
+    ) as { data: UserEntity[] };
     cached.data.forEach(function (u) {
       selectize.addOption({ value: u.id, text: u.username });
     });
@@ -1264,11 +1264,11 @@ $(".AddUserBlock button").on("click", function () {
         let username = "undefined";
         // Non-null: same "always-seeded by now" invariant as
         // updateUserSearch()'s own identical read, above.
-        const cached: { data: UserEntity[] } = JSON.parse(
+        const cached = JSON.parse(
           (usersCache.storage as unknown as Record<string, string>)[
             usersCache.key
           ]!,
-        );
+        ) as { data: UserEntity[] };
         cached.data.forEach(function (u) {
           if (u.id == id) {
             username = u.username;

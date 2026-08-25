@@ -74,8 +74,16 @@ export {};
     });
 
     this.find(".slider-choice").on("click", function () {
-      slider.slider("values", 0, options.values.indexOf($(this).data("min")));
-      slider.slider("values", 1, options.values.indexOf($(this).data("max")));
+      slider.slider(
+        "values",
+        0,
+        options.values.indexOf($(this).data("min") as number),
+      );
+      slider.slider(
+        "values",
+        1,
+        options.values.indexOf($(this).data("max") as number),
+      );
     });
 
     return this;

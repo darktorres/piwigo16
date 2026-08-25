@@ -121,7 +121,8 @@ $(document).ready(function () {
   });
 
   $("input, textarea").on("input", function () {
-    const pictureId = $(this).parents("fieldset").data("image_id");
+    const pictureId = $(this).parents("fieldset").data("image_id") as
+      string | number;
     if (user_interacted == true) {
       showUnsavedLocalBadge(pictureId);
     }
@@ -129,14 +130,16 @@ $(document).ready(function () {
 
   // Specific handler for datepicker inputs
   $("input[data-datepicker]").on("change", function () {
-    const pictureId = $(this).parents("fieldset").data("image_id");
+    const pictureId = $(this).parents("fieldset").data("image_id") as
+      string | number;
     if (user_interacted == true) {
       showUnsavedLocalBadge(pictureId);
     }
   });
 
   $("select").on("change", function () {
-    const pictureId = $(this).parents("fieldset").data("image_id");
+    const pictureId = $(this).parents("fieldset").data("image_id") as
+      string | number;
     if (user_interacted == true) {
       showUnsavedLocalBadge(pictureId);
     }
@@ -146,14 +149,16 @@ $(document).ready(function () {
     "click",
     function () {
       user_interacted = true;
-      const pictureId = $(this).parents("fieldset").data("image_id");
+      const pictureId = $(this).parents("fieldset").data("image_id") as
+        string | number;
       showUnsavedLocalBadge(pictureId);
     },
   );
 
   // METADATA SYNC
   $(".action-sync-metadata").on("click", function (_event) {
-    const pictureId = $(this).parents("fieldset").data("image_id");
+    const pictureId = $(this).parents("fieldset").data("image_id") as
+      string | number;
     $.confirm({
       title: str_meta_warning,
       draggable: false,
@@ -206,7 +211,7 @@ $(document).ready(function () {
   // DELETE
   $(".action-delete-picture").on("click", function (_event) {
     const $fieldset = $(this).parents("fieldset");
-    const pictureId = $fieldset.data("image_id");
+    const pictureId = $fieldset.data("image_id") as string | number;
     $.confirm({
       title: str_are_you_sure,
       draggable: false,
@@ -271,7 +276,7 @@ $(document).ready(function () {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async click handler, same as the original .js: jQuery's .on() doesn't await a handler's return value either way.
   $(".action-save-picture").on("click", async function (_event) {
     const $fieldset = $(this).parents("fieldset");
-    const pictureId = $fieldset.data("image_id");
+    const pictureId = $fieldset.data("image_id") as string | number;
     await saveChanges(pictureId);
   });
   //Global Save
@@ -286,14 +291,16 @@ $(document).ready(function () {
     modalTitle: str_title_ab,
   });
   $(".linked-albums.add-item").on("click", function () {
-    b_current_picture_id = $(this).parents("fieldset").data("image_id");
-    ab.hardUpdate(all_related_categories_ids[b_current_picture_id!] ?? []);
+    b_current_picture_id = $(this).parents("fieldset").data("image_id") as
+      string | number;
+    ab.hardUpdate(all_related_categories_ids[b_current_picture_id] ?? []);
     ab.open();
   });
   $(".related-categories-container").on("click", (e) => {
     if (e.target.classList.contains("remove-item")) {
       const cat_id = $(e.target).attr("id")!;
-      const picture_id = $(e.target).parents("fieldset").data("image_id");
+      const picture_id = $(e.target).parents("fieldset").data("image_id") as
+        string | number;
 
       remove_selected_category(cat_id, picture_id);
       check_related_categories(
@@ -595,7 +602,7 @@ async function saveChanges(pictureId: string | number) {
 async function saveAllChanges() {
   const allField = $("fieldset").toArray();
   for (const field of allField) {
-    const pictureId = $(field).data("image_id");
+    const pictureId = $(field).data("image_id") as string | number;
     await saveChanges(pictureId);
   }
 }

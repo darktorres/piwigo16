@@ -128,7 +128,7 @@ function updateRating(e: Event) {
     window._pwgRatingAutoQueue.length
   ) {
     for (let i = 0; i < window._pwgRatingAutoQueue.length; i++)
-      makeNiceRatingForm(window._pwgRatingAutoQueue[i]);
+      makeNiceRatingForm(window._pwgRatingAutoQueue[i]!);
   }
   window._pwgRatingAutoQueue = {
     push: function (opts: PwgRatingOptions) {

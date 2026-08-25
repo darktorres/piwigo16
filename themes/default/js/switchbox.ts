@@ -25,8 +25,8 @@ export {};
   };
 
   if (window.SwitchBox) {
-    for (let i = 0; i < window.SwitchBox.length; i += 2)
-      sbFunc(window.SwitchBox[i], window.SwitchBox[i + 1]);
+    for (let i = 0; i < (window.SwitchBox.length ?? 0); i += 2)
+      sbFunc(window.SwitchBox[i]!, window.SwitchBox[i + 1]!);
   }
 
   window.SwitchBox = {

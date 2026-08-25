@@ -110,9 +110,8 @@ function updateExtension(type: string, id: string, revision: string) {
     },
     error: function (jqXHR: JQuery.jqXHR) {
       const message =
-        jqXHR.responseJSON && jqXHR.responseJSON.detail
-          ? jqXHR.responseJSON.detail
-          : errorMsg;
+        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
+        errorMsg;
       jQuery.jGrowl(message, {
         theme: "error",
         header: errorHead,

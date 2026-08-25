@@ -31,14 +31,14 @@ type TagMergeResponse =
   operations["tagMerge"]["responses"][200]["content"]["application/json"];
 
 //Get the data
-let dataTags: TagRow[] = $(".tag-container").data("tags");
+let dataTags = $(".tag-container").data("tags") as TagRow[];
 
 //Initiate Select
 $("#select-100").prop("checked", true);
 
 //Orphan tags
 $(".info-warning p a").on("click", () => {
-  const url = $(".info-warning p a").data("url");
+  const url = $(".info-warning p a").data("url") as string;
   const tags = orphan_tag_names;
   const str_orphans = str_orphan_tags
     .replace("%s1", String(tags.length))
@@ -358,7 +358,10 @@ function setupTagbox(tagBox: JQuery) {
           text: str_yes_delete_confirmation,
           btnClass: "btn-red",
           action: function () {
-            removeTag(tagBox.data("id"), tagBox.find(".tag-name").html());
+            removeTag(
+              tagBox.data("id") as TagId,
+              tagBox.find(".tag-name").html(),
+            );
           },
         },
         cancel: {
@@ -372,8 +375,8 @@ function setupTagbox(tagBox: JQuery) {
   //Duplicate Tag
   tagBox.find(".dropdown-option.duplicate").on("click", function () {
     void duplicateTag(
-      tagBox.data("id"),
-      tagBox.find(".tag-name").data("rawname"),
+      tagBox.data("id") as TagId,
+      tagBox.find(".tag-name").data("rawname") as string,
     ).then((data) => {
       showMessage(str_tag_created.replace("%s", data.name));
     });
@@ -1039,7 +1042,7 @@ function showMessage(message: string) {
 /*-------
  Pagination
 -------*/
-let per_page: number = $(".tag-container").data("per_page");
+let per_page = $(".tag-container").data("per_page") as number;
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
@@ -1113,7 +1116,7 @@ function appendPaginationItem(page: number | null = null) {
       newTag.addClass("actual");
     }
     newTag.on("click", () => {
-      actualPage = newTag.data("page");
+      actualPage = newTag.data("page") as number;
       updatePaginationMenu();
     });
   } else {
@@ -1266,9 +1269,9 @@ function updateSearchInfo() {
 }
 
 const pwg_token = pwg_getPageData<string>("csrf_token");
-const orphan_tag_names: string[] = JSON.parse(
+const orphan_tag_names = JSON.parse(
   pwg_getPageData<string>("orphan_tag_names_array"),
-);
+) as string[];
 const str_delete = pwg_getPageString('Delete tag "%s"?');
 const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
@@ -1320,7 +1323,7 @@ if (!$.cookie("pwg_tags_per_page")) {
 
 $(function () {
   function setPagination() {
-    const test = $.cookie("pwg_tags_per_page");
+    const test = $.cookie("pwg_tags_per_page") as string | undefined;
     $(".pagination-per-page .selected").removeClass("selected");
     $("#" + test).trigger("click");
   }

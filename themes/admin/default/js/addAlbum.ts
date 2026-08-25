@@ -36,7 +36,9 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
     $albumParent = $popup.find('[name="category_parent"]'),
     $button = jQuery(this),
     $target = jQuery('[name="' + $button.data("addAlbum") + '"]'),
-    cache = $target.data("cache");
+    cache = $target.data("cache") as {
+      selectize(target: JQuery, options?: Record<string, unknown>): void;
+    };
 
   console.log(cache);
 
@@ -116,7 +118,10 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
             pos: 0,
           };
 
-          const parentSelectize = $albumParent[0]!.selectize;
+          const parentSelectize = $albumParent[0]!.selectize as Selectize.IApi<
+            string | number,
+            AlbumOptionData
+          >;
 
           if (parent_id != 0) {
             const parent = parentSelectize.options[String(parent_id)]!;

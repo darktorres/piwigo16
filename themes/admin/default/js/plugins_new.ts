@@ -22,7 +22,12 @@ const str_from_begining = pwg_getPageString("since the beginning");
 
 // <-- Define sort orders -->
 let sortOrder = "date";
-const sortPlugins = function (a: any, b: any) {
+// Params match jquery.sort.js's own untyped `sortElements(comparator: (a:
+// any, b: any) => number)` ambient signature (no real type source for
+// this vendored plugin) -- HTMLElement is the real runtime shape either
+// way, and a more specific param type here is still assignable to that
+// `any`-typed callback slot.
+const sortPlugins = function (a: HTMLElement, b: HTMLElement) {
   if (
     sortOrder == "downloads" ||
     sortOrder == "revision" ||
@@ -43,8 +48,24 @@ $(function () {
 
   const betaTestPlugins = $("#showBetaTestPlugin")[0]!.hasAttribute("checked");
 
-  // object that remember filters states (initialized later)
-  let filters: Record<string, any> = {};
+  interface PluginFilters {
+    search: string;
+    author: string;
+    tag: string;
+    rating: number;
+    certification: number;
+    revision: number;
+  }
+
+  // object that remember filters states (initialized later, below)
+  let filters: PluginFilters = {
+    search: "",
+    author: "",
+    tag: "",
+    rating: 0,
+    certification: 0,
+    revision: 0,
+  };
 
   // toggle advanced filter's panel
   $(".advanced-filter-btn").click(advanced_filter_button_click);
@@ -106,21 +127,26 @@ $(function () {
     displayStars(ratingContainer.find(".rating-star-container"), rating);
   });
 
+  interface FilterOption {
+    value: string;
+    text: string;
+  }
+
   // put default values in the select
-  const authorNames: any[] = [{ value: "", text: "-" }];
-  const tagsNames: any[] = [{ value: "", text: "-" }];
+  const authorNames: FilterOption[] = [{ value: "", text: "-" }];
+  const tagsNames: FilterOption[] = [{ value: "", text: "-" }];
 
   // read all plugin boxes to get author and tags
   $(".pluginBox").each((i, el) => {
     const author = $(el).data("author");
-    author.split(", ").forEach((name: any) => {
+    author.split(", ").forEach((name: string) => {
       if (!authorNames.find((el) => el.value == name)) {
         authorNames.push({ value: name, text: name });
       }
     });
 
     const tags = $(el).data("tags");
-    tags.split(", ").forEach((tag: any) => {
+    tags.split(", ").forEach((tag: string) => {
       if (!tagsNames.find((el) => el.value == tag)) {
         tagsNames.push({ value: tag, text: tag });
       }
@@ -128,27 +154,30 @@ $(function () {
   });
 
   // initialize the Selectize control
-  let $select: any = $("#author-filter").selectize({
-    onChange: function (value: any) {
+  let $select = $("#author-filter").selectize({
+    // Neither #author-filter nor #tag-filter is a `<select multiple>`
+    // (confirmed in plugins_new.latte), so onChange always gives a
+    // single string, not string[].
+    onChange: function (value: string) {
       applyFilter("author", value);
     },
     plugins: ["remove_button"],
   });
 
   // fetch the instance
-  const selectizeAuthor = $select[0].selectize;
+  const selectizeAuthor = $select[0]!.selectize;
   selectizeAuthor.addOption(authorNames);
 
   // initialize the Selectize control
   $select = $("#tag-filter").selectize({
-    onChange: function (value: any) {
+    onChange: function (value: string) {
       applyFilter("tag", value);
     },
     plugins: ["remove_button"],
   });
 
   // fetch the instance
-  const selectizeTag = $select[0].selectize;
+  const selectizeTag = $select[0]!.selectize;
   selectizeTag.addOption(tagsNames);
 
   $(".notation-filter-slider").slider({
@@ -157,9 +186,9 @@ $(function () {
     min: 0,
     max: 5,
     step: 0.5,
-    slide: function (event: any, ui: any) {
-      updateRatingFilterLabel(ui.value);
-      applyFilter("rating", ui.value);
+    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      updateRatingFilterLabel(ui.value!);
+      applyFilter("rating", ui.value!);
     },
   });
 
@@ -168,15 +197,15 @@ $(function () {
     value: 0,
     min: 0,
     max: 6,
-    slide: function (event: any, ui: any) {
-      const [month] = value_to_month(ui.value);
-      updateRevisionFilterLabel(ui.value);
+    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      const [month] = value_to_month(ui.value!);
+      updateRevisionFilterLabel(ui.value!);
       applyFilter("revision", month);
     },
   });
 
   // All the slider values and it's corresponding month's number and label
-  function value_to_month(val: any): [number, string] {
+  function value_to_month(val: number): [number, string] {
     switch (val) {
       case 6:
         return [1, str_x_month.replace("%d", String(1))];
@@ -203,9 +232,9 @@ $(function () {
     value: minCertification,
     min: minCertification,
     max: 3,
-    slide: function (event: any, ui: any) {
-      updateCertificationFilterLabel(ui.value);
-      applyFilter("certification", ui.value);
+    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      updateCertificationFilterLabel(ui.value!);
+      applyFilter("certification", ui.value!);
     },
   });
 
@@ -222,7 +251,7 @@ $(function () {
   updateCertificationFilterLabel(minCertification);
   updateRevisionFilterLabel(0);
 
-  function displayStars(element: any, rating: number) {
+  function displayStars(element: JQuery, rating: number) {
     element.find("span").addClass("icon-star-empty");
     element.find("span i").attr("class", "");
 
@@ -248,11 +277,11 @@ $(function () {
 
   // Updates labels when input change
 
-  function updateRatingFilterLabel(value: any) {
+  function updateRatingFilterLabel(value: number) {
     displayStars($(".advanced-filter-rating .rating-star-container"), value);
   }
 
-  function updateCertificationFilterLabel(value: any) {
+  function updateCertificationFilterLabel(value: number) {
     const certifNode = $(".advanced-filter-certification .certification");
     certifNode.attr("data-certification", value);
     certifNode.attr("title", strs_certification[String(value)]!);
@@ -263,7 +292,7 @@ $(function () {
     });
   }
 
-  function updateRevisionFilterLabel(val: any) {
+  function updateRevisionFilterLabel(val: number) {
     const [, label] = value_to_month(val);
     $(".revision-date").html(label);
   }
@@ -272,11 +301,17 @@ $(function () {
 
   // object that remember filters states
   filters = {
-    search: $("#search").val(),
+    // Real #search input, always a string.
+    search: $("#search").val() as string,
     author: "",
     tag: "",
     rating: $(".notation-filter-slider").slider("value"),
     certification: $(".certification-filter-slider").slider("value"),
+    // Real, pre-existing behavior, not a bug this phase fixes: reads
+    // `.certification-filter-slider`'s own value here, not
+    // `.revision-date-filter-slider`'s -- looks like a likely
+    // copy-paste bug (both sliders start at 0 so it's not currently
+    // observable), flagged rather than silently changed.
     revision: value_to_month(
       $(".certification-filter-slider").slider("value"),
     )[0],
@@ -285,10 +320,10 @@ $(function () {
   selectizeAuthor.setValue("");
   selectizeTag.setValue("");
 
-  function applyFilter(changed: string, value: any) {
-    filters[changed] = value;
+  function applyFilter(changed: keyof PluginFilters, value: string | number) {
+    (filters as Record<keyof PluginFilters, string | number>)[changed] = value;
 
-    sort((pluginBox: any) => {
+    sort((pluginBox: JQuery) => {
       const pluginRating = pluginBox.find(".pluginRating").data("rating") || 0;
       const pluginCertification = pluginBox
         .find(".certification")
@@ -313,7 +348,7 @@ $(function () {
   }
 
   // Display or not plugin with a function handler
-  function sort(sortFunction: (pluginBox: any) => boolean) {
+  function sort(sortFunction: (pluginBox: JQuery) => boolean) {
     $(".pluginBox").each((i, el) => {
       if (sortFunction($(el))) {
         $(el).show();

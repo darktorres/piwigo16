@@ -146,17 +146,27 @@ interface Window {
   // album_selector.ts's own established shared-global set (confirmed via
   // the P46-C full 61-file sweep, not this plan's earlier 5-minute
   // spot-check -- see docs/PLAN.md's own sweep writeup for the full
-  // per-name evidence).
+  // per-name evidence). Return type tightened from `any` to
+  // `AlbumSelectorInstance` (P47) -- the real class's own internal
+  // fields stay loosely typed until album_selector.ts's own P47-B turn,
+  // this ambient type only promises the public contract its consumers
+  // actually rely on.
   str_albums_found: string;
   str_result_limit: string;
-  AlbumSelector: new (options: Record<string, any>) => any;
+  AlbumSelector: new (options: Record<string, any>) => AlbumSelectorInstance;
 
   // intro.ts's own established shared-global set (matches this plan's
   // own earlier 5-minute spot-check finding, confirmed by full reading
-  // during the P46-C sweep).
+  // during the P46-C sweep). `StorageDetails` (below) replaces the
+  // former `Record<string, any>` (P47) -- real shape traced to
+  // IntroView.php's own `storage_chart_data` (`array<string,
+  // array<string, array<string, mixed>>>`) and the actual
+  // `.total.filesize`/`.total.nb_files`/`.details[ext].filesize`/
+  // `.details[ext].nb_files` fields both intro.ts and
+  // intro_tooltips.ts read.
   str_gb: string;
   str_mb: string;
-  storage_details: Record<string, any>;
+  storage_details: StorageDetails;
   translate_files: string;
   translate_type: Record<string, string>;
 
@@ -504,8 +514,10 @@ interface JQuery {
 
   // admin.ts's own first-party `jQuery.fn.lightAccordion` extension --
   // declared and consumed within the same file, no other real call
-  // site found.
-  lightAccordion(options?: Record<string, any>): JQuery;
+  // site found. Options interface lives here (not in admin.ts itself)
+  // since admin.ts is a module (`export {}`) and this ambient
+  // declaration needs the same shape (P47).
+  lightAccordion(options?: LightAccordionOptions): JQuery;
 
   // jQuery UI's own `slider` widget (vendored -- the one full-bundle
   // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
@@ -605,4 +617,54 @@ interface JQuery {
   // (P47) -- deleted here (method-shorthand on both sides, harmless to
   // leave, but redundant). `menubar.ts`'s own drag-to-reorder menu
   // setup is the one real first-party call site.
+}
+
+// admin.ts's own `jQuery.fn.lightAccordion` options shape (P47) --
+// declared here rather than in admin.ts itself, since admin.ts is a
+// module (`export {}`) and the `interface JQuery` augmentation above
+// needs the same type.
+interface LightAccordionOptions {
+  header?: string;
+  content?: string;
+  active?: number;
+}
+
+// `album_selector.ts`'s own real `class AlbumSelector` public surface
+// (P47) -- mirrors `TemporaryStateCtor`'s own precedent above. Kept to
+// the methods real consumers actually call; the real class's own
+// internal implementation stays loosely typed until its own P47-B turn.
+interface AlbumSelectorInstance {
+  open(): void;
+  close(): void;
+  remove_selected_album(id: string | number): void;
+  get_selected_albums(): string[];
+  select_album(id: string | number): void;
+  resetAll(): void;
+  hardUpdate(cats: string[]): void;
+}
+
+// The real shape `album_selector.ts`'s own constructor passes to a
+// consumer's `selectAlbum` callback (P47) -- confirmed by reading the
+// constructor's own wrapping (`this.#selectAlbum = (args) =>
+// selectAlbum.call(null, { ...args, newSelectedAlbum, addSelectedAlbum,
+// getSelectedAlbum })`), not guessed. Shared across every real
+// `selectAlbum:` consumer (`batchManagerFilter.ts`, `cat_modify.ts`,
+// `batchManagerGlobal.ts`, `mcs.ts`, `batchManagerUnit.ts`,
+// `picture_modify.ts`, `photos_add_direct.ts`) -- grows if a future
+// consumer needs more of `album`'s own real shape than `id`/`name`.
+interface AlbumSelectorCallbackArgs {
+  album: { id: string | number; name?: string; root?: string };
+  newSelectedAlbum: () => void;
+  addSelectedAlbum: (...args: any[]) => void;
+  getSelectedAlbum: () => string[];
+}
+
+// `intro.ts`'s own `storage_details` shared global (P47) -- real shape
+// traced to `IntroView.php`'s `storage_chart_data` property and the
+// actual fields `intro.ts`/`intro_tooltips.ts` both read.
+interface StorageDetails {
+  [type: string]: {
+    total: { filesize: number; nb_files: number };
+    details?: Record<string, { filesize: number; nb_files: number }>;
+  };
 }

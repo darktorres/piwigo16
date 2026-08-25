@@ -10,11 +10,12 @@ const str_gb_used = pwg_getPageString("%s GB used");
 const str_mb_used = pwg_getPageString("%s MB used");
 const str_gb = pwg_getPageString("%sGB").replace(" ", "&nbsp;");
 const str_mb = pwg_getPageString("%sMB").replace(" ", "&nbsp;");
-const storage_total = pwg_getPageData("storage_total");
-const storage_details: Record<string, any> =
-  pwg_getPageData("storage_chart_data");
+const storage_total = pwg_getPageData<number>("storage_total");
+const storage_details = pwg_getPageData<StorageDetails>("storage_chart_data");
 const translate_files = pwg_getPageString("%d files");
-const newsletter_base_url = pwg_getPageData("subscribe_base_url");
+const newsletter_base_url = pwg_getPageData<string | null>(
+  "subscribe_base_url",
+);
 
 const translate_type: Record<string, string> = {};
 Object.keys(storage_details).forEach(function (type) {
@@ -28,13 +29,15 @@ jQuery().ready(function () {
     positionBy: "bottomTop",
   });
 
-  if (pwg_getPageData("check_for_updates")) {
+  if (pwg_getPageData<boolean>("check_for_updates")) {
     jQuery.ajax({
       type: "GET",
       url: "api/v1/extensions/updates",
       dataType: "json",
       timeout: 5000,
-      success: function (data: any) {
+      success: function (
+        data: import("../../../../openapi/client/schema").operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"],
+      ) {
         const piwigo_update = data["piwigoNeedUpdate"];
         const ext_update = data["extNeedUpdate"];
         if ((piwigo_update || ext_update) && !jQuery(".warnings").is("div"))
@@ -51,7 +54,7 @@ jQuery().ready(function () {
     });
   }
 
-  if (pwg_getPageData("subscribe_base_url")) {
+  if (pwg_getPageData<string | null>("subscribe_base_url")) {
     jQuery(".eiw").prepend(`
     <div class="promote-newsletter">
       <div class="promote-content">
@@ -61,10 +64,10 @@ jQuery().ready(function () {
         <div class="promote-newsletter-content">
           <span class="promote-newsletter-title">${pwg_getPageString("Subscribe to our newsletter and stay updated!")}</span>
           <div class="promote-content subscribe-newsletter">
-            <input type="text" id="newsletterSubscribeInput" value="${pwg_getPageData("email") || ""}" class="left-side">
-            <a href="${pwg_getPageData("subscribe_base_url")}${pwg_getPageData("email") || ""}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
+            <input type="text" id="newsletterSubscribeInput" value="${pwg_getPageData<string | null>("email") || ""}" class="left-side">
+            <a href="${pwg_getPageData<string | null>("subscribe_base_url")}${pwg_getPageData<string | null>("email") || ""}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
           </div>
-          <a href="${pwg_getPageData("old_newsletters_url") || ""}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
+          <a href="${pwg_getPageData<string | null>("old_newsletters_url") || ""}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
         </div>
 
       </div>

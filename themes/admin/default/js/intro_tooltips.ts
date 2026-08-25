@@ -22,55 +22,58 @@ $(function () {
     $("#storage-files-" + type).html(
       "<p>" +
         (infos.total.nb_files
-          ? translate_files.replace("%d", infos.total.nb_files)
+          ? translate_files.replace("%d", String(infos.total.nb_files))
           : "~") +
         "</p>",
     );
 
     // Display body of Tooltip
     if (infos.details) {
-      $.each(infos.details, function (ext: string, data: any) {
-        // Determinate if we use MB or GB and show it correctly (duplicate code from total size for scaling code)
-        const detail_size = data.filesize;
-        let detail_str_size_type_string;
-        let detail_size_nb: number | string;
-        if (detail_size > 1048576) {
-          detail_str_size_type_string = str_gb;
-          detail_size_nb = (detail_size / 1048576).toFixed(2);
-        } else {
-          detail_str_size_type_string = str_mb;
-          detail_size_nb =
-            Number((detail_size / 1024).toFixed(0)) < 1
-              ? (detail_size / 1024).toFixed(2)
-              : (detail_size / 1024).toFixed(0);
-        }
-        const detail_str_size = detail_str_size_type_string.replace(
-          "%s",
-          String(detail_size_nb),
-        );
-        $("#storage-detail-" + type).append(
-          "" +
-            '<span class="tooltip-details-cont">' +
-            '<span class="tooltip-details-ext"><b>' +
-            ext +
-            "</b></span>" +
-            '<span class="tooltip-details-size"><b>' +
-            detail_str_size +
-            "</b></span>" +
-            '<span class="tooltip-details-files">' +
-            translate_files.replace("%d", data.nb_files) +
-            "</span>" +
-            "</span>" +
-            "",
-        );
-        const ext_bg_color = $(
-          '.storage-chart span[data-type="storage-' + type + '"]',
-        ).css("background-color");
-        $("#storage-" + type + " .tooltip-details-ext b").css(
-          "color",
-          ext_bg_color,
-        );
-      });
+      $.each(
+        infos.details,
+        function (ext: string, data: { filesize: number; nb_files: number }) {
+          // Determinate if we use MB or GB and show it correctly (duplicate code from total size for scaling code)
+          const detail_size = data.filesize;
+          let detail_str_size_type_string;
+          let detail_size_nb: number | string;
+          if (detail_size > 1048576) {
+            detail_str_size_type_string = str_gb;
+            detail_size_nb = (detail_size / 1048576).toFixed(2);
+          } else {
+            detail_str_size_type_string = str_mb;
+            detail_size_nb =
+              Number((detail_size / 1024).toFixed(0)) < 1
+                ? (detail_size / 1024).toFixed(2)
+                : (detail_size / 1024).toFixed(0);
+          }
+          const detail_str_size = detail_str_size_type_string.replace(
+            "%s",
+            String(detail_size_nb),
+          );
+          $("#storage-detail-" + type).append(
+            "" +
+              '<span class="tooltip-details-cont">' +
+              '<span class="tooltip-details-ext"><b>' +
+              ext +
+              "</b></span>" +
+              '<span class="tooltip-details-size"><b>' +
+              detail_str_size +
+              "</b></span>" +
+              '<span class="tooltip-details-files">' +
+              translate_files.replace("%d", String(data.nb_files)) +
+              "</span>" +
+              "</span>" +
+              "",
+          );
+          const ext_bg_color = $(
+            '.storage-chart span[data-type="storage-' + type + '"]',
+          ).css("background-color");
+          $("#storage-" + type + " .tooltip-details-ext b").css(
+            "color",
+            ext_bg_color,
+          );
+        },
+      );
     } else {
       $("#storage-" + type + " .separated").attr(
         "style",

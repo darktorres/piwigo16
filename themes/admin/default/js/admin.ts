@@ -1,6 +1,9 @@
 export {};
 
-jQuery.fn.lightAccordion = function (this: JQuery, options: any) {
+jQuery.fn.lightAccordion = function (
+  this: JQuery,
+  options?: LightAccordionOptions,
+) {
   const settings = $.extend(
     {
       header: "dt",
@@ -16,7 +19,7 @@ jQuery.fn.lightAccordion = function (this: JQuery, options: any) {
     const contents = self.find(settings.content),
       headers = self.find(settings.header);
 
-    contents.not(contents[settings.active]).hide();
+    contents.not(contents[settings.active ?? 0]!).hide();
 
     self.on("click", settings.header, function () {
       const content = jQuery(this).next(settings.content);
@@ -27,7 +30,7 @@ jQuery.fn.lightAccordion = function (this: JQuery, options: any) {
 };
 
 $("#menubar").lightAccordion({
-  active: pwg_getPageData("active_menu"),
+  active: pwg_getPageData<number>("active_menu"),
 });
 
 /* in case we have several infos/errors/warnings display bullets */

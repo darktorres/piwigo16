@@ -8,8 +8,26 @@ export {};
 // different theme, a different page, never co-loaded) -- this file's
 // own `export {}` module isolation keeps the two from ever colliding
 // regardless.
-const dimensions = pwg_getPageData("dimensions");
-const filesizeData = pwg_getPageData("filesize");
+interface DimensionsData {
+  widths: string;
+  heights: string;
+  ratios: string;
+  selected: {
+    min_width: string | number;
+    max_width: string | number;
+    min_height: string | number;
+    max_height: string | number;
+    min_ratio: string | number;
+    max_ratio: string | number;
+  };
+}
+interface FilesizeData {
+  list: string;
+  selected: { min: string | number; max: string | number };
+}
+
+const dimensions = pwg_getPageData<DimensionsData>("dimensions");
+const filesizeData = pwg_getPageData<FilesizeData>("filesize");
 
 const sliders = {
   widths: {
@@ -49,7 +67,9 @@ const sliders = {
   },
 };
 
-const filterCategorySelected = pwg_getPageData("filter_category_selected");
+const filterCategorySelected = pwg_getPageData<number | null>(
+  "filter_category_selected",
+);
 const selected_filter_cat_ids = filterCategorySelected
   ? [String(filterCategorySelected)]
   : [];
@@ -99,11 +119,11 @@ function select_album_filter({
   album,
   newSelectedAlbum,
   getSelectedAlbum,
-}: any) {
-  $("#selectedAlbumNameFilter").html(album.name);
+}: AlbumSelectorCallbackArgs) {
+  $("#selectedAlbumNameFilter").html(album.name!);
   newSelectedAlbum();
   hide_filters_error(str_select_album);
-  $("#filterCategoryValue").val(+getSelectedAlbum()[0]);
+  $("#filterCategoryValue").val(+getSelectedAlbum()[0]!);
   $("#selectAlbumFilter").hide();
   $("#selectedAlbumFilterArea").fadeIn();
 }

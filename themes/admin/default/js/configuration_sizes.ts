@@ -20,7 +20,7 @@ $(".restore-settings-button").each(function () {
     labelMaxHeight = pwg_getPageString("Maximum height"),
     labelHeight = pwg_getPageString("Height");
 
-  function toggleResizeFields(_size: any) {
+  function toggleResizeFields(_size: string) {
     const checkbox = jQuery("[name=original_resize]");
     const needToggle = jQuery("#sizeEdit-original");
 

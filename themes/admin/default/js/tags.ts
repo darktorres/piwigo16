@@ -1,7 +1,37 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
+// Real per-row shape (P47), traced to TagsPageRenderer.php's own
+// `$all_tags` construction (`name`/`id`/`url_name`/`raw_name` always
+// set; `counter`/`alt_names` only set when non-empty, hence optional).
+interface TagRow {
+  id: number;
+  name: string;
+  url_name: string;
+  raw_name: string;
+  counter?: number;
+  alt_names?: string;
+}
+
+// Mixed at runtime -- most callers read a real numeric `TagRow.id`, but
+// several DOM-attribute-sourced sites (`.attr("data-id")`, `.data("id")`)
+// hand back a string form of the same value.
+type TagId = string | number;
+
+type TagCreateResponse =
+  operations["tagCreate"]["responses"][201]["content"]["application/json"];
+type TagRenameResponse =
+  operations["tagRename"]["responses"][200]["content"]["application/json"];
+type TagDeleteResponse =
+  operations["tagDelete"]["responses"][200]["content"]["application/json"];
+type TagDuplicateResponse =
+  operations["tagDuplicate"]["responses"][201]["content"]["application/json"];
+type TagMergeResponse =
+  operations["tagMerge"]["responses"][200]["content"]["application/json"];
+
 //Get the data
-let dataTags: any = $(".tag-container").data("tags");
+let dataTags: TagRow[] = $(".tag-container").data("tags");
 
 //Initiate Select
 $("#select-100").prop("checked", true);
@@ -45,11 +75,11 @@ $(".info-warning p a").on("click", () => {
 
 //Create and recycle tag box
 function createTagBox(
-  id: any,
-  name: any,
-  url_name: any,
-  count: any,
-  raw_name: any = null,
+  id: number,
+  name: string,
+  url_name: string,
+  count: number | undefined,
+  raw_name: string | null = null,
 ) {
   if (raw_name === null) {
     raw_name = name;
@@ -76,13 +106,13 @@ function createTagBox(
     newTag.addClass("selection");
     newTag.find(".in-selection-mode").show();
   }
-  if (count > 0) {
+  if (count !== undefined && count > 0) {
     newTag
       .find(".dropdown-option.view, .dropdown-option.manage")
       .css("display", "block");
     newTag
       .find(".tag-dropdown-header i")
-      .html(str_number_photos.replace("%d", count));
+      .html(str_number_photos.replace("%d", String(count)));
   } else {
     newTag.find(".tag-dropdown-header i").html(str_no_photos);
   }
@@ -90,12 +120,12 @@ function createTagBox(
 }
 
 function recycleTagBox(
-  tagBox: any,
-  id: any,
-  name: any,
-  url_name: any,
-  count: any,
-  raw_name: any = null,
+  tagBox: JQuery,
+  id: number,
+  name: string,
+  url_name: string,
+  count: number | undefined,
+  raw_name: string | null = null,
 ) {
   if (raw_name === null) {
     raw_name = name;
@@ -113,13 +143,13 @@ function recycleTagBox(
   tagBox.find(".dropdown-option.view").attr("href", u_view);
   tagBox.find(".dropdown-option.manage").attr("href", u_edit);
 
-  if (count > 0) {
+  if (count !== undefined && count > 0) {
     tagBox
       .find(".dropdown-option.view, .dropdown-option.manage")
       .css("display", "block");
     tagBox
       .find(".tag-dropdown-header i")
-      .html(str_number_photos.replace("%d", count));
+      .html(str_number_photos.replace("%d", String(count)));
   } else {
     tagBox.find(".tag-dropdown-header i").html(str_no_photos);
   }
@@ -127,7 +157,7 @@ function recycleTagBox(
 
 //Number On Badge
 function updateBadge() {
-  $(".badge-number").html(dataTags.length);
+  $(".badge-number").html(String(dataTags.length));
   if (dataTags.length == 0) {
     $(".tag-header #add-tag .add-tag-label").addClass("highlight");
   } else {
@@ -156,12 +186,14 @@ $(".tag-box").each(function () {
 $(".TagSubmit").on("click", function () {
   $(".TagSubmit").hide();
   $(".TagLoading").show();
+  // Non-null: set_up_popin() always sets this id before the form is
+  // submittable.
   const $tagboxid = $(".RenameTagPopInContainer")
     .find(".tag-property-input")
-    .attr("id");
+    .attr("id")!;
   renameTag(
     $tagboxid,
-    $(".RenameTagPopInContainer").find(".tag-property-input").val(),
+    String($(".RenameTagPopInContainer").find(".tag-property-input").val()),
   )
     .then(() => {
       $(".TagSubmit").show();
@@ -171,7 +203,7 @@ $(".TagSubmit").on("click", function () {
       $("[data-id=" + $tagboxid + "]").wrap('<div class="tag-changed"></div>');
       $(".tag-changed").prepend('<i class="icon-ok tag-checkmark"></i>');
     })
-    .catch((message: any) => {
+    .catch((message: Error) => {
       $(".TagSubmit").show();
       $(".TagLoading").hide();
       console.error(message);
@@ -201,7 +233,7 @@ $("#add-tag").submit(function (e) {
       "style",
       "pointer-event:none",
     );
-    addTag($("#add-tag-input").val())
+    addTag(String($("#add-tag-input").val()))
       .then(function () {
         showMessage(
           str_tag_created.replace("%s", String($("#add-tag-input").val())),
@@ -211,9 +243,9 @@ $("#add-tag").submit(function (e) {
         $("#search-tag .search-input").trigger("input");
         loadState.reverse();
       })
-      .catch((message: any) => {
+      .catch((message: Error) => {
         loadState.reverse();
-        showError(message?.message ?? message);
+        showError(message.message);
       });
   }
 });
@@ -224,7 +256,7 @@ $("#add-tag .icon-validate").on("click", function () {
   }
 });
 
-function addTag(name: any) {
+function addTag(name: string) {
   return new Promise<void>((resolve, reject) => {
     jQuery.ajax({
       url: "api/v1/tags",
@@ -237,7 +269,7 @@ function addTag(name: any) {
         name: name,
       }),
       dataType: "json",
-      success: function (data: any) {
+      success: function (data: TagCreateResponse) {
         const newTag = createTagBox(data.id, data.name, data.urlName, 0);
         $(".tag-container").prepend(newTag);
         setupTagbox(newTag);
@@ -253,12 +285,12 @@ function addTag(name: any) {
         updateBadge();
         resolve();
       },
-      error: function (err: any) {
+      error: function (err: JQuery.jqXHR) {
         if (err.status === 422) {
           reject(new Error(str_already_exist.replace("%s", name)));
           return;
         }
-        reject(new Error(err));
+        reject(new Error(err.statusText));
       },
     });
   });
@@ -267,17 +299,17 @@ function addTag(name: any) {
  Setup Tag Box
 -------*/
 
-function setupTagbox(tagBox: any) {
+function setupTagbox(tagBox: JQuery) {
   //Dropdown options
   tagBox.find(".showOptions").on("click", function () {
     tagBox.find(".tag-dropdown-block").css("display", "grid");
   });
 
-  $(document).mouseup(function (e: any) {
+  $(document).mouseup(function (e) {
     e.stopPropagation();
     let option_is_clicked = false;
-    tagBox.find(".dropdown-option").each(function (this: any) {
-      if (!($(this).has(e.target).length === 0)) {
+    tagBox.find(".dropdown-option").each(function (this: HTMLElement) {
+      if (!($(this).has(e.target as unknown as Element).length === 0)) {
         option_is_clicked = true;
       }
     });
@@ -291,25 +323,31 @@ function setupTagbox(tagBox: any) {
     if ($(".tag-container").hasClass("selection")) {
       if (tagBox.attr("data-selected") == "1") {
         tagBox.attr("data-selected", "0");
-        removeSelectedItem(tagBox.attr("data-id"));
+        removeSelectedItem(tagBox.attr("data-id")!);
       } else {
         tagBox.attr("data-selected", "1");
-        addSelectedItem(tagBox.attr("data-id"));
+        addSelectedItem(tagBox.attr("data-id")!);
       }
       updateSelectionContent();
     }
   });
 
   //Edit Name
-  tagBox.find(".dropdown-option.edit").on("click", function (this: any) {
-    const id = $(this).closest(".tag-box").data("id");
-    const tagIndex = dataTags.findIndex((tag: any) => tag.id == id);
-    const tagRawName =
-      dataTags[tagIndex].raw_name ?? tagBox.find(".tag-name").data("rawname");
-    const tagName = dataTags[tagIndex].name ?? tagBox.find(".tag-name").html();
-    set_up_popin(tagBox.data("id"), tagRawName, tagName);
-    rename_tag_open();
-  });
+  tagBox
+    .find(".dropdown-option.edit")
+    .on("click", function (this: HTMLElement) {
+      const id = $(this).closest(".tag-box").data("id") as TagId;
+      const tagIndex = dataTags.findIndex((tag) => tag.id == id);
+      // Non-null: `id` always comes from a real tag box, which was
+      // itself rendered from this same `dataTags` array.
+      const tagRawName =
+        dataTags[tagIndex]!.raw_name ??
+        tagBox.find(".tag-name").data("rawname");
+      const tagName =
+        dataTags[tagIndex]!.name ?? tagBox.find(".tag-name").html();
+      set_up_popin(tagBox.data("id") as TagId, tagRawName, tagName);
+      rename_tag_open();
+    });
 
   //Delete Tag
   tagBox.find(".dropdown-option.delete").on("click", function () {
@@ -342,7 +380,7 @@ function setupTagbox(tagBox: any) {
   });
 }
 
-function set_up_popin(id: any, tagRawName: any, tagName: any) {
+function set_up_popin(id: TagId, tagRawName: string, tagName: string) {
   $(".RenameTagPopInContainer").find(".tag-property-input").attr("id", id);
 
   $(".AddIconTitle span").html(str_tag_rename.replace("%s", tagName));
@@ -362,7 +400,7 @@ function rename_tag_open() {
   $(".tag-property-input").first().focus();
 }
 
-function removeTag(id: any, name: any) {
+function removeTag(id: TagId, name: string) {
   $.alert({
     title: str_tag_deleted.replace("%s", name),
     content: function () {
@@ -373,10 +411,10 @@ function removeTag(id: any, name: any) {
           "X-CSRF-Token": pwg_token,
         },
         dataType: "json",
-        success: function (_data: any) {
+        success: function (_data: TagDeleteResponse) {
           $(".tag-box[data-id=" + id + "]").remove();
           //Update data
-          dataTags = dataTags.filter((tag: any) => tag.id != id);
+          dataTags = dataTags.filter((tag) => tag.id != id);
           showMessage(str_tag_deleted.replace("%s", name));
           updateBadge();
           updateSearchInfo();
@@ -391,8 +429,8 @@ function removeTag(id: any, name: any) {
   });
 }
 
-function renameTag(id: any, new_name: any) {
-  return new Promise<any>((resolve, reject) => {
+function renameTag(id: TagId, new_name: string) {
+  return new Promise<TagRenameResponse>((resolve, reject) => {
     jQuery.ajax({
       url: "api/v1/tags/" + id,
       type: "PATCH",
@@ -404,7 +442,7 @@ function renameTag(id: any, new_name: any) {
         name: new_name,
       }),
       dataType: "json",
-      success: function (data: any) {
+      success: function (data: TagRenameResponse) {
         $(
           ".tag-box[data-id=" +
             id +
@@ -424,14 +462,16 @@ function renameTag(id: any, new_name: any) {
         $(".dropdown-option.view").attr("href", u_view);
 
         //Update the data
-        const index = dataTags.findIndex((tag: any) => tag.id == id);
-        dataTags[index].name = data.name;
-        dataTags[index].raw_name = data.nameRaw;
-        dataTags[index].url_name = data.urlName;
+        const index = dataTags.findIndex((tag) => tag.id == id);
+        // Non-null: `id` always identifies a real, currently-rendered
+        // tag box, which was itself rendered from this same array.
+        dataTags[index]!.name = data.name;
+        dataTags[index]!.raw_name = data.nameRaw;
+        dataTags[index]!.url_name = data.urlName;
 
         resolve(data);
       },
-      error: function (XMLHttpRequest: any) {
+      error: function (XMLHttpRequest: JQuery.jqXHR) {
         if (XMLHttpRequest.status === 422) {
           reject(new Error(str_already_exist.replace("%s", new_name)));
           return;
@@ -442,11 +482,11 @@ function renameTag(id: any, new_name: any) {
   });
 }
 
-function duplicateTag(id: any, name: any) {
-  return new Promise<any>((resolve, reject) => {
+function duplicateTag(id: TagId, name: string) {
+  return new Promise<TagDuplicateResponse>((resolve, reject) => {
     let copy_name = name + str_copy;
 
-    const name_exist = function (name: any) {
+    const name_exist = function (name: string) {
       let exist = false;
       $(".tag-box .tag-name").each(function () {
         if ($(this).html() === name) exist = true;
@@ -470,7 +510,7 @@ function duplicateTag(id: any, name: any) {
         name: copy_name,
       }),
       dataType: "json",
-      success: function (data: any) {
+      success: function (data: TagDuplicateResponse) {
         const newTag = createTagBox(
           data.id,
           data.name,
@@ -481,9 +521,17 @@ function duplicateTag(id: any, name: any) {
         setupTagbox(newTag);
 
         //Update Data
-        const index = dataTags.findIndex((tag: any) => tag.id == id);
+        const index = dataTags.findIndex((tag) => tag.id == id);
         dataTags.splice(index + 1, 0, {
           name: data.name,
+          // Was missing entirely -- `TagRow.raw_name` is a required
+          // field, and `tagDuplicate`'s own response has no separate
+          // raw-name field to source it from (same gap `tagCreate`'s
+          // response has, worked around identically in addTag()'s own
+          // success handler above: the rendered `name` is the best
+          // available stand-in until a real page reload re-fetches the
+          // true raw name).
+          raw_name: data.name,
           id: data.id,
           url_name: data.urlName,
           counter: data.count,
@@ -492,7 +540,7 @@ function duplicateTag(id: any, name: any) {
         updateSearchInfo();
         resolve(data);
       },
-      error: function (XMLHttpRequest: any) {
+      error: function (XMLHttpRequest: JQuery.jqXHR) {
         reject(new Error(XMLHttpRequest.statusText));
       },
     });
@@ -502,7 +550,7 @@ function duplicateTag(id: any, name: any) {
 /*-------
  Selection mode
 -------*/
-let selected: any[] = [];
+let selected: TagId[] = [];
 const maxItemDisplayed = 5;
 
 $("#toggleSelectionMode").prop("checked", false);
@@ -511,7 +559,7 @@ $("#toggleSelectionMode").click(function () {
   $(".tag-info").hide();
 });
 
-function selectionMode(isSelection: any) {
+function selectionMode(isSelection: boolean) {
   if (isSelection) {
     $(".in-selection-mode").addClass("show");
     $(".not-in-selection-mode").addClass("hide");
@@ -534,7 +582,7 @@ function clearSelection() {
   updateSelectionContent();
 }
 
-function addSelectedItem(id: any) {
+function addSelectedItem(id: TagId) {
   if (!selected.includes(id)) {
     selected.push(id);
 
@@ -549,14 +597,14 @@ function addSelectedItem(id: any) {
       );
     } else {
       $(".selection-other-tags").hide();
-      if (dataTags.findIndex((tag: any) => tag.id == id) > -1) {
-        createSelectionItem(id, dataTags.find((tag: any) => tag.id == id).name);
+      if (dataTags.findIndex((tag) => tag.id == id) > -1) {
+        createSelectionItem(id, dataTags.find((tag) => tag.id == id)!.name);
       }
     }
   }
 }
 
-function createSelectionItem(id: any, name: any) {
+function createSelectionItem(id: TagId, name: string) {
   const newItemStructure = $(
     '<div data-id="' +
       id +
@@ -573,10 +621,10 @@ function createSelectionItem(id: any, name: any) {
   );
 }
 
-function removeSelectedItem(id: any) {
-  if (selected.findIndex((tag: any) => tag == id) > -1) {
-    selected = selected.filter((tag: any) => {
-      return parseInt(tag) != parseInt(id);
+function removeSelectedItem(id: TagId) {
+  if (selected.findIndex((tag) => tag == id) > -1) {
+    selected = selected.filter((tag) => {
+      return parseInt(String(tag)) != parseInt(String(id));
     });
 
     $(".tag-box[data-id=" + id + "]").attr("data-selected", "0");
@@ -595,9 +643,9 @@ function removeSelectedItem(id: any) {
           ) {
             isNotCreate = false;
             const indexOfTag = dataTags.findIndex(
-              (tag: any) => tag.id == selected[i],
+              (tag) => tag.id == selected[i],
             );
-            createSelectionItem(selected[i], dataTags[indexOfTag].name);
+            createSelectionItem(selected[i]!, dataTags[indexOfTag]!.name);
           }
           i++;
         }
@@ -622,13 +670,13 @@ function removeSelectedItem(id: any) {
 
 function updateMergeItems() {
   $("#MergeOptionsChoices").html("");
-  selected.forEach((id: any) => {
+  selected.forEach((id) => {
     $("#MergeOptionsChoices").append(
       $(
         '<option value="' +
           id +
           '">' +
-          dataTags.find((tag: any) => tag.id == id).name +
+          dataTags.find((tag) => tag.id == id)!.name +
           "</option>",
       ),
     );
@@ -704,9 +752,9 @@ $("#selectAll").on("click", function () {
   }
 });
 
-function selectAll(data: any) {
-  const promises: Promise<any>[] = [];
-  data.forEach((tag: any) => {
+function selectAll(data: TagRow[]) {
+  const promises: Promise<void>[] = [];
+  data.forEach((tag) => {
     promises.push(
       new Promise<void>((res, rej) => {
         $(".tag-box[data-id=" + tag.id + "]").attr("data-selected", 1);
@@ -718,7 +766,7 @@ function selectAll(data: any) {
   return Promise.all(promises);
 }
 
-function showSelectMessage(str1: any, str2: any, callback: any) {
+function showSelectMessage(str1: string, str2: string, callback: () => void) {
   if (!$(".tag-select-message").is(":visible")) {
     $(".tag-select-message").slideDown({
       start: function () {
@@ -750,8 +798,8 @@ $("#selectInvert").on("click", function () {
   selectInvert(tagToDisplay());
 });
 
-function selectInvert(data: any) {
-  data.forEach((tag: any) => {
+function selectInvert(data: TagRow[]) {
+  data.forEach((tag) => {
     const tagBox = $(".tag-box[data-id=" + tag.id + "]");
     if (tagBox.attr("data-selected") == "1") {
       tagBox.attr("data-selected", "0");
@@ -770,9 +818,9 @@ function selectInvert(data: any) {
 
 //Remove tags
 $("#DeleteSelectionMode").on("click", function () {
-  const names: any[] = [];
-  selected.forEach(function (id: any) {
-    names.push(dataTags.find((tag: any) => tag.id == id).name);
+  const names: string[] = [];
+  selected.forEach(function (id) {
+    names.push(dataTags.find((tag) => tag.id == id)!.name);
   });
 
   $.confirm({
@@ -794,9 +842,9 @@ $("#DeleteSelectionMode").on("click", function () {
 });
 
 function removeSelectedTags() {
-  const names: any[] = [];
-  selected.forEach(function (id: any) {
-    names.push(dataTags.find((tag: any) => tag.id == id).name);
+  const names: string[] = [];
+  selected.forEach(function (id) {
+    names.push(dataTags.find((tag) => tag.id == id)!.name);
   });
 
   $.alert({
@@ -805,7 +853,7 @@ function removeSelectedTags() {
       // No bulk-delete endpoint (a REST single-resource DELETE per tag,
       // per P27's own design) -- fire one DELETE per selected tag.
       return Promise.all(
-        selected.map(function (id: any) {
+        selected.map(function (id) {
           return jQuery.ajax({
             url: "api/v1/tags/" + id,
             type: "DELETE",
@@ -816,12 +864,12 @@ function removeSelectedTags() {
           });
         }),
       ).then(function () {
-        selected.forEach(function (id: any) {
+        selected.forEach(function (id) {
           $(".tag-box[data-id=" + id + "]").remove();
         });
 
         // Update Data
-        dataTags = dataTags.filter((tag: any) => !selected.includes(tag.id));
+        dataTags = dataTags.filter((tag) => !selected.includes(tag.id));
 
         clearSelection();
         updatePaginationMenu();
@@ -835,17 +883,18 @@ function removeSelectedTags() {
 
 //Merge Tags
 $(".ConfirmMergeButton").on("click", () => {
-  const dest_id = $("#MergeOptionsChoices").val();
+  // Single-value <select>, never multi.
+  const dest_id = $("#MergeOptionsChoices").val() as string;
   mergeGroups(dest_id, selected);
 });
 
-function mergeGroups(destination_id: any, merge_ids: any) {
+function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
   const destination_name = $(
     ".tag-box[data-id=" + destination_id + "] .tag-name",
   ).html();
-  const merge_name: any[] = [];
+  const merge_name: string[] = [];
 
-  merge_ids.forEach((id: any) => {
+  merge_ids.forEach((id) => {
     merge_name.push($(".tag-box[data-id=" + id + "] .tag-name").html());
   });
 
@@ -868,12 +917,12 @@ function mergeGroups(destination_id: any, merge_ids: any) {
           mergeTagIds: merge_ids,
         }),
         dataType: "json",
-        success: function (data: any) {
-          data.deletedTagIds.forEach((id: any) => {
+        success: function (data: TagMergeResponse) {
+          data.deletedTagIds.forEach((id) => {
             if (data.destinationTagId != id) {
               $(".tag-box[data-id=" + id + "]").remove();
               // Update data
-              dataTags = dataTags.filter((tag: any) => id != tag.id);
+              dataTags = dataTags.filter((tag) => id != tag.id);
             }
           });
           if (data.imagesInMergedTag.length > 0) {
@@ -886,14 +935,17 @@ function mergeGroups(destination_id: any, merge_ids: any) {
               )
               .show();
             $(".tag-dropdown-header i").html(
-              str_number_photos.replace("%d", data.imagesInMergedTag.length),
+              str_number_photos.replace(
+                "%d",
+                String(data.imagesInMergedTag.length),
+              ),
             );
 
             // Update data
             const index = dataTags.findIndex(
-              (tag: any) => tag.id == data.destinationTagId,
+              (tag) => tag.id == data.destinationTagId,
             );
-            dataTags[index].counter = data.imagesInMergedTag.length;
+            dataTags[index]!.counter = data.imagesInMergedTag.length;
           }
           $(".tag-box").attr("data-selected", "0");
           clearSelection();
@@ -907,7 +959,7 @@ function mergeGroups(destination_id: any, merge_ids: any) {
   });
 }
 
-function tagListToString(list: any) {
+function tagListToString(list: string[]) {
   if (list.length > 5) {
     return (
       list.slice(0, 5).join(", ") +
@@ -924,7 +976,11 @@ function tagListToString(list: any) {
 -------*/
 
 const maxShown = 100;
-let searchTimeOut: any;
+// `ReturnType<typeof setTimeout>`, not `number` -- this project's
+// tsconfig `types` array includes `"node"`, so the ambient
+// `setTimeout`/`clearTimeout` here resolve to Node's own
+// `NodeJS.Timeout`-returning signatures, not the DOM lib's.
+let searchTimeOut: ReturnType<typeof setTimeout> | undefined;
 const delaySearchInput = 300;
 
 $("#search-tag .search-input").on("input", function () {
@@ -941,7 +997,10 @@ $("#search-tag .search-input").on("input", function () {
   }, delaySearchInput);
 });
 
-function isSearched(tagBox: any, stringSearch: any) {
+// Genuinely dead code -- zero real callers found (confirmed via grep)
+// -- typed rather than left broken, same policy as prior files this
+// campaign.
+function isSearched(tagBox: JQuery, stringSearch: string): boolean {
   const name = tagBox.find("p").text().toLowerCase();
   if (name.startsWith(stringSearch.toLowerCase())) {
     return true;
@@ -950,7 +1009,7 @@ function isSearched(tagBox: any, stringSearch: any) {
   }
 }
 
-function isDataSearched(tagObj: any) {
+function isDataSearched(tagObj: TagRow) {
   const name = tagObj.raw_name.toLowerCase();
   const stringSearch = String($("#search-tag .search-input").val());
   if (name.includes(stringSearch.toLowerCase())) {
@@ -963,14 +1022,14 @@ function isDataSearched(tagObj: any) {
 /*-------
  Show Info
 -------*/
-function showError(message: any) {
+function showError(message: string) {
   $(".info-error p").html(message);
   $(".info-error").attr("title", message);
   $(".info-info").hide();
   $(".info-error").css("display", "flex");
 }
 
-function showMessage(message: any) {
+function showMessage(message: string) {
   $(".info-message p").html(message);
   $(".info-message").attr("title", message);
   $(".info-info").hide();
@@ -980,7 +1039,7 @@ function showMessage(message: any) {
 /*-------
  Pagination
 -------*/
-let per_page: any = $(".tag-container").data("per_page");
+let per_page: number = $(".tag-container").data("per_page");
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
@@ -1046,9 +1105,9 @@ function createPaginationMenu() {
   appendPaginationItem(nbPage);
 }
 
-function appendPaginationItem(page: any = null) {
+function appendPaginationItem(page: number | null = null) {
   if (page != null) {
-    const newTag = $(pageItem.replace(/%d/g, page));
+    const newTag = $(pageItem.replace(/%d/g, String(page)));
     $(".pagination-item-container").append(newTag);
     if (actualPage == page) {
       newTag.addClass("actual");
@@ -1081,7 +1140,7 @@ function getNumberPages() {
   return Math.floor((dataVisible - 1) / per_page) + 1;
 }
 
-function movePage(toRigth: any = true) {
+function movePage(toRigth: boolean = true) {
   $(".tag-box").removeClass("edit-name");
   if (toRigth) {
     if (actualPage < getNumberPages()) {
@@ -1111,7 +1170,7 @@ function updatePage() {
           const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
 
           for (let i = 0; i < boxToRecycle; i++) {
-            const tag = dataToDisplay[i];
+            const tag = dataToDisplay[i]!;
             recycleTagBox(
               $(tagBoxes[i]!),
               tag.id,
@@ -1128,7 +1187,7 @@ function updatePage() {
             }
           } else if (dataToDisplay.length > tagBoxes.length) {
             for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
-              const tag = dataToDisplay[j];
+              const tag = dataToDisplay[j]!;
               const newTag = createTagBox(
                 tag.id,
                 tag.name,
@@ -1197,17 +1256,19 @@ function updateSearchInfo() {
   if ($(".search-input").val() != "") {
     const number = dataTags.filter(isDataSearched).length;
     if (number > 1) {
-      $(".search-info").html(str_tags_found.replace("%d", number));
+      $(".search-info").html(str_tags_found.replace("%d", String(number)));
     } else {
-      $(".search-info").html(str_tag_found.replace("%d", number));
+      $(".search-info").html(str_tag_found.replace("%d", String(number)));
     }
   } else {
     $(".search-info").html("");
   }
 }
 
-const pwg_token = pwg_getPageData("csrf_token");
-const orphan_tag_names = JSON.parse(pwg_getPageData("orphan_tag_names_array"));
+const pwg_token = pwg_getPageData<string>("csrf_token");
+const orphan_tag_names: string[] = JSON.parse(
+  pwg_getPageData<string>("orphan_tag_names_array"),
+);
 const str_delete = pwg_getPageString('Delete tag "%s"?');
 const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
@@ -1247,7 +1308,9 @@ const str_tag_found = pwg_getPageString("<b>%d</b> tag found");
 
 $(document).ready(function () {
   $("h1").append(
-    '<span class="badge-number">' + pwg_getPageData("total") + "</span>",
+    '<span class="badge-number">' +
+      pwg_getPageData<number>("total") +
+      "</span>",
   );
 });
 

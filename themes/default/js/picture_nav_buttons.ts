@@ -17,30 +17,30 @@ document.onkeydown = function (e: KeyboardEvent) {
         e.ctrlKey ||
         docElem.scrollLeft === docElem.scrollWidth - docElem.clientWidth
       )
-        url = pwg_getPageData("nav_next_url");
+        url = pwg_getPageData<string | undefined>("nav_next_url");
       break;
     case 63234:
     case 37:
       if (e.ctrlKey || docElem.scrollLeft === 0)
-        url = pwg_getPageData("nav_previous_url");
+        url = pwg_getPageData<string | undefined>("nav_previous_url");
       break;
     case 36:
       // Home
-      if (e.ctrlKey) url = pwg_getPageData("nav_first_url");
+      if (e.ctrlKey) url = pwg_getPageData<string | undefined>("nav_first_url");
       break;
     case 35:
       // End
-      if (e.ctrlKey) url = pwg_getPageData("nav_last_url");
+      if (e.ctrlKey) url = pwg_getPageData<string | undefined>("nav_last_url");
       break;
     case 38:
       // Up
-      if (e.ctrlKey) url = pwg_getPageData("nav_up_url");
+      if (e.ctrlKey) url = pwg_getPageData<string | undefined>("nav_up_url");
       break;
     case 32:
       // Pause / Play
       url =
-        pwg_getPageData("nav_slideshow_start_url") ||
-        pwg_getPageData("nav_slideshow_stop_url");
+        pwg_getPageData<string | undefined>("nav_slideshow_start_url") ||
+        pwg_getPageData<string | undefined>("nav_slideshow_stop_url");
       break;
   }
   if (url) {

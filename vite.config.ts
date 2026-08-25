@@ -1,12 +1,68 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const r = (p: string) => resolve(__dirname, p);
 
 export default defineConfig({
   root: ".",
+  plugins: [
+    // docs/PLAN.md P48's own real fix for a genuine Rollup constraint,
+    // confirmed by a live `vite build` + direct dist/ inspection (not
+    // assumed from docs): a module reachable from 2+ separate `input`
+    // entries gets extracted into one shared chunk, and that chunk's
+    // real `import` statement in each consuming entry's own compiled
+    // output is a hard SyntaxError once wrapped in this file's own
+    // `banner`/`footer` IIFE (`Cannot use import statement outside a
+    // module`, confirmed directly). Since P48's own design (matching
+    // this project's historical `FileCombiner` precedent, see
+    // docs/PLAN.md's P48 plan) wants every page's own bundle fully
+    // self-contained -- real duplication, not a shared chunk -- any
+    // shared-library file importable from 2+ real page-bundle entries
+    // needs `import "./real-path?dup";` (the literal, fixed `?dup`
+    // suffix, no manual per-call tag -- this plugin derives the real
+    // disambiguating key from the *importer's own resolved path*,
+    // guaranteed unique per real consuming file already, rather than
+    // trusting a hand-picked tag not to collide) instead of a plain
+    // `import "./real-path";`. Resolves to the real file's own path
+    // (so it's still real, checked TypeScript source, not a separate
+    // copy on disk) but keeps a per-importer-unique id for Rollup, so
+    // Rollup treats each importer's copy as a genuinely distinct
+    // module -- confirmed via a live build that this produces zero
+    // `imports` in the resulting manifest.json entries and fully
+    // duplicates the real compiled code into each consuming entry
+    // instead. The fixed (no wildcard-in-the-middle) `?dup` suffix is
+    // also what makes `build/vite-modules.d.ts`'s own ambient
+    // `declare module "*?dup"` valid -- TypeScript's wildcard module
+    // patterns only support a single `*`, confirmed directly (a
+    // `"*?dup=*"`-shaped pattern, tried first, left both real
+    // importers as real `tsc` errors). `enforce: "pre"` is load-bearing,
+    // confirmed directly -- without it, Vite's own core resolver
+    // silently claims the `?dup`-suffixed specifier first (stripping
+    // the query and resolving straight to the real shared file, no
+    // error, just quietly wrong), and this plugin's `resolveId` never
+    // runs at all.
+    {
+      name: "duplicate-shared-module",
+      enforce: "pre",
+      async resolveId(source, importer) {
+        if (source !== "?dup" && !source.endsWith("?dup")) return null;
+        const realSource = source.slice(0, -"?dup".length);
+        const resolved = await this.resolve(realSource, importer, {
+          skipSelf: true,
+        });
+        if (!resolved || !importer) return null;
+        return resolved.id + "?dup&importer=" + encodeURIComponent(importer);
+      },
+      load(id) {
+        if (!id.includes("?dup&importer=")) return null;
+        const realId = id.split("?dup&importer=")[0]!;
+        return readFileSync(realId, "utf-8");
+      },
+    },
+  ],
   // Resolve dynamic chunk URLs via import.meta.url so they work under any
   // Apache document root prefix (Piwigo can be served at /, /piwigo17/, etc.).
   base: "./",
@@ -169,10 +225,11 @@ export default defineConfig({
         configurationSizes: r("themes/admin/default/js/configuration_sizes.ts"),
         configurationMain: r("themes/admin/default/js/configuration_main.ts"),
         maintenanceActions: r("themes/admin/default/js/maintenance_actions.ts"),
-        // P46-C part 15 -- addAlbum.ts/datepicker.ts, the real
-        // declarers of pwgAddAlbum/pwgDatepicker (already ambient-typed
-        // `any` and consumed by several already-converted files).
-        addAlbum: r("themes/admin/default/js/addAlbum.ts"),
+        // P46-C part 15 -- datepicker.ts, the real declarer of
+        // pwgDatepicker (already ambient-typed `any` and consumed by
+        // several already-converted files). addAlbum.ts (its former
+        // sibling here) is no longer its own entry (docs/PLAN.md P48)
+        // -- see the pages/ entries below, its 2 real registrants.
         datepicker: r("themes/admin/default/js/datepicker.ts"),
         // P46-C part 16 -- migrating the remaining files in bulk;
         // validation (typecheck/lint/build/test) deferred to the end
@@ -197,6 +254,15 @@ export default defineConfig({
         standardPages: r("themes/standard_pages/js/standard_pages.ts"),
         profile: r("themes/standard_pages/js/profile.ts"),
         mcs: r("themes/default/js/mcs.ts"),
+        // docs/PLAN.md P48 -- real per-page bundle entries, one per
+        // (page × LoadMode group), each extended by later batches as
+        // more of that page's shared-library files get folded in.
+        photosAddDirectPage: r(
+          "themes/admin/default/js/pages/photos_add_direct.ts",
+        ),
+        batchManagerGlobalAsyncPage: r(
+          "themes/admin/default/js/pages/batch_manager_global_async.ts",
+        ),
       },
       output: {
         // P36's Piwigo\Asset\ViteManifest (reading manifest.json for

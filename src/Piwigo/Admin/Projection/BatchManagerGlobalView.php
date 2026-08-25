@@ -92,12 +92,19 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
                 ->pageAssets(),
             ...new ColorboxView(load_mode: 'footer')
                 ->pageAssets(),
-            ...new AddAlbumView(load_mode: 'async', colorscheme: $this->colorscheme)
+            ...new AddAlbumView(colorscheme: $this->colorscheme)
                 ->pageAssets(),
+            // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
+            // addAlbum.ts's code in via a real `import` instead of the
+            // separate script tag AddAlbumView used to register
+            // directly. This page's own Footer-mode script group gets
+            // its own separate bundle entry once that group's own
+            // shared-library files land in later batches.
+            AssetContribution::script('batch_manager_global_async_page', 'themes/admin/default/js/pages/batch_manager_global_async.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Async),
-            AssetContribution::script('batchManagerGlobal', 'themes/admin/default/js/batchManagerGlobal.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'datepicker', 'jquery.colorbox', 'addAlbum', 'doubleSlider']),
+            AssetContribution::script('batchManagerGlobal', 'themes/admin/default/js/batchManagerGlobal.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'datepicker', 'jquery.colorbox', 'batch_manager_global_async_page', 'doubleSlider']),
             AssetContribution::script('batch_manager_global', 'themes/admin/default/js/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),

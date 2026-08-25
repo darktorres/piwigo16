@@ -122,6 +122,11 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
                 ...$assets,
                 ...new AddAlbumView(colorscheme: $this->colorscheme)
                     ->pageAssets(),
+                // Real per-page bundle entry (docs/PLAN.md's P48) --
+                // folds addAlbum.ts's code in via a real `import`
+                // instead of the separate script tag AddAlbumView used
+                // to register directly.
+                AssetContribution::script('photos_add_direct_page', 'themes/admin/default/js/pages/photos_add_direct.ts', loadMode: LoadMode::Footer),
             ];
         }
 

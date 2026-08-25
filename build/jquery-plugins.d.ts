@@ -126,29 +126,21 @@ interface Window {
   // LocalStorageCache.ts's own established shared-global set (same
   // eslint.config.ts pre-existing globals block, same "now enforced by
   // real exposure" note as common.ts's own copy of this comment).
-  // Loosely typed on purpose: these 4 are old-style prototype-chain
-  // "classes" (`Foo.prototype = new Bar()`), not real ES6 classes --
-  // modeling the actual inheritance chain precisely isn't this phase's
-  // job (P46 stays "same code, same behavior," not a real typing
-  // refactor); `any` options in, an object with a real `selectize()`
-  // method out is all a consumer ever needs from the ambient type.
-  CategoriesCache: new (options: any) => {
-    selectize($target: JQuery, options?: any): void;
-  };
-  TagsCache: new (options: any) => {
-    selectize($target: JQuery, options?: any): void;
-  };
-  GroupsCache: new (options: any) => {
-    selectize($target: JQuery, options?: any): void;
-  };
-  UsersCache: new (options: any) => {
-    selectize($target: JQuery, options?: any): void;
-  };
+  // `EntityCacheCtor<T>`/`ProcessedCategory`/`ProcessedTag`/
+  // `ProcessedGroup`/`UserEntity` (P47) are LocalStorageCache.ts's own
+  // top-level ambient types -- that file is a genuinely non-module IIFE,
+  // same technique as album_selector.ts's `AlbumSelectorInstance`, so
+  // referencing them bare here is a real (not `any`) cross-file ambient
+  // dependency, not a redeclaration.
+  CategoriesCache: EntityCacheCtor<ProcessedCategory>;
+  TagsCache: EntityCacheCtor<ProcessedTag>;
+  GroupsCache: EntityCacheCtor<ProcessedGroup>;
+  UsersCache: EntityCacheCtor<UserEntity>;
   // The base class the 4 above inherit from -- exported (`exports.
   // LocalStorageCache = ...`) same as the others in the real pre-P46
   // .js, even though no other real file reads it bare today; typed for
   // the same "same code" completeness reason, not because it's used.
-  LocalStorageCache: any;
+  LocalStorageCache: LocalStorageCacheCtor;
 
   // album_selector.ts's own established shared-global set (confirmed via
   // the P46-C full 61-file sweep, not this plan's earlier 5-minute

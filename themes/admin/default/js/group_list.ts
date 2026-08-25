@@ -1,4 +1,30 @@
+import type { components, operations } from "../../../../openapi/client/schema";
+
 export {};
+
+// `UserEntity`/`EntityCacheInstance<T>` (below, `usersCache`'s own real
+// type) are LocalStorageCache.ts's own top-level ambient types -- that
+// file is a genuinely non-module IIFE, same cross-file ambient-global
+// technique as cat_modify.ts's own `AlbumSelectorCallbackArgs` reuse.
+type Group = components["schemas"]["Group"];
+// The real `GET /api/v1/users?groupIds[]=...` response shape (same
+// underlying schema LocalStorageCache.ts's own `UserEntity` alias
+// already resolves to, kept as a separate local alias here since this
+// file reads the raw API response directly, not through UsersCache).
+type GroupUserListResponse =
+  operations["userList"]["responses"][200]["content"]["application/json"];
+// The user-manager popup's own `usersInGroup` list holds either a real
+// fetched user row, or a locally-synthesized partial one appended right
+// after a successful add-user call (before any refetch) -- only `id`/
+// `username` are ever read from either shape throughout this file.
+interface GroupMemberDisplay {
+  id: string | number;
+  username: string;
+}
+interface UserSelectOption {
+  value: string | number;
+  text: string;
+}
 
 const DELAY_FEEDBACK = 3000;
 /*-------
@@ -116,7 +142,9 @@ jQuery(document).ready(function () {
           name: name,
         }),
         dataType: "json",
-        success: function (data: any) {
+        success: function (
+          data: operations["groupCreate"]["responses"][201]["content"]["application/json"],
+        ) {
           loadState.reverse();
           $(".addGroupFormLabelAndInput input").val("");
           const group = data;
@@ -125,7 +153,7 @@ jQuery(document).ready(function () {
           setupGroupBox(groupBox);
           updateBadge();
         },
-        error: function (_err: any) {
+        error: function (_err: JQuery.jqXHR) {
           loadState.reverse();
           $("#addGroupForm .groupError").html(str_name_not_empty);
           $("#addGroupForm .groupError").fadeIn();
@@ -141,7 +169,7 @@ jQuery(document).ready(function () {
   });
 });
 
-const createGroup = function (group: any) {
+const createGroup = function (group: Group) {
   //Setup the group
   const newgroup = $("#group-template")
     .clone()
@@ -195,8 +223,8 @@ jQuery(document).ready(function () {
     if ($(this).attr("id") != "group-template") setupGroupBox($(this));
   });
 });
-const setupGroupBox = function (groupBox: any) {
-  const id = groupBox.data("id");
+const setupGroupBox = function (groupBox: JQuery) {
+  const id = groupBox.data("id") as string | number;
 
   /* Change background color of group block if checked in selection mode */
   groupBox.find(".Group-checkbox input[type='checkbox']").change(function () {
@@ -205,9 +233,14 @@ const setupGroupBox = function (groupBox: any) {
       groupBox.find(".Group-checkbox input[type='checkbox']").is(":checked"),
     );
   });
+  // Was `.attr("checked", false)` -- jQuery's `.attr()` setter never
+  // accepted a boolean (masked by this file's pre-P47 `any` typing);
+  // `.prop("checked", ...)` is the correct API for a checkbox's boolean
+  // state, matching every other checked-state toggle in this same file
+  // (e.g. `toogleSelection`'s own `.prop("checked", true/false)` below).
   groupBox
     .find(".Group-checkbox input[type='checkbox']")
-    .attr("checked", false);
+    .prop("checked", false);
 
   /* Display the option on the click on "..." */
   groupBox.find(".group-dropdown-options").click(function GroupOptions(
@@ -235,9 +268,9 @@ const setupGroupBox = function (groupBox: any) {
     groupBox.find(".group-rename form").trigger("submit");
   });
 
-  groupBox.find(".group-rename form").on("submit", function (e: any) {
+  groupBox.find(".group-rename form").on("submit", function (e) {
     e.preventDefault();
-    renameGroup(id, groupBox.find(".group_name-editable").val());
+    renameGroup(id, String(groupBox.find(".group_name-editable").val()));
   });
 
   groupBox.find(".group-rename .icon-cancel").on("click", function () {
@@ -249,11 +282,11 @@ const setupGroupBox = function (groupBox: any) {
 
   /* Hide group options and rename field on click on the screen */
 
-  $(document).mouseup(function (e: any) {
+  $(document).mouseup(function (e) {
     e.stopPropagation();
     let option_is_clicked = false;
     $("#GroupOptions div").each(function () {
-      if (!($(this).has(e.target).length === 0)) {
+      if (!($(this).has(e.target as unknown as Element).length === 0)) {
         option_is_clicked = true;
       }
     });
@@ -278,7 +311,7 @@ const setupGroupBox = function (groupBox: any) {
   });
 };
 
-const toogleSelection = function (group_id: any, toggle: any) {
+const toogleSelection = function (group_id: string | number, toggle: boolean) {
   const groupBox = $("#group-" + group_id);
   if (toggle) {
     groupBox.find(".Group-checkbox input").prop("checked", true);
@@ -330,7 +363,7 @@ const toogleSelection = function (group_id: any, toggle: any) {
 };
 
 /* Group Ajax and Display Functions */
-const deleteGroup = function (id: any) {
+const deleteGroup = function (id: string | number) {
   $.confirm({
     title: str_delete.replace("%s", $("#group-" + id + " #group_name").html()),
     draggable: false,
@@ -363,13 +396,15 @@ const deleteGroup = function (id: any) {
                     "X-CSRF-Token": pwg_token,
                   },
                   dataType: "json",
-                  success: function (_data: any) {
+                  success: function (
+                    _data: operations["groupDelete"]["responses"][200]["content"]["application/json"],
+                  ) {
                     $("#group-" + id).remove();
                     $(".DeleteGroupList div[data-id=" + id + "]").remove();
                     $("#MergeOptionsChoices option[value=" + id + "]").remove();
                     updateBadge();
                   },
-                  error: function (err: any) {
+                  error: function (err: JQuery.jqXHR) {
                     console.log(err);
                   },
                 });
@@ -386,7 +421,7 @@ const deleteGroup = function (id: any) {
   });
 };
 
-const renameGroup = function (id: any, newName: any) {
+const renameGroup = function (id: string | number, newName: string) {
   const loadState = new window.TemporaryState();
   loadState.changeHTML(
     $("#group-" + id + " .group-rename .validate"),
@@ -414,7 +449,9 @@ const renameGroup = function (id: any, newName: any) {
         name: newName,
       }),
       dataType: "json",
-      success: function (data: any) {
+      success: function (
+        data: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
+      ) {
         loadState.reverse();
         newName = data.name;
         //Display message
@@ -435,7 +472,7 @@ const renameGroup = function (id: any, newName: any) {
         //Hide editable field
         displayRenameForm(false, id);
       },
-      error: function (_err: any) {
+      error: function (_err: JQuery.jqXHR) {
         loadState.reverse();
         //Display error message
         $("#group-" + id)
@@ -466,7 +503,10 @@ const renameGroup = function (id: any, newName: any) {
 };
 
 // Hide or display rename form
-const displayRenameForm = function (doDisplay: any, grp_id: any) {
+const displayRenameForm = function (
+  doDisplay: boolean,
+  grp_id: string | number,
+) {
   if (doDisplay) {
     $("#group-" + grp_id)
       .find(".group-rename")
@@ -490,7 +530,7 @@ const displayRenameForm = function (doDisplay: any, grp_id: any) {
   }
 };
 
-const setDefaultGroup = function (id: any, is_default: any) {
+const setDefaultGroup = function (id: string | number, is_default: boolean) {
   $("#group-" + id + " #GroupDefault").css(
     "width",
     $("#group-" + id + " #GroupDefault").width()!,
@@ -519,7 +559,9 @@ const setDefaultGroup = function (id: any, is_default: any) {
       isDefault: is_default,
     }),
     dataType: "json",
-    success: function (_data: any) {
+    success: function (
+      _data: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
+    ) {
       $("#group-" + id + " #GroupOptions").hide();
       if (is_default) {
         setupDefaultActions(id, true);
@@ -527,13 +569,16 @@ const setDefaultGroup = function (id: any, is_default: any) {
         setupDefaultActions(id, false);
       }
     },
-    error: function (err: any) {
+    error: function (err: JQuery.jqXHR) {
       console.log(err);
     },
   });
 };
 
-const setupDefaultActions = function (id: any, is_default: any) {
+const setupDefaultActions = function (
+  id: string | number,
+  is_default: boolean,
+) {
   $("#group-" + id + " #GroupDefault").attr("style", "");
   $("#group-" + id + " #GroupDefault").addClass("icon-star");
   $("#group-" + id)
@@ -585,7 +630,7 @@ const setupDefaultActions = function (id: any, is_default: any) {
   }
 };
 
-const duplicateAction = function (id: any) {
+const duplicateAction = function (id: string | number) {
   const loadState = new window.TemporaryState();
   loadState.changeHTML(
     $("#group-" + id + " #GroupDuplicate"),
@@ -599,7 +644,7 @@ const duplicateAction = function (id: any) {
   );
   let copy_name = $("#group-" + id + " #group_name").html() + str_copy;
 
-  const name_exist = function (name: any) {
+  const name_exist = function (name: string) {
     let exist = false;
     $(".Group-name-container p").each(function () {
       if ($(this).html() === name) exist = true;
@@ -625,7 +670,9 @@ const duplicateAction = function (id: any) {
       name: copy_name,
     }),
     dataType: "json",
-    success: function (data: any) {
+    success: function (
+      data: operations["groupDuplicate"]["responses"][201]["content"]["application/json"],
+    ) {
       loadState.reverse();
       $("#group-" + id + " #GroupOptions").hide();
       const group = data;
@@ -638,7 +685,7 @@ const duplicateAction = function (id: any) {
         setupDefaultActions(data.id, true);
       }
     },
-    error: function (err: any) {
+    error: function (err: JQuery.jqXHR) {
       loadState.reverse();
       console.log(err);
     },
@@ -672,7 +719,7 @@ $(function () {
  -------*/
 let state = "NoSelection";
 
-const updateSelectionPanel = function (changedState: any = "") {
+const updateSelectionPanel = function (changedState: string = "") {
   const numSelect = $(".DeleteGroupList div").length;
 
   if (numSelect == 0) {
@@ -693,7 +740,7 @@ const updateSelectionPanel = function (changedState: any = "") {
 /*Update the state of the panel in 5 states :
  NoSelection, OneSelected, ConfirmDeletion, Selection, OptionMerge
  */
-const updateStatePanel = function (newState: any = "Selection") {
+const updateStatePanel = function (newState: string = "Selection") {
   state = newState;
   switch (newState) {
     case "OneSelected":
@@ -749,12 +796,12 @@ const updateStatePanel = function (newState: any = "Selection") {
   }
 };
 
-const buttonAvailable = function (button: any, onClick: any) {
+const buttonAvailable = function (button: JQuery, onClick: string) {
   button.removeClass("unavailable");
   button.attr("OnClick", onClick);
 };
 
-const buttonUnavailable = function (button: any) {
+const buttonUnavailable = function (button: JQuery) {
   button.addClass("unavailable");
   button.removeAttr("OnClick");
 };
@@ -775,10 +822,17 @@ $(".ConfirmMergeButton").on("click", function () {
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   loadState.removeClass($(".ConfirmMergeButton"), "icon-ok");
-  const merge_group: any[] = [];
-  const name_merge: any[] = [];
-  let name_dest: any = [];
-  const dest_grp = $("#MergeOptionsChoices").val();
+  const merge_group: number[] = [];
+  const name_merge: string[] = [];
+  // Always overwritten inside the loop below before use (`dest_grp`
+  // always matches exactly one selected group's data-id) -- typed as a
+  // string, not the original `[]` placeholder, which never matched the
+  // value actually assigned or read.
+  let name_dest = "";
+  // Single-value <select>, never multi -- `.val()`'s generic
+  // `JQuery<HTMLElement>` overload would otherwise widen to
+  // `string | number | string[] | undefined`.
+  const dest_grp = $("#MergeOptionsChoices").val() as string;
 
   $(".DeleteGroupList div").each(function () {
     if (dest_grp != $(this).attr("data-id")) {
@@ -801,10 +855,12 @@ $(".ConfirmMergeButton").on("click", function () {
       mergeGroupIds: merge_group,
     }),
     dataType: "json",
-    success: function (_data: any) {
+    success: function (
+      _data: operations["groupMerge"]["responses"][200]["content"]["application/json"],
+    ) {
       loadState.reverse();
       updateSelectionPanel("Selection");
-      merge_group.forEach(function (id: any) {
+      merge_group.forEach(function (id: number) {
         $("#group-" + id).fadeOut(function () {
           $(this).remove();
         });
@@ -833,7 +889,7 @@ $(".ConfirmMergeButton").on("click", function () {
           groupIds: [dest_grp],
         },
         dataType: "json",
-        success: function (data: any) {
+        success: function (data: GroupUserListResponse) {
           const number = data.users.length;
           $("#group-" + String(dest_grp) + " .group_number_users").html(
             number +
@@ -844,7 +900,7 @@ $(".ConfirmMergeButton").on("click", function () {
         },
       });
     },
-    error: function (err: any) {
+    error: function (err: JQuery.jqXHR) {
       loadState.reverse();
       console.log(err);
     },
@@ -856,10 +912,10 @@ $(".ConfirmMergeButton").on("click", function () {
  -------*/
 
 $(".ConfirmDeleteButton").on("click", function () {
-  const names: any[] = [];
-  const ids: any[] = [];
+  const names: string[] = [];
+  const ids: (string | number)[] = [];
   $(".DeleteGroupList div").each(function () {
-    const id = $(this).data("id");
+    const id = $(this).data("id") as string | number;
     names.push($("#group-" + id + " #group_name").html());
     ids.push(id);
   });
@@ -879,7 +935,7 @@ $(".ConfirmDeleteButton").on("click", function () {
   // No bulk-delete endpoint (a REST single-resource DELETE per group,
   // per P27's own design) -- fire one DELETE per selected group.
   Promise.all(
-    ids.map(function (id: any) {
+    ids.map(function (id: string | number) {
       return jQuery.ajax({
         url: "api/v1/groups/" + id,
         type: "DELETE",
@@ -910,7 +966,7 @@ $(".ConfirmDeleteButton").on("click", function () {
       });
       updateBadge();
     })
-    .catch(function (err: any) {
+    .catch(function (err: JQuery.jqXHR) {
       loadState.reverse();
       console.log(err);
     });
@@ -921,12 +977,14 @@ $(".ConfirmDeleteButton").on("click", function () {
  -------*/
 
 // Initialize the research user bar
-let selectize: any;
+let selectize: Selectize.IApi<string | number, UserSelectOption>;
 
-// Initialize the cache
-let usersCache: any = {};
+// Initialize the cache -- placeholder cast, real init happens via
+// `new window.UsersCache(...)` inside updateUserSearch()/at module load
+// (below) before any handler that reads it can actually run.
+let usersCache = {} as EntityCacheInstance<UserEntity>;
 
-let usersInGroup: any[] = [];
+let usersInGroup: GroupMemberDisplay[] = [];
 
 // Max offset of the user container (322 = 6 lines)
 const maxOffsetUserCont = 322;
@@ -951,10 +1009,15 @@ let updateUserSearch: () => void;
 
 $(function () {
   // initialize the Selectize control
-  const $select: any = $(".AddUserBlock select").selectize({});
+  const $select = $(".AddUserBlock select").selectize({});
 
-  // fetch the instance
-  selectize = $select[0].selectize;
+  // fetch the instance -- ambient `HTMLElement.selectize` (from
+  // @types/selectize) ships as `Selectize.IApi<any, any>`; narrowed to
+  // this file's real value/option shape.
+  selectize = $select[0]!.selectize as Selectize.IApi<
+    string | number,
+    UserSelectOption
+  >;
 
   let idSearch = "";
   $(".UserSearch input").on("focus", function () {
@@ -976,25 +1039,36 @@ $(function () {
       serverId: serverId,
       rootUrl: rootUrl,
     });
-    JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (
-      u: any,
-    ) {
+    // Non-null: `new window.UsersCache(...)` above synchronously
+    // seeds this storage slot before any handler that reads it can run
+    // (the P46-preserved "temporary fix for #1283" behavior, see the
+    // module-load call at the bottom of this file).
+    const cached: { data: UserEntity[] } = JSON.parse(
+      (usersCache.storage as unknown as Record<string, string>)[
+        usersCache.key
+      ]!,
+    );
+    cached.data.forEach(function (u) {
       selectize.addOption({ value: u.id, text: u.username });
     });
     idSearch = $("#UserList").attr("data-group_id") ?? "";
-    for (const [key, value] of Object.entries<any>(selectize.options)) {
-      if (value.username === "guest") {
-        selectize.removeOption(value.id);
+    // Was `value.username` -- no such field exists on the actual
+    // selectize option data (`addOption({value, text})` above only ever
+    // sets `value`/`text`), so this comparison was always false and the
+    // guest user was never really filtered out of the search dropdown.
+    for (const [_key, value] of Object.entries(selectize.options)) {
+      if (value.text === "guest") {
+        selectize.removeOption(value.value);
       }
     }
     $(".UsernameBlock").each(function () {
-      selectize.removeOption($(this).data("id"));
+      selectize.removeOption($(this).data("id") as string | number);
     });
   };
 });
 
 // Display the user manager for a specific group
-const openUserManager = function (grp_id: any) {
+const openUserManager = function (grp_id: string | number) {
   const loadState = new window.TemporaryState();
   loadState.removeClass(
     $("#group-" + grp_id + " #UserListTrigger"),
@@ -1016,7 +1090,7 @@ const openUserManager = function (grp_id: any) {
       groupIds: [grp_id],
     },
     dataType: "json",
-    success: function (data: any) {
+    success: function (data: GroupUserListResponse) {
       loadState.reverse();
       //Set the popin name
       $(".group-name-block p").html(
@@ -1030,7 +1104,7 @@ const openUserManager = function (grp_id: any) {
       //Fill with user blocks
       usersInGroup = data.users;
       // Sort in alphabetic order
-      usersInGroup.sort(function (a: any, b: any) {
+      usersInGroup.sort(function (a, b) {
         if (a.username.toLowerCase() < b.username.toLowerCase()) {
           return -1;
         } else return 1;
@@ -1041,8 +1115,8 @@ const openUserManager = function (grp_id: any) {
         usersInGroup[i] != undefined
       ) {
         getUserDisplay(
-          usersInGroup[i].username,
-          usersInGroup[i].id,
+          usersInGroup[i]!.username,
+          usersInGroup[i]!.id,
           grp_id,
         ).appendTo(".UsersInGroupList");
         i++;
@@ -1059,7 +1133,7 @@ const openUserManager = function (grp_id: any) {
         "admin.php?page=user_list&group=" + grp_id,
       );
     },
-    error: function (err: any) {
+    error: function (err: JQuery.jqXHR) {
       loadState.reverse();
       console.log(err);
     },
@@ -1067,7 +1141,11 @@ const openUserManager = function (grp_id: any) {
 };
 
 //Add a user block
-const getUserDisplay = function (username: any, user_id: any, grp_id: any) {
+const getUserDisplay = function (
+  username: string,
+  user_id: string | number,
+  grp_id: string | number,
+) {
   const userBlock = $(
     '<div class="UsernameBlock" data-id=' +
       user_id +
@@ -1106,7 +1184,9 @@ const getUserDisplay = function (username: any, user_id: any, grp_id: any) {
         userIds: [Number(user_id)],
       }),
       dataType: "json",
-      success: function (_data: any) {
+      success: function (
+        _data: operations["groupRemoveUser"]["responses"][200]["content"]["application/json"],
+      ) {
         const str = str_user_dissociated.replace("%s", username);
         associateUserInfo.fadeOut();
         dissociateUserInfo.find("p").html(str);
@@ -1121,7 +1201,7 @@ const getUserDisplay = function (username: any, user_id: any, grp_id: any) {
           $(".UsernameBlock").last().remove();
         }
 
-        usersInGroup = usersInGroup.filter((u: any) => u.id != user_id);
+        usersInGroup = usersInGroup.filter((u) => u.id != user_id);
 
         //Update member number
         updateMembernumber(parseInt($(".UserNumberBadge").html()) - 1, grp_id);
@@ -1132,12 +1212,12 @@ const getUserDisplay = function (username: any, user_id: any, grp_id: any) {
 };
 
 //Update member number function
-function updateMembernumber(number: any, grp_id: any) {
+function updateMembernumber(number: number, grp_id: string | number) {
   $(".GroupContainer[data-id=" + grp_id + "] .group_number_users").html(
     number + " " + (number > 1 ? str_members_default : str_member_default),
   );
-  $(".UserNumberBadge").html(number);
-  $(".AmountOfUsersShown strong:nth-child(2)").html(number);
+  $(".UserNumberBadge").html(String(number));
+  $(".AmountOfUsersShown strong:nth-child(2)").html(String(number));
   $(".AmountOfUsersShown strong:nth-child(1)").html(
     String($(".UsernameBlock").length),
   );
@@ -1150,9 +1230,11 @@ $(".CloseUserList").on("click", function () {
 
 // Adding Group Action
 $(".AddUserBlock button").on("click", function () {
-  const grp_id = $("#UserList").attr("data-group_id");
-  // Get selected ids
-  const id = selectize.getValue();
+  const grp_id = $("#UserList").attr("data-group_id") ?? "";
+  // Get selected ids -- `@types/selectize`'s own `getValue(): any` is a
+  // real, incomplete vendor declaration (same gap as `.storage`
+  // indexing above), narrowed to this file's real value shape.
+  const id = selectize.getValue() as string | number;
 
   if (id != "") {
     const loadState = new window.TemporaryState();
@@ -1173,14 +1255,21 @@ $(".AddUserBlock button").on("click", function () {
         userIds: [Number(id)],
       }),
       dataType: "json",
-      success: function (_data: any) {
+      success: function (
+        _data: operations["groupAddUser"]["responses"][200]["content"]["application/json"],
+      ) {
         loadState.reverse();
 
         // Get the username
         let username = "undefined";
-        JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function (
-          u: any,
-        ) {
+        // Non-null: same "always-seeded by now" invariant as
+        // updateUserSearch()'s own identical read, above.
+        const cached: { data: UserEntity[] } = JSON.parse(
+          (usersCache.storage as unknown as Record<string, string>)[
+            usersCache.key
+          ]!,
+        );
+        cached.data.forEach(function (u) {
           if (u.id == id) {
             username = u.username;
           }
@@ -1212,7 +1301,7 @@ $(".AddUserBlock button").on("click", function () {
         //Update member number
         updateMembernumber(parseInt($(".UserNumberBadge").html()) + 1, grp_id);
       },
-      error: function (err: any) {
+      error: function (err: JQuery.jqXHR) {
         loadState.reverse();
         console.log(err);
       },
@@ -1222,13 +1311,13 @@ $(".AddUserBlock button").on("click", function () {
 
 $(".input-user-name").on("input", function () {
   const searchString = String($(this).val()).toLowerCase();
-  const grp_id = $(".UserListPopIn").data("group_id");
+  const grp_id = $(".UserListPopIn").data("group_id") as string | number;
   if (searchString != "") {
     $(".UsersInGroupListContainer").css(
       "min-height",
       $(".UsersInGroupListContainer").height()!,
     );
-    usersInGroup.forEach(function (u: any) {
+    usersInGroup.forEach(function (u) {
       const isSearched = u.username.toLowerCase().includes(searchString);
       if ($(".UsernameBlock[data-id=" + u.id + "]").length != 0) {
         if (!isSearched) {
@@ -1247,8 +1336,8 @@ $(".input-user-name").on("input", function () {
       usersInGroup[i] != undefined
     ) {
       getUserDisplay(
-        usersInGroup[i].username,
-        usersInGroup[i].id,
+        usersInGroup[i]!.username,
+        usersInGroup[i]!.id,
         grp_id,
       ).appendTo(".UsersInGroupList");
       i++;
@@ -1262,7 +1351,7 @@ $(".input-user-name").on("input", function () {
   }
 });
 
-const pwg_token = pwg_getPageData("csrf_token");
+const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_member_default = pwg_getPageString("member");
 const str_members_default = pwg_getPageString("members");
 const str_group_created = pwg_getPageString("Group added");
@@ -1294,9 +1383,9 @@ const str_merged_into = pwg_getPageString(
 const str_copy = pwg_getPageString(" (copy)");
 const str_other_copy = pwg_getPageString(" (copy %s)");
 
-const serverKey = pwg_getPageData("cache_key_users");
-const serverId = pwg_getPageData("cache_key_hash");
-const rootUrl = pwg_getPageData("root_url");
+const serverKey = pwg_getPageData<string>("cache_key_users");
+const serverId = pwg_getPageData<string>("cache_key_hash");
+const rootUrl = pwg_getPageData<string>("root_url");
 
 $(document).on("keydown", function (e) {
   if (e.keyCode === 27) {

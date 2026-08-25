@@ -190,7 +190,10 @@ export default defineConfig({
         groupList: r("themes/admin/default/js/group_list.ts"),
         tags: r("themes/admin/default/js/tags.ts"),
         userList: r("themes/admin/default/js/user_list.ts"),
-        toaster: r("themes/standard_pages/js/toaster.ts"),
+        // toaster.ts is no longer its own entry (docs/PLAN.md P48) --
+        // it has exactly one real consumer (profile.ts, imported
+        // below), so its code ships inside that entry's own compiled
+        // output instead of a separate <script> tag.
         standardPages: r("themes/standard_pages/js/standard_pages.ts"),
         profile: r("themes/standard_pages/js/profile.ts"),
         mcs: r("themes/default/js/mcs.ts"),

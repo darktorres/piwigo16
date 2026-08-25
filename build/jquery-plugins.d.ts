@@ -286,9 +286,6 @@ interface Window {
   // own signature but never circled back to update this copy.
   updateSelectionPanel: (changedState?: string) => void;
 
-  // toaster.ts's own function -- profile.ts calls this bare (P46-G).
-  pwgToaster: (info: PwgToasterInfo) => void;
-
   // user_list.ts's own real public plugin extension point (P47) --
   // JSDoc-documented for third-party plugins to call from their own
   // separately-loaded `<script>` tags.

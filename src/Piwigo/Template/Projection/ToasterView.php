@@ -7,7 +7,6 @@ namespace Piwigo\Template\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
-use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
 
@@ -25,14 +24,17 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
 final readonly class ToasterView implements View, HasPageAssets
 {
     /**
-     * `toaster.latte`'s own unconditional `{do combineScript(...)}`/
-     * `{do combineCss(...)}` (docs/PLAN.md's P42-B).
+     * `toaster.latte`'s own unconditional `{do combineCss(...)}`
+     * (docs/PLAN.md's P42-B). No script registration here anymore
+     * (docs/PLAN.md's P48) -- `toaster.ts` has exactly one real
+     * consumer (`profile.ts`, this class's own one real caller), so
+     * its code now ships as a real `import` inside `profile.ts`'s own
+     * bundle instead of a separate `<script>` tag.
      */
     #[Override]
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('toaster_js', 'themes/standard_pages/js/toaster.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::css('themes/standard_pages/css/pages/toaster.css', id: 'toaster'),
         ];
     }

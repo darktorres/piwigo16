@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Latte\Runtime\Html;
 use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\AssetKind;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Controller\Projection\ProfileView;
 
@@ -59,12 +60,19 @@ test('exposedPageData/exposedStrings are both empty for the default theme', func
         ->toBe([]);
 });
 
-test('pageAssets includes the merged-in ToasterView contribution for standard_pages', function (): void {
+test('pageAssets includes the merged-in ToasterView CSS but not its own toaster_js script for standard_pages (docs/PLAN.md P48 -- toaster.ts ships as a real import inside profile.ts\'s own bundle now, not a separate script tag)', function (): void {
     $view = makeProfileView(true);
+    $assets = $view->pageAssets();
 
-    expect($view->pageAssets())
-        ->toContainEqual(AssetContribution::script('toaster_js', 'themes/standard_pages/js/toaster.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']))
+    expect($assets)
         ->toContainEqual(AssetContribution::css('themes/standard_pages/css/pages/toaster.css', id: 'toaster'));
+
+    $scriptIds = array_map(
+        static fn (AssetContribution $asset): string => $asset->id,
+        array_filter($assets, static fn (AssetContribution $asset): bool => $asset->kind === AssetKind::Script),
+    );
+    expect($scriptIds)
+        ->not->toContain('toaster_js');
 });
 
 test('exposedPageData exposes can_update_password as the inverse of specialUser for standard_pages', function (): void {

@@ -1,10 +1,10 @@
-interface PwgToasterInfo {
+export interface PwgToasterInfo {
   text: string;
   icon: "success" | "error";
   time?: number;
 }
 
-function pwgToaster(info: PwgToasterInfo) {
+export function pwgToaster(info: PwgToasterInfo) {
   if (!info.text || !info.icon) {
     console.log("set info.text or info.icon");
     return;
@@ -38,12 +38,3 @@ function pwgToaster(info: PwgToasterInfo) {
     });
   }, time);
 }
-
-// Explicit `window.` exposure -- required for the same reason as
-// page-data.ts's own copy of this comment: profile.ts calls this bare,
-// and Vite/Rollup's per-entry IIFE-wrapping (vite.config.ts's own
-// banner/footer) hides an un-exposed top-level declaration from any
-// other loaded <script> tag, even though this file has no `export {}`
-// of its own (its own declaration is still a real ambient global for
-// `tsc`'s whole-program type-check either way).
-window.pwgToaster = pwgToaster;

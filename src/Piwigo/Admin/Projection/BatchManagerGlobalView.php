@@ -97,15 +97,31 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // addAlbum.ts's code in via a real `import` instead of the
             // separate script tag AddAlbumView used to register
-            // directly. This page's own Footer-mode script group gets
-            // its own separate bundle entry once that group's own
-            // shared-library files land in later batches.
-            AssetContribution::script('batch_manager_global_async_page', 'themes/admin/default/js/pages/batch_manager_global_async.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
+            // directly, plus both of this page's own real shared-
+            // library files, batchManagerGlobal.ts and
+            // batch_manager_global.ts, which this pair's own batch found
+            // must merge into ONE bundle at ONE LoadMode (see both
+            // files' own leading comments) rather than staying 2
+            // separate (page × LoadMode) entries the way most pages'
+            // shared-library files do -- batchManagerGlobal.ts has real,
+            // unconditional page-load side effects (event-handler
+            // registration), so it can never be safely duplicated the
+            // way addAlbum.ts's `?dup` import is. Footer (not
+            // batchManagerGlobal.ts's former Async) is the merged mode,
+            // matching batch_manager_global.ts's own former mode --
+            // `datepicker`/`jquery.colorbox`/`doubleSlider` below cascade-
+            // promote to Footer too via PageAssets::promoteLoadModes()
+            // ("a dependency can't load more loosely than its
+            // dependent"), a real, intentional structural side effect
+            // (docs/PLAN.md's own Design §6) that also fixes a genuine
+            // pre-existing race: batchManagerGlobal.ts's own top-level
+            // `lang.Cancel` read wasn't previously guaranteed to run
+            // after batch_manager_global.ts set it (Async vs Footer, no
+            // `dependsOn` between them).
+            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'datepicker', 'jquery.colorbox', 'doubleSlider', 'page-data']),
             AssetContribution::script('common', 'themes/admin/default/js/common.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Async),
-            AssetContribution::script('batchManagerGlobal', 'themes/admin/default/js/batchManagerGlobal.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'datepicker', 'jquery.colorbox', 'batch_manager_global_async_page', 'doubleSlider']),
-            AssetContribution::script('batch_manager_global', 'themes/admin/default/js/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),

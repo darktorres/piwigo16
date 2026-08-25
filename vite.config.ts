@@ -144,11 +144,9 @@ export default defineConfig({
         albumSelector: r("themes/admin/default/js/album_selector.ts"),
         // P46-C part 2 — the genuinely bidirectional pair (see both
         // files' own leading comments for the real ordering-safety
-        // analysis).
-        batchManagerGlobalUnderscore: r(
-          "themes/admin/default/js/batch_manager_global.ts",
-        ),
-        batchManagerGlobal: r("themes/admin/default/js/batchManagerGlobal.ts"),
+        // analysis). Neither is its own entry any more (docs/PLAN.md
+        // P48) -- both fold into the same pages/batch_manager_global.ts
+        // bundle below, the one page that registers either.
         // P46-C part 3 -- the first consumer-only file. plugins_installated.ts
         // is no longer its own entry (docs/PLAN.md P48) -- see the pages/
         // entries below, its one real registrant.
@@ -260,8 +258,16 @@ export default defineConfig({
         photosAddDirectPage: r(
           "themes/admin/default/js/pages/photos_add_direct.ts",
         ),
-        batchManagerGlobalAsyncPage: r(
-          "themes/admin/default/js/pages/batch_manager_global_async.ts",
+        // Merged Footer-mode bundle (docs/PLAN.md P48) -- was 2 separate
+        // (page × LoadMode) entries (Async batchManagerGlobal.ts +
+        // Footer batch_manager_global.ts) until this pair's own batch
+        // found the 2 files must share one real evaluation (see both
+        // files' own leading comments): batchManagerGlobal.ts has real,
+        // unconditional page-load side effects (event-handler
+        // registration), so it can never be duplicated across 2 script
+        // tags the way addAlbum.ts's ?dup import safely is.
+        batchManagerGlobalPage: r(
+          "themes/admin/default/js/pages/batch_manager_global.ts",
         ),
         introPage: r("themes/admin/default/js/pages/intro.ts"),
         pluginsInstalledPage: r(

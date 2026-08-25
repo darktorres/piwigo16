@@ -1,3 +1,22 @@
+// Genuinely bidirectional with batch_manager_global.ts (docs/PLAN.md
+// P48 -- was window-global latching, see git history for the pre-P48
+// shape). This file's own top-level, synchronous read of `lang.Cancel`
+// (below) requires batch_manager_global.ts's module to have already
+// finished evaluating and set `lang` by the time this file's own
+// top-level code reaches that point -- real, enforced by which file
+// this page's own bundle entry (themes/admin/default/js/pages/
+// batch_manager_global.ts) imports first: this file, whose own
+// circular import of batch_manager_global.ts (right here) causes it
+// to fully evaluate before returning control to this file's own
+// subsequent code. Do not reorder the bundle entry's own import
+// statements without re-verifying this.
+import {
+  lang,
+  all_elements,
+  str_add_alb_associate,
+  str_select_alb_associate,
+} from "./batch_manager_global";
+
 /* ********** Thumbs */
 
 /* Shift-click: select all photos between the click and the shift+click */
@@ -67,7 +86,7 @@ function select_album_action({
   album,
   addSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  $("#associate_as p").html(window.str_add_alb_associate);
+  $("#associate_as p").html(str_add_alb_associate);
   $(".selected-associate-action").append(
     `<div class="selected-associate-item">
       <span>${album.name}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
@@ -84,7 +103,7 @@ function remove_album_action({
   $(".selected-associate-item").find(`#${id_album}`).parent().remove();
   const selected = getSelectedAlbum();
   if (!selected.length) {
-    $("#associate_as p").html(window.str_select_alb_associate);
+    $("#associate_as p").html(str_select_alb_associate);
   }
 }
 
@@ -103,7 +122,7 @@ jQuery(".thumbnails img").tipTip({
 // condition analysis this conversion preserves rather than fixes.
 jQuery("[data-datepicker]").pwgDatepicker({
   showTimepicker: true,
-  cancelButton: window.lang.Cancel,
+  cancelButton: lang.Cancel,
 });
 
 jQuery("[data-add-album]").pwgAddAlbum();
@@ -139,7 +158,7 @@ interface Derivatives {
   finished(): boolean;
 }
 
-const derivatives: Derivatives = {
+export const derivatives: Derivatives = {
   elements: null,
   done: 0,
   total: 0,
@@ -153,7 +172,7 @@ const derivatives: Derivatives = {
   },
 };
 
-function progress_start() {
+export function progress_start() {
   jQuery("#uploadingActions").show();
   jQuery("#uploadingActions .progress-bar").width("0%");
 }
@@ -162,7 +181,7 @@ function progress_end() {
   jQuery("#uploadingActions").hide();
 }
 
-function progress(success?: boolean) {
+export function progress(success?: boolean) {
   const percent = parseInt(
     String((derivatives.done / derivatives.total) * 100),
   );
@@ -180,7 +199,7 @@ function progress(success?: boolean) {
   }
 }
 
-function getDerivativeUrls() {
+export function getDerivativeUrls() {
   const ids = derivatives.elements!.splice(0, 500).map(Number);
   const params: { maxUrls: number; ids: number[]; types: string[] } = {
     maxUrls: 100000,
@@ -194,7 +213,7 @@ function getDerivativeUrls() {
   jQuery(".permitActionListButton").hide();
   jQuery("#confirmDel").hide();
   jQuery("#regenerationMsg").show();
-  jQuery("#regenerationText").html(window.lang.generateMsg);
+  jQuery("#regenerationText").html(lang.generateMsg);
   progress_start();
   jQuery.ajax({
     type: "POST",
@@ -319,11 +338,11 @@ jQuery("#applyAction").click(function (e) {
     e.preventDefault();
     e.stopPropagation();
     jQuery(".bulkAction").hide();
-    jQuery("#regenerationText").html(window.lang.syncProgressMessage);
+    jQuery("#regenerationText").html(lang.syncProgressMessage);
     elements = [];
 
     if (jQuery("input[name=setSelected]").is(":checked")) {
-      elements = window.all_elements;
+      elements = all_elements;
     } else {
       jQuery('input[name="selection[]"]')
         .filter(":checked")
@@ -420,7 +439,7 @@ jQuery("#applyAction").click(function (e) {
   elements = [];
 
   if (jQuery("input[name=setSelected]").is(":checked")) {
-    elements = window.all_elements;
+    elements = all_elements;
   } else {
     jQuery('input[name="selection[]"]')
       .filter(":checked")
@@ -442,7 +461,7 @@ jQuery("#applyAction").click(function (e) {
   jQuery("#applyActionBlock").hide();
   jQuery(".permitActionListButton").hide();
   jQuery("#confirmDel").hide();
-  jQuery("#regenerationText").html(window.lang.deleteProgressMessage);
+  jQuery("#regenerationText").html(lang.deleteProgressMessage);
   jQuery("#regenerationMsg").show();
   progress_bar_start();
   for (let i = 0; i < elements.length; i++) {
@@ -649,16 +668,3 @@ function delete_orphans_block(blockSize?: number) {
     },
   });
 }
-
-// Explicit `window.` exposure -- required, not decorative (see
-// page-data.ts's own copy of this comment, docs/PLAN.md P46-B). Unlike
-// `_pwgRatingAutoQueue` (P46-B), none of these 4 are ever *read* before
-// being unconditionally set here, so a bare bidirectional reference
-// (like `pwg_getPageData`) is safe -- batch_manager_global.ts's own
-// bare reads (deferred, inside its own `#applyAction` click handler,
-// confirmed safe regardless of load order -- see its own leading
-// comment) resolve through the scope chain to these `window.` properties.
-window.derivatives = derivatives;
-window.progress_start = progress_start;
-window.progress = progress;
-window.getDerivativeUrls = getDerivativeUrls;

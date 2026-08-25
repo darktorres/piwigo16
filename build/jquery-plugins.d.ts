@@ -180,35 +180,23 @@ interface Window {
   str_result_limit: string;
   AlbumSelector: new (options: AlbumSelectorOptions) => AlbumSelectorInstance;
 
-  // batch_manager_global.ts / batchManagerGlobal.ts's own genuinely
-  // bidirectional shared-global set (docs/PLAN.md P46-C's own full
-  // sweep -- see both files' own leading comments for the real
-  // ordering-safety analysis, not just this ambient typing).
-  lang: {
-    Cancel: string;
-    deleteProgressMessage: string;
-    syncProgressMessage: string;
-    AreYouSure: string;
-    generateMsg: string;
-  };
-  all_elements: (string | number)[];
-  str_add_alb_associate: string;
-  str_select_alb_associate: string;
-  derivatives: {
-    elements: any[] | null;
-    done: number;
-    total: number;
-    finished(): boolean;
-  };
-  progress_start: () => void;
-  progress: (success?: boolean) => void;
-  getDerivativeUrls: () => void;
+  // batchManagerGlobal.ts's own 4 functions, called from
+  // batch_manager_global.latte's own `href="javascript:
+  // selectGenerateDerivAll()"`-style pseudo-protocol links (docs/
+  // PLAN.md P46-C's own finding, the one that first surfaced this
+  // exposure pattern -- no ambient entry was needed for it until this
+  // file itself became a real module (P48), since a global-script
+  // file's own top-level function declarations merge into
+  // `typeof globalThis` automatically).
+  selectGenerateDerivAll: () => void;
+  selectGenerateDerivNone: () => void;
+  selectDelDerivAll: () => void;
+  selectDelDerivNone: () => void;
 
   // footer.ts's own 2 functions, called from layout.latte's own
   // `onclick="show_user_whats_new()"` / `onClick=
-  // "hide_user_whats_new()"` attributes -- the `javascript:`/`onclick=`
-  // exposure pattern (docs/PLAN.md P46-C's own finding, first surfaced
-  // by batchManagerGlobal.ts's own selectGenerateDerivAll/etc.).
+  // "hide_user_whats_new()"` attributes -- same `javascript:`/`onclick=`
+  // exposure pattern as batchManagerGlobal.ts's own copy above.
   hide_user_whats_new: () => void;
   show_user_whats_new: () => void;
 
@@ -265,27 +253,6 @@ interface Window {
   // other cross-file/cross-module-boundary global in this file.
   Chart: typeof Chart;
 }
-
-// batch_manager_global.ts reads these 4 as *bare* identifiers (deferred,
-// inside its own `#applyAction` click handler only -- confirmed safe
-// regardless of load order). Only the 3 functions need a `declare
-// function` binding here, same reasoning as page-data.ts's own copy of
-// this comment: TS allows a `declare function` to coexist with a real
-// `function` declaration of the same name elsewhere (function
-// declaration merging), so both this ambient signature and
-// batchManagerGlobal.ts's own real one are valid together. `derivatives`
-// itself does NOT get one: it's declared with `const` there, and `let`/
-// `const` (unlike `function`) flatly disallow being redeclared by
-// anything, ambient or not, in the same global scope -- confirmed via a
-// real TS2451 "Cannot redeclare block-scoped variable" error. No
-// ambient binding is needed for it anyway: every `themes/**/*.ts` file
-// is one shared global type-checking scope regardless of module
-// bundling, so batchManagerGlobal.ts's own real `const derivatives`
-// declaration already makes the bare name resolve correctly for
-// batch_manager_global.ts's own type-checking, with zero ambient help.
-declare function progress_start(): void;
-declare function progress(success?: boolean): void;
-declare function getDerivativeUrls(): void;
 
 // Declared outside `Window` (TS doesn't allow forward-referencing a
 // same-file class-as-type from inside an interface merge) -- mirrors

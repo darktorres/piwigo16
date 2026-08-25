@@ -1,19 +1,27 @@
-// Genuinely bidirectional with batchManagerGlobal.ts (docs/PLAN.md P46-C's
-// own full-sweep finding): this file declares `lang`/`all_elements`/
-// `str_add_alb_associate`/`str_select_alb_associate`, read bare by
-// batchManagerGlobal.ts; that file declares `derivatives`/`progress_start`/
-// `progress`/`getDerivativeUrls`, read bare here (only inside the deferred
-// `#applyAction` click handler below -- safe regardless of load order).
-// batchManagerGlobal.ts's own `lang.Cancel` reference is NOT deferred
-// (a real top-level, synchronous read) -- a genuine pre-existing race
-// condition this conversion preserves exactly, not fixes: both scripts
-// are real `AssetContribution` registrations on the same page
-// (`BatchManagerGlobalView.php`), `batchManagerGlobal` `Async` and
-// `batch_manager_global` `Footer`, with no `dependsOn` between them
-// today, so `window.lang` may or may not be set yet by the time
-// batchManagerGlobal.ts's own top-level code runs -- exactly as risky
-// pre-P46 as it is now.
-window.lang = {
+// Genuinely bidirectional with batchManagerGlobal.ts (docs/PLAN.md P48
+// -- was window-global latching pre-P48, see git history). This file
+// declares `lang`/`all_elements`/`str_add_alb_associate`/
+// `str_select_alb_associate`, imported by batchManagerGlobal.ts; that
+// file declares `derivatives`/`progress_start`/`progress`/
+// `getDerivativeUrls`, imported here (only used inside the deferred
+// `#applyAction` click handler below -- safe regardless of evaluation
+// order, unlike batchManagerGlobal.ts's own `lang.Cancel` reference,
+// which is a real top-level, synchronous read -- see that file's own
+// leading comment for the real, now-enforced evaluation-order fix this
+// conversion applies). Both files fold into one real page bundle
+// (themes/admin/default/js/pages/batch_manager_global.ts) -- a real,
+// necessary requirement, not a style choice: this file's own top-level
+// code has real, unconditional side effects (event-handler
+// registration), so it can never safely be loaded twice on the same
+// page the way a pure-declaration file like addAlbum.ts can.
+import {
+  derivatives,
+  progress_start,
+  progress,
+  getDerivativeUrls,
+} from "./batchManagerGlobal";
+
+export const lang = {
   Cancel: pwg_getPageString("Cancel"),
   deleteProgressMessage: pwg_getPageString("Deletion in progress"),
   syncProgressMessage: pwg_getPageString("Synchronization in progress"),
@@ -76,7 +84,7 @@ jQuery(document).ready(function () {
 const _nb_thumbs_page = pwg_getPageData<number>("nb_thumbs_page");
 const nb_thumbs_set = pwg_getPageData<number>("nb_thumbs_set");
 const applyOnDetails_pattern = pwg_getPageString("on the %d selected photos");
-window.all_elements =
+export const all_elements =
   pwg_getPageData<(string | number)[]>("all_elements") || [];
 
 const selectedMessage_pattern = pwg_getPageString("%d of %d photos selected");
@@ -84,8 +92,8 @@ const selectedMessage_none = pwg_getPageString(
   "No photo selected, %d photos in current set",
 );
 const selectedMessage_all = pwg_getPageString("All %d photos are selected");
-window.str_add_alb_associate = pwg_getPageString("Add Album");
-window.str_select_alb_associate = pwg_getPageString("Select an album");
+export const str_add_alb_associate = pwg_getPageString("Add Album");
+export const str_select_alb_associate = pwg_getPageString("Select an album");
 
 $(document).ready(function () {
   function checkPermitAction() {
@@ -222,7 +230,7 @@ $(document).ready(function () {
 
   $("input[name=setSelected]").change(function () {
     $("input[name=whole_set]").val(
-      (this as HTMLInputElement).checked ? window.all_elements.join(",") : "",
+      (this as HTMLInputElement).checked ? all_elements.join(",") : "",
     );
   });
 
@@ -267,7 +275,7 @@ $(document).ready(function () {
 
     derivatives.elements = [];
     if (jQuery('input[name="setSelected"]').is(":checked"))
-      derivatives.elements = window.all_elements;
+      derivatives.elements = all_elements;
     else
       jQuery(".thumbnails input[type=checkbox]").each(function () {
         if (jQuery(this).is(":checked")) {

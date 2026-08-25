@@ -1,3 +1,5 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
 // GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the
@@ -7,11 +9,19 @@ export {};
 
 $(document).ready(function () {
   $("h1").append(
-    "<span class='badge-number'>" + pwg_getPageData("nb_elements") + "</span>",
+    "<span class='badge-number'>" +
+      pwg_getPageData<number>("nb_elements") +
+      "</span>",
   );
 });
 
-const pwg_token = pwg_getPageData("csrf_token");
+const pwg_token = pwg_getPageData<string>("csrf_token");
+
+// rating_user.latte's own `data-usr='{"uid":...,"aid":"..."}'` literal.
+interface RatingUserCellData {
+  uid: number;
+  aid: string;
+}
 
 jQuery("#rateTable").dataTable({
   dom: '<"dtBar"filp>rt<"dtBar"ilp>',
@@ -61,9 +71,9 @@ jQuery("#rateTable").dataTable({
 
 const oTable = jQuery("#rateTable").DataTable();
 
-function uidFromCell(cell: any) {
-  let tr = cell;
-  while (tr.nodeName !== "TR") tr = tr.parentNode;
+function uidFromCell(cell: HTMLElement): RatingUserCellData {
+  let tr: HTMLElement = cell;
+  while (tr.nodeName !== "TR") tr = tr.parentNode as HTMLElement;
   return $(tr).data("usr");
 }
 
@@ -84,14 +94,15 @@ $(document).ready(function () {
           text: confirm_msg,
           btnClass: "btn-red",
           action: function () {
-            const cell: any = e.target.parentNode;
-            let tr = cell;
-            while (tr.nodeName !== "TR") tr = tr.parentNode;
-            tr = jQuery(tr).fadeTo(1000, 0.4);
+            const cell = (e.target as HTMLElement).parentNode as HTMLElement;
+            let trElement: HTMLElement = cell;
+            while (trElement.nodeName !== "TR")
+              trElement = trElement.parentNode as HTMLElement;
+            const tr = jQuery(trElement).fadeTo(1000, 0.4);
             const data = uidFromCell(cell);
             $.ajax({
               url:
-                pwg_getPageData("root_url") +
+                pwg_getPageData<string>("root_url") +
                 "api/v1/users/" +
                 data.uid +
                 "/actions/delete-ratings",
@@ -99,13 +110,15 @@ $(document).ready(function () {
               contentType: "application/json",
               data: JSON.stringify({ anonymousId: data.aid || null }),
               headers: { "X-CSRF-Token": pwg_token },
-              error: function (jqXHR: any) {
+              error: function (jqXHR: JQuery.jqXHR) {
                 tr.stop();
                 tr.fadeTo(0, 1);
                 alert(jqXHR.status + " " + jqXHR.statusText);
               },
-              success: function (result: any) {
-                if (result.deletedCount) oTable.row(tr[0]).remove().draw();
+              success: function (
+                result: operations["userDeleteRatings"]["responses"][200]["content"]["application/json"],
+              ) {
+                if (result.deletedCount) oTable.row(tr[0]!).remove().draw();
                 else alert(result.deletedCount);
               },
             });
@@ -120,10 +133,17 @@ $(document).ready(function () {
   });
 });
 
+interface GeoIpResult {
+  fullName?: string;
+  latitude?: number;
+  longitude?: number;
+  region_name?: string;
+}
+
 jQuery(document).ready(function () {
   jQuery("#rateTable").tooltip({
     items: ".usr,[title]",
-    content: function (this: any, callback: (content: string) => void) {
+    content: function (this: HTMLElement, callback: (content: string) => void) {
       const t = $(this).attr("title");
       if (t) return t;
       const that = $(this),
@@ -133,7 +153,7 @@ jQuery(document).ready(function () {
         that.removeData("isOver");
       });
 
-      GeoIp.get(udata.aid + ".1", function (data: any) {
+      GeoIp.get(udata.aid + ".1", function (data: GeoIpResult) {
         if (!data.fullName) return;
         let content = data.fullName;
         if (data.latitude && data.region_name) {

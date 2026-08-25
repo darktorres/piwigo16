@@ -238,8 +238,8 @@ interface Window {
   // `onclick=` exposure pattern as footer.ts's own copy above.
   ignoreAll: () => void;
   resetIgnored: () => void;
-  updateExtension: (type: any, id: any, revision: any) => void;
-  ignoreExtension: (type: any, id: any) => void;
+  updateExtension: (type: string, id: string, revision: string) => void;
+  ignoreExtension: (type: string, id: string) => void;
 
   // albums.ts's own shared-global set (docs/PLAN.md P46-C's full
   // sweep) -- cat_search.ts reads both of these bare.
@@ -661,9 +661,26 @@ interface AlbumSelectorInstance {
 // `picture_modify.ts`, `photos_add_direct.ts`) -- grows if a future
 // consumer needs more of `album`'s own real shape than `id`/`name`.
 interface AlbumSelectorCallbackArgs {
-  album: { id: string | number; name?: string; root?: string };
+  album: {
+    id: string | number;
+    name?: string;
+    root?: string;
+    // picture_modify.ts's own real usage.
+    full_name_with_admin_links?: string;
+  };
   newSelectedAlbum: () => void;
   addSelectedAlbum: (...args: any[]) => void;
+  getSelectedAlbum: () => string[];
+}
+
+// The real shape `album_selector.ts`'s constructor passes to a
+// consumer's `removeSelectedAlbum` callback (P47) -- confirmed via the
+// same constructor wrapping as `AlbumSelectorCallbackArgs` above
+// (`this.#removeSelectedAlbum = (args) => removeSelectedAlbum.call(null,
+// { ...args, getSelectedAlbum })`), called with `{ id_album: id }` from
+// `remove_selected_album(id)`.
+interface AlbumSelectorRemoveCallbackArgs {
+  id_album: string | number;
   getSelectedAlbum: () => string[];
 }
 

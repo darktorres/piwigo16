@@ -1,15 +1,17 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
 const categoriesCache = new window.CategoriesCache({
-  serverKey: pwg_getPageData("cache_key_categories"),
-  serverId: pwg_getPageData("cache_key_hash"),
-  rootUrl: pwg_getPageData("root_url"),
+  serverKey: pwg_getPageData<string>("cache_key_categories"),
+  serverId: pwg_getPageData<string>("cache_key_hash"),
+  rootUrl: pwg_getPageData<string>("root_url"),
 });
 
 categoriesCache.selectize(jQuery("[data-selectize=categories]"));
 
 jQuery("#removeAlbumFilter").click(function () {
-  (jQuery("select[name=cat]")[0] as any).selectize.setValue(null);
+  jQuery("select[name=cat]")[0]!.selectize.setValue(null);
   return false;
 });
 
@@ -28,11 +30,13 @@ jQuery("select[name=cat]").change(function () {
 
 $(document).ready(function () {
   $("h1").append(
-    "<span class='badge-number'>" + pwg_getPageData("nb_elements") + "</span>",
+    "<span class='badge-number'>" +
+      pwg_getPageData<number>("nb_elements") +
+      "</span>",
   );
 });
 
-const pwg_token = pwg_getPageData("csrf_token");
+const pwg_token = pwg_getPageData<string>("csrf_token");
 
 $(document).on("click", "a.icon-trash[data-image-id]", function () {
   return del(
@@ -43,7 +47,7 @@ $(document).on("click", "a.icon-trash[data-image-id]", function () {
   );
 });
 
-function del(node: any, id: any, uid: any, aid: any) {
+function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
   const tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),
     data = {
       imageId: id,
@@ -52,7 +56,7 @@ function del(node: any, id: any, uid: any, aid: any) {
 
   $.ajax({
     url:
-      pwg_getPageData("root_url") +
+      pwg_getPageData<string>("root_url") +
       "api/v1/users/" +
       uid +
       "/actions/delete-ratings",
@@ -60,12 +64,14 @@ function del(node: any, id: any, uid: any, aid: any) {
     contentType: "application/json",
     data: JSON.stringify(data),
     headers: { "X-CSRF-Token": pwg_token },
-    error: function (jqXHR: any) {
+    error: function (jqXHR: JQuery.jqXHR) {
       tr.stop();
       tr.fadeTo(0, 1);
       alert(jqXHR.status + " " + jqXHR.statusText);
     },
-    success: function (result: any) {
+    success: function (
+      result: operations["userDeleteRatings"]["responses"][200]["content"]["application/json"],
+    ) {
       if (result.deletedCount) tr.remove();
       else alert(result.deletedCount);
     },

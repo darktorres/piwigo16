@@ -10,7 +10,7 @@ interface PwgRatingResult {
 
 interface PwgRatingOptions {
   rootUrl: string;
-  image_id: any;
+  image_id: string | number;
   onSuccess?: (result: PwgRatingResult) => void;
   updateRateElement?: HTMLElement;
   updateRateText?: string;

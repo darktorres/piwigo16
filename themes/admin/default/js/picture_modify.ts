@@ -14,25 +14,27 @@ export {};
 // too, independently of the same-named functions in mcs.js/
 // batchManagerUnit.js/cat_modify.js/photos_add_direct.js (docs/PLAN.md
 // P46-B's own finding) -- safe since none of these pages ever co-load.
-const related_categories_ids = pwg_getPageData("related_categories_ids");
+const related_categories_ids = pwg_getPageData<string[]>(
+  "related_categories_ids",
+);
 const str_assoc_album_ab = pwg_getPageString("Associate to album");
 const str_orphan = pwg_getPageString("This photo is an orphan");
 
 (function () {
   // <!-- CATEGORIES -->
   const categoriesCache = new window.CategoriesCache({
-    serverKey: pwg_getPageData("cache_key_categories"),
-    serverId: pwg_getPageData("cache_key_hash"),
-    rootUrl: pwg_getPageData("root_url"),
+    serverKey: pwg_getPageData<string>("cache_key_categories"),
+    serverId: pwg_getPageData<string>("cache_key_hash"),
+    rootUrl: pwg_getPageData<string>("root_url"),
   });
 
   categoriesCache.selectize(jQuery("[data-selectize=categories]"));
 
   // <!-- TAGS -->
   const tagsCache = new window.TagsCache({
-    serverKey: pwg_getPageData("cache_key_tags"),
-    serverId: pwg_getPageData("cache_key_hash"),
-    rootUrl: pwg_getPageData("root_url"),
+    serverKey: pwg_getPageData<string>("cache_key_tags"),
+    serverId: pwg_getPageData<string>("cache_key_hash"),
+    rootUrl: pwg_getPageData<string>("root_url"),
   });
 
   tagsCache.selectize(jQuery("[data-selectize=tags]"), {
@@ -58,7 +60,7 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   const str_are_you_sure = pwg_getPageString("Are you sure?");
   const str_yes = pwg_getPageString("Yes, delete");
   const str_no = pwg_getPageString("No, I have changed my mind");
-  const url_delete = pwg_getPageData("u_delete");
+  const url_delete = pwg_getPageData<string>("u_delete");
 
   $("#action-delete-picture").on("click", function () {
     $.confirm({
@@ -105,7 +107,7 @@ $(document).ready(function () {
 
   $(".related-categories-container").on("click", (e) => {
     if (e.target.classList.contains("remove-item")) {
-      ab.remove_selected_album($(e.target).attr("id"));
+      ab.remove_selected_album($(e.target).attr("id")!);
     }
   });
 
@@ -122,7 +124,7 @@ $(document).ready(function () {
     .on("change", function () {
       if (user_interacted) {
         form_unsaved = true;
-        console.log(($(this)[0] as any).name, $(this));
+        console.log(($(this)[0] as HTMLInputElement).name, $(this));
       }
     });
   $(window).on("beforeunload", function () {
@@ -135,7 +137,10 @@ $(document).ready(function () {
   });
 });
 
-function remove_related_category({ id_album, getSelectedAlbum }: any) {
+function remove_related_category({
+  id_album,
+  getSelectedAlbum,
+}: AlbumSelectorRemoveCallbackArgs) {
   $(
     ".invisible-related-categories-select option[value=" + id_album + "]",
   ).remove();
@@ -150,8 +155,8 @@ function add_related_category({
   album,
   addSelectedAlbum,
   getSelectedAlbum,
-}: any) {
-  if (!getSelectedAlbum().includes(album.id)) {
+}: AlbumSelectorCallbackArgs) {
+  if (!getSelectedAlbum().includes(String(album.id))) {
     $(".related-categories-container").append(
       `<div class="breadcrumb-item">
         <span class="link-path">${album.full_name_with_admin_links}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
@@ -168,8 +173,8 @@ function add_related_category({
   check_related_categories(getSelectedAlbum());
 }
 
-function check_related_categories(selected_cat: any) {
-  $(".linked-albums-badge").html(selected_cat.length);
+function check_related_categories(selected_cat: string[]) {
+  $(".linked-albums-badge").html(String(selected_cat.length));
 
   if (selected_cat.length == 0) {
     $(".linked-albums-badge").addClass("badge-red");

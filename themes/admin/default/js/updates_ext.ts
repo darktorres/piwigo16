@@ -1,11 +1,13 @@
+import type { operations } from "../../../../openapi/client/schema";
+
 export {};
 
 // ignoreAll/resetIgnored/updateExtension/ignoreExtension are called
 // from updates_ext.latte's own onClick= attributes -- window.X = X
 // exposure at the bottom of this file (the javascript:/onclick=
 // pattern, docs/PLAN.md P46-C's own finding).
-const pwg_token = pwg_getPageData("csrf_token");
-const extType = pwg_getPageData("ext_type");
+const pwg_token = pwg_getPageData<string>("csrf_token");
+const extType = pwg_getPageData<string>("ext_type");
 const errorHead = pwg_getPageString("ERROR");
 const successHead = pwg_getPageString("Update Complete");
 const errorMsg = pwg_getPageString("an error happened");
@@ -45,7 +47,8 @@ function resetIgnored() {
     headers: { "X-CSRF-Token": pwg_token },
     dataType: "json",
     data: JSON.stringify({ reset: true, type: extType }),
-    success: function (data: any) {
+    // 204 No Content -- extensionsIgnoreUpdate's real response has no body.
+    success: function (_data: unknown) {
       jQuery(".pluginBox, fieldset").show();
       jQuery(".pluginBox").attr("data-ignored", "false");
       jQuery("#update_all").show();
@@ -85,7 +88,7 @@ function checkFieldsets() {
   }
 }
 
-function updateExtension(type: any, id: any, revision: any) {
+function updateExtension(type: string, id: string, revision: string) {
   queuedManager.add({
     type: "POST",
     dataType: "json",
@@ -93,7 +96,9 @@ function updateExtension(type: any, id: any, revision: any) {
     headers: { "X-CSRF-Token": pwg_token },
     url: "api/v1/extensions/" + type + "/" + id + "/actions/update",
     data: JSON.stringify({ revision: revision }),
-    success: function (data: any) {
+    success: function (
+      data: operations["extensionUpdate"]["responses"][200]["content"]["application/json"],
+    ) {
       jQuery.jGrowl(data["message"], {
         theme: "success",
         header: successHead,
@@ -103,7 +108,7 @@ function updateExtension(type: any, id: any, revision: any) {
       jQuery("#" + type + "_" + id).remove();
       checkFieldsets();
     },
-    error: function (jqXHR: any) {
+    error: function (jqXHR: JQuery.jqXHR) {
       const message =
         jqXHR.responseJSON && jqXHR.responseJSON.detail
           ? jqXHR.responseJSON.detail
@@ -160,7 +165,7 @@ const callback = (
 const observer = new MutationObserver(callback);
 observer.observe(targetNode!, config);
 
-function ignoreExtension(type: any, id: any) {
+function ignoreExtension(type: string, id: string) {
   queuedManager.add({
     type: "POST",
     url: "api/v1/extensions/updates/ignore",
@@ -168,7 +173,8 @@ function ignoreExtension(type: any, id: any) {
     headers: { "X-CSRF-Token": pwg_token },
     dataType: "json",
     data: JSON.stringify({ type: type, id: id }),
-    success: function (data: any) {
+    // 204 No Content -- extensionsIgnoreUpdate's real response has no body.
+    success: function (_data: unknown) {
       jQuery("#" + type + "_" + id).hide();
       jQuery("#" + type + "_" + id).attr("data-ignored", "true");
       jQuery("#reset_ignore").show();

@@ -10,8 +10,8 @@ $(document).ready(function () {
     $(".adminEmail").text(String($(this).val()));
   });
 
-  let dbCheckXhr: any = null;
-  let dbCheckTimer: any = null;
+  let dbCheckXhr: JQuery.jqXHR | null = null;
+  let dbCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
   function dbCheckReady() {
     const host = String($("#dbhost").val()).trim();
@@ -55,8 +55,8 @@ $(document).ready(function () {
   // own distinct message is shown via db-check-status instead, see
   // runDbCheck()'s success handler below).
   function toggleOverwriteWarning(
-    hasExistingInstall: any,
-    overwriteToken: any,
+    hasExistingInstall: boolean | null,
+    overwriteToken: string | null,
   ) {
     const row = $("#overwrite-confirm-row");
     if (hasExistingInstall === true) {
@@ -68,6 +68,16 @@ $(document).ready(function () {
       row.addClass("install-hidden-row");
       $("#confirm_overwrite").prop("checked", false);
     }
+  }
+
+  // install.php's own ajax=check-db action -- not part of the real REST
+  // API (installer-only, no OpenAPI coverage), so hand-typed from this
+  // file's own real usage rather than the schema.
+  interface DbCheckResponse {
+    ok: boolean;
+    hasExistingInstall: boolean | null;
+    overwriteToken?: string;
+    errors?: string[];
   }
 
   function runDbCheck() {
@@ -97,7 +107,7 @@ $(document).ready(function () {
         dbdriver: $("#dbdriver").val(),
         dbport: $("#dbport").val(),
       },
-      success: function (data: any) {
+      success: function (data: DbCheckResponse) {
         if (data.ok) {
           if (data.hasExistingInstall === null) {
             showDbCheckStatus(
@@ -112,13 +122,16 @@ $(document).ready(function () {
               pwg_getPageString("Connection successful"),
             );
           }
-          toggleOverwriteWarning(data.hasExistingInstall, data.overwriteToken);
+          toggleOverwriteWarning(
+            data.hasExistingInstall,
+            data.overwriteToken ?? null,
+          );
         } else {
           showDbCheckStatus("db-check-error", (data.errors || []).join(" "));
           toggleOverwriteWarning(false, null);
         }
       },
-      error: function (jqXHR: any, textStatus: any) {
+      error: function (jqXHR: JQuery.jqXHR, textStatus: string) {
         if (textStatus === "abort") {
           return;
         }

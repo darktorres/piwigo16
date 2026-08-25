@@ -15,7 +15,16 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["node", "jquery"]
+    "types": [
+      "node",
+      "jquery",
+      "jqueryui",
+      "selectize",
+      "jquery.colorbox",
+      "jquery.cookie",
+      "chart.js",
+      "plupload"
+    ]
   },
   "include": [
     "build/**/*.ts",

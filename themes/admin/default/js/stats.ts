@@ -51,16 +51,18 @@ function gradient(r: number, g: number, b: number) {
 }
 
 //Setup the graph
-Chart.defaults.global.elements.point.radius = 0.1;
-Chart.defaults.global.elements.point.hitRadius = 10;
-Chart.defaults.global.defaultFontSize = 14;
-Chart.defaults.global.defaultFontColor = "#888";
-Chart.defaults.global.tooltips.intersect = false;
-Chart.defaults.global.legend.onClick = null;
+window.Chart.defaults.global.elements!.point!.radius = 0.1;
+window.Chart.defaults.global.elements!.point!.hitRadius = 10;
+window.Chart.defaults.global.defaultFontSize = 14;
+window.Chart.defaults.global.defaultFontColor = "#888";
+window.Chart.defaults.global.tooltips.intersect = false;
+window.Chart.defaults.global.legend!.onClick = undefined;
 
-const statGraph = new Chart(ctx, {
+const statGraph = new window.Chart(ctx, {
   type: "line",
-  maintainAspectRatio: false,
+  options: {
+    maintainAspectRatio: false,
+  },
 });
 
 //Line options
@@ -112,14 +114,14 @@ function changeData(dataType: any, options: any = displayOptions) {
         intersect: false,
       },
     };
-    statGraph.options.scales.xAxes.forEach((axe: any) => {
+    statGraph.options.scales!.xAxes!.forEach((axe: any) => {
       axe.time.tooltipFormat = str_tooltip_format[dataType];
       axe.time.unit = data_unit[dataType];
       axe.time.displayFormats = str_unit_format;
     });
     statGraph.update();
   } else {
-    statGraph.options.legend.display = true;
+    statGraph.options.legend!.display = true;
     statGraph.options.hover = {
       intersect: true,
     };
@@ -146,16 +148,16 @@ function changeData(dataType: any, options: any = displayOptions) {
               display: true,
               labelString: str_number_page_visited,
             },
-            tick: {
+            ticks: {
               min: 0,
             },
           },
         ],
       };
     } else if (dataType == "months") {
-      const days: number[] = [];
+      const days: string[] = [];
       for (let i = 1; i <= 31; i++) {
-        days.push(i);
+        days.push(String(i));
       }
       statGraph.data = {
         datasets: getMonthStatsDataset(),

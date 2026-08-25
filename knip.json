@@ -19,7 +19,6 @@
   "ignoreDependencies": [
     "@cyclonedx/cyclonedx-npm",
     "lefthook",
-    "chart.js",
     "datatables.net",
     "jgrowl",
     "jquery-cluetip",
@@ -27,16 +26,9 @@
     "jquery-timepicker-addon",
     "jquery-ui",
     "jquery.ajaxmanager",
-    "jquery.colorbox",
-    "jquery.cookie",
     "jquery.jcrop",
-    "jqtree",
-    "moment",
     "piecon",
-    "plupload",
-    "selectize",
     "tipTip",
-    "tus-js-client",
     "underscore"
   ]
 }

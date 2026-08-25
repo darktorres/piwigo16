@@ -1,3 +1,15 @@
+/// <reference types="jqtree" />
+// jqtree ships its own real, bundled `.d.ts` (`node_modules/jqtree/src/
+// tree.jquery.d.ts`, referenced via its own `package.json`'s `types`
+// field) but isn't a `@types/*` package, so it isn't picked up by
+// `tsconfig.json`'s `types` array -- this reference directive is what
+// actually pulls in its `interface JQuery { tree: IJQTreePlugin; }`
+// declaration (P47). That declaration is a *property*, not
+// method-shorthand, so the hand-rolled `tree(...)` overloads this file
+// used to carry were deleted below -- keeping both would be the same
+// "subsequent property declarations must have the same type" conflict
+// documented at the `JQueryUI.Datepicker` merge further down.
+
 // Shared ambient types for vendored jQuery-plugin methods that
 // @types/jquery doesn't cover (docs/PLAN.md P46). `JQueryStatic`/`JQuery`
 // are already global interfaces (see node_modules/@types/jquery), so
@@ -46,7 +58,7 @@ interface Window {
   // global. Declared here (not inferred from the assignment) so every
   // consumer file's own bare reference -- e.g. `pwg_getPageData(...)`
   // in picture.ts, which never imports anything -- type-checks too.
-  pwg_getPageData: (key: string) => any;
+  pwg_getPageData: <T = unknown>(key: string) => T;
   pwg_getPageString: (key: string) => string;
   phpWGOpenWindow: (theURL: string, winName: string, features: string) => void;
   popuphelp: (url: string) => void;
@@ -236,6 +248,18 @@ interface Window {
 
   // toaster.ts's own function -- profile.ts calls this bare (P46-G).
   pwgToaster: (info: any) => void;
+
+  // Chart.js (vendored -- P46-0's own CDN table, real types from
+  // `@types/chart.js`, P47). `@types/chart.js`'s own `.d.ts` has a real
+  // top-level `import` of its own (for `moment`'s types), which makes
+  // it an ambient *module* -- its `export as namespace Chart` UMD
+  // global is therefore only referenceable bare from a *non*-module
+  // file (TS2686 otherwise). Every P46 entry except the 4 established
+  // shared-global files is a module (`export {}`), so `stats.ts` (the
+  // one real first-party call site) reads this `window.` property
+  // instead of the bare identifier -- same exposure pattern as every
+  // other cross-file/cross-module-boundary global in this file.
+  Chart: typeof Chart;
 }
 
 // batch_manager_global.ts reads these 4 as *bare* identifiers (deferred,
@@ -294,7 +318,7 @@ interface TemporaryStateCtor {
 // Add the other 2 (`popuphelp`/`pwg_tryFocus`) here too the first time a
 // converted .ts file actually calls one of them bare -- no real
 // consumer yet, so no ambient binding needed for them yet either.
-declare function pwg_getPageData(key: string): any;
+declare function pwg_getPageData<T = unknown>(key: string): T;
 declare function pwg_getPageString(key: string): string;
 declare function phpWGOpenWindow(
   theURL: string,
@@ -324,17 +348,19 @@ declare function sprintf(...args: any[]): string;
 // the one time an ambient `declare const pwg_token` briefly coexisted
 // with `plugins_installed_config.ts`'s own real `var` declaration.
 
-// Vendored standalone-library globals (not jQuery plugins) --
-// `photos_add_direct.ts` is the first real converted call site for all
-// 3. Loosely typed, matching this whole file's own "minimal types to
-// satisfy strict tsconfig" convention -- these are P46-0's own CDN-
-// migrated vendored libraries, not first-party code this phase re-derives
-// real types for.
-declare const plupload: any;
+// Vendored standalone-library globals (not jQuery plugins).
+// `plupload`'s own namespace/constants/`Uploader` class are now real,
+// verified types from `@types/plupload` (P47) -- no `declare const`
+// needed here any more; keeping one would silently shadow the real
+// package's own global with `any` (confirmed via a local `tsc` repro
+// during planning). `Piecon` has no real upstream types (one of P46-0's
+// own genuinely-unresolved vendored libraries) and stays hand-typed.
+// `tus` is real, verified via `tus-js-client`'s own bundled `.d.ts`
+// (already an installed npm dependency) -- `typeof import(...)` gives
+// the real named-export shape (`Upload`, `isSupported`, etc.) the CDN
+// global mirrors.
 declare const Piecon: { setProgress(percent: number): void; reset(): void };
-declare const tus: {
-  Upload: new (file: any, options: Record<string, any>) => any;
-};
+declare const tus: typeof import("tus-js-client");
 
 // jquery.geoip.js -- genuinely first-party (docs/PLAN.md's own scope
 // note), but excluded from this phase's real 61-file count and not yet
@@ -343,20 +369,23 @@ declare const tus: {
 // the meantime.
 declare const GeoIp: any;
 
-// Chart.js / moment.js (both vendored -- P46-0's own CDN table).
-// `stats.ts`'s own graph rendering is the one real first-party call
-// site for both -- loosely typed throughout, matching this whole
-// file's own convention for vendored libraries P46 doesn't re-derive
-// real types for.
-declare const Chart: any;
-declare const moment: any;
+// Chart.js (vendored -- P46-0's own CDN table). Real, verified types
+// from `@types/chart.js` (P47) -- no `declare const` needed any more
+// (removed; leaving one would silently shadow the real package's own
+// global with `any`, confirmed via a local `tsc` repro during
+// planning). `stats.ts`'s own graph rendering is the one real
+// first-party call site.
+//
+// moment.js (vendored -- P46-0's own CDN table) ships its own bundled
+// `.d.ts` (`node_modules/moment/moment.d.ts`, already an installed npm
+// dependency) but declares itself via `export = moment`, not
+// `export as namespace` -- it has no global binding of its own, so
+// `typeof import(...)` bridges the real npm types to the CDN-loaded
+// global the same way `tus` does above. `stats.ts`'s own graph
+// rendering is the one real first-party call site.
+declare const moment: typeof import("moment");
 
 interface JQueryStatic {
-  // jquery.cookie (vendored -- P46-0's own CDN table). `cat_list.ts`'s
-  // own album-manager view-mode cookie is the one real first-party
-  // call site so far.
-  cookie(name: string, value?: any, options?: Record<string, unknown>): any;
-
   // jquery.ajaxmanager (vendored, never published to npm -- P46-0's own
   // CDN table) -- `thumbnails.loader.ts`'s own queued-thumbnail loader is
   // the one real first-party call site.
@@ -393,17 +422,31 @@ interface JQueryStatic {
   // first-party call site.
   jGrowl(text: string, options?: Record<string, unknown>): void;
 
-  // jQuery UI's core datepicker widget + jquery-ui-timepicker-addon
-  // (both vendored -- P46-0's own CDN table). `datepicker.ts`'s own
-  // `pwgDatepicker` plugin definition (patching `_generateMonthYearHeader`/
-  // `_selectMonthYear`) is the one real first-party call site for all
-  // of these -- loosely typed throughout, matching this whole file's
-  // own "minimal types" convention for vendored internals P46 doesn't
-  // re-derive real types for.
+  // jquery-ui-timepicker-addon (vendored -- P46-0's own CDN table, no
+  // real upstream types). `datepicker.ts`'s own `pwgDatepicker` plugin
+  // is the one real first-party call site. `JQueryStatic.datepicker`
+  // itself is no longer declared here -- see the `JQueryUI.Datepicker`
+  // merge below, required because `@types/jqueryui` (P47) now declares
+  // `JQueryStatic.datepicker: JQueryUI.Datepicker` itself, and
+  // re-declaring the same property with a different from-scratch type
+  // here would be a real "subsequent property declarations must have
+  // the same type" compile error.
   timepicker: { log: any };
-  datepicker: {
-    _generateMonthYearHeader: (...args: any[]) => any;
-    _selectMonthYear: (...args: any[]) => any;
+}
+
+// `@types/jqueryui` (P47) declares `JQueryStatic.datepicker:
+// JQueryUI.Datepicker`, but its public API has no home for the
+// internal engine methods `datepicker.ts`'s own `pwgDatepicker` plugin
+// patches (`_generateMonthYearHeader`/`_selectMonthYear`/`parseDateTime`/
+// `parseDate`) -- merged directly onto the real `JQueryUI.Datepicker`
+// interface instead of re-declaring `JQueryStatic.datepicker` from
+// scratch (which would conflict, per the note above). Confirmed a real,
+// mergeable `interface`, not a `type` alias, via a local `tsc` repro
+// during planning.
+declare namespace JQueryUI {
+  interface Datepicker {
+    _generateMonthYearHeader(...args: any[]): any;
+    _selectMonthYear(...args: any[]): any;
     parseDateTime(
       dateFormat: string,
       timeFormat: string,
@@ -411,6 +454,22 @@ interface JQueryStatic {
       ...args: any[]
     ): any;
     parseDate(format: string, value: string, ...args: any[]): any;
+  }
+}
+
+// jqtree's own bundled `IJQTreePlugin` (referenced above) never typed
+// its real `"getState"` command -- an upstream typings gap, not
+// something we can edit in `node_modules` directly. `albums.ts`'s own
+// album tree reads `.tree("getState").open_nodes` -- confirmed against
+// jqtree's real runtime source (`save_state_handler.js`'s own
+// `getState()`) that this returns `{ open_nodes, selected_node }`,
+// both arrays of the tree's own `INode.id` type (`number | string`).
+// `IJQTreePlugin` is a real, mergeable top-level interface, so this
+// adds the one missing overload without touching the vendored file.
+interface IJQTreePlugin {
+  (behavior: "getState"): {
+    open_nodes: (number | string)[];
+    selected_node: (number | string)[];
   };
 }
 
@@ -421,11 +480,12 @@ interface JQuery {
   // `jQuery("div.active").size()` is the one real first-party call site.
   size(): number;
 
-  // selectize.js (vendored, github-sourced -- P46-0's own CDN table).
-  // `LocalStorageCache.ts`'s own `CategoriesCache`/`TagsCache`/
-  // `GroupsCache`/`UsersCache.selectize()` methods are the one real
-  // first-party call site so far.
-  selectize(options?: Record<string, unknown>): JQuery;
+  // selectize.js's own `.selectize()` init method is now real, verified
+  // types from `@types/selectize` (P47) -- deleted here (was
+  // method-shorthand on both sides, harmless to leave, but redundant).
+  // `@types/selectize` also declares `interface HTMLElement { selectize:
+  // Selectize.IApi<any, any>; }` globally itself, so the live-instance
+  // property (`$el[0].selectize`) needs no ambient entry here either.
 
   // jquery.cluetip (vendored, github-sourced -- P46-0's own CDN table).
   // `intro.ts`'s own tooltip setup is the one real first-party call
@@ -447,20 +507,20 @@ interface JQuery {
   // site found.
   lightAccordion(options?: Record<string, any>): JQuery;
 
-  // jQuery UI's own `slider` widget (vendored -- P46-0's own CDN
-  // table, the one full-bundle `jquery.ui` id) --
-  // `doubleSlider.ts`'s own `pwgDoubleSlider` extension (declared
-  // separately below, alongside every other vendored-plugin entry)
-  // is built on it. Both its options-object and multi-arg "command"
-  // forms (`.slider('values', 0, ...)`) are real, distinct call
-  // shapes.
-  slider(options?: Record<string, unknown>): JQuery;
-  slider(command: string, ...args: any[]): any;
+  // jQuery UI's own `slider` widget (vendored -- the one full-bundle
+  // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
+  // (P47) -- deleted here (method-shorthand on both sides, harmless to
+  // leave, but redundant). `doubleSlider.ts`'s own `pwgDoubleSlider`
+  // extension (declared separately below) is built on it.
 
-  // jquery.colorbox / jquery.tipTip (both vendored -- P46-0's own CDN
-  // table). `batchManagerGlobal.ts`'s own thumbnail preview/tooltip
-  // setup is the one real first-party call site so far for each.
-  colorbox(options?: Record<string, unknown>): JQuery;
+  // jquery.tipTip (vendored -- P46-0's own CDN table, no real upstream
+  // types). `batchManagerGlobal.ts`'s own tooltip setup is the one real
+  // first-party call site. `.colorbox()` is now real, verified types
+  // from `@types/jquery.colorbox` (P47) -- deleted here: it was
+  // declared as a *property* by the real package (`colorbox: Colorbox`)
+  // vs. method-shorthand here, a real "duplicate identifier" conflict
+  // if both were left in place (confirmed via a local `tsc` repro
+  // during planning), not just redundant like `.slider()` above.
   tipTip(options?: Record<string, unknown>): JQuery;
 
   // jquery.Jcrop (vendored -- P46-0's own CDN table). `picture_coi.ts`'s
@@ -496,10 +556,11 @@ interface JQuery {
   dataTable(options?: Record<string, unknown>): JQuery;
   DataTable(options?: Record<string, unknown>): any;
 
-  // jQuery UI's own `tooltip` widget (vendored -- P46-0's own CDN
-  // table, the one full-bundle `jquery.ui` id). `rating_user.ts`'s own
-  // GeoIP-lookup tooltip is the one real first-party call site.
-  tooltip(options?: Record<string, unknown>): JQuery;
+  // jQuery UI's own `tooltip` widget (vendored -- the one full-bundle
+  // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
+  // (P47) -- deleted here (method-shorthand on both sides, harmless to
+  // leave, but redundant). `rating_user.ts`'s own GeoIP-lookup tooltip
+  // is the one real first-party call site.
 
   // jquery.sort.js (the well-known `jQuery.fn.sortElements` snippet --
   // one of the genuinely-unresolved libraries P46-0's own CDN
@@ -508,14 +569,13 @@ interface JQuery {
   // first-party call site.
   sortElements(comparator: (a: any, b: any) => number): JQuery;
 
-  // jqtree (vendored -- P46-0's own CDN table). `albums.ts`'s own
-  // album tree is the one real first-party call site -- both its
-  // options-object setup form and its many distinct command-string
-  // forms (`.tree('getNodeById', ...)`, `.tree('openNode', ...)`,
-  // etc.) collapse to one loose signature, matching `.sortable()`/
-  // `.slider()`/`.tree()`'s own sibling entries above.
-  tree(options?: Record<string, unknown>): JQuery;
-  tree(command: string, ...args: any[]): any;
+  // jqtree's own `.tree()` is now real, verified types from its own
+  // bundled `.d.ts` (`/// <reference types="jqtree" />` at the top of
+  // this file) -- deleted here: jqtree declares `tree` as a *property*
+  // (`tree: IJQTreePlugin`), so leaving this file's own method-shorthand
+  // `tree(...)` overloads in place would be a real "duplicate
+  // identifier" conflict, not just redundant. `albums.ts`'s own album
+  // tree is the one real first-party call site.
 
   // `batchManagerGlobal.ts`'s own first-party `jQuery.fn` extension --
   // declared and consumed within the same file, no other real call
@@ -540,13 +600,9 @@ interface JQuery {
   // first-party call site.
   autogrow(): JQuery;
 
-  // jQuery UI's `sortable` widget (vendored -- P46-0's own CDN table,
-  // the one full-bundle `jquery.ui` id). `menubar.ts`'s own drag-to-
-  // reorder menu setup is the one real first-party call site so far --
-  // both the options-object form and the single-string "command" form
-  // (`.sortable('toArray')`, returning the sorted elements' own `id`
-  // attributes) are real, distinct call shapes jQuery UI itself
-  // supports.
-  sortable(options?: Record<string, unknown>): JQuery;
-  sortable(command: string): any;
+  // jQuery UI's `sortable` widget (vendored -- the one full-bundle
+  // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
+  // (P47) -- deleted here (method-shorthand on both sides, harmless to
+  // leave, but redundant). `menubar.ts`'s own drag-to-reorder menu
+  // setup is the one real first-party call site.
 }

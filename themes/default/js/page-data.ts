@@ -15,8 +15,8 @@ function pwg_getPageDataPayload(): PwgPageDataPayload {
   return pwg_pageDataPayload!;
 }
 
-function pwg_getPageData(key: string): any {
-  return pwg_getPageDataPayload().data[key];
+function pwg_getPageData<T = unknown>(key: string): T {
+  return pwg_getPageDataPayload().data[key] as T;
 }
 
 function pwg_getPageString(key: string): string {

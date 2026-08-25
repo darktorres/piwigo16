@@ -10,7 +10,7 @@ const str_delete = pwg_getPageString(
 const str_deletes = pwg_getPageString(
   'Are you sure you want to delete "%d" comments?',
 );
-const pwg_token = pwg_getPageData("csrf_token");
+const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_an_error_has = pwg_getPageString("An error has occured");
 const str_comment_validated = pwg_getPageString(
   "The comment has been validated.",
@@ -47,17 +47,41 @@ const commentsOptionsFiltersAuthor = '<option value="" selected="">--</option>';
 const commentsSelectedList =
   '<div class="comments-selected-item"><a class="icon-cancel comments-selected-remove" id="deletecomment_%d"></a> <p>#%d</p></div>';
 
-let commentsState: any = {};
-const commentsParams: Record<string, any> = {
+// The real shape of the GET api/v1/comments response (CommentListController.php),
+// via the existing OpenAPI schema.
+type CommentListResponse =
+  import("../../../../openapi/client/schema").operations["commentList"]["responses"][200]["content"]["application/json"];
+type CommentEntry = CommentListResponse["comments"][number];
+
+interface CommentsFilterParams {
+  status: string;
+  page: number;
+  per_page: number | string;
+  search?: string;
+  author_id?: string | number;
+  f_min_date?: string;
+  f_max_date?: string;
+  // Never actually set anywhere in this file (confirmed via grep) --
+  // only read/deleted. Kept, not pruned: harmless, and out of this
+  // phase's own scope (typing existing behavior, not trimming it).
+  image_id?: string | number;
+}
+
+// Placeholder until the first `getComments()` call (fired unconditionally
+// on document ready, below) populates it for real -- every real read of
+// `commentsState.comments`/`.paging` only happens from handlers wired up
+// after that first call succeeds.
+let commentsState: CommentListResponse = {} as CommentListResponse;
+const commentsParams: CommentsFilterParams = {
   status: "all",
   page: 0,
   per_page: 5,
 };
 
 let updateAuthorId = true;
-let searchTimeOut: any = null;
+let searchTimeOut: ReturnType<typeof setTimeout> | undefined;
 let selectionMode = false;
-let commentsSelected: any[] = [];
+let commentsSelected: (string | number)[] = [];
 
 $(function () {
   $("#commentFilters").on("click", function () {
@@ -101,7 +125,7 @@ $(function () {
   });
 
   $(".tab-filters input").on("change", function () {
-    commentsParams.status = $(this).attr("data-status");
+    commentsParams.status = $(this).attr("data-status")!;
     commentsParams.page = 0;
     getComments(commentsParams);
   });
@@ -120,7 +144,9 @@ $(function () {
   $("#commentSearchInput").on("input", function () {
     clearTimeout(searchTimeOut);
     searchTimeOut = setTimeout(() => {
-      const search = $(this).val();
+      // Real #commentSearchInput's own value: a plain text input, always
+      // a string.
+      const search = $(this).val() as string;
 
       delete commentsParams.author_id;
       delete commentsParams.f_min_date;
@@ -147,7 +173,7 @@ $(function () {
   getComments(commentsParams);
 });
 
-function getComments(params: any) {
+function getComments(params: CommentsFilterParams) {
   $.ajax({
     url: "api/v1/comments",
     type: "GET",
@@ -162,7 +188,7 @@ function getComments(params: any) {
       maxDate: params.f_max_date,
       imageId: params.image_id,
     },
-    success: (data) => {
+    success: (data: CommentListResponse) => {
       // for debug
       // console.log(data);
       commentsState = { ...data };
@@ -173,7 +199,7 @@ function getComments(params: any) {
 
       delete commentsParams.search;
     },
-    error: (e) => {
+    error: (e: JQuery.jqXHR) => {
       console.log(e);
       $.alert({
         title: str_an_error_has,
@@ -184,25 +210,28 @@ function getComments(params: any) {
   });
 }
 
-function commentsDisplaySummary(summary: any) {
+function commentsDisplaySummary(summary: CommentListResponse["summary"]) {
   commentsAll.text(summary.allComments);
   commentsValidated.text(summary.validated);
   commentsPending.text(summary.pending);
 }
 
-function displayComments(comments: any) {
+function displayComments(comments: CommentListResponse["comments"]) {
   commentsList.empty();
-  comments.forEach((comment: any) => {
+  comments.forEach((comment: CommentEntry) => {
     const clone = $(".comment-template").clone();
     clone.removeClass("comment-template").addClass("comment");
 
     clone.attr("id", comment.id);
     clone.find(".comment-img").attr("src", comment.mediumUrl);
-    const raw_lenght = comment.contentRaw.length;
+    // contentRaw is genuinely nullable (CommentEntity::$content is
+    // `?string`) -- a null raw comment previously threw here
+    // (`.length` on null) under the old `any` typing. Treated as empty,
+    // matching every other nullable-string display field in this file.
+    const rawContent = comment.contentRaw ?? "";
+    const raw_lenght = rawContent.length;
     const preview =
-      raw_lenght > 50
-        ? comment.contentRaw.substring(0, 50) + "..."
-        : comment.contentRaw;
+      raw_lenght > 50 ? rawContent.substring(0, 50) + "..." : rawContent;
     clone.find(".comment-msg").text('"' + preview + '"');
     clone.find(".comment-author-name").text(comment.author);
     clone.find(".comment-datetime").text(comment.date);
@@ -287,13 +316,13 @@ function displayComments(comments: any) {
     });
 }
 
-function commentsDiplayPagination(paging: any) {
+function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
   const container = $(".pagination-item-container");
   container.empty();
 
   if (paging.totalPages == 0) {
     const pageNumbers = paging.totalPages + 1;
-    const page = commentsPaginItems.replace(/%d/g, pageNumbers);
+    const page = commentsPaginItems.replace(/%d/g, String(pageNumbers));
     $(page).addClass("actual").appendTo(container);
   } else if (paging.totalPages <= 2) {
     Array.from(Array(paging.totalPages + 1)).forEach((_, i) => {
@@ -360,7 +389,7 @@ function commentsDiplayPagination(paging: any) {
     });
 }
 
-function commentsDisplayFilters(filters: any) {
+function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
   if (updateAuthorId) {
     commentsDisplayAuthors(filters.nbAuthors);
   }
@@ -378,7 +407,9 @@ function commentsDisplayFilters(filters: any) {
     if (!min) {
       delete commentsParams.f_min_date;
     } else {
-      commentsParams.f_min_date = min;
+      // Real filter_date_start's own value: a plain date input, always
+      // a string.
+      commentsParams.f_min_date = min as string;
     }
 
     filterDateEnd.attr({ min: min });
@@ -392,7 +423,9 @@ function commentsDisplayFilters(filters: any) {
     if (!max) {
       delete commentsParams.f_max_date;
     } else {
-      commentsParams.f_max_date = max;
+      // Real filter_date_end's own value: a plain date input, always a
+      // string.
+      commentsParams.f_max_date = max as string;
     }
 
     filterDateStart.attr({ max: max });
@@ -401,11 +434,13 @@ function commentsDisplayFilters(filters: any) {
   });
 }
 
-function commentsDisplayAuthors(nb_authors: any) {
+function commentsDisplayAuthors(
+  nb_authors: CommentListResponse["filters"]["nbAuthors"],
+) {
   filterAuthor.empty();
   filterAuthor.append(commentsOptionsFiltersAuthor);
 
-  nb_authors.forEach((a: any) => {
+  nb_authors.forEach((a) => {
     filterAuthor.append(`
       <option value="${a.author_id}">${a.author} (${a.nb_authors})</option>
       `);
@@ -417,7 +452,8 @@ function commentsDisplayAuthors(nb_authors: any) {
     if (!authorId) {
       delete commentsParams.author_id;
     } else {
-      commentsParams.author_id = authorId;
+      // Real filter_author's own value: a plain <select>, always a string.
+      commentsParams.author_id = authorId as string;
     }
 
     commentsParams.page = 0;
@@ -426,17 +462,16 @@ function commentsDisplayAuthors(nb_authors: any) {
   });
 }
 
-function updateNbComments(nb: any) {
+function updateNbComments(nb: string | number) {
   commentsNb.removeClass("selected-pagination");
   $(`#pagination-per-page-${nb}`).addClass("selected-pagination");
 
   commentsParams.per_page = nb;
-  window.localStorage.setItem("adminCommentsNB", nb);
+  window.localStorage.setItem("adminCommentsNB", String(nb));
 }
 
-function showModalViewComment(id: any) {
-  const comment =
-    commentsState.comments.filter((c: any) => c.id == id)[0] ?? null;
+function showModalViewComment(id: string | number) {
+  const comment = commentsState.comments.filter((c) => c.id == id)[0] ?? null;
   if (!comment) return;
 
   const item = $(`#${id}`);
@@ -481,7 +516,7 @@ function closeModalViewComment() {
   $("#commentsModalDelete").off("click");
 }
 
-function validateComment(id: any) {
+function validateComment(id: (string | number)[]) {
   const idLenght = id.length ?? 1;
 
   $.ajax({
@@ -495,7 +530,9 @@ function validateComment(id: any) {
       commentIds: id,
     }),
     dataType: "json",
-    success: function (res) {
+    success: function (
+      _data: import("../../../../openapi/client/schema").operations["commentValidate"]["responses"][200]["content"]["application/json"],
+    ) {
       $.alert({
         ...{
           title: idLenght > 1 ? str_comments_validated : str_comment_validated,
@@ -505,7 +542,7 @@ function validateComment(id: any) {
       });
       getComments(commentsParams);
     },
-    error: function (e) {
+    error: function (e: JQuery.jqXHR) {
       console.log(e);
       $.alert({
         ...{
@@ -518,14 +555,14 @@ function validateComment(id: any) {
   });
 }
 
-function deleteComment(id: any) {
+function deleteComment(id: (string | number)[]) {
   const idLenght = id.length ?? 1;
 
   $.confirm({
     title:
       idLenght > 1
-        ? str_deletes.replace("%d", idLenght)
-        : str_delete.replace("%s", id),
+        ? str_deletes.replace("%d", String(idLenght))
+        : str_delete.replace("%s", String(id)),
     draggable: false,
     titleClass: "jconfirmDeleteConfirm",
     theme: "modern",
@@ -553,10 +590,12 @@ function deleteComment(id: any) {
               commentIds: id,
             }),
             dataType: "json",
-            success: function (res) {
+            success: function (
+              _data: import("../../../../openapi/client/schema").operations["commentDelete"]["responses"][200]["content"]["application/json"],
+            ) {
               getComments(commentsParams);
             },
-            error: function (e) {
+            error: function (e: JQuery.jqXHR) {
               console.log(e);
             },
           });
@@ -587,7 +626,7 @@ function commentsSelectAll() {
 
   commentsSelected = [];
   $(".comment-selected").each((i, el) => {
-    const id = $(el).attr("id");
+    const id = $(el).attr("id")!;
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
@@ -601,7 +640,7 @@ function commentsInvertSelect() {
 
   commentsSelected = [];
   $(".comment-selected").each((i, el) => {
-    const id = $(el).attr("id");
+    const id = $(el).attr("id")!;
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
@@ -628,7 +667,7 @@ function commentsUpdateSelection() {
       return;
     }
     commentsSelectedOthers.text("");
-    const item = commentsSelectedList.replace(/%d/g, id);
+    const item = commentsSelectedList.replace(/%d/g, String(id));
     commentsSelectedArea.append(item);
     count++;
   });

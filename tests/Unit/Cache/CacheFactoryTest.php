@@ -52,19 +52,75 @@ test('an explicit filesystem request always succeeds', function (): void {
     expect(CacheFactory::create('filesystem'))->toBeInstanceOf(FilesystemAdapter::class);
 });
 
-test('buildFilesystem points the adapter at the real repo root\'s _data/cache/ directory', function (): void {
+test('buildFilesystem points the adapter at the real repo root\'s _data/cache/ directory, scoped by the real PIWIGO_DB_BASE', function (): void {
     // No existing test ever inspects *where* the filesystem adapter
     // actually writes -- only that one gets built. FilesystemAdapter has
     // no public getter for its configured directory, so this reads the
     // same protected $directory property FilesystemTrait itself uses
     // internally (confirmed present via direct source read).
+    //
+    // tests/.env.test sets PIWIGO_DB_BASE=piwigo_test for the whole
+    // suite -- scopeToDatabase() folds it into the namespace, so the
+    // real directory carries it too.
     $pool = CacheFactory::create('filesystem');
 
     $directory = new ReflectionProperty($pool, 'directory')
         ->getValue($pool);
 
     expect($directory)
-        ->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo/');
+        ->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo.' . getenv('PIWIGO_DB_BASE') . '/');
+});
+
+test('scopeToDatabase folds the real PIWIGO_DB_BASE into the namespace, so live and test databases never share a cache pool', function (): void {
+    // The actual bug this exists to prevent, found live: a shared dev
+    // Apache instance serving both the live and test databases via the
+    // X-Piwigo-Env header kept serving one database's own cached content
+    // to the other, because every real call site's own fixed namespace
+    // string ('piwigo.config', ...) carried no database identity at all.
+    $original = getenv('PIWIGO_DB_BASE');
+
+    try {
+        putenv('PIWIGO_DB_BASE=piwigo_live_probe');
+        $live = CacheFactory::create('filesystem');
+        $liveDir = new ReflectionProperty($live, 'directory')
+            ->getValue($live);
+
+        putenv('PIWIGO_DB_BASE=piwigo_test_probe');
+        $test = CacheFactory::create('filesystem');
+        $testDir = new ReflectionProperty($test, 'directory')
+            ->getValue($test);
+
+        expect($liveDir)
+            ->toContain('piwigo.piwigo_live_probe')
+            ->and($testDir)
+            ->toContain('piwigo.piwigo_test_probe')
+            ->and($liveDir)
+            ->not->toBe($testDir);
+    } finally {
+        putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
+    }
+});
+
+test('scopeToDatabase leaves the namespace bare when PIWIGO_DB_BASE is unset or empty', function (): void {
+    $original = getenv('PIWIGO_DB_BASE');
+
+    try {
+        putenv('PIWIGO_DB_BASE');
+        $pool = CacheFactory::create('filesystem');
+        $directory = new ReflectionProperty($pool, 'directory')
+            ->getValue($pool);
+        expect($directory)
+            ->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo/');
+
+        putenv('PIWIGO_DB_BASE=');
+        $pool = CacheFactory::create('filesystem');
+        $directory = new ReflectionProperty($pool, 'directory')
+            ->getValue($pool);
+        expect($directory)
+            ->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo/');
+    } finally {
+        putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
+    }
 });
 
 test('the PIWIGO_CACHE_ADAPTER env var is honored when no explicit param is given', function (): void {

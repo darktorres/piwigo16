@@ -35,6 +35,7 @@ final class CacheFactory
     {
         $explicit = $adapter ?? self::envAdapter();
         $resolved = $explicit ?? (ApcuAdapter::isSupported() ? 'apcu' : 'filesystem');
+        $namespace = self::scopeToDatabase($namespace);
 
         return match ($resolved) {
             'apcu' => self::buildApcu($namespace, $defaultLifetime),
@@ -44,6 +45,39 @@ final class CacheFactory
                 "Unknown cache adapter '{$resolved}'. Expected apcu, redis, or filesystem."
             ),
         };
+    }
+
+    /**
+     * Every real call site here hardcodes a fixed namespace string
+     * ('piwigo.config', 'piwigo.category_tree', ...) -- none of them are
+     * derived from which database the cached content actually describes.
+     * `PIWIGO_DB_BASE` (the real, connected-to database name -- `piwigo`
+     * live vs `piwigo_test`, or a distinct name per worktree/parallel test
+     * worker, see Env::testModeHeader()'s own `test-wN` support) is the
+     * one signal that already correctly captures that distinction in
+     * every real case, so folding it into the namespace here, once, fixes
+     * every call site at once rather than needing each of the dozen-plus
+     * `CacheFactory::create()` call sites to do it individually.
+     *
+     * Found live: a shared dev Apache instance serving both the live
+     * (`piwigo`) and test (`piwigo_test`) databases via the
+     * `X-Piwigo-Env` header kept serving one database's own cached
+     * `gallery_title`/`page_banner` to the OTHER database's requests --
+     * whichever database's request warmed the shared, unscoped
+     * `piwigo.config` pool first "won" for every later request
+     * regardless of which database it was actually for. For the
+     * filesystem adapter this is a same-worktree, same-`_data/cache/`
+     * collision; for APCu (a single shared-memory segment for the whole
+     * machine, not per-worktree) the same unscoped namespace would
+     * collide across every worktree on this box sharing that adapter,
+     * not just live vs test within one -- a real cross-worktree data
+     * leak, not merely a local annoyance.
+     */
+    private static function scopeToDatabase(string $namespace): string
+    {
+        $dbBase = getenv('PIWIGO_DB_BASE');
+
+        return $dbBase !== false && $dbBase !== '' ? $namespace . '.' . $dbBase : $namespace;
     }
 
     private static function envAdapter(): ?string

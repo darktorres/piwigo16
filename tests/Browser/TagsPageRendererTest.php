@@ -77,7 +77,7 @@ function tagsPageDeleteTag(int $tagId): void
 }
 
 it('renders the tag list including a real tagged photo\'s counter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Tags Page Album ' . uniqid(),
     ]);
@@ -104,7 +104,7 @@ it('renders the tag list including a real tagged photo\'s counter', function ():
 });
 
 it('warns about a real orphan tag and offers a review link', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $tagName = 'Orphan Tag ' . uniqid();
     $tagId = tagsPageAddTag($page, $tagName);
     tagsPageBackdateTag($tagId);
@@ -120,7 +120,7 @@ it('warns about a real orphan tag and offers a review link', function (): void {
 });
 
 it('deletes every orphan tag via the CSRF-gated delete_orphans action', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $tagName = 'Deletable Orphan Tag ' . uniqid();
     $tagId = tagsPageAddTag($page, $tagName);
     tagsPageBackdateTag($tagId);
@@ -138,7 +138,7 @@ it('deletes every orphan tag via the CSRF-gated delete_orphans action', function
 });
 
 it('rejects a delete_orphans request without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $tagName = 'CSRF Guarded Orphan Tag ' . uniqid();
     $tagId = tagsPageAddTag($page, $tagName);
     tagsPageBackdateTag($tagId);
@@ -267,7 +267,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     $db = H::connect();
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $tagId = tagsPageAddTag($page, $tagName);
 
     try {

@@ -24,7 +24,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * avoids mutating shared filesystem state destructively.
  */
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'std_pages_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [
@@ -55,7 +55,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
 });
 
 it('rejects a save submission with no CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, '/admin.php?page=themes_standard_pages', [
         'submit' => '1',
@@ -67,7 +67,7 @@ it('rejects a save submission with no CSRF token', function (): void {
 
 it('persists the selected logo option and skin across a later plain visit', function (): void {
     $snapshot = H::snapshotConfig(['use_standard_pages', 'standard_pages_selected_logo', 'standard_pages_selected_skin']);
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         $result = H::adminPost($page, '/admin.php?page=themes_standard_pages', [
@@ -102,7 +102,7 @@ it('persists the selected logo option and skin across a later plain visit', func
 it('unchecks use_standard_pages when the checkbox is simply omitted from the submission', function (): void {
     $snapshot = H::snapshotConfig(['use_standard_pages']);
     H::setConfigValue('use_standard_pages', 'true');
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         // Sending no `use_standard_pages` key at all (not '0') is exactly

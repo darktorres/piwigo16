@@ -46,7 +46,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * note against a sibling class), not a real gap.
  */
 it('streams a CSV export via type=download_logs instead of rendering the normal page', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=user_activity&type=download_logs');
 
@@ -61,7 +61,7 @@ it('streams a CSV export via type=download_logs instead of rendering the normal 
 });
 
 it('resolves the album additional-filter to its real fixture name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity&album=1');
     $page->assertNoJavaScriptErrors();
 
@@ -70,7 +70,7 @@ it('resolves the album additional-filter to its real fixture name', function ():
 });
 
 it('resolves the photo additional-filter to its real fixture name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity&photo=1');
     $page->assertNoJavaScriptErrors();
 
@@ -79,7 +79,7 @@ it('resolves the photo additional-filter to its real fixture name', function ():
 });
 
 it('resolves the group additional-filter to its real fixture name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity&group=1');
     $page->assertNoJavaScriptErrors();
 
@@ -91,7 +91,7 @@ it('resolves the group additional-filter to its real fixture name', function ():
 // before 'group' and stops at the first one present -- passing both photo
 // and album must resolve to the photo, not the album.
 it('prioritizes the photo filter over the album filter when both are present', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity&photo=1&album=2');
     $page->assertNoJavaScriptErrors();
 
@@ -103,7 +103,7 @@ it('prioritizes the photo filter over the album filter when both are present', f
 // Edge/error condition: a filter value referencing a non-existent row calls
 // fatalError() (HTTP 500, rendered inline) rather than silently ignoring it.
 it('shows a fatal error for a non-existent album filter id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity&album=999999');
 
     $page->assertSee('album #999999 does not exist');

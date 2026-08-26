@@ -54,7 +54,7 @@ function userPermSelectOptions(string $html, string $selectName): array
 // UserPermPageRenderer::render() calls fatalError() (HTTP 500, rendered
 // inline) when it's missing.
 it('shows a fatal error when user_id is missing', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_perm');
 
     $page->assertSee('user_id URL parameter is missing');
@@ -65,7 +65,7 @@ it('shows a fatal error when user_id is missing', function (): void {
 // fieldset is never rendered (isset($categories_because_of_groups) stays
 // false) -- a genuinely different branch from user 4's own case below.
 it('shows no group-based album access for a user with no group memberships', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_perm&user_id=2');
     $page->assertNoJavaScriptErrors();
 
@@ -74,7 +74,7 @@ it('shows no group-based album access for a user with no group memberships', fun
 });
 
 it('shows the album granted through group membership, with no private albums yet', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_perm&user_id=4');
     $page->assertNoJavaScriptErrors();
 
@@ -106,7 +106,7 @@ it('shows the album granted through group membership, with no private albums yet
 it('lists the newly-private album as forbidden once it stops being covered by the group grant', function (): void {
     H::setCategoryPrivate(2, private: true);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_perm&user_id=4');
     $page->assertNoJavaScriptErrors();
 
@@ -123,7 +123,7 @@ it('lists the newly-private album as forbidden once it stops being covered by th
 
 it('trueifies then falsifies direct user_access for a private album', function (): void {
     H::setCategoryPrivate(2, private: true);
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $db = H::connect();
 
     try {

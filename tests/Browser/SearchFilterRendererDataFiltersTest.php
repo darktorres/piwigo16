@@ -149,7 +149,7 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
     H::setConfigValue('rate', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Data Filters Album ' . uniqid(),
         ]);
@@ -324,7 +324,7 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $uniqueWord = 'zephyrus' . uniqid();
 
         $album = H::createCategory($page, [
@@ -401,7 +401,7 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Author Only Album ' . uniqid(),
         ]);
@@ -471,7 +471,7 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
     H::setConfigValue('order_by', H::jsonEncode('ORDER BY id DESC'));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $adminId = searchFilterDataAdminUserId();
         $album = H::createCategory($page, [
             'name' => 'Search Added By Only Album ' . uniqid(),
@@ -552,7 +552,7 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
         ->clear();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Height Only Album ' . uniqid(),
         ]);
@@ -616,7 +616,7 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
         ->clear();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Width Only Album ' . uniqid(),
         ]);
@@ -689,7 +689,7 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
         ->clear();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Ratios Only Album ' . uniqid(),
         ]);
@@ -747,7 +747,7 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
     H::setConfigValue('rate', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Ratings Only Album ' . uniqid(),
         ]);
@@ -804,7 +804,7 @@ it('rejects a non-array ratings value with 422', function (): void {
     H::setConfigValue('rate', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawPostJson($page, '/api/v1/images/searches', [
             'ratings' => '3',
@@ -821,7 +821,7 @@ it('rejects a ratings array containing a non-string element with 422', function 
     H::setConfigValue('rate', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawPostJson($page, '/api/v1/images/searches', [
             'ratings' => [3],
@@ -843,7 +843,7 @@ it('rejects a ratings array containing a non-string element with 422', function 
  * there isn't a distinct one to test.
  */
 it('rejects a non-empty body with the wrong (or missing) Content-Type with 415', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawPostRawBody($page, '/api/v1/images/searches', '{"tags":[1]}', 'text/plain');
     expect($result['status'])->toBe(415);
@@ -853,7 +853,7 @@ it('rejects a non-empty body with the wrong (or missing) Content-Type with 415',
 });
 
 it('creates a distinct search on every call with no Idempotency-Key header', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $first = H::rawPostJson($page, '/api/v1/images/searches', [
         'tags' => [1],
@@ -869,7 +869,7 @@ it('creates a distinct search on every call with no Idempotency-Key header', fun
 });
 
 it('replays the stored response for a repeated Idempotency-Key with the same body', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $key = 'test-idempotency-' . uniqid();
 
     $first = H::rawPostJson($page, '/api/v1/images/searches', [
@@ -888,7 +888,7 @@ it('replays the stored response for a repeated Idempotency-Key with the same bod
 });
 
 it('rejects a repeated Idempotency-Key with a different body with 400', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $key = 'test-idempotency-conflict-' . uniqid();
 
     $first = H::rawPostJson($page, '/api/v1/images/searches', [
@@ -940,7 +940,7 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
         ->clear();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Filetypes Only Album ' . uniqid(),
         ]);
@@ -1001,7 +1001,7 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Ratio Landscape Album ' . uniqid(),
         ]);
@@ -1089,7 +1089,7 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Filesize Null Album ' . uniqid(),
         ]);

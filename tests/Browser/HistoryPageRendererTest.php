@@ -14,7 +14,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * exercise the results endpoint itself directly.
  */
 it('renders with today\'s date pre-filled and no filter applied', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=history');
 
     // START/END are hidden inputs (not "filter_ip"/"filter_image_id",
@@ -31,7 +31,7 @@ it('renders with today\'s date pre-filled and no filter applied', function (): v
 });
 
 it('clears the default start date when any filter is applied', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=history&filter_ip=127.0.0.1');
 
     // hasAnyFilter=true -> $form['start'] is reset to '' instead of
@@ -47,14 +47,14 @@ it('clears the default start date when any filter is applied', function (): void
 });
 
 it('echoes a valid image_id filter back into the form', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=history&filter_image_id=42');
 
     expect(H::rawWebpage($page)->content())->toContain('"image_id":"42"');
 });
 
 it('resolves a real filter_user_id to its username', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     // user 1 is the real fixture_admin account (see this suite's own
     // fixture-shape memory notes).
     $page = H::navigateOk($page, '/admin.php?page=history&filter_user_id=1');
@@ -63,7 +63,7 @@ it('resolves a real filter_user_id to its username', function (): void {
 });
 
 it('resets an unresolvable filter_user_id back to -1 without erroring', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=history&filter_user_id=999999');
 
     $page->assertNoJavaScriptErrors();
@@ -71,7 +71,7 @@ it('resets an unresolvable filter_user_id back to -1 without erroring', function
 });
 
 it('rejects a non-digit filter_ip as an invalid request parameter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=history&filter_ip=not-an-ip');
 
@@ -79,7 +79,7 @@ it('rejects a non-digit filter_ip as an invalid request parameter', function ():
 });
 
 it('GET /api/v1/history/search returns real JSON instead of the old ws.php 404', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::truncateHistory();
 
     $result = H::rawGet($page, '/api/v1/history/search?pageNumber=0');
@@ -104,7 +104,7 @@ it('GET /api/v1/history/search returns real JSON instead of the old ws.php 404',
 });
 
 it('renders an empty results table without hanging the loading spinner', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     // See VisualRegressionTest.php's own class docblock -- wipe the table
     // this page queries AFTER logging in (login itself logs a history
     // row) and BEFORE navigating there (its JS fires the search AJAX

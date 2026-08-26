@@ -14,7 +14,7 @@ function pictureCoiValue(int $imageId): ?string
 }
 
 it('renders the coi editor for a photo with no center of interest set yet', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Coi Album ' . uniqid(),
     ]);
@@ -36,7 +36,7 @@ it('renders the coi editor for a photo with no center of interest set yet', func
 });
 
 it('submits a new center of interest, persists it, and invalidates derivative-URL-style config', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Coi Submit Album ' . uniqid(),
     ]);
@@ -64,7 +64,7 @@ it('submits a new center of interest, persists it, and invalidates derivative-UR
 });
 
 it('carries a real representative_ext into the deleted derivative_infos when set', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Coi RepExt Album ' . uniqid(),
     ]);
@@ -113,7 +113,7 @@ it('resets a "questionmark" derivative_url_style (1) back to "auto" (0) for this
     $snapshot = H::snapshotConfig(['derivative_url_style']);
     H::setConfigValue('derivative_url_style', '1');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Coi UrlStyle Album ' . uniqid(),
     ]);
@@ -146,7 +146,7 @@ it('resets a "questionmark" derivative_url_style (1) back to "auto" (0) for this
 });
 
 it('renders a real 404 "Page not found" response for a nonexistent image_id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // pageNotFound() -> RedirectService::redirectHtml() throws a real
     // ResponseReadyException with the given status code baked into the

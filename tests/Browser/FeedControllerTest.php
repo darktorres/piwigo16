@@ -199,7 +199,7 @@ const FEED_FIXED_DATE = '2020-06-15 12:00:00';
 it('serves a well-formed RSS2 XML feed with the real Content-Type header and exactly 1 recent-post-date item', function (): void {
     // 1. Guarantee at least one real, visible image exists, regardless of
     // ambient DB state.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Feed Test Album ' . uniqid(),
     ]);
@@ -326,7 +326,7 @@ it('returns a 404 page-not-found for a well-formed but unknown personal feed id'
  * there).
  */
 it('switches the current user to a personal feed\'s real owner when fetched anonymously', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/notification.php');
     $feedId = feedExtractFeedId(H::rawWebpage($page)->content());
 
@@ -392,7 +392,7 @@ it('resets an authenticated session back to guest identity for the generic (toke
  * (lines ~108-136) is the one that actually sets last_check.
  */
 it('touches last_check via the periodic-refresh path (not real news) when image_only forces an empty news list', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/notification.php');
     $feedId = feedExtractFeedId(H::rawWebpage($page)->content());
 

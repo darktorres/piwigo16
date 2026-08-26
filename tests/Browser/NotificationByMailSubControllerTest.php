@@ -125,19 +125,19 @@ function nbmForceInstantSendmailTimeout(): array
 }
 
 it('renders the send tab by default', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=notification_by_mail');
     $page->assertNoJavaScriptErrors();
 });
 
 it('renders the param tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=notification_by_mail&mode=param');
     $page->assertNoJavaScriptErrors();
 });
 
 it('renders the subscribe tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     // Deliberately not navigateOk(): notification_by_mail.latte's subscribe
     // tab legitimately renders the literal copy "Warning: subscribing or
     // unsubscribing will send mails to users" -- a false positive for
@@ -148,7 +148,7 @@ it('renders the subscribe tab', function (): void {
 });
 
 it('updates notification parameters via the param tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $snapshot = H::snapshotConfig(['nbm_send_html_mail', 'nbm_send_detailed_content', 'nbm_send_recent_post_dates', 'nbm_send_mail_as']);
@@ -184,7 +184,7 @@ it('unsubscribes a user from category-based notifications', function (): void {
     // User 4 (power_user) has no email at all, guaranteeing the
     // deterministic "mail-send skipped" path -- a temporary row, not a
     // fixture mutation, since neither user 2 nor user 4 has one already.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     nbmSetUserMailNotificationRow(4, [
@@ -217,7 +217,7 @@ it('subscribes a user to category-based notifications', function (): void {
     // "mail-send skipped" reasoning as the unsubscribe test above; this
     // one reuses its real pre-seeded (disabled) fixture row instead of a
     // temporary one just to also cover the "existing row" shape.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $snapshot = nbmUserMailNotificationRow(3);
@@ -245,7 +245,7 @@ it('subscribes a user to category-based notifications', function (): void {
 });
 
 it('sends a notification email to selected users', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $snapshot = nbmUserMailNotificationRow(1);
@@ -288,7 +288,7 @@ it('sends a notification email to selected users', function (): void {
  * and deterministically, without depending on a real reachable MTA.
  */
 it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe mail delivery fails', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $smtpSnapshot = H::snapshotConfig(['smtp_host']);
@@ -352,7 +352,7 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
  * this the only real code path.
  */
 it('returns the customize-mail-content unchanged when nbm_send_html_mail is disabled', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $snapshot = H::snapshotConfig(['nbm_send_html_mail']);
     H::setConfigValue('nbm_send_html_mail', 'false');
 
@@ -366,7 +366,7 @@ it('returns the customize-mail-content unchanged when nbm_send_html_mail is disa
 });
 
 it('rejects a mutating submission with a missing CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = nbmPost($page, 'param', [
         'param_submit' => '1',
@@ -376,7 +376,7 @@ it('rejects a mutating submission with a missing CSRF token', function (): void 
 });
 
 it('self-heals a missing notification-subscription row on a plain page load', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $snapshot = nbmUserMailNotificationRow(1);
     expect($snapshot)
@@ -402,7 +402,7 @@ it('reports a repost for falsify with the estimated-time message when the sendma
     // own docblock on `! $isSubscribe`), so this temp row needs enabled=1
     // to even be picked up by the per-user loop that calls
     // checkSendmailTimeout() in the first place.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
@@ -448,7 +448,7 @@ it('reports a repost for trueify with the estimated-time message when the sendma
     // sentinel) -- enabled=0 here is deliberately the opposite of the
     // 'falsify' test's row, to also exercise that the filter really is
     // absent for this branch.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
@@ -480,7 +480,7 @@ it('reports a repost for trueify with the estimated-time message when the sendma
 });
 
 it('reports a repost for send_submit with the batch-timing estimate when the sendmail timeout is forced', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
@@ -520,7 +520,7 @@ it('renders only the previously-selected user as checked when redisplaying the s
     // (empty/unchecked for a candidate that exists but wasn't selected)
     // actually be reached -- the must_repost branch above can only ever
     // produce 'checked="checked"' for the users it includes at all.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $snapshot = nbmUserMailNotificationRow(1);
@@ -579,7 +579,7 @@ it('cleans up newly-inserted notification rows and redirects when the plain-load
     // nbm_default_value_user_enabled=true flips $isSubscribe to true,
     // which drops that filter entirely (see the 'trueify' test above),
     // letting the just-inserted rows reach the loop for real.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $snapshot = nbmUserMailNotificationRow(1);
     expect($snapshot)

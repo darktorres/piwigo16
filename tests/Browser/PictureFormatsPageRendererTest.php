@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('renders an empty formats list for a photo with no alternate formats', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Formats Album ' . uniqid(),
     ]);
@@ -24,7 +24,7 @@ it('renders an empty formats list for a photo with no alternate formats', functi
 });
 
 it('lists a real alternate-format file with its label, filesize in KB, and download URL', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Formats With Format Album ' . uniqid(),
     ]);
@@ -60,7 +60,7 @@ it('lists a real alternate-format file with its label, filesize in KB, and downl
 });
 
 it('rejects a nonexistent image_id with a fatal error', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=picture_formats&image_id=999999999');
 

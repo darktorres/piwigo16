@@ -57,7 +57,7 @@ function permalinksOldPermalinkCatId(mysqli|Connection $db, string $permalink): 
 }
 
 it('rejects a set_permalink submission without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, '/admin.php?page=permalinks', [
         'cat_id' => '2',
@@ -76,7 +76,7 @@ it('rejects a set_permalink submission without a valid CSRF token', function ():
 });
 
 it('rejects a delete_permanent request without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=permalinks&delete_permanent=does-not-matter');
 
@@ -85,7 +85,7 @@ it('rejects a delete_permanent request without a valid CSRF token', function ():
 });
 
 it('sets a category permalink, lists it among active permalinks, clears it into history, then permanently deletes the history entry', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $catId = 2;
     $permalink = 'permalinks-subctrl-' . uniqid();
@@ -148,7 +148,7 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
 });
 
 it('fatal-errors on an unexpected URL GET key while building the sort links', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // Any GET key other than page/psf/dpsf/pwg_token/delete_permanent is
     // rejected by parseSortVariables()'s own allowlist -- confirmed live
@@ -162,7 +162,7 @@ it('fatal-errors on an unexpected URL GET key while building the sort links', fu
 });
 
 it('marks the active-permalinks sort column as already-selected when psf matches it', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=permalinks&psf=id');
 

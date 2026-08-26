@@ -18,13 +18,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * no upload needed for a read-only tab-render check.
  */
 it('dispatches to the coi tab renderer via page=photo&tab=coi', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=photo&image_id=1&tab=coi');
     $page->assertNoJavaScriptErrors();
 });
 
 it('dispatches to the formats tab renderer via page=photo&tab=formats when formats are enabled', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $snapshot = H::snapshotConfig(['enable_formats']);
 
     try {
@@ -38,7 +38,7 @@ it('dispatches to the formats tab renderer via page=photo&tab=formats when forma
 });
 
 it('falls back to the properties tab for an unknown tab value', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=photo&image_id=1&tab=not-a-real-tab');
     $page->assertNoJavaScriptErrors();
 });

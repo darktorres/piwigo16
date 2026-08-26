@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('renders the global gallery actions fieldset with no webmaster warning for the webmaster fixture user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
     // PHP_VERSION/DB_VERSION are assigned by this class but only ever
@@ -19,7 +19,7 @@ it('renders the global gallery actions fieldset with no webmaster warning for th
 });
 
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'maint_actions_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
 
@@ -58,7 +58,7 @@ it('shows the unlock-gallery link and hides lock-gallery when the gallery is loc
     H::setConfigValue('gallery_locked', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
         $page->assertPresent('a[href*="action=unlock_gallery"]');
@@ -73,7 +73,7 @@ it('shows the lock-gallery link and hides unlock-gallery when the gallery is unl
     H::setConfigValue('gallery_locked', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
         $page->assertPresent('a[href*="action=lock_gallery"]');
@@ -92,7 +92,7 @@ it('renders successfully forced onto the "imagick" graphics library branch', fun
     H::setConfigValue('graphics_library', '"imagick"');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
         $page->assertNoJavaScriptErrors();
@@ -107,7 +107,7 @@ it('renders successfully forced onto the "gd" graphics library branch', function
     H::setConfigValue('graphics_library', '"gd"');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
         $page->assertNoJavaScriptErrors();
@@ -124,7 +124,7 @@ it('shows the time-since-last-calculation-derived cache size info when a real ca
     H::setConfigValue('cache_sizes', '[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3},{"name":"d","value":"2020-01-01 00:00:00"}]');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance');
 
         $page->assertNoJavaScriptErrors();
@@ -135,7 +135,7 @@ it('shows the time-since-last-calculation-derived cache size info when a real ca
 });
 
 it('shows the empty-lounge link and counter when the upload lounge has real items', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Maintenance Actions Lounge Album ' . uniqid(),
     ]);

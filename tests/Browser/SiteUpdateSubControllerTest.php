@@ -323,13 +323,13 @@ function suSync(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $tok
 }
 
 it('renders the introduction with default settings and category options', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, suPath());
     $page->assertNoJavaScriptErrors();
 });
 
 it('renders with a preselected cat_id, defaulting sync to files', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, suPath([
         'cat_id' => '1',
     ]));
@@ -337,7 +337,7 @@ it('renders with a preselected cat_id, defaulting sync to files', function (): v
 });
 
 it('fatal-errors when synchronization is disabled', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $snapshot = H::snapshotConfig(['enable_synchronization']);
 
     try {
@@ -353,7 +353,7 @@ it('fatal-errors when synchronization is disabled', function (): void {
 });
 
 it('fatal-errors when the site param is missing', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, '/admin.php?page=site_update', []);
 
@@ -362,7 +362,7 @@ it('fatal-errors when the site param is missing', function (): void {
 });
 
 it('fatal-errors when the site param is not numeric', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, suPath([
         'site' => 'abc',
@@ -373,7 +373,7 @@ it('fatal-errors when the site param is not numeric', function (): void {
 });
 
 it('fatal-errors when the site does not exist', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, suPath([
         'site' => '999999',
@@ -384,7 +384,7 @@ it('fatal-errors when the site does not exist', function (): void {
 });
 
 it('fatal-errors for a remote site', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $remoteSiteId = suInsertRemoteSite('http://ct-remote-' . uniqid() . '.example.invalid/');
 
     try {
@@ -407,7 +407,7 @@ it('reports all-zero counts when the site directory cannot be opened', function 
     // (isset($post['submit']) && sync in [dirs,files] alone) -- so the
     // page still renders a real summary, just with every count at 0
     // rather than a fatal error.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $unreadableSiteId = suInsertRemoteSite('galleries/ct-does-not-exist-' . uniqid() . '/');
     $token = H::pwgToken($page);
 
@@ -440,7 +440,7 @@ it('reports all-zero counts when the site directory cannot be opened', function 
 });
 
 it('rejects a submission with a missing CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, suPath(), [
         'submit' => '1',
@@ -451,7 +451,7 @@ it('rejects a submission with a missing CSRF token', function (): void {
 });
 
 it('rejects a submission with a wrong CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, suPath(), [
         'submit' => '1',
@@ -463,7 +463,7 @@ it('rejects a submission with a wrong CSRF token', function (): void {
 });
 
 it('quick_sync requires a CSRF token too', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, suPath([
         'quick_sync' => '1',
@@ -480,7 +480,7 @@ it('synchronizes a new directory/photo and detects its deletion on resync', func
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -524,7 +524,7 @@ it('simulate mode reports counts without writing to the database', function (): 
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -550,7 +550,7 @@ it('rejects a directory whose name fails the sync-chars regex', function (): voi
     $dir = 'ct bad dir! ' . uniqid();
     $tempDir = suMakeTempDir($dir);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -578,7 +578,7 @@ it('synchronizes metadata for a registered photo', function (): void {
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -618,7 +618,7 @@ it('scopes a submit to a single category via cat, honoring subcats-included and 
     $parentDir = 'ct_site_cat_parent_' . uniqid();
     $parentTemp = suMakeTempDir($parentDir);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -682,7 +682,7 @@ it('scopes a submit to a single category via cat, honoring subcats-included and 
 });
 
 it('propagates directly-granted group/user permissions onto newly-synced private child categories, walking a multi-level new-category chain', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $snapshot = H::snapshotConfig(['inheritance_by_default', 'newcat_default_status']);
 
@@ -780,7 +780,7 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
 
     file_put_contents($tempDir . '/bad name!.jpg', 'not a real image');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $snapshot = H::snapshotConfig(['enable_formats']);
 
@@ -863,7 +863,7 @@ it('reports a PWG-ERROR-NO-FS error when a registered photo is deleted before it
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -915,7 +915,7 @@ it('quick_sync performs a real full local synchronization via the GET shortcut',
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -950,7 +950,7 @@ it('creates a new sub-category successfully when its parent has a null global_ra
     $parentDir = 'ct_site_nullrank_parent_' . uniqid();
     $parentTemp = suMakeTempDir($parentDir);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -1011,7 +1011,7 @@ it('forces a new sub-category invisible when its parent category is not visible'
     $parentDir = 'ct_site_invisible_parent_' . uniqid();
     $parentTemp = suMakeTempDir($parentDir);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -1070,7 +1070,7 @@ it('clears a deleted category\'s cached derivative directory when one exists on 
     copy($imagePath, $tempDir . '/photo.jpg');
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $derivDir = suDerivativeCacheDirFor($dir);
 
@@ -1128,7 +1128,7 @@ it('silently skips a photo whose containing directory has no matching category',
     copy($imagePath, suGalleriesRoot() . $orphanFile);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -1164,7 +1164,7 @@ it('scopes metadata synchronization to a single category via cat, honoring subca
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -1222,7 +1222,7 @@ it('assigns tags from IPTC keywords during metadata synchronization', function (
     copy($imagePath, $tempDir . '/' . $file);
     @unlink($imagePath);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $snapshot = H::snapshotConfig(['use_iptc']);
 

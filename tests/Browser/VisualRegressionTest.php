@@ -153,7 +153,7 @@ foreach ($routes as $name => [$path, $needsAuth]) {
                     H::truncateGuestActivity();
                 }
 
-                $page = H::loginAsAdmin($this);
+                $page = H::asAdmin($this);
 
                 if ($name === 'admin-history') {
                     // See the class-level docblock: wipe the table this page
@@ -266,7 +266,7 @@ it('admin-photo-editor matches its visual baseline', function (): void {
     // "Visited N times" text.
     H::freezeImageHits(1, 5);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=photo-1');
     $page->assertScreenshotMatches();
 })->group('visual-regression');

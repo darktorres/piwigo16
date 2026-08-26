@@ -47,7 +47,7 @@ $adminRoutes = [
 
 foreach ($adminRoutes as $name => $path) {
     it("{$name} — clean (no server errors, no JS errors)", function () use ($path): void {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, $path);
         $page->assertNoJavaScriptErrors();
     });

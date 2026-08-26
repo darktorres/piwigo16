@@ -137,7 +137,7 @@ function galRemoveFixturePlugin(string $pluginDir): void
 }
 
 it('renders a category page with subcategories, exercising the main thumbnail/sort/edit-icon paths', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1');
     $page->assertNoJavaScriptErrors();
 });
@@ -146,7 +146,7 @@ it('escapes an HTML-special-character-bearing photo name on the main thumbnail g
     // thumbnails.latte:42's {$thumbnail['NAME']} used to print |noescape --
     // HtmlService::renderElementName() returns the raw stored name
     // unmodified (RenderElementName has no default handler).
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Thumbnail Name Escaping Album ' . uniqid(),
     ]);
@@ -173,13 +173,13 @@ it('escapes an HTML-special-character-bearing photo name on the main thumbnail g
 });
 
 it('renders a category page in flat mode', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/flat');
     $page->assertNoJavaScriptErrors();
 });
 
 it('renders a childless category with the flat icon enabled, clearing the flat-mode link', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $snapshot = H::snapshotConfig(['index_flat_icon']);
 
     try {
@@ -193,13 +193,13 @@ it('renders a childless category with the flat icon enabled, clearing the flat-m
 });
 
 it('renders a category filtered by creation chronology, exercising the alternate-field icon link', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/created-monthly');
     $page->assertNoJavaScriptErrors();
 });
 
 it('renders month_calendar.latte and its own CSS when the calendar chronology view is requested', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/created-monthly-calendar');
     $body = H::rawWebpage($page)->content();
 
@@ -209,31 +209,41 @@ it('renders month_calendar.latte and its own CSS when the calendar chronology vi
 });
 
 it('shows page-not-found when start is beyond the item count', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/start-999');
     $page->assertNoJavaScriptErrors();
 });
 
 it('sets the session image order and redirects back to the section', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1&image_order=2');
     $page->assertNoJavaScriptErrors();
+
+    // GalleryController persists this into $_SESSION['image_order'] with
+    // no expiry -- a later asAdmin()-authenticated test must not inherit
+    // it. See BrowserTestHelpers::$sharedSessionKnownClean's own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('clears an invalid image order and redirects back to the section', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1&image_order=abc');
     $page->assertNoJavaScriptErrors();
 });
 
 it('sets the noindex flag and derivative display type via the display param', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1&display=square');
     $page->assertNoJavaScriptErrors();
+
+    // GalleryController persists this into $_SESSION['index_deriv'] with
+    // no expiry -- a later asAdmin()-authenticated test must not inherit
+    // it. See BrowserTestHelpers::$sharedSessionKnownClean's own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('fills the caddie and redirects back to the section', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         $page = H::navigateOk($page, '/index.php?/category/1&caddie=1');
@@ -244,13 +254,13 @@ it('fills the caddie and redirects back to the section', function (): void {
 });
 
 it('renders a tag page with combinable related tags', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/tags/1');
     $page->assertNoJavaScriptErrors();
 });
 
 it("renders a category's description when present", function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $comment = 'CT category description ' . uniqid();
 
     try {
@@ -277,7 +287,7 @@ it('renders the recent-albums page, exercising CategoryCatsRenderer\'s isRecentC
     // PIWIGO_TEST_NOW exactly, well within any real recent_period
     // default -- so it's real, fixture-driven "recent" data, not a
     // fabricated date.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/recent_cats');
     $page->assertNoJavaScriptErrors();
 });
@@ -290,7 +300,7 @@ it('builds a navigation bar when the section holds more items than the page size
     // preference (user_infos, same "restorable DB toggle" pattern
     // as galSetCategoryComment()/galClearCaddie() above) instead of
     // faking a bigger fixture.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         galSetNbImagePage(1, 1);
@@ -310,7 +320,7 @@ it('snaps the canonical URL start back a full page once it lands past the last i
     // down by one full page before building the canonical URL. start-1
     // itself stays valid (1 < count($page_items) = 2), so this never
     // trips the earlier page_not_found() gate at GalleryController.php:105.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         galSetNbImagePage(1, 2);
@@ -331,7 +341,7 @@ it('renders a category filtered by posted chronology, exercising the alternate-f
     // indexCreatedDateIcon() (GalleryController.php:248) -- the
     // 'created-monthly' test above only ever reaches the mirror-image
     // 'posted' resolution.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1/posted-monthly');
     $page->assertNoJavaScriptErrors();
 });
@@ -343,7 +353,7 @@ it('redirects to the slideshow when the slideshow param is present', function ()
     // actually produced a real slideshow URL (i.e. $page_items isn't
     // empty), so this needs a real photo-bearing category, not the
     // homepage.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/index.php?/category/1&slideshow');
     $page->assertNoJavaScriptErrors();
 });
@@ -373,7 +383,7 @@ it('renders quick-search category/tag hints and an unmatched term alongside real
     $searchId = galInsertQuickSearch('Sample nature quxfrobnicate42');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/index.php?/search/' . $searchId);
         $page->assertNoJavaScriptErrors();
         $page->assertSee('Album results for');
@@ -395,7 +405,7 @@ it('renders the empty quick-search state when no term matches anything', functio
     $searchId = galInsertQuickSearch('zzzqfrobnomatch77');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/index.php?/search/' . $searchId);
         $page->assertNoJavaScriptErrors();
         $page->assertSee('No results for');
@@ -441,7 +451,7 @@ it('dispatches IndexRendered with the real category id/name/comment when viewing
     try {
         galSetCategoryComment(1, $comment);
 
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/index.php?/category/1');
         $body = H::rawWebpage($page)->content();
 
@@ -483,7 +493,7 @@ it('escapes an HTML-special-character-bearing plugin-contributed index button UR
     H::dbClose($db);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/index.php?/category/1');
         $body = H::rawWebpage($page)->content();
 
@@ -524,7 +534,7 @@ it('dispatches IndexRendered with null category fields on a tag page (not a sing
     H::dbClose($db);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/index.php?/tags/1');
         $body = H::rawWebpage($page)->content();
 

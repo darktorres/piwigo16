@@ -33,7 +33,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * private and its default parameter value is what's unreachable).
  */
 it('renders the stats page as a webmaster', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=stats');
 
     $page->assertNoJavaScriptErrors();

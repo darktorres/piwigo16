@@ -28,7 +28,7 @@ function albumsPageChildrenOrderedByRank(int $parentId): array
 }
 
 it('renders the album tree with real nested albums', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $parent = H::createCategory($page, [
         'name' => 'Albums Page Parent ' . uniqid(),
     ]);
@@ -45,7 +45,7 @@ it('renders the album tree with real nested albums', function (): void {
 });
 
 it('reorders root-level albums alphabetically ascending via simpleAutoOrder', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $suffix = uniqid();
     $zebra = H::createCategory($page, [
         'name' => 'Zebra Auto Order ' . $suffix,
@@ -79,7 +79,7 @@ it('reorders root-level albums alphabetically ascending via simpleAutoOrder', fu
 });
 
 it('reorders a specific parent\'s direct children via simpleAutoOrder scoped by id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $suffix = uniqid();
     $parent = H::createCategory($page, [
         'name' => 'Scoped Auto Order Parent ' . $suffix,
@@ -117,7 +117,7 @@ it('reorders a specific parent\'s direct children via simpleAutoOrder scoped by 
 });
 
 it('reorders recursively (recursiveAutoOrder) including grandchildren', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $suffix = uniqid();
     $parent = H::createCategory($page, [
         'name' => 'Recursive Auto Order Parent ' . $suffix,
@@ -157,7 +157,7 @@ it('reorders recursively (recursiveAutoOrder) including grandchildren', function
 });
 
 it('sorts by date_creation via the date-based auto-order branch', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $suffix = uniqid();
     $parent = H::createCategory($page, [
         'name' => 'Date Auto Order Parent ' . $suffix,
@@ -190,7 +190,7 @@ it('sorts by date_creation via the date-based auto-order branch', function (): v
 });
 
 it('rejects an invalid auto-order sort value', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, '/admin.php?page=albums', [
         'pwg_token' => H::pwgToken($page),

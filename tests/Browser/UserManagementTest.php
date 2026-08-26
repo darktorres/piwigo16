@@ -51,7 +51,7 @@ function listedUsers(array $response): array
 }
 
 it('creates and deletes a user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pwgToken = H::pwgToken($page);
 
     $username = 'browser_test_user_' . uniqid();
@@ -82,13 +82,13 @@ it('creates and deletes a user', function (): void {
 });
 
 it('admin user list page loads without errors', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_list');
     $page->assertNoJavaScriptErrors();
 });
 
 it('admin group list page loads without errors', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=group_list');
     $page->assertNoJavaScriptErrors();
 });

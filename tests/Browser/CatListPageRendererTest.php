@@ -14,7 +14,7 @@ function catListPageCategoryExists(int $categoryId): bool
 }
 
 it('renders the root-level album list', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Cat List Root Album ' . uniqid(),
     ]);
@@ -30,7 +30,7 @@ it('renders the root-level album list', function (): void {
 });
 
 it('navigates into a parent album\'s own children list', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $parent = H::createCategory($page, [
         'name' => 'Cat List Parent ' . uniqid(),
     ]);
@@ -51,7 +51,7 @@ it('navigates into a parent album\'s own children list', function (): void {
 });
 
 it('creates a new virtual album at the root via submitAdd, and reports success', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $name = 'Cat List New Virtual ' . uniqid();
 
     $result = H::adminPost($page, '/admin.php?page=cat_list', [
@@ -68,7 +68,7 @@ it('creates a new virtual album at the root via submitAdd, and reports success',
 });
 
 it('creates a new virtual album under a parent via submitAdd + parent_id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $parent = H::createCategory($page, [
         'name' => 'Cat List Add Parent ' . uniqid(),
     ]);
@@ -91,7 +91,7 @@ it('creates a new virtual album under a parent via submitAdd + parent_id', funct
 });
 
 it('rejects creating a virtual album with an empty name and reports an error', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, '/admin.php?page=cat_list', [
         'pwg_token' => H::pwgToken($page),
@@ -104,7 +104,7 @@ it('rejects creating a virtual album with an empty name and reports an error', f
 });
 
 it('deletes a virtual album and redirects with a session confirmation message', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Cat List Delete Me ' . uniqid(),
     ]);
@@ -127,7 +127,7 @@ it('deletes a virtual album and redirects with a session confirmation message', 
 });
 
 it('deletes a virtual child album and redirects back to its own parent_id listing', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $parent = H::createCategory($page, [
         'name' => 'Cat List Delete Parent ' . uniqid(),
     ]);
@@ -210,7 +210,7 @@ it('deletes a virtual child album and redirects back to its own parent_id listin
 });
 
 it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when synchronization is enabled', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $db = H::connect();
 
     // Every album created via pwg.categories.add is virtual (dir=NULL) --
@@ -236,7 +236,7 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
 });
 
 it('rejects a delete request without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Cat List Delete Guard ' . uniqid(),
     ]);

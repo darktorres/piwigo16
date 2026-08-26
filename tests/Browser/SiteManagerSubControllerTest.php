@@ -9,7 +9,7 @@ it('shows a fatal error when synchronization is disabled', function (): void {
     H::setConfigValue('enable_synchronization', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/admin.php?page=site_manager');
 
@@ -20,7 +20,7 @@ it('shows a fatal error when synchronization is disabled', function (): void {
 });
 
 it('renders the site list including the real fixture site', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=site_manager');
 
     $page->assertSee('galleries');
@@ -28,7 +28,7 @@ it('renders the site list including the real fixture site', function (): void {
 });
 
 it('rejects a remote galleries_url as unsupported', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $result = H::adminPost($page, '/admin.php?page=site_manager', [
@@ -41,7 +41,7 @@ it('rejects a remote galleries_url as unsupported', function (): void {
 });
 
 it('rejects creating a site whose directory already exists as a registered site', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $result = H::adminPost($page, '/admin.php?page=site_manager', [
@@ -55,7 +55,7 @@ it('rejects creating a site whose directory already exists as a registered site'
 });
 
 it('rejects creating a site whose directory does not exist on disk', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $missingDir = 'galleries/does-not-exist-' . uniqid();
 
@@ -75,7 +75,7 @@ it('creates a new site for a real, existing directory, then deletes it via the C
     mkdir($absoluteDir, 0o777, true);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $createResult = H::adminPost($page, '/admin.php?page=site_manager', [
@@ -116,7 +116,7 @@ it('creates a new site for a real, existing directory, then deletes it via the C
 });
 
 it('rejects a submission without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::adminPost($page, '/admin.php?page=site_manager', [
         'submit' => '1',

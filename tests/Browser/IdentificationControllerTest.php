@@ -43,7 +43,7 @@ it('shows an error and re-renders the form for invalid credentials', function ()
 });
 
 it('redirects an already-authenticated session away from the login form', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     H::rawWebpage($page)->navigate(H::baseUrl() . '/identification.php');
     H::assertNoServerErrors($page, 'identification page while already logged in');

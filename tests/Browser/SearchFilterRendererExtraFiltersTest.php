@@ -191,7 +191,7 @@ it('renders every configured search filter panel without a fatal error', functio
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Extra Filters Album ' . uniqid(),
         ]);
@@ -239,7 +239,7 @@ it('renders the date-filter panel with a real threshold-based interval', functio
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Date Filter Album ' . uniqid(),
         ]);
@@ -292,7 +292,7 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Ratings Disabled Album ' . uniqid(),
         ]);
@@ -403,7 +403,7 @@ it('forces a searched tag with no intersection among the other active filters ba
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Tag Merge Album ' . uniqid(),
         ]);
@@ -519,7 +519,7 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Date Cache Album ' . uniqid(),
         ]);
@@ -596,7 +596,7 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
  * field's own access check already passed).
  */
 it('falls back to an empty search-fields array (and leaves has_filters_filled false) for a directly-persisted search row whose rules JSON has no "fields" key at all', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $uuid = extraFiltersInsertRawSearchRow([
         'mode' => 'AND',
@@ -629,7 +629,7 @@ it('resets a non-array "tags"/"author" search-field value back to an empty array
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Malformed Fields Album ' . uniqid(),
         ]);
@@ -742,7 +742,7 @@ it('denies access to and unsets every per-filter search field whose own filters_
     H::setConfigValue('rate', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Access Denied Album ' . uniqid(),
         ]);
@@ -846,7 +846,7 @@ it('denies access to and unsets every per-filter search field whose own filters_
  * this needs a genuine anonymous viewer instead.
  */
 it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched album is forbidden for the current (guest) viewer', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $uniqueWord = 'forbiddenalbumhint' . uniqid();
     $album = H::createCategory($page, [
         'name' => 'Album ' . $uniqueWord,

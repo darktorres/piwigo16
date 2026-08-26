@@ -93,7 +93,7 @@ function albumSubRemoveFixturePlugin(string $pluginId): void
 }
 
 it('fatal-errors with "unknown album" for a cat_id with no matching category row', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=999999999');
 
     expect($page->content())
@@ -116,7 +116,7 @@ it('renders the real category name when a render_category_name hook returns some
 
     $db = albumSubDb();
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $categoryName = 'CT Album Sub Hook Fallback ' . uniqid();
     $album = H::createCategory($page, [
         'name' => $categoryName,

@@ -15,7 +15,7 @@ it('hides a block and repositions another, persisting the new blk_menubar config
     $snapshot = H::snapshotConfig(['blk_menubar']);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::adminPost($page, '/admin.php?page=menubar', [
             'pwg_token' => H::pwgToken($page),
@@ -45,7 +45,7 @@ it('shows a hidden block\'s saved position as a negative value on the next rende
     $snapshot = H::snapshotConfig(['blk_menubar']);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         H::adminPost($page, '/admin.php?page=menubar', [
             'pwg_token' => H::pwgToken($page),

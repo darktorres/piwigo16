@@ -20,7 +20,7 @@ it('shows a fatal error when the extensions install system is disabled', functio
     H::setConfigValue('enable_extensions_install', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/admin.php?page=updates&tab=ext');
 
@@ -31,7 +31,7 @@ it('shows a fatal error when the extensions install system is disabled', functio
 });
 
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'updates_ext_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

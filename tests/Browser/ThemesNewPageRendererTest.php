@@ -14,7 +14,7 @@ it('shows a fatal error when the extensions install system is disabled', functio
     H::setConfigValue('enable_extensions_install', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/admin.php?page=themes&tab=new');
 
@@ -29,7 +29,7 @@ it('reports success and offers an install confirmation for installstatus=ok', fu
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=themes&tab=new&installstatus=ok');
 
         $page->assertSee('Theme has been successfully installed');
@@ -43,7 +43,7 @@ it('reports each known installstatus error with its own message', function (): v
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // The loaded en_UK translation catalog rephrases these from their
         // literal PHP source msgids (e.g. "Can't create temporary file."
@@ -69,7 +69,7 @@ it('rejects an automatic-install request from a non-webmaster session', function
     $snapshot = H::snapshotConfig(['enable_extensions_install']);
     H::setConfigValue('enable_extensions_install', 'true');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'themes_new_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

@@ -42,7 +42,7 @@ it('renders an empty installed-themes list since every real theme on disk is del
     // its own source. Every theme actually on disk in this test
     // environment falls into that exclusion list, so the installed-themes
     // table always renders with zero rows here.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes');
 
     $page->assertSee('Add a new theme');
@@ -55,7 +55,7 @@ it('renders an empty installed-themes list since every real theme on disk is del
 });
 
 it('rejects an activate action without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=themes&action=activate&theme=default');
 
@@ -63,7 +63,7 @@ it('rejects an activate action without a valid CSRF token', function (): void {
 });
 
 it('rejects a delete action without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=themes&action=delete&theme=default');
 
@@ -78,7 +78,7 @@ it('handles a CSRF-valid activate action on the already-active default theme as 
     // CSRF-valid action-dispatch block (fs-entry lookup + performAction()
     // call + the action_errors===[] "deleteCompiledTemplates()+redirect"
     // branch) as a genuine no-op, without ever mutating real theme state.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $page = H::navigateOk($page, '/admin.php?page=themes&action=activate&theme=default&pwg_token=' . $token);
@@ -98,7 +98,7 @@ it('rejects a CSRF-valid deactivate action on the only installed theme with the 
     H::dbQuery($db, "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'default')");
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $page = H::navigateOk($page, '/admin.php?page=themes&action=deactivate&theme=default&pwg_token=' . $token);
@@ -111,7 +111,7 @@ it('rejects a CSRF-valid deactivate action on the only installed theme with the 
 });
 
 it('does not attempt any action when action= is present but theme= is missing', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=themes&action=activate');
 
@@ -122,7 +122,7 @@ it('does not attempt any action when action= is present but theme= is missing', 
 });
 
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'themes_installed_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

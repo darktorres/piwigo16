@@ -57,7 +57,7 @@ function photoUploadImagesList(array $response): array
 }
 
 it('uploads a photo via the API and returns a positive image id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Upload Test Album ' . uniqid(),
     ]);
@@ -71,7 +71,7 @@ it('uploads a photo via the API and returns a positive image id', function (): v
 });
 
 it('uploaded photo appears in getInfo with real dimensions', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'GetInfo Test Album ' . uniqid(),
     ]);
@@ -91,7 +91,7 @@ it('uploaded photo appears in getInfo with real dimensions', function (): void {
 });
 
 it('two uploaded photos both appear in the album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Multi Upload Album ' . uniqid(),
     ]);

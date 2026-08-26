@@ -73,7 +73,7 @@ function commentsValidatedFlag(int $commentId): ?int
 }
 
 it('lists, paginates and keyword-filters real comments for an admin', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments Test Album ' . uniqid(),
@@ -124,7 +124,7 @@ it('lists, paginates and keyword-filters real comments for an admin', function (
 });
 
 it('single-escapes HTML-special-character-bearing keyword/author filter values, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode('Author & "Quote"') . '&keyword=' . urlencode('Key & "Word"'));
     $body = H::rawWebpage($page)->content();
@@ -139,7 +139,7 @@ it('single-escapes HTML-special-character-bearing keyword/author filter values, 
 });
 
 it('lets an admin validate and delete a comment via comments.php\'s own moderation actions', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pwgToken = H::pwgToken($page);
 
     $album = H::createCategory($page, [
@@ -190,7 +190,7 @@ it('lets an admin delete an anonymous (NULL author_id) comment via comments.php\
     // the full trace of this same underlying issue. getCommentAuthorId()
     // now returns `null` for this case and canManageComment() now accepts
     // it explicitly.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pwgToken = H::pwgToken($page);
 
     $album = H::createCategory($page, [
@@ -241,7 +241,7 @@ it('injects a non-standard comments_page_nb_comments value into the item_number 
 });
 
 it('filters comments by category (including subcats) and treats an unknown category as zero matches', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $parent = H::createCategory($page, [
         'name' => 'Comments CatFilter Parent ' . uniqid(),
@@ -294,7 +294,7 @@ it('redirects a guest to identification.php when requesting a specific comment_i
 });
 
 it('narrows the listing to exactly one comment when an admin passes comment_id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments CommentId Album ' . uniqid(),
@@ -319,7 +319,7 @@ it('narrows the listing to exactly one comment when an admin passes comment_id',
 });
 
 it('hides an unvalidated comment from a guest while an admin still sees it', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments GuestVisibility Album ' . uniqid(),
@@ -348,7 +348,7 @@ it('hides an unvalidated comment from a guest while an admin still sees it', fun
 });
 
 it('shows the edit form with a real ephemeral key for a comment the admin can manage', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments EditKey Album ' . uniqid(),
@@ -369,7 +369,7 @@ it('shows the edit form with a real ephemeral key for a comment the admin can ma
 });
 
 it('auto-validates an admin\'s own comment edit through the real ephemeral-key round trip', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments EditSubmit Album ' . uniqid(),
@@ -414,7 +414,7 @@ it('auto-validates an admin\'s own comment edit through the real ephemeral-key r
 });
 
 it('rejects an edit submission carrying an invalid ephemeral key', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments EditReject Album ' . uniqid(),
@@ -460,7 +460,7 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
         H::setConfigValue('user_can_edit_comment', 'true');
         H::setConfigValue('comments_page_nb_comments', '9999');
 
-        $adminPage = H::loginAsAdmin($this);
+        $adminPage = H::asAdmin($this);
         $album = H::createCategory($adminPage, [
             'name' => 'Comments Moderate Album ' . uniqid(),
         ]);
@@ -524,7 +524,7 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
 });
 
 it('falls back to the filename-derived name when a photo has no explicit name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments NoName Album ' . uniqid(),
@@ -573,7 +573,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
 });
 
 it("shows an anonymous comment's own email when no linked user account has one", function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $album = H::createCategory($page, [
         'name' => 'Comments GuestEmail Album ' . uniqid(),
@@ -707,7 +707,7 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Comments Hook Album ' . uniqid(),
         ]);

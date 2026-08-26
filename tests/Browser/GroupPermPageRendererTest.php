@@ -45,7 +45,7 @@ function groupPermSelectOptions(string $html, string $selectName): array
 it('lists the private album as already-authorized for the group that has access to it', function (): void {
     H::setCategoryPrivate(2, private: true);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=group_perm&group_id=1');
     $page->assertNoJavaScriptErrors();
 
@@ -73,7 +73,7 @@ it('lists the private album as already-authorized for the group that has access 
 it('lists the same private album as still-forbidden for a group without access to it', function (): void {
     H::setCategoryPrivate(2, private: true);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=group_perm&group_id=3');
     $page->assertNoJavaScriptErrors();
 
@@ -90,7 +90,7 @@ it('lists the same private album as still-forbidden for a group without access t
 
 it('falsifies (revokes) a private album\'s access for a group that currently has it', function (): void {
     H::setCategoryPrivate(2, private: true);
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         // Group 1 ("Editors") has real group_access to category 2 in the
@@ -123,7 +123,7 @@ it('falsifies (revokes) a private album\'s access for a group that currently has
 
 it('trueifies (grants) a private album\'s access for a group that currently lacks it', function (): void {
     H::setCategoryPrivate(2, private: true);
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         // Group 3 ("Guests") has no group_access to category 2 in the
@@ -152,7 +152,7 @@ it('trueifies (grants) a private album\'s access for a group that currently lack
 // GroupPermPageRenderer::render() calls fatalError() (HTTP 500, rendered
 // inline rather than a silent redirect) when it's missing.
 it('shows a fatal error when group_id is missing', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=group_perm');
 
     $page->assertSee('group_id URL parameter is missing');
@@ -165,7 +165,7 @@ it('shows a fatal error when group_id is missing', function (): void {
 // that tryFrom() now correctly rejects a 0/negative group_id that
 // is_numeric() alone used to silently let through.
 it('shows a fatal error when group_id is present but not a valid positive group id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=group_perm&group_id=0');
 
     $page->assertSee('group_id URL parameter is missing');

@@ -17,7 +17,7 @@ it('shows a fatal error when the extensions install system is disabled', functio
     H::setConfigValue('enable_extensions_install', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/admin.php?page=languages&tab=new');
 
@@ -32,7 +32,7 @@ it('reports success for installstatus=ok', function (): void {
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=languages&tab=new&installstatus=ok');
 
         $page->assertSee('Language has been successfully installed');
@@ -46,7 +46,7 @@ it('reports each known installstatus error with its own message', function (): v
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // The loaded en_UK translation catalog rephrases these from their
         // literal PHP source msgids (e.g. "Can't create temporary file."
@@ -72,7 +72,7 @@ it('rejects an install request from a non-webmaster session', function (): void 
     $snapshot = H::snapshotConfig(['enable_extensions_install']);
     H::setConfigValue('enable_extensions_install', 'true');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'languages_new_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

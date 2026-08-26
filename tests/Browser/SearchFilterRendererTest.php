@@ -17,7 +17,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * touches.
  */
 it('renders search results filtered by a single tag', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Search Tag Album ' . uniqid(),
     ]);
@@ -41,7 +41,7 @@ it('renders search results filtered by a single tag', function (): void {
 });
 
 it('renders search results filtered by a single album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Search Cat Album ' . uniqid(),
     ]);
@@ -59,7 +59,7 @@ it('renders search results filtered by a single album', function (): void {
 });
 
 it('renders an empty search-results page for a freshly created tag with no matching photos', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $tag = H::createTag($page, [
         'name' => 'Empty Search Tag ' . uniqid(),
     ]);
@@ -79,7 +79,7 @@ it('renders search results for a plain text query, exercising the allwords filte
     // field neither of those params ever populate -- and
     // SearchFilterRenderer::render()'s own matching
     // `isset($searchFields['allwords'])` branch downstream.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Search Text Album ' . uniqid(),
     ]);

@@ -17,7 +17,7 @@ it('fatal-errors when both the core-update and extensions-install systems are di
     H::setConfigValue('enable_core_update', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=updates');
 
         expect($page->content())

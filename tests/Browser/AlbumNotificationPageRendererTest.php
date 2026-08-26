@@ -23,7 +23,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * group-related PageRenderer tests) may create groups at any time.
  */
 it('sends an album notification email to selected users and reports how many were sent', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Notification Test Album ' . uniqid(),
     ]);
@@ -54,7 +54,7 @@ it('sends an album notification email to selected users and reports how many wer
 });
 
 it('resolves the representative-photo image query and injects an auth_key URL param for a normal-status recipient', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Notification Repr Album ' . uniqid(),
     ]);
@@ -107,7 +107,7 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
 });
 
 it('populates the private-album permission_url and direct/indirect notified-user queries when at least one group exists', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Notification Private Album ' . uniqid(),
     ]);
@@ -182,7 +182,7 @@ it('populates the private-album permission_url and direct/indirect notified-user
 });
 
 it('sends an album notification email to a group and reports the group name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Notification Group Album ' . uniqid(),
     ]);

@@ -31,7 +31,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * config value, snapshotted/restored around the test).
  */
 it('reports "select at least one photo" when submitting an action with nothing selected', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = bmPost($page, [
         'submit' => '1',
@@ -43,7 +43,7 @@ it('reports "select at least one photo" when submitting an action with nothing s
 });
 
 it('reports "select at least one tag" for add_tags with no tags chosen', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Empty AddTags ' . uniqid(),
     ]);
@@ -66,7 +66,7 @@ it('reports "select at least one tag" for add_tags with no tags chosen', functio
 });
 
 it('reports "select at least one tag" for del_tags with no tags chosen', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Empty DelTags ' . uniqid(),
     ]);
@@ -89,7 +89,7 @@ it('reports "select at least one tag" for del_tags with no tags chosen', functio
 });
 
 it('reports "select at least one album" for associate with no album chosen', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Empty Associate ' . uniqid(),
     ]);
@@ -112,7 +112,7 @@ it('reports "select at least one album" for associate with no album chosen', fun
 });
 
 it('clears the title/date_creation via their own "remove" checkboxes instead of an empty string', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Remove Fields ' . uniqid(),
     ]);
@@ -157,7 +157,7 @@ it('clears the title/date_creation via their own "remove" checkboxes instead of 
 });
 
 it('reports "no photo can be deleted" when confirm_deletion is sent with an empty selection', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = bmPost($page, [
         'submit' => '1',
@@ -175,7 +175,7 @@ it('reports "no photo can be deleted" when confirm_deletion is sent with an empt
 });
 
 it('deletes cached derivatives of the chosen type for a real selection via delete_derivatives', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Del Derivatives ' . uniqid(),
     ]);
@@ -199,7 +199,7 @@ it('deletes cached derivatives of the chosen type for a real selection via delet
 });
 
 it('honors display=all and a numeric display= to override the per-page thumbnail count', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $allResult = H::rawGet($page, '/admin.php?page=batch_manager&display=all');
     expect($allResult['status'])->toBe(200);
@@ -209,7 +209,7 @@ it('honors display=all and a numeric display= to override the per-page thumbnail
 });
 
 it('redirects after add_tags when the active filter is the "no_tag" prefilter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global NoTag Redirect ' . uniqid(),
     ]);
@@ -245,7 +245,7 @@ it('redirects after add_tags when the active filter is the "no_tag" prefilter', 
 });
 
 it("redirects after del_tags when the removed tags overlap the active filter's tags", function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global DelTags Redirect ' . uniqid(),
     ]);
@@ -288,7 +288,7 @@ it("redirects after del_tags when the removed tags overlap the active filter's t
 });
 
 it('redirects after associate when the active filter is the "no_album" prefilter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Associate NoAlbum Source ' . uniqid(),
     ]);
@@ -323,7 +323,7 @@ it('redirects after associate when the active filter is the "no_album" prefilter
 });
 
 it('redirects after associate when the active filter is "no_virtual_album" and the target album is virtual', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Associate NoVirtual Source ' . uniqid(),
     ]);
@@ -362,7 +362,7 @@ it('redirects after associate when the active filter is "no_virtual_album" and t
 });
 
 it('redirects after move when the active filter is the "no_album" prefilter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move NoAlbum Source ' . uniqid(),
     ]);
@@ -397,7 +397,7 @@ it('redirects after move when the active filter is the "no_album" prefilter', fu
 });
 
 it('redirects after move when the active filter is "no_virtual_album" and the move target is virtual', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move NoVirtual Source ' . uniqid(),
     ]);
@@ -432,7 +432,7 @@ it('redirects after move when the active filter is "no_virtual_album" and the mo
 });
 
 it('redirects after move when the active category filter no longer matches the move target', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Global Move CatMismatch Source ' . uniqid(),
     ]);
@@ -477,7 +477,7 @@ it('redirects after move when the active category filter no longer matches the m
 });
 
 it('redirects after a level change when the new level is lower than the active level filter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Level Redirect ' . uniqid(),
     ]);
@@ -512,7 +512,7 @@ it('redirects after a level change when the new level is lower than the active l
 });
 
 it('passes representative_ext through to the derivative-deletion payload when the image has one', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Del Deriv RepExt ' . uniqid(),
     ]);
@@ -553,7 +553,7 @@ it('falls back to the hardcoded 20-per-page default when the configured page siz
     H::setConfigValue('batch_manager_images_per_page_global', H::jsonEncode(15));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Batch Global BadPageSize ' . uniqid(),
         ]);
@@ -621,7 +621,7 @@ function bmMakeNamedTestImage(string $basename): string
 }
 
 it('orders thumbnails by the duplicate-detection fields when the active filter is "duplicates"', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Global Duplicates ' . uniqid(),
     ]);

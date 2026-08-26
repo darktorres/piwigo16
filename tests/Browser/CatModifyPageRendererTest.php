@@ -29,7 +29,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * can't happen through the real request path either.
  */
 it('shows the real photo/sub-album counts for a parent album with sub-albums', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=properties');
     $page->assertNoJavaScriptErrors();
 
@@ -42,7 +42,7 @@ it('shows the real photo/sub-album counts for a parent album with sub-albums', f
 });
 
 it('single-escapes an HTML-special-character-bearing category name/comment, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Cat Modify Escaping Album & "Quote" ' . uniqid(),
     ]);
@@ -68,7 +68,7 @@ it('single-escapes an HTML-special-character-bearing category name/comment, not 
 });
 
 it('shows the real photo count and zero sub-albums for a leaf album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=2&tab=properties');
     $page->assertNoJavaScriptErrors();
 
@@ -86,7 +86,7 @@ it('shows the real photo count and zero sub-albums for a leaf album', function (
 // thumbnail area falls back to its empty placeholder instead of a real
 // picture.
 it('shows the empty-album placeholder and no manage-photos link for a freshly created album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $albumName = 'Empty Modify Test Album ' . uniqid();
     $album = H::createCategory($page, [
         'name' => $albumName,
@@ -120,7 +120,7 @@ it('shows the empty-album placeholder and no manage-photos link for a freshly cr
 });
 
 it('formats a multi-date info-title ("added between") when its photos span more than one date', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Multi Date Test Album ' . uniqid(),
     ]);
@@ -172,7 +172,7 @@ it('formats a multi-date info-title ("added between") when its photos span more 
 // json_encode(), so an int value renders as a bare number, not a
 // quoted string.
 it('assigns the real parent id to PARENT_CAT_ID for a sub-album, not 0', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $result = H::rawGet($page, '/admin.php?page=album&cat_id=2&tab=properties');
 
     expect($result['status'])->toBe(200);
@@ -194,7 +194,7 @@ it('shows the delete-representative action when allow_random_representative is e
     H::setConfigValue('allow_random_representative', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=properties');
         $page->assertNoJavaScriptErrors();
 
@@ -205,7 +205,7 @@ it('shows the delete-representative action when allow_random_representative is e
 });
 
 it('shows the real physical directory info for a non-virtual (disk-synced) album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $db = H::connect();
 

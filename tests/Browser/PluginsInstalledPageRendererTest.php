@@ -6,7 +6,7 @@ use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('toggles show_details on via the URL param and persists it across a later plain visit', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/admin.php?page=plugins&show_details=1');
     $page->assertNoJavaScriptErrors();
@@ -16,19 +16,30 @@ it('toggles show_details on via the URL param and persists it across a later pla
     // not silently reset to the false default.
     $page = H::navigateOk($page, '/admin.php?page=plugins');
     $page->assertNoJavaScriptErrors();
+
+    // Leaves $_SESSION['plugins_show_details'] permanently true with no
+    // expiry -- a later asAdmin()-authenticated test must not inherit it.
+    // See BrowserTestHelpers::$sharedSessionKnownClean's own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('toggles show_details off explicitly', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/admin.php?page=plugins&show_details=1');
     $page = H::navigateOk($page, '/admin.php?page=plugins&show_details=0');
 
     $page->assertNoJavaScriptErrors();
+
+    // Ends false here, but only because this test's own second visit
+    // explicitly set it back -- still real, real mutation of shared
+    // state that shouldn't be assumed by test order. See
+    // BrowserTestHelpers::$sharedSessionKnownClean's own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('returns an empty JSON array for the incompatible_plugins AJAX check when the PEM version list is unreachable', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=plugins&incompatible_plugins=1');
 
@@ -37,7 +48,7 @@ it('returns an empty JSON array for the incompatible_plugins AJAX check when the
 });
 
 it('reuses the session-cached incompatible-plugins result on a second request within the 5-minute TTL', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // First call seeds $_SESSION['incompatible_plugins'] with only the
     // '~~expire~~' placeholder (getIncompatibleExtensions()'s own
@@ -56,7 +67,7 @@ it('reuses the session-cached incompatible-plugins result on a second request wi
 });
 
 it('flags an installed-but-missing-from-disk plugin as STATE=missing with the uninstall warning', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pluginId = 'missing-plugin-' . uniqid();
 
     $db = H::connect();
@@ -315,7 +326,7 @@ function pluginsInstalledRemoveManifestOnlyFixturePlugin(string $pluginId): void
 }
 
 it('lists a new-contract, manifest-only plugin (no main.inc.php at all) via the PluginRegistry merge', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pluginId = 'manifest-only-plugin-' . uniqid();
 
     pluginsInstalledWriteManifestOnlyFixturePlugin($pluginId);
@@ -388,7 +399,7 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $hooksId)));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugins');
 
         // The settings link is an <a href="..."> icon/label, not visible
@@ -447,7 +458,7 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $hooksId)));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugins');
 
         $page->assertPresent('a[href="admin.php?page=plugin-pwgtest-plugins-installed-malformed-hooks"]');
@@ -481,7 +492,7 @@ it('rewrites a piwigo-videojs settings URL from "plugin-piwigo-videojs" to "plug
     PHP);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugins');
 
         // Same reasoning as the settings-URL hook test above -- the href
@@ -535,7 +546,7 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // Seed a session entry whose recorded version ('0.1-stale')
         // deliberately differs from the plugin's real on-disk version
@@ -588,7 +599,7 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
     H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // Same recorded version as the fixture's real on-disk version --
         // the mismatch guard must NOT fire this time.

@@ -16,7 +16,7 @@ it('assigns CAT_COMMENTABLE when comments are activated', function (): void {
     H::setConfigValue('activate_comments', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=properties');
 
         $page->assertNoJavaScriptErrors();
@@ -31,7 +31,7 @@ it('omits CAT_COMMENTABLE entirely when comments are deactivated', function (): 
     H::setConfigValue('activate_comments', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=properties');
 
         $page->assertNoJavaScriptErrors();

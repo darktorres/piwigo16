@@ -22,7 +22,7 @@ it('shows a fatal error when core updates are disabled', function (): void {
     H::setConfigValue('enable_core_update', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/admin.php?page=updates');
 
@@ -37,7 +37,7 @@ it('rejects a step=2 upgrade submission without a valid CSRF token, never reachi
     H::setConfigValue('enable_core_update', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::adminPost($page, '/admin.php?page=updates&step=2', [
             'submit' => '1',
@@ -55,7 +55,7 @@ it('rejects a step=3 upgrade submission without a valid CSRF token, never reachi
     H::setConfigValue('enable_core_update', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::adminPost($page, '/admin.php?page=updates&step=3', [
             'submit' => '1',
@@ -73,7 +73,7 @@ it('does not attempt an upgrade when step=2 is visited with no form submission',
     H::setConfigValue('enable_core_update', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=updates&step=2');
 
         $page->assertNoJavaScriptErrors();
@@ -87,7 +87,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     $snapshot = H::snapshotConfig(['enable_core_update']);
     H::setConfigValue('enable_core_update', 'true');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'updates_pwg_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

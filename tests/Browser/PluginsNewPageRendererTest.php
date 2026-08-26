@@ -39,7 +39,7 @@ it('shows a fatal error when the extensions install system is disabled', functio
     H::setConfigValue('enable_extensions_install', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/admin.php?page=plugins&tab=new');
 
@@ -54,7 +54,7 @@ it('reports success and offers an activate-it-now link for installstatus=ok', fu
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&installstatus=ok');
 
         $page->assertSee('Plugin has been successfully copied');
@@ -69,7 +69,7 @@ it('reports each known installstatus error with its own message', function (): v
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // The loaded en_UK translation catalog rephrases these from their
         // literal PHP source msgids (e.g. "Can't create temporary file."
@@ -93,7 +93,7 @@ it('reports an unrecognized installstatus with the generic extraction-error mess
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new&installstatus=some-unknown-status');
 
         $page->assertSee('An error occured during the files');
@@ -108,7 +108,7 @@ it('runs the webmaster automatic-install branch with a valid CSRF token, landing
     H::setConfigValue('enable_extensions_install', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         // revision/extension are arbitrary PEM ids -- the real download
@@ -133,7 +133,7 @@ it('rejects an automatic-install request from a non-webmaster session', function
     $snapshot = H::snapshotConfig(['enable_extensions_install']);
     H::setConfigValue('enable_extensions_install', 'true');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'plugins_new_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

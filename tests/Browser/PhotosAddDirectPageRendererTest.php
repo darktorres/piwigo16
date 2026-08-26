@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('adds a batch of photo ids to the caddie and redirects to the batch manager', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photos Add Direct Batch Album ' . uniqid(),
     ]);
@@ -31,7 +31,7 @@ it('adds a batch of photo ids to the caddie and redirects to the batch manager',
 });
 
 it('rejects a batch caddie request without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=photos_add&batch=1');
 
@@ -39,7 +39,7 @@ it('rejects a batch caddie request without a valid CSRF token', function (): voi
 });
 
 it('preselects a valid album= and shows its display name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photos Add Direct Preselect Album ' . uniqid(),
     ]);
@@ -56,7 +56,7 @@ it('preselects a valid album= and shows its display name', function (): void {
 });
 
 it('renders a real 404 "Page not found" response for a nonexistent album=', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // pageNotFound() -> RedirectService::redirectHtml() throws a real
     // ResponseReadyException with the given status code baked into the
@@ -76,7 +76,7 @@ it('falls back to filename-based original detection when formats= targets a none
     H::setConfigValue('enable_formats', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=photos_add&formats=999999999');
 
         // No "doesn't exist" error for an unresolvable original -- HAVE_
@@ -93,7 +93,7 @@ it('lists a real photo\'s existing formats when formats= targets a valid origina
     H::setConfigValue('enable_formats', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Photos Add Direct Formats Album ' . uniqid(),
         ]);
@@ -119,7 +119,7 @@ it('lists a real photo\'s existing formats when formats= targets a valid origina
 });
 
 it('sets the upload_hide_warnings session flag when hide_warnings= is present', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/admin.php?page=photos_add&hide_warnings=1');
     $page->assertNoJavaScriptErrors();
@@ -129,6 +129,12 @@ it('sets the upload_hide_warnings session flag when hide_warnings= is present', 
     // persistence, not just a per-request echo).
     $page = H::navigateOk($page, '/admin.php?page=photos_add');
     $page->assertNoJavaScriptErrors();
+
+    // $_SESSION['upload_hide_warnings'] is never unset anywhere in
+    // production -- once true, permanently true for this session. A
+    // later asAdmin()-authenticated test must not inherit it. See
+    // BrowserTestHelpers::$sharedSessionKnownClean's own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('computes the GD max-upload-resolution memory warning when forced onto the "gd" graphics library', function (): void {
@@ -140,7 +146,7 @@ it('computes the GD max-upload-resolution memory warning when forced onto the "g
     H::setConfigValue('graphics_library', '"gd"');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
 
         $page->assertNoJavaScriptErrors();
@@ -157,7 +163,7 @@ it('shows the original-resize dimensions warning when original_resize is enabled
     H::setConfigValue('original_resize_maxheight', '1200');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
 
         $page->assertNoJavaScriptErrors();
@@ -168,7 +174,7 @@ it('shows the original-resize dimensions warning when original_resize is enabled
 });
 
 it('skips the mobile-app-promotion computation entirely once the user has dismissed it', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // Real client flow (themes/admin/default/js/photos_add_direct.ts's
     // ".dont-show-again" handler): a real `PUT /api/v1/session/
@@ -230,7 +236,7 @@ it('reports a setup error (and suppresses warnings) when the configured upload_d
     H::setConfigValue('upload_dir', H::jsonEncode($relDir));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
 
         $page->assertSee('directory at the root of your Piwigo installation');
@@ -254,7 +260,7 @@ it('warns when upload_form_chunk_size is configured larger than PHP\'s real uplo
     H::setConfigValue('upload_form_chunk_size', '3000');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
 
         $page->assertSee('should be smaller than PHP configuration setting upload_max_filesize');

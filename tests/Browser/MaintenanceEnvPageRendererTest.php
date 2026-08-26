@@ -14,7 +14,7 @@ it('renders the env tab with real server/DB info when the gallery is unlocked', 
     H::setConfigValue('gallery_locked', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
 
         $page->assertSee(PHP_VERSION);
@@ -52,7 +52,7 @@ it('server-renders a real active plugin\'s name and badge count in the env tab p
     H::dbClose($db);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
 
         $page->assertSee('CT Env Tab Fake Plugin');
@@ -84,7 +84,7 @@ it('shows the time-since-last-calculation when a real cache_sizes config value i
     H::setConfigValue('cache_sizes', '[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3},{"name":"d","value":"2020-01-01 00:00:00"}]');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
 
         $page->assertNoJavaScriptErrors();
@@ -112,7 +112,7 @@ it('runs the real phpinfo maintenance action over a live HTTP request and return
     // Piwigo\Core\CoverageCollector dump real per-request pcov coverage
     // from this server-side process (see that class's own docblock), later
     // merged in by tools/coverage-merge.php.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $response = H::rawGet($page, '/admin.php?page=maintenance&tab=env&action=phpinfo&pwg_token=' . $token);
@@ -134,7 +134,7 @@ it('rejects a maintenance action request with a missing/invalid CSRF token', fun
     // ever sees the 'phpinfo' action, distinct from the real-phpinfo test
     // above's own valid-token, successful-dispatch path through the exact
     // same 2 lines.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $response = H::rawGet($page, '/admin.php?page=maintenance&tab=env&action=phpinfo');
 
@@ -146,7 +146,7 @@ it('renders successfully with the gallery locked (U_MAINT_UNLOCK_GALLERY branch)
     H::setConfigValue('gallery_locked', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
 
         // MaintenanceEnvPageRenderer assigns U_MAINT_LOCK_GALLERY/

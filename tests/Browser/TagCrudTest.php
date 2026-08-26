@@ -6,7 +6,7 @@ use PHPUnit\Framework\ExpectationFailedException;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('creates a tag, assigns it to a photo, then deletes the tag', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pwgToken = H::pwgToken($page);
 
     $album = H::createCategory($page, [
@@ -59,7 +59,7 @@ it('creates a tag, assigns it to a photo, then deletes the tag', function (): vo
 });
 
 it('admin tags page loads without errors', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=tags');
     $page->assertNoJavaScriptErrors();
 });

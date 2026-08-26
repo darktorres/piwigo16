@@ -529,7 +529,7 @@ function passwordUserPreferences(int $userId): ?array
 }
 
 it('nulls a reset key for an already-logged-in (non-guest) user and redirects the default "lost" action home', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // A logged-in user is never a guest, so __invoke()'s own
     // `if ($key !== null and !isAGuest()) { $key = null; }` fires --

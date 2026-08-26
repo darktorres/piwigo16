@@ -48,7 +48,7 @@ function doubleSelectOptions(string $html, string $selectName): array
 }
 
 it('lists both public albums as authorized and none as forbidden for the status section', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_options&section=status');
     $page->assertNoJavaScriptErrors();
 
@@ -76,7 +76,7 @@ it('lists both public albums as authorized and none as forbidden for the status 
 it('splits albums between the true/false selects once one of them is private', function (): void {
     H::setCategoryPrivate(2, private: true);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_options&section=status');
     $page->assertNoJavaScriptErrors();
 
@@ -102,7 +102,7 @@ it('splits albums between the true/false selects once one of them is private', f
 // isolation (already covered separately by
 // tests/Unit/Admin/Request/CatOptionsRequestTest.php).
 it('renders the comments section with its own legend/labels', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_options&section=comments');
     $page->assertNoJavaScriptErrors();
 
@@ -110,7 +110,7 @@ it('renders the comments section with its own legend/labels', function (): void 
 });
 
 it('renders the visible section with its own legend/labels', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_options&section=visible');
     $page->assertNoJavaScriptErrors();
 
@@ -118,7 +118,7 @@ it('renders the visible section with its own legend/labels', function (): void {
 });
 
 it('falsifies commentable for a chosen album via the falsify submission', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     try {
         $result = H::adminPost($page, '/admin.php?page=cat_options&section=comments', [
@@ -146,7 +146,7 @@ it('falsifies commentable for a chosen album via the falsify submission', functi
 });
 
 it('falls back to the status section for an unrecognized section value', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_options&section=bogus');
     $page->assertNoJavaScriptErrors();
 

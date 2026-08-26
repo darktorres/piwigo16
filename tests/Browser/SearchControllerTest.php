@@ -65,7 +65,7 @@ it('returns 404 for a nonexistent cat_id', function (): void {
 });
 
 it('accepts a real, visible cat_id and redirects to a real search URL', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Search Controller Album ' . uniqid(),
     ]);
@@ -92,7 +92,7 @@ it('accepts a real, visible cat_id and redirects to a real search URL', function
 });
 
 it('fatal-errors on an invalid array tag_id when tags exist', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $tagResult = H::createTag($page, [
         'name' => 'ct-search-tag-' . uniqid(),
     ]);
@@ -152,7 +152,7 @@ it('reads default active filters from a logged-in user\'s saved preference once 
     H::setConfigValue('filters_views', $filtersViews);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Search Prefs Album ' . uniqid(),
         ]);

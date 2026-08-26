@@ -14,7 +14,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * that CSRF gate directly rather than any actual mutation.
  */
 it('renders the group list with real groups, member counts, and member names', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $group = H::createGroup($page, [
         'name' => 'Group List Test Group ' . uniqid(),
     ]);
@@ -38,7 +38,7 @@ it('renders the group list with real groups, member counts, and member names', f
 });
 
 it('rejects a delete param without a CSRF token, even though the param itself is a documented no-op', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=group_list&delete=999999');
 
@@ -46,7 +46,7 @@ it('rejects a delete param without a CSRF token, even though the param itself is
 });
 
 it('accepts a delete param with a valid CSRF token and still renders normally (the param is a no-op)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     $result = H::rawGet($page, '/admin.php?page=group_list&delete=999999&pwg_token=' . $token);
@@ -56,7 +56,7 @@ it('accepts a delete param with a valid CSRF token and still renders normally (t
 });
 
 it('rejects a toggle_is_default param without a CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=group_list&toggle_is_default=999999');
 

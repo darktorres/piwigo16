@@ -18,7 +18,7 @@ function ratingUserInsertRate(int $imageId, int $userId, string $anonymousId, in
 }
 
 it('formats an anonymous (guest) rater\'s user_key with their anonymous_id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Rating User Anon Album ' . uniqid(),
     ]);
@@ -49,7 +49,7 @@ it('formats an anonymous (guest) rater\'s user_key with their anonymous_id', fun
 });
 
 it('labels a rate from a user with no matching user_infos row as "???{user_id}"', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Rating User Ghost Album ' . uniqid(),
     ]);
@@ -86,7 +86,7 @@ it('labels a rate from a user with no matching user_infos row as "???{user_id}"'
 });
 
 it('honors a valid order_by= GET override for the ratings sort', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // 3 is 'Consensus deviation' (available_order_by index 3) -- any
     // in-range value other than the default (4, 'Last') proves the GET

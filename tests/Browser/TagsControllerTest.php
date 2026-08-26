@@ -48,7 +48,7 @@ it('renders the tag cloud (default display mode) with a real tag', function (): 
 });
 
 it('renders the letters display mode, grouping tags by first letter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Tags Controller Letters Album ' . uniqid(),
     ]);
@@ -191,7 +191,7 @@ it('renders the real tag name when a render_tag_name hook returns something othe
     );
     PHP);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $db = H::connect();
 
     try {

@@ -13,7 +13,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * name is safe rather than a hacking-attempt rejection.
  */
 it('renders the default "add_photos" help section', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help');
 
     $page->assertSee('Add Photos');
@@ -21,7 +21,7 @@ it('renders the default "add_photos" help section', function (): void {
 });
 
 it('renders the "permissions" help section when requested', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help&section=permissions');
 
     $page->assertSee('Permissions');
@@ -29,7 +29,7 @@ it('renders the "permissions" help section when requested', function (): void {
 });
 
 it('renders the "groups" help section when requested', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help&section=groups');
 
     $page->assertSee('Groups');
@@ -37,7 +37,7 @@ it('renders the "groups" help section when requested', function (): void {
 });
 
 it('falls back to the first registered section for an unrecognized section name', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help&section=not-a-real-section');
 
     // Tabsheet::select() falls back to the first added sheet (add_photos)
@@ -47,14 +47,14 @@ it('falls back to the first registered section for an unrecognized section name'
 });
 
 it('shows the English online-documentation message for an en_UK admin user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help');
 
     $page->assertSee('Check the online documentation');
 });
 
 it('shows the French online-documentation message for a fr_ admin user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $db = H::connect();
 
     // CurrentUser is loaded fresh from the DB on each request, so switching

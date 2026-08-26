@@ -17,7 +17,7 @@ it('activates and deactivates a real, non-default language', function (): void {
     expect(languagesInstalledIsActive('fr_FR'))
         ->toBeFalse();
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     try {
@@ -40,7 +40,7 @@ it('activates and deactivates a real, non-default language', function (): void {
 });
 
 it('rejects an activate action without a valid CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=languages&action=activate&language=fr_FR');
 
@@ -50,7 +50,7 @@ it('rejects an activate action without a valid CSRF token', function (): void {
 });
 
 it('cannot deactivate en_UK: it is the only active language and the default', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
 
     // performAction() itself is expected to refuse and report an error --
@@ -65,7 +65,7 @@ it('cannot deactivate en_UK: it is the only active language and the default', fu
 });
 
 it('reassigns users off a missing-from-disk language and deletes its stale db row on page load', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $db = H::connect();
 
     // A language row with no matching fs entry -- render()'s own
@@ -102,7 +102,7 @@ it('reassigns users off a missing-from-disk language and deletes its stale db ro
 });
 
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'languages_installed_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [

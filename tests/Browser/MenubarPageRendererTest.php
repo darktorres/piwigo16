@@ -12,7 +12,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * was once registered but no longer is).
  */
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'menubar_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [
@@ -51,7 +51,7 @@ it('silently drops a stale block id from blk_menubar that no longer matches a re
     H::setConfigValue('blk_menubar', '{"no_longer_registered_block":999}');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=menubar');
 
         $page->assertNoJavaScriptErrors();

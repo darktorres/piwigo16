@@ -288,7 +288,7 @@ function pictureModifyCurlLoginSession(string $username, string $password): arra
 }
 
 it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports success', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photo Modify Album ' . uniqid(),
     ]);
@@ -340,7 +340,7 @@ it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports 
 });
 
 it('single-escapes an HTML-special-character-bearing author/description, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photo Modify Escaping Album ' . uniqid(),
     ]);
@@ -375,7 +375,7 @@ it('single-escapes an HTML-special-character-bearing author/description, not dou
 });
 
 it('rejects a photo-modify submission with a missing CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photo Modify CSRF Album ' . uniqid(),
     ]);
@@ -398,7 +398,7 @@ it('rejects a photo-modify submission with a missing CSRF token', function (): v
 });
 
 it('sets a plain (non-array) tag name and assigns the photo as its new album representative', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photo Modify Represent Album ' . uniqid(),
     ]);
@@ -432,7 +432,7 @@ it('sets a plain (non-array) tag name and assigns the photo as its new album rep
 });
 
 it('synchronizes metadata from file via the sync_metadata CSRF-gated action', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photo Modify Sync Album ' . uniqid(),
     ]);
@@ -453,7 +453,7 @@ it('synchronizes metadata from file via the sync_metadata CSRF-gated action', fu
 });
 
 it('deletes the photo via the CSRF-gated delete action and redirects to the gallery root', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Photo Modify Delete Album ' . uniqid(),
     ]);
@@ -546,7 +546,7 @@ it('honors the session edit context as the delete redirect target instead of the
 });
 
 it('renders U_JUMPTO from the session edit context, ahead of the authorized-category fallback', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'PM Jumpto Album ' . uniqid(),
     ]);
@@ -612,7 +612,7 @@ it('proceeds with the original submission when a picture_modify_before_update pl
     H::dbClose($pluginDb);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'PM Bogus Hook Album ' . uniqid(),
         ]);
@@ -663,7 +663,7 @@ it('sets a newly-represented album as representative even when it already has a 
     // ever runs. This test uses two albums, each already representative
     // of a DIFFERENT photo before the submission, so only this renderer's
     // own explicit call can change either one.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $albumB = H::createCategory($page, [
         'name' => 'PM New Thumb Album B ' . uniqid(),
@@ -710,7 +710,7 @@ it('sets a newly-represented album as representative even when it already has a 
 });
 
 it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/270-degree rotation', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'PM Rotation Album ' . uniqid(),
     ]);
@@ -777,7 +777,7 @@ it('resolves storage_category_id from a filesystem-synced photo, marks it unlink
     // landing on an exact "1.00MB" instead of a rounding-fuzzy value.
     file_put_contents($tempDir . '/pwg_format/' . $dir . '.cr2', str_repeat('A', 1024 * 1024));
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     $snapshot = H::snapshotConfig(['enable_formats']);
 

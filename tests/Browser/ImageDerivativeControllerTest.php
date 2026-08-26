@@ -665,7 +665,7 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
     $srcPath = $tmpPath . '.jpg';
     imagejpeg($img, $srcPath, 95);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Derivative Rotation Album ' . uniqid(),
     ]);
@@ -1574,7 +1574,7 @@ it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, w
 });
 
 it('serves the correct Content-Type for a gif derivative', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Derivative Gif Album ' . uniqid(),
     ]);
@@ -1633,7 +1633,7 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     // targets without ever constructing a ImageBackend from the webp source at
     // all -- exactly how a real request for an already-generated webp
     // derivative behaves in production too, regardless of backend.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Derivative Webp Album ' . uniqid(),
     ]);

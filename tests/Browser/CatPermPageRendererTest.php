@@ -40,7 +40,7 @@ afterEach(function (): void {
 });
 
 it('shows the public status and all 3 granted groups for category 1', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=permissions');
     $page->assertNoJavaScriptErrors();
 
@@ -66,7 +66,7 @@ it('shows the public status and all 3 granted groups for category 1', function (
 it('shows the private status and the single granted group for category 2', function (): void {
     H::setCategoryPrivate(2, private: true);
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=2&tab=permissions');
     $page->assertNoJavaScriptErrors();
 
@@ -79,7 +79,7 @@ it('shows the private status and the single granted group for category 2', funct
 });
 
 it('submits a status/group permission change and persists it', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Cat Perm Submit Album ' . uniqid(),
     ]);

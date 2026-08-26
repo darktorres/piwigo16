@@ -13,16 +13,21 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * photo-N-tab), and the invalid-tab rejection.
  */
 it('accepts a plugins_new_order AJAX request and exits immediately with an empty body', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?plugins_new_order=pluginA,pluginB');
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toBe('');
+
+    // Leaves $_SESSION['plugins_new_order'] set with no expiry -- a later
+    // asAdmin()-authenticated test must not inherit it. See
+    // BrowserTestHelpers::$sharedSessionKnownClean's own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('toggles the admin theme via change_theme and redirects back', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=intro&change_theme=1');
 
@@ -33,7 +38,7 @@ it('toggles the admin theme via change_theme and redirects back', function (): v
 });
 
 it('resolves the plugin-X page-slug alias to page=plugin&section=X/admin.php', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/admin.php?page=plugin-community');
 
@@ -42,7 +47,7 @@ it('resolves the plugin-X page-slug alias to page=plugin&section=X/admin.php', f
 });
 
 it('resolves the plugin-X-Y page-slug alias to page=plugin&section=X/admin.php&tab=Y', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/admin.php?page=plugin-community-pendings');
 
@@ -51,7 +56,7 @@ it('resolves the plugin-X-Y page-slug alias to page=plugin&section=X/admin.php&t
 });
 
 it('rewrites the piwigo_videojs plugin section name to its hyphenated form', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/admin.php?page=plugin-piwigo_videojs');
 
@@ -60,7 +65,7 @@ it('rewrites the piwigo_videojs plugin section name to its hyphenated form', fun
 });
 
 it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notification', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'AdminShell Alias Album ' . uniqid(),
     ]);
@@ -76,7 +81,7 @@ it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notifica
 });
 
 it('resolves the photo-N-tab page-slug alias to page=photo&image_id=N&tab=properties', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'AdminShell Photo Alias Album ' . uniqid(),
     ]);
@@ -95,7 +100,7 @@ it('resolves the photo-N-tab page-slug alias to page=photo&image_id=N&tab=proper
 });
 
 it('rejects a tab value containing disallowed characters as an invalid request parameter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=intro&tab=' . rawurlencode('../../etc/passwd'));
 
@@ -106,7 +111,7 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     $snapshot = H::snapshotConfig(['activate_comments']);
     H::setConfigValue('activate_comments', 'true');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'AdminShell Comment Album ' . uniqid(),
     ]);
@@ -143,7 +148,7 @@ it('re-runs the filesystem quick check when the last check is older than the con
     H::setConfigValue('fs_quick_check_last_check', H::jsonEncode($staleCheck));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=intro');
         $page->assertNoJavaScriptErrors();
 
@@ -183,7 +188,7 @@ it('synchronizes users against the base table when externalAuthentification is e
     // Login first, while the default (externalAuthentification: false)
     // DeploymentPolicy is still in effect -- this branch only needs to be
     // active for the admin.php request itself.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     file_put_contents(
         $localConfigPath,
@@ -216,7 +221,7 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
     ]))));
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=intro');
         $page->assertNoJavaScriptErrors();
 

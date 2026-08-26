@@ -19,7 +19,7 @@ function ratingPageDeleteRates(int $imageId): void
 }
 
 it('renders the rating report for a real rated photo, listing its rater', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Rating Page Album ' . uniqid(),
     ]);
@@ -44,7 +44,7 @@ it('renders the rating report for a real rated photo, listing its rater', functi
 });
 
 it('scopes the report to a specific album via cat=', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Rating Page Cat Album ' . uniqid(),
     ]);
@@ -69,7 +69,7 @@ it('scopes the report to a specific album via cat=', function (): void {
 });
 
 it('filters to registered users only via users=user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=rating&users=user');
 
     $page->assertNoJavaScriptErrors();
@@ -77,7 +77,7 @@ it('filters to registered users only via users=user', function (): void {
 });
 
 it('filters to guests only via users=guest', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=rating&users=guest');
 
     $page->assertNoJavaScriptErrors();
@@ -85,7 +85,7 @@ it('filters to guests only via users=guest', function (): void {
 });
 
 it('clamps an out-of-range order_by index back to 0 instead of erroring', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=rating&order_by=999');
 
     $page->assertNoJavaScriptErrors();
@@ -93,7 +93,7 @@ it('clamps an out-of-range order_by index back to 0 instead of erroring', functi
 });
 
 it('clamps a negative order_by index back to 0 instead of erroring', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=rating&order_by=-5');
 
     $page->assertNoJavaScriptErrors();

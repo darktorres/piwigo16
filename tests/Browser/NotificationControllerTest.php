@@ -46,7 +46,7 @@ function extractFeedId(string $html): string
 }
 
 it('creates a real per-user feed subscription row with no last_check yet', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/notification.php');
 
     $html = H::rawWebpage($page)->content();
@@ -64,7 +64,7 @@ it('creates a real per-user feed subscription row with no last_check yet', funct
 });
 
 it('updates last_check once the feed is actually fetched', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/notification.php');
     $feedId = extractFeedId(H::rawWebpage($page)->content());
 
@@ -114,7 +114,7 @@ it('gives a guest visitor a bare feed.php URL (no query string) for the image-on
 });
 
 it('mints a distinct feed id on each visit', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $page = H::navigateOk($page, '/notification.php');
     $firstId = extractFeedId(H::rawWebpage($page)->content());

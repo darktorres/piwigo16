@@ -13,7 +13,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * show_add_user filter echo, and the line/grid pagination-default branch.
  */
 it('renders the user list with the real fixture group/status/level breakdowns', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_list');
 
     $page->assertSee('fixture_admin');
@@ -21,7 +21,7 @@ it('renders the user list with the real fixture group/status/level breakdowns', 
 });
 
 it('protects other admin/webmaster users from deletion for a plain "admin"-status viewer', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'user_list_plain_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
     $addResult = H::createUser($page, [
@@ -87,7 +87,7 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
 });
 
 it('echoes a group filter, a user_id search, and show_add_user into the form', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $group = H::createGroup($page, [
         'name' => 'User List Filter Group ' . uniqid(),
     ]);
@@ -108,7 +108,7 @@ it('shows the local-webmaster_id deprecation warning only when config.inc.php se
     // own docblock: it's a presence check against that specific file, not
     // CurrentConfig's own schema default) -- confirms the real negative
     // case rather than assuming it.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_list');
 
     $page->assertDontSee('is deprecated, please remove it');
@@ -133,7 +133,7 @@ it('shows the local-webmaster_id deprecation warning when config.inc.php really 
     chmod($configPath, 0o666);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
         // Not 'is deprecated': UserListPageRenderer's own warning text
@@ -160,7 +160,7 @@ it('shows a fatal error when the configured default_user_id matches no real user
     H::setConfigValue('default_user_id', '999999');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $result = H::rawGet($page, '/admin.php?page=user_list');
 
         expect($result['status'])->toBe(500);
@@ -181,7 +181,7 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
     H::dbQuery($db, 'UPDATE user_infos SET preferences = NULL WHERE user_id = 1');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
         // getUserManagerView() ?? 'line' defaults to 'line' when unset ->
@@ -206,7 +206,7 @@ it('switches to grid-view pagination default of 10 when the saved view preferenc
     H::dbQuery($db, "UPDATE user_infos SET preferences = '{\"user-manager-view\":\"tile\"}' WHERE user_id = 1");
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
         H::assertSeeSettled($page, '"view_selector":"tile"');

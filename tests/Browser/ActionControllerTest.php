@@ -32,7 +32,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *   never itself be the one that's true.
  */
 it('downloads a photo\'s original file via part=e', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Album ' . uniqid(),
     ]);
@@ -59,7 +59,7 @@ it('downloads a photo\'s original file via part=e', function (): void {
 });
 
 it('returns 400 for an invalid id/part combination', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/action.php?part=e');
 
@@ -68,7 +68,7 @@ it('returns 400 for an invalid id/part combination', function (): void {
 });
 
 it('returns 400 for a request missing both id/part and format', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/action.php');
 
@@ -76,7 +76,7 @@ it('returns 400 for a request missing both id/part and format', function (): voi
 });
 
 it('returns 404 for a nonexistent image id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/action.php?id=999999999&part=e');
 
@@ -85,7 +85,7 @@ it('returns 404 for a nonexistent image id', function (): void {
 });
 
 it('returns 404 for part=r when the photo has no representative file', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller No Rep Album ' . uniqid(),
     ]);
@@ -115,7 +115,7 @@ it('returns 400 for part=f when the extensions-format system is disabled', funct
     $snapshot = H::snapshotConfig(['enable_formats']);
     H::setConfigValue('enable_formats', 'false');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Format Off Album ' . uniqid(),
     ]);
@@ -149,7 +149,7 @@ it('returns 400 for a nonexistent format id when formats are enabled', function 
     H::setConfigValue('enable_formats', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $result = H::rawGet($page, '/action.php?format=999999999');
 
@@ -161,7 +161,7 @@ it('returns 400 for a nonexistent format id when formats are enabled', function 
 });
 
 it('sends a Content-Disposition attachment header when download is requested', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Download Album ' . uniqid(),
     ]);
@@ -195,7 +195,7 @@ it('forces Content-Disposition: attachment for an SVG-typed original regardless 
     // without needing uploadFormAllTypes enabled for this whole shared
     // dev server (same technique PictureControllerTest.php's own PDF
     // viewer test already establishes).
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller SVG Album ' . uniqid(),
     ]);
@@ -296,7 +296,7 @@ function actionImagePath(int $imageId): string
  * too, rather than hang or flake against a real remote host.
  */
 it('serves a remote-storage photo through the guessMimeType() fallback when mime_content_type() is never consulted', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Remote Album ' . uniqid(),
     ]);
@@ -341,7 +341,7 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     $snapshot = H::snapshotConfig(['enable_formats']);
     H::setConfigValue('enable_formats', 'true');
 
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Format Album ' . uniqid(),
     ]);
@@ -395,7 +395,7 @@ it('serves a photo through a real registered format id, logging a "high" visit',
 });
 
 it('serves a photo\'s representative file via part=r when one is registered', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Rep Album ' . uniqid(),
     ]);
@@ -477,7 +477,7 @@ function actionCurlGet(string $path, array $extraHeaders = []): array
 }
 
 it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s own mtime', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller 304 Album ' . uniqid(),
     ]);
@@ -512,7 +512,7 @@ it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s
 });
 
 it('denies HD download of an oversized original to a guest with no HD access', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Oversized Album ' . uniqid(),
     ]);
@@ -563,7 +563,7 @@ it('denies HD download of an oversized original to a guest with no HD access', f
 });
 
 it('rejects access to a private album\'s photo for a guest', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Private Album ' . uniqid(),
         'status' => 'private',
@@ -598,7 +598,7 @@ it('returns 400 for an empty format value when formats are enabled', function ()
     H::setConfigValue('enable_formats', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // `format=` with no value: isset($_GET['format']) is still true, so
         // ActionRequest::formatRequested is true, but InputValidator::
@@ -619,7 +619,7 @@ it('returns 400 for an empty format value when formats are enabled', function ()
 });
 
 it('returns 400 for part=f requested directly on a real photo, without a format id', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Direct Part F Album ' . uniqid(),
     ]);
@@ -650,7 +650,7 @@ it('returns 400 for part=f requested directly on a real photo, without a format 
 });
 
 it('returns 404 naming the resolved path when the original file is missing from disk', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Missing File Album ' . uniqid(),
     ]);
@@ -691,7 +691,7 @@ it('returns 404 naming the resolved path when the original file is missing from 
 });
 
 it('bypasses the no-HD-access restriction for an admin download carrying a valid pwg_token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Action Controller Admin Download Album ' . uniqid(),
     ]);

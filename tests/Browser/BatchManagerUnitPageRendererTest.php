@@ -30,7 +30,7 @@ function batchManagerUnitImageRow(int $imageId): array
 }
 
 it('renders the per-image thumbnail grid for a real category filter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Grid Album ' . uniqid(),
     ]);
@@ -65,7 +65,7 @@ it('renders the per-image thumbnail grid for a real category filter', function (
 });
 
 it('single-escapes HTML-special-character-bearing NAME/AUTHOR/DESCRIPTION fields, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Escaping Album ' . uniqid(),
     ]);
@@ -112,7 +112,7 @@ it('single-escapes HTML-special-character-bearing NAME/AUTHOR/DESCRIPTION fields
 });
 
 it('submits the unit-mode edit form for a whole_set selection and mass-updates every field', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Submit Album ' . uniqid(),
     ]);
@@ -150,7 +150,7 @@ it('submits the unit-mode edit form for a whole_set selection and mass-updates e
 });
 
 it('accepts a single non-array tag string for the per-image tags field', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Scalar Tag Album ' . uniqid(),
     ]);
@@ -182,7 +182,7 @@ it('accepts a single non-array tag string for the per-image tags field', functio
 });
 
 it('accepts nb_photos_deleted/whole_set/selection[] as alternative ways to seed the display-only collection', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // None of these submit `submit=1`, so the CSRF-gated mass-update
     // branch never runs -- only the separate, always-executed "collection"
@@ -205,7 +205,7 @@ it('accepts nb_photos_deleted/whole_set/selection[] as alternative ways to seed 
 });
 
 it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a physically-owning album filter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Storage Cat Album ' . uniqid(),
     ]);
@@ -250,7 +250,7 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
     H::setConfigValue('allow_html_descriptions', 'false');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Batch Unit HTML Album ' . uniqid(),
         ]);
@@ -283,7 +283,7 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
 });
 
 it('fatal-errors on an invalid whole_set element (the invalid-parameter guard)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // Every whole_set element must match /^\d+$/ -- one non-digit element
     // ('not-a-digit') is enough to fail the per-element preg_match() loop
@@ -308,7 +308,7 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
     H::setConfigValue('batch_manager_images_per_page_unit', '7');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // batch_manager_unit.latte only renders the per-page pagination
         // links at all inside a `{if !empty($elements)}` guard -- with
@@ -358,7 +358,7 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
 });
 
 it('applies the duplicates-prefilter ORDER BY override ("file, id") when the session prefilter is "duplicates"', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Dup Album ' . uniqid(),
     ]);
@@ -433,7 +433,7 @@ it('applies the duplicates-prefilter ORDER BY override ("file, id") when the ses
 });
 
 it('sets the "see-out" jump-to link when the current admin is authorized for the photo\'s only category', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Unit Jumpto Album ' . uniqid(),
     ]);
@@ -491,7 +491,7 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
 });
 
 it('scopes the see-out link to the filtered album for a photo in several albums', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // Two albums, lowest id first: findCategoryIdsForImage() orders by
     // category id, so the un-filtered `else` branch always picks album A.

@@ -41,7 +41,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * test.
  */
 it('help page shows the default Add Photos section and its real translated content', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help');
 
     $page->assertSee('Add Photos');
@@ -49,7 +49,7 @@ it('help page shows the default Add Photos section and its real translated conte
 });
 
 it('help page renders a non-default section when one is requested', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help&section=permissions');
 
     $page->assertSee('Permissions on albums');
@@ -65,7 +65,7 @@ it('languages add-new tab connects to the real mirror and lists a real 17.0.0-co
     // a stable, always-present entry to assert against, the same way the
     // plugins/themes add-new tests below assert on their own one
     // deterministic real entry ("Language Switch"/"Clear").
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=languages&tab=new');
 
     $page->assertSee('Add New Language');
@@ -92,7 +92,7 @@ it('plugins add-new tab connects to the real mirror but currently lists no 17.0.
     // precedent from before *that* mirror was ported) rather than a
     // specific entry name. Revisit once the separate re-porting effort
     // lands a new real 17.0.0-compatible plugin.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
     $page->assertSee('There is no other plugin available.');
@@ -107,7 +107,7 @@ it('themes add-new tab connects to the real mirror but currently lists no 17.0.0
     // entry by its own declared `piwigo_compat`. Revisit once the
     // separate re-porting effort lands a new real 17.0.0-compatible
     // theme.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes&tab=new');
 
     $page->assertSee('Add a new theme');
@@ -116,7 +116,7 @@ it('themes add-new tab connects to the real mirror but currently lists no 17.0.0
 });
 
 it('theme page rejects a theme id that ExtensionScanner never found on disk', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=theme&theme=zzz_nonexistent_theme');
 
     expect($page->content())
@@ -130,7 +130,7 @@ it('theme page reports "no settings page" for a real, scanned theme with none', 
     // real branch: neither bundled theme (default/standard_pages)
     // implements PluginConfig\SettingsPageInterface, so this reaches a
     // real fatalError() call.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=theme&theme=default');
 
     expect($page->content())
@@ -281,7 +281,7 @@ it('theme page dispatches to a real SettingsPageInterface theme and renders its 
     themeSubWriteFixtureTheme($themeId, $suffix);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=theme&theme=' . $themeId);
 
         expect($page->content())
@@ -296,7 +296,7 @@ it('updates ext tab checks every extension type against the real mirrors and fin
     // disk to compare against the (now genuinely reachable) catalogs, so
     // the real, correct outcome is "nothing to update", not a connection
     // failure.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=updates&tab=ext');
 
     $page->assertSee('Extensions');
@@ -305,7 +305,7 @@ it('updates ext tab checks every extension type against the real mirrors and fin
 });
 
 it('plugins update tab restricts the shared updates-ext renderer to the plugin type', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=update');
 
     // Reached via a different real caller than the ?page=updates&tab=ext
@@ -320,7 +320,7 @@ it('plugins update tab restricts the shared updates-ext renderer to the plugin t
 });
 
 it('maintenance env tab renders real server, database and version info', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
 
     $page->assertSee('Operating system: Linux');
@@ -332,7 +332,7 @@ it('maintenance sys tab server-renders the webmaster-only activity log table, no
     // The fixture DB's install-time system log (Core install + 2
     // default-theme activations, see tests/Fixtures/piwigo-17.0.sql) is
     // server-rendered directly.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=sys');
 
     $page->assertSee('System Activities');
@@ -357,7 +357,7 @@ it('batch manager unit mode shows the caddie prefilter active by default with an
     // any display:none precisely when $filter.prefilter === 'caddie' (the
     // real default here), so it's the correct, deterministic signal for
     // "the default caddie prefilter is active and empty".
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
 
     expect($page->content())
@@ -376,7 +376,7 @@ it('batch manager unit mode renders the real per-photo edit grid for a category 
     // Category 1 ("Sample Album") holds fixture images 1-3 (Photo
     // 1/2/3, files fixture-photo-1..3.jpg) per this fixture's own
     // image_category rows.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&filter=cat-1');
 
     $content = $page->content();
@@ -390,10 +390,18 @@ it('batch manager unit mode renders the real per-photo edit grid for a category 
         // ran for a real row, not just that 3 filenames happened to print.
         ->and($content)
         ->toContain('Sample Album');
+
+    // The 'filter=cat-1' URL token above writes $_SESSION['bulk_manager_
+    // filter'] with no expiry -- a later asAdmin()-authenticated test
+    // (including this file's own "shows the caddie prefilter active by
+    // default" test above, which depends on starting unfiltered) must not
+    // inherit it. See BrowserTestHelpers::$sharedSessionKnownClean's own
+    // docblock.
+    H::markSharedSessionDirty();
 });
 
 it('admin popuphelp renders real help content inside the popup page chrome', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin/popuphelp.php?page=cat_options');
 
     $page->assertPresent('body#thePopuphelpPage');
@@ -413,7 +421,7 @@ it('admin popuphelp renders real help content inside the popup page chrome', fun
 });
 
 it('admin popuphelp content_only output returns the bare help fragment with no page chrome', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin/popuphelp.php?page=cat_options&output=content_only');
 
     $content = $page->content();
@@ -437,7 +445,7 @@ it('admin popuphelp content_only output returns the bare help fragment with no p
 });
 
 it('admin popuphelp rejects a page parameter with invalid characters', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin/popuphelp.php?page=INVALID');
 
     expect($page->content())
@@ -676,7 +684,7 @@ it('plugin page dispatches to a real SettingsPageInterface plugin and renders it
     H::dbClose($db);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId);
 
         expect($page->content())
@@ -699,7 +707,7 @@ it('plugin page reports "no settings page" for a real active plugin with none', 
     H::dbClose($db);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId);
 
         expect($page->content())

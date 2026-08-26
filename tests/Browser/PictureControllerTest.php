@@ -228,7 +228,7 @@ function pictureGetWithCookies(string $cookieJar, string $path): string
 }
 
 it('increments the hit counter on first view, then not on an immediate same-picture reload', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Test Album ' . uniqid(),
     ]);
@@ -281,7 +281,7 @@ it('increments the hit counter on first view, then not on an immediate same-pict
 });
 
 it('adds and removes a photo from favorites via the picture.php action links, verified in favorites', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Test Album ' . uniqid(),
     ]);
@@ -319,7 +319,7 @@ it('404s with "Page not found" for a nonexistent image_id', function (): void {
 });
 
 it('lets an admin delete and validate comments directly from picture.php\'s own actions', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pwgToken = H::pwgToken($page);
 
     $album = H::createCategory($page, [
@@ -568,7 +568,7 @@ it("edits a comment's own content via the edit_comment action, validating it as 
 });
 
 it('navigates between previous/next/first/last items across a 3-photo album, ordered by title', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Nav Test Album ' . uniqid(),
     ]);
@@ -630,7 +630,7 @@ it('navigates between previous/next/first/last items across a 3-photo album, ord
 });
 
 it('sets a photo as the album representative via the set_as_representative action', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Representative Test Album ' . uniqid(),
     ]);
@@ -659,7 +659,7 @@ it('sets a photo as the album representative via the set_as_representative actio
 });
 
 it('adds a photo to the caddie via the add_to_caddie action', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Caddie Test Album ' . uniqid(),
     ]);
@@ -690,7 +690,7 @@ it('rates a photo via the rate action', function (): void {
     H::setConfigValue('rate', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Rate Test Album ' . uniqid(),
         ]);
@@ -824,7 +824,7 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
 });
 
 it('toggles the show_metadata session flag on repeated ?metadata visits without erroring', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Metadata Toggle Album ' . uniqid(),
     ]);
@@ -850,7 +850,7 @@ it('toggles the show_metadata session flag on repeated ?metadata visits without 
 });
 
 it('renders a related tag link for a photo with a real assigned tag', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Related Tags Album ' . uniqid(),
     ]);
@@ -1146,7 +1146,7 @@ it('shows "requested image is filtered" for a backdated photo excluded by an act
 });
 
 it('redirects to the section listing (not back to the picture) when removing a favorite from within the favorites section', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Favorites Up Album ' . uniqid(),
     ]);
@@ -1194,7 +1194,7 @@ it('redirects to the section listing (not back to the picture) when removing a f
 });
 
 it('does not increment the hit counter for a Firefox prefetch request (X-Moz: prefetch)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Prefetch Test Album ' . uniqid(),
     ]);
@@ -1228,7 +1228,7 @@ it('does not increment the hit counter for a Firefox prefetch request (X-Moz: pr
 });
 
 it('remembers a picture_deriv cookie choice in the session across a follow-up request', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Deriv Cookie Album ' . uniqid(),
     ]);
@@ -1308,7 +1308,7 @@ it('remembers a picture_deriv cookie choice in the session across a follow-up re
 });
 
 it('renders the related-categories breadcrumb via the single-category fast path when the photo belongs to exactly its own viewed album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $albumName = 'Related Cats Fast Path Album ' . uniqid();
     $album = H::createCategory($page, [
         'name' => $albumName,
@@ -1340,7 +1340,7 @@ it('renders the related-categories breadcrumb for every album a multi-category p
     // branch (the `SELECT id, name, permalink ... WHERE id IN (...)`
     // lookup, one getCatDisplayName() call per related category) instead
     // of reading straight off $page_category['upper_names'].
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $albumAName = 'Multi Cat Album A ' . uniqid();
     $albumA = H::createCategory($page, [
         'name' => $albumAName,
@@ -1376,7 +1376,7 @@ it('renders the related-categories breadcrumb for every album a multi-category p
 });
 
 it('renders slideshow mode with play/repeat/period controls and a real next item', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Slideshow Album ' . uniqid(),
     ]);
@@ -1487,7 +1487,7 @@ it('shows access-denied when a viewed image has no category association at all (
     // nothing, hitting access-denied() rather than either the best_rated
     // fallback or the redirect this file's other tests cover for the
     // "found via a different category" case.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Orphaned Image Album ' . uniqid(),
     ]);
@@ -1510,7 +1510,7 @@ it('shows access-denied when a viewed image has no category association at all (
 });
 
 it('appends the current photo into best_rated\'s own item list instead of redirecting, when it is accessible but not actually top-rated', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Best Rated Fallback Album ' . uniqid(),
     ]);
@@ -1850,7 +1850,7 @@ it('builds a download-format list with the URL fallback, strtoupper() label fall
     H::setConfigValue('enable_formats', 'true');
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $album = H::createCategory($page, [
             'name' => 'Format List Album ' . uniqid(),
         ]);
@@ -1917,7 +1917,7 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
     // same on-disk location -- exactly what PictureController itself
     // reads (extension + path + filesize), independent of how the image
     // got there.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'PDF Viewer Album ' . uniqid(),
     ]);
@@ -2000,7 +2000,7 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     // `is_string(...) && ... !== ''` guards around the "legend"/"author"/
     // "creation date" blocks always fail, leaving COMMENT_IMG/
     // INFO_AUTHOR/INFO_CREATION_DATE entirely unbuilt.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Legend Info Album ' . uniqid(),
     ]);
@@ -2067,7 +2067,7 @@ it('wraps around to the first photo via meta-refresh when a repeating slideshow 
     // when viewing the LAST item of a multi-photo section with repeat
     // enabled, engineered here the same image_order=1-then-view technique
     // as this file's own nav test uses to get a deterministic rank.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Slideshow Wrap Album ' . uniqid(),
     ]);
@@ -2211,7 +2211,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
     // above uses for a different event, content-marker-gated by this
     // photo's own real image_id so it's a no-op for every other concurrent
     // request against this shared dev server while active.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Element Content Hook Album ' . uniqid(),
     ]);
@@ -2286,7 +2286,7 @@ it('lets a plugin hide a display-info field via FilterPictureDisplayInfo', funct
     // whenever the flag is true -- a reliable, content-independent marker
     // for "did the filtered array actually reach the template," without
     // needing to fabricate a specific permission-level fixture.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Display Info Filter Album ' . uniqid(),
     ]);
@@ -2347,7 +2347,7 @@ it('dispatches PicturePageRendered with the real requested image id', function (
     // captures the dispatched event's own imageId directly to a marker
     // file instead of smuggling it through rendered HTML, sidestepping
     // any dependency on a live template-injection point entirely.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Picture Page Rendered Album ' . uniqid(),
     ]);

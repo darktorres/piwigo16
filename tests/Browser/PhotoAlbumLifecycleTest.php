@@ -54,7 +54,7 @@ function lifecycleResultList(array $result, string $listKey, string $context): a
 }
 
 it('photo and album full CRUD lifecycle', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $pwgToken = H::pwgToken($page);
 
     // --- Create album ---

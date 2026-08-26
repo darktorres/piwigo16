@@ -328,13 +328,13 @@ function ctDisplayCheckboxes(): array
 }
 
 it('renders the main tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('main'));
     $page->assertNoJavaScriptErrors();
 });
 
 it('saves the main tab and persists real config values', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
     $title = 'CT Gallery Title ' . uniqid();
@@ -371,7 +371,7 @@ it('saves the main tab and persists real config values', function (): void {
 });
 
 it('main tab: single-escapes HTML-special-character-bearing gallery_title/page_banner, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -412,7 +412,7 @@ it('main tab: single-escapes HTML-special-character-bearing gallery_title/page_b
 });
 
 it('main tab: rejects a submission with no order field selected', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -436,7 +436,7 @@ it('main tab: rejects a submission with no order field selected', function (): v
 });
 
 it('main tab: routes new-user notification to a specific group', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -464,13 +464,13 @@ it('main tab: routes new-user notification to a specific group', function (): vo
 });
 
 it('renders the comments tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('comments'));
     $page->assertNoJavaScriptErrors();
 });
 
 it('saves the comments tab and persists real config values', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('comments'));
     $token = H::pwgToken($page);
 
@@ -494,7 +494,7 @@ it('saves the comments tab and persists real config values', function (): void {
 });
 
 it('comments tab: rejects an out-of-range nb_comment_page', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('comments'));
     $token = H::pwgToken($page);
 
@@ -516,13 +516,13 @@ it('comments tab: rejects an out-of-range nb_comment_page', function (): void {
 });
 
 it('renders the display tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('display'));
     $page->assertNoJavaScriptErrors();
 });
 
 it('saves the display tab and persists real config values', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('display'));
     $token = H::pwgToken($page);
 
@@ -562,7 +562,7 @@ it('saves the display tab and persists real config values', function (): void {
 });
 
 it('display tab: rejects an nb_categories_page below the minimum', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('display'));
     $token = H::pwgToken($page);
 
@@ -583,13 +583,13 @@ it('display tab: rejects an nb_categories_page below the minimum', function (): 
 });
 
 it('renders the search tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('search'));
     $page->assertNoJavaScriptErrors();
 });
 
 it('saves the search tab and persists real config values', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('search'));
     $token = H::pwgToken($page);
 
@@ -632,7 +632,7 @@ it('saves the search tab and persists real config values', function (): void {
 });
 
 it('renders the default tab (guest profile)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('default'));
     $page->assertNoJavaScriptErrors();
 });
@@ -658,7 +658,7 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
     // table -- same direct-mysqli snapshot/restore shape as
     // NotificationByMailSubControllerTest's own DB helpers, since
     // H::snapshotConfig()/restoreConfig() only ever touch `config`.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('default'));
     $token = H::pwgToken($page);
 
@@ -694,13 +694,13 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
 });
 
 it('renders the sizes tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('sizes'));
     $page->assertNoJavaScriptErrors();
 });
 
 it('sizes tab: restore_settings resets derivative params to Piwigo defaults', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('sizes'));
     $token = H::pwgToken($page);
 
@@ -716,7 +716,7 @@ it('sizes tab: saves every derivative type with valid ascending sizes', function
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('sizes'), [
@@ -738,7 +738,7 @@ it('sizes tab: rejects an out-of-range resize_quality without saving', function 
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('sizes'), [
@@ -760,7 +760,7 @@ it('sizes tab: rejects a thumb size that is not strictly larger than the square 
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         // thumb's max(w,h) must exceed square's w (120) -- 100 is smaller,
@@ -789,7 +789,7 @@ it('sizes tab: rejects a non-thumb size that is not strictly larger than the pre
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         // 'small' must exceed 'xsmall' (432x324) in both w and h --
@@ -818,7 +818,7 @@ it('sizes tab: leaving a non-required type disabled skips its validation', funct
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $payload = ctDerivativesPayload();
@@ -845,7 +845,7 @@ it('sizes tab: leaving a non-required type disabled skips its validation', funct
 });
 
 it('renders the watermark tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, ctConfigSection('watermark'));
     $page->assertNoJavaScriptErrors();
 });
@@ -854,7 +854,7 @@ it('saves the watermark tab with a fixed topleft position, persisting the derive
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('watermark'), [
@@ -889,7 +889,7 @@ it('saves a custom watermark position with explicit xpos/ypos/repeat', function 
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('watermark'), [
@@ -919,7 +919,7 @@ it('rejects an out-of-range watermark opacity, without saving', function (): voi
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('watermark'), [
@@ -949,7 +949,7 @@ it('rejects an out-of-range watermark xpos, without saving', function (): void {
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('watermark'), [
@@ -979,7 +979,7 @@ it('saves the watermark tab with each named position, deriving the matching xpos
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $cases = [
             'topright' => ['100', '0'],
@@ -1023,7 +1023,7 @@ it('rejects a submission with a wrong (present) CSRF token', function (): void {
     // CsrfService::check() returns false for a present-but-wrong token,
     // routed to HtmlService::accessDenied() -- a real HTTP 401, not a
     // redirect, for an authenticated non-guest session.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
 
     $snapshot = H::snapshotConfig(['gallery_title']);
@@ -1046,7 +1046,7 @@ it('rejects a submission with a wrong (present) CSRF token', function (): void {
 it('rejects a submission with a missing CSRF token', function (): void {
     // CsrfService::check() returns null when the field is absent entirely,
     // routed to HtmlService::badRequest() -- a real HTTP 400.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
 
     $snapshot = H::snapshotConfig(['gallery_title']);
@@ -1066,7 +1066,7 @@ it('rejects a submission with a missing CSRF token', function (): void {
 });
 
 it('shows the webmaster-required warning for a plain "admin"-status user', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'config_ct_admin_' . uniqid();
     $password = 'a-strong-test-password-1';
 
@@ -1229,7 +1229,7 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
 });
 
 it('main tab: dedups a repeated order_by selection into a single field', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -1259,7 +1259,7 @@ it('main tab: dedups a repeated order_by selection into a single field', functio
 });
 
 it('main tab: a rank-only order_by selection falls back to id ASC while order_by_inside_category keeps rank', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -1292,7 +1292,7 @@ it('main tab: a rank-only order_by selection falls back to id ASC while order_by
 });
 
 it('main tab: rejects an order_by submission that becomes empty after de-duplication', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -1328,7 +1328,7 @@ it('main tab: keeps the photo-order selector usable even with a stale order_by_c
     // maps it, and hydrate() returns early for an unmapped param. A row
     // left behind by a hand-edited database must therefore be completely
     // inert -- not disable the selector the way it used to.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $snapshot = H::snapshotConfig(['order_by_custom']);
 
     try {
@@ -1351,7 +1351,7 @@ it('sizes tab: saves valid original-resize settings alongside derivative sizes',
     ]);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('sizes'), [
@@ -1389,7 +1389,7 @@ it('sizes tab: rejects an out-of-range original_resize_maxwidth, redisplaying th
     ]);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('sizes'), [
@@ -1421,7 +1421,7 @@ it('sizes tab: toggles a non-required derivative type off then back on across su
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // Step 1: baseline -- every type enabled.
         $token = H::pwgToken($page);
@@ -1475,7 +1475,7 @@ it('rejects an out-of-range watermark ypos, without saving', function (): void {
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('watermark'), [
@@ -1642,7 +1642,7 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
 });
 
 it('main tab: falls back to "all" new-user notifications when a group filter has no group selected', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -1677,7 +1677,7 @@ it('sizes tab: resubmitting identical derivative values leaves an unchanged type
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $payload = [
             'submit' => '1',
@@ -1731,7 +1731,7 @@ it('sizes tab: deletes a custom derivative entry when its delete flag is submitt
 
         expect(ctDecodedDerivatives()['c'])->toHaveKey($customKey);
 
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $result = H::adminPost($page, ctConfigSection('sizes'), [
@@ -1961,7 +1961,7 @@ it('watermark tab: lowering the size threshold bumps last_mod_time for a still-e
         $decoded['d']['small']->last_mod_time = $seededLastMod;
         ctSetDecodedDerivatives($decoded);
 
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         $watermarkFields = [
             'file' => 'watermarks/ct_lastmod_fixture.png',
@@ -2021,7 +2021,7 @@ it('default tab: reaches the no-op massaging branch when submitted via the gener
     // otherwise-empty `case 'default':` branch (the generic config-row
     // update loop right after it then runs too, same as every other
     // section, just with no massaged fields to pick up).
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('default'));
     $token = H::pwgToken($page);
 
@@ -2040,7 +2040,7 @@ it('main tab: strips HTML tags from the gallery title when HTML descriptions are
     // reached when it's explicitly turned off) is never exercised by the
     // plain "saves the main tab" test above, which never touches
     // allow_html_descriptions and posts a plain-text title anyway.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, ctConfigSection('main'));
     $token = H::pwgToken($page);
 
@@ -2079,7 +2079,7 @@ it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently 
     // fixture webmaster, so this early-return branch (reached by a
     // logged-in, but merely "admin"-status, non-webmaster user) is never
     // exercised elsewhere in this file.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $username = 'config_ct_nonweb_' . uniqid();
     $password = 'a-strong-test-password-1';
 
@@ -2146,7 +2146,7 @@ it('sizes tab: ignores a malformed non-array "d" entry instead of crashing', fun
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         // A tampered/malformed field: d[bogus_type] posted as a plain
@@ -2177,7 +2177,7 @@ it('sizes tab: rejects a thumb size with a non-positive width and height', funct
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         // Exercises processSizes()'s THUMB-specific `$w <= 0`/`$h <= 0`
@@ -2209,7 +2209,7 @@ it('sizes tab: rejects an out-of-range sharpen value for a derivative type', fun
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $payload = ctDerivativesPayload();
@@ -2234,7 +2234,7 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
     $snapshot = H::snapshotDerivativeConfig();
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
 
         // ImageStdParams::loadFromDb() self-heals disabled_type_map back
         // to ImageStdParams::getDisabledDefaultSizes() (3xlarge/4xlarge)
@@ -2328,7 +2328,7 @@ it('sizes tab: reconciles a min_size that drifted out of sync with an unchanged 
         $decoded['d']['small']->last_mod_time = $seededLastMod;
         ctSetDecodedDerivatives($decoded);
 
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $token = H::pwgToken($page);
 
         $payload = ctDerivativesPayload();
@@ -2380,7 +2380,7 @@ it('sizes tab: renders age labels for existing custom derivatives without error'
         $decoded['c'][$oldKey] = time() - (3 * 24 * 3600);
         ctSetDecodedDerivatives($decoded);
 
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         $page = H::navigateOk($page, ctConfigSection('sizes'));
         $page->assertNoJavaScriptErrors();
 

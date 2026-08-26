@@ -23,7 +23,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 function albumTreePwgToken(object $test): array
 {
-    $page = H::loginAsAdmin($test);
+    $page = H::asAdmin($test);
     $token = H::pwgToken($page);
 
     return [$page, $token];

@@ -470,7 +470,7 @@ test('src/Piwigo/ contains no InputValidator::createStatic() calls', function ()
     // Zero-tolerance regression guard, not a shrinking allow-list.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InputValidator::createStatic(');
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', ['InputValidator::createStatic(']);
 
     expect(describeCallSites($hits))
         ->toBe([]);
@@ -587,9 +587,20 @@ test('CurrentUser::reset() is only called from tests/', function (): void {
 // scanning comment lines for this one check.
 
 /**
+ * $needles is a list, not a single string, so callers checking several
+ * retired symbols against the same tree (e.g. the 7-needle IN_ADMIN/IN_WS/
+ * ... test below) tokenize each of src/Piwigo's ~840 files exactly once
+ * instead of once per needle -- confirmed live via `composer test:profile`
+ * that re-tokenizing the whole tree per needle (the previous single-needle
+ * signature, called N times and merged with `...`) was pure redundant
+ * work: per-call cost was ~0.6s flat regardless of which single needle was
+ * searched, so a 7-needle caller paid 7x the same tokenization for
+ * different only in the final string comparison.
+ *
+ * @param list<string> $needles
  * @return list<array{path: string, line: int}>
  */
-function findCallSitesOutsideComments(string $dir, string $needle): array
+function findCallSitesOutsideComments(string $dir, array $needles): array
 {
     $hits = [];
     if (! is_dir($dir)) {
@@ -631,11 +642,13 @@ function findCallSitesOutsideComments(string $dir, string $needle): array
         }
 
         foreach (explode("\n", $blanked) as $lineNumber => $line) {
-            if (str_contains($line, $needle)) {
-                $hits[] = [
-                    'path' => $file->getPathname(),
-                    'line' => $lineNumber + 1,
-                ];
+            foreach ($needles as $needle) {
+                if (str_contains($line, $needle)) {
+                    $hits[] = [
+                        'path' => $file->getPathname(),
+                        'line' => $lineNumber + 1,
+                    ];
+                }
             }
         }
     }
@@ -646,7 +659,7 @@ function findCallSitesOutsideComments(string $dir, string $needle): array
 test('src/Piwigo/ contains no define() calls', function (): void {
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'define(');
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', ['define(']);
 
     expect(describeCallSites($hits))
         ->toBe([]);
@@ -661,10 +674,7 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function ():
     // generation) instead of allowlisted.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_ROOT_PATH'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PWG_LOCAL_DIR'),
-    ];
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', ['PHPWG_ROOT_PATH', 'PWG_LOCAL_DIR']);
 
     expect(describeCallSites($hits))
         ->toBe([]);
@@ -698,12 +708,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     //     the original's own CSRF-before-field-validation ordering.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_POST'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_GET'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_REQUEST'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', '$_FILES'),
-    ];
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', ['$_POST', '$_GET', '$_REQUEST', '$_FILES']);
 
     $allowlistedSuffixes = [
         'Admin/AdminShell.php',
@@ -737,15 +742,15 @@ test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PWG_CHARSET/PHP
     // here.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'IN_ADMIN'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'IN_WS'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_INSTALLED'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PWG_CHARSET'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_URL'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PHPWG_DOMAIN'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PEM_URL'),
-    ];
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', [
+        'IN_ADMIN',
+        'IN_WS',
+        'PHPWG_INSTALLED',
+        'PWG_CHARSET',
+        'PHPWG_URL',
+        'PHPWG_DOMAIN',
+        'PEM_URL',
+    ]);
 
     expect(describeCallSites($hits))
         ->toBe([]);
@@ -762,12 +767,12 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
     // allowlist needed.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $filter'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $pwg_loaded_plugins'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $template'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $page'),
-    ];
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', [
+        'global $filter',
+        'global $pwg_loaded_plugins',
+        'global $template',
+        'global $page',
+    ]);
 
     expect(describeCallSites($hits))
         ->toBe([]);
@@ -782,12 +787,12 @@ test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarat
     // global. Zero-tolerance, no allowlist needed.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $conf'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $prefixeTable'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $last_time'),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $t2'),
-    ];
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', [
+        'global $conf',
+        'global $prefixeTable',
+        'global $last_time',
+        'global $t2',
+    ]);
 
     expect(describeCallSites($hits))
         ->toBe([]);
@@ -803,11 +808,11 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
     // L1Infrastructure/L2aCoreDomain. Zero-tolerance, no allowlist needed.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'add_event_handler('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'trigger_change('),
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'trigger_notify('),
-    ];
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', [
+        'add_event_handler(',
+        'trigger_change(',
+        'trigger_notify(',
+    ]);
 
     expect(describeCallSites($hits))
         ->toBe([]);

@@ -6,6 +6,7 @@ use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Tools\PhpStan\Latte\CallSiteScanResult;
 use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
 
 /**
@@ -39,10 +40,27 @@ use Piwigo\Tools\PhpStan\Latte\TemplateCallSiteScanner;
  * `themes/default/template/mail/`), not genuinely theme-polymorphic, so
  * they already cover the separate Mail-scoping test below instead.
  */
+/**
+ * Memoized -- TemplateCallSiteScanner::scan() has no caching of its own
+ * and does a full, uncached src/Piwigo/+themes/ tree walk on every call.
+ * The real repo tree never changes mid-run, so beforeEach() below
+ * recomputing it fresh for each of this file's 7 tests was pure
+ * redundant work (confirmed live via `composer test:profile`: this
+ * file's true cost is ~2s smeared across all 7 tests, not just the 2
+ * that happened to land in a global top-10 slowest-tests view).
+ */
+function templateCallSiteScannerTestRealRepoScan(string $root): CallSiteScanResult
+{
+    /** @var CallSiteScanResult|null */
+    static $result = null;
+
+    return $result ??= new TemplateCallSiteScanner($root)
+        ->scan();
+}
+
 beforeEach(function (): void {
     $this->root = dirname(__DIR__, 3);
-    $this->result = new TemplateCallSiteScanner($this->root)
-        ->scan();
+    $this->result = templateCallSiteScannerTestRealRepoScan($this->root);
 });
 
 it('resolves an Admin renderer call site only under the admin theme', function (): void {

@@ -269,8 +269,21 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             );
         }
 
-        $filters_views_default = $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews;
-        $filters_names_checkboxes = array_keys($filters_views_default);
+        // The checkbox *iteration order* always comes from the canonical
+        // declared order (defaultFiltersViews, built from
+        // DEFAULT_FILTERS_VIEWS's own fixed declaration order), never
+        // from the possibly-already-saved filtersViews's own key order:
+        // `config.value` is a native MySQL `json` column, which does NOT
+        // preserve object key insertion order on write -- MySQL
+        // canonicalizes JSON object keys by length then lexicographically
+        // when storing/retrieving. Using the saved value's own key order
+        // here would silently reorder these checkboxes away from their
+        // intended, designed order the first time this page's own
+        // first-visit seed (above) round-trips through the DB. Real per-
+        // filter access/default *values* still come from whichever of
+        // filtersViews/defaultFiltersViews is active (looked up by name,
+        // not iterated) wherever this page reads them.
+        $filters_names_checkboxes = array_keys($this->currentConfig->defaultFiltersViews);
 
         // image order management
         $sort_fields = [

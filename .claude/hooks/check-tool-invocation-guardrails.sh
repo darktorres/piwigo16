@@ -81,9 +81,58 @@ check_concurrent_heavy_tool() {
     fi
 }
 
-# Split into segments on shell control operators for per-segment leading-word checks.
+# Split into segments on shell control operators for per-segment leading-word
+# checks.
+#
+# Quote- and heredoc-aware, deliberately: a `|`/`;`/`&&` inside a quoted
+# string, or anywhere inside a heredoc body, is data for some other program
+# rather than a command boundary. Splitting on it blindly manufactures a
+# phantom "segment" that BEGINS with whatever followed the separator, which
+# the leading-word checks below then match as if it were a real invocation.
+# Both halves are confirmed false positives, not hypotheticals:
+#   - `ps -eo args | grep -E "sleep|vendor/bin/pest|composer test"` was
+#     blocked as "a raw vendor/bin/pest invocation" -- the `|` characters
+#     inside the grep alternation split the pattern into segments.
+#   - every commit message on this project is written through `<<'EOF'`, so
+#     any message with a tool name at the start of a line is exposed to the
+#     same thing (this hook's own header comment mentions several).
+# Tracking quote state and skipping heredoc bodies keeps the leading-word
+# anchoring honest without loosening any of the patterns themselves.
 segments() {
-    printf '%s\n' "$cmd" | sed -E 's/(&&|\|\||;|\|)/\n/g'
+    printf '%s\n' "$cmd" | awk '
+        BEGIN { SQ = sprintf("%c", 39) }
+        heredoc != "" {
+            if ($0 == heredoc) heredoc = ""
+            next
+        }
+        {
+            line = $0
+            tagre = "<<-?[ \t]*[\"" SQ "]?[A-Za-z_][A-Za-z0-9_]*[\"" SQ "]?"
+            if (match(line, tagre)) {
+                tag = substr(line, RSTART, RLENGTH)
+                sub("^<<-?[ \t]*", "", tag)
+                gsub("[\"" SQ "]", "", tag)
+                heredoc = tag
+                line = substr(line, 1, RSTART - 1)
+            }
+            n = length(line); out = ""; q = ""
+            for (i = 1; i <= n; i++) {
+                c = substr(line, i, 1)
+                if (q != "") { out = out c; if (c == q) q = ""; continue }
+                if (c == "\"" || c == SQ) { q = c; out = out c; continue }
+                if (c == ";") { print out; out = ""; continue }
+                if (c == "|") {
+                    if (substr(line, i + 1, 1) == "|") i++
+                    print out; out = ""; continue
+                }
+                if (c == "&" && substr(line, i + 1, 1) == "&") {
+                    i++; print out; out = ""; continue
+                }
+                out = out c
+            }
+            print out
+        }
+    '
 }
 
 while IFS= read -r seg; do

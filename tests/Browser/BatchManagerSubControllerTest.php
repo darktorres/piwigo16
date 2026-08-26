@@ -153,25 +153,36 @@ function bmImageHasTag(int $imageId, int $tagId): bool
  */
 function bmPost(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $fields): array
 {
-    return H::adminPost($page, '/admin.php?page=batch_manager', array_merge([
+    $result = H::adminPost($page, '/admin.php?page=batch_manager', array_merge([
         'pwg_token' => H::pwgToken($page),
     ], $fields));
+
+    // BatchManagerGlobalPageRenderer writes $_SESSION['bulk_manager_filter']
+    // (read back by both itself and BatchManagerUnitPageRenderer) on every
+    // real submit -- H::asAdmin()'s cached session is shared across the
+    // whole suite run, unlike a real per-test loginAsAdmin() login, so a
+    // later asAdmin() caller must not reuse this session without a fresh
+    // re-mint. See BrowserTestHelpers::$sharedSessionKnownClean's own
+    // docblock for the confirmed live failure this fixes.
+    H::markSharedSessionDirty();
+
+    return $result;
 }
 
 it('renders the global tab with no filter, defaulting to the caddie prefilter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager');
     $page->assertNoJavaScriptErrors();
 });
 
 it('renders the unit tab', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
     $page->assertNoJavaScriptErrors();
 });
 
 it('empty_caddie clears the caddie and redirects', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $token = H::pwgToken($page);
     bmInsertCaddie(1, 1);
     expect(bmCaddieCount(1))
@@ -191,7 +202,7 @@ it('empty_caddie clears the caddie and redirects', function (): void {
 });
 
 it('empty_caddie rejects a missing CSRF token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     bmInsertCaddie(1, 1);
 
     $result = H::adminPost($page, '/admin.php?page=batch_manager&action=empty_caddie', []);
@@ -207,19 +218,19 @@ it('empty_caddie rejects a missing CSRF token', function (): void {
 });
 
 it('delete_orphans records a session message and redirects when photos were deleted', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&action=delete_orphans&nb_orphans_deleted=3');
     $page->assertNoJavaScriptErrors();
 });
 
 it('sync_md5sum records a session message and redirects when checksums were added', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&action=sync_md5sum&nb_md5sum_added=2');
     $page->assertNoJavaScriptErrors();
 });
 
 it('submits a duplicates prefilter with every detection option checked', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -237,7 +248,7 @@ it('submits a duplicates prefilter with every detection option checked', functio
 });
 
 it('submits a category prefilter scoped recursively', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -252,7 +263,7 @@ it('submits a category prefilter scoped recursively', function (): void {
 });
 
 it('redirects and clears the session filter when the filtered category no longer exists', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -269,7 +280,7 @@ it('redirects and clears the session filter when the filtered category no longer
 });
 
 it('submits a tags prefilter as a multi-value array', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -284,7 +295,7 @@ it('submits a tags prefilter as a multi-value array', function (): void {
 });
 
 it('submits a tags prefilter as a single scalar value', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -299,7 +310,7 @@ it('submits a tags prefilter as a single scalar value', function (): void {
 });
 
 it('submits a permission-level prefilter including lower levels', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -314,7 +325,7 @@ it('submits a permission-level prefilter including lower levels', function (): v
 });
 
 it('submits a dimension prefilter with valid width/height/ratio bounds', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -333,7 +344,7 @@ it('submits a dimension prefilter with valid width/height/ratio bounds', functio
 });
 
 it('submits a filesize prefilter with valid bounds', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -348,7 +359,7 @@ it('submits a filesize prefilter with valid bounds', function (): void {
 });
 
 it('submits a quick-search prefilter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -362,7 +373,7 @@ it('submits a quick-search prefilter', function (): void {
 });
 
 it('single-escapes an HTML-special-character-bearing quick-search query, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -377,7 +388,7 @@ it('single-escapes an HTML-special-character-bearing quick-search query, not dou
 });
 
 it('submitting the filter form with nothing checked resets to the default filter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -389,7 +400,7 @@ it('submitting the filter form with nothing checked resets to the default filter
 });
 
 it('applies a combined URL filter token list covering prefilter/category/tag/level/search/dimension/filesize', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $filter = implode(',', [
         'prefilter-duplicates-checksum',
@@ -407,13 +418,13 @@ it('applies a combined URL filter token list covering prefilter/category/tag/lev
 });
 
 it('applies a plain (non-duplicates) prefilter via a URL filter token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&filter=prefilter-no_album');
     $page->assertNoJavaScriptErrors();
 });
 
 it('applies add_tags then del_tags to a whole_set selection, round-tripping the association in image_tag', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch AddTags Album ' . uniqid(),
     ]);
@@ -461,7 +472,7 @@ it('applies add_tags then del_tags to a whole_set selection, round-tripping the 
 });
 
 it('associates a whole_set selection with another album via the associate action', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $sourceAlbum = H::createCategory($page, [
         'name' => 'Batch Associate Source ' . uniqid(),
     ]);
@@ -515,7 +526,7 @@ function bmImageCategoryLinks(int $imageId, int $storageAlbumId, int $targetAlbu
 }
 
 it('moves a whole_set selection, clearing all prior album links and adding the target', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $storageAlbum = H::createCategory($page, [
         'name' => 'Batch Move Storage ' . uniqid(),
     ]);
@@ -563,7 +574,7 @@ it('moves a whole_set selection, clearing all prior album links and adding the t
 });
 
 it('dissociates a whole_set selection from a non-storage album', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $storageAlbum = H::createCategory($page, [
         'name' => 'Batch Dissociate Storage ' . uniqid(),
     ]);
@@ -640,7 +651,7 @@ function bmImageRow(int $imageId): array
 }
 
 it('mass-updates author, title, date_creation, and level for a whole_set selection', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Mass Update Album ' . uniqid(),
     ]);
@@ -706,7 +717,7 @@ it('mass-updates author, title, date_creation, and level for a whole_set selecti
 });
 
 it('adds and removes a whole_set selection from the caddie', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Caddie Album ' . uniqid(),
     ]);
@@ -746,7 +757,7 @@ it('adds and removes a whole_set selection from the caddie', function (): void {
 });
 
 it('rejects a delete action without confirm_deletion, then deletes and records a session message once confirmed', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Delete Album ' . uniqid(),
     ]);
@@ -789,7 +800,7 @@ it('rejects a delete action without confirm_deletion, then deletes and records a
 });
 
 it('reports metadata-synchronized and generate_derivatives success/error counts', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Metadata Album ' . uniqid(),
     ]);
@@ -824,7 +835,7 @@ it('reports metadata-synchronized and generate_derivatives success/error counts'
 });
 
 it('renders the global-mode thumbnail grid for a real category filter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Thumbnails Album ' . uniqid(),
     ]);
@@ -861,7 +872,7 @@ it('shows an HTML-special-character-bearing filtered category name single-escape
     // leaving the already-escaped, safe name text. Removing |noescape
     // here too would double-escape it (verified directly: produced
     // '&amp;lt;b&amp;gt;' instead of '&lt;b&gt;' before this was caught).
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => '<b>Bold</b> & "Album" ' . uniqid(),
     ]);
@@ -883,7 +894,7 @@ it('shows an HTML-special-character-bearing filtered category name single-escape
 });
 
 it('builds the current selection from a selection[] array, an alternative to whole_set', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Selection Array Album ' . uniqid(),
     ]);
@@ -914,7 +925,7 @@ it('builds the current selection from a selection[] array, an alternative to who
 });
 
 it('nb_photos_deleted fakes a placeholder collection for the ajax-driven post-delete reload', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     // No real photo ids are known/needed here (see this renderer's own
     // docblock on the nbPhotosDeletedPresent branch) -- the placeholder
@@ -933,7 +944,7 @@ it('nb_photos_deleted fakes a placeholder collection for the ajax-driven post-de
 });
 
 it('rejects a whole_set value containing a non-digit element as an invalid request parameter', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $result = bmPost($page, [
         'submit' => '1',
@@ -1120,7 +1131,7 @@ it('marks the dimension and filesize URL-filter tokens invalid when a bound valu
     // 'filesize-bogus..10' fails FILTER_VALIDATE_FLOAT the same way (the
     // whole filesize bound dropped, since that case has only one
     // min/max pair, not per-part).
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
 
     $filter = implode(',', [
         'dimension-w10..1000-hbogus..2000-r0.5..2',
@@ -1132,7 +1143,7 @@ it('marks the dimension and filesize URL-filter tokens invalid when a bound valu
 });
 
 it('applies the no_sync_md5sum prefilter via a URL filter token', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&filter=prefilter-no_sync_md5sum');
     $page->assertNoJavaScriptErrors();
 });
@@ -1199,7 +1210,7 @@ it('proceeds with an empty filter set when a perform_batch_manager_prefilters ha
     H::dbClose($pluginDb);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         H::navigateOk($page, '/admin.php?page=batch_manager');
 
         $result = bmPost($page, [
@@ -1247,7 +1258,7 @@ it('proceeds with an empty filter set when a batch_manager_perform_filters handl
     H::dbClose($pluginDb);
 
     try {
-        $page = H::loginAsAdmin($this);
+        $page = H::asAdmin($this);
         H::navigateOk($page, '/admin.php?page=batch_manager');
 
         $result = bmPost($page, [
@@ -1267,7 +1278,7 @@ it('proceeds with an empty filter set when a batch_manager_perform_filters handl
 });
 
 it('renders unmatched search terms as "No results for" alongside real matched items', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     // 'Sample' full-text-matches category 1's permanent fixture name
@@ -1292,7 +1303,7 @@ it('renders unmatched search terms as "No results for" alongside real matched it
 });
 
 it('single-escapes an HTML-special-character-bearing unmatched search term, not double-escaped (P44-F)', function (): void {
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
     $result = bmPost($page, [
@@ -1318,7 +1329,7 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     // 200x150 (H::makeTestImage()'s own fixed size, ratio 1.33) already
     // covers the 'landscape' bucket elsewhere in this suite -- only
     // portrait (<0.95), square (0.95..1.05) and panorama (>=2) are new.
-    $page = H::loginAsAdmin($this);
+    $page = H::asAdmin($this);
     $album = H::createCategory($page, [
         'name' => 'Batch Ratio Buckets Album ' . uniqid(),
     ]);

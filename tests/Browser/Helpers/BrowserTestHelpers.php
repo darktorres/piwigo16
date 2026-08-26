@@ -701,6 +701,48 @@ final class BrowserTestHelpers
     private static ?array $adminSessionCookies = null;
 
     /**
+     * Tracks whether the cached admin session in $adminSessionCookies is
+     * still safe to reuse. Piwigo persists a swath of per-session UI
+     * preference/filter state directly in $_SESSION (SessionService's own
+     * pwg_filter_categories/pwg_filter_check_key/pwg_filter_enabled/
+     * pwg_filter_visible_categories/pwg_filter_visible_images/
+     * pwg_image_order/pwg_comments_order/pwg_index_deriv/
+     * pwg_picture_deriv/pwg_mobile_theme/pwg_show_metadata/
+     * pwg_referer_image_id/pwg_device/pwg_plugins_new_order/
+     * pwg_plugins_show_details, plus
+     * BatchManagerGlobalPageRenderer's own bulk_manager_filter,
+     * UserService's edit_context, AuthService's fake_user_cache,
+     * IntroSubController's cache_activity_last_weeks, TagsPageRenderer's
+     * message_tags, NoPhotoYetRenderer's no_photo_yet,
+     * PhotosAddDirectPageRenderer's upload_hide_warnings, UploadService's
+     * uploads_error, PluginsInstalledPageRenderer's incompatible_plugins) --
+     * a real UI login via loginAsAdmin() always started that state
+     * genuinely empty (a brand-new session every call), which asAdmin()'s
+     * single session, reused for the entire suite run, does not. A test
+     * whose own action WRITES one of these keys (confirmed live: a
+     * BatchManagerSubControllerTest whole_set 'move'/'associate' POST
+     * leaving a stale bulk_manager_filter behind broke a LATER test's own
+     * redirect-vs-200 expectation) must call markSharedSessionDirty()
+     * right after -- the next asAdmin() call then re-mints a fresh login
+     * instead of reusing the possibly-contaminated cached one. Mirrors
+     * IntegrationTestCase::$sharedFixtureKnownPristine's own dirty-flag
+     * shape for the exact same reason: cheap reuse by default, provably
+     * safe re-mint whenever a test can't guarantee it left shared state
+     * clean.
+     */
+    private static bool $sharedSessionKnownClean = true;
+
+    /**
+     * Call right after any asAdmin()-authenticated action that writes one
+     * of the $_SESSION-persisted preference/filter keys documented on
+     * $sharedSessionKnownClean above -- see that property's own docblock.
+     */
+    public static function markSharedSessionDirty(): void
+    {
+        self::$sharedSessionKnownClean = false;
+    }
+
+    /**
      * Parses a curl cookie jar (Netscape format: tab-separated domain /
      * includeSubdomains / path / secure / expiry / name / value, with an
      * optional "#HttpOnly_" prefix on the domain field for httpOnly
@@ -751,18 +793,21 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Logs in as fixture_admin exactly once per test process, via the same
-     * curlApi()+cookie-jar mechanism uploadPhotoViaApi() already uses for
-     * its own separate curl-based login -- no browser/UI interaction, no
-     * repeated page load. Caches the resulting cookie(s) so every later
-     * asAdmin() call reuses the SAME server-side session instead of
-     * logging in again. See asAdmin()'s own docblock for why this exists.
+     * Logs in as fixture_admin via the same curlApi()+cookie-jar mechanism
+     * uploadPhotoViaApi() already uses for its own separate curl-based
+     * login -- no browser/UI interaction, no repeated page load. Caches the
+     * resulting cookie(s) so every later asAdmin() call reuses the SAME
+     * server-side session instead of logging in again, UNLESS
+     * $sharedSessionKnownClean says an earlier caller may have left
+     * $_SESSION-persisted state behind that a fresh login discards -- see
+     * that property's own docblock. See asAdmin()'s own docblock for why
+     * this caching exists at all.
      *
      * @return list<array{name: string, value: string, domain: string, path: string, httpOnly: bool, secure: bool}>
      */
     private static function adminSessionCookies(): array
     {
-        if (self::$adminSessionCookies !== null) {
+        if (self::$adminSessionCookies !== null && self::$sharedSessionKnownClean) {
             return self::$adminSessionCookies;
         }
 
@@ -779,6 +824,7 @@ final class BrowserTestHelpers
         ]);
 
         self::$adminSessionCookies = self::parseCookieJar($cookieJar);
+        self::$sharedSessionKnownClean = true;
         @unlink($cookieJar);
 
         return self::$adminSessionCookies;
@@ -807,6 +853,21 @@ final class BrowserTestHelpers
      * page load instead of two, zero form interaction, and the DB
      * lockout-clearing round-trip happens once per test process instead of
      * once per test.
+     *
+     * A limitation markSharedSessionDirty() does NOT cover: this session
+     * is always minted via POST /api/v1/session
+     * (Controller\Api\SessionLoginController), which sets
+     * $_SESSION['connected_with'] = ConnectedWith::ApiSessionLogin --
+     * never ConnectedWith::PwgUi, which only a real UI form login
+     * (IdentificationController) sets, and which
+     * ProfileFormHandler::apiCanManage gates the profile page's own
+     * API-key-management section on (`=== ConnectedWith::PwgUi`). No
+     * re-mint changes this. A test asserting on apiCanManage/
+     * connected_with-gated behavior must use loginAsAdmin() instead, not
+     * asAdmin() -- confirmed live via SessionLoginController's own
+     * connectedWithSession->set() call, no current Browser test happens to
+     * assert on this (grepped for api_can_manage/apiCanManage — 0 hits),
+     * but a future one easily could.
      *
      * Still asserts the logout link is present, exactly like
      * loginAsAdmin() -- if the cookie-based auth ever silently failed, the

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Event;
 
+use SensitiveParameter;
+use SensitiveParameterValue;
+
 /**
  * Typed event for the legacy `try_log_user` filter. Registered
  * (`AuthService::pwgLogin()`, wired from `RequestBootstrap.php`) -- the
@@ -12,24 +15,40 @@ namespace Piwigo\Auth\Event;
  * since both real callers (identification.php's raw POST body,
  * {@see \Piwigo\Controller\Api\SessionLoginController}'s optional request
  * field) can genuinely omit it.
+ *
+ * The password is stored wrapped in the engine's own `SensitiveParameterValue`
+ * (not just a private property) -- confirmed live that `#[SensitiveParameter]`
+ * only redacts the *parameter* at a function boundary, not an object property
+ * built from it, and that `print_r()`/raw property enumeration (unlike
+ * `var_dump()`) never call `__debugInfo()` at all: a `TryLogUser` instance
+ * flowing through the event bus and into a captured stack trace's `args`
+ * exposed the plaintext in the clear via either path, `private` or not,
+ * until this wrapping (`SensitiveParameterValue` has no enumerable
+ * properties of its own, so neither path finds anything to print). See
+ * SensitiveParameterTest.php for the live proof.
  */
 final class TryLogUser
 {
+    private readonly SensitiveParameterValue $passwordValue;
+
     public function __construct(
         public bool $success,
         public readonly string $username,
-        public readonly ?string $password,
+        #[SensitiveParameter]
+        ?string $password,
         public readonly bool $rememberMe,
-    ) {}
+    ) {
+        $this->passwordValue = new SensitiveParameterValue($password);
+    }
+
+    public function password(): ?string
+    {
+        $value = $this->passwordValue->getValue();
+
+        return is_string($value) ? $value : null;
+    }
 
     /**
-     * `#[\SensitiveParameter]` only redacts scalar/array function
-     * parameters, not object properties, so a `TryLogUser` instance
-     * flowing through the event bus and into a stack trace's captured
-     * arguments still exposes `$password` unless this hooks the object's
-     * own debug-output path -- var_dump()-family serialization only,
-     * same redaction convention as Config\CurrentConfig::all().
-     *
      * @return array<string, mixed>
      */
     public function __debugInfo(): array
@@ -37,7 +56,7 @@ final class TryLogUser
         return [
             'success' => $this->success,
             'username' => $this->username,
-            'password' => $this->password === null ? null : str_repeat('*', 8),
+            'password' => $this->password() === null ? null : str_repeat('*', 8),
             'rememberMe' => $this->rememberMe,
         ];
     }

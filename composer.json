@@ -223,6 +223,10 @@
       "@php vendor/bin/pest --testsuite Integration"
     ],
     "test:mutate": "@php vendor/bin/pest --mutate --testsuite Unit --parallel --everything --covered-only",
+    "test:profile": [
+      "bash tools/reimport-fixture.sh",
+      "@php -d memory_limit=1024M vendor/bin/pest --testsuite Unit,Arch --profile"
+    ],
     "test:visual": [
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --group=visual-regression"

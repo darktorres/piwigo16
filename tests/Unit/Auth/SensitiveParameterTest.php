@@ -70,6 +70,115 @@ function sensitiveParameterTestRoot(): string
     return $root;
 }
 
+/**
+ * Walks a captured exception trace's `args` for $needle without ever
+ * materializing a `print_r()`-style flat string -- a trace raised deep
+ * inside a fully-booted app (real EntityManager/Container/EventDispatcher
+ * on the stack) can `print_r()` into a multi-gigabyte string, and PHPUnit's
+ * Exporter (invoked to build a failure/description message even on
+ * `->not->toContain()`'s expected-success path, since Pest implements
+ * negation by catching the underlying positive assertion's failure) then
+ * tries to bin2hex() the whole thing -- confirmed live to OOM-kill the
+ * process.
+ *
+ * `Exception::getTrace()` captures the *entire* call stack, not just the
+ * application code between this test's own try/catch: every frame from
+ * PHPUnit's TestRunner/TestSuite/TestCase and Pest's own test-closure
+ * machinery is in there too, all the way up to `bin/pest`'s entry point.
+ * Confirmed live (dumped real frame class/arg-type lists under both
+ * `composer test -- --filter=...` and `composer test:profile`) that
+ * `PHPUnit\Framework\TestSuite::runTests(array $tests, ...)` receives, as
+ * its own `$tests` arg, literally every TestCase queued for the current
+ * run -- under `--filter` that's a handful, harmless; under
+ * `composer test:profile` (single long-lived process, no `--parallel`,
+ * so no ParaTest worker ever splits the suite) it's all 5,526 Unit+Arch
+ * tests in one array, each a full TestCase object. Walking into that from
+ * `TestSuite`/`TestRunner`/`TestCase` frames is what exhausted a
+ * 200,000-node budget even with a depth cap of 12 -- not a leak, not a
+ * bug, just PHPUnit's own bookkeeping, and not a meaningful security
+ * question either (a real exception trace captured in production never
+ * has PHPUnit frames on it at all). Frames whose class belongs to the
+ * test framework itself are skipped entirely rather than walked and
+ * bounded -- the right fix for "irrelevant and unboundedly large", not a
+ * bigger budget for it.
+ *
+ * What's left after that filter is genuinely small application-level
+ * state, bounded by DEPTH: a real leak sits shallow (a property a level
+ * or two off a frame's own args, e.g. an event/DTO object), so the depth
+ * cap finds it fast regardless of how large the rest of the graph is. The
+ * spl_object_id() visited-set guards the walk against Doctrine's
+ * documented reference-cyclic EntityManager/UnitOfWork graph (see
+ * tests/Pest.php). $nodeBudget stays as a backstop against a
+ * combinatorially wide graph within the depth cap (throws rather than
+ * silently returning false -- a leak check must not report "safe" without
+ * having actually finished checking) but shouldn't fire in practice now
+ * that the framework's own huge, irrelevant state is excluded up front.
+ *
+ * @param list<array{function: string, line?: int, file?: string, class?: class-string, type?: '->'|'::', args?: list<mixed>, object?: object}> $trace
+ */
+function sensitiveParameterTestTraceContains(array $trace, string $needle, int $maxDepth = 12, int $nodeBudget = 200_000): bool
+{
+    $visited = [];
+    $nodesVisited = 0;
+    $stack = [];
+    foreach ($trace as $frame) {
+        $frameClass = $frame['class'] ?? '';
+        if (str_starts_with($frameClass, 'PHPUnit\\') || str_starts_with($frameClass, 'Pest\\') || str_starts_with($frameClass, 'ParaTest\\')) {
+            continue; // test-framework bookkeeping (e.g. TestSuite's own array of every queued test) -- not application state, and unboundedly large under a non-parallel full-suite run
+        }
+        foreach ($frame['args'] ?? [] as $arg) {
+            $stack[] = [$arg, 0];
+        }
+    }
+
+    while ($stack !== []) {
+        if ($nodesVisited >= $nodeBudget) {
+            throw new RuntimeException(sprintf(
+                'Trace scan budget (%d nodes) exhausted before reaching a conclusive answer -- the call graph is too wide to safely verify even within the depth cap; raise the budget deliberately after checking why it grew.',
+                $nodeBudget,
+            ));
+        }
+        $nodesVisited++;
+
+        [$value, $depth] = array_pop($stack);
+
+        if ($value instanceof SensitiveParameterValue) {
+            continue; // the redaction marker itself, not a leak
+        }
+
+        if (is_string($value)) {
+            if (str_contains($value, $needle)) {
+                return true;
+            }
+            continue;
+        }
+
+        if ($depth >= $maxDepth) {
+            continue; // stop descending -- a real leak surfaces shallow; deep infrastructure internals aren't worth walking
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                $stack[] = [$item, $depth + 1];
+            }
+            continue;
+        }
+
+        if (is_object($value)) {
+            $id = spl_object_id($value);
+            if (isset($visited[$id])) {
+                continue;
+            }
+            $visited[$id] = true;
+            foreach ((array) $value as $property) {
+                $stack[] = [$property, $depth + 1];
+            }
+        }
+    }
+
+    return false;
+}
+
 function sensitiveParameterTestAuthService(): AuthService
 {
     $conn = DbConnection::build();
@@ -136,8 +245,8 @@ test('AuthService::tryLogUser() keeps the plaintext password out of its own fram
         }
         expect($tryLogUserFrame['args'][1] ?? null)
             ->toBeInstanceOf(SensitiveParameterValue::class);
-        expect(print_r($trace, true))
-            ->not->toContain('super-secret-plaintext');
+        expect(sensitiveParameterTestTraceContains($trace, 'super-secret-plaintext'))
+            ->toBeFalse();
     } finally {
         ini_set('zend.exception_ignore_args', $originalIni);
     }
@@ -177,8 +286,8 @@ test('DbCredentials::__construct() keeps the plaintext password out of its own f
         }
         expect($constructFrame['args'][2] ?? null)
             ->toBeInstanceOf(SensitiveParameterValue::class);
-        expect(print_r($trace, true))
-            ->toContain('db.example.test'); // sanity: unattributed args (host) DO show up in the clear -- proves this is selective redaction, not a blanket hide
+        expect(sensitiveParameterTestTraceContains($trace, 'db.example.test'))
+            ->toBeTrue(); // sanity: unattributed args (host) DO show up in the clear -- proves this is selective redaction, not a blanket hide
     } finally {
         ini_set('zend.exception_ignore_args', $originalIni);
     }
@@ -233,12 +342,14 @@ test('IdentificationSubmitRequest\'s private constructor keeps the plaintext pas
         }
         expect($constructFrame['args'][5] ?? null)
             ->toBeInstanceOf(SensitiveParameterValue::class);
+        expect(sensitiveParameterTestTraceContains($trace, 'someuser'))
+            ->toBeTrue(); // sanity: unattributed args (username) DO show up in the clear -- proves this is selective redaction, not a blanket hide
     } finally {
         ini_set('zend.exception_ignore_args', $originalIni);
     }
 });
 
-test('TryLogUser::__debugInfo() redacts the plaintext password from var_dump()-style output while leaving real property access untouched', function (): void {
+test('TryLogUser::__debugInfo() redacts the plaintext password from var_dump()-style output while leaving password() access untouched', function (): void {
     $event = new TryLogUser(false, 'someuser', 'super-secret-plaintext', false);
 
     ob_start();
@@ -247,7 +358,7 @@ test('TryLogUser::__debugInfo() redacts the plaintext password from var_dump()-s
 
     expect($dumped)
         ->not->toContain('super-secret-plaintext')
-        ->and($event->password)
+        ->and($event->password())
         ->toBe('super-secret-plaintext');
 });
 

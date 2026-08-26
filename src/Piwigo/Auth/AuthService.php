@@ -336,7 +336,7 @@ final readonly class AuthService
         }
 
         $username = $event->username;
-        $password = $event->password;
+        $password = $event->password();
         $rememberMe = $event->rememberMe;
 
         // we force the session table to be clean

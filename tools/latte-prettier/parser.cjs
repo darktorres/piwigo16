@@ -377,6 +377,29 @@ function parsePostfix(es) {
       }
       continue;
     }
+    // `Class::CONST` / `Class::method(...)` -- real PHP static access,
+    // reached through Latte's own expression syntax. The one real
+    // first-party site is an enum case
+    // (`\Piwigo\Contribution\FieldOverride::Password`, profile_content.latte),
+    // whose class half parsePrimary() already reads as a
+    // backslash-qualified Identifier.
+    if (es.peek() === ":" && es.peek(1) === ":") {
+      es.advance(2);
+      es.skipSpace();
+      const name = readExprIdentifier(es);
+      es.skipSpace();
+      if (es.peek() === "(") {
+        const args = parseCallArgs(es);
+        expr = {
+          type: "Call",
+          callee: { type: "StaticAccess", object: expr, prop: name },
+          args,
+        };
+      } else {
+        expr = { type: "StaticAccess", object: expr, prop: name };
+      }
+      continue;
+    }
     if (es.peek() === "[") {
       es.advance();
       es.skipSpace();
@@ -923,6 +946,13 @@ function parseLatteNode(s, head, listOpts) {
       return parseContentType(s, start);
     case "varType":
       return parseVarType(s, start);
+    case "templateType":
+      return parseTemplateType(s, start);
+    case "layout":
+    case "extends":
+      return parseLayout(s, start, head.keyword);
+    case "block":
+      return parseBlock(s, start, listOpts);
     case "spaceless":
       return parseSpaceless(s, start, listOpts);
     case "capture":
@@ -1171,6 +1201,44 @@ function parseVarType(s, start) {
   const src = readNestedBracedTagBody(s).replace(/^varType\s+/, "");
   const value = src.trim();
   return { type: "LatteVarType", value, start, end: s.pos };
+}
+
+// `{templateType FQCN}` -- P40's View/Renderer mechanism puts one at the
+// top of nearly every template. Same nature as {varType}: an
+// IDE/PHPStan-only declaration compiling to a literal empty string (see
+// vendor/latte/latte's own TemplateTypeNode.php), whose body is real PHP
+// type syntax rather than an expression, so it is kept as a raw string.
+function parseTemplateType(s, start) {
+  const src = readNestedBracedTagBody(s).replace(/^templateType\s+/, "");
+  const value = src.trim();
+  return { type: "LatteTemplateType", value, start, end: s.pos };
+}
+
+// `{layout 'file.latte'}` (and its `{extends}` alias) -- names the parent
+// template whose {block}s this one fills in. The body is a real
+// expression, not a type or a bare name.
+function parseLayout(s, start, keyword) {
+  const src = readTagBody(s).replace(new RegExp(`^${keyword}\\s+`), "");
+  const expr = parseExprString(src);
+  return { type: "LatteLayout", keyword, expr, start, end: s.pos };
+}
+
+// `{block name}...{/block}` -- structurally identical to {define}: a
+// named, paired fragment. Unlike {define} it is rendered in place, and
+// a child template's same-named block overrides the parent's.
+function parseBlock(s, start, listOpts) {
+  const src = readTagBody(s).replace(/^block\s*/, "");
+  const name = src.trim();
+  const isAttrList = Boolean(listOpts && listOpts.isAttrList);
+  const blockStops = new Set(["/block"]);
+  const body = isAttrList
+    ? parseAttributeItems(s, blockStops)
+    : parseBodyLoop(s, Boolean(listOpts && listOpts.allowElements), blockStops);
+  const head = peekLatteHead(s);
+  if (!head || stopKey(head) !== "/block") s.error("expected {/block}");
+  s.advance();
+  readTagBody(s);
+  return { type: "LatteBlock", name, body, start, end: s.pos };
 }
 
 function parseDo(s, start) {

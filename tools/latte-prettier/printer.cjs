@@ -43,6 +43,8 @@ function exprToDoc(e) {
       return [exprToDoc(e.left), " ", e.op, " ", exprToDoc(e.right)];
     case "PropAccess":
       return [exprToDoc(e.object), "->", e.prop];
+    case "StaticAccess":
+      return [exprToDoc(e.object), "::", e.prop];
     case "Index":
       return [exprToDoc(e.object), "[", exprToDoc(e.index), "]"];
     case "Call": {
@@ -209,6 +211,7 @@ const SIMPLE_ATTR_PASSTHROUGH = new Set([
   "LatteBreakIf",
   "LatteFor",
   "LatteDefine",
+  "LatteBlock",
 ]);
 
 function attrPieces(item, options) {
@@ -419,6 +422,12 @@ function printNode(node, options, mode = "block") {
     case "LatteVarType":
       return ["{varType ", node.value, "}"];
 
+    case "LatteTemplateType":
+      return ["{templateType ", node.value, "}"];
+
+    case "LatteLayout":
+      return ["{", node.keyword, " ", exprToDoc(node.expr), "}"];
+
     case "LatteInclude": {
       const parts = ["{include ", exprToDoc(node.target)];
       for (const a of node.args) {
@@ -529,6 +538,22 @@ function printNode(node, options, mode = "block") {
       const b = computeBlock(node.body, options);
       if (b) parts.push(indent([b.leadBreak, ...b.inner]), b.trailBreak);
       parts.push("{/for}");
+      return parts;
+    }
+
+    case "LatteBlock": {
+      const head = node.name ? ["{block ", node.name, "}"] : ["{block}"];
+      if (mode === "inline") {
+        return [
+          head,
+          ...node.body.map((n) => printInlinePart(n, options)),
+          "{/block}",
+        ];
+      }
+      const parts = [head];
+      const b = computeBlock(node.body, options);
+      if (b) parts.push(indent([b.leadBreak, ...b.inner]), b.trailBreak);
+      parts.push("{/block}");
       return parts;
     }
 

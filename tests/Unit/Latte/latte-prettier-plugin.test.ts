@@ -9,10 +9,11 @@ import { parse } from "../../../tools/latte-prettier/parser.cjs";
 const REPO_ROOT = join(import.meta.dirname, "../../..");
 const THEMES_DIR = join(REPO_ROOT, "themes");
 // Matches format:latte/format:latte:fix's glob (package.json): every real
-// .latte file in the tree, not just themes/.
-const LATTE_ROOTS = ["themes", "template-extension"].map((d) =>
-  join(REPO_ROOT, d),
-);
+// .latte file in the tree. `template-extension/` was in both until P40
+// Batch 1 deleted the template-extension feature (76fd0691c1) -- a glob
+// tolerates a missing directory, readdirSync does not, so this list kept
+// naming it long after it stopped existing.
+const LATTE_ROOTS = ["themes"].map((d) => join(REPO_ROOT, d));
 
 function findLatteFilesIn(dir: string): string[] {
   const out: string[] = [];
@@ -67,8 +68,15 @@ function normalizeAst(node: unknown): unknown {
 }
 
 const CORPUS_FILES = [
-  "header.latte",
-  "footer.latte",
+  // Replaced header.latte/footer.latte, which P41-G/H's asset-pipeline
+  // swap deleted (00fd301ac5) and which this list kept naming, so
+  // readFileSync threw at collection time and took the whole file down
+  // before a single test ran. index.latte and layout.latte are the
+  // closest real equivalents and cover strictly more: the
+  // `{templateType}` / `{layout} `/ `{block}` trio the old corpus never
+  // reached, plus layout.latte's 136-line generated `{varType}` block.
+  "index.latte",
+  "layout.latte",
   "comment_list.latte",
   "register.latte",
   // {varType} content containing a PHPStan array-shape type (`array{key:

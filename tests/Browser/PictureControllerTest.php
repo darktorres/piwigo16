@@ -847,6 +847,14 @@ it('toggles the show_metadata session flag on repeated ?metadata visits without 
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&metadata');
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'picture.php show_metadata toggle');
+
+    // This test's own two visits just left $_SESSION['show_metadata']
+    // toggled to an unpredictable state (set on the first visit, unset on
+    // the second -- see the comment above) -- H::asAdmin()'s cached
+    // session is shared across the whole suite run, so a later caller must
+    // not inherit it. See BrowserTestHelpers::$sharedSessionKnownClean's
+    // own docblock.
+    H::markSharedSessionDirty();
 });
 
 it('renders a related tag link for a photo with a real assigned tag', function (): void {

@@ -13,6 +13,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * findGrantedGroupIdsByCategory()/findGrantedUserIdsByCategory()'s own
@@ -47,6 +48,14 @@ final class PermissionRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping investigation): begin before any
+        // container resolution below, so the container's own first-
+        // resolution-per-test-lifetime caching of Connection::class/
+        // EntityManagerInterface::class (config/container.php's own
+        // documented behavior) picks up this wrapped connection, not a
+        // pre-override one.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -57,6 +66,20 @@ final class PermissionRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new PermissionRepository(EntityManagerFactory::build($this->conn));
+        // PILOT fix: this class's own tests (e.g.
+        // testFindGrantedGroupIdsByCategoryGroupsRowsByCatId, inserting
+        // group_id=1/cat_id=1) previously relied on tearDown()'s DELETEs
+        // below having *really* run for a prior test in this class,
+        // leaving user_access/group_access genuinely empty rather than
+        // matching the fixture's own 4 pre-seeded group_access rows --
+        // a real pre-existing fragility (only worked because of
+        // whichever test happened to run first), made structurally
+        // impossible to rely on now that nothing persists across tests.
+        // Clearing here too makes every test self-contained regardless
+        // of run order, matching AuditRepositoryTest's own established
+        // setUp()-clears-too convention.
+        $this->conn->executeStatement('DELETE FROM user_access');
+        $this->conn->executeStatement('DELETE FROM group_access');
     }
 
     #[Override]
@@ -71,6 +94,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE categories SET status = 'public', visible = {$visibleLiteral}");
         $this->conn->executeStatement('DELETE FROM user_access');
         $this->conn->executeStatement('DELETE FROM group_access');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

@@ -18,6 +18,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * The fixture actually seeds 3 real audit_log rows (group-creation events
@@ -46,6 +47,14 @@ final class AuditRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping investigation): begin before any
+        // container resolution below, so the container's own first-
+        // resolution-per-test-lifetime caching of Connection::class/
+        // EntityManagerInterface::class (config/container.php's own
+        // documented behavior) picks up this wrapped connection, not a
+        // pre-override one.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -63,6 +72,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM audit_log');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

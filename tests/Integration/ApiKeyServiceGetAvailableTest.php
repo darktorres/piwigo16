@@ -21,6 +21,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 
@@ -57,6 +58,14 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping investigation): begin before any
+        // container resolution below, so the container's own first-
+        // resolution-per-test-lifetime caching of Connection::class/
+        // EntityManagerInterface::class (config/container.php's own
+        // documented behavior) picks up this wrapped connection, not a
+        // pre-override one.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
         $userId = $this->conn->fetchOne("SELECT id FROM users WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
@@ -86,6 +95,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM user_auth_keys WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

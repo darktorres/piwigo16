@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SortRenderer;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * §10 of the SQL-modernization plan: MySQL always treats NULL as the
@@ -41,6 +42,11 @@ final class SortRendererNullOrderingTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
     }
 
     #[Override]
@@ -57,6 +63,7 @@ final class SortRendererNullOrderingTest extends IntegrationTestCase
             $this->insertedImageIds = [];
         }
 
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

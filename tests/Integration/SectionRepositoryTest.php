@@ -10,6 +10,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Section\SectionRepository -- had no dedicated test file; only
@@ -42,8 +43,20 @@ final class SectionRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
         $this->repo = new SectionRepository(EntityManagerFactory::build($this->conn));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindVisibleSubcategoryIdsReturnsDirectSubcategories(): void

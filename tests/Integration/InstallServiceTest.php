@@ -19,6 +19,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 
@@ -71,6 +72,11 @@ final class InstallServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
@@ -90,6 +96,7 @@ final class InstallServiceTest extends IntegrationTestCase
         }
         $currentConfig->reset();
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 
@@ -130,6 +137,12 @@ final class InstallServiceTest extends IntegrationTestCase
 
     public function testInstallDbConnectReturnsNullAndRecordsAnErrorForAWrongPassword(): void
     {
+        // installDbConnect() calls DbConnection::build() itself and needs a
+        // genuinely fresh per-call connection attempt against these bad
+        // credentials, not the wrapper's one shared, already-open
+        // connection from setUp() -- see tests/Pest.php's own docblock for
+        // this exact documented exception.
+        DbTransactionTestOverride::rollback();
         DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
@@ -169,6 +182,12 @@ final class InstallServiceTest extends IntegrationTestCase
         // succeeds (MySQL: "Unknown database"; Postgres: "database ...
         // does not exist"), unlike an unreachable host, which would
         // otherwise block on a real ~60s connect-timeout here.
+        // installDbConnect() calls DbConnection::build() itself and needs a
+        // genuinely fresh per-call connection attempt against this bad
+        // dbname, not the wrapper's one shared, already-open connection
+        // from setUp() -- see tests/Pest.php's own docblock for this exact
+        // documented exception.
+        DbTransactionTestOverride::rollback();
         DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,

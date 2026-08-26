@@ -34,6 +34,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\PageStateTestFactory;
@@ -204,6 +205,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
+
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -238,6 +244,13 @@ namespace Piwigo\Tests\Integration {
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
             $this->service = new CommentService(LangTestFactory::get(), TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class), CommentRepository::class), new EphemeralKeyService(CurrentConfigTestFactory::get()), $mailer, HtmlServiceTestFactory::build(), UrlServiceTestFactory::build(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $this->accessLevelChecker());
+        }
+
+        #[Override]
+        protected function tearDown(): void
+        {
+            DbTransactionTestOverride::rollback();
+            parent::tearDown();
         }
 
         private function accessControl(): AccessControl

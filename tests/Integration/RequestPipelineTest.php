@@ -15,6 +15,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Http\Middleware\PluginBootstrapMiddleware;
 use Piwigo\PluginConfig\PluginRegistry;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionMethod;
@@ -73,6 +74,11 @@ final class RequestPipelineTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
     }
 
     #[Override]
@@ -95,6 +101,7 @@ final class RequestPipelineTest extends IntegrationTestCase
             }
         }
 
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

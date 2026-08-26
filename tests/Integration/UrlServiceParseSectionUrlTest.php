@@ -16,6 +16,7 @@ use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\UrlService;
 use RuntimeException;
@@ -187,6 +188,11 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -202,6 +208,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE categories SET permalink = NULL WHERE id IN (1, 2)');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

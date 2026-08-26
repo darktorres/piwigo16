@@ -33,6 +33,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
     use ReflectionMethod;
@@ -59,6 +60,11 @@ namespace Piwigo\Tests\Integration {
                 $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
                 self::$fixtureReady = true;
             }
+
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
 
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
@@ -101,6 +107,7 @@ namespace Piwigo\Tests\Integration {
 
             @rmdir($this->scratchDir);
 
+            DbTransactionTestOverride::rollback();
             parent::tearDown();
         }
 

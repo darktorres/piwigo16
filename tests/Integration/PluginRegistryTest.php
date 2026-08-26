@@ -45,6 +45,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -94,6 +95,11 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
 
         $this->conn = DbConnection::build();
 
@@ -161,6 +167,7 @@ final class PluginRegistryTest extends IntegrationTestCase
         foreach ($this->tempDirs as $dir) {
             $this->removeDir($dir);
         }
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

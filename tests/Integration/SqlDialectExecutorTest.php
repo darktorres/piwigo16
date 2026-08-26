@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialectExecutor;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * SqlDialectExecutor's real DB round-trips -- no fixture dependency,
@@ -34,8 +35,20 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
         $this->executor = new SqlDialectExecutor($this->conn);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFetchRecentCutoffDateReturnsARealComputedDateString(): void

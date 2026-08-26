@@ -17,6 +17,7 @@ use Piwigo\Config\Projection\ConfigValueUpdate;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TypedRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * ConfigRepository has no Unit-level test file at all -- every public
@@ -49,6 +50,11 @@ final class ConfigRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -64,6 +70,13 @@ final class ConfigRepositoryTest extends IntegrationTestCase
 
         $repo = TypedRepository::narrow($this->em->getRepository(ConfigEntry::class), ConfigRepository::class);
         $this->repo = $repo;
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindReturnsARealFixtureRow(): void

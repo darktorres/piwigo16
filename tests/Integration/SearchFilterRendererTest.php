@@ -15,6 +15,7 @@ use Piwigo\Listener\HtmlRenderingListener;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Tag\TagService;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use ReflectionMethod;
 use RuntimeException;
 
@@ -47,7 +48,19 @@ final class SearchFilterRendererTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     /**

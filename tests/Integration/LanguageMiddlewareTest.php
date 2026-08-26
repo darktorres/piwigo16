@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Http\Middleware\LanguageMiddleware;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -46,6 +47,11 @@ final class LanguageMiddlewareTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
@@ -66,6 +72,7 @@ final class LanguageMiddlewareTest extends IntegrationTestCase
     {
         unset($_REQUEST['method']);
 
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

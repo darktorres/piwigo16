@@ -16,6 +16,7 @@ use Piwigo\Db\TypedRepository;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\Projection\HistorySummaryCount;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * `history`/`history_summary` are both empty in the fixture, so every test
@@ -47,6 +48,11 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -57,6 +63,13 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), HistoryRepository::class);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindLastSummaryWithHistoryIdToReturnsNullWhenEmpty(): void

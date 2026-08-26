@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Container;
 use Piwigo\Core\Kernel;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * The ORM stack (EntityManager, attribute-mapped entities) is genuinely
@@ -35,6 +36,11 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         if (Kernel::isBooted()) {
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
@@ -51,6 +57,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

@@ -22,6 +22,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Sort\UserSortField;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\Projection\UserInfoInsertRow;
 use Piwigo\Users\Projection\UserListing;
@@ -49,6 +50,11 @@ final class UserRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -59,6 +65,13 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindIdByUsernameReturnsAFixtureUser(): void

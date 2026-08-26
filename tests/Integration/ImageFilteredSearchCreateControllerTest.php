@@ -15,6 +15,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -48,6 +49,11 @@ final class ImageFilteredSearchCreateControllerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = $this->resolve(CurrentConfig::class);
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -63,6 +69,7 @@ final class ImageFilteredSearchCreateControllerTest extends IntegrationTestCase
     {
         DbConnection::build()->executeStatement('DELETE FROM search');
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

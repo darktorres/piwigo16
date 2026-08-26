@@ -22,6 +22,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Db\TypedRepository;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Users\User;
 
     final class ActivityServiceTest extends IntegrationTestCase
@@ -43,6 +44,11 @@ namespace Piwigo\Tests\Integration {
                 $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
                 self::$fixtureReady = true;
             }
+
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
 
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
@@ -68,6 +74,7 @@ namespace Piwigo\Tests\Integration {
         protected function tearDown(): void
         {
             $this->conn->executeStatement("DELETE FROM activity WHERE object LIKE 'test-%'");
+            DbTransactionTestOverride::rollback();
             parent::tearDown();
         }
 

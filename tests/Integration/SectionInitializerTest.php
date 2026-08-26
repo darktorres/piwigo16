@@ -26,6 +26,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentTemplateTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
@@ -63,6 +64,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
+
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -84,6 +90,7 @@ namespace Piwigo\Tests\Integration {
             CurrentTemplateTestFactory::get()->reset();
             LangTestFactory::get()->reset();
             Kernel::reset();
+            DbTransactionTestOverride::rollback();
             parent::tearDown();
         }
 

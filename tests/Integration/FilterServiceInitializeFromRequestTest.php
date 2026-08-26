@@ -24,6 +24,7 @@ use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\LayoutStateTestFactory;
 use Piwigo\Users\User;
@@ -68,6 +69,11 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -110,6 +116,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         unset($_GET['filter']);
         CurrentUserTestFactory::get()->reset();
         LayoutStateTestFactory::get()->reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

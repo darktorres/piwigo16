@@ -45,6 +45,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tests\Support\ImageStdParamsTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
@@ -234,6 +235,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
+
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -282,6 +288,7 @@ namespace Piwigo\Tests\Integration {
             // counter (findCategoryIdFromPermalinks()'s is_old branch) --
             // matches CategoryRepositoryTest's own tearDown restore value.
             $this->conn->executeStatement("UPDATE old_permalinks SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+            DbTransactionTestOverride::rollback();
             parent::tearDown();
         }
 

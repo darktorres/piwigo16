@@ -25,6 +25,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
 
     final class PermissionServiceTest extends IntegrationTestCase
     {
@@ -45,6 +46,11 @@ namespace Piwigo\Tests\Integration {
                 $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
                 self::$fixtureReady = true;
             }
+
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
 
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
@@ -79,6 +85,7 @@ namespace Piwigo\Tests\Integration {
             $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
             $this->conn->executeStatement("UPDATE categories SET status = 'public', visible = {$visibleLiteral}");
             $this->conn->executeStatement('DELETE FROM user_access');
+            DbTransactionTestOverride::rollback();
             parent::tearDown();
         }
 

@@ -22,6 +22,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\LayoutStateTestFactory;
@@ -81,6 +82,11 @@ final class UserBootstrapTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
@@ -112,6 +118,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->reset();
         CurrentUserTestFactory::get()->reset();
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionRepository;
     use Piwigo\Session\SessionService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
 
     /**
      * Same fixture shape as NotificationByMailRepositoryTest.
@@ -44,6 +45,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
+
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -54,6 +60,13 @@ namespace Piwigo\Tests\Integration {
 
             $this->conn = DbConnection::build();
             $this->service = new NotificationByMailService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class), NotificationByMailRepository::class), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()));
+        }
+
+        #[Override]
+        protected function tearDown(): void
+        {
+            DbTransactionTestOverride::rollback();
+            parent::tearDown();
         }
 
         public function testFindAvailableCheckKeyMatchesTheExpectedShape(): void

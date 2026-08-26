@@ -16,6 +16,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -41,6 +42,11 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         // invalidate() unconditionally ends with confDeleteParam() on the
         // container-shared CurrentConfigService singleton (see its own
         // docblock) -- every test below reaches that call, so every test
@@ -51,6 +57,13 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         }
         $this->configService = new ConfigService($this->buildConfigRepository(), $currentConfig);
         CurrentConfigServiceTestFactory::get()->set($this->configService);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     private function permissionsCachePool(): PermissionsCachePool

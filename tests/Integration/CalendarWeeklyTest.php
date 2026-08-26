@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\SqlCondition;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Tests\Support\ImageStdParamsTestFactory;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\TemplateTestFactory;
@@ -77,6 +78,11 @@ namespace Piwigo\Tests\Integration {
                 self::$fixtureReady = true;
             }
 
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
+
             CurrentConfigTestFactory::get()->reset();
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
@@ -121,6 +127,7 @@ namespace Piwigo\Tests\Integration {
             calendar_weekly_test_rrmdir(CurrentPathsTestFactory::get()->root . 'data');
             LangTestFactory::get()->reset();
             TranslatorTestFactory::get()->reset();
+            DbTransactionTestOverride::rollback();
             parent::tearDown();
         }
 

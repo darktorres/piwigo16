@@ -21,6 +21,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Psr\Http\Message\ResponseInterface;
@@ -56,6 +57,11 @@ final class FinalizeBridgeMiddlewareTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), CurrentConfigTestFactory::get()));
@@ -69,6 +75,13 @@ final class FinalizeBridgeMiddlewareTest extends IntegrationTestCase
             status: UserStatus::Normal,
             enabledHigh: true,
         ));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testProcessCallsFinalizeStopsTheBootTimerAndPassesTheResponseThrough(): void

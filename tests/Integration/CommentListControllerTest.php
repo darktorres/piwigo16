@@ -28,6 +28,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Http\AdminGuard;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -61,6 +62,11 @@ final class CommentListControllerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = $this->resolve(CurrentConfig::class);
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -76,6 +82,7 @@ final class CommentListControllerTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

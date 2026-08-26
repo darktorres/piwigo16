@@ -16,6 +16,7 @@ use Piwigo\Db\TypedRepository;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\PluginConfig\Projection\Plugin;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class PluginRepositoryTest extends IntegrationTestCase
 {
@@ -36,6 +37,11 @@ final class PluginRepositoryTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -71,6 +77,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('DELETE FROM plugins');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

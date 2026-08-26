@@ -22,6 +22,7 @@ use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
@@ -50,6 +51,11 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -84,6 +90,7 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement("UPDATE categories SET status = 'public', visible = {$visibleLiteral}");
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

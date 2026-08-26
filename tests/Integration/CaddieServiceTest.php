@@ -14,6 +14,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Users\User;
 
 /**
@@ -43,6 +44,11 @@ final class CaddieServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -60,6 +66,7 @@ final class CaddieServiceTest extends IntegrationTestCase
         $this->clearCaddie(1);
         $this->clearCaddie(3);
         $this->clearCaddie(4);
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

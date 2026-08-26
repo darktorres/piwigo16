@@ -16,6 +16,7 @@ use Piwigo\Site\Projection\SiteCategoryImageCounts;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class SiteRepositoryTest extends IntegrationTestCase
 {
@@ -34,6 +35,11 @@ final class SiteRepositoryTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -56,6 +62,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
             "DELETE FROM sites WHERE galleries_url LIKE 'p17-test-%'"
         );
 
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

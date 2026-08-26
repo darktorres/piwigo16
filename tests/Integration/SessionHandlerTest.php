@@ -16,6 +16,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionHandler;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Session\SessionHandler -- the SessionHandlerInterface adapter
@@ -57,6 +58,11 @@ final class SessionHandlerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? null;
         $this->originalRemoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : null;
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
@@ -86,6 +92,7 @@ final class SessionHandlerTest extends IntegrationTestCase
         } else {
             $_SERVER['REMOTE_ADDR'] = $this->originalRemoteAddr;
         }
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

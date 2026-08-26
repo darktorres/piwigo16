@@ -32,6 +32,7 @@ use Piwigo\Group\GroupService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Most of this file covers only the validation paths that fail before
@@ -77,6 +78,11 @@ final class GroupServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -97,6 +103,13 @@ final class GroupServiceTest extends IntegrationTestCase
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class), CurrentConfigTestFactory::get()));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testCreateRejectsAnAlreadyUsedName(): void

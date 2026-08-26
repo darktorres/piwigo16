@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Direct coverage of ExtensionRepository's own CRUD/query methods --
@@ -54,6 +55,11 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -64,6 +70,13 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new ExtensionRepository(EntityManagerFactory::build($this->conn));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindAllReturnsTheFixtureLanguage(): void

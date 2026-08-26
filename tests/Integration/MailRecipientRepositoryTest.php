@@ -14,6 +14,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\Projection\MailRecipient;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Fixture shape (see tests/Fixtures/piwigo-17.0.sql): 4 users --
@@ -51,6 +52,11 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -68,6 +74,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('UPDATE users SET mail_address = NULL WHERE id IN (3, 4)');
         $this->conn->executeStatement("UPDATE user_infos SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

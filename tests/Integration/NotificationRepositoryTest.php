@@ -15,6 +15,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * The committed fixture seeds every comment/image/user at one uniform
@@ -47,6 +48,11 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -58,26 +64,40 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = new NotificationRepository(EntityManagerFactory::build($this->conn));
 
-        if ($freshFixture) {
-            // The committed fixture seeds every comment/image/user at one
-            // uniform timestamp (2026-08-01 00:00:00, matching
-            // PIWIGO_TEST_NOW) -- this class's own tests need graduated,
-            // distinguishable dates to exercise date-RANGE filtering
-            // meaningfully, so they're set explicitly here, scoped to this
-            // test class's own DB session only (never touches the shared
-            // fixture file). See this class's own docblock for the exact
-            // shape these values match.
-            // validated is a genuine boolean column -- a bare `1` literal
-            // in the SQL text (unlike a bound parameter, which the driver
-            // coerces implicitly) is rejected outright by Postgres.
-            $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement("UPDATE comments SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
-            $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
-            $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
-            $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
-            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
-        }
+        // The committed fixture seeds every comment/image/user at one
+        // uniform timestamp (2026-08-01 00:00:00, matching
+        // PIWIGO_TEST_NOW) -- this class's own tests need graduated,
+        // distinguishable dates to exercise date-RANGE filtering
+        // meaningfully, so they're set explicitly here, scoped to this
+        // test class's own DB session only (never touches the shared
+        // fixture file). See this class's own docblock for the exact
+        // shape these values match.
+        //
+        // PILOT (transaction-wrapping rollout): this used to be guarded by
+        // `if ($freshFixture)` and rely on the UPDATEs genuinely
+        // persisting (a real commit) for every later test in this class --
+        // now that DbTransactionTestOverride wraps each test in its own
+        // rolled-back transaction, that assumption no longer holds, so
+        // this runs unconditionally every test instead. Cheap (6 plain
+        // UPDATEs), unlike the reimport above, which stays fixtureReady-
+        // guarded.
+        // validated is a genuine boolean column -- a bare `1` literal
+        // in the SQL text (unlike a bound parameter, which the driver
+        // coerces implicitly) is rejected outright by Postgres.
+        $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $this->conn->executeStatement("UPDATE comments SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
+        $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+        $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+        $this->conn->executeStatement("UPDATE images SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+        $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+        $this->conn->executeStatement("UPDATE user_infos SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testCountByTypeCountsNewCommentsInRange(): void

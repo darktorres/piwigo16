@@ -15,6 +15,7 @@ use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * PasswordService::hash()/verify()/verifyLegacyPhpass() use native
@@ -63,6 +64,11 @@ final class PasswordServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -75,6 +81,13 @@ final class PasswordServiceTest extends IntegrationTestCase
         // A fresh, all-defaults DeploymentPolicy (externalAuthentification
         // false) -- no test in this file needs a non-default policy.
         $this->service = new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy());
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testHashProducesABcryptHash(): void

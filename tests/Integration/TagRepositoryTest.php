@@ -21,6 +21,7 @@ use Piwigo\Tag\Projection\ImageTagLink;
 use Piwigo\Tag\Projection\ImageTagPair;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class TagRepositoryTest extends IntegrationTestCase
 {
@@ -42,6 +43,11 @@ final class TagRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -52,6 +58,13 @@ final class TagRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), TagRepository::class);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindAllReturnsEveryFixtureTag(): void

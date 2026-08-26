@@ -16,6 +16,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Session\SessionUserResolver;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * [SEC-33] resolveLoggedUserId() against real session table rows -- same
@@ -47,6 +48,11 @@ final class SessionUserResolverTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -70,6 +76,7 @@ final class SessionUserResolverTest extends IntegrationTestCase
         } else {
             $_SERVER['REMOTE_ADDR'] = $this->originalRemoteAddr;
         }
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

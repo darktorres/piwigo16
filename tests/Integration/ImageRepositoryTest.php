@@ -34,6 +34,7 @@ use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class ImageRepositoryTest extends IntegrationTestCase
 {
@@ -55,6 +56,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -72,6 +78,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('UPDATE images SET hit = 0, coi = NULL WHERE id IN (1, 2)');
         $this->conn->executeStatement('DELETE FROM image_format');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

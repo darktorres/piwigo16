@@ -17,6 +17,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class SessionRepositoryTest extends IntegrationTestCase
 {
@@ -36,6 +37,11 @@ final class SessionRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -45,6 +51,13 @@ final class SessionRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->repo = TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), SessionRepository::class);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testWriteThenReadRoundTripsRealData(): void

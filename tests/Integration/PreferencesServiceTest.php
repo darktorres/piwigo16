@@ -13,6 +13,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
@@ -38,6 +39,11 @@ final class PreferencesServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -59,6 +65,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement('UPDATE user_infos SET preferences = NULL WHERE user_id = 1');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

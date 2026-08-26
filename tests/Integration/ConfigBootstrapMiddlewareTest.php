@@ -12,6 +12,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Http\Middleware\ConfigBootstrapMiddleware;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -59,6 +60,11 @@ final class ConfigBootstrapMiddlewareTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
@@ -84,6 +90,7 @@ final class ConfigBootstrapMiddlewareTest extends IntegrationTestCase
             $errorCollector->reset();
         }
 
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 
@@ -93,6 +100,12 @@ final class ConfigBootstrapMiddlewareTest extends IntegrationTestCase
         // instead of blocking on a real ~60s connect-timeout the way an
         // unreachable host/IP would -- same reasoning as
         // InstallServiceTest::test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password.
+        // The middleware calls DbConnection::build() itself and needs a
+        // genuinely fresh per-call connection attempt against these bad
+        // credentials, not the wrapper's one shared, already-open
+        // connection from setUp() -- see tests/Pest.php's own docblock for
+        // this exact documented exception.
+        DbTransactionTestOverride::rollback();
         DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,

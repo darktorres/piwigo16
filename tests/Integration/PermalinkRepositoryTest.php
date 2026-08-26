@@ -16,6 +16,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\Projection\OldPermalink;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class PermalinkRepositoryTest extends IntegrationTestCase
 {
@@ -37,6 +38,11 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -56,6 +62,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         // hit=42, last_hit='2026-08-01 00:00:00') after any test that
         // mutates it.
         $this->conn->executeStatement("UPDATE old_permalinks SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

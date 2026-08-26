@@ -19,6 +19,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\LayoutStateTestFactory;
@@ -67,6 +68,11 @@ final class RedirectServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
@@ -98,6 +104,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         LangTestFactory::get()->reset();
         $this->currentConfig()
             ->reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

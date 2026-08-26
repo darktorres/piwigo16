@@ -11,6 +11,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use RuntimeException;
 
 /**
@@ -42,6 +43,11 @@ final class ConfigServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -51,6 +57,13 @@ final class ConfigServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->service = new ConfigService($this->buildConfigRepository(), $currentConfig);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testLoadConfFromDbMergesEveryRowWithJsonDecoding(): void

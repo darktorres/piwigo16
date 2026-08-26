@@ -14,6 +14,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\LoungeMaintenance;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * loungeActive defaults false, so every real caller's happy path never
@@ -39,6 +40,11 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
+
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
 
         $this->conn = DbConnection::build();
         $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM images WHERE id = 1');
@@ -66,6 +72,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->currentConfig()
             ->loungeMaxDuration = 300;
         unset($_REQUEST['method']);
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

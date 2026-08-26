@@ -17,6 +17,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
 use Piwigo\Search\SearchRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Same fixture shape as CategoryRepositoryTest: images 1-5 (image_category
@@ -50,6 +51,11 @@ final class SearchRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -60,6 +66,13 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new SearchRepository(EntityManagerFactory::build($this->conn));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindSavedSearchByUuidReturnsNullForNoMatch(): void

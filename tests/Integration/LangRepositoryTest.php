@@ -12,6 +12,7 @@ use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Lang\Projection\LanguageListing;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Lang\LangRepository -- had no dedicated test file; only
@@ -37,9 +38,21 @@ final class LangRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
         $repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(LanguageEntity::class), LangRepository::class);
         $this->repo = $repo;
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testFindAllRowsReturnsTheFixturesInstalledLanguage(): void

@@ -22,6 +22,7 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\LayoutStateTestFactory;
@@ -74,6 +75,11 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
@@ -106,6 +112,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

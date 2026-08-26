@@ -13,6 +13,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Metadata\MetadataRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Fixture shape: images 1-5 (real paths, no representative_ext); category
@@ -41,6 +42,11 @@ final class MetadataRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -58,6 +64,7 @@ final class MetadataRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('UPDATE categories SET site_id = NULL, dir = NULL');
         $this->conn->executeStatement("UPDATE images SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

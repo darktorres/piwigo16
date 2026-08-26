@@ -10,6 +10,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 /**
  * Piwigo\Core\RecentIconResolver::getIcon() needs a real DB round-trip
@@ -37,6 +38,11 @@ final class RecentIconResolverTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         // RecentIconResolver takes ProcessCache/Lang as explicit method
         // parameters -- resolve the real container-shared instances a
         // real caller would get.
@@ -59,6 +65,7 @@ final class RecentIconResolverTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

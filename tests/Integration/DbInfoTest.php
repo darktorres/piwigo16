@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class DbInfoTest extends IntegrationTestCase
 {
@@ -26,7 +27,19 @@ final class DbInfoTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->dbInfo = new DbInfo(DbConnection::build());
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     public function testVersionReturnsARealNonEmptyMysqlVersionString(): void

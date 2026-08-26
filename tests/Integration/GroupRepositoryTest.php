@@ -18,6 +18,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 
 final class GroupRepositoryTest extends IntegrationTestCase
 {
@@ -39,6 +40,11 @@ final class GroupRepositoryTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -49,6 +55,13 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), GroupRepository::class);
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     /**

@@ -17,6 +17,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 
 /**
@@ -45,6 +46,11 @@ final class TemplateAdapterTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
@@ -63,6 +69,7 @@ final class TemplateAdapterTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

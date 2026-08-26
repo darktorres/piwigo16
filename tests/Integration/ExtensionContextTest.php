@@ -55,6 +55,7 @@ use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\MailServiceTestSpyTransport;
 use Piwigo\Tests\Support\MailServiceTestTransportSwap;
 use Piwigo\Tests\Support\TemplateTestFactory;
@@ -164,6 +165,11 @@ final class ExtensionContextTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
 
         // mail() reaches MailService::mail(), which internally
@@ -197,6 +203,13 @@ final class ExtensionContextTest extends IntegrationTestCase
         $this->categoryWriteFacade = new CategoryWriteFacade($this->containerGet(CategoryService::class));
 
         $this->context = $this->buildContext(PluginId::from('test-plugin'));
+    }
+
+    #[Override]
+    protected function tearDown(): void
+    {
+        DbTransactionTestOverride::rollback();
+        parent::tearDown();
     }
 
     private function buildContext(PluginId $extensionId, ?AdminContext $adminContext = null, ?MailService $mailService = null, ?ApiContext $apiContext = null): ExtensionContext

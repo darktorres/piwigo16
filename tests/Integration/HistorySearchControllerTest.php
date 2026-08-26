@@ -24,6 +24,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagService;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
@@ -66,6 +67,11 @@ final class HistorySearchControllerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = $this->resolve(CurrentConfig::class);
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
@@ -85,6 +91,7 @@ final class HistorySearchControllerTest extends IntegrationTestCase
         DbConnection::build()->executeStatement('DELETE FROM history');
         DbConnection::build()->executeStatement('DELETE FROM search');
         Kernel::reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

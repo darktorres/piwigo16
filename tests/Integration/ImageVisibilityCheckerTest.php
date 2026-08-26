@@ -12,6 +12,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Users\User;
 
 /**
@@ -42,6 +43,11 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $this->conn = DbConnection::build();
         $this->checker = new ImageVisibilityChecker(new PermissionRepository(EntityManagerFactory::build($this->conn)), CurrentUserTestFactory::get());
     }
@@ -50,6 +56,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentUserTestFactory::get()->reset();
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

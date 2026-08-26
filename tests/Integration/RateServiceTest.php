@@ -27,6 +27,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Rate\RateService;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\DbTransactionTestOverride;
     use Piwigo\Users\User;
 
     final class RateServiceTest extends IntegrationTestCase
@@ -48,6 +49,11 @@ namespace Piwigo\Tests\Integration {
                 $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
                 self::$fixtureReady = true;
             }
+
+            // PILOT (transaction-wrapping rollout): begin before any container
+            // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+            // comment for the full reasoning.
+            DbTransactionTestOverride::begin();
 
             $currentConfig = Kernel::container()->get(CurrentConfig::class);
             if (! $currentConfig instanceof CurrentConfig) {
@@ -74,6 +80,13 @@ namespace Piwigo\Tests\Integration {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
             $this->service = new RateService($accessControl, TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), RateRepository::class), new CookieService(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
+        }
+
+        #[Override]
+        protected function tearDown(): void
+        {
+            DbTransactionTestOverride::rollback();
+            parent::tearDown();
         }
 
         public function testRateReturnsFalseForANullRate(): void

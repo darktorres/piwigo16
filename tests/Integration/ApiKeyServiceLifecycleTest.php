@@ -27,6 +27,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 
@@ -107,6 +108,11 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         CurrentConfigTestFactory::get()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
@@ -138,6 +144,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM user_auth_keys WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

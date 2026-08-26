@@ -22,6 +22,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Telemetry\TelemetryService;
+use Piwigo\Tests\Support\DbTransactionTestOverride;
 use ReflectionMethod;
 
 final class TelemetryServiceTest extends IntegrationTestCase
@@ -46,6 +47,11 @@ final class TelemetryServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
+        // PILOT (transaction-wrapping rollout): begin before any container
+        // resolution below -- see ApiKeyServiceGetAvailableTest.php's own
+        // comment for the full reasoning.
+        DbTransactionTestOverride::begin();
+
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
@@ -63,6 +69,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->configRepo->deleteByParam('telemetry_install_id');
+        DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
 

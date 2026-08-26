@@ -527,13 +527,30 @@ final class Lang
     }
 
     /**
+     * `Translator::mirror()` builds `day`/`month` by iterating whichever
+     * physical order the real `.po` file lists its `piwigo_day_N`/
+     * `piwigo_month_N` entries in, not numeric `N` order -- PHP's own
+     * array preserves INSERTION order, not key order, so an unsorted
+     * `array_values()` over this group silently returns entries out of
+     * calendar order (confirmed live: a real `array_values($lang->
+     * months())` call came back `October, November, ..., September`).
+     * `day()`/`month()`'s own single-index lookups above never noticed,
+     * since a direct `$group[$index]` read doesn't care about iteration
+     * order -- only `days()`/`months()`'s own bulk contract does.
+     * `ksort()` here fixes it once for both bulk accessors.
+     *
      * @return array<int, string>
      */
     private function langArrayGroup(string $key): array
     {
         $group = $this->data[$key] ?? null;
+        if (! is_array($group)) {
+            return [];
+        }
 
-        return is_array($group) ? $group : [];
+        ksort($group);
+
+        return $group;
     }
 
     private function getParentLanguage(?string $lang_id = null): ?string

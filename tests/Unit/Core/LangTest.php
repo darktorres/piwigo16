@@ -492,6 +492,45 @@ test('months returns an empty array when nothing is loaded', function (): void {
         ->toBe([]);
 });
 
+test('months/days sort into calendar order even when the underlying PO-derived array was built out of order', function (): void {
+    // Translator::mirror() builds this group by iterating the real .po
+    // file's own physical entry order, not numeric N order -- a real,
+    // confirmed scramble (found live: a real .po file's entries came
+    // back October, November, ..., September). Insertion order matching
+    // that exact rotation, not a contrived shuffle.
+    $lang = langTestMake();
+    $lang->loadArray([
+        'month' => [
+            10 => 'October',
+            11 => 'November',
+            12 => 'December',
+            1 => 'January',
+            2 => 'February',
+            3 => 'March',
+            4 => 'April',
+            5 => 'May',
+            6 => 'June',
+            7 => 'July',
+            8 => 'August',
+            9 => 'September',
+        ],
+        'day' => [
+            3 => 'Wednesday',
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+        ],
+    ]);
+
+    expect(array_values($lang->months()))
+        ->toBe([
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December',
+        ])
+        ->and(array_values($lang->days()))
+        ->toBe(['Sunday', 'Monday', 'Tuesday', 'Wednesday']);
+});
+
 test('snapshot returns the currently active translation table, and restore replaces it wholesale', function (): void {
     $lang = langTestMake();
     $lang->loadArray([

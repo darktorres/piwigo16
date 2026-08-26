@@ -145,6 +145,44 @@ function registerFreshCookieJar(): string
 }
 
 /**
+ * Mints a single real anti-bot form key, real-clock-aged past
+ * EphemeralKeyService::generate(6)'s own 6-second minimum, exactly once
+ * for this whole file's run -- instead of every test below independently
+ * repeating its own GET + sleep(7) dance. EphemeralKeyService::verify()
+ * is a pure function of the key string plus the real clock at verify()
+ * time (no session/nonce binding, no single-use consumption -- see that
+ * class's own docblock), so the exact same matured key is valid for every
+ * test below needing one, each POSTing it through its own fresh,
+ * independent cookie jar.
+ */
+function registerMaturedKey(): string
+{
+    /** @var string|null */
+    static $key = null;
+    /** @var int|null */
+    static $mintedAt = null;
+
+    if ($key === null || $mintedAt === null) {
+        $jar = registerFreshCookieJar();
+        $get = registerCurl($jar, '/register.php');
+        $key = registerExtractKey($get['body']);
+        $mintedAt = hrtime(true);
+        @unlink($jar);
+    }
+
+    // Same 1-second margin past the 6-second minimum as the original
+    // per-test sleep(7) calls -- both generate()'s and verify()'s own
+    // round(microtime(true), 1) calls make the exact 6.0s boundary
+    // rounding-sensitive (see EphemeralKeyService's own docblock).
+    $remainingSeconds = 7.0 - (hrtime(true) - $mintedAt) / 1_000_000_000;
+    if ($remainingSeconds > 0) {
+        usleep((int) ($remainingSeconds * 1_000_000));
+    }
+
+    return $key;
+}
+
+/**
  * Plain anonymous GET carrying a raw `Cookie:` header, for exercising
  * RegisterController's own $_COOKIE['lang'] handling directly --
  * registerCurl()'s CURLOPT_COOKIEFILE/COOKIEJAR pair only ever replays a
@@ -207,9 +245,7 @@ function registerRemoveLanguage(string $code): void
 
 it('registers a brand-new user, auto-logs them in, and creates the real DB row', function (): void {
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7); // clear the 6-second anti-bot minimum form-key age
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_' . uniqid();
     $email = $username . '@example.test';
@@ -272,9 +308,7 @@ it('registers successfully within a bounded time even with send_password_by_mail
     // fatal) well within BoundedSendmailTransport's own bound, not the
     // >2-minute hang this used to take.
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_mail_' . uniqid();
     $email = $username . '@example.test';
@@ -315,9 +349,7 @@ it('shows "passwords do not match" and does not create an account', function ():
     // when `$errors === []`, so a mismatched confirmation never reaches
     // registerUser() at all and no account is created.
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_mismatch_' . uniqid();
 
@@ -351,9 +383,7 @@ it('shows "passwords do not match" and does not create an account', function ():
 // MAIL_TRANSPORT_TIMEOUT_SECONDS instead.
 it('[SEC-31] handles a duplicate username indistinguishably from a real success, without creating a second account', function (): void {
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     // 'fixture_admin' already exists (the fixture's own seeded admin
     // account) -- registerUser()'s own duplicate-username branch must
@@ -455,9 +485,7 @@ it('rejects an invalid/expired form key with a real 403 and does not attempt reg
 
 it('shows "password is missing" and does not create an account when the password is empty', function (): void {
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_emptypw_' . uniqid();
 
@@ -483,9 +511,7 @@ it('shows "password is missing" and does not create an account when the password
 
 it('shows "password confirmation is missing" and does not create an account when only password_conf is empty', function (): void {
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_emptypwconf_' . uniqid();
 
@@ -519,9 +545,7 @@ it("surfaces registerUser()'s own validation errors (invalid email format) and d
     // that appends implode(' ', $registration_errors) onto
     // $errors['register_form_error'].
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_bademail_' . uniqid();
 
@@ -551,9 +575,7 @@ it('single-escapes an HTML-special-character-bearing formEmail on a failed regis
     // <>&"' outright, P44-H), while mail_address carries the HTML-special
     // characters this test actually checks the echo-back escaping of.
     $jar = registerFreshCookieJar();
-    $get = registerCurl($jar, '/register.php');
-    $key = registerExtractKey($get['body']);
-    sleep(7);
+    $key = registerMaturedKey();
 
     $username = 'browser_reg_escaping_' . uniqid();
 

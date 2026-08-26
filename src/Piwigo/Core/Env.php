@@ -104,6 +104,48 @@ final class Env
      * Docker -e, shell export) win over file values (Dotenv::populate()'s
      * default $overrideExistingVars = false). Missing file is a safe no-op.
      */
+    /**
+     * Symfony Dotenv's own `populate()` only overrides an already-set env
+     * var when that var's name is listed in `SYMFONY_DOTENV_VARS`
+     * (tracking "a prior `Dotenv::populate()` call in THIS process set
+     * this one, so refresh it" -- distinct from a genuinely external
+     * var, e.g. a real systemd `EnvironmentFile`/Docker `-e`, which
+     * `overrideExistingVars = false` deliberately protects). That
+     * tracking list lives in `$_ENV`/`$_SERVER`, which a normal SAPI
+     * request resets every request -- but the actual `putenv()`'d
+     * values (and `SYMFONY_DOTENV_VARS` itself, also `putenv()`'d) live
+     * in the OS-level process environment table, which survives across
+     * requests within the SAME reused Apache/mod_php worker process.
+     * Without this, a worker that has ever loaded one of `.env`/
+     * `.env.test` first makes every later request in that same worker
+     * -- `X-Piwigo-Env: test` header or not -- silently keep routing to
+     * whichever file loaded first: `populate()` sees a fresh, empty
+     * `$_ENV['SYMFONY_DOTENV_VARS']` this request, doesn't recognize
+     * the leftover `putenv()`'d values as its own prior work, and
+     * treats them as protected external ones instead. Found live: a
+     * manual Playwright/curl session against a shared dev Apache
+     * instance kept silently landing on the production DB despite a
+     * correctly-sent test-mode header, once any earlier request on that
+     * same worker had loaded `.env` first. Re-seeding `$_ENV`/
+     * `$_SERVER`'s own copy of `SYMFONY_DOTENV_VARS` from the
+     * OS-level value `getenv()` can still see restores Dotenv's own
+     * "these were set by a prior load, always refresh them"
+     * recognition for this request -- a real genuinely-external var
+     * (never `putenv()`'d by this mechanism, so never listed here) is
+     * still left untouched, unlike a blanket `Dotenv::overload()` /
+     * `overrideExistingVars: true` switch would.
+     */
+    private static function reseedDotenvLoadedVarsTracking(): void
+    {
+        $loadedVars = getenv('SYMFONY_DOTENV_VARS');
+        if ($loadedVars === false) {
+            return;
+        }
+
+        $_ENV['SYMFONY_DOTENV_VARS'] = $loadedVars;
+        $_SERVER['SYMFONY_DOTENV_VARS'] = $loadedVars;
+    }
+
     public static function loadEnvFile(string $root): void
     {
         $root = rtrim($root, '/\\');
@@ -111,6 +153,8 @@ final class Env
         if (! is_file($file)) {
             return;
         }
+
+        self::reseedDotenvLoadedVarsTracking();
 
         new Dotenv()
             ->usePutenv()

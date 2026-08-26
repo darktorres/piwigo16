@@ -170,6 +170,59 @@ test('loadEnvFile actually loads the resolved env file into the process environm
         ->toBe('loaded');
 });
 
+test('loadEnvFile overrides a value left by an earlier load in the same worker process, even with $_ENV/$_SERVER reset', function (): void {
+    // Reproduces a real bug found live: a reused Apache/mod_php worker
+    // that loads .env first, then .env.test on a later request, kept
+    // serving .env's own (stale) value for a key both files define --
+    // Dotenv::populate()'s own overrideExistingVars=false only refreshes
+    // a key it recognizes as "loaded by me before" via SYMFONY_DOTENV_VARS,
+    // which this test clears from $_ENV/$_SERVER (simulating a fresh
+    // request) while leaving the real putenv()'d leftover value in place
+    // (simulating what actually survives across requests in a reused
+    // worker).
+    $root = $this->root;
+    file_put_contents($root . '/.env', "ENV_SWAP_CHECK=from-env\n");
+    file_put_contents($root . '/.env.test', "ENV_SWAP_CHECK=from-env-test\n");
+
+    $originalHeader = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
+    $originalTracking = getenv('SYMFONY_DOTENV_VARS');
+
+    try {
+        unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+        Env::loadEnvFile($root);
+        expect(getenv('ENV_SWAP_CHECK'))
+            ->toBe('from-env');
+
+        // Simulate a fresh request in the same worker: $_ENV/$_SERVER's
+        // own SYMFONY_DOTENV_VARS is gone, but the real putenv()'d value
+        // above (and Dotenv's own putenv()'d SYMFONY_DOTENV_VARS marker)
+        // is still there, exactly like a real reused worker.
+        unset($_ENV['SYMFONY_DOTENV_VARS'], $_SERVER['SYMFONY_DOTENV_VARS']);
+
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
+        Env::loadEnvFile($root);
+
+        expect(getenv('ENV_SWAP_CHECK'))
+            ->toBe('from-env-test');
+    } finally {
+        putenv('ENV_SWAP_CHECK');
+        unset($_ENV['ENV_SWAP_CHECK'], $_SERVER['ENV_SWAP_CHECK']);
+        if ($originalTracking === false) {
+            putenv('SYMFONY_DOTENV_VARS');
+            unset($_ENV['SYMFONY_DOTENV_VARS'], $_SERVER['SYMFONY_DOTENV_VARS']);
+        } else {
+            putenv('SYMFONY_DOTENV_VARS=' . $originalTracking);
+            $_ENV['SYMFONY_DOTENV_VARS'] = $originalTracking;
+            $_SERVER['SYMFONY_DOTENV_VARS'] = $originalTracking;
+        }
+        if ($originalHeader === null) {
+            unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+        } else {
+            $_SERVER['HTTP_X_PIWIGO_ENV'] = $originalHeader;
+        }
+    }
+});
+
 test('mergeIntoEnvFile replaces matching keys while preserving every other existing line untouched', function (): void {
     $envFile = $this->root . '/.env.merge-test';
     file_put_contents($envFile, "DB_HOST=localhost\nDB_NAME=piwigo\nUNRELATED_VAR=keepme\n");

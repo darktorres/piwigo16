@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\Renderer;
@@ -17,9 +18,14 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  * dedicated Integration/Browser spec of its own -- reached only as the
  * "applications" tab of the "photos_add" page slug, dispatched by
  * PhotosAddSubController (a real Browser-level route hit, see
- * config/admin_pages.php), but this class's own logic (rendering an
- * empty PhotosAddApplicationsView) has no branches worth a duplicate
- * end-to-end HTTP test.
+ * config/admin_pages.php), but this class's own logic (rendering a
+ * PhotosAddApplicationsView carrying nothing but the upstream host)
+ * has no branches worth a duplicate end-to-end HTTP test.
+ *
+ * That host is the one thing worth pinning here: the template used to
+ * hardcode `piwigo.org` in all 22 of its screenshot/extension URLs, so
+ * every view of the page made 9 live third-party image requests, which
+ * AppInfo::DOMAIN exists specifically to prevent.
  *
  * A real Template is required (not a fake): Renderer::render() calls
  * Template::renderView(), which needs a real
@@ -72,7 +78,7 @@ test('render() assigns the page title and renders photos_add_applications.latte 
         CurrentTemplateTestFactory::get()->set($template);
         $tplDir = $root . 'tpl/';
         mkdir($tplDir, 0o777, true);
-        file_put_contents($tplDir . 'photos_add_applications.latte', 'static content');
+        file_put_contents($tplDir . 'photos_add_applications.latte', 'static content at {$phpwgUrl}');
         $template->setTemplateDir($tplDir);
 
         $result = new PhotosAddApplicationsPageRenderer()
@@ -81,7 +87,9 @@ test('render() assigns the page title and renders photos_add_applications.latte 
         expect($result->pageTitle)
             ->toBe('Upload Photos')
             ->and((string) $result->content)
-            ->toBe('static content');
+            ->toBe('static content at ' . AppInfo::URL)
+            ->and(AppInfo::URL)
+            ->not->toContain('piwigo.org');
     } finally {
         photosAddApplicationsTestRrmdir($root);
         CurrentTemplateTestFactory::get()->reset();

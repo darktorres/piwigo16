@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Projection\PhotosAddApplicationsView;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -18,7 +19,9 @@ final class PhotosAddApplicationsPageRenderer
 {
     public function render(Lang $lang, CurrentTemplate $currentTemplate, Renderer $renderer): AdminPageResult
     {
-        $adminContent = $renderer->render(new PhotosAddApplicationsView());
+        $adminContent = $renderer->render(new PhotosAddApplicationsView(
+            phpwgUrl: AppInfo::URL,
+        ));
 
         return new AdminPageResult(
             content: $adminContent,

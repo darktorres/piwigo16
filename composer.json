@@ -227,6 +227,10 @@
       "bash tools/reimport-fixture.sh",
       "@php -d memory_limit=1024M vendor/bin/pest --testsuite Unit,Arch --profile"
     ],
+    "test:profile:integration": [
+      "bash tools/reimport-fixture.sh",
+      "@php -d memory_limit=1024M vendor/bin/pest --testsuite Integration --profile"
+    ],
     "test:visual": [
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --group=visual-regression"

@@ -53,8 +53,7 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
 
         if (! self::$fixtureReady) {
-            $this->resetDatabase();
-            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            $this->reimportFixtureIfSharedStateUnknown(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
 
@@ -104,10 +103,14 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
 
         // no exception/fatal is the real assertion here -- see the class
         // docblock for why a full real EXIF-sync side effect isn't
-        // exercised by this particular test; setUp()'s own
-        // resetDatabase()/loadFixture() already perform real assertions
-        // for this test method, so PHPUnit doesn't flag it as risky for
-        // lacking any.
+        // exercised by this particular test. Explicit, rather than
+        // relying on setUp()'s own resetDatabase()/loadFixture() to
+        // incidentally contribute real assertions and keep PHPUnit from
+        // flagging this test as risky for lacking any of its own -- true
+        // only when that reimport actually runs, which the shared-DB
+        // trust flag (IntegrationTestCase::$sharedFixtureKnownPristine)
+        // now often skips.
+        self::expectNotToPerformAssertions();
         $handler(new ReindexImagesJob([]));
     }
 }

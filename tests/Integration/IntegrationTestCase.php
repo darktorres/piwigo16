@@ -51,6 +51,62 @@ use Piwigo\Users\CurrentUser;
  */
 abstract class IntegrationTestCase extends TestCase
 {
+    /**
+     * Whether the shared fixture DB is *currently known* to hold an
+     * unmutated copy of tests/Fixtures/piwigo-17.0.sql -- a real, PROCESS-
+     * WIDE static (not per-subclass like $fixtureReady below; every
+     * IntegrationTestCase subclass shares this one storage location by
+     * inheritance, same as DbTransactionTestOverride's own single shared
+     * connection).
+     *
+     * Follow-up to the DbTransactionTestOverride rollout: a
+     * transaction-wrapped class's own writes can never persist (that's
+     * the wrapping guarantee), so once ONE class has established a known-
+     * pristine baseline, every OTHER wrapped class can trust it and skip
+     * its own real reimport entirely -- see reimportFixtureIfSharedStateUnknown().
+     * An UNWRAPPED class's writes very much CAN persist (proven live: the
+     * transaction-wrapping rollout's own fingerprinting found real,
+     * measurable drift -- comment/activity/group_access row-count changes
+     * -- surviving from one class into the next in 27 of 136 measured
+     * cases), so every unwrapped class calls markSharedFixtureDirty()
+     * once it's about to run tests that could leave the shared DB in that
+     * state -- see e.g. BackupServiceTest.php.
+     *
+     * Defaults true: composer test:integration's own
+     * `bash tools/reimport-fixture.sh` step already establishes a real,
+     * committed, pristine baseline before Pest even starts.
+     */
+    protected static bool $sharedFixtureKnownPristine = true;
+
+    /**
+     * Real reimport only when the shared DB *isn't already known* to be
+     * pristine -- see $sharedFixtureKnownPristine's own docblock. Callers
+     * keep their own per-class `$fixtureReady`-guarded `if` block exactly
+     * as before (still needed: without it, EVERY test in a class would
+     * re-check this method, not just the first), replacing their own
+     * inline `$this->resetDatabase(); $this->loadFixture(...);` pair with
+     * a single call to this method.
+     */
+    protected function reimportFixtureIfSharedStateUnknown(string $fixturePath): void
+    {
+        if (! self::$sharedFixtureKnownPristine) {
+            $this->resetDatabase();
+            $this->loadFixture($fixturePath);
+        }
+        self::$sharedFixtureKnownPristine = true;
+    }
+
+    /**
+     * Called by every unwrapped (not transaction-wrapped) class that uses
+     * the shared fixture DB, once it's about to run tests that could
+     * leave real, persisted drift behind -- see $sharedFixtureKnownPristine's
+     * own docblock for why this can't be proven safe to omit per-class.
+     */
+    protected static function markSharedFixtureDirty(): void
+    {
+        self::$sharedFixtureKnownPristine = false;
+    }
+
     protected string $dbHost = '';
 
     protected string $dbUser = '';

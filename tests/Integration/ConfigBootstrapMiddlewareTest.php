@@ -55,8 +55,7 @@ final class ConfigBootstrapMiddlewareTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
 
         if (! self::$fixtureReady) {
-            $this->resetDatabase();
-            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            $this->reimportFixtureIfSharedStateUnknown(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
 
@@ -106,6 +105,12 @@ final class ConfigBootstrapMiddlewareTest extends IntegrationTestCase
         // connection from setUp() -- see tests/Pest.php's own docblock for
         // this exact documented exception.
         DbTransactionTestOverride::rollback();
+        // Defensive: this test's own connection attempt fails (that's the
+        // whole point), so nothing here actually commits -- but for the
+        // rest of this method, DbConnection::build() is back to real,
+        // unwrapped behavior, so marking dirty costs nothing and removes
+        // any need to re-prove that on every future edit to this test.
+        IntegrationTestCase::markSharedFixtureDirty();
         DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,

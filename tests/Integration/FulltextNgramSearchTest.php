@@ -53,6 +53,12 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // This class runs unwrapped, real-commit tests against the
+        // shared fixture DB -- marks the shared trust flag dirty so any
+        // DbTransactionTestOverride-wrapped class running after this one
+        // knows it can't skip its own reimport. See
+        // IntegrationTestCase::$sharedFixtureKnownPristine's own docblock.
+        IntegrationTestCase::markSharedFixtureDirty();
         $this->setUpConnectionFromEnv();
 
         // This whole class exercises MySQL/InnoDB's own `WITH PARSER

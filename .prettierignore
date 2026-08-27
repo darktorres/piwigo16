@@ -25,6 +25,8 @@ template-extension/**/*.css
 # list along with them.
 docs/PLAN.md
 docs/REFERENCE.md
+docs/PLAN-v2.md
+docs/events-legacy-map.md
 
 # Generated/vendored, not hand-formatted
 composer.lock
@@ -33,3 +35,7 @@ eslint-suppressions.json
 # Written by composer-patches (note its own `_hash` field), 4-space indent.
 # Reformatting it would be undone by the next patch-set change.
 patches.lock.json
+# Written by `bun run generate:api-client` (openapi-typescript), 4-space
+# indent. Same reasoning as patches.lock.json: reformatting it would be
+# undone by the next regeneration.
+openapi/client/schema.d.ts

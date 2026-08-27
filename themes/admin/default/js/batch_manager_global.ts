@@ -5,10 +5,13 @@
 // file declares `derivatives`/`progress_start`/`progress`/
 // `getDerivativeUrls`, imported here (only used inside the deferred
 // `#applyAction` click handler below -- safe regardless of evaluation
-// order, unlike batchManagerGlobal.ts's own `lang.Cancel` reference,
-// which is a real top-level, synchronous read -- see that file's own
-// leading comment for the real, now-enforced evaluation-order fix this
-// conversion applies). Both files fold into one real page bundle
+// order. batchManagerGlobal.ts's `lang.Cancel` read used to be the one
+// exception, a genuine top-level synchronous read across this cycle; it
+// now happens inside a `.ready()` callback, so no binding is read
+// across the cycle during evaluation any more. That file's own leading
+// comment records the one ordering dependency that does remain -- the
+// order the two modules register their ready callbacks in). Both files
+// fold into one real page bundle
 // (themes/admin/default/js/pages/batch_manager_global.ts) -- a real,
 // necessary requirement, not a style choice: this file's own top-level
 // code has real, unconditional side effects (event-handler

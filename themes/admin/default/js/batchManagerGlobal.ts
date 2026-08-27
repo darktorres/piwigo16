@@ -1,15 +1,13 @@
 // Genuinely bidirectional with batch_manager_global.ts (docs/PLAN.md
 // P48 -- was window-global latching, see git history for the pre-P48
-// shape). This file's own top-level, synchronous read of `lang.Cancel`
-// (below) requires batch_manager_global.ts's module to have already
-// finished evaluating and set `lang` by the time this file's own
-// top-level code reaches that point -- real, enforced by which file
-// this page's own bundle entry (themes/admin/default/js/pages/
-// batch_manager_global.ts) imports first: this file, whose own
-// circular import of batch_manager_global.ts (right here) causes it
-// to fully evaluate before returning control to this file's own
-// subsequent code. Do not reorder the bundle entry's own import
-// statements without re-verifying this.
+// shape). The cycle itself is fine: nothing imported from it is read
+// while this module evaluates. `lang.Cancel` used to be, which made
+// correctness depend on this file's circular import forcing
+// batch_manager_global.ts to evaluate first -- a guarantee that held
+// only because the bundle entry happened to import this file first.
+// That read now happens inside a `.ready()` callback instead, so import
+// order no longer matters and the previous "do not reorder the bundle
+// entry's own import statements" warning no longer applies.
 import {
   lang,
   all_elements,
@@ -125,12 +123,21 @@ jQuery(".thumbnails img").tipTip({
 
 /* ********** Actions*/
 
-// Real, pre-existing top-level synchronous read of `window.lang` -- see
-// batch_manager_global.ts's own leading comment for the full race-
-// condition analysis this conversion preserves rather than fixes.
-jQuery("[data-datepicker]").pwgDatepicker({
-  showTimepicker: true,
-  cancelButton: lang.Cancel,
+// `lang` is read inside the ready callback, not at module top level.
+// Reading it during this module's own evaluation only worked because the
+// circular import of batch_manager_global.ts forced that module to
+// finish evaluating first -- an ordering guarantee that holds for a
+// single self-contained bundle but not once Rollup is free to hoist a
+// shared module into a chunk. `lang` is a `const`, so an evaluation
+// order that reaches this line first is a TDZ ReferenceError at page
+// load, not a silent undefined. Deferring the read removes the
+// dependency on import order entirely; this mirrors the `.ready()`
+// wrapper directly below, added for the same class of ordering problem.
+jQuery(document).ready(function () {
+  jQuery("[data-datepicker]").pwgDatepicker({
+    showTimepicker: true,
+    cancelButton: lang.Cancel,
+  });
 });
 
 // Real regression found live (docs/PLAN.md P48, this pair's own merge
@@ -150,10 +157,17 @@ jQuery("[data-datepicker]").pwgDatepicker({
 // this in its own `.ready()` call re-establishes correct relative
 // order: batch_manager_global.ts's own `.ready()` callback (the
 // selectize setup) is registered first, since its module fully
-// evaluates before this file's own subsequent code runs (the same
-// circular-import ordering this file's own leading comment already
-// documents for `lang.Cancel`) -- jQuery's ready queue runs callbacks
-// in registration order.
+// evaluates before this file's own subsequent code runs -- jQuery's
+// ready queue runs callbacks in registration order.
+//
+// NOTE this is still a real import-order dependency, and a different
+// one from the `lang.Cancel` TDZ fixed above: it needs the two modules
+// to *register* their ready callbacks in this order, not merely to have
+// finished evaluating. Reordering them does not throw a ReferenceError,
+// it makes pwgAddAlbum() run before the selectize setup and hit
+// addAlbum.ts's own `pwgAddAlbum: target must use selectize` guard.
+// Confirmed live once already. Anything that lets the bundler decide
+// module evaluation order (shared chunks) has to re-verify this page.
 jQuery(document).ready(function () {
   jQuery("[data-add-album]").pwgAddAlbum();
 });

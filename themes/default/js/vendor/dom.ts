@@ -392,6 +392,61 @@ function onOne(
 }
 
 /**
+ * `$(el).on("click", ".child", handler)` -- a *delegated* handler.
+ *
+ * The listener sits on `target`, but only runs for events originating inside
+ * a descendant matching `selector`, and runs with that descendant as `this`
+ * rather than the element the listener is attached to. There is no native
+ * equivalent: `addEventListener` gives the bound element, and reconstructing
+ * the match means walking the path yourself.
+ *
+ * jQuery walks from `event.target` up to but not including the delegate,
+ * firing once for every matching ancestor, innermost first (`handlerQueue`
+ * in src/event.js) -- so a nested match fires twice, not once. It stops that
+ * walk when a handler calls `stopPropagation()`, which is why that call is
+ * intercepted here.
+ */
+export function delegate(
+  target: EventTarget,
+  spec: string,
+  selector: string,
+  handler: EventListener
+): void {
+  on(target, spec, (event) => {
+    if (!(event.target instanceof Element)) {
+      return;
+    }
+
+    let stopped = false;
+    const nativeStop = event.stopPropagation.bind(event);
+    Object.defineProperty(event, "stopPropagation", {
+      configurable: true,
+      value: () => {
+        stopped = true;
+        nativeStop();
+      },
+    });
+
+    try {
+      let current: Element | null = event.target;
+      while (current !== null && (current as EventTarget) !== target) {
+        if (current.matches(selector)) {
+          handler.call(current, event);
+          if (stopped) {
+            return;
+          }
+        }
+        current = current.parentElement;
+      }
+    } finally {
+      // Leave the event exactly as it was found: it may still be travelling
+      // to other listeners after this one.
+      delete (event as unknown as Record<string, unknown>)["stopPropagation"];
+    }
+  });
+}
+
+/**
  * `$(el).off("click.ns")` / `.off(".ns")` / `.off("click")`.
  *
  * An empty type matches every type (the `.ns` form); an empty namespace list

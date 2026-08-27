@@ -1,5 +1,21 @@
 import { pwg_getPageString } from "../../default/js/page-data";
+import {
+  css,
+  data as readData,
+  delegate,
+  hide,
+  on,
+  ready,
+  show,
+} from "../../default/js/vendor/dom";
 export {};
+
+/** jQuery's `.html(value)` writes to every element of the set. */
+function setHtmlAll(targets: ArrayLike<Element>, value: string): void {
+  for (const element of Array.from(targets)) {
+    element.innerHTML = value;
+  }
+}
 
 const modeCookie = getCookie("mode");
 if ("" != modeCookie) {
@@ -17,47 +33,69 @@ window
     toggle_mode(newMode);
   });
 
-jQuery(document).ready(function () {
+ready(function () {
   //Override empty input message
-  jQuery("form").on("submit", function (e) {
-    let isValid = true;
+  document.querySelectorAll("form").forEach((form) => {
+    form.addEventListener("submit", function (e) {
+      let isValid = true;
 
-    jQuery(".column-flex").each(function (i) {
-      // Because we overid the default browser error message
-      // we need to distinguish which fields are now required
-      // To do this we use data-required="true" on the input
-      const input = $(this).find("input");
-      if ($(input).data("required") == true) {
-        const input = jQuery(this).find("input");
-        const errorMessage = jQuery(this).find(".error-message");
-        if (!String(input.val() ?? "").trim()) {
-          e.preventDefault();
-          (input[0] as HTMLInputElement).setCustomValidity(""); // Override browser tooltip (empty space hides it)
-          errorMessage.show();
-          isValid = false;
-        } else {
-          (input[0] as HTMLInputElement).setCustomValidity("");
-          errorMessage.hide();
+      document.querySelectorAll(".column-flex").forEach((column) => {
+        // Because we overid the default browser error message
+        // we need to distinguish which fields are now required
+        // To do this we use data-required="true" on the input
+        //
+        // `.data()`, not `dataset`: data-required="true" is the string
+        // "true" in the DOM and the boolean `true` through jQuery's own
+        // coercion, and this comparison is against the boolean.
+        const inputs = column.querySelectorAll<HTMLInputElement>("input");
+        const input = inputs[0];
+        if (input !== undefined && readData(input, "required") == true) {
+          const errorMessages = column.querySelectorAll(".error-message");
+          if (!input.value.trim()) {
+            e.preventDefault();
+            input.setCustomValidity(""); // Override browser tooltip (empty space hides it)
+            show(errorMessages);
+            isValid = false;
+          } else {
+            input.setCustomValidity("");
+            hide(errorMessages);
+          }
         }
+      });
+
+      // jQuery turns a handler's `false` return into preventDefault plus
+      // stopPropagation; a `true` return does nothing at all.
+      if (!isValid) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     });
-
-    return isValid;
   });
 
   // Hide error message and reset validation on input
-  jQuery(".column-flex input").on("input", function () {
-    const errorMessage = jQuery(this)
-      .closest(".column-flex")
-      .find(".error-message");
-    (jQuery(this)[0] as HTMLInputElement).setCustomValidity(""); // Reset browser tooltip
-    errorMessage.hide();
-  });
+  document
+    .querySelectorAll<HTMLInputElement>(".column-flex input")
+    .forEach((input) => {
+      input.addEventListener("input", function () {
+        const errorMessages =
+          input.closest(".column-flex")?.querySelectorAll(".error-message") ??
+          [];
+        input.setCustomValidity(""); // Reset browser tooltip
+        hide(errorMessages);
+      });
+    });
 
   // Hide error message when user starts typing
-  jQuery(".column-flex input").on("input", function () {
-    jQuery(this).closest(".column-flex").find(".error-message").hide();
-  });
+  document
+    .querySelectorAll<HTMLInputElement>(".column-flex input")
+    .forEach((input) => {
+      input.addEventListener("input", function () {
+        hide(
+          input.closest(".column-flex")?.querySelectorAll(".error-message") ??
+            [],
+        );
+      });
+    });
 });
 
 function toggle_mode(mode: string) {
@@ -65,21 +103,32 @@ function toggle_mode(mode: string) {
   const logo = document.getElementById(
     "piwigo-logo",
   ) as HTMLImageElement | null;
+  const lightToggle = document.getElementById("toggle_mode_light");
+  const darkToggle = document.getElementById("toggle_mode_dark");
+  const root = document.getElementById("mode");
   if ("dark" === mode) {
     //Dark mode
-    jQuery("#toggle_mode_light").hide();
-    jQuery("#toggle_mode_dark").show();
-    jQuery("#mode").addClass("dark");
-    jQuery("#mode").removeClass("light");
+    if (lightToggle !== null) {
+      hide(lightToggle);
+    }
+    if (darkToggle !== null) {
+      show(darkToggle);
+    }
+    root?.classList.add("dark");
+    root?.classList.remove("light");
     if (logo) {
       logo.src = logo.dataset.logoDark!;
     }
   } else {
     //Light mode
-    jQuery("#toggle_mode_dark").hide();
-    jQuery("#toggle_mode_light").show();
-    jQuery("#mode").addClass("light");
-    jQuery("#mode").removeClass("dark");
+    if (darkToggle !== null) {
+      hide(darkToggle);
+    }
+    if (lightToggle !== null) {
+      show(lightToggle);
+    }
+    root?.classList.add("light");
+    root?.classList.remove("dark");
     if (logo) {
       logo.src = logo.dataset.logoLight!;
     }
@@ -112,38 +161,74 @@ function getCookie(cname: string) {
   return "";
 }
 
-jQuery(".togglePassword").click(function (e) {
-  const toggle = jQuery(e.target);
-  const input = jQuery(toggle).siblings("input")[0] as HTMLInputElement;
-  if (input.type === "password") {
-    input.type = "text";
-    jQuery(toggle).css("color", "#ff7700");
-  } else {
-    input.type = "password";
-    jQuery(toggle).css("color", "#898989");
-  }
+document.querySelectorAll(".togglePassword").forEach((element) => {
+  element.addEventListener("click", function (e) {
+    // The original reads `e.target`, not the bound element, so a click
+    // landing on a child of the toggle styles that child. Kept as-is.
+    const toggle = e.target;
+    if (!(toggle instanceof HTMLElement)) {
+      return;
+    }
+
+    // `.siblings("input")` -- the parent's other children, never the
+    // element itself.
+    const input = Array.from(toggle.parentElement?.children ?? []).find(
+      (sibling) => sibling !== toggle && sibling.matches("input"),
+    ) as HTMLInputElement | undefined;
+    if (input === undefined) {
+      return;
+    }
+
+    if (input.type === "password") {
+      input.type = "text";
+      css(toggle, "color", "#ff7700");
+    } else {
+      input.type = "password";
+      css(toggle, "color", "#898989");
+    }
+  });
 });
 
-jQuery("#other-languages a").click(function (e) {
-  const clickedUrl = new URL(jQuery(e.target).attr("href")!);
-  const selectedLang = clickedUrl.searchParams.get("lang");
+document.querySelectorAll("#other-languages a").forEach((link) => {
+  link.addEventListener("click", function (e) {
+    const target = e.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    const clickedUrl = new URL(target.getAttribute("href")!);
+    const selectedLang = clickedUrl.searchParams.get("lang");
 
-  if (selectedLang) {
-    setCookie("lang", selectedLang, 1);
-  }
+    if (selectedLang) {
+      setCookie("lang", selectedLang, 1);
+    }
+  });
 });
 
-jQuery("#toggle_mode_light").click(function () {
-  toggle_mode("dark");
-});
+document
+  .getElementById("toggle_mode_light")
+  ?.addEventListener("click", function () {
+    toggle_mode("dark");
+  });
 
-jQuery("#toggle_mode_dark").click(function () {
-  toggle_mode("light");
-});
+document
+  .getElementById("toggle_mode_dark")
+  ?.addEventListener("click", function () {
+    toggle_mode("light");
+  });
 
-jQuery("#other-languages").on("click", "[data-lang-code]", function () {
-  setCookie("lang", jQuery(this).data("langCode") as string, 30);
-});
+const otherLanguages = document.getElementById("other-languages");
+if (otherLanguages !== null) {
+  // Delegated: the listener is on the container, but runs with the matched
+  // descendant as its subject.
+  delegate(
+    otherLanguages,
+    "click",
+    "[data-lang-code]",
+    function (this: Element) {
+      setCookie("lang", readData(this, "langCode") as string, 30);
+    },
+  );
+}
 
 // Live mirrors of server-side checks already run on submit
 // (RegisterController's/PasswordController's own password-match check,
@@ -162,67 +247,67 @@ function pwg_checkPasswordMatchStdPages(
   pass1Id: string,
   pass2Id: string,
 ) {
-  const root = jQuery("#" + rootId);
-  if (root.length === 0) {
+  const root = document.getElementById(rootId);
+  if (root === null) {
     return;
   }
-  const pass1 = root.find("#" + pass1Id);
-  const pass2 = root.find("#" + pass2Id);
-  if (pass1.length === 0 || pass2.length === 0) {
+  const pass1 = root.querySelector<HTMLInputElement>("#" + pass1Id);
+  const pass2 = root.querySelector<HTMLInputElement>("#" + pass2Id);
+  if (pass1 === null || pass2 === null) {
     return;
   }
-  const errorMessage = pass2.closest(".column-flex").find(".error-message");
+  const errorMessages =
+    pass2.closest(".column-flex")?.querySelectorAll(".error-message") ?? [];
 
-  function check() {
-    if (pass2.val() !== "" && pass1.val() !== pass2.val()) {
-      errorMessage
-        .html(
-          '<i class="gallery-icon-attention-circled"></i> ' +
-            pwg_getPageString("The passwords do not match"),
-        )
-        .show();
+  const check = (): void => {
+    if (pass2.value !== "" && pass1.value !== pass2.value) {
+      setHtmlAll(
+        errorMessages,
+        '<i class="gallery-icon-attention-circled"></i> ' +
+          pwg_getPageString("The passwords do not match"),
+      );
+      show(errorMessages);
     } else {
-      errorMessage.hide();
+      hide(errorMessages);
     }
-  }
+  };
 
-  pass1.on("blur keyup", check);
-  pass2.on("blur keyup", check);
+  // Two types in one registration, as jQuery splits them.
+  on(pass1, "blur keyup", check);
+  on(pass2, "blur keyup", check);
 }
 
 function pwg_checkEmailFormatStdPages(rootId: string, fieldId: string) {
-  const root = jQuery("#" + rootId);
-  if (root.length === 0) {
+  const root = document.getElementById(rootId);
+  if (root === null) {
     return;
   }
-  const field = root.find("#" + fieldId);
-  if (field.length === 0) {
+  const field = root.querySelector<HTMLInputElement>("#" + fieldId);
+  if (field === null) {
     return;
   }
-  const errorMessage = field.closest(".column-flex").find(".error-message");
+  const errorMessages =
+    field.closest(".column-flex")?.querySelectorAll(".error-message") ?? [];
 
-  function check() {
-    if (
-      field.val() !== "" &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(field.val() ?? ""))
-    ) {
-      errorMessage
-        .html(
-          '<i class="gallery-icon-attention-circled"></i> ' +
-            pwg_getPageString(
-              "mail address must be like xxx@yyy.eee (example : jack@altern.org)",
-            ),
-        )
-        .show();
+  const check = (): void => {
+    if (field.value !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
+      setHtmlAll(
+        errorMessages,
+        '<i class="gallery-icon-attention-circled"></i> ' +
+          pwg_getPageString(
+            "mail address must be like xxx@yyy.eee (example : jack@altern.org)",
+          ),
+      );
+      show(errorMessages);
     } else {
-      errorMessage.hide();
+      hide(errorMessages);
     }
-  }
+  };
 
-  field.on("blur", check);
+  field.addEventListener("blur", check);
 }
 
-jQuery(document).ready(function () {
+ready(function () {
   pwg_checkPasswordMatchStdPages("register-form", "password", "password_conf");
   pwg_checkEmailFormatStdPages("register-form", "mail_address");
   pwg_checkPasswordMatchStdPages(

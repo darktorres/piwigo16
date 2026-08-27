@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  delegate,
   off,
   on,
   parseEventSpec,
@@ -237,5 +238,116 @@ describe("whitespace-separated specs", () => {
     el.dispatchEvent(new Event("mouseleave"));
 
     expect(handler).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("delegated handlers", () => {
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    document.body.innerHTML =
+      '<div id="root">' +
+      '<a class="pick" href="#"><span id="inner">x</span></a>' +
+      '<b id="other"></b>' +
+      "</div>";
+    root = document.getElementById("root") as HTMLElement;
+  });
+
+  it("runs for an event originating inside a match", () => {
+    const handler = vi.fn();
+    delegate(root, "click", ".pick", handler);
+
+    (document.getElementById("inner") as HTMLElement).click();
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls the handler with the matched descendant, not the delegate", () => {
+    let seen = "";
+    delegate(root, "click", ".pick", function (this: unknown) {
+      seen = (this as Element).className;
+    });
+
+    (document.getElementById("inner") as HTMLElement).click();
+
+    // `this` is the anchor the selector matched -- the whole point of
+    // delegation, and what a bare addEventListener cannot give.
+    expect(seen).toBe("pick");
+  });
+
+  it("ignores an event with no matching ancestor", () => {
+    const handler = vi.fn();
+    delegate(root, "click", ".pick", handler);
+
+    (document.getElementById("other") as HTMLElement).click();
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("does not treat the delegate itself as a candidate", () => {
+    const handler = vi.fn();
+    // The walk stops *before* the delegate, so a selector the delegate
+    // itself matches still does not fire for it.
+    delegate(root, "click", "#root", handler);
+
+    (document.getElementById("inner") as HTMLElement).click();
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("fires once per matching ancestor, innermost first", () => {
+    document.body.innerHTML =
+      '<div id="root"><div class="m" id="outer"><div class="m" id="mid">' +
+      '<i id="leaf"></i></div></div></div>';
+    const seen: string[] = [];
+    delegate(
+      document.getElementById("root") as HTMLElement,
+      "click",
+      ".m",
+      function (this: unknown) {
+        seen.push((this as Element).id);
+      }
+    );
+
+    (document.getElementById("leaf") as HTMLElement).click();
+
+    expect(seen).toEqual(["mid", "outer"]);
+  });
+
+  it("stops the walk when a handler stops propagation", () => {
+    document.body.innerHTML =
+      '<div id="root"><div class="m" id="outer"><div class="m" id="mid">' +
+      '<i id="leaf"></i></div></div></div>';
+    const seen: string[] = [];
+    delegate(
+      document.getElementById("root") as HTMLElement,
+      "click",
+      ".m",
+      function (this: unknown, event) {
+        seen.push((this as Element).id);
+        event.stopPropagation();
+      }
+    );
+
+    (document.getElementById("leaf") as HTMLElement).click();
+
+    expect(seen).toEqual(["mid"]);
+  });
+
+  it("leaves the event's own stopPropagation in place afterwards", () => {
+    const handler = vi.fn();
+    delegate(root, "click", ".pick", handler);
+
+    let ownProperty = true;
+    document.body.addEventListener("click", (event) => {
+      ownProperty = Object.prototype.hasOwnProperty.call(
+        event,
+        "stopPropagation"
+      );
+    });
+
+    (document.getElementById("inner") as HTMLElement).click();
+
+    expect(ownProperty).toBe(false);
   });
 });

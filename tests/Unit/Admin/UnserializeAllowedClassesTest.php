@@ -20,15 +20,8 @@ declare(strict_types=1);
  * rejection path both callers already have (`is_array($decodedExtensions)`/
  * `is_array($input)`).
  */
-final class UnserializeAllowedClassesTestGadget
-{
-    public bool $woke = false;
 
-    public function __wakeup(): void
-    {
-        $this->woke = true;
-    }
-}
+use Piwigo\Tests\Unit\Admin\UnserializeAllowedClassesTestGadget;
 
 test('PiwigoInfosSender::send()\'s unserialize() call passes allowed_classes: false', function (): void {
     $source = file_get_contents(dirname(__DIR__, 3) . '/src/Piwigo/Admin/PiwigoInfosSender.php');

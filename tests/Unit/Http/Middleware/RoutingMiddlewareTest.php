@@ -9,28 +9,13 @@ use Piwigo\Routing\ApiRouteRegistrarInterface;
 use Piwigo\Routing\PageRouteRegistrarInterface;
 use Piwigo\Routing\Router;
 use Piwigo\Routing\RouteResult;
+use Piwigo\Tests\Unit\Http\Middleware\RoutingMiddlewareTestNoopPageRegistrar;
+use Piwigo\Tests\Unit\Http\Middleware\RoutingMiddlewareTestNoopRegistrar;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
-
-// One-line no-op fakes for the narrow ApiRouteRegistrarInterface/
-// PageRouteRegistrarInterface -- exactly the payoff of RoutingMiddleware
-// depending on these interfaces instead of the much heavier concrete
-// PluginConfig\CurrentPluginRegistry/PluginRegistry chain (see either
-// interface's own docblock).
-final class RoutingMiddlewareTestNoopRegistrar implements ApiRouteRegistrarInterface
-{
-    #[Override]
-    public function registerApiRoutes(RouteCollection $routes): void {}
-}
-
-final class RoutingMiddlewareTestNoopPageRegistrar implements PageRouteRegistrarInterface
-{
-    #[Override]
-    public function registerPageRoutes(RouteCollection $routes): void {}
-}
 
 test('attaches the dispatched RouteResult as a request attribute', function (): void {
     $routes = new RouteCollection();

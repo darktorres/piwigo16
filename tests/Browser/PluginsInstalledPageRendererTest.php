@@ -38,7 +38,18 @@ it('toggles show_details off explicitly', function (): void {
     H::markSharedSessionDirty();
 });
 
-it('returns an empty JSON array for the incompatible_plugins AJAX check when the PEM version list is unreachable', function (): void {
+it('returns an empty JSON array for the incompatible_plugins AJAX check when no plugin is installed on disk', function (): void {
+    // Empty because the fixture gallery has no plugins to check, NOT
+    // because the PEM catalog is out of reach: .env.test points
+    // PIWIGO_ALT_PLUGINS_PEM_URL at a real, locally served manifest.json
+    // and getIncompatibleExtensions() fetches it successfully here.
+    // Verified in PluginsIncompatiblePanelTest, which drops one plugin on
+    // disk and gets that plugin's id back from this same endpoint -- which
+    // it could not if fetchManifest() had returned null.
+    //
+    // So this asserts the empty case only. It cannot tell "the lookup ran
+    // and found nothing" apart from "the lookup never ran"; that
+    // distinction is what PluginsIncompatiblePanelTest exists for.
     $page = H::asAdmin($this);
 
     $result = H::rawGet($page, '/admin.php?page=plugins&incompatible_plugins=1');
@@ -50,14 +61,18 @@ it('returns an empty JSON array for the incompatible_plugins AJAX check when the
 it('reuses the session-cached incompatible-plugins result on a second request within the 5-minute TTL', function (): void {
     $page = H::asAdmin($this);
 
-    // First call seeds $_SESSION['incompatible_plugins'] with only the
-    // '~~expire~~' placeholder (getIncompatibleExtensions()'s own
-    // network-unreachable path returns `false` without ever storing a real
-    // entry). A second call within the 300s TTL takes the early
-    // is_array($cached) branch instead and returns that same
-    // placeholder-only array -- still reduced to [] by the '~~expire~~'
-    // skip below, but through a genuinely different code path than the
-    // first call's `$incompatible_plugins_raw === false` branch.
+    // First call runs the lookup for real and stores
+    // $_SESSION['incompatible_plugins'] holding only the '~~expire~~'
+    // placeholder -- with no plugin on disk there is no scan row to mark
+    // incompatible, so nothing else is ever added to it. A second call
+    // within the 300s TTL takes the early is_array($cached) branch instead
+    // and returns that same placeholder-only array -- still reduced to []
+    // by the '~~expire~~' skip below, but through a genuinely different
+    // code path than the first call's full walk.
+    //
+    // Both calls return an array, never `false`: that return is reserved
+    // for getVersionsToCheck() coming back empty or fetchManifest()
+    // failing, and neither happens here (see the test above).
     $first = H::rawGet($page, '/admin.php?page=plugins&incompatible_plugins=1');
     $second = H::rawGet($page, '/admin.php?page=plugins&incompatible_plugins=1');
 

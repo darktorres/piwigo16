@@ -733,6 +733,15 @@ final class BrowserTestHelpers
     private static bool $sharedSessionKnownClean = true;
 
     /**
+     * Params that had no `config` row when snapshotConfig() ran, so
+     * restoreConfig() can delete rather than null them back. See
+     * restoreConfig()'s own comment.
+     *
+     * @var array<string, bool>
+     */
+    private static array $configAbsentAtSnapshot = [];
+
+    /**
      * Call right after any asAdmin()-authenticated action that writes one
      * of the $_SESSION-persisted preference/filter keys documented on
      * $sharedSessionKnownClean above -- see that property's own docblock.
@@ -2001,9 +2010,40 @@ final class BrowserTestHelpers
         $snapshot = [];
         foreach ($params as $param) {
             $snapshot[$param] = self::configValue($param);
+            self::$configAbsentAtSnapshot[$param] = ! self::configRowExists($param);
         }
 
         return $snapshot;
+    }
+
+    /**
+     * Whether a `config` row exists at all, which is NOT the same question as
+     * whether its value is null: `mobile_theme` ships in the fixture as a
+     * real row holding NULL, while a param no test has touched has no row.
+     * The app distinguishes them -- an absent row leaves CurrentConfig's own
+     * default in force, a present NULL overrides it.
+     */
+    private static function configRowExists(string $param): bool
+    {
+        $db = self::connect();
+        $row = self::dbFetchAssoc(
+            $db,
+            sprintf("SELECT 1 AS present FROM config WHERE param = '%s'", self::dbEscape($db, $param))
+        );
+        self::dbClose($db);
+
+        return $row !== null;
+    }
+
+    /**
+     * Deletes a `config` row outright, then clears the config cache pool.
+     */
+    private static function deleteConfigRow(string $param): void
+    {
+        $db = self::connect();
+        self::dbQuery($db, sprintf("DELETE FROM config WHERE param = '%s'", self::dbEscape($db, $param)));
+        self::dbClose($db);
+        new ConfigCachePool(CacheFactory::create(namespace: 'piwigo.config'))->clear();
     }
 
     /**
@@ -2012,6 +2052,20 @@ final class BrowserTestHelpers
     public static function restoreConfig(array $snapshot): void
     {
         foreach ($snapshot as $param => $value) {
+            // A param with no row before the test must end with no row, not
+            // with a row holding NULL. setConfigValue(null) is an UPDATE, so
+            // it cannot undo the INSERT the test performed -- restoring that
+            // way leaves a row behind permanently, and a present NULL beats
+            // CurrentConfig's default where an absent row would not. That is
+            // exactly how config.show_newsletter_subscription came to exist
+            // and made IntroSubControllerTest's promo assertion fail on every
+            // run after the first.
+            if (self::$configAbsentAtSnapshot[$param] ?? false) {
+                self::deleteConfigRow($param);
+                unset(self::$configAbsentAtSnapshot[$param]);
+
+                continue;
+            }
             self::setConfigValue($param, $value);
         }
     }

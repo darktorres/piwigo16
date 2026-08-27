@@ -746,7 +746,8 @@ also persists ECS's own `sys_get_temp_dir()` changed-files cache across
 runs (130s cold → 1.5s warm), the same way the `phpstan` job persists
 `/tmp/phpstan`. Psalm was never gated in CI, and was removed from the
 project entirely on 2026-08-24 (see "Psalm was dropped from the project
-entirely" under Key design decisions). Rector's rule set is real again too, not the
+entirely" under Key design decisions). Rector's rule set is real
+again too, not the
 placeholder it once was: `rector.php` has `withPhpSets(php85: true)` and
 `withPreparedSets(typeDeclarations: true, instanceOf: true)` both active
 (`c49a00014d`/`0bfc324f59`, both applied tree-wide, not just enabled) —

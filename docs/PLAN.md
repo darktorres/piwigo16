@@ -138,7 +138,7 @@ Three structural changes produced that drift:
 | P45 | Latte lint/format enforcement | Not started | 0 |
 | P46 | JS → TS mechanical conversion | Done — 79 files (not the 68 originally guessed at), full validation green | 19 |
 | P47 | `getPageData<T>()` typing + `any` reduction | Done — all 168 `pwg_getPageData()` call sites across 57 files typed, 782+ `: any`/`as any`/`<any>` sites eliminated; 6 new `@types/*` vendor packages added (jqueryui, selectize, jquery.colorbox, jquery.cookie, chart.js, plupload); `eslint.config.ts`'s blanket P46/P47 any-tolerance override narrowed to 6 first-party files with a confirmed-justified remaining `any` (`search_filters.ts`, `mcs.ts`, `history.ts`, `common.ts`, `datepicker.ts`, `profile.ts`) plus `jquery-plugins.d.ts`'s own unsourced vendor entries (`jquery-confirm`, `jquery.cluetip`, `jquery.Jcrop`, `jquery.jgrowl`, `jquery.ajaxmanager`, `jquery.progressbar`, `jquery.sort`, `jquery.autogrow-textarea`, DataTables). Full validation green: `typecheck`/`lint:js`/`format`/`knip`/`vite build`, Unit+Arch (5526), Integration (2172), golden-html (74), Visual Regression (66), Browser (787) | 27 |
-| P48 | Refactor TS into modules | Done — every shared-library file converted to real `export`/`import` and folded into its real registrant pages' bundles via the `?dup` Rollup-duplication plugin (Design §4), no more `window.X = X` cross-file latching outside confirmed-permanent category-2/3/queue-coordination exceptions: `common.ts`, `page-data.ts` (the 2 heaviest, 48+ and 30+ real consumers respectively), `scripts.ts`, `album_selector.ts`, `LocalStorageCache.ts` (non-module IIFE → real module), `doubleSlider.ts`, `switchbox.ts`, `search_filters.ts`, `addAlbum.ts`, `datepicker.ts`, `autosize.ts`, `toaster.ts`, `albums.ts`, `intro.ts`/`intro_tooltips.ts`, `batchManagerGlobal.ts`/`batch_manager_global.ts`, `plugins_installed_config.ts`/`plugins_installated.ts`. `footer.ts` and default-theme `rating.ts` confirmed and documented as deliberate non-folds (footer.ts: centrally injected by `Template::finalizeHtml()`, no per-page hook to fold into; rating.ts: conditional registration, folding would make it unconditionally present). `vite.config.ts`: 72 real entries (down from 79), 11 new `themes/**/pages/*.ts` bundles. `knip.json`: `entry` narrowed to the real 72-entry list (was a broad glob that made dead-code detection a no-op), `project` now recursive; `bun knip` clean. Full validation green: `typecheck`/`lint:js`/`format`/`knip`/`vite build` (+ manifest/compiled-output inspection confirming zero shared-chunk extraction anywhere, including the first real nested-`?dup` case), `lint:php`/`analyse:phpstan`, Unit+Arch (5526), Integration (2172), golden-html (74, baselines regenerated after diff review), Visual Regression (66), Browser (787). One real regression found via golden-html review and fixed: folding `doubleSlider.ts` into `mcs.ts` silently dropped the structural guarantee that jQuery UI loads before it (`SearchFiltersView`'s own `mcs` registration promoted `Async` → `Footer` with an explicit `dependsOn: ['jquery.ui']`, restoring the ordering the old separate `doubleSlider` script tag provided) — confirmed fixed via a live Playwright spot-check | 0 |
+| P48 | Refactor TS into modules | Done — every shared-library file converted to real `export`/`import`, then shipped as genuine ES modules with shared chunks. No more `window.X = X` cross-file latching outside confirmed-permanent category-2/3/queue-coordination exceptions: `common.ts`, `page-data.ts` (the 2 with most consumers, 48+ and 30+ files), `scripts.ts`, `album_selector.ts`, `LocalStorageCache.ts` (non-module IIFE → real module), `doubleSlider.ts`, `switchbox.ts`, `search_filters.ts`, `addAlbum.ts`, `datepicker.ts`, `autosize.ts`, `toaster.ts`, `albums.ts`, `intro.ts`/`intro_tooltips.ts`, `batchManagerGlobal.ts`/`batch_manager_global.ts`, `plugins_installed_config.ts`/`plugins_installated.ts`. `footer.ts` and default-theme `rating.ts` are deliberate non-folds (footer.ts: centrally injected by `Template::finalizeHtml()`, no per-page hook; rating.ts: conditional registration). **The `?dup` Rollup-duplication plugin was an intermediate step, now gone.** It existed because entries loaded as IIFE-wrapped classic scripts, where a shared chunk's `import` is a SyntaxError, so every page bundle had to be self-contained. Built entries now render as `<script type="module">` and Rollup shares code normally: **10 shared chunks, `dist/assets` 631,463 → 359,172 bytes (−43%)**, with transitive `<link rel="modulepreload">` hints (emitted queryless, so the hint and the module import are one request, not two). The classic/module decision keys on the `dist/` prefix `PageAssets::resolvePath()` adds for manifest-resolved assets — deliberately not "is it local?", since four vendored jQuery plugins are served from `themes/**` and must stay classic (`jquery.geoip.js` assigns a bare `GeoIp` global, which throws under a module's strict mode). Retiring `?dup` also deleted its ambient wildcard `.d.ts` and a 43-file ESLint allowlist that had been disabling five `no-unsafe-*` rules: measured directly, `?dup` really did resolve to `any` under `tsc` (an identical bogus call is a TS2554 through a plain import and silent through a `?dup` one), so those reports were an accurate signal, not the "tool divergence" the config claimed. With the rules restored those files report 0 errors. Sharing also *fixed* a documented loss: `album_selector.ts`'s two independent class copies on `batch_manager_unit`/`batch_manager_global` are now one, so `activeAlbumSelector`'s single-active-popup coordination spans both widgets again. The last 4 non-jQuery CDN vendors are bundled too (chart.js, moment-with-locales, tus-js-client, piecon), leaving every remaining CDN registration jQuery-family. Two needed their resolution pinned rather than trusted: tus-js-client resolved to its **node** build (`TypeError: Super expression must either be null or a function` live, and 56 KB larger), and moment needed its with-locales build so a non-English gallery localises — verified live on a Portuguese install, where the chart's x-axis reads "jun/jul/ago 2026". Full validation green: `typecheck`/`lint:js`/`format`/`knip`/`vite build`, `lint:php`/`analyse:phpstan`, Unit+Arch (5533), golden-html (74), Visual Regression (66, zero visual change from the module switch), install-flow. Live-verified per page: deferred inline `pwg_tryFocus` still focuses, all four classic vendor scripts still execute, no TDZ at `batch_manager_global`. | 0 |
 | P49 | Remove jQuery | Not started | 0 |
 | P50 | Lit component catalog (conditional on P49) | Not started | 0 |
 | P51 | TS modernization | Not started | 0 |
@@ -2020,9 +2020,10 @@ guard already anticipated this. `picture.latte`'s body renamed to
 match throughout, including converting one bare
 `{include 'navigation_bar.latte'}` (relying on inherited scope) to an
 explicit `navbar: $commentsNavbar` param, matching every other real
-call site of that template. Verified end-to-end each commit: `php -l`
-+ `composer analyse:phpstan` + `lint:latte` + `picture-1`/`slideshow`
-golden-html unchanged for the first (Metadata) commit; `php -l` +
+call site of that template. Verified end-to-end each commit:
+`php -l` + `composer analyse:phpstan` + `lint:latte` +
+`picture-1`/`slideshow` golden-html unchanged for the first
+(Metadata) commit; `php -l` +
 `lint:latte` only for Rate/Comments per this session's "skip
 validation" direction at the time. **The deferred full pass has since
 run**: a full `composer test:golden-html` caught one real regression
@@ -4283,6 +4284,29 @@ vendored per widget), `jquery.geoip.js`, and the installer's own separate
 `jquery.packed.js` load, which is a third easy-to-miss surface with
 thinner coverage (`composer test:install` only). `pngfix.js` is not in
 scope — it is an IE shim, not a jQuery plugin, already removed in P35.
+
+Split into two sub-phases per the user's own explicit direction: P49-A
+(non-visual removals — plain DOM/ajax/event plumbing with an obvious
+native equivalent) first, P49-B (every vendored-widget replacement —
+a real design decision, not a mechanical swap) scoped but deferred.
+Two scope corrections found by direct investigation, not assumed:
+`themes/default/js/ui/**` no longer exists (removed by P46-0's CDN
+migration); the installer's own "`jquery.packed.js`" doesn't exist
+either — `InstallView.php` loads the same CDN jQuery as every other
+page, and its one real distinct surface (`jquery.cluetip`) isn't
+installer-exclusive.
+
+An earlier attempt at this phase was dropped wholesale rather than
+finished: P49-B was executed batch-by-batch without a plan, and kept
+producing regressions found only afterwards — three native widget ports
+silently dropped the marker classes their CSS targets (`hasDatepicker`,
+`dataTable`, `ui-state-hover`), a `JSON.parse(null)` crash shipped, and
+a load-order change broke every batch-manager page. Those 67 commits are
+preserved at the `p49-archive-20260826` tag, readable as reference
+implementations, and the ES-modules work they carried was redone from a
+clean base under P48. When this phase restarts it starts from a real
+plan file, with the marker-class/CSS-coupling failure mode stated up
+front and verification designed before conversion rather than after.
 
 **P50 — Lit component catalog.** Conditional on P49's findings, and still
 parity-only. Just for widgets P49 finds no reasonable vanilla replacement

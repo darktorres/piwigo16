@@ -23,10 +23,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * `composer test:golden-html` runs the check: a route with no existing
  * baseline writes one (first capture); an existing baseline is compared
- * byte-for-byte after goldenHtmlNormalize() strips the one
- * legitimate source of cross-checkout noise (the configured
- * PIWIGO_BASE_URL path segment, which differs by whichever vhost served
- * the request) -- a real mismatch fails the test with both normalized
+ * byte-for-byte after goldenHtmlNormalize() strips the
+ * legitimate sources of run-to-run and cross-checkout noise (the
+ * configured PIWIGO_BASE_URL path segment, which differs by whichever
+ * vhost served the request; this checkout's absolute filesystem path;
+ * CSRF/antibot/feed tokens; cumulative activity counts; and Vite's
+ * per-content asset hashes -- each documented in full on that function)
+ * -- a real mismatch fails the test with both normalized
  * bodies to diff, and leaves the committed file untouched. Deliberately
  * accept a new baseline with `GOLDEN_HTML_UPDATE=1 composer
  * test:golden-html` only after reviewing the failure's diff.
@@ -236,6 +239,15 @@ function goldenHtmlNormalize(string $html): string
     $html = preg_replace('#(class="tooltip-title"\s*>)\d+( Activit(?:y|ies)</span>)#', '$1{{N}}$2', $html) ?? $html;
     $html = preg_replace('#(tooltip-detail"\s*title=")\d+( [a-z ]+"\s*>)\d+(</span>)#', '$1{{N}}$2{{N}}$3', $html) ?? $html;
     $html = preg_replace('#(<span> \([A-Za-z]+\) )\d+( </span>)#', '$1{{N}}$2', $html) ?? $html;
+    // Vite's own 8-char content hash on every built asset filename
+    // (`dist/assets/catSearch-xjkvbOv9.js`). Not randomness and not
+    // drift -- it is a pure function of bundle content, so it changes on
+    // every real JS edit and would otherwise rewrite all 75 snapshots
+    // each time, for no signal: the *name* prefix is what proves the
+    // right bundle is on the right page, and that is deliberately kept.
+    // Applies to both `.js` entries and the `.css` chunks a Vite entry
+    // pulls along with it.
+    $html = preg_replace('#(dist/assets/[A-Za-z0-9_.-]+?)-[A-Za-z0-9_-]{8}\.(js|css)#', '$1-{{ASSET_HASH}}.$2', $html) ?? $html;
 
     // This checkout's own absolute filesystem path, which real pages do
     // print: a site's `galleries_url` is seeded as an absolute path by

@@ -73,7 +73,7 @@ final readonly class MenubarView implements View, HasPageAssets, ExposesPageData
                 'menubar_menu.latte' => [
                     ...$assets,
                     ...(self::hasQuickSearch($block) ? [
-                        AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+                        AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer),
                         AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
                     ] : []),
                 ],

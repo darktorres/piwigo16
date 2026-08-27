@@ -59,7 +59,7 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
             // plugins_installed_config.ts/plugins_installated.ts's code
             // in via real imports instead of the 2 separate script
             // tags this used to register.
-            AssetContribution::script('plugins_installed_page', 'themes/admin/default/js/pages/plugins_installed.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager', 'page-data']),
+            AssetContribution::script('plugins_installed_page', 'themes/admin/default/js/pages/plugins_installed.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
         ];
     }
 

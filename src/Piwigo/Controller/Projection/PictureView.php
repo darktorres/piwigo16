@@ -139,7 +139,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
             // former conditional `core.scripts` registrations below are
             // dropped, since 'picture' is unconditional and already
             // covers them regardless of $uOriginal/$rating.
-            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
+            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
         ];
 
         if ($this->rating !== null) {

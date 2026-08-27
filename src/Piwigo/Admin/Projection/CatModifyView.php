@@ -72,7 +72,7 @@ final readonly class CatModifyView implements View, HasPageAssets, ExposesPageDa
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('cat_modify', 'themes/admin/default/js/cat_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('cat_modify', 'themes/admin/default/js/cat_modify.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080

@@ -51,7 +51,7 @@ test('pageAssets registers menubar_menu.latte\'s quicksearch assets when qsearch
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
         ]);
 

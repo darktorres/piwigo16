@@ -75,7 +75,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
             // direct import now (docs/PLAN.md P48) -- the separate
             // `core.scripts` registration this page used to carry is
             // dropped.
-            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui', 'page-data']),
+            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui']),
         ];
     }
 

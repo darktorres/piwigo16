@@ -54,7 +54,7 @@ final readonly class UserActivityView implements View, HasPageAssets, ExposesPag
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/user_activity.css', id: 'user_activity'),
-            AssetContribution::script('user_activity', 'themes/admin/default/js/user_activity.ts', loadMode: LoadMode::Async, dependsOn: ['jquery', 'page-data']),
+            AssetContribution::script('user_activity', 'themes/admin/default/js/user_activity.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
         ];
     }
 

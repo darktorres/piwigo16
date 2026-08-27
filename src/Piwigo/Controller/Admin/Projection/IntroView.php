@@ -72,7 +72,7 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
             // intro.ts/intro_tooltips.ts's code in via real imports
             // instead of the 2 separate script tags this used to
             // register.
-            AssetContribution::script('intro_page', 'themes/admin/default/js/pages/intro.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip', 'page-data']),
+            AssetContribution::script('intro_page', 'themes/admin/default/js/pages/intro.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
             AssetContribution::css('themes/admin/default/css/pages/intro.css', id: 'intro'),
         ];
     }

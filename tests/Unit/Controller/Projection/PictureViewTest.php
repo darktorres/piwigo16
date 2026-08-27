@@ -80,8 +80,8 @@ test('pageAssets registers only the 3 unconditional entries when uOriginal and r
     expect($view->pageAssets())
         ->toEqual([
             AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
-            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
-            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer),
         ]);
 });
 
@@ -91,8 +91,8 @@ test('pageAssets registers only the 2 unconditional entries when uOriginal is se
     expect($view->pageAssets())
         ->toEqual([
             AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
-            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'page-data']),
-            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('picture', 'themes/default/js/picture.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer),
         ]);
 });
 

@@ -104,7 +104,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'jquery.colorbox', 'page-data']),
+            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'jquery.colorbox']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
                 ->pageAssets(),
@@ -123,7 +123,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via
             // batch_manager_filter.inc.latte's own {include} of it --

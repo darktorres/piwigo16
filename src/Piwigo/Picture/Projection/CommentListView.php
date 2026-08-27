@@ -67,7 +67,7 @@ final readonly class CommentListView implements View, HasPageAssets, ExposesPage
         $assets = [
             AssetContribution::css('themes/default/css/pages/comment_list.css', id: 'comment_list'),
             AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager', 'page-data']),
+            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
         ];
 
         foreach ($this->comments as $comment) {
@@ -79,7 +79,7 @@ final readonly class CommentListView implements View, HasPageAssets, ExposesPage
                 // shared with the other real pages that need
                 // scripts.ts for nothing but its own side effects (see
                 // that bundle file's own leading comment).
-                $assets[] = AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']);
+                $assets[] = AssetContribution::script('core_scripts_page', 'themes/default/js/pages/core_scripts.ts', loadMode: LoadMode::Footer);
                 break;
             }
         }

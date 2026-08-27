@@ -53,7 +53,7 @@ final readonly class ConfigurationWatermarkView implements View, HasPageAssets, 
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('configuration_watermark', 'themes/admin/default/js/configuration_watermark.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('configuration_watermark', 'themes/admin/default/js/configuration_watermark.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/configuration_watermark.css', id: 'configuration_watermark'),
         ];
     }

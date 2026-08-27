@@ -130,7 +130,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // wasn't previously guaranteed to run after
             // batch_manager_global.ts set it (Async vs Footer, no
             // `dependsOn` between them).
-            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon', 'jquery.colorbox', 'page-data']),
+            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon', 'jquery.colorbox']),
             AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
             AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Async),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
@@ -154,7 +154,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via
             // batch_manager_filter.inc.latte's own {include} of it --

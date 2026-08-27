@@ -140,7 +140,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // `loadMode: Footer` (was Async) + `dependsOn: ['jquery.ui']`
             // restores the identical real ordering guarantee doubleSlider
             // used to carry on its own.
-            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui', 'page-data']),
+            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui']),
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')

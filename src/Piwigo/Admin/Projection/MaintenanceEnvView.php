@@ -57,7 +57,7 @@ final readonly class MaintenanceEnvView implements View, HasPageAssets, ExposesP
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('ajax', 'themes/admin/default/js/maintenance.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('ajax', 'themes/admin/default/js/maintenance.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/maintenance_env.css', id: 'maintenance_env'),
         ];

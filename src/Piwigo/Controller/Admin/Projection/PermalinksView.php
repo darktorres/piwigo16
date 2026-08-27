@@ -50,7 +50,7 @@ final readonly class PermalinksView implements View, HasPageAssets, ExposesPageD
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('permalinks', 'themes/admin/default/js/permalinks.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('permalinks', 'themes/admin/default/js/permalinks.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/permalinks.css', id: 'permalinks'),
         ];
     }

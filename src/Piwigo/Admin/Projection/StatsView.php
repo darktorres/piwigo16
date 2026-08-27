@@ -50,7 +50,7 @@ final readonly class StatsView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('stats', 'themes/admin/default/js/stats.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('stats', 'themes/admin/default/js/stats.ts', loadMode: LoadMode::Footer),
         ];
     }
 

@@ -47,7 +47,7 @@ final readonly class CheckIntegrityView implements View, HasPageAssets, ExposesP
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('check_integrity', 'themes/admin/default/js/check_integrity.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
+            AssetContribution::script('check_integrity', 'themes/admin/default/js/check_integrity.ts', loadMode: LoadMode::Footer),
         ];
     }
 

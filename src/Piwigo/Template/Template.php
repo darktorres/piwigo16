@@ -116,10 +116,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
 
     /**
-     * Collects `{do combineCss}`/`{do combineScript}`/`{do footerScript}`
-     * registrations and resolves them into ordered, `ViteManifest`-aware
-     * `ResolvedAsset` lists -- `ScriptLoader`/`CssLoader`/`FileCombiner`'s
-     * own real replacement (P41-G, docs/PLAN.md). Constructed fresh per
+     * Collects the `AssetContribution`s each `View::pageAssets()` returns
+     * and resolves them into ordered, `ViteManifest`-aware `ResolvedAsset`
+     * lists -- `ScriptLoader`/`CssLoader`/`FileCombiner`'s own real
+     * replacement (P41-G, docs/PLAN.md). The `{do combineCss}`/
+     * `{do combineScript}`/`{do footerScript}` Latte functions this
+     * replaced no longer exist; `PiwigoExtension` registers only the
+     * read side (`getCombinedCss`/`getCombinedScripts`). Constructed fresh per
      * instance below, same shape as `$templateLocator`/`$themeChain`.
      * File-combining itself (`FileCombiner`'s real, `templateCombineFiles`-gated
      * multi-file-bundle-into-one-cache-file mechanism) is intentionally
@@ -825,10 +828,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Combined-scripts/combined-CSS/JSON-island/`<head>`-element
      * substitutions against an arbitrary rendered string -- every real
      * page render (P41, docs/PLAN.md) calls this directly on its own
-     * `Renderer::render(View): Html` result. `{do combineCss}`/
-     * `{do combineScript}`/`{do htmlHead}` registrations land on this
-     * same `Template` instance's `$pageAssets`/`$htmlHeadElements`
-     * regardless of which page called this.
+     * `Renderer::render(View): Html` result. Every `PageAssets::add()`
+     * and `htmlHead()` call lands on this same `Template` instance's
+     * `$pageAssets`/`$htmlHeadElements` regardless of which page called
+     * this.
      */
     public function finalizeHtml(string $html): string
     {
@@ -856,17 +859,18 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // to carry the import (the few genuinely script-free pages
             // -- `maintenance_sys`/`help`/`redirect`/`slideshow`/
             // `double_select`/`selected_tags` among others -- need
-            // neither function at all). The many pre-existing
-            // `dependsOn: ['page-data']` entries left scattered across
-            // this codebase's own `AssetContribution::script()` calls
-            // are now vestigial but harmless -- `PageAssets::
-            // promoteLoadModes()`'s own dependency lookup silently no-ops
-            // on a missing id (confirmed directly in its own source),
-            // same as this file's own former `dependsOn: ['core.scripts']`/
-            // `['core.switchbox']` precedents -- not swept out here,
-            // since the real ordering guarantee they used to encode is
-            // now provided structurally by each consumer's own direct
-            // `import` instead.
+            // neither function at all). The 51 `dependsOn: ['page-data']`
+            // entries this left scattered across the codebase's own
+            // `AssetContribution::script()` calls have been swept: the
+            // ordering guarantee they used to encode is now provided
+            // structurally by each consumer's own direct `import`, so
+            // they named an id that no registration produced any more.
+            // They were inert either way -- `resolveMissingDependencies()`
+            // only materializes an unknown id when it is in `$knownPaths`,
+            // and both `promoteLoadModes()` and `computeOrder()` skip an
+            // id with no registration -- but a dependency on an asset
+            // that does not exist reads as fact. Same disposition as this
+            // file's own former `['core.scripts']`/`['core.switchbox']`.
             if ($this->themeBaseApplied && $this->isAdminLayout) {
                 foreach (ThemeBaseAssets::lateAdminScripts() as $lateAsset) {
                     $this->pageAssets->add($lateAsset);
@@ -1331,8 +1335,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * `{do exposeData(...)}` -- accumulates into `PageState`, like
-     * `combineScript()`/`combineCss()` above accumulate into
+     * `{do exposeData(...)}` -- accumulates into `PageState`, the way
+     * `PageAssets::add()` accumulates `AssetContribution`s into
      * `$pageAssets`, rather than being implemented directly
      * on `PiwigoExtension` the way stateless `translate()` is (see
      * docs/PLAN.md's P37 section for why the two functions below match

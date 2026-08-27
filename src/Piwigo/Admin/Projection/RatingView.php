@@ -68,7 +68,7 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
             // P48) -- the separate
             // `core.scripts` registration this page used to carry is
             // dropped.
-            AssetContribution::script('rating', 'themes/admin/default/js/rating.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.selectize', 'page-data']),
+            AssetContribution::script('rating', 'themes/admin/default/js/rating.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.selectize']),
         ];
     }
 

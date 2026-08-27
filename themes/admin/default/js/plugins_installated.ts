@@ -668,7 +668,13 @@ jQuery(document).ready(function () {
   jQuery.ajax({
     method: "GET",
     url: "admin.php",
-    data: { page: "plugins_installed", incompatible_plugins: true },
+    // `page=plugins_installed` is upstream Piwigo's slug. This fork
+    // consolidated the per-tab slugs into `page=plugins` + `tab`
+    // (CoreTabs.php's own 'plugins' case), and an unrecognised slug
+    // still returns 200 with the default admin page's HTML -- so the
+    // old value made `dataType: "json"` fail to parse on every view,
+    // silently killing this whole handler.
+    data: { page: "plugins", tab: "installed", incompatible_plugins: true },
     dataType: "json",
     // Real shape confirmed via PluginsInstalledPageRenderer.php's own
     // `echo json_encode($incompatible_plugins);` -- a plain array of

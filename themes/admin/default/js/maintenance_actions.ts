@@ -1,9 +1,9 @@
-import "./common?dup";
+import "./common";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 const confirm_msg = pwg_getPageString("Yes, I am sure");

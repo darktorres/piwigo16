@@ -6,13 +6,13 @@ import type { operations } from "../../../../openapi/client/schema";
 // (`popuphelp`/`pwg_tryFocus`'s own `window.X` assignments, the
 // `[data-confirm]` click guard). `?dup` since scripts.ts has many real
 // registrant pages (Design §4).
-import "../../../default/js/scripts?dup";
-import { jConfirm_confirm_options } from "./common?dup";
+import "../../../default/js/scripts";
+import { jConfirm_confirm_options } from "./common";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 // GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the

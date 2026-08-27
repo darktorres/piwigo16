@@ -1,9 +1,9 @@
-import { jConfirm_alert_options, jConfirm_warning_options } from "./common?dup";
+import { jConfirm_alert_options, jConfirm_warning_options } from "./common";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");

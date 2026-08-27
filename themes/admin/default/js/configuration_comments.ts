@@ -1,4 +1,4 @@
-import "./common?dup";
+import "./common";
 
 export {};
 

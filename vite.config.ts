@@ -1,68 +1,13 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
-import { readFileSync } from "fs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const r = (p: string) => resolve(__dirname, p);
 
 export default defineConfig({
   root: ".",
-  plugins: [
-    // docs/PLAN.md P48's own real fix for a genuine Rollup constraint,
-    // confirmed by a live `vite build` + direct dist/ inspection (not
-    // assumed from docs): a module reachable from 2+ separate `input`
-    // entries gets extracted into one shared chunk, and that chunk's
-    // real `import` statement in each consuming entry's own compiled
-    // output is a hard SyntaxError once wrapped in this file's own
-    // `banner`/`footer` IIFE (`Cannot use import statement outside a
-    // module`, confirmed directly). Since P48's own design (matching
-    // this project's historical `FileCombiner` precedent, see
-    // docs/PLAN.md's P48 plan) wants every page's own bundle fully
-    // self-contained -- real duplication, not a shared chunk -- any
-    // shared-library file importable from 2+ real page-bundle entries
-    // needs `import "./real-path?dup";` (the literal, fixed `?dup`
-    // suffix, no manual per-call tag -- this plugin derives the real
-    // disambiguating key from the *importer's own resolved path*,
-    // guaranteed unique per real consuming file already, rather than
-    // trusting a hand-picked tag not to collide) instead of a plain
-    // `import "./real-path";`. Resolves to the real file's own path
-    // (so it's still real, checked TypeScript source, not a separate
-    // copy on disk) but keeps a per-importer-unique id for Rollup, so
-    // Rollup treats each importer's copy as a genuinely distinct
-    // module -- confirmed via a live build that this produces zero
-    // `imports` in the resulting manifest.json entries and fully
-    // duplicates the real compiled code into each consuming entry
-    // instead. The fixed (no wildcard-in-the-middle) `?dup` suffix is
-    // also what makes `build/vite-modules.d.ts`'s own ambient
-    // `declare module "*?dup"` patterns valid -- TypeScript's wildcard
-    // module patterns only support a single `*`, confirmed directly (a
-    // `"*?dup=*"`-shaped pattern, tried first, left both real
-    // importers as real `tsc` errors). `enforce: "pre"` is load-bearing,
-    // confirmed directly -- without it, Vite's own core resolver
-    // silently claims the `?dup`-suffixed specifier first (stripping
-    // the query and resolving straight to the real shared file, no
-    // error, just quietly wrong), and this plugin's `resolveId` never
-    // runs at all.
-    {
-      name: "duplicate-shared-module",
-      enforce: "pre",
-      async resolveId(source, importer) {
-        if (source !== "?dup" && !source.endsWith("?dup")) return null;
-        const realSource = source.slice(0, -"?dup".length);
-        const resolved = await this.resolve(realSource, importer, {
-          skipSelf: true,
-        });
-        if (!resolved || !importer) return null;
-        return resolved.id + "?dup&importer=" + encodeURIComponent(importer);
-      },
-      load(id) {
-        if (!id.includes("?dup&importer=")) return null;
-        const realId = id.split("?dup&importer=")[0]!;
-        return readFileSync(realId, "utf-8");
-      },
-    },
-  ],
+  plugins: [],
   // Resolve dynamic chunk URLs via import.meta.url so they work under any
   // Apache document root prefix (Piwigo can be served at /, /piwigo17/, etc.).
   base: "./",
@@ -365,36 +310,26 @@ export default defineConfig({
         // every other entry keeps the default.
         entryFileNames: (chunk) =>
           chunk.name === "vitals" ? "vitals.js" : "assets/[name]-[hash].js",
-        // Real bug found only via an actual `vite build` + real browser
-        // run (P46-B): every themes/**/*.ts entry compiles as a flat,
-        // unwrapped top-level script (Rollup's default 'es' output has
-        // no reason to add a wrapper when a chunk has no real import/
-        // export of its own -- confirmed against several real entries'
-        // output). Since every one of these entries is loaded as a
-        // separate, non-module `<script>` tag sharing ONE browser global
-        // scope (docs/PLAN.md's own "not real ES modules, no import/
-        // export between first-party files" P46 scope), each entry's own
-        // MINIFIED-INTERNAL (not `window.`-exposed) top-level names can
-        // silently collide with another entry's own same-named internal
-        // binding -- confirmed concretely: page-data.ts's cache variable
-        // and menubar-quicksearch.ts's own top-level function both
-        // minified down to the identical single-letter name `e`, and
-        // menubar-quicksearch's later-loaded declaration overwrote
-        // page-data's cache variable, silently corrupting
-        // `pwg_getPageString()` on every page that loads both. `format:
-        // 'iife'` (Rollup's normal fix for this) can't be used
-        // build-wide: `vitals` genuinely needs real ES-module semantics
-        // (`import.meta.url`, confirmed in its own source) that `iife`
-        // doesn't support. Wrapping only the *other* entries' own raw
-        // output text in a self-invoking function -- via `banner`/
-        // `footer`, not the `format` option -- gets the same private-
-        // scope isolation for exactly the entries that need it, without
-        // touching `vitals`'s own compiled format at all. Safe precisely
-        // because these entries already compile with zero import/export
-        // statements (confirmed) -- wrapping code that already assumes
-        // "plain script, own scope" changes nothing else observable.
-        banner: (chunk) => (chunk.name === "vitals" ? "" : "(function(){"),
-        footer: (chunk) => (chunk.name === "vitals" ? "" : "})();"),
+        // No `banner`/`footer` IIFE wrapper any more. It existed to fix a
+        // real, concretely-diagnosed bug (P46-B): entries used to load as
+        // separate non-module `<script>` tags sharing ONE global scope, so
+        // two entries' MINIFIED-INTERNAL top-level names could collide --
+        // page-data.ts's cache variable and menubar-quicksearch.ts's own
+        // top-level function both minified to `e`, and the later-loaded
+        // declaration overwrote the other, silently corrupting
+        // `pwg_getPageString()` on every page loading both.
+        //
+        // Module scope replaces that protection outright: every entry now
+        // ships as `<script type="module">`, and a module's top-level
+        // bindings are private to it by definition -- there is no shared
+        // global scope left for minified names to collide in. The wrapper
+        // and the module switch are therefore a single atomic change;
+        // removing either alone would reintroduce that corruption bug.
+        // (The wrapper was also incompatible with sharing: a shared
+        // chunk's `import` statement inside an IIFE-wrapped classic
+        // script is a hard `Cannot use import statement outside a module`
+        // SyntaxError, which is exactly why entries had to be fully
+        // self-contained before.)
       },
     },
   },

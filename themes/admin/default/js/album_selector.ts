@@ -38,11 +38,11 @@
 // stays uniquely keyed per outer page just the same -- no shared-chunk
 // collision risk, just (accepted, Design §4) code duplicated once per
 // outer consumer that reaches this file.
-import { sprintf } from "./common?dup";
+import { sprintf } from "./common";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),

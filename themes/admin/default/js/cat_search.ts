@@ -15,7 +15,7 @@ import {
   str_albums_found,
   str_result_limit,
   str_album_found,
-} from "./album_selector?dup";
+} from "./album_selector";
 // Real consumer of albums.ts's own top-level `data` (docs/PLAN.md P48,
 // albums.ts's own batch -- was a `window.data` read before that).
 // `?dup`, NOT a plain import (a real bug found and fixed via a live
@@ -26,7 +26,7 @@ import {
 // the same 2-entry threshold as any other `?dup` case, "one real
 // registrant page" alone isn't the right test when the declarer itself
 // is still independently registered).
-import { data } from "./albums?dup";
+import { data } from "./albums";
 
 export {};
 

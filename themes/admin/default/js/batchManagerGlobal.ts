@@ -21,7 +21,7 @@ import {
 // this page" consequence of batchManagerFilter.ts's own separate
 // `?dup` import). `?dup` since album_selector.ts has several real
 // registrant pages (Design §4).
-import { AlbumSelector } from "./album_selector?dup";
+import { AlbumSelector } from "./album_selector";
 
 /* ********** Thumbs */
 
@@ -404,15 +404,13 @@ jQuery("#applyAction").click(function (e) {
       maxRequests: 1,
     });
 
-    // Narrowed once, right after the assignment above -- TS's own
-    // control-flow narrowing of the outer `let elements` doesn't
-    // survive the intervening `.each(function () {...})` call above
-    // (a closure that could, as far as the type checker can tell,
-    // reassign it), so every later read below needs this local
-    // definitely-assigned alias instead of re-reading `elements`
-    // directly (confirmed pre-existing TS18048 errors, not a P48
-    // regression -- this file itself is untouched by that campaign).
-    const syncElements = elements!;
+    // Local alias for the definitely-assigned value, kept for
+    // readability. The non-null assertion this used to need is gone:
+    // it was only necessary while `all_elements` arrived typed as `any`
+    // through a `?dup` import, which defeated control-flow narrowing of
+    // the outer `let elements`. With the real `(string | number)[]`
+    // type restored, both assignment branches narrow it properly.
+    const syncElements = elements;
 
     progressBar_max = syncElements.length;
     let todo = 0;
@@ -508,9 +506,9 @@ jQuery("#applyAction").click(function (e) {
       });
   }
 
-  // Narrowed once -- see syncElements's own identical comment above
-  // for why (confirmed pre-existing, not a P48 regression).
-  const deleteElements = elements!;
+  // Local alias, same as syncElements above -- and likewise no longer
+  // needs a non-null assertion now that `all_elements` has a real type.
+  const deleteElements = elements;
 
   progressBar_max = deleteElements.length;
   let todo = 0;

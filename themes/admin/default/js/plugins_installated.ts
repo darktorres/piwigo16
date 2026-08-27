@@ -2,7 +2,7 @@
 // real exports now (docs/PLAN.md P48 -- was ambient window-global
 // latching). jConfirm_alert_options/jConfirm_confirm_options now import
 // from common.ts too (its own P48 batch landed).
-import { jConfirm_alert_options, jConfirm_confirm_options } from "./common?dup";
+import { jConfirm_alert_options, jConfirm_confirm_options } from "./common";
 import {
   activate_msg,
   cancel_msg,

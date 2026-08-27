@@ -4,4 +4,4 @@
 // import would make Rollup extract it into a shared chunk reachable
 // from 3 entries, breaking every one of them (Design §4's mechanical
 // addendum).
-import "../autosize?dup";
+import "../autosize";

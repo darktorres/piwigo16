@@ -7,15 +7,15 @@
 // already-established queue-based deferred-init pattern (P47's
 // SwitchBoxQueue/RatingAutoQueue redesign), not a plain function
 // exposure, and stay exactly as they are.
-import { phpWGOpenWindow } from "./scripts?dup";
+import { phpWGOpenWindow } from "./scripts";
 // switchbox.ts's own side effect only (docs/PLAN.md P48) -- drains
 // `window.SwitchBox`; this file is one of its 2 real pushers (the
 // other, IndexView's own index.ts, has its own separate `?dup`
 // import). `?dup` since switchbox.ts has 2 real registrant pages
 // (Design §4).
-import "./switchbox?dup";
+import "./switchbox";
 
-import { pwg_getPageData, pwg_getPageString } from "./page-data?dup";
+import { pwg_getPageData, pwg_getPageString } from "./page-data";
 export {};
 
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {

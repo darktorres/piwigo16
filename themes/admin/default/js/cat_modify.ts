@@ -4,13 +4,13 @@ import type { operations } from "../../../../openapi/client/schema";
 // see that file's own leading comment for the full real-consumer
 // list). `?dup` since album_selector.ts has several real registrant
 // pages (Design §4).
-import { AlbumSelector } from "./album_selector?dup";
-import { jConfirm_confirm_options } from "./common?dup";
+import { AlbumSelector } from "./album_selector";
+import { jConfirm_confirm_options } from "./common";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 // `add_related_category` is declared here too, independently of the

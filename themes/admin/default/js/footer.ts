@@ -6,7 +6,7 @@
 // nothing else imports footer.ts itself, so it's safe for it to become
 // a real module (gaining this import) without needing to be folded
 // into anyone else's bundle.
-import { pwg_getPageData } from "../../../default/js/page-data?dup";
+import { pwg_getPageData } from "../../../default/js/page-data";
 
 export {};
 

@@ -8,6 +8,6 @@
 // BatchManagerUnitView used to register directly -- this page doesn't
 // read any of scripts.ts's own real exports, just needs its side
 // effects.
-import "../autosize?dup";
-import "../datepicker?dup";
-import "../../../../default/js/scripts?dup";
+import "../autosize";
+import "../datepicker";
+import "../../../../default/js/scripts";

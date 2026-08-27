@@ -3,13 +3,13 @@
 // see that file's own leading comment for the full real-consumer
 // list). `?dup` since album_selector.ts has several real registrant
 // pages (Design §4).
-import { AlbumSelector } from "./album_selector?dup";
-import { CategoriesCache, TagsCache } from "./LocalStorageCache?dup";
+import { AlbumSelector } from "./album_selector";
+import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 //
 // `add_related_category`/`remove_related_category` are declared here

@@ -4,4 +4,4 @@
 // would make Rollup extract it into a shared chunk reachable from
 // multiple entries, breaking every one of them (Design §4's mechanical
 // addendum).
-import "../datepicker?dup";
+import "../datepicker";

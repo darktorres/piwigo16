@@ -18,7 +18,7 @@
 // converting it would risk silently breaking a real caller this
 // investigation simply didn't find (Design §1's own "don't assume the
 // taxonomy is exhaustive" caution).
-import { pwg_getPageString } from "./page-data?dup";
+import { pwg_getPageString } from "./page-data";
 
 export function phpWGOpenWindow(
   theURL: string,

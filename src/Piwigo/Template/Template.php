@@ -881,7 +881,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 foreach ($scripts as $asset) {
                     if ($asset->loadMode === LoadMode::Header) {
                         $content[] =
-                            '<script type="text/javascript" src="'
+                            '<script type="' . $this->scriptTypeAttr($asset) . '" src="'
                             . $this->makeAssetSrc($asset)
                             . '"></script>';
                     }
@@ -1044,6 +1044,28 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     /**
      * Returns clean relative URL to an asset file.
      */
+    /**
+     * The `type` attribute for one script asset: `module` for anything
+     * Vite built, `text/javascript` for everything else.
+     *
+     * The test is the `dist/` prefix, which is precisely
+     * `PageAssets::resolvePath()`'s own signal: it returns
+     * `'dist/' . $entry->file` when the Vite manifest resolved the asset
+     * and the raw source path when it did not. So this asks "did Vite
+     * build this?", not "is it local?" -- and those differ. Remote CDN
+     * scripts are classic, but so are the vendored jQuery plugins served
+     * straight from `themes/**` (jquery.geoip.js, jquery.sort.js,
+     * jquery.autogrow-textarea.js, jquery.progressbar.min.js), which are
+     * not Vite entries. Loading one of those as a module would break it:
+     * jquery.geoip.js opens with a bare `GeoIp = {...}` assignment, and
+     * module code is always strict, so that is a ReferenceError rather
+     * than an implicit global.
+     */
+    private function scriptTypeAttr(ResolvedAsset $asset): string
+    {
+        return str_starts_with($asset->path, 'dist/') ? 'module' : 'text/javascript';
+    }
+
     private function makeAssetSrc(ResolvedAsset $asset): string
     {
         $isRemote = $this->urlService->urlIsRemote($asset->path) || str_starts_with($asset->path, '//');
@@ -1081,7 +1103,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         foreach ($scripts as $asset) {
             if ($asset->loadMode === LoadMode::Footer && $asset->inlineCode === null) {
                 $content[] =
-                  '<script type="text/javascript" src="'
+                  '<script type="' . $this->scriptTypeAttr($asset) . '" src="'
                   . $this->makeAssetSrc($asset)
                   . '"></script>';
             }
@@ -1089,7 +1111,19 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $inline = array_values(array_filter($scripts, static fn (ResolvedAsset $asset): bool => $asset->inlineCode !== null));
         if ($inline !== []) {
-            $content[] = '<script type="text/javascript">//<![CDATA[
+            // Always a module, regardless of what it contains. This block is
+            // emitted after the footer bundle tags, and its registrations
+            // depend on those bundles having run -- IdentificationView's and
+            // RegisterView's `pwg_tryFocus(...)` needs scripts.ts. Classic
+            // scripts run during parsing, before any deferred module, so
+            // leaving this classic would invert that order. As a module it
+            // stays after them, matching document order.
+            //
+            // Safe because no inline registration declares a bare global for
+            // other code to read: they are either plain calls or explicitly
+            // `window.`-namespaced (see the `window.SwitchBox` push in
+            // switchBox()), so module scoping takes nothing away.
+            $content[] = '<script type="module">//<![CDATA[
 ';
             foreach ($inline as $asset) {
                 $content[] = (string) $asset->inlineCode;
@@ -1099,14 +1133,24 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $async = array_values(array_filter($scripts, static fn (ResolvedAsset $asset): bool => $asset->loadMode === LoadMode::Async));
         if ($async !== []) {
+            // This bootstrap stays classic on purpose. It locates its own
+            // insertion point with `getElementsByTagName('script')[len-1]`,
+            // i.e. "the last script parsed so far, which is me" -- true only
+            // while it runs during parsing. As a deferred module it would run
+            // after the document was parsed and pick the wrong element.
             $content[] = '<script type="text/javascript">';
             $content[] = <<<'JS'
             (function() {
             var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
             JS;
             foreach ($async as $asset) {
+                // Per asset, not a blanket 'module': the async set mixes Vite
+                // bundles with vendored classic plugins (jquery.autogrow,
+                // jquery.progressBar, jquery.geoip), and injecting one of
+                // those as a module would break it.
+                $scriptType = $this->scriptTypeAttr($asset);
                 $content[] = <<<JS
-                s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->makeAssetSrc($asset)}';
+                s=document.createElement('script'); s.type='{$scriptType}'; s.async=true; s.src='{$this->makeAssetSrc($asset)}';
                 JS;
                 $content[] = 'after = after.parentNode.insertBefore(s, after);';
             }

@@ -15,7 +15,7 @@
 // folding it into picture.ts's own always-present bundle would make it
 // unconditionally present instead -- a real behavior change, not just
 // a request-count optimization, so it's excluded here.
-import { pwgAddEventListener } from "./scripts?dup";
+import { pwgAddEventListener } from "./scripts";
 
 export {};
 

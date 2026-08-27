@@ -1,7 +1,7 @@
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 const str_number_page_visited = pwg_getPageString("Page Visited");

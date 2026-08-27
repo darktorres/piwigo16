@@ -1,4 +1,4 @@
-import { pwg_getPageString } from "./page-data?dup";
+import { pwg_getPageString } from "./page-data";
 export {};
 
 function pwg_initQuickSearch() {

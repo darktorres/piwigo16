@@ -1,6 +1,6 @@
 import type { components, operations } from "../../../../openapi/client/schema";
-import { jConfirm_alert_options, TemporaryState } from "./common?dup";
-import { UsersCache } from "./LocalStorageCache?dup";
+import { jConfirm_alert_options, TemporaryState } from "./common";
+import { UsersCache } from "./LocalStorageCache";
 // Type-only -- erased at compile time, so no `?dup` needed regardless
 // of LocalStorageCache.ts's own many real registrant pages (Design §4
 // only applies to real runtime imports; `import type` never reaches
@@ -10,7 +10,7 @@ import type { EntityCacheInstance, UserEntity } from "./LocalStorageCache";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 // `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own

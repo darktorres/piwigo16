@@ -1,6 +1,6 @@
-import "./common?dup";
+import "./common";
 
-import { pwg_getPageData } from "../../../default/js/page-data?dup";
+import { pwg_getPageData } from "../../../default/js/page-data";
 export {};
 
 const filters_names = pwg_getPageData<string[]>("filters_names");

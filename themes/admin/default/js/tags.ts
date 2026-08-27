@@ -3,12 +3,12 @@ import {
   jConfirm_alert_options,
   jConfirm_confirm_options,
   TemporaryState,
-} from "./common?dup";
+} from "./common";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own

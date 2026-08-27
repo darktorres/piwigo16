@@ -6,13 +6,13 @@ import type { operations } from "../../../../openapi/client/schema";
 // this page" consequence of batchManagerFilter.ts's own separate
 // `?dup` import). `?dup` since album_selector.ts has several real
 // registrant pages (Design §4).
-import { AlbumSelector } from "./album_selector?dup";
-import { CategoriesCache, TagsCache } from "./LocalStorageCache?dup";
+import { AlbumSelector } from "./album_selector";
+import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own

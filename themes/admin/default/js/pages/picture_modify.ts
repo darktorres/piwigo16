@@ -4,5 +4,5 @@
 // `?dup` suffix -- a plain import would make Rollup extract them into
 // a shared chunk reachable from multiple entries, breaking every one
 // of them (Design §4's mechanical addendum).
-import "../autosize?dup";
-import "../datepicker?dup";
+import "../autosize";
+import "../datepicker";

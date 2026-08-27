@@ -11,4 +11,4 @@
 // scripts.ts's own former standalone entry already had). `?dup` since
 // scripts.ts has several real registrant pages beyond this shared one
 // too (Design §4).
-import "../scripts?dup";
+import "../scripts";

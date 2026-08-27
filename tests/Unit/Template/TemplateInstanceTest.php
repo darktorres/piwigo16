@@ -1145,6 +1145,64 @@ test('registerPageAssets maps LoadMode::Footer to the footer placeholder as a pl
         ->toBe('');
 });
 
+test('a Vite-built asset renders as type="module"', function (): void {
+    $t = TemplateTestFactory::build();
+    $root = CurrentPathsTestFactory::get()->root;
+    @mkdir($root . '/dist/assets', 0777, true);
+    file_put_contents($root . '/dist/assets/built-abc12345.js', 'export{};');
+
+    $t->registerPageAssets([AssetContribution::script('built', 'dist/assets/built-abc12345.js', LoadMode::Footer)]);
+
+    // The `dist/` prefix is exactly what PageAssets::resolvePath() puts on
+    // a path the Vite manifest resolved, and nothing else carries it.
+    expect(templateInstanceTestScriptTags($t)['footer'])
+        ->toBe('<script type="module" src="dist/assets/built-abc12345.js?v' . AppInfo::VERSION . '"></script>');
+});
+
+test('a vendored classic script served from themes/ stays type="text/javascript"', function (): void {
+    $t = TemplateTestFactory::build();
+    $root = CurrentPathsTestFactory::get()->root;
+    @mkdir($root . '/themes/default/js/plugins', 0777, true);
+    // Mirrors the real jquery.geoip.js/jquery.sort.js family: vendored,
+    // registered as a local asset, and deliberately NOT a Vite entry, so
+    // the manifest cannot resolve it and resolvePath() passes the raw
+    // source path through. Loading one of these as a module would break
+    // it -- jquery.geoip.js assigns a bare `GeoIp = {...}` global, which
+    // throws under a module's always-on strict mode.
+    file_put_contents($root . '/themes/default/js/plugins/jquery.legacy.js', 'Legacy = {};');
+
+    $t->registerPageAssets([AssetContribution::script('jquery.legacy', 'themes/default/js/plugins/jquery.legacy.js', LoadMode::Footer)]);
+
+    expect(templateInstanceTestScriptTags($t)['footer'])
+        ->toBe('<script type="text/javascript" src="themes/default/js/plugins/jquery.legacy.js?v' . AppInfo::VERSION . '"></script>');
+});
+
+test('the async bootstrap keeps a classic wrapper and types each injected script individually', function (): void {
+    $t = TemplateTestFactory::build();
+    $root = CurrentPathsTestFactory::get()->root;
+    @mkdir($root . '/dist/assets', 0777, true);
+    file_put_contents($root . '/dist/assets/asyncmod-abc12345.js', 'export{};');
+    @mkdir($root . '/themes/default/js/plugins', 0777, true);
+    file_put_contents($root . '/themes/default/js/plugins/jquery.legacy.js', 'Legacy = {};');
+
+    $t->registerPageAssets([
+        AssetContribution::script('asyncmod', 'dist/assets/asyncmod-abc12345.js', LoadMode::Async),
+        AssetContribution::script('jquery.legacy', 'themes/default/js/plugins/jquery.legacy.js', LoadMode::Async),
+    ]);
+
+    $footer = templateInstanceTestScriptTags($t)['footer'];
+
+    // The wrapper itself must stay classic: it finds its own insertion
+    // point via getElementsByTagName('script')[len-1], which is only
+    // "itself" while running during parsing.
+    expect($footer)->toStartWith('<script type="text/javascript">');
+    // ...while each injected script is typed on its own merits.
+    expect($footer)
+        ->toContain("s.type='module'; s.async=true; s.src='dist/assets/asyncmod-abc12345.js?v" . AppInfo::VERSION . "'")
+        ->and($footer)
+        ->toContain("s.type='text/javascript'; s.async=true; s.src='themes/default/js/plugins/jquery.legacy.js?v" . AppInfo::VERSION . "'");
+});
+
 test('registerPageAssets maps LoadMode::Async to the footer placeholder via the dynamic-script bootstrap', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/async.js', 'console.log(1);');

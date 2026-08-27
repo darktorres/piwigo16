@@ -23,12 +23,12 @@ import {
   progress,
   getDerivativeUrls,
 } from "./batchManagerGlobal";
-import { sprintf } from "./common?dup";
-import { CategoriesCache, TagsCache } from "./LocalStorageCache?dup";
+import { sprintf } from "./common";
+import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 
 export const lang = {
   Cancel: pwg_getPageString("Cancel"),

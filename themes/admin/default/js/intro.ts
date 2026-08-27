@@ -1,7 +1,7 @@
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 
 const piwigo_need_update_msg =
   '<a href="admin.php?page=updates">' +

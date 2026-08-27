@@ -1,4 +1,4 @@
-import { sprintf } from "./common?dup";
+import { sprintf } from "./common";
 
 export {};
 

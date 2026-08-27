@@ -1,4 +1,4 @@
-import { pwg_getPageString } from "../../default/js/page-data?dup";
+import { pwg_getPageString } from "../../default/js/page-data";
 export {};
 
 const modeCookie = getCookie("mode");

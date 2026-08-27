@@ -6,13 +6,13 @@ import type { operations } from "../../../../openapi/client/schema";
 // UserActivityView's own explicit `LoadMode::Footer`; folded into this
 // file, it now runs at this file's own `LoadMode::Async` instead (the
 // only registrant page where common.ts's timing actually changes).
-import "./common?dup";
-import { UsersCache } from "./LocalStorageCache?dup";
+import "./common";
+import { UsersCache } from "./LocalStorageCache";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 type UserListResponse =

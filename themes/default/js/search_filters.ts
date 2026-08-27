@@ -1,4 +1,4 @@
-import { pwg_getPageData, pwg_getPageString } from "./page-data?dup";
+import { pwg_getPageData, pwg_getPageString } from "./page-data";
 
 const global_params_json = pwg_getPageData<string | false>(
   "global_params_json",

@@ -7,15 +7,13 @@ import {
 } from "./intro";
 $(function () {
   Object.entries(storage_details).forEach(([type, rawInfos]) => {
-    // Cast, not a param type annotation -- `Object.entries()`'s own
-    // generic overload doesn't infer `StorageDetails`'s index-signature
-    // value type here (a real, pre-existing TS lib quirk, confirmed
-    // unrelated to any P48 change: this file is untouched by that
-    // campaign), falling back to its untyped `[string, unknown][]`
-    // overload instead; annotating the callback's own param type
-    // directly is a contravariance mismatch against that inferred
-    // signature (a real TS2345, confirmed directly).
-    const infos = rawInfos as StorageDetails[string];
+    // `Object.entries()` infers `StorageDetails`'s index-signature value
+    // type directly, so `rawInfos` needs no cast. It used to: intro.ts
+    // imported `pwg_getPageData` through a `?dup` specifier, which
+    // resolved to `any`, so `storage_details` was `any` and the generic
+    // overload had nothing to infer from -- a cast two files away from
+    // the actual cause.
+    const infos = rawInfos;
     // Determine if we use MB or GB and show it correctly
     const size = infos.total.filesize;
     const str_size_type_string = size > 1048576 ? str_gb : str_mb;

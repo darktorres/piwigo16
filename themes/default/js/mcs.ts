@@ -4,15 +4,15 @@ import type { operations } from "../../../openapi/client/schema";
 // see that file's own leading comment for the full real-consumer
 // list). `?dup` since album_selector.ts has several real registrant
 // pages (Design §4).
-import { AlbumSelector } from "../../admin/default/js/album_selector?dup";
-import { sprintf } from "../../admin/default/js/common?dup";
+import { AlbumSelector } from "../../admin/default/js/album_selector";
+import { sprintf } from "../../admin/default/js/common";
 // doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
 // file's real `.pwgDoubleSlider(...)` call sites below). This file has
 // exactly one real registrant page (SearchFiltersView), but
 // doubleSlider.ts itself has 2 real file-level consumers (this file and
 // batchManagerFilter.ts, each its own separate Vite entry) -- `?dup`
 // per Design §4.
-import "../../admin/default/js/doubleSlider?dup";
+import "../../admin/default/js/doubleSlider";
 // Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,
 // search_filters.ts's own batch -- was bare-global reads before that).
 // No `?dup`: this file is search_filters.ts's only real consumer

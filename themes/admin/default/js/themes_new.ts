@@ -1,4 +1,4 @@
-import { pwg_getPageData } from "../../../default/js/page-data?dup";
+import { pwg_getPageData } from "../../../default/js/page-data";
 export {};
 
 document

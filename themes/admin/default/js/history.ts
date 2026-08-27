@@ -1,10 +1,10 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { sprintf } from "./common?dup";
+import { sprintf } from "./common";
 
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data?dup";
+} from "../../../default/js/page-data";
 export {};
 
 type HistorySearchResponse =

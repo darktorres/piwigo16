@@ -6,11 +6,11 @@ import type { operations } from "../../../../openapi/client/schema";
 // (`popuphelp`/`pwg_tryFocus`'s own `window.X` assignments, the
 // `[data-confirm]` click guard). `?dup` since scripts.ts has many real
 // registrant pages (Design §4).
-import "../../../default/js/scripts?dup";
-import "./common?dup";
-import { CategoriesCache } from "./LocalStorageCache?dup";
+import "../../../default/js/scripts";
+import "./common";
+import { CategoriesCache } from "./LocalStorageCache";
 
-import { pwg_getPageData } from "../../../default/js/page-data?dup";
+import { pwg_getPageData } from "../../../default/js/page-data";
 export {};
 
 const categoriesCache = new CategoriesCache({

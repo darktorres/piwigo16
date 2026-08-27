@@ -100,6 +100,19 @@ const formats: [string, string][] = [];
 On DOM load
 --------------*/
 $(function () {
+  // Moved out of photos_add_direct.latte's own inline onClick, which both
+  // navigated and set a loading class. The URL it interpolated now rides on
+  // the label as data-switch-format-mode-url, since a real listener cannot
+  // read a template variable.
+  $(".format-mode-group-manager .switch").on("click", function () {
+    const url = $(this).data("switch-format-mode-url") as string | undefined;
+    if (url === undefined || url === "") {
+      return;
+    }
+    $(".switch .slider").addClass("loading");
+    window.location.replace(url);
+  });
+
   // First album event
   // Genuine pre-existing bug found via strict typing: PhotosAddDirectView.php's
   // own exposedPageData() exposes `nb_albums` as a *string* (`(string)

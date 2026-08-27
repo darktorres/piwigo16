@@ -99,6 +99,17 @@ const add_sub_album_of = pwg_getPageString('Create a sub-album of "%s"');
 const tiptip_locked_album = pwg_getPageString("Locked album");
 
 $(document).ready(() => {
+  // Moved out of albums.latte's own `onClick="$('.cat-move-order-popin')
+  // .fadeOut()"`. An inline handler is invisible to tsc, eslint and every
+  // grep over themes/**/*.ts, so it would have broken silently the moment
+  // jQuery went away (docs/PLAN.md P49-A). Deliberately still jQuery: this
+  // same element is faded in by jQuery further down, and running two
+  // animation queues against one element is its own bug -- both convert
+  // together when this file does.
+  $(".cat-move-order-popin .close-popin").on("click", function () {
+    $(".cat-move-order-popin").fadeOut();
+  });
+
   const openUppercats =
     openCat == "-1" ? [] : findAlbumById(data, openCat)!.uppercats.split(",");
   const new_data = data.map((a: AlbumTreeNode) => {

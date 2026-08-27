@@ -160,6 +160,16 @@ function hide_filters_error(message: string) {
 }
 
 $(document).ready(function () {
+  // Moved out of batch_manager_filter.inc.latte's own
+  // `onclick="$('.addFilter-dropdown').slideToggle()"` -- see albums.ts for
+  // why these came out of the templates, and why they stay on jQuery until
+  // their file converts. The document-level handler further down already
+  // slides this dropdown up when a click lands outside it, and skips clicks
+  // on .addFilter-button precisely so this toggle keeps working.
+  $(".addFilter-button").on("click", function () {
+    $(".addFilter-dropdown").slideToggle();
+  });
+
   const ab_filter = new AlbumSelector({
     selectedCategoriesIds: selected_filter_cat_ids,
     selectAlbum: select_album_filter,

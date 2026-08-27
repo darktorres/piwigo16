@@ -352,7 +352,7 @@ function add_related_category({
   if (!getSelectedAlbum().includes(album.id)) {
     $("#" + b_current_picture_id + " .related-categories-container").append(
       `<div class="breadcrumb-item album-listed">
-        <span class="link-path">${album.full_name_with_admin_links}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
+        <span class="link-path">${album.fullname ?? ""}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
       </div>`,
     );
 

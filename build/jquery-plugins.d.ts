@@ -631,8 +631,15 @@ interface AlbumSelectorCallbackArgs {
     id: string | number;
     name?: string;
     root?: string;
-    // picture_modify.ts's own real usage.
-    full_name_with_admin_links?: string;
+    // The breadcrumb display name, HTML-stripped, as
+    // CategoryListController builds it. Was
+    // `full_name_with_admin_links` until it turned out that field does
+    // not exist: the controller's own docblock records dropping the
+    // XML-era `additional_output=full_name_with_admin_links` opt-in, so
+    // every consumer reading it got `undefined` at runtime while this
+    // declaration kept it compiling. All four consumers are
+    // `adminMode: true`, which is the mode that carries `fullname`.
+    fullname?: string;
   };
   newSelectedAlbum: () => void;
   addSelectedAlbum: (...args: any[]) => void;

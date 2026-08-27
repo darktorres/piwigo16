@@ -42,6 +42,92 @@ function albumSelectorOpen(object $page, string $trigger): void
     JS);
 }
 
+
+/**
+ * Searches for an album by name and clicks its row, then waits for the
+ * breadcrumb it adds.
+ *
+ * Searching rather than picking from the prefill list, and using a
+ * purpose-made album rather than whatever is first: `add_related_category`
+ * silently skips an album the photo already belongs to, so a pre-existing
+ * breadcrumb would otherwise satisfy the assertion with the JS never having
+ * run. The search path is also the one that binds `.search-result-item`
+ * (`#loadFillResultEvent`); the prefill path binds the inner
+ * `.prefill-results-item` instead.
+ */
+function albumSelectorAddByName(object $page, string $name): string
+{
+    /** @var int $before */
+    $before = $page->script(
+        "document.querySelectorAll('.related-categories-container .link-path').length"
+    );
+
+    $page->fill('#search-input-ab', $name);
+    $page->script(
+        "document.getElementById('search-input-ab').dispatchEvent(new KeyboardEvent('keyup', {bubbles: true}))"
+    );
+
+    $encoded = json_encode($name, JSON_THROW_ON_ERROR);
+    $timeoutMs = 10000;
+    $page->script(<<<JS
+    new Promise((resolve, reject) => {
+        const deadline = Date.now() + {$timeoutMs};
+        const wanted = {$encoded};
+        const check = () => {
+            // `.not-rtl` marks a row built by the *search* renderer. The
+            // prefill renderer builds a different shape and binds the
+            // inner `.prefill-results-item` instead, so clicking its outer
+            // row does nothing -- and the prefill list already contains
+            // this album, which is exactly the trap.
+            const row = Array.from(
+                document.querySelectorAll('#searchResult .search-result-item')
+            ).find(
+                r => r.querySelector('.search-result-path.not-rtl') !== null &&
+                    r.textContent.includes(wanted)
+            );
+            if (row !== undefined) {
+                row.click();
+
+                return resolve(true);
+            }
+            if (Date.now() > deadline) {
+                return reject(new Error('Timed out waiting for the album search result'));
+            }
+            setTimeout(check, 100);
+        };
+        check();
+    })
+    JS);
+
+    $page->script(<<<JS
+    new Promise((resolve, reject) => {
+        const deadline = Date.now() + {$timeoutMs};
+        const check = () => {
+            if (document.querySelectorAll('.related-categories-container .link-path').length > {$before}) {
+                return resolve(true);
+            }
+            if (Date.now() > deadline) {
+                return reject(new Error('Timed out waiting for the album breadcrumb to be added'));
+            }
+            setTimeout(check, 100);
+        };
+        check();
+    })
+    JS);
+
+    /** @var string $text */
+    $text = $page->script(<<<'JS'
+    (() => {
+        const paths = document.querySelectorAll('.related-categories-container .link-path');
+        const last = paths[paths.length - 1];
+
+        return last === undefined ? '' : last.textContent.trim();
+    })()
+    JS);
+
+    return $text;
+}
+
 it('opens, prefills the album list from the API and closes again', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=photos_add');
@@ -225,17 +311,16 @@ it('selects an album and hands it back to the page', function (): void {
     expect($reported['promptHidden'])->toBeTrue();
     expect($reported['selectedShown'])->toBeTrue();
 
-    // NOT asserted: that the label names the album. It comes out empty, and
-    // that is a real pre-existing bug outside this file. photos_add_direct
-    // builds it from `album.full_name_with_admin_links`, a field
-    // CategoryListController deliberately dropped in the rewrite ("an
-    // XML-era opt-in ... a JSON client that wants an admin link can build
-    // one itself from `id`"). Three other admin entries read the same dead
-    // field: cat_modify falls back to blank, while picture_modify and
-    // batchManagerUnit interpolate the literal string "undefined" into a
-    // `.link-path` span. Recorded here rather than fixed, because the fix
-    // is a behaviour change in four files and belongs to whoever decides
-    // what should replace the field.
+    // The label now names the album. It used to come out empty:
+    // photos_add_direct built it from `album.full_name_with_admin_links`,
+    // a field CategoryListController deliberately dropped in the rewrite,
+    // so the read was always undefined. Three other admin entries had the
+    // same dead read -- cat_modify blanked, picture_modify and
+    // batchManagerUnit interpolated the literal "undefined" into a
+    // `.link-path` span. All four now use `fullname`, the same breadcrumb
+    // already HTML-stripped by the server.
+    expect($reported['label'])->not->toBe('');
+    expect($reported['label'])->not->toContain('undefined');
 
     $page->assertNoJavaScriptErrors();
 });
@@ -300,6 +385,72 @@ it('expands a sub-album row in place', function (): void {
     // Children are indented by reading the parent row's own computed
     // margin and adding to it, which is the other id-built selector.
     expect($expanded['margin'])->not->toBe('');
+
+    $page->assertNoJavaScriptErrors();
+});
+
+// The other two consumers interpolate the album's breadcrumb straight into
+// markup rather than into an element's text, so a missing field showed up as
+// the literal string "undefined" on the page rather than as a blank. Both
+// pages are covered here because the field they read was the same dead one.
+
+it('names the album in the photo editor rather than writing "undefined"', function (): void {
+    $page = H::asAdmin($this);
+
+    // A fresh album, so the photo is definitely not already in it.
+    $albumName = 'Album Selector Editor Album ' . uniqid();
+    H::createCategory($page, ['name' => $albumName]);
+
+    $page = H::navigateOk($page, '/admin.php?page=photo-1');
+
+    albumSelectorOpen($page, '.linked-albums.add-item');
+
+    $text = albumSelectorAddByName($page, $albumName);
+
+    expect($text)->toContain($albumName);
+    expect($text)->not->toBe('undefined');
+
+    $page->assertNoJavaScriptErrors();
+});
+
+it('names the album in the unit batch manager rather than writing "undefined"', function (): void {
+    $page = H::asAdmin($this);
+
+    // The unit batch manager renders per-photo fieldsets only for photos in
+    // the current filter, and the default prefilter (the caddie) is empty --
+    // so the page carries no album control at all until a filter is set.
+    // Same setup BatchManagerUnitPageRendererTest uses to reach it.
+    $album = H::createCategory($page, [
+        'name' => 'Album Selector Batch Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    H::uploadPhotoViaApi($image, $albumId, 'Album Selector Batch Photo');
+    @unlink($image);
+
+    $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
+        'pwg_token' => H::pwgToken($page),
+        'submitFilter' => '1',
+        'filter_category_use' => '1',
+        'filter_category' => (string) $albumId,
+    ]);
+    expect($filterResult['status'])->toBe(200);
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
+
+    // A second album, one the photo is not already in.
+    $targetName = 'Album Selector Batch Target ' . uniqid();
+    H::createCategory($page, ['name' => $targetName]);
+
+    albumSelectorOpen($page, '.linked-albums.add-item');
+
+    $text = albumSelectorAddByName($page, $targetName);
+
+    expect($text)->toContain($targetName);
+    expect($text)->not->toBe('undefined');
 
     $page->assertNoJavaScriptErrors();
 });

@@ -844,12 +844,14 @@ function add_related_category({
   album,
   newSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  let text = "";
-  $(album.full_name_with_admin_links ?? "").each(function (i, s) {
-    if ($(s).html()) {
-      text += $(s).html();
-    }
-  });
+  // Was: parse `full_name_with_admin_links` as HTML and concatenate the
+  // inner HTML of each top-level node -- which turned
+  // `<a>A</a><span> / </span><a>B</a>` into "A / B". The field does not
+  // exist (CategoryListController dropped it), so this always produced ""
+  // and blanked the label on every selection. `fullname` is that same
+  // breadcrumb already HTML-stripped by the server, so the string is
+  // identical and the unpacking is no longer needed.
+  const text = album.fullname ?? "";
   newSelectedAlbum();
 
   selectedAlbumName.hide();

@@ -528,7 +528,10 @@ function add_related_category({
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
   if (parent_album != album.id) {
-    $("#cat-parent").html(album.full_name_with_admin_links ?? album.root ?? "");
+    // Plain breadcrumb text, not linked markup: the API deliberately no
+    // longer returns per-segment admin links, and `uppercats` alone (comma-
+    // separated ids, no names) cannot rebuild them client-side.
+    $("#cat-parent").html(album.fullname ?? album.root ?? "");
 
     $(".search-result-item #" + album.id).addClass("notClickable");
     $(".invisible-related-categories-select").append(

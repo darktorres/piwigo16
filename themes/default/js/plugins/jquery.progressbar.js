@@ -4,6 +4,14 @@
  * t.wits.sg (the author/site this file's own header below cites) could
  * be found anywhere.
  *
+ * NOT DEAD, despite nothing referencing this path: the file actually
+ * served is the sibling jquery.progressbar.min.js, registered by
+ * BatchManagerGlobalView. That minified copy carries no header at all, so
+ * this is the only record of the copyright below, and -- upstream being
+ * unreachable, per the paragraph above -- the only readable copy left to
+ * inspect or patch against. A reference-count sweep flags it as unused;
+ * it stays.
+ *
  * jQuery Progress Bar plugin
  * Version 2.0 (06/22/2009)
  * @requires jQuery v1.2.1 or later

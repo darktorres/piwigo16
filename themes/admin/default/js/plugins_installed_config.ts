@@ -19,7 +19,6 @@ export const incompatible_msg = pwg_getPageString(
 export const activate_msg = pwg_getPageString(
   "Do you want to activate anyway?",
 );
-export const deactivate_all_msg = pwg_getPageString("Deactivate all");
 
 /* group action */
 export const pwg_token = pwg_getPageData<string>("csrf_token");

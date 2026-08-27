@@ -50,7 +50,6 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
@@ -59,7 +58,7 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
             // plugins_installed_config.ts/plugins_installated.ts's code
             // in via real imports instead of the 2 separate script
             // tags this used to register.
-            AssetContribution::script('plugins_installed_page', 'themes/admin/default/js/pages/plugins_installed.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
+            AssetContribution::script('plugins_installed_page', 'themes/admin/default/js/pages/plugins_installed.ts', loadMode: LoadMode::Footer),
         ];
     }
 
@@ -87,7 +86,6 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
         return [
             'WARNING! This plugin does not seem to be compatible with this version of Piwigo.',
             'Do you want to activate anyway?',
-            'Deactivate all',
             'Are you sure you want to delete the plugin "%s"?',
             'Plugin "%s" deleted!',
             'Are you sure you want to restore the plugin "%s"?',

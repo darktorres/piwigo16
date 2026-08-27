@@ -11,7 +11,6 @@ import {
   activate_msg,
   cancel_msg,
   confirm_msg,
-  deactivate_all_msg,
   delete_plugin_msg,
   deleted_plugin_msg,
   incompatible_msg,
@@ -587,32 +586,6 @@ function set_view_selector(view_type: string) {
   });
 }
 
-// TPL part :
-
-const queuedManager = jQuery.manageAjax.create("queued", {
-  queue: true,
-  maxRequests: 1,
-});
-
-const nb_plugins = jQuery("div.active").size();
-// Was `const done = 0;` with `done++;` below -- a genuine pre-existing
-// bug (reassigning a `const`), invisible at runtime only because nothing
-// ever exercised this exact code path in a way that surfaced the
-// TypeError, and undetectable by `eqeqeq`/`no-undef` (P45's own
-// not-yet-CI-gated lint rules) the way this plan's other real bug finds
-// were. `strict: true` refuses to compile a `const` reassignment
-// outright (TS2588), so this genuinely can't be preserved byte-for-byte
-// the way an ordering race condition can -- `let` is the fix, restoring
-// the "reload after every active plugin is deactivated" feature this
-// bug silently broke.
-let done = 0;
-
-function showInactivePlugins() {
-  jQuery(".showInactivePlugins").fadeOut(function () {
-    jQuery(".plugin-inactive").fadeIn();
-  });
-}
-
 function actualizeFilter() {
   $("label[for='seeAll'] .filter-badge").html(String(nb_plugin.all));
   $("label[for='seeActive'] .filter-badge").html(String(nb_plugin.active));
@@ -639,27 +612,6 @@ function actualizeFilter() {
         $("#seeAll").trigger("click");
       }
     }
-  });
-}
-
-function performPluginDeactivate(id: string) {
-  queuedManager.add({
-    type: "POST",
-    dataType: "json",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    url: "api/v1/plugins/" + id + "/actions/perform",
-    data: JSON.stringify({
-      action: "deactivate",
-    }),
-    // 204 No Content -- pluginPerformAction's real response has no body.
-    success: function (_data: unknown) {
-      jQuery("#" + id)
-        .removeClass("active")
-        .addClass("inactive");
-      done++;
-      if (done == nb_plugins) location.reload();
-    },
   });
 }
 
@@ -694,27 +646,6 @@ jQuery(document).ready(function () {
     const myplugin = jQuery(this);
     myplugin.find(".showOptions").click(function () {
       myplugin.find(".PluginOptionsBlock").toggle();
-    });
-  });
-
-  jQuery("div.deactivate_all a").click(function () {
-    $.confirm({
-      title: deactivate_all_msg,
-      buttons: {
-        confirm: {
-          text: confirm_msg,
-          btnClass: "btn-red",
-          action: function () {
-            jQuery("div.active").each(function () {
-              performPluginDeactivate(jQuery(this).attr("id")!);
-            });
-          },
-        },
-        cancel: {
-          text: cancel_msg,
-        },
-      },
-      ...jConfirm_confirm_options,
     });
   });
 
@@ -756,14 +687,6 @@ jQuery(document).ready(function () {
         maxWidth: "250px",
       });
     },
-  });
-
-  jQuery(".fullInfo").tipTip({
-    delay: 500,
-    fadeIn: 200,
-    fadeOut: 200,
-    maxWidth: "300px",
-    keepAlive: false,
   });
 
   /*Add the filter research*/
@@ -901,9 +824,6 @@ jQuery(document).ready(function () {
       );
     }
   });
-
-  /* Show Inactive plugins or button to show them*/
-  jQuery(".showInactivePlugins button").on("click", showInactivePlugins);
 
   if (plugin_filter == "deactivated") {
     jQuery(".filterLabel[for='seeInactive']").trigger("click");

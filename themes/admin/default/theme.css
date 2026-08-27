@@ -3082,13 +3082,8 @@ div.jGrowl div.jGrowl-notification{
   }
 
 .warning:before {content:url(icon/warning.png);vertical-align:top;}
-.deactivate_all {font-size: 11px;font-weight: normal; margin-top: -5px; margin-bottom: 5px; font-weight: bold;opacity: 0.6;}
 .showDetails {text-align:right; margin-bottom:-15px; margin-top:-10px; padding-right:1em;}
 
-.showInactivePlugins {margin-bottom: 40px;}
-.showInactivePluginsInfo {display: flex;justify-content: center;align-items: center; font-size: 18px;}
-.showInactivePluginsInfo > * {margin: 5px;}
-.showInactivePlugins button {font-size: 16px;}
 
 .languageBoxes {min-height:0;text-align:left;}
 .languageBox {display:inline-table; text-align:center; width:200px; height:40px; margin:5px; -moz-border-radius:5px;border-radius:5px; overflow:hidden; }

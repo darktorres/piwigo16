@@ -256,3 +256,138 @@ export function toggle(
     showHide(el, isHiddenForDisplay(el));
   }
 }
+
+// ── Namespaced events ────────────────────────────────────────────────────
+//
+// jQuery splits an event spec on dots: everything before the first dot is the
+// type, the rest are namespaces (src/event.js). `.off("click.apply")` removes
+// only that namespace's handlers, and `.off(".apikey")` removes every type
+// carrying it. `removeEventListener` has no equivalent -- it needs the exact
+// handler reference -- so ported naively these calls become no-ops that leak
+// handlers, or over-broad removals that kill unrelated listeners.
+//
+// It is also how jqtree's `tree.open`/`tree.close`/`tree.move` work: those
+// are type `tree` with namespaces `open`/`close`/`move`, not literal types.
+// Binding and triggering agree because both go through this parsing.
+
+interface EventSpec {
+  type: string;
+  namespaces: string[];
+}
+
+interface Registration extends EventSpec {
+  handler: EventListener;
+  wrapped: EventListener;
+}
+
+const eventRegistry = new WeakMap<EventTarget, Registration[]>();
+
+/** Namespaces this synthetic event was triggered with, if any. */
+const triggeredNamespaces = new WeakMap<Event, string[]>();
+
+export function parseEventSpec(spec: string): EventSpec {
+  const [type = "", ...namespaces] = spec.split(".");
+
+  return {
+    type,
+    namespaces: namespaces.filter((n) => n !== "").sort(),
+  };
+}
+
+/**
+ * jQuery fires a handler when the *triggered* namespaces are all present on
+ * the handler -- so `.trigger("tree.open")` reaches a handler bound as
+ * `tree.open` but not one bound as plain `tree`, and an untriggered native
+ * event (no namespaces) reaches every handler of that type.
+ */
+function namespacesMatch(handlerNs: string[], firedNs: string[]): boolean {
+  return firedNs.every((n) => handlerNs.includes(n));
+}
+
+/** `$(el).on("click.ns", handler)`. */
+export function on(
+  target: EventTarget,
+  spec: string,
+  handler: EventListener,
+  options?: AddEventListenerOptions
+): void {
+  const { type, namespaces } = parseEventSpec(spec);
+  if (type === "") {
+    return;
+  }
+
+  const wrapped: EventListener = (event) => {
+    const fired = triggeredNamespaces.get(event) ?? [];
+    if (namespacesMatch(namespaces, fired)) {
+      handler.call(target, event);
+    }
+  };
+
+  const registrations = eventRegistry.get(target) ?? [];
+  registrations.push({
+    type,
+    namespaces,
+    handler,
+    wrapped,
+  });
+  eventRegistry.set(target, registrations);
+
+  target.addEventListener(type, wrapped, options);
+}
+
+/**
+ * `$(el).off("click.ns")` / `.off(".ns")` / `.off("click")`.
+ *
+ * An empty type matches every type (the `.ns` form); an empty namespace list
+ * matches every namespace. Passing `handler` narrows further, for the
+ * off-then-on replace idiom used at several call sites.
+ */
+export function off(
+  target: EventTarget,
+  spec: string,
+  handler?: EventListener
+): void {
+  const { type, namespaces } = parseEventSpec(spec);
+  const registrations = eventRegistry.get(target);
+  if (registrations === undefined) {
+    return;
+  }
+
+  const kept: Registration[] = [];
+  for (const registration of registrations) {
+    const typeMatches = type === "" || registration.type === type;
+    const namespaceMatches = namespacesMatch(registration.namespaces, namespaces);
+    const handlerMatches = handler === undefined || registration.handler === handler;
+
+    if (typeMatches && namespaceMatches && handlerMatches) {
+      target.removeEventListener(registration.type, registration.wrapped);
+    } else {
+      kept.push(registration);
+    }
+  }
+
+  eventRegistry.set(target, kept);
+}
+
+/**
+ * `$(el).trigger("tree.open", detail)` -- dispatches a bubbling event whose
+ * namespaces gate which handlers run, matching jQuery.
+ */
+export function trigger(
+  target: EventTarget,
+  spec: string,
+  detail?: unknown
+): void {
+  const { type, namespaces } = parseEventSpec(spec);
+  if (type === "") {
+    return;
+  }
+
+  const event = new CustomEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    detail,
+  });
+  triggeredNamespaces.set(event, namespaces);
+  target.dispatchEvent(event);
+}

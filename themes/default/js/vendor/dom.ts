@@ -688,3 +688,174 @@ export function stop(
     state.running?.stop(jumpToEnd);
   }
 }
+
+// ── Animation: the fade and slide family ─────────────────────────────────
+//
+// From src/effects.js: fadeIn/fadeOut are `{opacity: "show"|"hide"}` and the
+// slides are `genFx()`, which expands to height plus marginTop/Bottom and
+// paddingTop/Bottom -- a slide moves the box's vertical spacing too, not just
+// its height.
+//
+// The show/hide pass is what makes these compose with the display memory:
+// showing calls show() first and animates *up to* the element's own value;
+// hiding animates down to 0 and calls hide() at the end. Either way the
+// original inline values are restored afterwards, so a faded-out element is
+// left `display:none` with its opacity intact rather than stranded at 0.
+
+/** Vertical box properties a slide animates, per `genFx()`. */
+const SLIDE_PROPS = [
+  "height",
+  "marginTop",
+  "marginBottom",
+  "paddingTop",
+  "paddingBottom",
+];
+
+type EffectMode = "show" | "hide" | "toggle";
+
+function runEffect(
+  target: Element | ArrayLike<Element>,
+  propNames: string[],
+  mode: EffectMode,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  const ms = resolveDuration(duration);
+
+  for (const el of toElements(target)) {
+    if (!(el instanceof HTMLElement)) {
+      continue;
+    }
+
+    enqueue(el, (next) => {
+      const hidden = isHiddenForDisplay(el);
+      const showing = mode === "toggle" ? hidden : mode === "show";
+
+      // jQuery skips a prop whose requested state already holds -- fadeIn on
+      // a visible element animates nothing, but still runs the callback.
+      if (mode !== "toggle" && showing !== hidden) {
+        complete?.call(el);
+        next();
+
+        return;
+      }
+
+      const affectsBox = propNames.some(
+        (p) => p === "height" || p === "width"
+      );
+      const originalOverflow = el.style.overflow;
+      if (affectsBox) {
+        el.style.overflow = "hidden";
+      }
+
+      // Record the element's own values before anything is touched: these are
+      // both the tween's target when showing and what gets restored after.
+      const originals = propNames.map((prop) => ({
+        prop,
+        inline: el.style.getPropertyValue(cssPropertyName(prop)),
+      }));
+
+      if (showing) {
+        show(el);
+      }
+
+      const tweens = propNames.map((prop) => {
+        const own = currentValue(el, prop);
+        const unit = CSS_NUMBER.has(prop) ? "" : "px";
+        const zero = prop === "height" || prop === "width" ? 1 : 0;
+
+        return {
+          prop,
+          from: showing ? zero : own,
+          to: showing ? own : 0,
+          unit,
+        };
+      });
+
+      const finish = (): void => {
+        if (!showing) {
+          hide(el);
+        }
+        if (affectsBox) {
+          el.style.overflow = originalOverflow;
+        }
+        for (const { prop, inline } of originals) {
+          if (inline === "") {
+            el.style.removeProperty(cssPropertyName(prop));
+          } else {
+            el.style.setProperty(cssPropertyName(prop), inline);
+          }
+        }
+        complete?.call(el);
+      };
+
+      const tween = new Tween(el, tweens, ms, finish, next);
+      fxState(el).running = tween;
+      tween.start();
+    });
+  }
+}
+
+/** `$(el).fadeIn(duration, complete)`. */
+export function fadeIn(
+  target: Element | ArrayLike<Element>,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  runEffect(target, ["opacity"], "show", duration, complete);
+}
+
+/** `$(el).fadeOut(duration, complete)`. */
+export function fadeOut(
+  target: Element | ArrayLike<Element>,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  runEffect(target, ["opacity"], "hide", duration, complete);
+}
+
+/**
+ * `$(el).fadeTo(duration, opacity, complete)` -- animates to an arbitrary
+ * opacity. Unlike fadeOut it never hides the element, and unlike fadeIn it
+ * shows a hidden one first so the fade is visible.
+ */
+export function fadeTo(
+  target: Element | ArrayLike<Element>,
+  duration: number | string,
+  opacity: number,
+  complete?: () => void
+): void {
+  for (const el of toElements(target)) {
+    if (el instanceof HTMLElement && isHiddenForDisplay(el)) {
+      show(el);
+    }
+  }
+  animate(target, { opacity }, duration, complete);
+}
+
+/** `$(el).slideDown(duration, complete)`. */
+export function slideDown(
+  target: Element | ArrayLike<Element>,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  runEffect(target, SLIDE_PROPS, "show", duration, complete);
+}
+
+/** `$(el).slideUp(duration, complete)`. */
+export function slideUp(
+  target: Element | ArrayLike<Element>,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  runEffect(target, SLIDE_PROPS, "hide", duration, complete);
+}
+
+/** `$(el).slideToggle(duration, complete)`. */
+export function slideToggle(
+  target: Element | ArrayLike<Element>,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  runEffect(target, SLIDE_PROPS, "toggle", duration, complete);
+}

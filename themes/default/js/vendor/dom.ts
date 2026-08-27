@@ -881,3 +881,39 @@ export function slideToggle(
 ): void {
   runEffect(target, SLIDE_PROPS, "toggle", duration, complete);
 }
+
+// ── Document ready ───────────────────────────────────────────────────────
+
+/**
+ * `jQuery(document).ready(fn)` / `$(fn)`.
+ *
+ * Not interchangeable with a bare `DOMContentLoaded` listener, and the
+ * difference is load-bearing here: P48 made every bundle a deferred module,
+ * so a module's own top-level code frequently runs *after* DOMContentLoaded
+ * has already fired. A listener registered then never fires at all, and the
+ * whole file silently does nothing.
+ *
+ * Mirrors src/core/ready.js: when the document is already parsed, the
+ * callback is scheduled asynchronously rather than run inline, so handlers
+ * registered from different modules keep running in registration order
+ * instead of some jumping ahead of others.
+ */
+export function ready(callback: () => void): void {
+  if (document.readyState === "complete") {
+    setTimeout(callback);
+
+    return;
+  }
+
+  if (document.readyState !== "loading") {
+    // Parsed but still loading subresources -- DOMContentLoaded has already
+    // fired, so waiting for it would wait forever.
+    setTimeout(callback);
+
+    return;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    callback();
+  });
+}

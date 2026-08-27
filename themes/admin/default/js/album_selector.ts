@@ -35,6 +35,34 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  after,
+  append,
+  attr,
+  attrOf,
+  css,
+  cssValue,
+  empty,
+  escapeId,
+  fadeIn,
+  fadeOut,
+  find,
+  hasClass,
+  hide,
+  html,
+  is,
+  isVisible,
+  off,
+  on,
+  remove,
+  removeClass,
+  setVal,
+  show,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),
@@ -99,8 +127,20 @@ const str_root = pwg_getPageString("Root");
 
 let activeAlbumSelector: AlbumSelector | null = null;
 
-$(window).on("keypress", function (e) {
-  const haveAlbumSelector = $("#addLinkedAlbum").is(":visible");
+/**
+ * jQuery captured each static selector once, at class-definition time, and
+ * kept that snapshot. `querySelectorAll` is likewise static, so an element
+ * added to the page later is invisible to both -- the staleness is
+ * preserved, not introduced.
+ */
+function q(selector: string): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>(selector));
+}
+
+window.addEventListener("keypress", function (e) {
+  // `:visible` is not a CSS selector -- `matches()` throws a SyntaxError on
+  // it. jQuery computes it from layout, which `isVisible()` reproduces.
+  const haveAlbumSelector = q("#addLinkedAlbum").some(isVisible);
   if (haveAlbumSelector && e.key === "Enter") {
     e.preventDefault();
   }
@@ -158,31 +198,31 @@ export class AlbumSelector {
    * Selector for AlbumSelector
    */
   static selectors = {
-    addLinkedAlbum: $("#addLinkedAlbum"),
-    closeAlbumPopIn: $("#closeAlbumPopIn"),
-    searchInput: $("#search-input-ab"),
-    searchResult: $("#searchResult"),
-    limitReached: $(".limitReached"),
-    iconCancelInput: $(".search-cancel-linked-album"),
-    relatedCategoriesDom: $(
+    addLinkedAlbum: q("#addLinkedAlbum"),
+    closeAlbumPopIn: q("#closeAlbumPopIn"),
+    searchInput: q("#search-input-ab"),
+    searchResult: q("#searchResult"),
+    limitReached: q(".limitReached"),
+    iconCancelInput: q(".search-cancel-linked-album"),
+    relatedCategoriesDom: q(
       ".related-categories-container .breadcrumb-item .remove-item",
     ),
-    iconSearchingSpin: $(".searching"),
-    albumSelector: $("#linkedAlbumSelector"),
-    albumCreate: $("#linkedAlbumCreate"),
-    albumCheckBox: $("#album-create-check"),
-    linkedAddAlbum: $("#linkedAddAlbum"),
-    linkedModalTitle: $("#linkedModalTitle"),
-    linkedAlbumSwitch: $("#linkedAlbumSwitch"),
-    linkedAlbumSubTitle: $("#linkedAlbumSubtitle"),
-    linkedAddNewAlbum: $("#linkedAddNewAlbum"),
-    linkedAlbumInput: $("#linkedAlbumInput"),
-    putToRoot: $(".put-to-root-container"),
-    linkedAlbumCancel: $("#linkedAlbumCancel"),
-    linkedAddAlbumErrors: $("#linkedAddAlbumErrors"),
-    addAlbumErrors: $(".AddAlbumErrors"),
-    putToRootBtn: $("#put-to-root"),
-    linkedAlbumPopInContainer: $(".linkedAlbumPopInContainer"),
+    iconSearchingSpin: q(".searching"),
+    albumSelector: q("#linkedAlbumSelector"),
+    albumCreate: q("#linkedAlbumCreate"),
+    albumCheckBox: q("#album-create-check"),
+    linkedAddAlbum: q("#linkedAddAlbum"),
+    linkedModalTitle: q("#linkedModalTitle"),
+    linkedAlbumSwitch: q("#linkedAlbumSwitch"),
+    linkedAlbumSubTitle: q("#linkedAlbumSubtitle"),
+    linkedAddNewAlbum: q("#linkedAddNewAlbum"),
+    linkedAlbumInput: q("#linkedAlbumInput"),
+    putToRoot: q(".put-to-root-container"),
+    linkedAlbumCancel: q("#linkedAlbumCancel"),
+    linkedAddAlbumErrors: q("#linkedAddAlbumErrors"),
+    addAlbumErrors: q(".AddAlbumErrors"),
+    putToRootBtn: q("#put-to-root"),
+    linkedAlbumPopInContainer: q(".linkedAlbumPopInContainer"),
   };
 
   constructor({
@@ -237,16 +277,16 @@ export class AlbumSelector {
   #init() {
     // console.log('init id:', activeAlbumSelector.instanceId);
     if (this.#in_admin_mode && this.#show_root_btn) {
-      AlbumSelector.selectors.linkedAlbumPopInContainer.addClass("big");
+      addClass(AlbumSelector.selectors.linkedAlbumPopInContainer, "big");
     }
 
     if (!this.#show_root_btn) {
-      AlbumSelector.selectors.putToRoot.remove();
+      remove(AlbumSelector.selectors.putToRoot);
     }
 
     if (!this.#in_admin_mode) {
-      AlbumSelector.selectors.albumCreate.remove();
-      AlbumSelector.selectors.linkedAlbumSwitch.remove();
+      remove(AlbumSelector.selectors.albumCreate);
+      remove(AlbumSelector.selectors.linkedAlbumSwitch);
     }
   }
 
@@ -321,162 +361,164 @@ export class AlbumSelector {
   #loadGeneralEvent() {
     const instanceAb = `.${this.instanceId}`;
     // event close album selector
-    AlbumSelector.selectors.closeAlbumPopIn
-      .off(`click${instanceAb}`)
-      .on(`click${instanceAb}`, () => {
-        this.#close_album_selector();
-      });
+    off(AlbumSelector.selectors.closeAlbumPopIn, `click${instanceAb}`);
+    on(AlbumSelector.selectors.closeAlbumPopIn, `click${instanceAb}`, () => {
+      this.#close_album_selector();
+    });
 
     // event escape album selector
-    $(document)
-      .off(`keyup${instanceAb}`)
-      .on(`keyup${instanceAb}`, (e) => {
-        if (
-          e.key === "Escape" &&
-          AlbumSelector.selectors.addLinkedAlbum.is(":visible")
-        ) {
-          this.#close_album_selector();
-        }
+    off(document, `keyup${instanceAb}`);
+    on(document, `keyup${instanceAb}`, (event) => {
+      const e = event as KeyboardEvent;
+      if (
+        e.key === "Escape" &&
+        AlbumSelector.selectors.addLinkedAlbum.some(isVisible)
+      ) {
+        this.#close_album_selector();
+      }
 
-        if (
-          e.key === "Enter" &&
-          AlbumSelector.selectors.addLinkedAlbum.is(":visible")
-        ) {
-          if ($("#linkedAddNewAlbum").is(":visible")) {
-            AlbumSelector.selectors.linkedAddNewAlbum.trigger(
-              `click${instanceAb}`,
-            );
-          }
+      if (
+        e.key === "Enter" &&
+        AlbumSelector.selectors.addLinkedAlbum.some(isVisible)
+      ) {
+        if (q("#linkedAddNewAlbum").some(isVisible)) {
+          trigger(
+            AlbumSelector.selectors.linkedAddNewAlbum,
+            `click${instanceAb}`,
+          );
         }
-      });
+      }
+    });
 
     // event empty search input
     if (AlbumSelector.selectors.iconCancelInput.length) {
-      AlbumSelector.selectors.iconCancelInput
-        .off(`click${instanceAb}`)
-        .on(`click${instanceAb}`, () => {
-          this.#reset_search_input(true);
-        });
+      off(AlbumSelector.selectors.iconCancelInput, `click${instanceAb}`);
+      on(AlbumSelector.selectors.iconCancelInput, `click${instanceAb}`, () => {
+        this.#reset_search_input(true);
+      });
     }
 
     // event perform search
-    AlbumSelector.selectors.searchInput
-      .off(`keyup${instanceAb}`)
-      .on(`keyup${instanceAb}`, (_e) => {
-        const searchValue = String(
-          AlbumSelector.selectors.searchInput.val() ?? "",
-        );
-        if (searchValue.length > 0) {
-          AlbumSelector.selectors.iconCancelInput.show();
-        } else {
-          AlbumSelector.selectors.iconCancelInput.hide();
-        }
-        this.#perform_albums_search(searchValue);
-      });
+    off(AlbumSelector.selectors.searchInput, `keyup${instanceAb}`);
+    on(AlbumSelector.selectors.searchInput, `keyup${instanceAb}`, () => {
+      const searchValue = String(
+        val(AlbumSelector.selectors.searchInput) ?? "",
+      );
+      if (searchValue.length > 0) {
+        show(AlbumSelector.selectors.iconCancelInput);
+      } else {
+        hide(AlbumSelector.selectors.iconCancelInput);
+      }
+      this.#perform_albums_search(searchValue);
+    });
 
     // event in admin mode
     if (this.#in_admin_mode) {
-      AlbumSelector.selectors.albumCheckBox
-        .off(`change${instanceAb}`)
-        .on(`change${instanceAb}`, (e) => {
-          this.#isAlbumCreationChecked = $(e.currentTarget).is(":checked");
-          this.#switch_album_creation();
-        });
+      off(AlbumSelector.selectors.albumCheckBox, `change${instanceAb}`);
+      on(AlbumSelector.selectors.albumCheckBox, `change${instanceAb}`, (e) => {
+        this.#isAlbumCreationChecked = is(
+          e.currentTarget as Element,
+          ":checked",
+        );
+        this.#switch_album_creation();
+      });
     }
 
     // event put root btn
     if (this.#show_root_btn) {
-      AlbumSelector.selectors.putToRootBtn
-        .off(`click${instanceAb}`)
-        .on(`click${instanceAb}`, (e) => {
-          if (!this.#selected_categories.includes("0")) {
-            const curr = $(e.currentTarget);
-            curr.addClass("notClickable");
-            this.#put_to_root = true;
-            this.#selectAlbum({ album: { id: 0, root: str_root } });
-            this.#close_album_selector();
-          }
-        });
+      off(AlbumSelector.selectors.putToRootBtn, `click${instanceAb}`);
+      on(AlbumSelector.selectors.putToRootBtn, `click${instanceAb}`, (e) => {
+        if (!this.#selected_categories.includes("0")) {
+          const curr = e.currentTarget as Element;
+          addClass(curr, "notClickable");
+          this.#put_to_root = true;
+          this.#selectAlbum({ album: { id: 0, root: str_root } });
+          this.#close_album_selector();
+        }
+      });
     }
   }
 
   #loadPickAlbumEvent() {
     const instanceAb = `.${this.instanceId}`;
     if (this.#isAlbumCreationChecked) {
-      $(".prefill-results-item")
-        .off(`click${instanceAb}`)
-        .on(`click${instanceAb}`, (e) => {
-          const curr = $(e.currentTarget);
-          const cat_id = curr.attr("id")!;
-          const cat = this.#cats[cat_id]!;
-          this.#switch_album_view(cat);
-        });
+      const items = q(".prefill-results-item");
+      off(items, `click${instanceAb}`);
+      on(items, `click${instanceAb}`, (e) => {
+        const curr = e.currentTarget as Element;
+        const cat_id = attrOf(curr, "id")!;
+        const cat = this.#cats[cat_id]!;
+        this.#switch_album_view(cat);
+      });
     } else {
-      $(".prefill-results-item.available")
-        .off(`click${instanceAb}`)
-        .on(`click${instanceAb}`, (e) => {
-          const curr = $(e.currentTarget);
-          const cat_id = curr.attr("id")!;
-          const cat = this.#cats[cat_id]!;
+      const available = q(".prefill-results-item.available");
+      off(available, `click${instanceAb}`);
+      on(available, `click${instanceAb}`, (e) => {
+        const curr = e.currentTarget as Element;
+        const cat_id = attrOf(curr, "id")!;
+        const cat = this.#cats[cat_id]!;
 
-          this.#currentSelectedId = cat.id;
-          this.#selectAlbum({ album: cat });
-          this.#close_album_selector();
-        });
+        this.#currentSelectedId = cat.id;
+        this.#selectAlbum({ album: cat });
+        this.#close_album_selector();
+      });
     }
   }
 
   #loadSubCatEvent() {
     const instanceAb = `.${this.instanceId}`;
-    $(".display-subcat")
-      .off(`click${instanceAb}`)
-      .on(`click${instanceAb}`, (e) => {
-        const curr = e.currentTarget;
-        const cat_id = $(curr).prop("id") as string;
-        const cat = this.#cats[cat_id]!;
+    const togglers = q(".display-subcat");
+    off(togglers, `click${instanceAb}`);
+    on(togglers, `click${instanceAb}`, (e) => {
+      const curr = e.currentTarget as HTMLElement;
+      const cat_id = curr.id;
+      const cat = this.#cats[cat_id]!;
 
-        if ($(curr).hasClass("open")) {
-          $(curr).removeClass("open");
-          $("#subcat-" + cat.id).fadeOut();
-        } else if ($("#subcat-" + cat.id).length) {
-          $(curr).addClass("open");
-          $("#subcat-" + cat.id).fadeIn();
-        } else {
-          $("#" + cat_id + ".display-subcat")
-            .removeClass("gallery-icon-up-open")
-            .addClass("gallery-icon-spin6 animate-spin");
-          $("#" + cat_id + ".search-result-item").after(
-            `<div id="subcat-${cat_id}" class="search-result-subcat-item"></div>`,
-          );
-          void this.#prefill_search_subcats(cat_id).then(() => {
-            $("#" + cat_id + ".display-subcat")
-              .removeClass("gallery-icon-spin6 animate-spin")
-              .addClass("gallery-icon-up-open");
-            $(curr).addClass("open");
-            $("#subcat-" + cat.id).fadeIn();
-          });
-        }
-      });
+      if (hasClass(curr, "open")) {
+        removeClass(curr, "open");
+        fadeOut(q("#subcat-" + escapeId(cat.id)));
+      } else if (q("#subcat-" + escapeId(cat.id)).length) {
+        addClass(curr, "open");
+        fadeIn(q("#subcat-" + escapeId(cat.id)));
+      } else {
+        const arrow = q("#" + escapeId(cat_id) + ".display-subcat");
+        removeClass(arrow, "gallery-icon-up-open");
+        addClass(arrow, "gallery-icon-spin6 animate-spin");
+        after(
+          q("#" + escapeId(cat_id) + ".search-result-item"),
+          `<div id="subcat-${cat_id}" class="search-result-subcat-item"></div>`,
+        );
+        void this.#prefill_search_subcats(cat_id).then(() => {
+          const settled = q("#" + escapeId(cat_id) + ".display-subcat");
+          removeClass(settled, "gallery-icon-spin6 animate-spin");
+          addClass(settled, "gallery-icon-up-open");
+          addClass(curr, "open");
+          fadeIn(q("#subcat-" + escapeId(cat.id)));
+        });
+      }
+    });
   }
 
   #loadFillResultEvent(tempSelect: (string | number)[]) {
     const instanceAb = `.${this.instanceId}`;
 
-    AlbumSelector.selectors.searchResult
-      .find(".search-result-item")
-      .off(`click${instanceAb}`)
-      .on(`click${instanceAb}`, (e) => {
-        const curr = $(e.currentTarget);
-        const cat_id = curr.attr("id")!;
-        const cat = this.#searchCat[cat_id]!;
+    const rows = find(
+      AlbumSelector.selectors.searchResult,
+      ".search-result-item",
+    );
+    off(rows, `click${instanceAb}`);
+    on(rows, `click${instanceAb}`, (e) => {
+      const curr = e.currentTarget as Element;
+      const cat_id = attrOf(curr, "id")!;
+      const cat = this.#searchCat[cat_id]!;
 
-        const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);
-        if (!tempSelect.includes(formated_cat_id)) {
-          this.#currentSelectedId = cat.id;
-          this.#selectAlbum({ album: cat });
-          this.#close_album_selector();
-        }
-      });
+      const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);
+      if (!tempSelect.includes(formated_cat_id)) {
+        this.#currentSelectedId = cat.id;
+        this.#selectAlbum({ album: cat });
+        this.#close_album_selector();
+      }
+    });
   }
 
   /*--------------
@@ -501,17 +543,18 @@ export class AlbumSelector {
     }
 
     if (this.#show_root_btn && !this.#selected_categories.includes("0")) {
-      AlbumSelector.selectors.putToRootBtn.removeClass("notClickable");
+      removeClass(AlbumSelector.selectors.putToRootBtn, "notClickable");
     } else {
-      AlbumSelector.selectors.putToRootBtn.addClass("notClickable");
+      addClass(AlbumSelector.selectors.putToRootBtn, "notClickable");
     }
 
-    AlbumSelector.selectors.linkedModalTitle.html(this.#title);
-    AlbumSelector.selectors.searchInput.attr(
+    html(AlbumSelector.selectors.linkedModalTitle, this.#title);
+    attr(
+      AlbumSelector.selectors.searchInput,
       "placeholder",
       this.#searchPlaceholder,
     );
-    AlbumSelector.selectors.addLinkedAlbum.fadeIn();
+    fadeIn(AlbumSelector.selectors.addLinkedAlbum);
   }
 
   #close_album_selector() {
@@ -523,7 +566,7 @@ export class AlbumSelector {
 
     this.#destroyEvent();
 
-    AlbumSelector.selectors.addLinkedAlbum.fadeOut();
+    fadeOut(AlbumSelector.selectors.addLinkedAlbum);
   }
 
   #reset_album_selector() {
@@ -531,27 +574,28 @@ export class AlbumSelector {
     this.#reset_search_input(false);
     // AlbumSelector.selectors.searchInput.val('');
     // // AlbumSelector.selectors.searchInput.trigger("input");
-    AlbumSelector.selectors.limitReached.html(str_no_search_in_progress);
-    AlbumSelector.selectors.albumSelector.show();
+    html(AlbumSelector.selectors.limitReached, str_no_search_in_progress);
+    show(AlbumSelector.selectors.albumSelector);
   }
 
   #hard_reset_album_selector() {
-    AlbumSelector.selectors.albumCreate.hide();
+    hide(AlbumSelector.selectors.albumCreate);
     this.#hide_new_album_error();
 
     this.#reset_album_selector();
-    AlbumSelector.selectors.linkedAlbumInput.val("");
-    if (AlbumSelector.selectors.albumCheckBox.is(":checked")) {
-      AlbumSelector.selectors.albumCheckBox.trigger("click");
+    setVal(AlbumSelector.selectors.linkedAlbumInput, "");
+    if (is(AlbumSelector.selectors.albumCheckBox, ":checked")) {
+      trigger(AlbumSelector.selectors.albumCheckBox, "click");
     }
-    AlbumSelector.selectors.searchResult.show();
-    AlbumSelector.selectors.linkedAlbumSwitch.show();
+    show(AlbumSelector.selectors.searchResult);
+    show(AlbumSelector.selectors.linkedAlbumSwitch);
   }
 
   #reset_search_input(prefill: boolean) {
-    AlbumSelector.selectors.searchInput.val("");
-    AlbumSelector.selectors.limitReached.show().html(str_no_search_in_progress);
-    AlbumSelector.selectors.searchResult.empty();
+    setVal(AlbumSelector.selectors.searchInput, "");
+    show(AlbumSelector.selectors.limitReached);
+    html(AlbumSelector.selectors.limitReached, str_no_search_in_progress);
+    empty(AlbumSelector.selectors.searchResult);
     if (prefill) {
       this.#prefill_search();
     }
@@ -563,70 +607,67 @@ export class AlbumSelector {
 
     if (this.#isAlbumCreationChecked) {
       if (AlbumSelector.selectors.putToRoot.length) {
-        AlbumSelector.selectors.putToRoot.hide();
+        hide(AlbumSelector.selectors.putToRoot);
       }
-      AlbumSelector.selectors.linkedModalTitle.hide();
-      AlbumSelector.selectors.linkedModalTitle.html(str_create_and_select);
-      AlbumSelector.selectors.linkedAddAlbum.show();
-      AlbumSelector.selectors.linkedModalTitle.fadeIn();
+      hide(AlbumSelector.selectors.linkedModalTitle);
+      html(AlbumSelector.selectors.linkedModalTitle, str_create_and_select);
+      show(AlbumSelector.selectors.linkedAddAlbum);
+      fadeIn(AlbumSelector.selectors.linkedModalTitle);
 
-      AlbumSelector.selectors.linkedAddAlbum
-        .off(`click${instanceAb}`)
-        .on(`click${instanceAb}`, () => {
-          this.#switch_album_view("root");
-        });
+      off(AlbumSelector.selectors.linkedAddAlbum, `click${instanceAb}`);
+      on(AlbumSelector.selectors.linkedAddAlbum, `click${instanceAb}`, () => {
+        this.#switch_album_view("root");
+      });
     } else {
       if (AlbumSelector.selectors.putToRoot.length) {
-        AlbumSelector.selectors.putToRoot.fadeIn();
+        fadeIn(AlbumSelector.selectors.putToRoot);
       }
-      AlbumSelector.selectors.linkedModalTitle.hide();
-      AlbumSelector.selectors.linkedModalTitle.html(this.#title);
-      AlbumSelector.selectors.linkedModalTitle.fadeIn();
-      AlbumSelector.selectors.linkedAddAlbum.hide();
-      AlbumSelector.selectors.linkedAddAlbum.off("click");
+      hide(AlbumSelector.selectors.linkedModalTitle);
+      html(AlbumSelector.selectors.linkedModalTitle, this.#title);
+      fadeIn(AlbumSelector.selectors.linkedModalTitle);
+      hide(AlbumSelector.selectors.linkedAddAlbum);
+      off(AlbumSelector.selectors.linkedAddAlbum, "click");
     }
   }
 
   #switch_album_view(cat: AlbumCategory | "root") {
     const instanceAb = `.${this.instanceId}`;
 
-    AlbumSelector.selectors.albumSelector.hide();
-    AlbumSelector.selectors.searchResult.hide();
-    AlbumSelector.selectors.linkedAlbumSwitch.hide();
-    AlbumSelector.selectors.albumCreate.fadeIn();
+    hide(AlbumSelector.selectors.albumSelector);
+    hide(AlbumSelector.selectors.searchResult);
+    hide(AlbumSelector.selectors.linkedAlbumSwitch);
+    fadeIn(AlbumSelector.selectors.albumCreate);
 
-    AlbumSelector.selectors.linkedAlbumSubTitle.html(
+    html(
+      AlbumSelector.selectors.linkedAlbumSubTitle,
       sprintf(
         str_add_subcat_of,
         cat === "root" ? str_root_album_select : cat.name,
       ),
     );
-    AlbumSelector.selectors.linkedAddNewAlbum
-      .off(`click${instanceAb}`)
-      .on(`click${instanceAb}`, () => {
-        this.#add_new_album(cat === "root" ? cat : cat.id);
-      });
+    off(AlbumSelector.selectors.linkedAddNewAlbum, `click${instanceAb}`);
+    on(AlbumSelector.selectors.linkedAddNewAlbum, `click${instanceAb}`, () => {
+      this.#add_new_album(cat === "root" ? cat : cat.id);
+    });
 
-    AlbumSelector.selectors.linkedAlbumCancel
-      .off(`click${instanceAb}`)
-      .on(`click${instanceAb}`, () => {
-        this.#close_album_selector();
-      });
+    off(AlbumSelector.selectors.linkedAlbumCancel, `click${instanceAb}`);
+    on(AlbumSelector.selectors.linkedAlbumCancel, `click${instanceAb}`, () => {
+      this.#close_album_selector();
+    });
 
-    AlbumSelector.selectors.linkedAlbumInput
-      .off(`input${instanceAb}`)
-      .on(`input${instanceAb}`, () => {
-        this.#hide_new_album_error();
-      });
+    off(AlbumSelector.selectors.linkedAlbumInput, `input${instanceAb}`);
+    on(AlbumSelector.selectors.linkedAlbumInput, `input${instanceAb}`, () => {
+      this.#hide_new_album_error();
+    });
   }
 
   #hide_new_album_error() {
-    AlbumSelector.selectors.addAlbumErrors.css("visibility", "hidden");
+    css(AlbumSelector.selectors.addAlbumErrors, "visibility", "hidden");
   }
 
   #show_new_album_error(text: string) {
-    AlbumSelector.selectors.linkedAddAlbumErrors.html(text);
-    AlbumSelector.selectors.addAlbumErrors.css("visibility", "visible");
+    html(AlbumSelector.selectors.linkedAddAlbumErrors, text);
+    css(AlbumSelector.selectors.addAlbumErrors, "visibility", "visible");
   }
 
   #select_new_album_and_close(cat: CategoryAdmin) {
@@ -638,16 +679,17 @@ export class AlbumSelector {
   #destroyEvent() {
     const instanceAb = `.${this.instanceId}`;
 
-    $(document).off(`keyup${instanceAb}`);
-    $(document).off(`click${instanceAb}`);
-    $(document).off(`change${instanceAb}`);
-    $(document).off(`input${instanceAb}`);
-    AlbumSelector.selectors.searchInput.off(`keyup${instanceAb}`);
-    AlbumSelector.selectors.searchResult
-      .find(".search-result-item")
-      .off(`click${instanceAb}`);
-    $(".prefill-results-item").off(`click${instanceAb}`);
-    $(".prefill-results-item.available").off(`click${instanceAb}`);
+    off(document, `keyup${instanceAb}`);
+    off(document, `click${instanceAb}`);
+    off(document, `change${instanceAb}`);
+    off(document, `input${instanceAb}`);
+    off(AlbumSelector.selectors.searchInput, `keyup${instanceAb}`);
+    off(
+      find(AlbumSelector.selectors.searchResult, ".search-result-item"),
+      `click${instanceAb}`,
+    );
+    off(q(".prefill-results-item"), `click${instanceAb}`);
+    off(q(".prefill-results-item.available"), `click${instanceAb}`);
   }
 
   /*--------------
@@ -670,12 +712,12 @@ export class AlbumSelector {
       ...this.#cats,
       ...Object.fromEntries(cats.map((c) => [c.id, c])),
     };
-    let display_div = $("#subcat-" + rank);
+    let display_div = q("#subcat-" + escapeId(rank));
     if ("root" == rank) {
-      AlbumSelector.selectors.searchResult.empty();
+      empty(AlbumSelector.selectors.searchResult);
       display_div = AlbumSelector.selectors.searchResult;
     } else {
-      display_div = $("#subcat-" + rank);
+      display_div = q("#subcat-" + escapeId(rank));
     }
 
     cats.forEach((cat) => {
@@ -693,7 +735,8 @@ export class AlbumSelector {
 
       const isNotInSelectedCat = !tempSelectedCat.includes(cat.id);
       if (isCreationMode || isNotInSelectedCat) {
-        display_div.append(
+        append(
+          display_div,
           `<div class="search-result-item" id="${cat.id}">
               ${subcat}
               <div class="prefill-results-item available" id="${cat.id}">
@@ -703,7 +746,8 @@ export class AlbumSelector {
             </div>`,
         );
       } else {
-        display_div.append(
+        append(
+          display_div,
           `<div class="search-result-item already-in" id="${cat.id}" title="${str_album_selected}">
               ${subcat}
               <div class="prefill-results-item" id="${cat.id}">
@@ -715,10 +759,21 @@ export class AlbumSelector {
       }
 
       if (rank !== "root") {
-        const item = $("#" + rank + ".search-result-item");
-        const margin_left = parseInt(item.css("margin-left")) + 25;
-        $("#" + cat.id + ".search-result-item").css("margin-left", margin_left);
-        $("#" + cat.id + ".search-result-item .search-result-path").css(
+        const item = q("#" + escapeId(rank) + ".search-result-item")[0];
+        // `.css(name)` on an empty set is undefined, and parseInt of that
+        // is NaN -- which then reaches `.css(prop, NaN)` and is skipped.
+        // Preserved: an absent parent row leaves the margin untouched
+        // rather than throwing.
+        const margin_left =
+          parseInt(item === undefined ? "" : cssValue(item, "margin-left")) +
+          25;
+        css(
+          q("#" + escapeId(cat.id) + ".search-result-item"),
+          "margin-left",
+          margin_left,
+        );
+        css(
+          q("#" + escapeId(cat.id) + ".search-result-item .search-result-path"),
           "max-width",
           400 - margin_left - 80,
         );
@@ -735,7 +790,7 @@ export class AlbumSelector {
         limit.limitedTo,
         limit.totalCats,
       );
-      display_div.append(`<p class="and-more">${text}</p>`);
+      append(display_div, `<p class="and-more">${text}</p>`);
     }
   }
 
@@ -748,12 +803,13 @@ export class AlbumSelector {
       : [...this.#selected_categories];
 
     this.#searchCat = Object.fromEntries(cats.map((c) => [c.id, c]));
-    AlbumSelector.selectors.searchResult.empty();
+    empty(AlbumSelector.selectors.searchResult);
 
     cats.forEach((cat) => {
       const cat_name = this.#in_admin_mode ? cat.fullname! : cat.name;
 
-      AlbumSelector.selectors.searchResult.append(
+      append(
+        AlbumSelector.selectors.searchResult,
         `<div class='search-result-item' id="${cat.id}">
         <span class="search-result-path not-rtl">${this.#getEllipsisName(cat_name)}</span><span id="${cat.id}" class="${iconAlbum} item-add"></span>
       </div>`,
@@ -761,21 +817,23 @@ export class AlbumSelector {
 
       if (this.#isAlbumCreationChecked) {
         const instanceAb = `.${this.instanceId}`;
-        $(".search-result-item#" + cat.id)
-          .off(`click${instanceAb}`)
-          .on(`click${instanceAb}`, () => {
-            this.#switch_album_view(cat);
-          });
+        const row = q(".search-result-item#" + escapeId(cat.id));
+        off(row, `click${instanceAb}`);
+        on(row, `click${instanceAb}`, () => {
+          this.#switch_album_view(cat);
+        });
         return;
       }
 
       if (tempSelectedCat.includes(cat.id)) {
-        $(".search-result-item #" + cat.id + ".item-add")
-          .addClass("notClickable")
-          .attr("title", str_album_selected);
-        $("#" + cat.id + ".search-result-item")
-          .addClass("notClickable")
-          .attr("title", str_album_selected);
+        const adder = q(
+          ".search-result-item #" + escapeId(cat.id) + ".item-add",
+        );
+        addClass(adder, "notClickable");
+        attr(adder, "title", str_album_selected);
+        const whole = q("#" + escapeId(cat.id) + ".search-result-item");
+        addClass(whole, "notClickable");
+        attr(whole, "title", str_album_selected);
       }
     });
 
@@ -799,7 +857,7 @@ export class AlbumSelector {
   }
 
   #prefill_search() {
-    $(".linkedAlbumPopInContainer .searching").show();
+    show(q(".linkedAlbumPopInContainer .searching"));
     const api_params = {
       ...this.#catIdParam(0),
       recursive: false,
@@ -807,27 +865,28 @@ export class AlbumSelector {
       limit: this.#limitParam,
     };
 
-    $.ajax({
+    void ajax({
       url: this.#methodPwg,
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (data: CategoryListOrAvailableResponse) => {
+      success: (payload) => {
         // for debug
         // console.log(data);
-        $(".linkedAlbumPopInContainer .searching").hide();
+        const data = payload as CategoryListOrAvailableResponse;
+        hide(q(".linkedAlbumPopInContainer .searching"));
         const cats = data.categories;
         const limit = data.limit!;
         this.#prefill_results("root", cats, limit);
       },
-      error: function (e: JQuery.jqXHR) {
-        $(".linkedAlbumPopInContainer .searching").hide();
+      error: function (e) {
+        hide(q(".linkedAlbumPopInContainer .searching"));
         console.log("error : ", e.responseText);
       },
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await -- the call site (`#loadSubCatEvent`) relies on this always returning a real Promise (`.then(...)`), even though the body never needs to `await` anything itself: `$.ajax`'s own `error` callback already handles failures internally, nothing here re-throws.
+  // eslint-disable-next-line @typescript-eslint/require-await -- the call site (`#loadSubCatEvent`) relies on this always returning a real Promise (`.then(...)`), even though the body never needs to `await` anything itself: `ajax()`'s own `error` callback already handles failures internally, nothing here re-throws.
   async #prefill_search_subcats(cat_id: string | number) {
     const api_params = {
       ...this.#catIdParam(cat_id),
@@ -835,17 +894,18 @@ export class AlbumSelector {
       limit: this.#limitParam,
     };
 
-    $.ajax({
+    void ajax({
       url: this.#methodPwg,
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (data: CategoryListOrAvailableResponse) => {
+      success: (payload) => {
+        const data = payload as CategoryListOrAvailableResponse;
         const cats = data.categories.filter((c) => c.id != cat_id);
         const limit = data.limit!;
         this.#prefill_results(cat_id, cats, limit);
       },
-      error: (e: JQuery.jqXHR) => {
+      error: (e) => {
         console.log("prefill search error :", e);
       },
     });
@@ -863,33 +923,36 @@ export class AlbumSelector {
       search: searchText,
     };
 
-    AlbumSelector.selectors.iconSearchingSpin.show();
-    $.ajax({
+    show(AlbumSelector.selectors.iconSearchingSpin);
+    void ajax({
       url: this.#methodPwg,
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (data: CategoryListOrAvailableResponse) => {
-        AlbumSelector.selectors.iconSearchingSpin.hide();
+      success: (payload) => {
+        const data = payload as CategoryListOrAvailableResponse;
+        hide(AlbumSelector.selectors.iconSearchingSpin);
         const categories = data.categories;
         this.#fill_results(categories);
 
         if (data.limit && data.limit.remainingCats > 0) {
-          AlbumSelector.selectors.limitReached.html(
+          html(
+            AlbumSelector.selectors.limitReached,
             str_result_limit.replace("%d", String(categories.length)),
           );
         } else {
           if (categories.length == 1) {
-            AlbumSelector.selectors.limitReached.html(str_album_found);
+            html(AlbumSelector.selectors.limitReached, str_album_found);
           } else {
-            AlbumSelector.selectors.limitReached.html(
+            html(
+              AlbumSelector.selectors.limitReached,
               str_albums_found.replace("%d", String(categories.length)),
             );
           }
         }
       },
-      error: (e: JQuery.jqXHR) => {
-        AlbumSelector.selectors.iconSearchingSpin.hide();
+      error: (e) => {
+        hide(AlbumSelector.selectors.iconSearchingSpin);
         console.log(e.responseText);
       },
     });
@@ -898,8 +961,8 @@ export class AlbumSelector {
   #add_new_album(cat_id: string | number) {
     if (this.#loading_add) return;
     this.#loading_add = true;
-    const cat_name = AlbumSelector.selectors.linkedAlbumInput.val();
-    const cat_position = $("input[name=position]:checked").val();
+    const cat_name = val(AlbumSelector.selectors.linkedAlbumInput);
+    const cat_position = val(q("input[name=position]:checked"));
     const api_params = {
       name: cat_name,
       parentId: cat_id === "root" ? 0 : +cat_id,
@@ -911,7 +974,7 @@ export class AlbumSelector {
       return;
     }
 
-    $.ajax({
+    void ajax({
       url: "api/v1/categories",
       type: "POST",
       contentType: "application/json",
@@ -920,9 +983,9 @@ export class AlbumSelector {
       },
       data: JSON.stringify(api_params),
       dataType: "json",
-      success: (
-        data: import("../../../../openapi/client/schema").operations["categoryCreate"]["responses"][201]["content"]["application/json"],
-      ) => {
+      success: (payload) => {
+        const data =
+          payload as import("../../../../openapi/client/schema").operations["categoryCreate"]["responses"][201]["content"]["application/json"];
         this.#get_album_by_id(data.id);
       },
       error: () => {
@@ -932,16 +995,16 @@ export class AlbumSelector {
   }
 
   #get_album_by_id(cat_id: string | number) {
-    $.ajax({
+    void ajax({
       url: "api/v1/categories",
       type: "GET",
       dataType: "json",
       data: {
         parentId: cat_id,
       },
-      success: (
-        data: import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"],
-      ) => {
+      success: (payload) => {
+        const data =
+          payload as import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"];
         this.#select_new_album_and_close(data.categories[0]!);
       },
       error: () => {

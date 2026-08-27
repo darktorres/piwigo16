@@ -132,6 +132,27 @@ function computedDisplay(el: Element): string {
  * `visibility: hidden` or zero-size element, and jQuery uses each in a
  * different place.
  */
+/**
+ * The `:visible` pseudo-selector -- 33 first-party uses, and
+ * `querySelector` throws a real `SyntaxError` on it, because it is not a
+ * selector at all. jQuery computes it from layout
+ * (`css/hiddenVisibleSelectors.js`): an element is hidden when it has no
+ * box, which is true for `display: none` *and* for a zero-size element, and
+ * false for `visibility: hidden`, which still occupies space.
+ *
+ * Deliberately not the same test as `isHiddenForDisplay()` above -- they
+ * disagree on exactly those two cases, and jQuery uses each in a different
+ * place. The `reliableHiddenOffsets()` half of the original is an old-IE
+ * workaround and is dropped.
+ */
+export function isVisible(el: Element): boolean {
+  if (!(el instanceof HTMLElement)) {
+    return true;
+  }
+
+  return !(el.offsetWidth <= 0 && el.offsetHeight <= 0);
+}
+
 export function isHiddenForDisplay(el: Element): boolean {
   return (
     computedDisplay(el) === "none" || !el.ownerDocument.contains(el)
@@ -349,15 +370,34 @@ function splitSpecs(spec: string): string[] {
   return spec.match(/\S+/g) ?? [""];
 }
 
-/** `$(el).on("click.ns", handler)`, or several types at once. */
+/**
+ * jQuery binds to every element of a set, so these accept a set as readily
+ * as a single target.
+ *
+ * The two cases are told apart by asking whether the value can take a
+ * listener at all, rather than by `instanceof EventTarget`: that test is
+ * per-realm and answers false for anything from another document (an
+ * iframe, or the test environment's DOM), which would silently route a
+ * single element down the set branch and bind nothing. A `length` check
+ * would not work either -- `window.length` is its frame count.
+ */
+function toTargets(target: EventTarget | ArrayLike<Element>): EventTarget[] {
+  return typeof (target as EventTarget).addEventListener === "function"
+    ? [target as EventTarget]
+    : Array.from(target as ArrayLike<Element>);
+}
+
+/** `$(el).on("click.ns", handler)`, or several types, or a whole set. */
 export function on(
-  target: EventTarget,
+  target: EventTarget | ArrayLike<Element>,
   spec: string,
   handler: EventListener,
   options?: AddEventListenerOptions
 ): void {
-  for (const one of splitSpecs(spec)) {
-    onOne(target, one, handler, options);
+  for (const one of toTargets(target)) {
+    for (const type of splitSpecs(spec)) {
+      onOne(one, type, handler, options);
+    }
   }
 }
 
@@ -407,13 +447,27 @@ function onOne(
  * intercepted here.
  */
 export function delegate(
+  target: EventTarget | ArrayLike<Element>,
+  spec: string,
+  selector: string,
+  handler: EventListener
+): void {
+  for (const one of toTargets(target)) {
+    delegateOne(one, spec, selector, handler);
+  }
+}
+
+function delegateOne(
   target: EventTarget,
   spec: string,
   selector: string,
   handler: EventListener
 ): void {
   on(target, spec, (event) => {
-    if (!(event.target instanceof Element)) {
+    // `nodeType`, not `instanceof Element`, for the same cross-realm reason
+    // as `toTargets` above -- and because it is what jQuery itself checks.
+    const origin = event.target as Node | null;
+    if (origin === null || origin.nodeType !== 1) {
       return;
     }
 
@@ -428,7 +482,7 @@ export function delegate(
     });
 
     try {
-      let current: Element | null = event.target;
+      let current: Element | null = origin as Element;
       while (current !== null && (current as EventTarget) !== target) {
         if (current.matches(selector)) {
           handler.call(current, event);
@@ -454,12 +508,14 @@ export function delegate(
  * off-then-on replace idiom used at several call sites.
  */
 export function off(
-  target: EventTarget,
+  target: EventTarget | ArrayLike<Element>,
   spec: string,
   handler?: EventListener
 ): void {
-  for (const one of splitSpecs(spec)) {
-    offOne(target, one, handler);
+  for (const one of toTargets(target)) {
+    for (const type of splitSpecs(spec)) {
+      offOne(one, type, handler);
+    }
   }
 }
 
@@ -495,7 +551,7 @@ function offOne(
  * namespaces gate which handlers run, matching jQuery.
  */
 export function trigger(
-  target: EventTarget,
+  target: EventTarget | ArrayLike<Element>,
   spec: string,
   detail?: unknown
 ): void {
@@ -504,13 +560,16 @@ export function trigger(
     return;
   }
 
-  const event = new CustomEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    detail,
-  });
-  triggeredNamespaces.set(event, namespaces);
-  target.dispatchEvent(event);
+  for (const one of toTargets(target)) {
+    // A fresh event per element: a single Event cannot be dispatched twice.
+    const event = new CustomEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      detail,
+    });
+    triggeredNamespaces.set(event, namespaces);
+    one.dispatchEvent(event);
+  }
 }
 
 // ── Animation: the fx queue and tween engine ─────────────────────────────
@@ -1378,6 +1437,186 @@ export function css(
   for (const el of toElements(target)) {
     if (el instanceof HTMLElement) {
       el.style.setProperty(property, resolved);
+    }
+  }
+}
+
+// ── Set operations ───────────────────────────────────────────────────────
+//
+// jQuery methods are set operations with one consistent asymmetry: a setter
+// writes to *every* element of the set, a getter reads the *first*, and both
+// are silent no-ops on an empty set. Translating `$(".x").html(v)` to
+// `querySelector(".x").innerHTML = v` quietly drops every match after the
+// first, and throws outright when there are none -- which is why these are
+// here rather than inlined at each call site.
+//
+// `.is()` here handles real CSS selectors only. jQuery's own pseudo-classes
+// have no place in `matches()` -- `:visible` throws a SyntaxError there --
+// so call sites use `isVisible()` and friends directly instead of hiding
+// them behind a selector string.
+
+/** `.html(value)` -- writes to every element. */
+export function html(target: Element | ArrayLike<Element>, value: string): void {
+  for (const el of toElements(target)) {
+    el.innerHTML = value;
+  }
+}
+
+/** `.html()` -- reads the first element, `undefined` for an empty set. */
+export function htmlOf(target: Element | ArrayLike<Element>): string | undefined {
+  return toElements(target)[0]?.innerHTML;
+}
+
+/** `.val()` -- reads the first element, `undefined` for an empty set. */
+export function val(
+  target: Element | ArrayLike<Element>
+): string | undefined {
+  const first = toElements(target)[0];
+  if (
+    first instanceof HTMLInputElement ||
+    first instanceof HTMLSelectElement ||
+    first instanceof HTMLTextAreaElement
+  ) {
+    return first.value;
+  }
+
+  return undefined;
+}
+
+/** `.val(value)` -- writes to every element. */
+export function setVal(
+  target: Element | ArrayLike<Element>,
+  value: string
+): void {
+  for (const el of toElements(target)) {
+    if (
+      el instanceof HTMLInputElement ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLTextAreaElement
+    ) {
+      el.value = value;
+    }
+  }
+}
+
+/** `.addClass("a b")` -- space-separated, as jQuery splits it. */
+export function addClass(
+  target: Element | ArrayLike<Element>,
+  names: string
+): void {
+  const list = names.match(/\S+/g) ?? [];
+  for (const el of toElements(target)) {
+    el.classList.add(...list);
+  }
+}
+
+/** `.removeClass("a b")`. */
+export function removeClass(
+  target: Element | ArrayLike<Element>,
+  names: string
+): void {
+  const list = names.match(/\S+/g) ?? [];
+  for (const el of toElements(target)) {
+    el.classList.remove(...list);
+  }
+}
+
+/** `.hasClass(name)` -- true when *any* element carries it. */
+export function hasClass(
+  target: Element | ArrayLike<Element>,
+  name: string
+): boolean {
+  return toElements(target).some((el) => el.classList.contains(name));
+}
+
+/** `.attr(name)` -- reads the first element. */
+export function attrOf(
+  target: Element | ArrayLike<Element>,
+  name: string
+): string | null | undefined {
+  return toElements(target)[0]?.getAttribute(name);
+}
+
+/** `.attr(name, value)` -- writes to every element. */
+export function attr(
+  target: Element | ArrayLike<Element>,
+  name: string,
+  value: string
+): void {
+  for (const el of toElements(target)) {
+    el.setAttribute(name, value);
+  }
+}
+
+/** `.empty()` -- removes every child, of every element. */
+export function empty(target: Element | ArrayLike<Element>): void {
+  for (const el of toElements(target)) {
+    el.replaceChildren();
+  }
+}
+
+/** `.remove()` -- detaches every element from its parent. */
+export function remove(target: Element | ArrayLike<Element>): void {
+  for (const el of toElements(target)) {
+    el.remove();
+  }
+}
+
+/**
+ * Escapes a value for use as an id in a selector.
+ *
+ * `#1` is a valid Sizzle selector and an invalid CSS one:
+ * `querySelectorAll` throws a `SyntaxError` on an identifier starting with a
+ * digit, while jQuery's own engine accepts it. Every id built from a
+ * database row id hits this, so it is the rule rather than the exception --
+ * `CSS.escape` produces the conforming form (`#\31 `).
+ */
+export function escapeId(id: string | number): string {
+  return CSS.escape(String(id));
+}
+
+/** `.is(selector)` -- true when *any* element matches. CSS selectors only. */
+export function is(
+  target: Element | ArrayLike<Element>,
+  selector: string
+): boolean {
+  return toElements(target).some((el) => el.matches(selector));
+}
+
+/** `.find(selector)` -- every matching descendant of every element. */
+export function find(
+  target: Element | ArrayLike<Element>,
+  selector: string
+): Element[] {
+  return toElements(target).flatMap((el) =>
+    Array.from(el.querySelectorAll(selector))
+  );
+}
+
+/**
+ * `.append(html)` -- parses once per element, because a node cannot be in
+ * two parents at once (jQuery clones for every element after the first,
+ * which comes to the same thing).
+ */
+export function append(
+  target: Element | ArrayLike<Element>,
+  markup: string
+): void {
+  for (const el of toElements(target)) {
+    for (const node of parseHtml(markup)) {
+      el.appendChild(node);
+    }
+  }
+}
+
+/** `.after(html)` -- inserts as the next sibling of every element. */
+export function after(
+  target: Element | ArrayLike<Element>,
+  markup: string
+): void {
+  for (const el of toElements(target)) {
+    for (const node of parseHtml(markup).reverse()) {
+      el.parentElement?.insertBefore(node, el.nextSibling);
     }
   }
 }

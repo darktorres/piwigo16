@@ -4,6 +4,7 @@ import {
   defaultDisplay,
   hide,
   isHiddenForDisplay,
+  isVisible,
   show,
   toggle,
 } from "../../../themes/default/js/vendor/dom";
@@ -146,5 +147,60 @@ describe("defaultDisplay", () => {
 
   it("caches per nodeName", () => {
     expect(defaultDisplay("LI")).toBe(defaultDisplay("LI"));
+  });
+});
+
+describe("isVisible (the :visible pseudo-selector)", () => {
+  // happy-dom reports offsetWidth/offsetHeight as 0 for everything, so each
+  // case defines them explicitly: what is under test is jQuery's rule, not
+  // the engine's layout.
+  function withBox(el: HTMLElement, width: number, height: number): void {
+    Object.defineProperty(el, "offsetWidth", {
+      configurable: true,
+      value: width,
+    });
+    Object.defineProperty(el, "offsetHeight", {
+      configurable: true,
+      value: height,
+    });
+  }
+
+  it("treats an element with a box as visible", () => {
+    const el = mount("<div></div>");
+    withBox(el, 100, 20);
+
+    expect(isVisible(el)).toBe(true);
+  });
+
+  it("treats a zero-size element as hidden", () => {
+    // Not display:none -- an empty inline element is still hidden by this
+    // test, which is the whole difference from a display check.
+    const el = mount("<span></span>");
+    withBox(el, 0, 0);
+
+    expect(isVisible(el)).toBe(false);
+  });
+
+  it("needs only one non-zero dimension to count as visible", () => {
+    const el = mount("<div></div>");
+    withBox(el, 0, 5);
+
+    expect(isVisible(el)).toBe(true);
+  });
+
+  it("disagrees with the display test for visibility:hidden", () => {
+    const el = mount('<div style="visibility:hidden"></div>');
+    withBox(el, 100, 20);
+
+    // It still occupies space, so :visible says yes while the eye says no.
+    expect(isVisible(el)).toBe(true);
+    expect(isHiddenForDisplay(el)).toBe(false);
+  });
+
+  it("reports a display:none element as not visible", () => {
+    const el = mount('<div style="display:none"></div>');
+    withBox(el, 0, 0);
+
+    expect(isVisible(el)).toBe(false);
   });
 });

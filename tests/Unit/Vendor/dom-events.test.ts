@@ -351,3 +351,61 @@ describe("delegated handlers", () => {
     expect(ownProperty).toBe(false);
   });
 });
+
+describe("binding to a whole set", () => {
+  let set: NodeListOf<HTMLElement>;
+
+  beforeEach(() => {
+    document.body.innerHTML =
+      '<b class="s"></b><b class="s"></b><b class="s"></b>';
+    set = document.body.querySelectorAll<HTMLElement>(".s");
+  });
+
+  it("binds every element, as jQuery does", () => {
+    const handler = vi.fn();
+    on(set, "click", handler);
+
+    set.forEach((el) => {
+      el.click();
+    });
+
+    expect(handler).toHaveBeenCalledTimes(3);
+  });
+
+  it("unbinds every element", () => {
+    const handler = vi.fn();
+    on(set, "click.ns", handler);
+    off(set, ".ns");
+
+    set.forEach((el) => {
+      el.click();
+    });
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("triggers a fresh event per element", () => {
+    // One Event object cannot be dispatched twice, so a shared instance
+    // would reach only the first element.
+    const seen: EventTarget[] = [];
+    on(set, "custom", (event) => {
+      if (event.currentTarget !== null) {
+        seen.push(event.currentTarget);
+      }
+    });
+
+    trigger(set, "custom");
+
+    expect(seen).toHaveLength(3);
+  });
+
+  it("treats a single element as a set of one", () => {
+    const handler = vi.fn();
+    const [first] = Array.from(set);
+    on(first as HTMLElement, "click", handler);
+
+    (first as HTMLElement).click();
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+});

@@ -50,6 +50,79 @@ function introDeleteImage(int $imageId): void
     H::dbClose($db);
 }
 
+/**
+ * Inserts a minimal album row and returns its id. Only the NOT NULL columns
+ * are filled -- the promo threshold below counts rows and nothing else
+ * (CategoryRepository::countAllCategories() is a bare COUNT(id)), so a
+ * structurally valid row is all this needs to be.
+ */
+function introInsertAlbum(): int
+{
+    $db = introDbConnect();
+    $name = 'ct_promo_' . uniqid();
+    H::dbQuery($db, sprintf(
+        "INSERT INTO categories (name, status, visible, uppercats, commentable) VALUES ('%s', 'public', 1, '', 1)",
+        H::dbEscape($db, $name)
+    ));
+    $id = H::dbInsertId($db);
+    H::dbQuery($db, sprintf('UPDATE categories SET uppercats = %d WHERE id = %d', $id, $id));
+    H::dbClose($db);
+
+    return $id;
+}
+
+function introDeleteAlbum(int $categoryId): void
+{
+    $db = introDbConnect();
+    H::dbQuery($db, sprintf('DELETE FROM categories WHERE id = %d', $categoryId));
+    H::dbClose($db);
+}
+
+/**
+ * The newsletter promo only renders once the gallery is 2+ weeks old AND has
+ * at least 3 albums and 30 photos (IntroSubController::handle()). The
+ * committed fixture ships 2 albums and 5 photos, so the thresholds are not
+ * met on a clean database -- this test used to pass only when an earlier
+ * suite (Integration, or a fixture regeneration) had left extra rows behind,
+ * and failed on a freshly reimported one. Seed the shortfall explicitly
+ * rather than depending on what ran first.
+ *
+ * @return array{albums: list<int>, images: list<int>}
+ */
+function introSeedPromoThresholds(): array
+{
+    $db = introDbConnect();
+    $albumCount = (int) (H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS c FROM categories')['c'] ?? 0);
+    $imageCount = (int) (H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS c FROM images')['c'] ?? 0);
+    H::dbClose($db);
+
+    $seed = [
+        'albums' => [],
+        'images' => [],
+    ];
+    for ($i = $albumCount; $i < 3; $i++) {
+        $seed['albums'][] = introInsertAlbum();
+    }
+    for ($i = $imageCount; $i < 30; $i++) {
+        $seed['images'][] = introInsertOrphanImage();
+    }
+
+    return $seed;
+}
+
+/**
+ * @param array{albums: list<int>, images: list<int>} $seed
+ */
+function introRemovePromoSeed(array $seed): void
+{
+    foreach ($seed['images'] as $imageId) {
+        introDeleteImage($imageId);
+    }
+    foreach ($seed['albums'] as $categoryId) {
+        introDeleteAlbum($categoryId);
+    }
+}
+
 function introSetCategoryVisible(int $categoryId, bool $visible): void
 {
     $db = introDbConnect();
@@ -581,15 +654,20 @@ function introSetUserColumn(int $userId, string $column, ?string $value): void
 }
 
 it('shows the newsletter subscription promo panel for an account old enough with enough albums and photos', function (): void {
-    // The fixture's own registration_date is stamped to the frozen test
-    // "now" at build time (see RegenerateFixtureTest.php), so the "account
-    // must be 2+ weeks old" half of this branch's condition needs a real,
-    // deliberately-backdated row -- nb_cats/nb_images are already well over
-    // the 3/30 thresholds from the regenerated fixture itself (152
-    // categories, 131 photos), so only the date and the per-admin
-    // 'show_newsletter_subscription' preference (persistently flipped to
-    // false by this same file's own "hides the newsletter subscription
-    // banner" test, with no cleanup of its own) need forcing here.
+    // Every input to IntroSubController's promo condition is forced here,
+    // because none of them holds on a freshly reimported database:
+    //
+    //   - registration_date is stamped to the frozen test "now" at fixture
+    //     build time, so the "2+ weeks old" half needs a backdated row.
+    //   - the committed fixture ships 2 albums and 5 photos against
+    //     thresholds of 3 and 30, so the shortfall is seeded. This used to
+    //     be left to chance: the assertion passed only when an earlier suite
+    //     (Integration, or a fixture regeneration) had already put extra
+    //     rows in the database, and failed whenever it ran against a clean
+    //     one.
+    //   - the per-admin 'show_newsletter_subscription' preference is
+    //     persistently flipped to false by this same file's own "hides the
+    //     newsletter subscription banner" test, which has no cleanup.
     $page = H::loginAsAdmin($this);
     $db = introDbConnect();
 
@@ -606,6 +684,8 @@ it('shows the newsletter subscription promo panel for an account old enough with
         : "jsonb_set(COALESCE(preferences, '{}'::jsonb), '{show_newsletter_subscription}', 'true'::jsonb)";
     H::dbQuery($db, "UPDATE user_infos SET preferences = {$preferencesExpr} WHERE user_id = 1");
     H::dbClose($db);
+
+    $promoSeed = introSeedPromoThresholds();
 
     try {
         H::setConfigValue('show_newsletter_subscription', 'true');
@@ -627,6 +707,7 @@ it('shows the newsletter subscription promo panel for an account old enough with
         introSetUserColumn(1, 'registration_date', $originalRegistrationStr);
         introSetUserColumn(1, 'preferences', is_string($originalPreferences) ? $originalPreferences : null);
         H::restoreConfig($configSnapshot);
+        introRemovePromoSeed($promoSeed);
     }
 });
 

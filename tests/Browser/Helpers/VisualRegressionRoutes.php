@@ -81,12 +81,21 @@ return [
     'admin-popuphelp' => ['/admin/popuphelp.php?page=extend_for_templates', true],
 
     // ── Admin — Themes / Languages / Plugins / Updates ─────────────────────
-    'admin-themes-installed' => ['/admin.php?page=themes&tab=update', true],
+    // Themes/languages/plugins each expose three tabs -- installed, update,
+    // new (CoreTabs.php). Each `*-installed` name here used to point at
+    // `tab=update`, so `tab=installed` -- the default tab, the one reached by
+    // a bare `page=plugins` -- had no golden or visual coverage at all, and a
+    // change to it could not fail either suite. The names now match the tab
+    // they fetch; keep it that way.
+    'admin-themes-installed' => ['/admin.php?page=themes&tab=installed', true],
+    'admin-themes-update' => ['/admin.php?page=themes&tab=update', true],
     'admin-themes-new' => ['/admin.php?page=themes&tab=new', true],
     'admin-themes-standard-pages' => ['/admin.php?page=themes&tab=standard_pages', true],
-    'admin-languages-installed' => ['/admin.php?page=languages&tab=update', true],
+    'admin-languages-installed' => ['/admin.php?page=languages&tab=installed', true],
+    'admin-languages-update' => ['/admin.php?page=languages&tab=update', true],
     'admin-languages-new' => ['/admin.php?page=languages&tab=new', true],
-    'admin-plugins-installed' => ['/admin.php?page=plugins&tab=update', true],
+    'admin-plugins-installed' => ['/admin.php?page=plugins&tab=installed', true],
+    'admin-plugins-update' => ['/admin.php?page=plugins&tab=update', true],
     'admin-plugins-new' => ['/admin.php?page=plugins&tab=new', true],
     'admin-updates-pwg' => ['/admin.php?page=updates&tab=pwg', true],
     'admin-updates-ext' => ['/admin.php?page=updates&tab=ext', true],

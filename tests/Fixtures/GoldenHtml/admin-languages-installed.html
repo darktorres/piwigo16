@@ -25,14 +25,11 @@
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/clear/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/utilities.css?v17.0.0">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css?v17.0.0">
-    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/pages/updates_ext.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css?v17.0.0">
 
-    <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
-    <link rel="modulepreload" href="dist/assets/common-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/page-data-C2Oi3lBD.js">
+    <link rel="modulepreload" href="dist/assets/common-DXOuMdF0.js">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js"></script>
 
   </head>
 
@@ -41,7 +38,7 @@
 
       <div id="pwgHead">
         <a
-          href="{{BASE_PATH}}/"
+          href="/piwigo17/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -198,14 +195,14 @@
   <div id="tabsheet">
   <ul class="tabsheet">
     <li
-      class="normal_tab"
+      class="selected_tab"
     >
       <a
         href="admin.php?page=languages&amp;tab=installed"
       ><span><span class="icon-menu"></span>List</span></a>
     </li>
     <li
-      class="selected_tab"
+      class="normal_tab"
     >
       <a
         href="admin.php?page=languages&amp;tab=update"
@@ -228,33 +225,1416 @@
 
   </div> 
 
-  <div class="autoupdate_bar">
-  <div
-      class="head-button-1 icon-ok-circled"
-      id="update_all"
-    >Update All</div>
-  <div
-      class="head-button-2 icon-block"
-      id="ignore_all"
-      onClick="ignoreAll(); return false;"
-    >Ignore All</div>
-  <div
-      class="head-button-2 icon-ccw u-hidden"
-      id="reset_ignore"
-      onClick="resetIgnored(); return false;"
-    >Reset ignored updates</div>
-</div>
-<div class="autoupdate_bar u-hidden">
-  Please wait...<br><img
-      src="themes/admin/default/images/ajax-loader-bar.gif"
-    >
-</div>
+  
+<fieldset>
+  <legend>
+    Active Languages
+  </legend>
+  <div class="languageBoxes">
+    <div
+          class="languageBox languageDefault"
+        >
+      <div class="languageName">English (Great Britain)<em
+            >(default)</em></div>
+      <div class="languageActions">
+        <div>
+          <span
+                      title="Impossible to deactivate this language, first set another language as default."
+                    >Deactivate</span>
 
-<p
-    id="up_to_date"
-    class="u-hidden up-to-date-message"
-  >All languages are up to date.</p>
 
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+  </div> <!-- languageBoxes -->
+</fieldset>
+<fieldset>
+  <legend>
+    Inactive Languages
+  </legend>
+  <div class="languageBoxes">
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Afrikaans (Suid-Afrika)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=af_ZA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=af_ZA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Arbic (saudi)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ar_SA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ar_SA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Azərbaycanca (Azərbaycan)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=az_AZ&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=az_AZ&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Bahasa Indonesia (Indonesia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=id_ID&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=id_ID&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Brezhoneg (Frañs)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=br_FR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=br_FR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Castellano (Argentina)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=es_AR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=es_AR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Català (Catalunya/Spain)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ca_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ca_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Dansk (Danmark)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=da_DK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=da_DK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Deutsch (Deutschland)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=de_DE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=de_DE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Dhivehi (Maldives)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=dv_MV&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=dv_MV&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Dutch (Nederland)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=nl_NL&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=nl_NL&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">English (Great Britain)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=en_GB&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=en_GB&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">English (United States)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=en_US&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=en_US&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Español (España)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=es_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=es_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Esperanto (Esperantio)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=eo_EO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=eo_EO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Estonian (Estonia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=et_EE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=et_EE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Euskara (Euskadi)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=eu_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=eu_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Finnish (Suomi)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=fi_FI&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=fi_FI&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Français (France)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=fr_FR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=fr_FR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Français (Québec)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=fr_CA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=fr_CA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Gaeilge (éire)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ga_IE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ga_IE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Galego (Galiza)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=gl_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=gl_ES&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Georgian (Georgia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ka_GE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ka_GE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Hebrew (Israel)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=he_IL&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=he_IL&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Hrvatski (Hrvatska)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=hr_HR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=hr_HR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Italiano (Italia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=it_IT&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=it_IT&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Japanese (Japan)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ja_JP&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ja_JP&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Latvian (Latvia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=lv_LV&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=lv_LV&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Lietuvių (Lietuva)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=lt_LT&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=lt_LT&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Lëtzebuergesch (Luxembourg)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=lb_LU&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=lb_LU&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Magyar (Hungary)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=hu_HU&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=hu_HU&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Malay (Malaysia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ms_MY&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ms_MY&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">México (Mexico)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=es_MX&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=es_MX&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Norwegian (Norway)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=nb_NO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=nb_NO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Norwegian nynorsk (Norway)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=nn_NO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=nn_NO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Polish (Polska)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=pl_PL&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=pl_PL&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Português (Brasil)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=pt_BR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=pt_BR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Português (Portugal)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=pt_PT&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=pt_PT&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Română (România)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ro_RO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ro_RO&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Russian (Russia)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ru_RU&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ru_RU&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Slovenčina (Slovenská republika)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=sk_SK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=sk_SK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">slovenščina (Slovenija)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=sl_SI&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=sl_SI&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Srpski (Srbija)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=sh_RS&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=sh_RS&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Swedish (Sverige)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=sv_SE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=sv_SE&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Tiếng Việt (Việt Nam)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=vi_VN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=vi_VN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Turkish (Turkey)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=tr_TR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=tr_TR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Wolof (Sénégal)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=wo_SN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=wo_SN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Íslenska (Ísland)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=is_IS&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=is_IS&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Čeština (Česká Republika)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=cs_CZ&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=cs_CZ&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Ελληνικά (Ελλάδα)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=el_GR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=el_GR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Български (България)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=bg_BG&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=bg_BG&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Македонски (Република Македонија)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=mk_MK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=mk_MK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Монгол (Монгол улс)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=mn_MN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=mn_MN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Српски (Србија)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=sr_RS&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=sr_RS&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Українська (Україна)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=uk_UA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=uk_UA&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">Հայերեն (Հայաստան)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=hy_AM&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=hy_AM&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">العربية (مصر) (مصر)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ar_EG&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ar_EG&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">پارسی (ایران)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=fa_IR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=fa_IR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">कोंकणी (भारत)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=kok_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=kok_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">বাংলা (ভারত)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=bn_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=bn_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">ગુજરાતી (હિન્દુસ્તાન)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=gu_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=gu_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">தமிழ் (இந்தியா)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ta_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ta_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">ಕನ್ನಡ (ಭಾರತ)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=kn_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=kn_IN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">ภาษาไทย (ประเทศไทย)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=th_TH&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=th_TH&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">ភាសាខ្មែរ​ (ប្រទេសកម្ពុជា)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=km_KH&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=km_KH&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">中文 (中國)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=zh_TW&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=zh_TW&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">中文 (香港) (香港特別行政區)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=zh_HK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=zh_HK&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">简体中文 (中国)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=zh_CN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=zh_CN&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+    <div
+          class="languageBox"
+        >
+      <div class="languageName">한국어 (대한민국)</div>
+      <div class="languageActions">
+        <div>
+
+          <a
+                    href="admin.php?page=languages&amp;language=ko_KR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=activate"
+                    class="tiptip"
+                    title="Make this language available to users"
+                  >Activate</a>
+          | <a
+                      href="admin.php?page=languages&amp;language=ko_KR&amp;pwg_token=a62a1199bc279938e7877914764b6e963f8b72e84c2bda01dd637e1ed9ffe9d2&amp;action=delete"
+                      class="tiptip delete-lang-button"
+                      title="Delete this language"
+                    >Delete</a>
+        </div>
+      </div> <!-- languageActions -->
+    </div> <!-- languageBox -->
+  </div> <!-- languageBoxes -->
+</fieldset>
 
 </div>
       </div>
@@ -327,15 +1707,13 @@
       </div>
     </div>
 
-    <script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}","ext_type":"languages","active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","ERROR":"ERROR","Update Complete":"Update Complete","an error happened":"an error occurred","Reset ignored updates":"Reset ignored updates","Are you sure you want to update all extensions?":"Are you sure you want to update all extensions?"}}</script>
+    <script type="application/json" id="page-data">{"data":{"active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Are you sure you want to delete the language \"%s\"?":"Are you sure you want to delete the language \"%s\"?"}}</script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js"></script>
-    <script type="module" src="dist/assets/adminShell-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/adminShell-5ARaOe2v.js?v17.0.0"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
-    <script type="module" src="dist/assets/updatesExt-{{ASSET_HASH}}.js?v17.0.0"></script>
-    <script type="module" src="dist/assets/footerAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/languagesInstalled-CefIB-kb.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/footerAdmin-DZH9ukp3.js?v17.0.0"></script>
 
     <script
       type="module"

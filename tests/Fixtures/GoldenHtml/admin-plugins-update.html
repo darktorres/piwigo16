@@ -25,12 +25,14 @@
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/clear/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/utilities.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/pages/updates_ext.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css?v17.0.0">
 
-    <link rel="modulepreload" href="dist/assets/page-data-C2Oi3lBD.js">
-    <link rel="modulepreload" href="dist/assets/common-DXOuMdF0.js">
+    <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/common-{{ASSET_HASH}}.js">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js"></script>
 
   </head>
 
@@ -39,7 +41,7 @@
 
       <div id="pwgHead">
         <a
-          href="/piwigo17/"
+          href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
           title="Visit the gallery"
         ><i class="icon-left-open"></i>Visit</a>
@@ -196,14 +198,14 @@
   <div id="tabsheet">
   <ul class="tabsheet">
     <li
-      class="selected_tab"
+      class="normal_tab"
     >
       <a
         href="admin.php?page=plugins&amp;tab=installed"
       ><span><span class="icon-menu"></span>List</span></a>
     </li>
     <li
-      class="normal_tab"
+      class="selected_tab"
     >
       <a
         href="admin.php?page=plugins&amp;tab=update"
@@ -226,90 +228,33 @@
 
   </div> 
 
-   
-
-<div class="pluginTypeFilter">
-  <input
-      type="radio"
-      name="p-filter"
-      class="filter"
-      id="seeAll"
-      
-      checked
-      
-    ><label for="seeAll">All<span
-        class="filter-badge"
-      >X</span></label><input
-      type="radio"
-      name="p-filter"
-      class="filter"
-      id="seeActive"
-      
-    ><label class="filterLabel" for="seeActive">Activated<span
-        class="filter-badge"
-      >X</span></label><input
-      type="radio"
-      name="p-filter"
-      class="filter"
-      id="seeInactive"
-    ><label
-      class="filterLabel"
-      for="seeInactive"
-    >Deactivated<span class="filter-badge">X</span></label><input
-      type="radio"
-      name="p-filter"
-      class="filter"
-      id="seeOther"
-    ><label class="filterLabel" for="seeOther">Other<span
-        class="filter-badge"
-      >X</span></label>
+  <div class="autoupdate_bar">
+  <div
+      class="head-button-1 icon-ok-circled"
+      id="update_all"
+    >Update All</div>
+  <div
+      class="head-button-2 icon-block"
+      id="ignore_all"
+      onClick="ignoreAll(); return false;"
+    >Ignore All</div>
+  <div
+      class="head-button-2 icon-ccw u-hidden"
+      id="reset_ignore"
+      onClick="resetIgnored(); return false;"
+    >Reset ignored updates</div>
+</div>
+<div class="autoupdate_bar u-hidden">
+  Please wait...<br><img
+      src="themes/admin/default/images/ajax-loader-bar.gif"
+    >
 </div>
 
-<div class="nbPluginsSearch"></div>
+<p
+    id="up_to_date"
+    class="u-hidden up-to-date-message"
+  >All plugins are up to date.</p>
 
-<div class="pluginFilter">
-  <span class="icon-search search-icon"></span>
-  <span class="icon-cancel search-cancel"></span>
-  <input class='search-input' type="text" placeholder="Search">
-</div>
-
-<div class="AlbumViewSelector">
-  <input
-      type="radio"
-      name="layout"
-      class="switchLayout"
-      id="displayClassic"
-      
-      checked
-      
-    /><label for="displayClassic"><span
-        class="icon-pause firstIcon tiptip"
-        title="Classic View"
-      ></span></label><input
-      type="radio"
-      name="layout"
-      class="switchLayout"
-      id="displayLine"
-      
-    /><label for="displayLine"><span
-        class="icon-th-list tiptip"
-        title="Line View"
-      ></span></label><input
-      type="radio"
-      name="layout"
-      class="switchLayout"
-      id="displayCompact"
-      
-    /><label for="displayCompact"><span
-        class="icon-th-large lastIcon tiptip"
-        title="Compact View"
-      ></span></label>
-</div>
-
-<div
-    class="pluginContainer  classic-form "
-  >
-</div>
 
 </div>
       </div>
@@ -382,14 +327,15 @@
       </div>
     </div>
 
-    <script type="application/json" id="page-data">{"data":{"csrf_token":"ec6d0dbdc2518e81d36803d030716eb9967f6867a79aae03a99ef755bcbb3b9d","count_types_plugins":{"active":0,"inactive":0,"missing":0,"merged":0},"is_webmaster":1,"show_details":false,"active_menu":-1,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","WARNING! This plugin does not seem to be compatible with this version of Piwigo.":"WARNING! This plugin does not seem to be compatible with this version of Piwigo.","Do you want to activate anyway?":"Do you want to activate anyway?","Are you sure you want to delete the plugin \"%s\"?":"Are you sure you want to delete the plugin \"%s\"?","Plugin \"%s\" deleted!":"Plugin \"%s\" deleted!","Are you sure you want to restore the plugin \"%s\"?":"Are you sure you want to restore the plugin \"%s\"?","Are you sure you want to uninstall the plugin \"%s\"?":"Are you sure you want to uninstall the plugin \"%s\"?","Activated":"Activated","Deactivated":"Deactivated","Restored":"Restored","an error happened":"an error occurred","Webmaster status required":"Webmaster status required","No plugins found":"No plugins found","%s plugins found":"\u003Cb\u003E%s\u003C\/b\u003E plugins found","%s plugin found":"\u003Cb\u003E%s\u003C\/b\u003E plugin found","While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset":"While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"}}</script>
+    <script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}","ext_type":"plugins","active_menu":-1,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","ERROR":"ERROR","Update Complete":"Update Complete","an error happened":"an error occurred","Reset ignored updates":"Reset ignored updates","Are you sure you want to update all extensions?":"Are you sure you want to update all extensions?"}}</script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js"></script>
-    <script type="module" src="dist/assets/pluginsInstalledPage-O-ieVWXB.js?v17.0.0"></script>
-    <script type="module" src="dist/assets/adminShell-5ARaOe2v.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/adminShell-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
-    <script type="module" src="dist/assets/footerAdmin-DZH9ukp3.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/updatesExt-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/footerAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>
 
     <script
       type="module"

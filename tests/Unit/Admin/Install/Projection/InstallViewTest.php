@@ -86,7 +86,11 @@ test('pageAssets always registers the 5 static assets regardless of themes', fun
             AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install'),
             AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
-            AssetContribution::script('page-data', 'themes/default/js/page-data.ts', loadMode: LoadMode::Footer),
+            // No standalone page-data registration: install.ts imports it,
+            // so its code ships inside the install bundle. Registering it
+            // separately emitted a `<script src=".../page-data.ts">` tag,
+            // since P48 removed page-data.ts as a Vite entry and there is
+            // no manifest entry to resolve.
         ]);
 });
 

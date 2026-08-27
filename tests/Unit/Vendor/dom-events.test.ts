@@ -168,3 +168,74 @@ describe("trigger() with namespaces", () => {
     expect(nsHandler).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("whitespace-separated specs", () => {
+  let el: HTMLElement;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="multi"></div>';
+    el = document.getElementById("multi") as HTMLElement;
+  });
+
+  it("binds one handler to several types", () => {
+    const handler = vi.fn();
+    on(el, "mouseleave click", handler);
+
+    el.dispatchEvent(new Event("mouseleave"));
+    el.click();
+
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
+
+  it("unbinds every type in the spec", () => {
+    const handler = vi.fn();
+    on(el, "mouseleave click", handler);
+    off(el, "mouseleave click", handler);
+
+    el.dispatchEvent(new Event("mouseleave"));
+    el.click();
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("unbinds only the types named", () => {
+    const handler = vi.fn();
+    on(el, "mouseleave click focus", handler);
+    off(el, "click", handler);
+
+    el.click();
+    el.dispatchEvent(new Event("mouseleave"));
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps per-type namespaces when several types are given", () => {
+    const handler = vi.fn();
+    on(el, "click.apply mouseleave.apply", handler);
+
+    off(el, ".apply");
+    el.click();
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("an empty spec still means every type", () => {
+    const handler = vi.fn();
+    on(el, "click", handler);
+    off(el, "");
+
+    el.click();
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("tolerates surrounding and repeated whitespace", () => {
+    const handler = vi.fn();
+    on(el, "  click   mouseleave  ", handler);
+
+    el.click();
+    el.dispatchEvent(new Event("mouseleave"));
+
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
+});

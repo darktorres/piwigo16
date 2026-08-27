@@ -304,8 +304,30 @@ function namespacesMatch(handlerNs: string[], firedNs: string[]): boolean {
   return firedNs.every((n) => handlerNs.includes(n));
 }
 
-/** `$(el).on("click.ns", handler)`. */
+/**
+ * jQuery accepts several whitespace-separated specs in one call
+ * (`types.match(rnotwhite) || [""]` in `jQuery.event.add`/`remove`), which
+ * `switchbox`'s `on("mouseleave click", ...)` relies on. An empty or
+ * all-whitespace spec still yields one empty entry, so `.off("")` keeps
+ * meaning "every type".
+ */
+function splitSpecs(spec: string): string[] {
+  return spec.match(/\S+/g) ?? [""];
+}
+
+/** `$(el).on("click.ns", handler)`, or several types at once. */
 export function on(
+  target: EventTarget,
+  spec: string,
+  handler: EventListener,
+  options?: AddEventListenerOptions
+): void {
+  for (const one of splitSpecs(spec)) {
+    onOne(target, one, handler, options);
+  }
+}
+
+function onOne(
   target: EventTarget,
   spec: string,
   handler: EventListener,
@@ -343,6 +365,16 @@ export function on(
  * off-then-on replace idiom used at several call sites.
  */
 export function off(
+  target: EventTarget,
+  spec: string,
+  handler?: EventListener
+): void {
+  for (const one of splitSpecs(spec)) {
+    offOne(target, one, handler);
+  }
+}
+
+function offOne(
   target: EventTarget,
   spec: string,
   handler?: EventListener
@@ -880,6 +912,343 @@ export function slideToggle(
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "toggle", duration, complete);
+}
+
+// ── Geometry: offset, position and the box-model dimensions ──────────────
+//
+// None of jQuery's dimension methods is a native property under another
+// name. Each starts from the border-box measurement and then adds or
+// subtracts padding, border and margin according to the element's own
+// `box-sizing`, which is why `.width()`, `.innerWidth()`, `.outerWidth()`
+// and `.outerWidth(true)` are one measurement with four different extras
+// rather than four different properties. `clientWidth` is the closest
+// native analogue to `.innerWidth()` and still disagrees with it, because
+// it excludes the scrollbar and jQuery's does not.
+//
+// Ported from src/css.js (`getWidthOrHeight`, `augmentWidthOrHeight`),
+// src/dimensions.js and src/offset.js.
+
+type BoxExtra = "content" | "padding" | "border" | "margin";
+
+/**
+ * The two sides `augmentWidthOrHeight` walks per axis -- it indexes
+ * `cssExpand` (`["Top","Right","Bottom","Left"]`) from 1 for width and 0 for
+ * height, stepping by 2.
+ */
+const BOX_SIDES: Record<"width" | "height", [string, string]> = {
+  width: ["right", "left"],
+  height: ["top", "bottom"],
+};
+
+function styleNumber(styles: CSSStyleDeclaration, property: string): number {
+  return parseFloat(styles.getPropertyValue(property)) || 0;
+}
+
+function computedStyles(el: Element): CSSStyleDeclaration | null {
+  return el.ownerDocument.defaultView?.getComputedStyle(el) ?? null;
+}
+
+/**
+ * `augmentWidthOrHeight()`: the correction that turns the measurement we
+ * have into the one that was asked for. Returns 0 when they already agree.
+ */
+function augmentBox(
+  styles: CSSStyleDeclaration,
+  name: "width" | "height",
+  extra: BoxExtra,
+  isBorderBox: boolean
+): number {
+  if (extra === (isBorderBox ? "border" : "content")) {
+    return 0;
+  }
+
+  let val = 0;
+  for (const side of BOX_SIDES[name]) {
+    if (extra === "margin") {
+      val += styleNumber(styles, `margin-${side}`);
+    }
+
+    if (isBorderBox) {
+      // A border box already includes padding, so drop it for content.
+      if (extra === "content") {
+        val -= styleNumber(styles, `padding-${side}`);
+      }
+      // Anything but margin excludes the border.
+      if (extra !== "margin") {
+        val -= styleNumber(styles, `border-${side}-width`);
+      }
+    } else {
+      val += styleNumber(styles, `padding-${side}`);
+      if (extra !== "padding") {
+        val += styleNumber(styles, `border-${side}-width`);
+      }
+    }
+  }
+
+  return val;
+}
+
+/**
+ * `jQuery.swap()` -- apply styles, measure, put back exactly what was there
+ * (an absent declaration comes back absent, not as an empty string).
+ */
+function swap<T>(
+  el: HTMLElement,
+  properties: Record<string, string>,
+  callback: () => T
+): T {
+  const previous: Record<string, string> = {};
+  for (const [property, value] of Object.entries(properties)) {
+    previous[property] = el.style.getPropertyValue(property);
+    el.style.setProperty(property, value);
+  }
+
+  const result = callback();
+
+  for (const [property, value] of Object.entries(previous)) {
+    if (value === "") {
+      el.style.removeProperty(property);
+    } else {
+      el.style.setProperty(property, value);
+    }
+  }
+
+  return result;
+}
+
+/** `rdisplayswap` -- `none`, or a table display other than -cell/-caption. */
+const DISPLAY_SWAP = /^(none|table(?!-c[ea]).+)/;
+
+/** `cssShow` -- laid out, measurable, and invisible while it happens. */
+const CSS_SHOW: Record<string, string> = {
+  position: "absolute",
+  visibility: "hidden",
+  display: "block",
+};
+
+/**
+ * `jQuery.cssHooks.width/height.get`: a `display: none` element has no box, so
+ * every measurement of it reads zero. jQuery briefly forces it into layout --
+ * absolutely positioned and `visibility: hidden`, so nothing moves and nothing
+ * is seen -- measures, and restores the inline styles.
+ *
+ * This is not an optimisation. switchbox measures its popup *before* toggling
+ * it into view, and without the swap the width comes back as 0: the popup then
+ * pins itself flush to the right edge of the viewport instead of 5px inside
+ * it. Confirmed live before this was added, at exactly `right === viewport`.
+ */
+function boxSize(
+  el: HTMLElement,
+  name: "width" | "height",
+  extra: BoxExtra
+): number {
+  if (el.offsetWidth === 0 && DISPLAY_SWAP.test(computedDisplay(el))) {
+    return swap(el, CSS_SHOW, () => measureBox(el, name, extra));
+  }
+
+  return measureBox(el, name, extra);
+}
+
+/**
+ * `getWidthOrHeight()`. `offsetWidth`/`offsetHeight` is the preferred source
+ * because it is already a border-box number; the computed-style fallback
+ * covers the elements that have no offset box at all, such as SVG.
+ *
+ * Two deliberate deviations, both narrow:
+ *
+ * - jQuery returns the raw string ("50%", "2em") and stops when the computed
+ *   value is in a non-px unit. This always returns a number, because every
+ *   call site does arithmetic on the result and the string form would give
+ *   it NaN regardless.
+ * - `valueIsBorderBox` drops jQuery's `support.boxSizingReliable()` probe,
+ *   which is a workaround for browsers that predate this codebase's support
+ *   floor by a decade; on every engine we run, it is `true`.
+ */
+function measureBox(
+  el: HTMLElement,
+  name: "width" | "height",
+  extra: BoxExtra
+): number {
+  const styles = computedStyles(el);
+  if (styles === null) {
+    return 0;
+  }
+
+  const isBorderBox = styles.getPropertyValue("box-sizing") === "border-box";
+  let valueIsBorderBox = true;
+  let val = name === "width" ? el.offsetWidth : el.offsetHeight;
+
+  if (val <= 0) {
+    let raw = styles.getPropertyValue(name);
+    if (parseFloat(raw) < 0) {
+      raw = el.style.getPropertyValue(name);
+    }
+    valueIsBorderBox = isBorderBox;
+    val = parseFloat(raw) || 0;
+  }
+
+  return val + augmentBox(styles, name, extra, valueIsBorderBox);
+}
+
+/** `.width()` -- content box, excluding padding and border. */
+export function width(el: HTMLElement): number {
+  return boxSize(el, "width", "content");
+}
+
+/** `.height()`. */
+export function height(el: HTMLElement): number {
+  return boxSize(el, "height", "content");
+}
+
+/** `.innerWidth()` -- content plus padding, excluding border. */
+export function innerWidth(el: HTMLElement): number {
+  return boxSize(el, "width", "padding");
+}
+
+/** `.innerHeight()`. */
+export function innerHeight(el: HTMLElement): number {
+  return boxSize(el, "height", "padding");
+}
+
+/** `.outerWidth()`, or `.outerWidth(true)` to include margins. */
+export function outerWidth(el: HTMLElement, includeMargin = false): number {
+  return boxSize(el, "width", includeMargin ? "margin" : "border");
+}
+
+/** `.outerHeight()`, or `.outerHeight(true)`. */
+export function outerHeight(el: HTMLElement, includeMargin = false): number {
+  return boxSize(el, "height", includeMargin ? "margin" : "border");
+}
+
+/**
+ * `$(window).width()`. jQuery's window branch reads the document element's
+ * `clientWidth`, *not* `innerWidth` -- the difference is the scrollbar, and
+ * the one call site (`switchbox`) uses this to keep a popup on screen, where
+ * counting the scrollbar as usable space is precisely the bug.
+ */
+export function windowWidth(win: Window = window): number {
+  return win.document.documentElement.clientWidth;
+}
+
+/** `$(window).height()`. */
+export function windowHeight(win: Window = window): number {
+  return win.document.documentElement.clientHeight;
+}
+
+/**
+ * `.offset()` -- position relative to the document. Returns `{top: 0, left:
+ * 0}` for a detached node, as jQuery does, rather than throwing.
+ */
+export function offset(el: Element): { top: number; left: number } {
+  const doc = el.ownerDocument;
+  const docElem = doc.documentElement;
+  if (!docElem.contains(el)) {
+    return { top: 0, left: 0 };
+  }
+
+  const box = el.getBoundingClientRect();
+  const win = doc.defaultView;
+
+  return {
+    top: box.top + (win?.pageYOffset ?? docElem.scrollTop) - docElem.clientTop,
+    left:
+      box.left + (win?.pageXOffset ?? docElem.scrollLeft) - docElem.clientLeft,
+  };
+}
+
+/**
+ * `.offsetParent()` -- the *positioned* ancestor, which is not
+ * `el.offsetParent`: jQuery walks up past any ancestor whose computed
+ * position is `static`, and falls back to the document element.
+ */
+export function offsetParent(el: HTMLElement): HTMLElement {
+  const docElem = el.ownerDocument.documentElement;
+  let parent = el.offsetParent as HTMLElement | null;
+
+  while (
+    parent != null &&
+    parent.nodeName.toLowerCase() !== "html" &&
+    computedStyles(parent)?.getPropertyValue("position") === "static"
+  ) {
+    parent = parent.offsetParent as HTMLElement | null;
+  }
+
+  return parent ?? docElem;
+}
+
+/**
+ * `.position()` -- position relative to the offset parent, with the offset
+ * parent's borders and the element's own margins taken out. That last
+ * subtraction is the part a naive `offsetTop`/`offsetLeft` translation gets
+ * wrong for any element with a margin.
+ */
+export function position(el: HTMLElement): { top: number; left: number } {
+  const styles = computedStyles(el);
+  let parentOffset = { top: 0, left: 0 };
+  let elementOffset: { top: number; left: number };
+
+  if (styles?.getPropertyValue("position") === "fixed") {
+    // A fixed element is offset from the viewport, so its own rect is the
+    // answer and the offset parent plays no part.
+    const box = el.getBoundingClientRect();
+    elementOffset = { top: box.top, left: box.left };
+  } else {
+    const parent = offsetParent(el);
+    elementOffset = offset(el);
+    if (parent.nodeName.toLowerCase() !== "html") {
+      parentOffset = offset(parent);
+    }
+
+    const parentStyles = computedStyles(parent);
+    if (parentStyles !== null) {
+      parentOffset.top += styleNumber(parentStyles, "border-top-width");
+      parentOffset.left += styleNumber(parentStyles, "border-left-width");
+    }
+  }
+
+  return {
+    top:
+      elementOffset.top -
+      parentOffset.top -
+      (styles === null ? 0 : styleNumber(styles, "margin-top")),
+    left:
+      elementOffset.left -
+      parentOffset.left -
+      (styles === null ? 0 : styleNumber(styles, "margin-left")),
+  };
+}
+
+/**
+ * `.css(name, value)`. The reason this exists rather than a direct
+ * `style.foo =` at the call sites: jQuery appends "px" to a bare number for
+ * every property outside `jQuery.cssNumber`, so `.css("left", 12)` sets
+ * `left: 12px` while `.css("opacity", 0.5)` does not become `0.5px`. A
+ * literal translation that assigned the number would silently set nothing.
+ */
+export function css(
+  target: Element | ArrayLike<Element>,
+  name: string,
+  value: string | number
+): void {
+  // `jQuery.style` bails on NaN rather than writing "NaNpx" (its #7116). The
+  // guard is load-bearing, not defensive: switchbox computes a coordinate
+  // from a measurement that is legitimately absent when its popup is not in
+  // the document yet.
+  if (typeof value === "number" && Number.isNaN(value)) {
+    return;
+  }
+
+  const property = cssPropertyName(name);
+  const resolved =
+    typeof value === "number" && !CSS_NUMBER.has(name)
+      ? `${value}px`
+      : String(value);
+
+  for (const el of toElements(target)) {
+    if (el instanceof HTMLElement) {
+      el.style.setProperty(property, resolved);
+    }
+  }
 }
 
 // ── Document ready ───────────────────────────────────────────────────────

@@ -13,6 +13,8 @@ import { phpWGOpenWindow } from "./scripts";
 import "./switchbox";
 
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
+import { ajax } from "./vendor/ajax";
+import { css, ready } from "./vendor/dom";
 export {};
 
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
@@ -25,8 +27,15 @@ function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
     theImg.src = url;
     theImg.useMap = "#map" + typeMap;
   }
-  jQuery("#derivativeSwitchBox .switchCheck").css("visibility", "hidden");
-  jQuery("#derivativeChecked" + typeMap).css("visibility", "visible");
+  css(
+    document.querySelectorAll("#derivativeSwitchBox .switchCheck"),
+    "visibility",
+    "hidden",
+  );
+  const checked = document.getElementById("derivativeChecked" + typeMap);
+  if (checked) {
+    css(checked, "visibility", "visible");
+  }
   document.cookie =
     "picture_deriv=" +
     typeSave +
@@ -69,9 +78,9 @@ if (originalLink) {
   });
 }
 
-jQuery().ready(function () {
+ready(function () {
   if (document.getElementById("downloadSwitchBox")) {
-    jQuery("#downloadSwitchLink").removeAttr("href");
+    document.getElementById("downloadSwitchLink")?.removeAttribute("href");
     (window.SwitchBox = window.SwitchBox || ([] as string[])).push(
       "#downloadSwitchLink",
       "#downloadSwitchBox",
@@ -85,7 +94,7 @@ function addToCadie(
 ): void {
   if (aElement.disabled) return;
   aElement.disabled = true;
-  $.ajax({
+  void ajax({
     url: pwg_getPageData<string>("root_url") + "api/v1/session/caddie",
     method: "POST",
     contentType: "application/json",

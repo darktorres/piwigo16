@@ -123,6 +123,76 @@ test('scopeToDatabase leaves the namespace bare when PIWIGO_DB_BASE is unset or 
     }
 });
 
+test('scopeToDatabase sanitizes a PIWIGO_DB_BASE that is not a legal pool-namespace segment', function (): void {
+    // Symfony pool namespaces accept only [-+_.A-Za-z0-9]. sqlite takes
+    // ':memory:' as a real database name and DbMaintenanceRepositorySqliteTest
+    // putenv()s exactly that, so any CacheFactory::create() reached inside
+    // that test's beforeEach/afterEach window threw
+    // 'Namespace contains ":"' -- an order-dependent failure that only
+    // surfaced when the parallel runner happened to schedule the two in
+    // one worker process.
+    $original = getenv('PIWIGO_DB_BASE');
+
+    try {
+        putenv('PIWIGO_DB_BASE=:memory:');
+        $pool = CacheFactory::create('filesystem');
+        $directory = new ReflectionProperty($pool, 'directory')
+            ->getValue($pool);
+
+        expect($directory)
+            ->toBeString()
+            ->toContain('piwigo._memory_-');
+        assert(is_string($directory));
+
+        expect(basename(rtrim($directory, '/')))
+            ->toMatch('#^[-+_.A-Za-z0-9]+$#');
+    } finally {
+        putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
+    }
+});
+
+test('scopeToDatabase keeps two databases apart even when they sanitize to the same characters', function (): void {
+    // ':memory:' and '/memory/' both become '_memory_'. Collapsing them
+    // into one pool would recreate the very cross-database leak the
+    // scoping exists to prevent, so the suffix has to keep them distinct.
+    $original = getenv('PIWIGO_DB_BASE');
+
+    try {
+        putenv('PIWIGO_DB_BASE=:memory:');
+        $first = CacheFactory::create('filesystem');
+        $firstDir = new ReflectionProperty($first, 'directory')
+            ->getValue($first);
+
+        putenv('PIWIGO_DB_BASE=/memory/');
+        $second = CacheFactory::create('filesystem');
+        $secondDir = new ReflectionProperty($second, 'directory')
+            ->getValue($second);
+
+        expect($firstDir)
+            ->not->toBe($secondDir);
+    } finally {
+        putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
+    }
+});
+
+test('scopeToDatabase leaves an already-legal PIWIGO_DB_BASE untouched, with no hash suffix', function (): void {
+    // The readability half of the sanitizer: the common case must stay
+    // greppable on disk as plain 'piwigo.<dbname>'.
+    $original = getenv('PIWIGO_DB_BASE');
+
+    try {
+        putenv('PIWIGO_DB_BASE=piwigo_plain_probe');
+        $pool = CacheFactory::create('filesystem');
+        $directory = new ReflectionProperty($pool, 'directory')
+            ->getValue($pool);
+
+        expect($directory)
+            ->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo.piwigo_plain_probe/');
+    } finally {
+        putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
+    }
+});
+
 test('the PIWIGO_CACHE_ADAPTER env var is honored when no explicit param is given', function (): void {
     putenv('PIWIGO_CACHE_ADAPTER=filesystem');
 

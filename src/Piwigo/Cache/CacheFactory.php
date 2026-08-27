@@ -77,7 +77,41 @@ final class CacheFactory
     {
         $dbBase = getenv('PIWIGO_DB_BASE');
 
-        return $dbBase !== false && $dbBase !== '' ? $namespace . '.' . $dbBase : $namespace;
+        if ($dbBase === false || $dbBase === '') {
+            return $namespace;
+        }
+
+        return $namespace . '.' . self::toNamespaceSegment($dbBase);
+    }
+
+    /**
+     * Symfony's pool namespaces accept only `[-+_.A-Za-z0-9]` and throw on
+     * anything else, so `PIWIGO_DB_BASE` cannot be folded in raw: sqlite
+     * accepts `:memory:` (and a plain file path) as a real database name,
+     * which `DbMaintenanceRepositorySqliteTest` sets for real. Any
+     * `CacheFactory::create()` reached while that value is in the
+     * environment threw `Namespace contains ":"` before this sanitized.
+     *
+     * Only the env-derived half is sanitized. The `$namespace` argument is
+     * developer-controlled and hardcoded at every call site ('piwigo.config',
+     * ...), so a bad one there should keep failing loudly rather than being
+     * silently rewritten.
+     *
+     * The hash suffix is what keeps the mapping injective: `:memory:` and
+     * `/memory/` both sanitize to `_memory_`, and two databases sharing a
+     * pool is the exact cross-database leak this scoping exists to prevent.
+     * Values that are already legal are left untouched, so the common case
+     * stays readable on disk.
+     */
+    private static function toNamespaceSegment(string $dbBase): string
+    {
+        $safe = preg_replace('#[^-+_.A-Za-z0-9]#', '_', $dbBase) ?? '';
+
+        if ($safe === $dbBase) {
+            return $safe;
+        }
+
+        return $safe . '-' . substr(hash('sha256', $dbBase), 0, 8);
     }
 
     private static function envAdapter(): ?string

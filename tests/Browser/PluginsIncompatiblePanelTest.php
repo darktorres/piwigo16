@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 // End-to-end cover for the incompatible-plugins panel, which was dead from
@@ -95,6 +98,32 @@ function incompatible_fixture_plugin_remove(string $dir): void
     rmdir($dir);
 }
 
+/**
+ * The panel's markers arrive on an ajax round trip that navigateOk() does
+ * not wait for, and assertPresent() is one-shot -- so poll, the same shape
+ * as BrowserTestHelpers::waitUntilHidden().
+ */
+function incompatible_fixture_wait_for_marker(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $id): void
+{
+    $timeoutMs = 5000;
+    $page->script(<<<JS
+    new Promise((resolve, reject) => {
+        const deadline = Date.now() + {$timeoutMs};
+        const check = () => {
+            const row = document.getElementById('{$id}');
+            if (row !== null && row.classList.contains('incompatible')) {
+                return resolve(true);
+            }
+            if (Date.now() > deadline) {
+                return reject(new Error('Timed out waiting for #{$id} to be marked incompatible'));
+            }
+            setTimeout(check, 100);
+        };
+        check();
+    })
+    JS);
+}
+
 it('serves the incompatible-plugins list as JSON from the fork\'s own slug', function (): void {
     // loginAsAdmin(), not asAdmin(): getIncompatibleExtensions() memoises
     // its result in $_SESSION['incompatible_plugins'] for 300 seconds, and
@@ -146,6 +175,72 @@ it('returns the default admin page, not JSON, for upstream Piwigo\'s retired slu
         ->toBeNull();
 });
 
+it('asks before activating an incompatible plugin, and reverts the switch when refused', function (): void {
+    // The guard this covers was dead code until now. It used to bind to
+    // `#<id> .activate` -- upstream Piwigo's <a class="activate"> link,
+    // which this fork replaced with the toggle switch. No element of that
+    // class exists in any template, so the .each() matched nothing: the
+    // warning marker rendered and activation went straight through with no
+    // confirmation at all. It now hangs off the switch handler instead.
+    $dir = incompatible_fixture_plugin_create();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=plugins');
+
+        $id = INCOMPATIBLE_FIXTURE_PLUGIN_ID;
+        incompatible_fixture_wait_for_marker($page, $id);
+
+        // The change handler is bound only when is_webmaster is truthy
+        // (plugins_installated.ts's own `if (isWebmaster != 0)`), so assert
+        // that first: otherwise the switch would simply do nothing and the
+        // "no activation happened" assertions below would pass for entirely
+        // the wrong reason.
+        // page-data is shaped {data, strings} -- the exposed values live
+        // under .data, not at the top level.
+        expect($page->script('JSON.parse(document.getElementById("page-data").textContent).data.is_webmaster'))
+            ->toBeTruthy();
+
+        $page->click('#' . $id . ' label.switch');
+
+        // jquery-confirm renders into .jconfirm, carrying incompatible_msg
+        // as its title.
+        $page->assertPresent('.jconfirm');
+        H::assertSeeSettled($page, 'does not seem to be compatible');
+
+        // Refusing must both leave the plugin inactive and put the switch
+        // back: `change` has already flipped it by the time the dialog
+        // opens. jConfirm_confirm_with_content_options sets
+        // backgroundDismiss, so the revert hangs off onClose rather than
+        // the cancel button's own action -- clicking cancel exercises the
+        // same path a backdrop dismissal takes.
+        $page->click('.jconfirm button.btn-default');
+
+        $reverted = $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                const box = document.querySelector('#{$id} label.switch input');
+                if (box !== null && box.checked === false) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('switch was never reverted'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+        expect($reverted)
+            ->not->toBeNull();
+
+        $page->assertPresent('#' . $id . '.plugin-inactive');
+        $page->assertNotPresent('#' . $id . '.plugin-active');
+
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        incompatible_fixture_plugin_remove($dir);
+    }
+});
+
 it('marks an incompatible plugin in the DOM once the panel\'s ajax call lands', function (): void {
     $dir = incompatible_fixture_plugin_create();
 
@@ -155,28 +250,7 @@ it('marks an incompatible plugin in the DOM once the panel\'s ajax call lands', 
 
         $id = INCOMPATIBLE_FIXTURE_PLUGIN_ID;
 
-        // navigateOk() waits for the document, not for this panel's own
-        // ajax round trip, so the markers do not exist yet at this point --
-        // assertPresent() is one-shot and would race it. Poll instead, the
-        // same shape as waitUntilHidden().
-        $timeoutMs = 5000;
-        $js = <<<JS
-        new Promise((resolve, reject) => {
-            const deadline = Date.now() + {$timeoutMs};
-            const check = () => {
-                const row = document.getElementById('{$id}');
-                if (row !== null && row.classList.contains('incompatible')) {
-                    return resolve(true);
-                }
-                if (Date.now() > deadline) {
-                    return reject(new Error('Timed out waiting for #{$id} to be marked incompatible'));
-                }
-                setTimeout(check, 100);
-            };
-            check();
-        })
-        JS;
-        $page->script($js);
+        incompatible_fixture_wait_for_marker($page, $id);
 
         // What the success handler is responsible for: the row class, and
         // the warning marker prepended into .pluginName. A <span>, not an

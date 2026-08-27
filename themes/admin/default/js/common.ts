@@ -345,7 +345,7 @@ export const jConfirm_warning_options = {
   typeAnimated: false,
 };
 
-const jConfirm_confirm_with_content_options = {
+export const jConfirm_confirm_with_content_options = {
   draggable: false,
   theme: "modern",
   animation: "zoom",

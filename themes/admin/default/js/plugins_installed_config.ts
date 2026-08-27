@@ -12,8 +12,13 @@ import {
 export const incompatible_msg = pwg_getPageString(
   "WARNING! This plugin does not seem to be compatible with this version of Piwigo.",
 );
-export const activate_msg =
-  "\n" + pwg_getPageString("Do you want to activate anyway?");
+// Dialog *content* now, paired with incompatible_msg as the title (see
+// plugins_installated.ts's own incompatible-plugin activation guard). The
+// leading "\n" it used to carry only made sense while this was concatenated
+// onto a title string, where it rendered as nothing anyway.
+export const activate_msg = pwg_getPageString(
+  "Do you want to activate anyway?",
+);
 export const deactivate_all_msg = pwg_getPageString("Deactivate all");
 
 /* group action */

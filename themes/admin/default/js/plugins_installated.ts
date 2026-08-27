@@ -2,7 +2,11 @@
 // real exports now (docs/PLAN.md P48 -- was ambient window-global
 // latching). jConfirm_alert_options/jConfirm_confirm_options now import
 // from common.ts too (its own P48 batch landed).
-import { jConfirm_alert_options, jConfirm_confirm_options } from "./common";
+import {
+  jConfirm_alert_options,
+  jConfirm_confirm_options,
+  jConfirm_confirm_with_content_options,
+} from "./common";
 import {
   activate_msg,
   cancel_msg,
@@ -134,6 +138,63 @@ function activatePlugin(id: string) {
   }).done(function (_data: unknown) {
     $("#" + id + " .switch").prop("disabled", false);
     $("#" + id + " .AddPluginSuccess").fadeOut(3000);
+  });
+}
+
+/**
+ * The DOM half of activating a plugin, split out of the switch handler so
+ * the confirm-first path below can reuse it verbatim rather than duplicate
+ * the class bookkeeping.
+ */
+function applyActivation(row: JQuery) {
+  activatePlugin(row.attr("id")!);
+
+  row.addClass("plugin-active").removeClass("plugin-inactive");
+  if (row.find(".pluginUnavailableAction").attr("href")) {
+    row
+      .find(".pluginUnavailableAction")
+      .removeClass("pluginUnavailableAction")
+      .addClass("pluginActionLevel1");
+  }
+}
+
+/**
+ * The switch has already flipped by the time `change` fires, so anything
+ * short of confirming has to put it back.
+ *
+ * That revert hangs off `onClose`, not the cancel button's own action:
+ * jConfirm_confirm_with_content_options sets `backgroundDismiss: true`, and
+ * dismissing by backdrop click or Esc never runs the cancel action -- the
+ * switch would have been left reading "active" for a plugin that was never
+ * activated. `onClose` fires for every dismissal path, so the `confirmed`
+ * flag is what distinguishes them.
+ */
+function confirmIncompatibleActivation(toggle: JQuery, row: JQuery) {
+  let confirmed = false;
+
+  $.confirm({
+    title: incompatible_msg,
+    content: activate_msg,
+    buttons: {
+      confirm: {
+        text: confirm_msg,
+        btnClass: "btn-red",
+        action: function () {
+          confirmed = true;
+          applyActivation(row);
+          actualizeFilter();
+        },
+      },
+      cancel: {
+        text: cancel_msg,
+      },
+    },
+    onClose: function () {
+      if (!confirmed) {
+        toggle.prop("checked", false);
+      }
+    },
+    ...jConfirm_confirm_with_content_options,
   });
 }
 
@@ -366,39 +427,32 @@ $(document).ready(function () {
     $(".switch").change(function () {
       $(".pluginMiniBox").addClass("usable");
 
-      if ($(this).find("#toggleSelectionMode").is(":checked")) {
-        activatePlugin($(this).parent().parent().attr("id")!);
+      const toggle = $(this).find("#toggleSelectionMode");
+      const row = $(this).parent().parent();
 
-        $(this)
-          .parent()
-          .parent()
-          .addClass("plugin-active")
-          .removeClass("plugin-inactive");
-        if (
-          $(this)
-            .parent()
-            .parent()
-            .find(".pluginUnavailableAction")
-            .attr("href")
-        ) {
-          $(this)
-            .parent()
-            .parent()
-            .find(".pluginUnavailableAction")
-            .removeClass("pluginUnavailableAction")
-            .addClass("pluginActionLevel1");
+      if (toggle.is(":checked")) {
+        // Activating a plugin the PEM catalog reports as incompatible with
+        // this Piwigo version asks first. This guard used to hang off
+        // `#<id> .activate` inside the incompatible-plugins ajax handler
+        // below -- upstream Piwigo's markup, an <a class="activate"> link,
+        // which this fork replaced with the toggle switch this handler
+        // binds. No `class="activate"` element exists in any template any
+        // more, so that .each() matched nothing and the confirmation was
+        // never shown: the warning marker rendered, and activation went
+        // through silently regardless. It lives here now, on the control
+        // that actually performs the activation.
+        if (row.hasClass("incompatible")) {
+          confirmIncompatibleActivation(toggle, row);
+
+          return;
         }
-      } else {
-        disactivatePlugin($(this).parent().parent().attr("id")!);
 
-        $(this)
-          .parent()
-          .parent()
-          .removeClass("plugin-active")
-          .addClass("plugin-inactive");
-        $(this)
-          .parent()
-          .parent()
+        applyActivation(row);
+      } else {
+        disactivatePlugin(row.attr("id")!);
+
+        row.removeClass("plugin-active").addClass("plugin-inactive");
+        row
           .find(".pluginActionLevel1")
           .removeClass("pluginActionLevel1")
           .addClass("pluginUnavailableAction");
@@ -690,14 +744,10 @@ jQuery(document).ready(function () {
           jQuery("#" + data[i] + " .pluginName").prepend(
             '<span class="warning" title="' + incompatible_msg + '"></span>',
           );
+        // The `incompatible` class is what the activation guard in the
+        // switch handler above keys off -- this marker is the whole
+        // mechanism, not just styling.
         jQuery("#" + data[i]).addClass("incompatible");
-        jQuery("#" + data[i] + " .activate").each(function () {
-          $(this).pwg_jconfirm_follow_href({
-            alert_title: incompatible_msg + activate_msg,
-            alert_confirm: confirm_msg,
-            alert_cancel: cancel_msg,
-          });
-        });
       }
       jQuery(".warning").tipTip({
         delay: 0,
